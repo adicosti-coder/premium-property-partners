@@ -644,6 +644,7 @@ const ScraperLeads = () => {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [importingLeadId, setImportingLeadId] = useState<string | null>(null);
   const [bulkImportingSmart, setBulkImportingSmart] = useState(false);
+  const [bulkImportingHospitality, setBulkImportingHospitality] = useState(false);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
