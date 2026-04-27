@@ -233,6 +233,26 @@ const AnalizaROIApartament = () => {
         </section>
 
         <section className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-8 max-w-3xl"><div className="mb-3 flex items-center gap-2 text-primary"><CheckCircle2 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Scenarii de randament</span></div><h2 className="text-3xl font-bold text-foreground">Ce scenariu se potrivește apartamentului tău?</h2><p className="mt-3 text-muted-foreground">Folosește aceste repere pentru a interpreta rezultatul calculatorului și pentru a decide dacă merită o analiză detaliată.</p></div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {scenarioCards.map((scenario) => (
+              <Card key={scenario.title} className="border-border bg-card">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold text-foreground">{scenario.title}</h3>
+                  <div className="mt-5 grid gap-3 text-sm">
+                    <div className="flex justify-between gap-3"><span className="text-muted-foreground">Ocupare</span><span className="font-semibold text-foreground">{scenario.occupancy}</span></div>
+                    <div className="flex justify-between gap-3"><span className="text-muted-foreground">Tarif/noapte</span><span className="font-semibold text-foreground">{scenario.adr}</span></div>
+                    <div className="flex justify-between gap-3"><span className="text-muted-foreground">ROI net</span><span className="font-semibold text-primary">{scenario.roi}</span></div>
+                  </div>
+                  <p className="mt-5 text-sm text-muted-foreground">{scenario.note}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="bg-muted/40 py-14 md:py-20">
+          <div className="container mx-auto px-4">
           <div className="mb-8 max-w-3xl"><div className="mb-3 flex items-center gap-2 text-primary"><Building2 className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Link-uri strategice</span></div><h2 className="text-3xl font-bold text-foreground">Complexe recomandate pentru analiză ROI</h2><p className="mt-3 text-muted-foreground">Compară potențialul de randament al apartamentelor din ansambluri cu cerere ridicată și poziționare bună pentru închiriere.</p></div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {complexLinks.map((item) => (
@@ -248,6 +268,19 @@ const AnalizaROIApartament = () => {
             <div><Landmark className="mb-3 h-7 w-7 text-primary" /><h3 className="text-2xl font-bold text-foreground">Vrei o analiză pe o proprietate concretă?</h3><p className="mt-2 text-muted-foreground">Trimite apartamentul sau zona dorită și primești o estimare adaptată pieței locale.</p></div>
             <div className="mt-5 flex flex-wrap gap-3 md:mt-0"><Button asChild><Link to="/complexe">Toate complexele</Link></Button><Button asChild variant="outline"><Link to="/evaluare-gratuita">Evaluare gratuită</Link></Button></div>
           </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-6 flex items-center gap-2 text-primary"><HelpCircle className="h-5 w-5" /><h2 className="text-3xl font-bold text-foreground">Întrebări frecvente</h2></div>
+          <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-6" itemScope itemType="https://schema.org/FAQPage">
+            {faqItems.map((item, index) => (
+              <AccordionItem key={item.question} value={`faq-${index}`} className="last:border-b-0" itemScope itemProp="mainEntity" itemType="https://schema.org/Question">
+                <AccordionTrigger className="text-left text-foreground" itemProp="name">{item.question}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground" itemScope itemProp="acceptedAnswer" itemType="https://schema.org/Answer"><span itemProp="text">{item.answer}</span></AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </section>
       </main>
 
