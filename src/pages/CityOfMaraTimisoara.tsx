@@ -72,6 +72,24 @@ const yieldScenarios = [
   { label: "Dinamic", occupancy: "82%", monthly: "950–1.250€", detail: "regim hotelier administrat profesional, calendar optimizat" },
 ];
 
+const decisionHighlights = [
+  { value: "2.050+ €/mp", label: "benchmark 2026 în complex", detail: "pentru unități bine poziționate și finisate" },
+  { value: "5–10 min", label: "până la repere cheie", detail: "centru, Iulius Town și zone office" },
+  { value: "8.4–9.6%", label: "interval orientativ ROI", detail: "în scenarii bune pentru studiouri și 2 camere" },
+];
+
+const fitProfiles = [
+  { icon: Home, title: "Locuire premium", text: "Pentru cumpărători care vor apartamente noi aproape de centru, cu acces rapid și costuri predictibile de exploatare." },
+  { icon: TrendingUp, title: "Buy-to-let", text: "Potrivit pentru investitori care caută cerere constantă din partea profesioniștilor și chiriașilor corporate." },
+  { icon: Building2, title: "Portofoliu urban", text: "Interesant pentru cei care urmăresc diversificare în complexuri cunoscute, cu lichiditate mai bună la revânzare." },
+];
+
+const acquisitionSteps = [
+  { title: "1. Clarificăm ținta", text: "Stabilim rapid dacă urmărești locuire, chirie lungă sau randament din administrare hotelieră." },
+  { title: "2. Shortlist real", text: "Selectăm doar unitățile relevante după buget, etaj, orientare, parcare și potențial de negociere." },
+  { title: "3. Decizie asistată", text: "Primești comparație de cost total, randament și riscuri înainte de rezervare sau ofertă fermă." },
+];
+
 const CityOfMaraTimisoara = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -193,6 +211,15 @@ const CityOfMaraTimisoara = () => {
               <div className="mt-7 flex flex-wrap gap-3">
                 <Button asChild size="lg"><a href="#disponibilitati">Solicită disponibilități <ArrowRight className="h-4 w-4" /></a></Button>
                 <Button asChild size="lg" variant="secondary"><a href="#analiza">Analiză prețuri</a></Button>
+              </div>
+              <div className="mt-8 grid max-w-3xl gap-3 sm:grid-cols-3">
+                {decisionHighlights.map((item) => (
+                  <div key={item.label} className="rounded-lg border border-primary-foreground/20 bg-background/15 p-4 backdrop-blur-sm">
+                    <p className="text-xl font-bold text-primary-foreground">{item.value}</p>
+                    <p className="mt-1 text-sm font-semibold text-primary-foreground">{item.label}</p>
+                    <p className="mt-1 text-xs text-primary-foreground/80">{item.detail}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -321,6 +348,22 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="potrivire-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="potrivire-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Pentru cine sunt potrivite apartamentele City of Mara</h2>
+            <p className="mt-3 text-muted-foreground">Pagina filtrează rapid tipurile de cumpărători pentru care complexul are sens economic și practic, nu doar vizual.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {fitProfiles.map((item) => (
+              <article key={item.title} className="rounded-lg border border-border bg-card p-6">
+                <item.icon className="mb-4 h-7 w-7 text-primary" />
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="ghid-cumparator-city-of-mara">
           <div className="mb-8 max-w-3xl">
             <h2 id="ghid-cumparator-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Ghid rapid pentru cumpărători City of Mara</h2>
@@ -334,6 +377,23 @@ const CityOfMaraTimisoara = () => {
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="proces-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <h2 id="proces-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Cum ajungi de la interes la shortlist real</h2>
+              <p className="mt-3 text-muted-foreground">Am adăugat un flux scurt, foarte clar, util mai ales pe mobil, pentru utilizatorii care vor răspuns rapid și puțin zgomot vizual.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {acquisitionSteps.map((step) => (
+                <div key={step.title} className="rounded-lg border border-primary/20 bg-primary/5 p-6">
+                  <h3 className="text-lg font-semibold text-foreground">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
