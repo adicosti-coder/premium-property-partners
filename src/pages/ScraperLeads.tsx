@@ -25,7 +25,7 @@ import {
   ThumbsUp, HelpCircle, Download, GitCompare, ArrowRightCircle, History,
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
   Shield, Database, Sparkles, Crown, FileText, ArrowUpDown, Plus, Trash2, Save, Tags,
-  ChevronDown, ChevronUp, Pencil, Building2, Check, X, RefreshCw, ClipboardList,
+  ChevronDown, ChevronUp, Pencil, Building2, Check, X, RefreshCw, ClipboardList, Hotel,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -644,6 +644,7 @@ const ScraperLeads = () => {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [importingLeadId, setImportingLeadId] = useState<string | null>(null);
   const [bulkImportingSmart, setBulkImportingSmart] = useState(false);
+  const [bulkImportingHospitality, setBulkImportingHospitality] = useState(false);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -1237,6 +1238,22 @@ const ScraperLeads = () => {
     }
     setBulkImportingSmart(false);
     toast.success(`${imported} lead-uri prioritare trimise în Proprietăți ca drafturi verificate`);
+  };
+
+  const bulkImportHospitalityDrafts = async () => {
+    const targets = automationQueue.hospitalityCandidates.slice(0, 3);
+    if (!targets.length) {
+      toast.info("Nu există candidați potriviți pentru regim hotelier în filtrarea curentă");
+      return;
+    }
+    setBulkImportingHospitality(true);
+    let imported = 0;
+    for (const lead of targets) {
+      await importLeadAsListing(lead, { workflow: "hospitality", verification: "full", listingType: lead.listing_type === "inchiriere" ? "inchiriere" : "investitie" });
+      imported += 1;
+    }
+    setBulkImportingHospitality(false);
+    toast.success(`${imported} candidați pentru regim hotelier au fost trimiși ca drafturi`);
   };
 
   const copyAutomationBrief = () => {
@@ -2652,6 +2669,10 @@ const ScraperLeads = () => {
                     {bulkImportingSmart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
                     Importă top {automationQueue.readyToImport.length} ca draft
                   </Button>
+                  <Button size="sm" variant="outline" onClick={bulkImportHospitalityDrafts} disabled={bulkImportingHospitality || automationQueue.hospitalityCandidates.length === 0} className="gap-1.5">
+                    {bulkImportingHospitality ? <Loader2 className="h-4 w-4 animate-spin" /> : <Hotel className="h-4 w-4" />}
+                    Regim hotelier ({automationQueue.hospitalityCandidates.length})
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("pipeline"); }} className="gap-1.5">
                     <Flame className="h-4 w-4" /> Vezi prioritare
                   </Button>
@@ -2673,7 +2694,7 @@ const ScraperLeads = () => {
                   ))}
                 </div>
               )}
-              <div className="mt-3 grid gap-2 md:grid-cols-3">
+              <div className="mt-3 grid gap-2 md:grid-cols-4">
                 <button onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
                   <span className="block font-semibold text-foreground">Import inteligent</span>
                   <span className="text-muted-foreground">{automationQueue.readyToImport.length} lead-uri cu scor mare și URL valid</span>
@@ -2685,6 +2706,10 @@ const ScraperLeads = () => {
                 <button onClick={() => { setAdvancedFilters({ ...EMPTY_FILTERS }); setAppliedFilters({ ...EMPTY_FILTERS }); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
                   <span className="block font-semibold text-foreground">Curățare date</span>
                   <span className="text-muted-foreground">{automationQueue.needsVerification.length} lead-uri fără telefon, preț sau suprafață</span>
+                </button>
+                <button onClick={() => { setListingTab("inchiriere"); setHotOnly(true); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
+                  <span className="block font-semibold text-foreground">Regim hotelier</span>
+                  <span className="text-muted-foreground">{automationQueue.hospitalityCandidates.length} candidați pentru analiză operațională</span>
                 </button>
               </div>
             </CardContent>
