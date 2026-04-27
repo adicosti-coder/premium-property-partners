@@ -79,6 +79,7 @@ const SEOOptimizerManager = () => {
   const [filterLang, setFilterLang] = useState<"all" | "ro" | "en">("all");
   const [minScore, setMinScore] = useState<number>(0);
   const [bulkRunning, setBulkRunning] = useState(false);
+  const [dualRunning, setDualRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
 
   const { data: history = [] } = useQuery({
@@ -107,6 +108,27 @@ const SEOOptimizerManager = () => {
       return true;
     });
   }, [history, filter, filterLang, minScore]);
+
+  const seoStats = useMemo(() => {
+    const latest = new Map<string, AuditRow>();
+    history.forEach((audit) => {
+      const key = `${audit.url}::${audit.language}`;
+      if (!latest.has(key)) latest.set(key, audit);
+    });
+    const audits = Array.from(latest.values());
+    const avgScore = audits.length
+      ? Math.round(audits.reduce((sum, a) => sum + (a.overall_score ?? 0), 0) / audits.length)
+      : 0;
+    const criticalIssues = audits.reduce(
+      (sum, a) => sum + (a.issues || []).filter((issue: any) => issue.severity === "critical").length,
+      0
+    );
+    const urgentAudits = audits
+      .filter((a) => (a.overall_score ?? 0) < 70 || (a.issues || []).some((issue: any) => issue.severity === "critical"))
+      .sort((a, b) => (a.overall_score ?? 0) - (b.overall_score ?? 0))
+      .slice(0, 5);
+    return { latestCount: audits.length, avgScore, criticalIssues, urgentAudits };
+  }, [history]);
 
   const auditMutation = useMutation({
     mutationFn: async ({ targetUrl, force }: { targetUrl: string; force: boolean }) => {
@@ -143,6 +165,76 @@ const SEOOptimizerManager = () => {
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     setBulkRunning(false);
     toast.success(`Bulk audit: ${success}/${QUICK_URLS.length} URL-uri analizate`);
+  };
+
+  const runDualLanguageAudit = async () => {
+    setDualRunning(true);
+    let lastAudit: AuditRow | null = null;
+    try {
+      for (const lang of ["ro", "en"] as const) {
+        const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
+          body: { url, language: lang, forceRefresh: true },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        if (data?.audit) lastAudit = data.audit as AuditRow;
+      }
+      if (lastAudit) setSelectedAudit(lastAudit);
+      qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
+      toast.success("Audit RO + EN finalizat");
+    } catch (e: any) {
+      toast.error(e.message || "Eroare audit RO + EN");
+    } finally {
+      setDualRunning(false);
+    }
+  };
+
+  const buildImplementationBrief = (a: AuditRow): string => {
+    const topIssues = (a.issues || []).slice(0, 5).map((i: any) => `- [${i.severity}] ${i.issue}: ${i.fix}`).join("\n");
+    const topKeywords = [...(a.keyword_gaps || []), ...(a.local_geo_keywords || [])]
+      .slice(0, 8)
+      .map((k: any) => `- ${k.keyword || k}: ${k.where_to_add || k.suggested_placement || "adaugă natural în conținut"}`)
+      .join("\n");
+    const links = (a.raw_analysis?.recommended_internal_links || []).slice(0, 6).map((l: string) => `- ${l}`).join("\n");
+    return [
+      `Brief implementare SEO — ${a.url}`,
+      `Scor actual: ${a.overall_score ?? "—"}/100 · Local SEO: ${a.local_relevance_score ?? "—"}/100`,
+      "",
+      "1) Title / Meta",
+      `Title propus: ${a.suggested_title || "—"}`,
+      `Meta propusă: ${a.suggested_meta || "—"}`,
+      "",
+      "2) Probleme prioritare",
+      topIssues || "- Nu sunt probleme critice detectate.",
+      "",
+      "3) Keyword-uri de integrat",
+      topKeywords || "- Nu sunt keyword gaps majore.",
+      "",
+      "4) Link-uri interne recomandate",
+      links || "- Nu sunt link-uri interne recomandate de AI.",
+    ].join("\n");
+  };
+
+  const exportHistoryCSV = () => {
+    const header = ["url", "language", "score", "local_score", "issues", "critical_issues", "word_count", "created_at"].join(",");
+    const rows = filteredHistory.map((a) => [
+      a.url,
+      a.language,
+      a.overall_score ?? "",
+      a.local_relevance_score ?? "",
+      a.issues?.length ?? 0,
+      (a.issues || []).filter((issue: any) => issue.severity === "critical").length,
+      a.word_count ?? "",
+      a.created_at,
+    ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","));
+    const blob = new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = `realtrust-seo-audituri-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(href);
+    toast.success("CSV exportat");
   };
 
   const buildSummaryText = (a: AuditRow): string => {
@@ -414,7 +506,46 @@ const SEOOptimizerManager = () => {
             >
               <RefreshCw className="w-4 h-4" />
             </Button>
+            <Button
+              variant="secondary"
+              onClick={runDualLanguageAudit}
+              disabled={dualRunning || auditMutation.isPending || !url}
+              title="Analizează aceeași pagină în română și engleză"
+            >
+              {dualRunning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              RO+EN
+            </Button>
           </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="text-xs text-muted-foreground">Scor mediu ultimele audituri</div>
+              <div className={`text-2xl font-bold ${scoreColor(seoStats.avgScore)}`}>{seoStats.avgScore}<span className="text-sm text-muted-foreground">/100</span></div>
+            </div>
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="text-xs text-muted-foreground">Pagini urmărite</div>
+              <div className="text-2xl font-bold">{seoStats.latestCount}</div>
+            </div>
+            <div className="rounded-lg border bg-muted/20 p-3">
+              <div className="text-xs text-muted-foreground">Probleme critice</div>
+              <div className={`text-2xl font-bold ${seoStats.criticalIssues > 0 ? "text-red-600" : "text-green-600"}`}>{seoStats.criticalIssues}</div>
+            </div>
+          </div>
+
+          {seoStats.urgentAudits.length > 0 && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <div className="mb-2 flex items-center gap-2 font-semibold text-destructive">
+                <AlertTriangle className="h-4 w-4" /> Prioritate optimizare
+              </div>
+              <div className="space-y-1">
+                {seoStats.urgentAudits.map((audit) => (
+                  <button key={`${audit.id}-priority`} onClick={() => setSelectedAudit(audit)} className="block w-full truncate text-left text-xs hover:text-primary">
+                    {audit.overall_score ?? "—"}/100 · {audit.url}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2 items-center">
             {QUICK_URLS.map((u) => (
@@ -471,6 +602,10 @@ const SEOOptimizerManager = () => {
                   <Button size="sm" variant="outline" onClick={() => copySummary(selectedAudit)}>
                     <Copy className="w-3 h-3 mr-2" />
                     Copiază rezumat
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => copyText(buildImplementationBrief(selectedAudit), "Brief implementare")}>
+                    <Lightbulb className="w-3 h-3 mr-2" />
+                    Brief implementare
                   </Button>
                 </div>
               </div>
@@ -827,6 +962,10 @@ const SEOOptimizerManager = () => {
               <option value={80}>Scor ≥ 80</option>
               <option value={90}>Scor ≥ 90</option>
             </select>
+            <Button variant="outline" onClick={exportHistoryCSV} disabled={filteredHistory.length === 0}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
