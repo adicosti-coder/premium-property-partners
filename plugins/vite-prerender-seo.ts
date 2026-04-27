@@ -96,16 +96,16 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Închirieri apartamente studenți Bulevardul Vasile Pârvan</strong> — artera principală care traversează Complexul Studențesc Timișoara, oferind acces direct (sub 5 minute pe jos) la UVT — Universitatea de Vest, Politehnica Timișoara (UPT) și UMF „Victor Babeș". Apartamente cu 1, 2 și 3 camere mobilate, contracte 9–12 luni cu utilități incluse, internet de mare viteză și verificare proprietar pentru siguranța studenților și părinților.</p>
 
   <h3>Randament chirie Timișoara — comparație termen lung vs regim hotelier</h3>
-  <p><strong>Randament chirie Timișoara</strong>: chirie clasică pe termen lung oferă 4,5–6% anual brut (după impozit 8% și ANAF rămân 4–5,5% net), în timp ce regimul hotelier administrat de RealTrust generează un <strong>ROI net verificat de 9.4%</strong> anual datorită ocupării 78–88% și ADR de 55–95 €/noapte. Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> pentru o comparație personalizată pe proprietatea ta.</p>
+  <p><strong>Randament chirie Timișoara</strong>: chirie clasică pe termen lung oferă 4,5–6% anual brut (după impozit 8% și ANAF rămân 4–5,5% net), în timp ce regimul hotelier administrat de RealTrust generează un <strong>ROI net verificat de 9.4%</strong> anual datorită ocupării 78–88% și ADR de 55–95 €/noapte. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> pentru o comparație personalizată pe proprietatea ta.</p>
 
   <h3>Evaluator ANEVAR Timișoara — evaluări oficiale acreditate</h3>
   <p>Pentru tranzacțiile bancare, succesiuni, partaje sau credite ipotecare colaborăm cu <strong>evaluator ANEVAR Timișoara</strong> acreditat (Asociația Națională a Evaluatorilor Autorizați din România). Rapoarte de evaluare oficiale acceptate de toate băncile (BCR, BRD, Raiffeisen, ING, Banca Transilvania), notari și instanțe — livrare 3–5 zile lucrătoare, prețuri transparente.</p>
 
   <h3>Piața imobiliară Timișoara — evoluție și analize trimestriale</h3>
-  <p>Monitorizăm continuu <strong>piața imobiliară Timișoara evoluție</strong>: rapoarte trimestriale pe micro-zone (ISHO, Complex Studențesc, Iosefin, Dumbrăvița, Giroc), date despre prețul mediu pe metru pătrat, randamentul chiriilor, viteza de tranzacționare și impactul proiectelor majore (Iulius Town, Openville, Parcul Industrial Timișoara). Vezi <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței imobiliare Timișoara</a>.</p>
+  <p>Monitorizăm continuu <strong>piața imobiliară Timișoara evoluție</strong>: rapoarte trimestriale pe micro-zone (ISHO, Complex Studențesc, Iosefin, Dumbrăvița, Giroc), date despre prețul mediu pe metru pătrat, randamentul chiriilor, viteza de tranzacționare și impactul proiectelor majore (Iulius Town, Openville, Parcul Industrial Timișoara). Vezi <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței imobiliare Timișoara</a>.</p>
 `;
 
-const BASE_URL = 'https://www.realtrust.ro';
+const BASE_URL = 'https://realtrust.ro';
 const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8';
 const PROTECTED_HEAD_PATTERNS = [
@@ -158,7 +158,7 @@ const neighborhoods = [
     <h3>Spații comerciale &amp; terenuri ISHO Fabric</h3>
     <p>Zona include și <strong>spații comerciale Timișoara</strong> de tip street retail în ISHO Galleria și pe Bulevardul Take Ionescu, plus <strong>terenuri de vânzare Timișoara</strong> intravilan în Fabric pentru dezvoltări mici. RealTrust intermediază închirieri și vânzări pentru investitori interesați de yield comercial 7–9% net.</p>
     <h3>Piața imobiliară Timișoara — context ISHO</h3>
-    <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a>.</p>
+    <p><strong>Piața imobiliară Timișoara</strong> crește anual cu 5–8% în 2025–2026, iar ISHO este pol de creștere cu apreciere peste medie. Vezi <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza completă a pieței</a> și <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a>.</p>
   ` },
   { slug: 'iosefin', name: 'Iosefin', fullName: 'Iosefin', avgPrice: 1850, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Iosefin Timișoara?', a: 'Prețurile apartamentelor în Iosefin variază între 1.700 și 2.100 €/mp (medie 1.850 €/mp). Garsonierele se tranzacționează între 60.000 și 75.000 €.' },
@@ -177,7 +177,7 @@ const neighborhoods = [
     <h3>Puncte de interes lângă Iosefin</h3>
     <p><strong>Piața Iosefin</strong> (reper comercial, 2 min), <strong>Sinagoga din Iosefin</strong> (monument istoric, 5 min), Catedrala Romano-Catolică (3 min), malul Begăi (1 min), Piața Unirii (8 min pe jos), Gara de Nord (5 min), UVT (10 min cu tramvaiul de pe Bulevardul 16 Decembrie 1989), Iulius Town (10 min).</p>
     <h3>Apartamente de închiriat Iosefin Timișoara</h3>
-    <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
+    <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
   ` },
   { slug: 'dumbravita', name: 'Dumbrăvița', fullName: 'Dumbrăvița', avgPrice: 1680, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Dumbrăvița?', a: 'Apartamente noi 1.680 €/mp, cu 15–20% sub media Timișoara. Case și vile între 180.000 și 380.000 €.' },
@@ -209,7 +209,7 @@ const neighborhoods = [
     <h3>Piața imobiliară Dumbrăvița — analiză 2026</h3>
     <p>Dumbrăvița a crescut cu ~6% în 2025, susținută de cererea familiilor tinere și a profesioniștilor IT relocați. Preț mediu apartamente noi: 1.680 €/mp (vs. 2.000+ €/mp în Centru). Comparativ cu Giroc (1.650 €/mp) și Moșnița Nouă (1.580 €/mp), Dumbrăvița oferă cea mai bună infrastructură și acces la aeroport.</p>
 
-    <p>Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Dumbrăvița.</p>
+    <p>Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Dumbrăvița.</p>
   ` },
   { slug: 'giroc', name: 'Giroc', fullName: 'Giroc', avgPrice: 1620, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Giroc?', a: 'Apartamente 1.500–1.800 €/mp (medie 1.620 €/mp). Case 165.000–320.000 €. Terenuri intravilane 70–130 €/mp.' },
@@ -244,7 +244,7 @@ const neighborhoods = [
     <h3>Avantaje și dezavantaje Giroc</h3>
     <p><strong>Avantaje</strong>: liniște, spațiu verde abundent (lacul Giroc, parcuri), aer curat, taxe locale mai mici, școli bune. <strong>Dezavantaje</strong>: trafic aglomerat dimineața pe DJ595, distanță față de Centrul Vechi (10–25 min).</p>
 
-    <p>Vezi <a href="https://www.realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://www.realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Giroc.</p>
+    <p>Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/evaluare-gratuita">evaluarea gratuită</a> pentru proprietățile tale din Giroc.</p>
   ` },
 ];
 

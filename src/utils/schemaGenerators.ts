@@ -1184,7 +1184,7 @@ export const generateSpeakableSchema = (
   "creator": {
     "@type": "Organization",
     "name": "RealTrust & ApArt Hotel Timișoara",
-    "url": "https://www.realtrust.ro",
+    "url": "https://realtrust.ro",
   },
   "license": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
   "speakable": {

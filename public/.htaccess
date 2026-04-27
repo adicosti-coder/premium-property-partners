@@ -2,9 +2,9 @@
   RewriteEngine On
   RewriteBase /
 
-  # Force non-www to www (canonical domain)
-  RewriteCond %{HTTP_HOST} ^realtrust\.ro$ [NC]
-  RewriteRule ^(.*)$ https://www.realtrust.ro/$1 [R=301,L]
+  # Force www to non-www (canonical domain)
+  RewriteCond %{HTTP_HOST} ^www\.realtrust\.ro$ [NC]
+  RewriteRule ^(.*)$ https://realtrust.ro/$1 [R=301,L]
 
   # Force HTTP to HTTPS
   RewriteCond %{HTTPS} off
