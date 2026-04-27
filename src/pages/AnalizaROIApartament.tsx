@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, Clock3, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, Target, TrendingUp, WalletCards } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, Clock3, Gauge, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, Target, TrendingUp, WalletCards } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -88,6 +88,8 @@ const faqItems = [
   { question: "Ce înseamnă analiză profit apartament în România?", answer: "Este o estimare completă a profitului lunar și anual pentru un apartament, comparând chiria clasică, regimul hotelier, aprecierea prețului și lichiditatea zonei." },
   { question: "De ce sunt importante complexele rezidențiale în analiza ROI?", answer: "Complexele noi au de obicei cerere mai bună, costuri de mentenanță mai previzibile și poziționare mai ușor de promovat către oaspeți sau chiriași premium." },
   { question: "Pot folosi calculatorul pentru orice oraș din România?", answer: "Da, modelul funcționează pentru orice oraș dacă ajustezi prețul de achiziție, chiria, tariful pe noapte și ocuparea. Pentru Timișoara folosim repere operaționale verificate RealTrust." },
+  { question: "Când merită cumpărat un apartament pentru investiție?", answer: "Merită analizat când randamentul net depășește chiria clasică, zona are cerere constantă, costurile sunt previzibile și există potențial de revânzare sau apreciere pe termen mediu." },
+  { question: "Ce documente sunt utile pentru o analiză ROI completă?", answer: "Sunt utile prețul final de achiziție, suprafața, planul apartamentului, costurile de mobilare, istoricul zonei, taxele lunare și obiectivul investitorului: cashflow, apreciere sau revânzare." },
 ];
 
 const AnalizaROIApartament = () => {
@@ -110,6 +112,8 @@ const AnalizaROIApartament = () => {
     const monthlyHotelNet = hotelNet / 12;
     const paybackYears = purchasePrice / Math.max(totalReturn, 1);
     const breakevenOccupancy = (classicAnnual / (nightlyRate * 365 * 0.73)) * 100;
+    const investmentScore = Math.min(98, Math.max(45, Math.round(hotelRoi * 6 + annualGrowth * 4 + (occupancy - 55) * 0.8)));
+    const scoreLabel = investmentScore >= 82 ? "foarte atractiv" : investmentScore >= 68 ? "solid" : "necesită verificări";
 
     const projection = Array.from({ length: 6 }, (_, index) => {
       const year = 2026 + index;
@@ -127,6 +131,8 @@ const AnalizaROIApartament = () => {
       monthlyHotelNet: Math.round(monthlyHotelNet),
       paybackYears: paybackYears.toFixed(1),
       breakevenOccupancy: Math.min(95, Math.max(25, breakevenOccupancy)).toFixed(0),
+      investmentScore,
+      scoreLabel,
       projection,
       delta: Math.round(hotelNet - classicAnnual),
     };
@@ -162,6 +168,14 @@ const AnalizaROIApartament = () => {
                 { "@type": "HowToStep", name: "Compară chiria clasică cu regimul hotelier" },
                 { "@type": "HowToStep", name: "Verifică evoluția prețului și complexele potrivite" },
               ],
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: faqItems.map((item) => ({
+                "@type": "Question",
+                name: item.question,
+                acceptedAnswer: { "@type": "Answer", text: item.answer },
+              })),
             },
           ],
         }}
@@ -262,6 +276,20 @@ const AnalizaROIApartament = () => {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6 border-primary/20 bg-background">
+            <CardContent className="grid gap-6 p-6 md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-8 border-primary/20 bg-primary/10">
+                <span className="text-3xl font-bold text-primary">{calculations.investmentScore}</span>
+              </div>
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-primary"><Gauge className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Scor investițional</span></div>
+                <h2 className="text-2xl font-bold text-foreground">Profil {calculations.scoreLabel} pentru investiție imobiliară</h2>
+                <p className="mt-2 text-muted-foreground">Scorul combină ROI net, ocupare estimată, aprecierea anuală și diferența față de chiria clasică pentru o decizie mai rapidă.</p>
+              </div>
+              <Button asChild variant="outline"><Link to="/evaluare-gratuita">Cere validare RealTrust</Link></Button>
+            </CardContent>
+          </Card>
         </section>
 
         <section className="border-y border-border bg-background py-14 md:py-20">
