@@ -604,6 +604,37 @@ const CityOfMaraTimisoara = () => {
           </div>
         </section>
 
+        <section className="border-y border-border bg-muted/40 py-12 md:py-16" aria-labelledby="shortlist-city-of-mara">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <h2 id="shortlist-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Cum arată un shortlist bun în City of Mara</h2>
+              <p className="mt-3 text-muted-foreground">Bloc practic pentru utilizatorii care vor să compare rapid câteva opțiuni fără să piardă timp pe unități doar "ok" la prima vedere.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card p-6">
+              <div className="space-y-3 text-sm text-muted-foreground">
+                {shortlistSignals.map((item) => (
+                  <p key={item} className="flex gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{item}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-12 md:py-16" aria-labelledby="documente-city-of-mara">
+          <div className="mb-8 max-w-3xl">
+            <h2 id="documente-city-of-mara" className="text-3xl font-bold text-foreground md:text-4xl">Ce merită verificat înainte de rezervare sau ofertă</h2>
+            <p className="mt-3 text-muted-foreground">Am adăugat și o secțiune de due diligence simplificată, utilă atât pentru cumpărători la prima achiziție, cât și pentru investitori care vor decizie mai disciplinată.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {documentChecks.map((item) => (
+              <article key={item.title} className="rounded-lg border border-border bg-card p-6">
+                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="disponibilitati" className="bg-muted/40 py-12 md:py-16" aria-labelledby="formular-city-of-mara">
           <div className="container mx-auto grid gap-8 px-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div>
