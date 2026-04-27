@@ -2669,6 +2669,10 @@ const ScraperLeads = () => {
                     {bulkImportingSmart ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
                     Importă top {automationQueue.readyToImport.length} ca draft
                   </Button>
+                  <Button size="sm" variant="outline" onClick={bulkImportHospitalityDrafts} disabled={bulkImportingHospitality || automationQueue.hospitalityCandidates.length === 0} className="gap-1.5">
+                    {bulkImportingHospitality ? <Loader2 className="h-4 w-4 animate-spin" /> : <Hotel className="h-4 w-4" />}
+                    Regim hotelier ({automationQueue.hospitalityCandidates.length})
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("pipeline"); }} className="gap-1.5">
                     <Flame className="h-4 w-4" /> Vezi prioritare
                   </Button>
@@ -2690,7 +2694,7 @@ const ScraperLeads = () => {
                   ))}
                 </div>
               )}
-              <div className="mt-3 grid gap-2 md:grid-cols-3">
+              <div className="mt-3 grid gap-2 md:grid-cols-4">
                 <button onClick={() => { setSmartFilter("topROI"); setHotOnly(true); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
                   <span className="block font-semibold text-foreground">Import inteligent</span>
                   <span className="text-muted-foreground">{automationQueue.readyToImport.length} lead-uri cu scor mare și URL valid</span>
@@ -2702,6 +2706,10 @@ const ScraperLeads = () => {
                 <button onClick={() => { setAdvancedFilters({ ...EMPTY_FILTERS }); setAppliedFilters({ ...EMPTY_FILTERS }); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
                   <span className="block font-semibold text-foreground">Curățare date</span>
                   <span className="text-muted-foreground">{automationQueue.needsVerification.length} lead-uri fără telefon, preț sau suprafață</span>
+                </button>
+                <button onClick={() => { setListingTab("inchiriere"); setHotOnly(true); setViewMode("table"); }} className="rounded-md border bg-background p-3 text-left text-xs hover:border-primary/50">
+                  <span className="block font-semibold text-foreground">Regim hotelier</span>
+                  <span className="text-muted-foreground">{automationQueue.hospitalityCandidates.length} candidați pentru analiză operațională</span>
                 </button>
               </div>
             </CardContent>
