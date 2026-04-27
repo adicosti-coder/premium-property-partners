@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, TrendingUp } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, Calculator, CheckCircle2, ClipboardCheck, Clock3, HelpCircle, Home, Landmark, LineChart as LineChartIcon, PieChart, Target, TrendingUp, WalletCards } from "lucide-react";
 import Header from "@/components/Header";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
@@ -50,6 +50,24 @@ const scenarioCards = [
   { title: "Conservator", occupancy: "62%", adr: "55–65€", roi: "6.8–8.0%", note: "potrivit pentru apartamente standard, fără poziționare premium" },
   { title: "RealTrust standard", occupancy: "75%", adr: "68–82€", roi: "9.0–9.8%", note: "modelul de lucru recomandat pentru randament stabil" },
   { title: "Premium complex", occupancy: "80%+", adr: "85–110€", roi: "10%+", note: "unități în complexe noi, aproape de business și servicii" },
+];
+
+const sensitivityMatrix = [
+  { occupancy: "60%", adr60: "7.6%", adr75: "9.6%", adr90: "11.5%" },
+  { occupancy: "70%", adr60: "8.8%", adr75: "11.2%", adr90: "13.4%" },
+  { occupancy: "80%", adr60: "10.2%", adr75: "12.8%", adr90: "15.4%" },
+];
+
+const investmentLevers = [
+  { icon: Target, title: "Poziționare în piață", text: "Fotografii, dotări și descriere calibrate pentru oaspeți business, city-break și relocări." },
+  { icon: WalletCards, title: "Controlul costurilor", text: "Analiza include curățenie, mentenanță, taxe, comisioane și perioade cu ocupare redusă." },
+  { icon: Clock3, title: "Viteză de recuperare", text: "Modelăm în câți ani se recuperează investiția prin venit net și apreciere de capital." },
+];
+
+const relatedGuides = [
+  { label: "Calculator ROI", href: "/calculator-roi", text: "Compară rapid chiria clasică și regimul hotelier." },
+  { label: "Catalog Investiții", href: "/catalog-investitii", text: "Vezi oportunități filtrate după randament și risc." },
+  { label: "Piața imobiliară", href: "/piata-imobiliara-timisoara", text: "Urmărește tendințe locale, prețuri și cerere." },
 ];
 
 const investorChecklist = [
@@ -89,6 +107,9 @@ const AnalizaROIApartament = () => {
     const hotelRoi = (hotelNet / purchasePrice) * 100;
     const appreciation = (purchasePrice * annualGrowth) / 100;
     const totalReturn = hotelNet + appreciation;
+    const monthlyHotelNet = hotelNet / 12;
+    const paybackYears = purchasePrice / Math.max(totalReturn, 1);
+    const breakevenOccupancy = (classicAnnual / (nightlyRate * 365 * 0.73)) * 100;
 
     const projection = Array.from({ length: 6 }, (_, index) => {
       const year = 2026 + index;
@@ -103,6 +124,9 @@ const AnalizaROIApartament = () => {
       classicRoi: classicRoi.toFixed(1),
       hotelRoi: hotelRoi.toFixed(1),
       totalReturn: Math.round(totalReturn),
+      monthlyHotelNet: Math.round(monthlyHotelNet),
+      paybackYears: paybackYears.toFixed(1),
+      breakevenOccupancy: Math.min(95, Math.max(25, breakevenOccupancy)).toFixed(0),
       projection,
       delta: Math.round(hotelNet - classicAnnual),
     };
@@ -219,6 +243,11 @@ const AnalizaROIApartament = () => {
                   <div><p className="text-sm text-muted-foreground">ROI net regim hotelier</p><p className="text-3xl font-bold text-primary">{calculations.hotelRoi}%</p></div>
                   <div><p className="text-sm text-muted-foreground">Diferență anuală</p><p className="text-3xl font-bold text-foreground">+{calculations.delta.toLocaleString("ro-RO")}€</p></div>
                 </div>
+                <div className="mt-5 grid gap-3 rounded-lg border border-primary/20 bg-background/80 p-4 sm:grid-cols-3">
+                  <div><p className="text-xs text-muted-foreground">Net lunar estimat</p><p className="text-lg font-semibold text-foreground">{calculations.monthlyHotelNet.toLocaleString("ro-RO")}€</p></div>
+                  <div><p className="text-xs text-muted-foreground">Recuperare capital</p><p className="text-lg font-semibold text-foreground">{calculations.paybackYears} ani</p></div>
+                  <div><p className="text-xs text-muted-foreground">Ocupare break-even</p><p className="text-lg font-semibold text-foreground">{calculations.breakevenOccupancy}%</p></div>
+                </div>
                 <div className="mt-8 h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={comparisonData}>
@@ -232,6 +261,37 @@ const AnalizaROIApartament = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </section>
+
+        <section className="border-y border-border bg-background py-14 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 max-w-3xl">
+              <div className="mb-3 flex items-center gap-2 text-primary"><Target className="h-5 w-5" /><span className="text-sm font-semibold uppercase">Optimizare randament</span></div>
+              <h2 className="text-3xl font-bold text-foreground">Ce influențează profitul net al apartamentului</h2>
+              <p className="mt-3 text-muted-foreground">Randamentul nu depinde doar de preț. Cele mai importante diferențe apar din poziționare, costuri reale și disciplină operațională.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {investmentLevers.map((item) => (
+                <Card key={item.title} className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-6">
+                    <item.icon className="mb-4 h-8 w-8 text-primary" />
+                    <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground">{item.text}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="mt-8 overflow-hidden rounded-lg border border-border bg-card">
+              <div className="grid grid-cols-4 border-b border-border bg-muted/40 text-sm font-semibold text-foreground">
+                <div className="p-4">Ocupare / ADR</div><div className="p-4">60€</div><div className="p-4">75€</div><div className="p-4">90€</div>
+              </div>
+              {sensitivityMatrix.map((row) => (
+                <div key={row.occupancy} className="grid grid-cols-4 border-b border-border last:border-b-0 text-sm">
+                  <div className="p-4 font-semibold text-foreground">{row.occupancy}</div><div className="p-4 text-muted-foreground">{row.adr60}</div><div className="p-4 text-primary font-semibold">{row.adr75}</div><div className="p-4 text-muted-foreground">{row.adr90}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -321,6 +381,23 @@ const AnalizaROIApartament = () => {
         </section>
 
         <section className="container mx-auto px-4 py-14 md:py-20">
+          <div className="mb-10 rounded-lg border border-primary/20 bg-primary/5 p-6 md:p-8">
+            <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Continuă analiza cu ghidurile potrivite</h2>
+                <p className="mt-2 text-muted-foreground">Leagă estimarea ROI de paginile care ajută decizia: calculator, catalog și context de piață.</p>
+              </div>
+              <Button asChild size="lg"><Link to="/catalog-investitii">Catalog Investiții <ArrowRight className="h-4 w-4" /></Link></Button>
+            </div>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              {relatedGuides.map((guide) => (
+                <Link key={guide.href} to={guide.href} className="rounded-lg border border-border bg-background p-4 transition-colors hover:border-primary/50">
+                  <span className="font-semibold text-foreground">{guide.label}</span>
+                  <p className="mt-2 text-sm text-muted-foreground">{guide.text}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
           <div className="mb-6 flex items-center gap-2 text-primary"><HelpCircle className="h-5 w-5" /><h2 className="text-3xl font-bold text-foreground">Întrebări frecvente</h2></div>
           <Accordion type="single" collapsible className="rounded-lg border border-border bg-card px-6" itemScope itemType="https://schema.org/FAQPage">
             {faqItems.map((item, index) => (
