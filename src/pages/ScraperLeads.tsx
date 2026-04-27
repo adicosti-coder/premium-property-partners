@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   MessageCircle, ExternalLink, Flame, TrendingUp, ArrowLeft, Zap, StickyNote,
@@ -564,6 +564,26 @@ function deriveProspectType(title: string): string {
   if (upper.includes("DEZVOLTATOR") || upper.includes("ANSAMBLU") || upper.includes("COMPLEX") || upper.includes("🏢")) return "dezvoltator";
   return "proprietar";
 }
+
+type ImportWorkflow = "smart" | "quick-review" | "owner-contact" | "investment" | "hospitality" | "media-needed" | "seo-ready" | "active";
+
+interface ImportLeadOptions {
+  listingType?: string;
+  activate?: boolean;
+  verification?: "standard" | "full";
+  workflow?: ImportWorkflow;
+}
+
+const IMPORT_WORKFLOW_LABELS: Record<ImportWorkflow, string> = {
+  smart: "Draft inteligent",
+  "quick-review": "Revizie rapidă",
+  "owner-contact": "Contact proprietar prioritar",
+  investment: "Analiză investiție",
+  hospitality: "Pregătire regim hotelier",
+  "media-needed": "Necesită poze/verificare",
+  "seo-ready": "Draft SEO-ready",
+  active: "Import activ",
+};
 
 const ScraperLeads = () => {
   const { language } = useLanguage();
