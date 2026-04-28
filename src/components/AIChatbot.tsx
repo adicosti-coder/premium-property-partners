@@ -1103,7 +1103,7 @@ const AIChatbot = () => {
                 )}
 
                 {/* ─── Premium Input ─── */}
-                <div className="p-5 border-t border-border/30 bg-muted/10 backdrop-blur-sm">
+                  <div className="p-3 md:p-5 border-t border-border/30 bg-muted/10 backdrop-blur-sm">
                   {/* Attached image preview */}
                   {attachedImage && (
                     <div className="mb-3 relative inline-block">
@@ -1134,14 +1134,13 @@ const AIChatbot = () => {
 
                   <div className="flex gap-2 items-center">
                     {/* Camera button */}
-                    <label className="cursor-pointer h-14 w-14 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0">
+                    <label className="cursor-pointer h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0" aria-label={language === "ro" ? "Atașează fotografie pentru analiză" : "Attach photo for analysis"}>
                       <Camera className="w-5 h-5 text-primary" />
                       <input
                         ref={fileInputRef}
                         type="file"
                         hidden
                         accept="image/*"
-                        capture="environment"
                         onChange={handleImageUpload}
                       />
                     </label>
@@ -1155,7 +1154,7 @@ const AIChatbot = () => {
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12 text-foreground placeholder:text-muted-foreground"
+                        className="h-12 md:h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12 text-foreground placeholder:text-muted-foreground"
                         disabled={isLoading}
                         maxLength={2000}
                       />
@@ -1163,7 +1162,7 @@ const AIChatbot = () => {
                     </div>
                     <Button
                       size="icon"
-                      className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform"
+                      className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform shrink-0"
                       onClick={() => handleSend()}
                       disabled={(!input.trim() && !attachedImage) || isLoading}
                     >
@@ -1171,16 +1170,16 @@ const AIChatbot = () => {
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between mt-3 px-2">
+                  <div className="flex items-center justify-between mt-3 px-1 md:px-2 gap-2">
                     <div className="flex items-center gap-2 opacity-40">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-bold uppercase tracking-widest">Secured</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-[10px] text-muted-foreground">{input.length}/2000</span>
                       <span className="text-muted-foreground/30 mx-1">·</span>
                       <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-                      <span className="text-[10px] font-bold text-primary">{text.power}</span>
+                      <span className="text-[10px] font-bold text-primary truncate">{text.power}</span>
                     </div>
                   </div>
                 </div>
