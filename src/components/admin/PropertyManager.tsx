@@ -276,7 +276,30 @@ export default function PropertyManager() {
         .order("display_order", { ascending: true });
 
       if (error) throw error;
-      setProperties(data || []);
+      const rows = data || [];
+      const ids = rows.map((property) => property.id);
+      const contactsByPropertyId = new Map<string, Pick<Property, "contact_name" | "contact_phone" | "contact_email">>();
+
+      if (ids.length > 0) {
+        const { data: contactRows, error: contactsError } = await supabase
+          .from("property_contact_details" as any)
+          .select("property_id, contact_name, contact_phone, contact_email")
+          .in("property_id", ids);
+        if (contactsError) throw contactsError;
+
+        (contactRows || []).forEach((contact: any) => {
+          contactsByPropertyId.set(contact.property_id, {
+            contact_name: contact.contact_name,
+            contact_phone: contact.contact_phone,
+            contact_email: contact.contact_email,
+          });
+        });
+      }
+
+      setProperties(rows.map((property) => ({
+        ...property,
+        ...(contactsByPropertyId.get(property.id) || {}),
+      })));
     } catch (error) {
       console.error("Error fetching properties:", error);
       toast({
