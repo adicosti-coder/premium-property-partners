@@ -59,6 +59,8 @@ interface ConciergeListingCard {
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
 const STORAGE_KEY = "apart_ai_chat_v37";
 
+const cleanCardValue = (value?: string) => value?.replace(/[*_`]/g, "").replace(/^[:\s-]+/, "").trim();
+
 const parseConciergeListingCards = (content: string): { text: string; cards: ConciergeListingCard[] } => {
   const cards: ConciergeListingCard[] = [];
   const realTrustUrl = /https:\/\/(?:www\.)?realtrust\.ro\/proprietate\/[^\s)]+/i;
@@ -73,13 +75,13 @@ const parseConciergeListingCards = (content: string): { text: string; cards: Con
       .trim();
     const [identity = "", ...details] = readableLine.split("|").map((part) => part.trim()).filter(Boolean);
     const [rawName, rawLocation] = identity.split(/\s+[–—-]\s+/);
-    const roi = details.find((part) => /roi|randament/i.test(part))?.replace(/^(roi|roi estimat|randament estimat)\s*:\s*/i, "");
-    const revenue = details.find((part) => /venit/i.test(part))?.replace(/^(venit|venit estimat)\s*:\s*/i, "");
-    const badge = details.find((part) => /badge|verificat|premium|portofoliu/i.test(part))?.replace(/^badge\s*:\s*/i, "") || "Verificat RealTrust";
+    const roi = cleanCardValue(details.find((part) => /roi|randament/i.test(part))?.replace(/^(roi|roi estimat|randament estimat)\s*:?\s*/i, ""));
+    const revenue = cleanCardValue(details.find((part) => /venit/i.test(part))?.replace(/^(venit|venit estimat)\s*:?\s*/i, ""));
+    const badge = cleanCardValue(details.find((part) => /badge|verificat|premium|portofoliu/i.test(part))?.replace(/^badge\s*:?\s*/i, "")) || "Verificat RealTrust";
 
     cards.push({
-      name: rawName?.replace(/[*_`]/g, "").trim() || "Proprietate RealTrust",
-      location: rawLocation?.replace(/[*_`]/g, "").trim() || "Timișoara",
+      name: cleanCardValue(rawName) || "Proprietate RealTrust",
+      location: cleanCardValue(rawLocation) || "Timișoara",
       roi,
       revenue,
       badge,
