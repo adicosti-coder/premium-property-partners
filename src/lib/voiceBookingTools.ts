@@ -268,24 +268,17 @@ const search_local_guide = async (params: { category?: string; query?: string })
 
 const get_guest_guide = async (params: { booking_id?: string; property_name?: string }) => {
   try {
-    let query = supabase
-      .from("guest_guides")
-      .select("*")
-      .limit(1);
-
-    if (params.booking_id) {
-      query = query.eq("booking_id", params.booking_id);
-    } else if (params.property_name) {
-      query = query.ilike("property_name", `%${params.property_name}%`);
-    } else {
+    if (!params.booking_id) {
       return "Vă rog să specificați numele proprietății sau ID-ul rezervării pentru a accesa ghidul de oaspete.";
     }
 
-    const { data, error } = await query;
+    const { data, error } = await supabase.functions.invoke("guest-guide", {
+      body: { bookingId: params.booking_id },
+    });
     if (error) return `Eroare: ${error.message}`;
-    if (!data?.length) return "Nu am găsit un ghid de oaspete pentru această proprietate. Contactați-ne pe WhatsApp la +40770635252.";
+    if (!data?.guide) return "Nu am găsit un ghid de oaspete pentru această rezervare. Contactați-ne pe WhatsApp la +40770635252.";
 
-    const g = data[0];
+    const g = data.guide;
     const parts = [`Ghid oaspete — ${g.property_name}`];
     
     if (g.check_in_date && g.check_out_date) {
