@@ -161,8 +161,8 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
   }
   if (path.startsWith("/imobiliare")) {
     return lang === "ro"
-      ? ["🏗️ Ce proprietăți noi sunt disponibile?", "💰 Simulare randament investiție", "🔑 Caut apartament cu potențial STR", "📞 Programează consultanță gratuită"]
-      : ["🏗️ What new properties are available?", "💰 Investment yield simulation", "🔑 Looking for STR-potential apartment", "📞 Schedule free consultation"];
+      ? ["🏗️ Portofoliu investițional verificat", "💰 Simulare randament investiție", "🔑 Caut apartament cu potențial STR", "📞 Consultanță RealTrust"]
+      : ["🏗️ Verified investment portfolio", "💰 Investment yield simulation", "🔑 Looking for STR-potential apartment", "📞 RealTrust advisory"];
   }
   // Default — Hub / Homepage
   return lang === "ro"
@@ -227,9 +227,9 @@ const AIChatbot = () => {
     ro: {
       title: "Digital Concierge",
       status: "Disponibil 24/7",
-      greeting: "Bună ziua! Sunt Concierge-ul dumneavoastră Digital de la **RealTrust & ApArt Hotel Timișoara**. 🏠✨\n\nAm acces la **date în timp real** și instrumente dedicate:\n\n📅 **Disponibilitate live** — verific instant apartamentele libere\n💰 **Simulare ROI personalizată** — randament, comparație cu chiria clasică\n📸 **Evaluare proprietate** — trimiteți fotografii, primiti scor & recomandări\n🗓️ **Programare vizită** — organizez vizionarea automat\n🍽️ **Ghid local premium** — restaurante, atracții, sfaturi din experiență\n🏷️ **Cod discount DIRECT5** — 5% reducere la rezervare directă\n\nCu ce vă pot fi de folos astăzi?",
-      placeholder: "Întrebați orice despre cazare, investiții, Timișoara...",
-      power: "AI Agent · Live Data",
+      greeting: "Bună ziua! Sunt **Digital Concierge RealTrust & ApArt Hotel**. 🏛️✨\n\nVă pot ajuta rapid cu:\n\n📅 **Disponibilitate live** pentru cazare\n📈 **Portofoliu investițional verificat RealTrust**\n💰 **Simulare ROI** și comparație cu chiria clasică\n📸 **HostScan** — analiză din fotografii\n🗓️ **Programare consultanță sau vizionare**\n\nRecomand doar proprietăți administrate, verificate sau curate editorial de RealTrust — nu marketplace-uri și nu anunțuri externe neverificate.",
+      placeholder: "Întrebați despre cazare, ROI sau portofoliu verificat...",
+      power: "Verified AI · Live Data",
       quickActions: getContextualQuickActions("ro"),
       error: "A apărut o eroare. Te rog încearcă din nou.",
       errorNetwork: "Conexiune întreruptă. Verifică internetul.",
@@ -246,9 +246,9 @@ const AIChatbot = () => {
     en: {
       title: "Digital Concierge",
       status: "Available 24/7",
-      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**! 🏠✨ I'm your premium Digital Concierge.\n\nI have access to **real-time data** and dedicated tools:\n\n📅 **Live Availability** — instantly check free apartments\n💰 **Personalized ROI Simulation** — yield analysis vs. classic rent\n📸 **Property Evaluation** — send photos, get a score & recommendations\n🗓️ **Schedule a Visit** — I'll arrange the viewing automatically\n🍽️ **Premium Local Guide** — restaurants, attractions & insider tips\n🏷️ **Discount code DIRECT5** — 5% off direct bookings\n\nHow may I assist you today?",
-      placeholder: "Ask about accommodation, investments, Timișoara...",
-      power: "AI Agent · Live Data",
+      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**. 🏛️✨ I'm your premium Digital Concierge.\n\nI can help with **live availability**, **verified RealTrust investment listings**, **ROI simulations**, **photo-based HostScan**, and **private advisory scheduling**.\n\nI only recommend managed, verified, or editorially curated RealTrust opportunities — no external marketplaces or unverified owner ads.",
+      placeholder: "Ask about stays, ROI or verified listings...",
+      power: "Verified AI · Live Data",
       quickActions: getContextualQuickActions("en"),
       error: "An error occurred. Please try again.",
       errorNetwork: "Connection lost. Check your internet.",
