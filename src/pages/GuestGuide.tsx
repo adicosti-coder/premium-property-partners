@@ -77,13 +77,11 @@ const GuestGuide = () => {
   const { data: guide, isLoading, error } = useQuery({
     queryKey: ["guest-guide", bookingId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("guest_guides")
-        .select("*")
-        .eq("booking_id", bookingId!)
-        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke("guest-guide", {
+        body: { bookingId },
+      });
       if (error) throw error;
-      return data;
+      return data?.guide ?? null;
     },
     enabled: !!bookingId,
   });

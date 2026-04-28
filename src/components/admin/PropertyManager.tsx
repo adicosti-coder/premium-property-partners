@@ -218,6 +218,30 @@ export default function PropertyManager() {
     }
   }, [formData.base_price_per_night, formData.capital_necesar, formData.listing_type, calculateROI]);
 
+  const savePropertyContactDetails = async (propertyId: string, data: PropertyFormData) => {
+    const hasContact = data.contact_name || data.contact_phone || data.contact_email;
+    const contactPayload = {
+      property_id: propertyId,
+      contact_name: data.contact_name || null,
+      contact_phone: data.contact_phone || null,
+      contact_email: data.contact_email || null,
+    };
+
+    if (hasContact) {
+      const { error } = await supabase
+        .from("property_contact_details" as any)
+        .upsert(contactPayload as any, { onConflict: "property_id" });
+      if (error) throw error;
+      return;
+    }
+
+    const { error } = await supabase
+      .from("property_contact_details" as any)
+      .delete()
+      .eq("property_id", propertyId);
+    if (error) throw error;
+  };
+
   const handleTranslateToEN = async () => {
     if (!formData.description_ro) {
       toast({ title: "Completează mai întâi Descrierea RO", variant: "destructive" });
@@ -252,7 +276,30 @@ export default function PropertyManager() {
         .order("display_order", { ascending: true });
 
       if (error) throw error;
-      setProperties(data || []);
+      const rows = data || [];
+      const ids = rows.map((property) => property.id);
+      const contactsByPropertyId = new Map<string, Pick<Property, "contact_name" | "contact_phone" | "contact_email">>();
+
+      if (ids.length > 0) {
+        const { data: contactRows, error: contactsError } = await supabase
+          .from("property_contact_details" as any)
+          .select("property_id, contact_name, contact_phone, contact_email")
+          .in("property_id", ids);
+        if (contactsError) throw contactsError;
+
+        (contactRows || []).forEach((contact: any) => {
+          contactsByPropertyId.set(contact.property_id, {
+            contact_name: contact.contact_name,
+            contact_phone: contact.contact_phone,
+            contact_email: contact.contact_email,
+          });
+        });
+      }
+
+      setProperties(rows.map((property) => ({
+        ...property,
+        ...(contactsByPropertyId.get(property.id) || {}),
+      })));
     } catch (error) {
       console.error("Error fetching properties:", error);
       toast({
@@ -349,7 +396,7 @@ export default function PropertyManager() {
         .map((f) => f.trim())
         .filter((f) => f.length > 0);
 
-      const { error } = await supabase.from("properties").insert({
+      const { data: insertedProperty, error } = await supabase.from("properties").insert({
         name: formData.name,
         location: formData.location,
         description_ro: formData.description_ro,
@@ -380,9 +427,10 @@ export default function PropertyManager() {
         expert_insight_ro: formData.expert_insight_ro || null,
         expert_insight_en: formData.expert_insight_en || null,
         ...premiumFields,
-      });
+      }).select("id").single();
 
       if (error) throw error;
+      if (insertedProperty?.id) await savePropertyContactDetails(insertedProperty.id, formData);
 
       setSaveSuccess(true);
       toast({ title: "✅ Proprietate adăugată cu succes!" });
@@ -465,6 +513,7 @@ export default function PropertyManager() {
         .eq("id", editingProperty.id);
 
       if (error) throw error;
+      await savePropertyContactDetails(editingProperty.id, formData);
 
       setSaveSuccess(true);
       toast({ title: "✅ Proprietate actualizată cu succes!" });
