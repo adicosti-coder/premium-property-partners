@@ -130,6 +130,62 @@ export async function checkAvailability(args: {
   });
 }
 
+// ─── TOOL: RealTrust Investment Listings ────────────────────
+
+export async function getInvestmentListings(args: {
+  max_results?: number;
+  zone?: string;
+  min_roi?: number;
+}): Promise<string> {
+  const sb = getSupabase();
+  const limit = Math.min(Math.max(args.max_results || 5, 1), 8);
+
+  let query = sb
+    .from("properties")
+    .select("name, slug, listing_type, location, bedrooms, rooms, size, estimated_revenue, roi_percentage, tag")
+    .eq("is_active", true)
+    .in("listing_type", ["investitie", "vanzare"])
+    .order("display_order")
+    .limit(limit);
+
+  if (args.zone?.trim()) {
+    query = query.ilike("location", `%${args.zone.trim()}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("getInvestmentListings error:", error);
+    return JSON.stringify({ listings: [], message: "Nu pot încărca portofoliul în acest moment. Recomand consultanță directă prin WhatsApp." });
+  }
+
+  const minRoi = typeof args.min_roi === "number" ? args.min_roi : null;
+  const listings = (data || [])
+    .filter((p: any) => {
+      if (minRoi === null) return true;
+      const roi = Number.parseFloat(String(p.roi_percentage || "").replace(",", "."));
+      return Number.isFinite(roi) && roi >= minRoi;
+    })
+    .slice(0, limit)
+    .map((p: any) => ({
+      name: p.name,
+      location: p.location,
+      rooms: p.rooms || p.bedrooms || null,
+      size_sqm: p.size || null,
+      estimated_revenue: p.estimated_revenue || null,
+      roi: p.roi_percentage || null,
+      badge: p.tag || "Portofoliu RealTrust",
+      url: `https://www.realtrust.ro/proprietate/${p.slug}`,
+      source_note: "Listare verificată/curată editorial de RealTrust — nu promovată ca anunț direct de la proprietar.",
+    }));
+
+  return JSON.stringify({
+    portfolio: "RealTrust verified investment listings",
+    policy: "Recomandă doar linkurile RealTrust returnate aici. Nu folosi expresia «de la proprietari» și nu trimite către marketplace-uri externe.",
+    listings,
+    fallback: "Pentru selecție personalizată: https://wa.me/40799069256",
+  });
+}
+
 /** Fallback: check local bookings table for conflicts (handles property_id as numeric property_code) */
 async function checkBookingsLocal(
   sb: ReturnType<typeof getSupabase>,
@@ -424,6 +480,21 @@ export const TOOL_DEFINITIONS = [
   {
     type: "function" as const,
     function: {
+      name: "get_investment_listings",
+      description: "Return verified RealTrust investment/sale listing links. Use when the user asks what new properties, apartments, listings, investment opportunities, or properties for sale are available. Never present them as direct owner ads.",
+      parameters: {
+        type: "object",
+        properties: {
+          max_results: { type: "number", description: "Maximum number of listings to return, between 1 and 8" },
+          zone: { type: "string", description: "Optional neighborhood/zone filter in Timișoara" },
+          min_roi: { type: "number", description: "Optional minimum ROI percentage" },
+        },
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
       name: "calculate_roi",
       description: "Calculate investment ROI, monthly/yearly profit, and comparison with classic rent. Use when user asks about investment returns, profit estimates, or property yield.",
       parameters: {
@@ -486,6 +557,8 @@ export async function executeTool(
   switch (name) {
     case "check_availability":
       return await checkAvailability(args);
+    case "get_investment_listings":
+      return await getInvestmentListings(args as Parameters<typeof getInvestmentListings>[0]);
     case "calculate_roi":
       return calculateROI(args as Parameters<typeof calculateROI>[0]);
     case "schedule_viewing":
