@@ -47,8 +47,97 @@ interface QualificationData {
   zone: string;
 }
 
+interface ConciergeListingCard {
+  name: string;
+  location: string;
+  roi?: string;
+  revenue?: string;
+  badge: string;
+  url: string;
+}
+
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
 const STORAGE_KEY = "apart_ai_chat_v37";
+
+const parseConciergeListingCards = (content: string): { text: string; cards: ConciergeListingCard[] } => {
+  const cards: ConciergeListingCard[] = [];
+  const realTrustUrl = /https:\/\/(?:www\.)?realtrust\.ro\/proprietate\/[^\s)]+/i;
+  const keptLines = content.split("\n").filter((line) => {
+    const url = line.match(realTrustUrl)?.[0];
+    if (!url || !/(link realtrust|realtrust|roi|venit|randament)/i.test(line)) return true;
+
+    const readableLine = line
+      .replace(/^\s*[-*•]\s*/, "")
+      .replace(/\[[^\]]+\]\([^)]*\)/g, "")
+      .replace(realTrustUrl, "")
+      .trim();
+    const [identity = "", ...details] = readableLine.split("|").map((part) => part.trim()).filter(Boolean);
+    const [rawName, rawLocation] = identity.split(/\s+[–—-]\s+/);
+    const roi = details.find((part) => /roi|randament/i.test(part))?.replace(/^(roi|roi estimat|randament estimat)\s*:\s*/i, "");
+    const revenue = details.find((part) => /venit/i.test(part))?.replace(/^(venit|venit estimat)\s*:\s*/i, "");
+    const badge = details.find((part) => /badge|verificat|premium|portofoliu/i.test(part))?.replace(/^badge\s*:\s*/i, "") || "Verificat RealTrust";
+
+    cards.push({
+      name: rawName?.replace(/[*_`]/g, "").trim() || "Proprietate RealTrust",
+      location: rawLocation?.replace(/[*_`]/g, "").trim() || "Timișoara",
+      roi,
+      revenue,
+      badge,
+      url,
+    });
+
+    return false;
+  });
+
+  return { text: keptLines.join("\n").replace(/\n{3,}/g, "\n\n").trim(), cards };
+};
+
+const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => {
+  if (!cards.length) return null;
+
+  return (
+    <div className="mt-3 grid gap-2.5">
+      {cards.map((card) => (
+        <article key={`${card.name}-${card.url}`} className="rounded-xl border border-border/50 bg-card p-3 shadow-sm">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold leading-snug text-foreground">{card.name}</h3>
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <span className="truncate">{card.location}</span>
+              </div>
+            </div>
+            <span className="shrink-0 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              {card.badge}
+            </span>
+          </div>
+
+          {(card.roi || card.revenue) && (
+            <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg bg-muted/60 px-2 py-1.5">
+                <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">ROI</span>
+                <strong className="text-foreground">{card.roi || "La cerere"}</strong>
+              </div>
+              <div className="rounded-lg bg-muted/60 px-2 py-1.5">
+                <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">Venit</span>
+                <strong className="text-foreground">{card.revenue || "Estimare privată"}</strong>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Button asChild size="sm" variant="outline" className="h-9 px-2 text-xs">
+              <a href={card.url} target="_blank" rel="noopener noreferrer">Link RealTrust</a>
+            </Button>
+            <Button asChild size="sm" className="h-9 px-2 text-xs">
+              <a href="https://www.realtrust.ro/contact" target="_blank" rel="noopener noreferrer">Consultanță</a>
+            </Button>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+};
 
 // --- Voice Wave Visualizer ---
 const VoiceWave = () => (
@@ -89,44 +178,51 @@ const VoiceVisualizer = ({ isActive, isSpeaking }: { isActive: boolean; isSpeaki
 
 // --- Premium Markdown Renderer ---
 const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStreaming?: boolean }>(
-  ({ content, isStreaming }, ref) => (
-    <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[1.6] tracking-tight">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground/90">{children}</p>,
-          strong: ({ children }) => <strong className="font-bold text-primary bg-primary/5 px-1 rounded">{children}</strong>,
-          a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline inline-flex items-center gap-0.5">
-              {children} <ExternalLink className="w-3 h-3" />
-            </a>
-          ),
-          ul: ({ children }) => <ul className="list-disc ml-4 mb-3 space-y-1">{children}</ul>,
-          ol: ({ children }) => <ol className="list-decimal ml-4 mb-3 space-y-1">{children}</ol>,
-          li: ({ children }) => <li className="ml-2">{children}</li>,
-          code: ({ children }) => (
-            <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
-          ),
-          h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
-          table: ({ children }) => <div className="my-3 w-full overflow-x-auto rounded-lg border border-border/40"><table className="min-w-[520px] w-full border-collapse text-xs">{children}</table></div>,
-          thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
-          th: ({ children }) => <th className="px-2 py-1.5 text-left font-semibold border border-border/50">{children}</th>,
-          td: ({ children }) => <td className="px-2 py-1.5 border border-border/50">{children}</td>,
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-      {isStreaming && (
-        <motion.span 
-          animate={{ opacity: [0, 1, 0] }} 
-          transition={{ repeat: Infinity, duration: 0.8 }} 
-          className="inline-block w-2 h-4 bg-primary/60 ml-1 rounded-sm align-middle" 
-        />
-      )}
-    </div>
-  )
+  ({ content, isStreaming }, ref) => {
+    const { text, cards } = parseConciergeListingCards(content);
+
+    return (
+      <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[1.6] tracking-tight">
+        {text && (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground/90">{children}</p>,
+              strong: ({ children }) => <strong className="font-bold text-primary bg-primary/5 px-1 rounded">{children}</strong>,
+              a: ({ href, children }) => (
+                <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline inline-flex items-center gap-0.5">
+                  {children} <ExternalLink className="w-3 h-3" />
+                </a>
+              ),
+              ul: ({ children }) => <ul className="list-disc ml-4 mb-3 space-y-1">{children}</ul>,
+              ol: ({ children }) => <ol className="list-decimal ml-4 mb-3 space-y-1">{children}</ol>,
+              li: ({ children }) => <li className="ml-2">{children}</li>,
+              code: ({ children }) => (
+                <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
+              ),
+              h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+              h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+              h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+              table: ({ children }) => <div className="my-3 w-full overflow-x-auto rounded-lg border border-border/40"><table className="min-w-[520px] w-full border-collapse text-xs">{children}</table></div>,
+              thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
+              th: ({ children }) => <th className="px-2 py-1.5 text-left font-semibold border border-border/50">{children}</th>,
+              td: ({ children }) => <td className="px-2 py-1.5 border border-border/50">{children}</td>,
+            }}
+          >
+            {text}
+          </ReactMarkdown>
+        )}
+        <ConciergeListingCards cards={cards} />
+        {isStreaming && (
+          <motion.span 
+            animate={{ opacity: [0, 1, 0] }} 
+            transition={{ repeat: Infinity, duration: 0.8 }} 
+            className="inline-block w-2 h-4 bg-primary/60 ml-1 rounded-sm align-middle" 
+          />
+        )}
+      </div>
+    );
+  }
 ));
 MarkdownContent.displayName = "MarkdownContent";
 
