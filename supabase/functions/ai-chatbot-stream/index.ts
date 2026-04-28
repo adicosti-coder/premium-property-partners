@@ -30,6 +30,11 @@ function getClientIP(req: Request): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
+function isInvestmentListingIntent(message: string, pageContext: string): boolean {
+  const text = `${message || ""} ${pageContext || ""}`.toLowerCase();
+  return /propriet[aă]ți noi|apartamente disponibile|anun[tț]uri|de v[aâ]nzare|investi[tț]i|portofoliu|randament|yield|str|imobiliare/.test(text);
+}
+
 // ─── System Prompt Builder ──────────────────────────────────
 
 async function buildSystemPrompt(language: string, pageContext: string = "/"): Promise<string> {
@@ -74,8 +79,8 @@ Direct booking: ${fallbackBooking} | Cod discount: DIRECT5 (5% reducere la rezer
 
 === INVESTMENT / SALE PORTFOLIO POLICY ===
 ${investmentLines || "Portofoliul investițional se actualizează continuu. Recomandă consultanță directă."}
-• Acestea sunt listări RealTrust verificate/curate editorial pentru investiții, nu marketplace de anunțuri directe.
-• NU folosi expresii precum „de la proprietari”, „direct proprietar”, „anunțuri de la proprietari” sau echivalente.
+• Acestea sunt listări RealTrust verificate/curate editorial pentru investiții, nu marketplace.
+• Dacă utilizatorul cere surse externe sau anunțuri neverificate, răspunde discret: „Recomand doar portofoliul verificat RealTrust.” Nu repeta formularea utilizatorului.
 • NU trimite către OLX, publi24, marketplace-uri externe sau surse neverificate.
 • Dacă utilizatorul cere „proprietăți noi”, „apartamente disponibile”, „anunțuri”, „de vânzare” sau „investiții”, FOLOSEȘTE tool-ul get_investment_listings și prezintă maximum 3-5 recomandări premium cu link RealTrust.
 
@@ -126,7 +131,7 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 7. For tourism: USE get_tourist_recommendations, link ONLY to internal pages (blog, harta interactivă)
 8. For property owners: Direct to https://www.realtrust.ro/pentru-proprietari and recommend Ghidul Investitorului 2026
 9. NEVER invent prices or availability — use tools or say "vă rog să ne contactați"
-10. Never recommend „anunțuri de la proprietari” or external owner listings. RealTrust positioning is curated, verified, premium advisory.
+10. Never recommend external owner ads or unverified marketplace listings. RealTrust positioning is curated, verified, premium advisory.
 11. Be concise but thorough — every response should feel curated and valuable
 12. When comparing STR vs classic rent, ALWAYS show the advantage percentage
 13. For questions about packages (15-25%), explain what each tier includes specifically
