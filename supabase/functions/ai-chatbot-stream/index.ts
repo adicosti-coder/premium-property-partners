@@ -211,6 +211,7 @@ serve(async (req) => {
     }
 
     let systemPrompt = await buildSystemPrompt(language, pageContext);
+    const forceInvestmentListings = isInvestmentListingIntent(message || "", pageContext);
 
     // Enhance system prompt with qualification context and HostScan capabilities
     if (qualificationContext) {
@@ -267,7 +268,25 @@ When you complete a full property analysis, include a structured report at the e
 
     // ─── Step 1: Initial call with tools (non-streaming) ────
 
-    const initialResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    let initialResponse: Response;
+
+    if (forceInvestmentListings && !allImages.length) {
+      initialResponse = new Response(JSON.stringify({
+        choices: [{
+          finish_reason: "tool_calls",
+          message: {
+            role: "assistant",
+            content: null,
+            tool_calls: [{
+              id: "forced_get_investment_listings",
+              type: "function",
+              function: { name: "get_investment_listings", arguments: JSON.stringify({ max_results: 5 }) },
+            }],
+          },
+        }],
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
+    } else {
+      initialResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -281,7 +300,8 @@ When you complete a full property analysis, include a structured report at the e
         tools: TOOL_DEFINITIONS,
         stream: false,
       }),
-    });
+      });
+    }
 
     if (!initialResponse.ok) {
       const status = initialResponse.status;
@@ -325,6 +345,14 @@ When you complete a full property analysis, include a structured report at the e
         choice.message,
         ...toolResults,
       ];
+      if (forceInvestmentListings) {
+        finalMessages.splice(1, 0, {
+          role: "system",
+          content: language === "ro"
+            ? "Răspuns obligatoriu: folosește exclusiv datele din tool. Nu inventa proprietăți, zone, ROI sau linkuri. Nu menționa și nu recomanda anunțuri externe/marketplace. Nu repeta formulări despre proprietari externi. Prezintă maximum 5 listări într-un format compact premium, cu link RealTrust și CTA de consultanță."
+            : "Mandatory response: use only tool data. Do not invent properties, zones, ROI, or links. Do not mention or recommend external marketplaces. Present up to 5 listings in a compact premium format with RealTrust links and an advisory CTA."
+        });
+      }
 
       const streamResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
