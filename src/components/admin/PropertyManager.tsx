@@ -396,7 +396,7 @@ export default function PropertyManager() {
         .map((f) => f.trim())
         .filter((f) => f.length > 0);
 
-      const { error } = await supabase.from("properties").insert({
+      const { data: insertedProperty, error } = await supabase.from("properties").insert({
         name: formData.name,
         location: formData.location,
         description_ro: formData.description_ro,
@@ -427,9 +427,10 @@ export default function PropertyManager() {
         expert_insight_ro: formData.expert_insight_ro || null,
         expert_insight_en: formData.expert_insight_en || null,
         ...premiumFields,
-      });
+      }).select("id").single();
 
       if (error) throw error;
+      if (insertedProperty?.id) await savePropertyContactDetails(insertedProperty.id, formData);
 
       setSaveSuccess(true);
       toast({ title: "✅ Proprietate adăugată cu succes!" });
@@ -512,6 +513,7 @@ export default function PropertyManager() {
         .eq("id", editingProperty.id);
 
       if (error) throw error;
+      await savePropertyContactDetails(editingProperty.id, formData);
 
       setSaveSuccess(true);
       toast({ title: "✅ Proprietate actualizată cu succes!" });
