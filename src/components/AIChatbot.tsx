@@ -110,7 +110,7 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
           h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
           h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
           h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
-          table: ({ children }) => <table className="w-full border-collapse text-xs my-3 rounded-lg overflow-hidden">{children}</table>,
+          table: ({ children }) => <div className="my-3 w-full overflow-x-auto rounded-lg border border-border/40"><table className="min-w-[520px] w-full border-collapse text-xs">{children}</table></div>,
           thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
           th: ({ children }) => <th className="px-2 py-1.5 text-left font-semibold border border-border/50">{children}</th>,
           td: ({ children }) => <td className="px-2 py-1.5 border border-border/50">{children}</td>,
@@ -161,8 +161,8 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
   }
   if (path.startsWith("/imobiliare")) {
     return lang === "ro"
-      ? ["🏗️ Ce proprietăți noi sunt disponibile?", "💰 Simulare randament investiție", "🔑 Caut apartament cu potențial STR", "📞 Programează consultanță gratuită"]
-      : ["🏗️ What new properties are available?", "💰 Investment yield simulation", "🔑 Looking for STR-potential apartment", "📞 Schedule free consultation"];
+      ? ["🏗️ Portofoliu investițional verificat", "💰 Simulare randament investiție", "🔑 Caut apartament cu potențial STR", "📞 Consultanță RealTrust"]
+      : ["🏗️ Verified investment portfolio", "💰 Investment yield simulation", "🔑 Looking for STR-potential apartment", "📞 RealTrust advisory"];
   }
   // Default — Hub / Homepage
   return lang === "ro"
@@ -227,9 +227,9 @@ const AIChatbot = () => {
     ro: {
       title: "Digital Concierge",
       status: "Disponibil 24/7",
-      greeting: "Bună ziua! Sunt Concierge-ul dumneavoastră Digital de la **RealTrust & ApArt Hotel Timișoara**. 🏠✨\n\nAm acces la **date în timp real** și instrumente dedicate:\n\n📅 **Disponibilitate live** — verific instant apartamentele libere\n💰 **Simulare ROI personalizată** — randament, comparație cu chiria clasică\n📸 **Evaluare proprietate** — trimiteți fotografii, primiti scor & recomandări\n🗓️ **Programare vizită** — organizez vizionarea automat\n🍽️ **Ghid local premium** — restaurante, atracții, sfaturi din experiență\n🏷️ **Cod discount DIRECT5** — 5% reducere la rezervare directă\n\nCu ce vă pot fi de folos astăzi?",
-      placeholder: "Întrebați orice despre cazare, investiții, Timișoara...",
-      power: "AI Agent · Live Data",
+      greeting: "Bună ziua! Sunt **Digital Concierge RealTrust & ApArt Hotel**. 🏛️✨\n\nVă pot ajuta rapid cu:\n\n📅 **Disponibilitate live** pentru cazare\n📈 **Portofoliu investițional verificat RealTrust**\n💰 **Simulare ROI** și comparație cu chiria clasică\n📸 **HostScan** — analiză din fotografii\n🗓️ **Programare consultanță sau vizionare**\n\nRecomand doar proprietăți administrate, verificate sau curate editorial de RealTrust — nu marketplace-uri și nu anunțuri externe neverificate.",
+      placeholder: "Întrebați despre cazare, ROI sau portofoliu verificat...",
+      power: "Verified AI · Live Data",
       quickActions: getContextualQuickActions("ro"),
       error: "A apărut o eroare. Te rog încearcă din nou.",
       errorNetwork: "Conexiune întreruptă. Verifică internetul.",
@@ -246,9 +246,9 @@ const AIChatbot = () => {
     en: {
       title: "Digital Concierge",
       status: "Available 24/7",
-      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**! 🏠✨ I'm your premium Digital Concierge.\n\nI have access to **real-time data** and dedicated tools:\n\n📅 **Live Availability** — instantly check free apartments\n💰 **Personalized ROI Simulation** — yield analysis vs. classic rent\n📸 **Property Evaluation** — send photos, get a score & recommendations\n🗓️ **Schedule a Visit** — I'll arrange the viewing automatically\n🍽️ **Premium Local Guide** — restaurants, attractions & insider tips\n🏷️ **Discount code DIRECT5** — 5% off direct bookings\n\nHow may I assist you today?",
-      placeholder: "Ask about accommodation, investments, Timișoara...",
-      power: "AI Agent · Live Data",
+      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**. 🏛️✨ I'm your premium Digital Concierge.\n\nI can help with **live availability**, **verified RealTrust investment listings**, **ROI simulations**, **photo-based HostScan**, and **private advisory scheduling**.\n\nI only recommend managed, verified, or editorially curated RealTrust opportunities — no external marketplaces or unverified owner ads.",
+      placeholder: "Ask about stays, ROI or verified listings...",
+      power: "Verified AI · Live Data",
       quickActions: getContextualQuickActions("en"),
       error: "An error occurred. Please try again.",
       errorNetwork: "Connection lost. Check your internet.",
@@ -715,10 +715,10 @@ const AIChatbot = () => {
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
-              "fixed z-50 bg-card/95 backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden transition-all duration-500",
+              "fixed z-50 bg-card/98 backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
               isMinimized
                 ? "bottom-8 right-8 w-72 h-16 rounded-full"
-                : "bottom-4 right-2 md:right-4 left-2 md:left-auto w-auto md:w-[450px] h-[80vh] md:h-[700px] rounded-[2rem]"
+                : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-2 md:right-4 left-2 md:left-auto w-auto md:w-[450px] h-[min(82vh,720px)] md:h-[700px] rounded-[1.75rem]"
             )}
           >
             {/* Stream Progress Bar */}
@@ -732,11 +732,11 @@ const AIChatbot = () => {
             )}
 
             {/* ─── Premium Header ─── */}
-            <div className="p-5 border-b border-border/30 flex items-center justify-between shrink-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
-              <div className="flex items-center gap-4">
+            <div className="px-4 py-3 md:p-5 border-b border-border/30 flex items-center justify-between shrink-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="relative">
                   <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg",
+                    "w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border shadow-lg",
                     voiceMode
                       ? "bg-accent/20 border-accent/30"
                       : "bg-primary/20 border-primary/30"
@@ -746,8 +746,8 @@ const AIChatbot = () => {
                   <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent border-[3px] border-card rounded-full" />
                 </div>
                 {!isMinimized && (
-                  <div>
-                    <h3 className="font-bold text-base tracking-tight text-foreground">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-sm md:text-base tracking-tight text-foreground truncate">
                       {voiceMode ? text.voiceModeActive : text.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -820,8 +820,8 @@ const AIChatbot = () => {
             {/* ─── Chat Body ─── */}
             {!isMinimized && !voiceMode && (
               <>
-                <ScrollArea className="flex-1 p-5" ref={scrollRef}>
-                  <div className="space-y-6">
+                <ScrollArea className="flex-1 px-3 py-4 md:p-5" ref={scrollRef}>
+                  <div className="space-y-5">
                     {/* Empty state */}
                     {messages.length === 0 && (
                       <div className="text-center py-12 space-y-6">
@@ -838,16 +838,16 @@ const AIChatbot = () => {
                         key={m.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={cn("flex gap-4 group", m.role === "user" ? "flex-row-reverse" : "flex-row")}
+                        className={cn("flex gap-2.5 md:gap-4 group", m.role === "user" ? "flex-row-reverse" : "flex-row")}
                       >
                         <div className={cn(
-                          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
+                          "w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
                           m.role === "user" ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
                         )}>
                           {m.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                         </div>
                         <div className={cn(
-                          "max-w-[80%] p-4 px-5 rounded-[1.5rem] shadow-sm relative",
+                          "max-w-[calc(100%-3rem)] md:max-w-[80%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] shadow-sm relative overflow-hidden",
                           m.role === "user"
                             ? "bg-primary text-primary-foreground rounded-tr-none"
                             : m.isError
@@ -1103,7 +1103,7 @@ const AIChatbot = () => {
                 )}
 
                 {/* ─── Premium Input ─── */}
-                <div className="p-5 border-t border-border/30 bg-muted/10 backdrop-blur-sm">
+                  <div className="p-3 md:p-5 border-t border-border/30 bg-muted/10 backdrop-blur-sm">
                   {/* Attached image preview */}
                   {attachedImage && (
                     <div className="mb-3 relative inline-block">
@@ -1134,14 +1134,13 @@ const AIChatbot = () => {
 
                   <div className="flex gap-2 items-center">
                     {/* Camera button */}
-                    <label className="cursor-pointer h-14 w-14 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0">
+                    <label className="cursor-pointer h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 transition-all shrink-0" aria-label={language === "ro" ? "Atașează fotografie pentru analiză" : "Attach photo for analysis"}>
                       <Camera className="w-5 h-5 text-primary" />
                       <input
                         ref={fileInputRef}
                         type="file"
                         hidden
                         accept="image/*"
-                        capture="environment"
                         onChange={handleImageUpload}
                       />
                     </label>
@@ -1155,7 +1154,7 @@ const AIChatbot = () => {
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        className="h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12 text-foreground placeholder:text-muted-foreground"
+                        className="h-12 md:h-14 rounded-2xl bg-muted/30 border-border/50 focus-visible:ring-primary/50 text-base pr-12 text-foreground placeholder:text-muted-foreground"
                         disabled={isLoading}
                         maxLength={2000}
                       />
@@ -1163,7 +1162,7 @@ const AIChatbot = () => {
                     </div>
                     <Button
                       size="icon"
-                      className="h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform"
+                      className="h-12 w-12 md:h-14 md:w-14 rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-105 transition-transform shrink-0"
                       onClick={() => handleSend()}
                       disabled={(!input.trim() && !attachedImage) || isLoading}
                     >
@@ -1171,16 +1170,16 @@ const AIChatbot = () => {
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between mt-3 px-2">
+                  <div className="flex items-center justify-between mt-3 px-1 md:px-2 gap-2">
                     <div className="flex items-center gap-2 opacity-40">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-bold uppercase tracking-widest">Secured</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-[10px] text-muted-foreground">{input.length}/2000</span>
                       <span className="text-muted-foreground/30 mx-1">·</span>
                       <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-                      <span className="text-[10px] font-bold text-primary">{text.power}</span>
+                      <span className="text-[10px] font-bold text-primary truncate">{text.power}</span>
                     </div>
                   </div>
                 </div>

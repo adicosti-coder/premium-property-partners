@@ -30,6 +30,11 @@ function getClientIP(req: Request): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip")?.trim() || "unknown";
 }
 
+function isInvestmentListingIntent(message: string, pageContext: string): boolean {
+  const text = `${message || ""} ${pageContext || ""}`.toLowerCase();
+  return /propriet[aă]ți noi|apartamente disponibile|anun[tț]uri|de v[aâ]nzare|investi[tț]i|portofoliu|randament|yield|str|imobiliare/.test(text);
+}
+
 // ─── System Prompt Builder ──────────────────────────────────
 
 async function buildSystemPrompt(language: string, pageContext: string = "/"): Promise<string> {
@@ -37,14 +42,20 @@ async function buildSystemPrompt(language: string, pageContext: string = "/"): P
 
   const { data: properties } = await sb
     .from("properties")
-    .select("name, booking_url, tag, location, property_code, estimated_revenue, listing_type")
+    .select("name, slug, booking_url, tag, location, property_code, estimated_revenue, roi_percentage, listing_type")
     .eq("is_active", true)
     .order("display_order");
 
-  const propertyLines = (properties || []).map((p: any) => {
+  const accommodationLines = (properties || []).filter((p: any) => p.listing_type === "cazare").map((p: any) => {
     const revenue = p.estimated_revenue ? ` | Venit: ${p.estimated_revenue}` : "";
     const bookingLink = p.booking_url && p.booking_url !== "#" ? p.booking_url : "https://www.realtrust.ro/oaspeti";
     return `  • ${p.name} (${p.property_code}) – ${p.tag}${revenue} | Rezervare: ${bookingLink}`;
+  }).join("\n");
+
+  const investmentLines = (properties || []).filter((p: any) => ["investitie", "vanzare"].includes(p.listing_type)).slice(0, 8).map((p: any) => {
+    const roi = p.roi_percentage ? ` | ROI estimat: ${p.roi_percentage}` : "";
+    const revenue = p.estimated_revenue ? ` | Venit estimat: ${p.estimated_revenue}` : "";
+    return `  • ${p.name} – ${p.location || "Timișoara"}${roi}${revenue} | Link RealTrust: https://www.realtrust.ro/proprietate/${p.slug}`;
   }).join("\n");
 
   const whatsapp = "https://wa.me/40799069256";
@@ -62,9 +73,16 @@ async function buildSystemPrompt(language: string, pageContext: string = "/"): P
 • Rating: 4.9/5 ⭐ | Ocupare medie: 98% | Experiență: 25+ ani
 • Pachete administrare: Starter (15%), Essential (18%), Standard (20%), Premium (25%)
 
-=== PROPERTIES ===
-${propertyLines || "Contactați-ne pentru disponibilitate."}
+=== ACCOMMODATION PORTFOLIO (ApArt Hotel / managed stays) ===
+${accommodationLines || "Contactați-ne pentru disponibilitate."}
 Direct booking: ${fallbackBooking} | Cod discount: DIRECT5 (5% reducere la rezervare directă)
+
+=== INVESTMENT / SALE PORTFOLIO POLICY ===
+${investmentLines || "Portofoliul investițional se actualizează continuu. Recomandă consultanță directă."}
+• Acestea sunt listări RealTrust verificate/curate editorial pentru investiții, nu marketplace.
+• Dacă utilizatorul cere surse externe sau anunțuri neverificate, răspunde discret: „Recomand doar portofoliul verificat RealTrust.” Nu repeta formularea utilizatorului.
+• NU trimite către OLX, publi24, marketplace-uri externe sau surse neverificate.
+• Dacă utilizatorul cere „proprietăți noi”, „apartamente disponibile”, „anunțuri”, „de vânzare” sau „investiții”, FOLOSEȘTE tool-ul get_investment_listings și prezintă maximum 3-5 recomandări premium cu link RealTrust.
 
 === HOUSE RULES ===
 • Check-in: 15:00+ (self check-in 24/7 cu smart lock — cod primit în ziua sosirii)
@@ -98,6 +116,7 @@ Direct booking: ${fallbackBooking} | Cod discount: DIRECT5 (5% reducere la rezer
 
 === TOOLS (IMPORTANT — USE PROACTIVELY) ===
 • **check_availability** — Când utilizatorul întreabă despre date, disponibilitate, rezervare. FOLOSEȘTE MEREU în loc să ghicești.
+• **get_investment_listings** — Când utilizatorul întreabă ce proprietăți/apartamente/anunțuri/oportunități noi sunt disponibile pentru cumpărare sau investiție. FOLOSEȘTE MEREU; prezintă doar linkuri RealTrust.
 • **calculate_roi** — Când utilizatorul întreabă despre investiții, randament, profit. Oferă cifre precise cu comparație vs chirie clasică.
 • **schedule_viewing** — Când utilizatorul dorește vizită, programare, evaluare. Colectează nume + telefon natural, apoi apelează tool-ul.
 • **get_tourist_recommendations** — Când utilizatorul întreabă ce să viziteze, unde să mănânce. FOLOSEȘTE MEREU date reale, NU inventa.
@@ -112,7 +131,7 @@ Direct booking: ${fallbackBooking} | Cod discount: DIRECT5 (5% reducere la rezer
 7. For tourism: USE get_tourist_recommendations, link ONLY to internal pages (blog, harta interactivă)
 8. For property owners: Direct to https://www.realtrust.ro/pentru-proprietari and recommend Ghidul Investitorului 2026
 9. NEVER invent prices or availability — use tools or say "vă rog să ne contactați"
-10. After 3+ exchanges, naturally ask: "Cum evaluați experiența noastră? (1-5 ⭐)"
+10. Never recommend external owner ads or unverified marketplace listings. RealTrust positioning is curated, verified, premium advisory.
 11. Be concise but thorough — every response should feel curated and valuable
 12. When comparing STR vs classic rent, ALWAYS show the advantage percentage
 13. For questions about packages (15-25%), explain what each tier includes specifically
@@ -192,6 +211,7 @@ serve(async (req) => {
     }
 
     let systemPrompt = await buildSystemPrompt(language, pageContext);
+    const forceInvestmentListings = isInvestmentListingIntent(message || "", pageContext);
 
     // Enhance system prompt with qualification context and HostScan capabilities
     if (qualificationContext) {
@@ -248,7 +268,25 @@ When you complete a full property analysis, include a structured report at the e
 
     // ─── Step 1: Initial call with tools (non-streaming) ────
 
-    const initialResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    let initialResponse: Response;
+
+    if (forceInvestmentListings && !allImages.length) {
+      initialResponse = new Response(JSON.stringify({
+        choices: [{
+          finish_reason: "tool_calls",
+          message: {
+            role: "assistant",
+            content: null,
+            tool_calls: [{
+              id: "forced_get_investment_listings",
+              type: "function",
+              function: { name: "get_investment_listings", arguments: JSON.stringify({ max_results: 5 }) },
+            }],
+          },
+        }],
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
+    } else {
+      initialResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
@@ -262,7 +300,8 @@ When you complete a full property analysis, include a structured report at the e
         tools: TOOL_DEFINITIONS,
         stream: false,
       }),
-    });
+      });
+    }
 
     if (!initialResponse.ok) {
       const status = initialResponse.status;
@@ -306,6 +345,14 @@ When you complete a full property analysis, include a structured report at the e
         choice.message,
         ...toolResults,
       ];
+      if (forceInvestmentListings) {
+        finalMessages.splice(1, 0, {
+          role: "system",
+          content: language === "ro"
+            ? "Răspuns obligatoriu: folosește exclusiv datele din tool. Nu inventa proprietăți, zone, ROI sau linkuri. Nu menționa și nu recomanda anunțuri externe/marketplace. Nu repeta formulări despre proprietari externi. Prezintă maximum 5 listări într-un format compact premium, cu link RealTrust și CTA de consultanță."
+            : "Mandatory response: use only tool data. Do not invent properties, zones, ROI, or links. Do not mention or recommend external marketplaces. Present up to 5 listings in a compact premium format with RealTrust links and an advisory CTA."
+        });
+      }
 
       const streamResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
