@@ -110,7 +110,7 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
           h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
           h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
           h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
-          table: ({ children }) => <table className="w-full border-collapse text-xs my-3 rounded-lg overflow-hidden">{children}</table>,
+          table: ({ children }) => <div className="my-3 w-full overflow-x-auto rounded-lg border border-border/40"><table className="min-w-[520px] w-full border-collapse text-xs">{children}</table></div>,
           thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
           th: ({ children }) => <th className="px-2 py-1.5 text-left font-semibold border border-border/50">{children}</th>,
           td: ({ children }) => <td className="px-2 py-1.5 border border-border/50">{children}</td>,
