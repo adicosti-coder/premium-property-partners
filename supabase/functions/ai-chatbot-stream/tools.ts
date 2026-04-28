@@ -160,6 +160,7 @@ export async function getInvestmentListings(args: {
 
   const minRoi = typeof args.min_roi === "number" ? args.min_roi : null;
   const listings = (data || [])
+    .filter((p: any) => !/direct[-\s_]*proprietar|proprietar/i.test(`${p.name || ""} ${p.slug || ""}`))
     .filter((p: any) => {
       if (minRoi === null) return true;
       const roi = Number.parseFloat(String(p.roi_percentage || "").replace(",", "."));
