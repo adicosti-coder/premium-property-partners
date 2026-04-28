@@ -218,6 +218,30 @@ export default function PropertyManager() {
     }
   }, [formData.base_price_per_night, formData.capital_necesar, formData.listing_type, calculateROI]);
 
+  const savePropertyContactDetails = async (propertyId: string, data: PropertyFormData) => {
+    const hasContact = data.contact_name || data.contact_phone || data.contact_email;
+    const contactPayload = {
+      property_id: propertyId,
+      contact_name: data.contact_name || null,
+      contact_phone: data.contact_phone || null,
+      contact_email: data.contact_email || null,
+    };
+
+    if (hasContact) {
+      const { error } = await supabase
+        .from("property_contact_details" as any)
+        .upsert(contactPayload as any, { onConflict: "property_id" });
+      if (error) throw error;
+      return;
+    }
+
+    const { error } = await supabase
+      .from("property_contact_details" as any)
+      .delete()
+      .eq("property_id", propertyId);
+    if (error) throw error;
+  };
+
   const handleTranslateToEN = async () => {
     if (!formData.description_ro) {
       toast({ title: "Completează mai întâi Descrierea RO", variant: "destructive" });
