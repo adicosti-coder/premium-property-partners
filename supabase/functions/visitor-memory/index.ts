@@ -19,12 +19,18 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const authClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: req.headers.get("Authorization") || "" } },
+    });
 
     const body = await req.json();
-    const { action, sessionId, userId } = body;
+    const { action, sessionId } = body;
+    const { data: { user } } = await authClient.auth.getUser();
+    const userId = user?.id || null;
 
-    if (!sessionId || sessionId.length < 10) {
+    if (typeof sessionId !== "string" || !/^[A-Za-z0-9_-]{16,120}$/.test(sessionId)) {
       return new Response(JSON.stringify({ error: "sessionId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -57,6 +63,11 @@ serve(async (req) => {
     /* ── TRACK: append property view / search / preference ── */
     if (action === "track") {
       const { event } = body; // { type: 'view'|'search'|'preference'|'intent', data: {...} }
+      if (!event || !["view", "search", "preference", "intent"].includes(event.type)) {
+        return new Response(JSON.stringify({ error: "invalid event" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const row = await ensureRow();
 
       const updates: any = { last_seen_at: new Date().toISOString() };
@@ -74,7 +85,7 @@ serve(async (req) => {
       if (event?.type === "search" && event.data?.query) {
         const list = Array.isArray(row.search_history) ? row.search_history : [];
         updates.search_history = [
-          { query: event.data.query, intent: event.data.intent, at: new Date().toISOString() },
+          { query: String(event.data.query).slice(0, 300), intent: String(event.data.intent || "").slice(0, 80), at: new Date().toISOString() },
           ...list.slice(0, 19),
         ];
       }
