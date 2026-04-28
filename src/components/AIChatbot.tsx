@@ -715,10 +715,10 @@ const AIChatbot = () => {
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
-              "fixed z-50 bg-card/95 backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden transition-all duration-500",
+              "fixed z-50 bg-card/98 backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
               isMinimized
                 ? "bottom-8 right-8 w-72 h-16 rounded-full"
-                : "bottom-4 right-2 md:right-4 left-2 md:left-auto w-auto md:w-[450px] h-[80vh] md:h-[700px] rounded-[2rem]"
+                : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-2 md:right-4 left-2 md:left-auto w-auto md:w-[450px] h-[min(82vh,720px)] md:h-[700px] rounded-[1.75rem]"
             )}
           >
             {/* Stream Progress Bar */}
@@ -732,11 +732,11 @@ const AIChatbot = () => {
             )}
 
             {/* ─── Premium Header ─── */}
-            <div className="p-5 border-b border-border/30 flex items-center justify-between shrink-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
-              <div className="flex items-center gap-4">
+            <div className="px-4 py-3 md:p-5 border-b border-border/30 flex items-center justify-between shrink-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="relative">
                   <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg",
+                    "w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border shadow-lg",
                     voiceMode
                       ? "bg-accent/20 border-accent/30"
                       : "bg-primary/20 border-primary/30"
@@ -746,8 +746,8 @@ const AIChatbot = () => {
                   <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent border-[3px] border-card rounded-full" />
                 </div>
                 {!isMinimized && (
-                  <div>
-                    <h3 className="font-bold text-base tracking-tight text-foreground">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-sm md:text-base tracking-tight text-foreground truncate">
                       {voiceMode ? text.voiceModeActive : text.title}
                     </h3>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -820,8 +820,8 @@ const AIChatbot = () => {
             {/* ─── Chat Body ─── */}
             {!isMinimized && !voiceMode && (
               <>
-                <ScrollArea className="flex-1 p-5" ref={scrollRef}>
-                  <div className="space-y-6">
+                <ScrollArea className="flex-1 px-3 py-4 md:p-5" ref={scrollRef}>
+                  <div className="space-y-5">
                     {/* Empty state */}
                     {messages.length === 0 && (
                       <div className="text-center py-12 space-y-6">
@@ -838,16 +838,16 @@ const AIChatbot = () => {
                         key={m.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={cn("flex gap-4 group", m.role === "user" ? "flex-row-reverse" : "flex-row")}
+                        className={cn("flex gap-2.5 md:gap-4 group", m.role === "user" ? "flex-row-reverse" : "flex-row")}
                       >
                         <div className={cn(
-                          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
+                          "w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
                           m.role === "user" ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
                         )}>
                           {m.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                         </div>
                         <div className={cn(
-                          "max-w-[80%] p-4 px-5 rounded-[1.5rem] shadow-sm relative",
+                          "max-w-[calc(100%-3rem)] md:max-w-[80%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] shadow-sm relative overflow-hidden",
                           m.role === "user"
                             ? "bg-primary text-primary-foreground rounded-tr-none"
                             : m.isError
