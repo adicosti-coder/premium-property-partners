@@ -54,6 +54,7 @@ interface ConciergeListingCard {
   revenue?: string;
   badge: string;
   url: string;
+  context?: string;
 }
 
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
@@ -61,10 +62,35 @@ const STORAGE_KEY = "apart_ai_chat_v37";
 
 const cleanCardValue = (value?: string) => value?.replace(/[*_`]/g, "").replace(/^[:\s-]+/, "").trim();
 
+const parseCardAttributes = (source: string): Partial<ConciergeListingCard> => {
+  const attrs: Partial<ConciergeListingCard> = {};
+  source.replace(/(name|location|roi|revenue|badge|url|context)="([^"]*)"/gi, (_, key, value) => {
+    attrs[key.toLowerCase() as keyof ConciergeListingCard] = cleanCardValue(value) || "";
+    return "";
+  });
+  return attrs;
+};
+
 const parseConciergeListingCards = (content: string): { text: string; cards: ConciergeListingCard[] } => {
   const cards: ConciergeListingCard[] = [];
   const realTrustUrl = /https:\/\/(?:www\.)?realtrust\.ro\/proprietate\/[^\s)]+/i;
-  const keptLines = content.split("\n").filter((line) => {
+  const withoutStructuredCards = content.replace(/<RT_CARD\s+([^>]+)>/gi, (_, attrSource) => {
+    const attrs = parseCardAttributes(attrSource);
+    if (attrs.url && realTrustUrl.test(attrs.url)) {
+      cards.push({
+        name: attrs.name || "Proprietate RealTrust",
+        location: attrs.location || "Timișoara",
+        roi: attrs.roi,
+        revenue: attrs.revenue,
+        badge: attrs.badge || "Verificat RealTrust",
+        url: attrs.url,
+        context: attrs.context,
+      });
+    }
+    return "";
+  });
+
+  const keptLines = withoutStructuredCards.split("\n").filter((line) => {
     const url = line.match(realTrustUrl)?.[0];
     if (!url || !/(link realtrust|realtrust|roi|venit|randament)/i.test(line)) return true;
 
@@ -86,6 +112,7 @@ const parseConciergeListingCards = (content: string): { text: string; cards: Con
       revenue,
       badge,
       url,
+      context: cleanCardValue(details.find((part) => /potrivit|strategie|context/i.test(part))?.replace(/^(potrivit pentru|strategie|context)\s*:?\s*/i, "")),
     });
 
     return false;
@@ -99,7 +126,9 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
 
   return (
     <div className="mt-3 grid gap-2.5">
-      {cards.map((card) => (
+      {cards.map((card) => {
+        const advisoryHref = `https://wa.me/40799069256?text=${encodeURIComponent(`Bună ziua, doresc consultanță RealTrust pentru ${card.name}: ${card.url}`)}`;
+        return (
         <article key={`${card.name}-${card.url}`} className="rounded-xl border border-border/50 bg-card p-3 shadow-sm">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -113,6 +142,10 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
               {card.badge}
             </span>
           </div>
+
+          {card.context && (
+            <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{card.context}</p>
+          )}
 
           {(card.roi || card.revenue) && (
             <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
@@ -132,11 +165,12 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
               <a href={card.url} target="_blank" rel="noopener noreferrer">Link RealTrust</a>
             </Button>
             <Button asChild size="sm" className="h-9 px-2 text-xs">
-              <a href="https://www.realtrust.ro/contact" target="_blank" rel="noopener noreferrer">Consultanță</a>
+              <a href={advisoryHref} target="_blank" rel="noopener noreferrer">Consultanță</a>
             </Button>
           </div>
         </article>
-      ))}
+        );
+      })}
     </div>
   );
 };
