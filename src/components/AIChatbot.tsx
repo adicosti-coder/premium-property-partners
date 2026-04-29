@@ -60,12 +60,18 @@ interface ConciergeListingCard {
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
 const STORAGE_KEY = "apart_ai_chat_v37";
 
+const REALTRUST_PROPERTY_URL = /https:\/\/(?:www\.)?realtrust\.ro\/proprietate\/[^\s)"'>]+/i;
+const BLOCKED_EXTERNAL_MARKETPLACES = /\b(olx|publi24|storia|imobiliare\.ro|lajumate|facebook\.com\/marketplace)\b/i;
+
 const cleanCardValue = (value?: string) => value?.replace(/[*_`]/g, "").replace(/^[:\s-]+/, "").trim();
+const cleanCardUrl = (value?: string) => cleanCardValue(value)?.replace(/[.,;:!?]+$/, "");
 
 const parseCardAttributes = (source: string): Partial<ConciergeListingCard> => {
   const raw: Record<string, string> = {};
-  source.replace(/(name|location|roi|revenue|badge|url|context)="([^"]*)"/gi, (_, key, value) => {
+  source.replace(/(name|location|roi|revenue|badge|url|context)=(?:"([^"]*)"|'([^']*)')/gi, (_, key, value, altValue) => {
+    const resolvedValue = value || altValue || "";
     raw[key.toLowerCase()] = cleanCardValue(value) || "";
+    if (key.toLowerCase() === "url") raw.url = cleanCardUrl(resolvedValue) || "";
     return "";
   });
   return {
@@ -81,10 +87,9 @@ const parseCardAttributes = (source: string): Partial<ConciergeListingCard> => {
 
 const parseConciergeListingCards = (content: string): { text: string; cards: ConciergeListingCard[] } => {
   const cards: ConciergeListingCard[] = [];
-  const realTrustUrl = /https:\/\/(?:www\.)?realtrust\.ro\/proprietate\/[^\s)]+/i;
   const withoutStructuredCards = content.replace(/<RT_CARD\s+([^>]+)>/gi, (_, attrSource) => {
     const attrs = parseCardAttributes(attrSource);
-    if (attrs.url && realTrustUrl.test(attrs.url)) {
+    if (attrs.url && REALTRUST_PROPERTY_URL.test(attrs.url)) {
       cards.push({
         name: attrs.name || "Proprietate RealTrust",
         location: attrs.location || "Timișoara",
@@ -99,13 +104,13 @@ const parseConciergeListingCards = (content: string): { text: string; cards: Con
   });
 
   const keptLines = withoutStructuredCards.split("\n").filter((line) => {
-    const url = line.match(realTrustUrl)?.[0];
+    const url = cleanCardUrl(line.match(REALTRUST_PROPERTY_URL)?.[0]);
     if (!url || !/(link realtrust|realtrust|roi|venit|randament)/i.test(line)) return true;
 
     const readableLine = line
       .replace(/^\s*[-*•]\s*/, "")
       .replace(/\[[^\]]+\]\([^)]*\)/g, "")
-      .replace(realTrustUrl, "")
+      .replace(REALTRUST_PROPERTY_URL, "")
       .trim();
     const [identity = "", ...details] = readableLine.split("|").map((part) => part.trim()).filter(Boolean);
     const [rawName, rawLocation] = identity.split(/\s+[–—-]\s+/);
@@ -137,7 +142,7 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
       {cards.map((card) => {
         const advisoryHref = `https://wa.me/40799069256?text=${encodeURIComponent(`Bună ziua, doresc consultanță RealTrust pentru ${card.name}: ${card.url}`)}`;
         return (
-        <article key={`${card.name}-${card.url}`} className="rounded-xl border border-border/50 bg-card p-3 shadow-sm">
+        <article key={`${card.name}-${card.url}`} className="rounded-lg border border-border/50 bg-card p-3 shadow-sm">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <h3 className="text-sm font-semibold leading-snug text-foreground">{card.name}</h3>
@@ -146,7 +151,8 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
                 <span className="truncate">{card.location}</span>
               </div>
             </div>
-            <span className="shrink-0 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              <ShieldCheck className="h-3 w-3" />
               {card.badge}
             </span>
           </div>
@@ -157,11 +163,11 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
 
           {(card.roi || card.revenue) && (
             <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-lg bg-muted/60 px-2 py-1.5">
+              <div className="rounded-md bg-muted/60 px-2 py-1.5">
                 <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">ROI</span>
-                <strong className="text-foreground">{card.roi || "La cerere"}</strong>
+                <strong className="inline-flex items-center gap-1 text-foreground"><TrendingUp className="h-3 w-3 text-primary" />{card.roi || "La cerere"}</strong>
               </div>
-              <div className="rounded-lg bg-muted/60 px-2 py-1.5">
+              <div className="rounded-md bg-muted/60 px-2 py-1.5">
                 <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">Venit</span>
                 <strong className="text-foreground">{card.revenue || "Estimare privată"}</strong>
               </div>
@@ -170,10 +176,10 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
 
           <div className="mt-2 grid grid-cols-2 gap-2">
             <Button asChild size="sm" variant="outline" className="h-9 px-2 text-xs">
-              <a href={card.url} target="_blank" rel="noopener noreferrer">Link RealTrust</a>
+              <a href={card.url} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-1 h-3.5 w-3.5" />Link</a>
             </Button>
             <Button asChild size="sm" className="h-9 px-2 text-xs">
-              <a href={advisoryHref} target="_blank" rel="noopener noreferrer">Consultanță</a>
+              <a href={advisoryHref} target="_blank" rel="noopener noreferrer"><Phone className="mr-1 h-3.5 w-3.5" />Consultanță</a>
             </Button>
           </div>
         </article>
@@ -233,11 +239,14 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
             components={{
               p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground/90">{children}</p>,
               strong: ({ children }) => <strong className="font-bold text-primary bg-primary/5 px-1 rounded">{children}</strong>,
-              a: ({ href, children }) => (
-                <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline inline-flex items-center gap-0.5">
-                  {children} <ExternalLink className="w-3 h-3" />
-                </a>
-              ),
+              a: ({ href, children }) => {
+                if (href && BLOCKED_EXTERNAL_MARKETPLACES.test(href)) return <span className="font-medium text-foreground">{children}</span>;
+                return (
+                  <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary font-medium hover:underline inline-flex items-center gap-0.5">
+                    {children} <ExternalLink className="w-3 h-3" />
+                  </a>
+                );
+              },
               ul: ({ children }) => <ul className="list-disc ml-4 mb-3 space-y-1">{children}</ul>,
               ol: ({ children }) => <ol className="list-decimal ml-4 mb-3 space-y-1">{children}</ol>,
               li: ({ children }) => <li className="ml-2">{children}</li>,
