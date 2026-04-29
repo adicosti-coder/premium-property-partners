@@ -32,12 +32,12 @@ function getClientIP(req: Request): string {
 
 function isInvestmentListingIntent(message: string, pageContext: string): boolean {
   const text = `${message || ""} ${pageContext || ""}`.toLowerCase();
-  return /propriet[aă]ți noi|apartamente disponibile|anun[tț]uri|de v[aâ]nzare|investi[tț]i|portofoliu|randament|yield|str|imobiliare/.test(text);
+  return /propriet[aă]ți noi|apartamente disponibile|anun[tț]uri|de v[aâ]nzare|cump[aă]rare|investi[tț]i|portofoliu|randament|yield|str|imobiliare|oportunit[aă][tț]i/.test(text);
 }
 
 function extractListingFilters(message: string): { max_results: number; zone?: string; min_roi?: number } {
   const text = message || "";
-  const zones = ["centru", "iulius town", "isho", "iosefin", "elisabetin", "fabric", "giroc", "dumbrăvița", "dumbravita", "student", "complex"];
+  const zones = ["centru", "iulius town", "isho", "iosefin", "elisabetin", "fabric", "giroc", "dumbrăvița", "dumbravita", "student", "complex", "torontal", "braytim", "buziasului", "circumvalatiunii"];
   const foundZone = zones.find((zone) => text.toLowerCase().includes(zone));
   const roiMatch = text.match(/(?:roi|randament)\D{0,12}(\d{1,2}(?:[.,]\d)?)/i);
   const min_roi = roiMatch ? Number.parseFloat(roiMatch[1].replace(",", ".")) : undefined;
@@ -59,14 +59,15 @@ async function buildSystemPrompt(language: string, pageContext: string = "/"): P
     .select("name, slug, booking_url, tag, location, property_code, estimated_revenue, roi_percentage, listing_type")
     .eq("is_active", true)
     .order("display_order");
+  const safeProperties = (properties || []).filter((p: any) => !/direct[-\s_]*proprietar|proprietar|olx|publi24|marketplace/i.test(`${p.name || ""} ${p.slug || ""} ${p.tag || ""}`));
 
-  const accommodationLines = (properties || []).filter((p: any) => p.listing_type === "cazare").map((p: any) => {
+  const accommodationLines = safeProperties.filter((p: any) => p.listing_type === "cazare").map((p: any) => {
     const revenue = p.estimated_revenue ? ` | Venit: ${p.estimated_revenue}` : "";
     const bookingLink = p.booking_url && p.booking_url !== "#" ? p.booking_url : "https://www.realtrust.ro/oaspeti";
     return `  • ${p.name} (${p.property_code}) – ${p.tag}${revenue} | Rezervare: ${bookingLink}`;
   }).join("\n");
 
-  const investmentLines = (properties || []).filter((p: any) => ["investitie", "vanzare"].includes(p.listing_type)).slice(0, 8).map((p: any) => {
+  const investmentLines = safeProperties.filter((p: any) => ["investitie", "vanzare"].includes(p.listing_type)).slice(0, 8).map((p: any) => {
     const roi = p.roi_percentage ? ` | ROI estimat: ${p.roi_percentage}` : "";
     const revenue = p.estimated_revenue ? ` | Venit estimat: ${p.estimated_revenue}` : "";
     return `  • ${p.name} – ${p.location || "Timișoara"}${roi}${revenue} | Link RealTrust: https://www.realtrust.ro/proprietate/${p.slug}`;
@@ -98,6 +99,8 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 • NU trimite către OLX, publi24, marketplace-uri externe sau surse neverificate.
 • Dacă utilizatorul cere „proprietăți noi”, „apartamente disponibile”, „anunțuri”, „de vânzare” sau „investiții”, FOLOSEȘTE tool-ul get_investment_listings și prezintă maximum 3-4 recomandări premium cu link RealTrust.
 • Pentru fiecare proprietate recomandată, emite obligatoriu o singură linie structurată exact în formatul: <RT_CARD name="..." location="..." roi="..." revenue="..." badge="..." url="https://www.realtrust.ro/proprietate/..." context="motiv scurt, premium">. Nu folosi tabele pentru portofoliul investițional.
+• Format premium pentru portofoliu: maximum 1 propoziție introductivă, apoi numai carduri <RT_CARD>, apoi o întrebare scurtă de consultanță. Fără bullet-uri lungi, fără liste de linkuri brute.
+• Dacă lipsesc ROI sau venit, folosește valorile "La cerere" / "Estimare privată"; nu inventa cifre.
 
 === HOUSE RULES ===
 • Check-in: 15:00+ (self check-in 24/7 cu smart lock — cod primit în ziua sosirii)
@@ -365,8 +368,8 @@ When you complete a full property analysis, include a structured report at the e
         finalMessages.splice(1, 0, {
           role: "system",
           content: language === "ro"
-            ? "Răspuns obligatoriu: folosește exclusiv datele din tool. Nu inventa proprietăți, zone, ROI sau linkuri. Nu menționa și nu recomanda anunțuri externe/marketplace. Nu repeta formulări despre proprietari externi. Pentru fiecare listare emite linia <RT_CARD ...> cu name, location, roi, revenue, badge, url, context. În textul normal scrie doar o introducere scurtă și o invitație la consultanță."
-            : "Mandatory response: use only tool data. Do not invent properties, zones, ROI, or links. Do not mention or recommend external marketplaces. For each listing emit one <RT_CARD ...> line with name, location, roi, revenue, badge, url, context. In normal text, include only a short intro and an advisory invitation."
+            ? "Răspuns obligatoriu: folosește exclusiv datele din tool. Nu inventa proprietăți, zone, ROI sau linkuri. Nu menționa și nu recomanda anunțuri externe/marketplace. Nu repeta formulări despre proprietari externi. Pentru fiecare listare emite exact o linie <RT_CARD name=\"...\" location=\"...\" roi=\"...\" revenue=\"...\" badge=\"...\" url=\"https://www.realtrust.ro/proprietate/...\" context=\"...\">. În textul normal scrie maximum o propoziție introductivă și o întrebare scurtă de consultanță."
+            : "Mandatory response: use only tool data. Do not invent properties, zones, ROI, or links. Do not mention or recommend external marketplaces. For each listing emit exactly one <RT_CARD name=\"...\" location=\"...\" roi=\"...\" revenue=\"...\" badge=\"...\" url=\"https://www.realtrust.ro/proprietate/...\" context=\"...\"> line. In normal text, include at most one intro sentence and one short advisory question."
         });
       }
 
