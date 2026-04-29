@@ -63,12 +63,20 @@ const STORAGE_KEY = "apart_ai_chat_v37";
 const cleanCardValue = (value?: string) => value?.replace(/[*_`]/g, "").replace(/^[:\s-]+/, "").trim();
 
 const parseCardAttributes = (source: string): Partial<ConciergeListingCard> => {
-  const attrs: Partial<ConciergeListingCard> = {};
+  const raw: Record<string, string> = {};
   source.replace(/(name|location|roi|revenue|badge|url|context)="([^"]*)"/gi, (_, key, value) => {
-    attrs[key.toLowerCase() as keyof ConciergeListingCard] = cleanCardValue(value) || "";
+    raw[key.toLowerCase()] = cleanCardValue(value) || "";
     return "";
   });
-  return attrs;
+  return {
+    name: raw.name,
+    location: raw.location,
+    roi: raw.roi,
+    revenue: raw.revenue,
+    badge: raw.badge,
+    url: raw.url,
+    context: raw.context,
+  };
 };
 
 const parseConciergeListingCards = (content: string): { text: string; cards: ConciergeListingCard[] } => {
