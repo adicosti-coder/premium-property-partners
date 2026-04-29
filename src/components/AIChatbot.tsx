@@ -70,7 +70,7 @@ const parseCardAttributes = (source: string): Partial<ConciergeListingCard> => {
   const raw: Record<string, string> = {};
   source.replace(/(name|location|roi|revenue|badge|url|context)=(?:"([^"]*)"|'([^']*)')/gi, (_, key, value, altValue) => {
     const resolvedValue = value || altValue || "";
-    raw[key.toLowerCase()] = cleanCardValue(value) || "";
+    raw[key.toLowerCase()] = cleanCardValue(resolvedValue) || "";
     if (key.toLowerCase() === "url") raw.url = cleanCardUrl(resolvedValue) || "";
     return "";
   });
