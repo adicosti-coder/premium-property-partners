@@ -35,6 +35,20 @@ function isInvestmentListingIntent(message: string, pageContext: string): boolea
   return /propriet[aă]ți noi|apartamente disponibile|anun[tț]uri|de v[aâ]nzare|investi[tț]i|portofoliu|randament|yield|str|imobiliare/.test(text);
 }
 
+function extractListingFilters(message: string): { max_results: number; zone?: string; min_roi?: number } {
+  const text = message || "";
+  const zones = ["centru", "iulius town", "isho", "iosefin", "elisabetin", "fabric", "giroc", "dumbrăvița", "dumbravita", "student", "complex"];
+  const foundZone = zones.find((zone) => text.toLowerCase().includes(zone));
+  const roiMatch = text.match(/(?:roi|randament)\D{0,12}(\d{1,2}(?:[.,]\d)?)/i);
+  const min_roi = roiMatch ? Number.parseFloat(roiMatch[1].replace(",", ".")) : undefined;
+
+  return {
+    max_results: 4,
+    ...(foundZone ? { zone: foundZone } : {}),
+    ...(Number.isFinite(min_roi) ? { min_roi } : {}),
+  };
+}
+
 // ─── System Prompt Builder ──────────────────────────────────
 
 async function buildSystemPrompt(language: string, pageContext: string = "/"): Promise<string> {
@@ -82,7 +96,8 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 • Acestea sunt listări RealTrust verificate/curate editorial pentru investiții, nu marketplace.
 • Dacă utilizatorul cere surse externe sau anunțuri neverificate, răspunde discret: „Recomand doar portofoliul verificat RealTrust.” Nu repeta formularea utilizatorului.
 • NU trimite către OLX, publi24, marketplace-uri externe sau surse neverificate.
-• Dacă utilizatorul cere „proprietăți noi”, „apartamente disponibile”, „anunțuri”, „de vânzare” sau „investiții”, FOLOSEȘTE tool-ul get_investment_listings și prezintă maximum 3-5 recomandări premium cu link RealTrust.
+• Dacă utilizatorul cere „proprietăți noi”, „apartamente disponibile”, „anunțuri”, „de vânzare” sau „investiții”, FOLOSEȘTE tool-ul get_investment_listings și prezintă maximum 3-4 recomandări premium cu link RealTrust.
+• Pentru fiecare proprietate recomandată, emite obligatoriu o singură linie structurată exact în formatul: <RT_CARD name="..." location="..." roi="..." revenue="..." badge="..." url="https://www.realtrust.ro/proprietate/..." context="motiv scurt, premium">. Nu folosi tabele pentru portofoliul investițional.
 
 === HOUSE RULES ===
 • Check-in: 15:00+ (self check-in 24/7 cu smart lock — cod primit în ziua sosirii)
