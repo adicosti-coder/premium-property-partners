@@ -54,6 +54,7 @@ interface ConciergeListingCard {
   revenue?: string;
   badge: string;
   url: string;
+  context?: string;
 }
 
 const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
@@ -61,10 +62,43 @@ const STORAGE_KEY = "apart_ai_chat_v37";
 
 const cleanCardValue = (value?: string) => value?.replace(/[*_`]/g, "").replace(/^[:\s-]+/, "").trim();
 
+const parseCardAttributes = (source: string): Partial<ConciergeListingCard> => {
+  const raw: Record<string, string> = {};
+  source.replace(/(name|location|roi|revenue|badge|url|context)="([^"]*)"/gi, (_, key, value) => {
+    raw[key.toLowerCase()] = cleanCardValue(value) || "";
+    return "";
+  });
+  return {
+    name: raw.name,
+    location: raw.location,
+    roi: raw.roi,
+    revenue: raw.revenue,
+    badge: raw.badge,
+    url: raw.url,
+    context: raw.context,
+  };
+};
+
 const parseConciergeListingCards = (content: string): { text: string; cards: ConciergeListingCard[] } => {
   const cards: ConciergeListingCard[] = [];
   const realTrustUrl = /https:\/\/(?:www\.)?realtrust\.ro\/proprietate\/[^\s)]+/i;
-  const keptLines = content.split("\n").filter((line) => {
+  const withoutStructuredCards = content.replace(/<RT_CARD\s+([^>]+)>/gi, (_, attrSource) => {
+    const attrs = parseCardAttributes(attrSource);
+    if (attrs.url && realTrustUrl.test(attrs.url)) {
+      cards.push({
+        name: attrs.name || "Proprietate RealTrust",
+        location: attrs.location || "Timișoara",
+        roi: attrs.roi,
+        revenue: attrs.revenue,
+        badge: attrs.badge || "Verificat RealTrust",
+        url: attrs.url,
+        context: attrs.context,
+      });
+    }
+    return "";
+  });
+
+  const keptLines = withoutStructuredCards.split("\n").filter((line) => {
     const url = line.match(realTrustUrl)?.[0];
     if (!url || !/(link realtrust|realtrust|roi|venit|randament)/i.test(line)) return true;
 
@@ -86,6 +120,7 @@ const parseConciergeListingCards = (content: string): { text: string; cards: Con
       revenue,
       badge,
       url,
+      context: cleanCardValue(details.find((part) => /potrivit|strategie|context/i.test(part))?.replace(/^(potrivit pentru|strategie|context)\s*:?\s*/i, "")),
     });
 
     return false;
@@ -99,7 +134,9 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
 
   return (
     <div className="mt-3 grid gap-2.5">
-      {cards.map((card) => (
+      {cards.map((card) => {
+        const advisoryHref = `https://wa.me/40799069256?text=${encodeURIComponent(`Bună ziua, doresc consultanță RealTrust pentru ${card.name}: ${card.url}`)}`;
+        return (
         <article key={`${card.name}-${card.url}`} className="rounded-xl border border-border/50 bg-card p-3 shadow-sm">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -113,6 +150,10 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
               {card.badge}
             </span>
           </div>
+
+          {card.context && (
+            <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{card.context}</p>
+          )}
 
           {(card.roi || card.revenue) && (
             <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
@@ -132,11 +173,12 @@ const ConciergeListingCards = ({ cards }: { cards: ConciergeListingCard[] }) => 
               <a href={card.url} target="_blank" rel="noopener noreferrer">Link RealTrust</a>
             </Button>
             <Button asChild size="sm" className="h-9 px-2 text-xs">
-              <a href="https://www.realtrust.ro/contact" target="_blank" rel="noopener noreferrer">Consultanță</a>
+              <a href={advisoryHref} target="_blank" rel="noopener noreferrer">Consultanță</a>
             </Button>
           </div>
         </article>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -324,10 +366,10 @@ const AIChatbot = () => {
   const t = {
     ro: {
       title: "Digital Concierge",
-      status: "Disponibil 24/7",
-      greeting: "Bună ziua! Sunt **Digital Concierge RealTrust & ApArt Hotel**. 🏛️✨\n\nVă pot ajuta rapid cu:\n\n📅 **Disponibilitate live** pentru cazare\n📈 **Portofoliu investițional verificat RealTrust**\n💰 **Simulare ROI** și comparație cu chiria clasică\n📸 **HostScan** — analiză din fotografii\n🗓️ **Programare consultanță sau vizionare**\n\nRecomand doar proprietăți administrate, verificate sau curate editorial de RealTrust — nu marketplace-uri și nu anunțuri externe neverificate.",
-      placeholder: "Întrebați despre cazare, ROI sau portofoliu verificat...",
-      power: "Verified AI · Live Data",
+      status: "RealTrust Advisory 24/7",
+      greeting: "Bună ziua! Sunt **Digital Concierge RealTrust & ApArt Hotel**. 🏛️✨\n\nVă pot ajuta cu **disponibilitate live**, **portofoliu investițional verificat**, **simulare ROI**, **HostScan din fotografii** și **programare consultanță**.\n\nPentru oportunități imobiliare recomand exclusiv proprietăți RealTrust administrate, verificate sau curate editorial — fără marketplace-uri și fără anunțuri externe neverificate.",
+      placeholder: "Întrebați despre cazare, ROI, investiții sau consultanță...",
+      power: "Curated Portfolio · Live Data",
       quickActions: getContextualQuickActions("ro"),
       error: "A apărut o eroare. Te rog încearcă din nou.",
       errorNetwork: "Conexiune întreruptă. Verifică internetul.",
@@ -343,10 +385,10 @@ const AIChatbot = () => {
     },
     en: {
       title: "Digital Concierge",
-      status: "Available 24/7",
-      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**. 🏛️✨ I'm your premium Digital Concierge.\n\nI can help with **live availability**, **verified RealTrust investment listings**, **ROI simulations**, **photo-based HostScan**, and **private advisory scheduling**.\n\nI only recommend managed, verified, or editorially curated RealTrust opportunities — no external marketplaces or unverified owner ads.",
-      placeholder: "Ask about stays, ROI or verified listings...",
-      power: "Verified AI · Live Data",
+      status: "RealTrust Advisory 24/7",
+      greeting: "Welcome to **RealTrust & ApArt Hotel Timișoara**. 🏛️✨ I can help with **live availability**, **verified investment listings**, **ROI simulations**, **photo-based HostScan**, and **private advisory scheduling**.\n\nFor real estate opportunities, I recommend only managed, verified, or editorially curated RealTrust properties — no marketplaces and no unverified external ads.",
+      placeholder: "Ask about stays, ROI, investments or advisory...",
+      power: "Curated Portfolio · Live Data",
       quickActions: getContextualQuickActions("en"),
       error: "An error occurred. Please try again.",
       errorNetwork: "Connection lost. Check your internet.",

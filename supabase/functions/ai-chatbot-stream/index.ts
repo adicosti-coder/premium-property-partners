@@ -35,6 +35,20 @@ function isInvestmentListingIntent(message: string, pageContext: string): boolea
   return /propriet[aă]ți noi|apartamente disponibile|anun[tț]uri|de v[aâ]nzare|investi[tț]i|portofoliu|randament|yield|str|imobiliare/.test(text);
 }
 
+function extractListingFilters(message: string): { max_results: number; zone?: string; min_roi?: number } {
+  const text = message || "";
+  const zones = ["centru", "iulius town", "isho", "iosefin", "elisabetin", "fabric", "giroc", "dumbrăvița", "dumbravita", "student", "complex"];
+  const foundZone = zones.find((zone) => text.toLowerCase().includes(zone));
+  const roiMatch = text.match(/(?:roi|randament)\D{0,12}(\d{1,2}(?:[.,]\d)?)/i);
+  const min_roi = roiMatch ? Number.parseFloat(roiMatch[1].replace(",", ".")) : undefined;
+
+  return {
+    max_results: 4,
+    ...(foundZone ? { zone: foundZone } : {}),
+    ...(Number.isFinite(min_roi) ? { min_roi } : {}),
+  };
+}
+
 // ─── System Prompt Builder ──────────────────────────────────
 
 async function buildSystemPrompt(language: string, pageContext: string = "/"): Promise<string> {
@@ -82,7 +96,8 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 • Acestea sunt listări RealTrust verificate/curate editorial pentru investiții, nu marketplace.
 • Dacă utilizatorul cere surse externe sau anunțuri neverificate, răspunde discret: „Recomand doar portofoliul verificat RealTrust.” Nu repeta formularea utilizatorului.
 • NU trimite către OLX, publi24, marketplace-uri externe sau surse neverificate.
-• Dacă utilizatorul cere „proprietăți noi”, „apartamente disponibile”, „anunțuri”, „de vânzare” sau „investiții”, FOLOSEȘTE tool-ul get_investment_listings și prezintă maximum 3-5 recomandări premium cu link RealTrust.
+• Dacă utilizatorul cere „proprietăți noi”, „apartamente disponibile”, „anunțuri”, „de vânzare” sau „investiții”, FOLOSEȘTE tool-ul get_investment_listings și prezintă maximum 3-4 recomandări premium cu link RealTrust.
+• Pentru fiecare proprietate recomandată, emite obligatoriu o singură linie structurată exact în formatul: <RT_CARD name="..." location="..." roi="..." revenue="..." badge="..." url="https://www.realtrust.ro/proprietate/..." context="motiv scurt, premium">. Nu folosi tabele pentru portofoliul investițional.
 
 === HOUSE RULES ===
 • Check-in: 15:00+ (self check-in 24/7 cu smart lock — cod primit în ziua sosirii)
@@ -271,6 +286,7 @@ When you complete a full property analysis, include a structured report at the e
     let initialResponse: Response;
 
     if (forceInvestmentListings && !allImages.length) {
+      const listingFilters = extractListingFilters(message || "");
       initialResponse = new Response(JSON.stringify({
         choices: [{
           finish_reason: "tool_calls",
@@ -280,7 +296,7 @@ When you complete a full property analysis, include a structured report at the e
             tool_calls: [{
               id: "forced_get_investment_listings",
               type: "function",
-              function: { name: "get_investment_listings", arguments: JSON.stringify({ max_results: 5 }) },
+              function: { name: "get_investment_listings", arguments: JSON.stringify(listingFilters) },
             }],
           },
         }],
@@ -349,8 +365,8 @@ When you complete a full property analysis, include a structured report at the e
         finalMessages.splice(1, 0, {
           role: "system",
           content: language === "ro"
-            ? "Răspuns obligatoriu: folosește exclusiv datele din tool. Nu inventa proprietăți, zone, ROI sau linkuri. Nu menționa și nu recomanda anunțuri externe/marketplace. Nu repeta formulări despre proprietari externi. Prezintă maximum 5 listări într-un format compact premium, cu link RealTrust și CTA de consultanță."
-            : "Mandatory response: use only tool data. Do not invent properties, zones, ROI, or links. Do not mention or recommend external marketplaces. Present up to 5 listings in a compact premium format with RealTrust links and an advisory CTA."
+            ? "Răspuns obligatoriu: folosește exclusiv datele din tool. Nu inventa proprietăți, zone, ROI sau linkuri. Nu menționa și nu recomanda anunțuri externe/marketplace. Nu repeta formulări despre proprietari externi. Pentru fiecare listare emite linia <RT_CARD ...> cu name, location, roi, revenue, badge, url, context. În textul normal scrie doar o introducere scurtă și o invitație la consultanță."
+            : "Mandatory response: use only tool data. Do not invent properties, zones, ROI, or links. Do not mention or recommend external marketplaces. For each listing emit one <RT_CARD ...> line with name, location, roi, revenue, badge, url, context. In normal text, include only a short intro and an advisory invitation."
         });
       }
 
