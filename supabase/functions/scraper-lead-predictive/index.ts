@@ -13,19 +13,40 @@ interface RequestBody {
   forceRefresh?: boolean;
 }
 
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+async function requireAdmin(req: Request, sb: ReturnType<typeof createClient>) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return { error: jsonResponse({ error: "Authentication required" }, 401) };
+
+  const jwt = authHeader.replace("Bearer ", "").trim();
+  const { data: { user }, error: authError } = await sb.auth.getUser(jwt);
+  if (authError || !user) return { error: jsonResponse({ error: "Invalid authentication" }, 401) };
+
+  const { data: isAdmin, error: roleError } = await sb.rpc("has_role", { _user_id: user.id, _role: "admin" });
+  if (roleError || !isAdmin) return { error: jsonResponse({ error: "Admin access required" }, 403) };
+
+  return { user };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body: RequestBody = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "AI not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "AI not configured" }, 500);
     }
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const admin = await requireAdmin(req, sb);
+    if (admin.error) return admin.error;
+
+    const body: RequestBody = await req.json();
 
     // Build market context from existing leads (median price per neighborhood + listing_type)
     const { data: marketLeads } = await sb
@@ -37,21 +58,17 @@ serve(async (req) => {
 
     if (body.mode === "single") {
       if (!body.leadId) {
-        return new Response(JSON.stringify({ error: "leadId required" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "leadId required" }, 400);
       }
       const { data: lead } = await sb.from("scraper_leads").select("*").eq("id", body.leadId).maybeSingle();
       if (!lead) {
-        return new Response(JSON.stringify({ error: "Lead not found" }), {
-          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Lead not found" }, 404);
       }
 
       const cacheValid = lead.prediction_generated_at &&
         (Date.now() - new Date(lead.prediction_generated_at).getTime()) < 24 * 60 * 60 * 1000;
       if (cacheValid && !body.forceRefresh) {
-        return new Response(JSON.stringify({
+        return jsonResponse({
           cached: true,
           prediction: {
             conversion_probability: lead.conversion_probability,
@@ -59,7 +76,7 @@ serve(async (req) => {
             undervaluation_percent: lead.undervaluation_percent,
             prediction_reasoning: lead.prediction_reasoning,
           },
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        });
       }
 
       const prediction = await predict(lead, marketStats, LOVABLE_API_KEY);
@@ -71,9 +88,7 @@ serve(async (req) => {
         prediction_generated_at: new Date().toISOString(),
       }).eq("id", body.leadId);
 
-      return new Response(JSON.stringify({ cached: false, prediction }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ cached: false, prediction });
     }
 
     if (body.mode === "batch") {
@@ -107,19 +122,13 @@ serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({ processed, total: leads?.length || 0, results }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ processed, total: leads?.length || 0, results });
     }
 
-    return new Response(JSON.stringify({ error: "Invalid mode" }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Invalid mode" }, 400);
   } catch (err: any) {
     console.error("Predictive error:", err);
-    return new Response(JSON.stringify({ error: err.message || "Unknown" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: err.message || "Unknown" }, 500);
   }
 });
 
