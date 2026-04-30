@@ -140,9 +140,29 @@ function ensureCustomDomainUrl(value?: string): string {
       url.hostname = ROOT_DOMAIN
       url.port = ''
     }
+
+    for (const key of ['redirect_to', 'redirectTo', 'next', 'return_to', 'returnTo']) {
+      const nestedValue = url.searchParams.get(key)
+      if (!nestedValue) continue
+
+      try {
+        const nestedUrl = new URL(nestedValue)
+        if (nestedUrl.hostname.endsWith('.lovable.app')) {
+          nestedUrl.protocol = 'https:'
+          nestedUrl.hostname = ROOT_DOMAIN
+          nestedUrl.port = ''
+          url.searchParams.set(key, nestedUrl.toString())
+        }
+      } catch (_nestedError) {
+        if (nestedValue.includes('.lovable.app')) {
+          url.searchParams.set(key, nestedValue.replace(/https:\/\/[^/?#]+\.lovable\.app/gi, SITE_URL))
+        }
+      }
+    }
+
     return url.toString()
   } catch (_error) {
-    return value
+    return value.replace(/https:\/\/[^\s"'<>]+\.lovable\.app/gi, SITE_URL)
   }
 }
 
