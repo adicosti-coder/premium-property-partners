@@ -3041,6 +3041,75 @@ export type Database = {
         }
         Relationships: []
       }
+      public_site_settings: {
+        Row: {
+          hero_badge_en: string | null
+          hero_badge_ro: string | null
+          hero_cta_primary_en: string | null
+          hero_cta_primary_ro: string | null
+          hero_cta_secondary_en: string | null
+          hero_cta_secondary_ro: string | null
+          hero_highlight_en: string | null
+          hero_highlight_ro: string | null
+          hero_image_filename: string | null
+          hero_image_url: string | null
+          hero_subtitle_en: string | null
+          hero_subtitle_ro: string | null
+          hero_tags_en: string[] | null
+          hero_tags_ro: string[] | null
+          hero_title_en: string | null
+          hero_title_ro: string | null
+          hero_video_filename: string | null
+          hero_video_url: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          hero_badge_en?: string | null
+          hero_badge_ro?: string | null
+          hero_cta_primary_en?: string | null
+          hero_cta_primary_ro?: string | null
+          hero_cta_secondary_en?: string | null
+          hero_cta_secondary_ro?: string | null
+          hero_highlight_en?: string | null
+          hero_highlight_ro?: string | null
+          hero_image_filename?: string | null
+          hero_image_url?: string | null
+          hero_subtitle_en?: string | null
+          hero_subtitle_ro?: string | null
+          hero_tags_en?: string[] | null
+          hero_tags_ro?: string[] | null
+          hero_title_en?: string | null
+          hero_title_ro?: string | null
+          hero_video_filename?: string | null
+          hero_video_url?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          hero_badge_en?: string | null
+          hero_badge_ro?: string | null
+          hero_cta_primary_en?: string | null
+          hero_cta_primary_ro?: string | null
+          hero_cta_secondary_en?: string | null
+          hero_cta_secondary_ro?: string | null
+          hero_highlight_en?: string | null
+          hero_highlight_ro?: string | null
+          hero_image_filename?: string | null
+          hero_image_url?: string | null
+          hero_subtitle_en?: string | null
+          hero_subtitle_ro?: string | null
+          hero_tags_en?: string[] | null
+          hero_tags_ro?: string[] | null
+          hero_title_en?: string | null
+          hero_title_ro?: string | null
+          hero_video_filename?: string | null
+          hero_video_url?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -4672,31 +4741,6 @@ export type Database = {
           id?: string | null
           property_id?: number | null
           status?: string | null
-        }
-        Relationships: []
-      }
-      public_site_settings: {
-        Row: {
-          hero_badge_en: string | null
-          hero_badge_ro: string | null
-          hero_cta_primary_en: string | null
-          hero_cta_primary_ro: string | null
-          hero_cta_secondary_en: string | null
-          hero_cta_secondary_ro: string | null
-          hero_highlight_en: string | null
-          hero_highlight_ro: string | null
-          hero_image_filename: string | null
-          hero_image_url: string | null
-          hero_subtitle_en: string | null
-          hero_subtitle_ro: string | null
-          hero_tags_en: string[] | null
-          hero_tags_ro: string[] | null
-          hero_title_en: string | null
-          hero_title_ro: string | null
-          hero_video_filename: string | null
-          hero_video_url: string | null
-          id: string | null
-          updated_at: string | null
         }
         Relationships: []
       }
