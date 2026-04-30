@@ -130,6 +130,22 @@ async function handlePreview(req: Request): Promise<Response> {
   })
 }
 
+function ensureCustomDomainUrl(value?: string): string {
+  if (!value) return SITE_URL
+
+  try {
+    const url = new URL(value)
+    if (url.hostname.endsWith('.lovable.app')) {
+      url.protocol = 'https:'
+      url.hostname = ROOT_DOMAIN
+      url.port = ''
+    }
+    return url.toString()
+  } catch (_error) {
+    return value
+  }
+}
+
 // Webhook handler - verifies signature and sends email
 async function handleWebhook(req: Request): Promise<Response> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY')
