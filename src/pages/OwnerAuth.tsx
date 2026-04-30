@@ -14,6 +14,8 @@ import PasswordStrengthIndicator from "@/components/PasswordStrengthIndicator";
 
 type AuthMode = "login" | "signup" | "reset";
 
+const AUTH_SITE_URL = "https://realtrust.ro";
+
 const OwnerAuth = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -161,7 +163,7 @@ const OwnerAuth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${AUTH_SITE_URL}/reset-password`,
       });
       if (error) throw error;
       toast({
@@ -261,7 +263,7 @@ const OwnerAuth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/portal-proprietar`,
+            emailRedirectTo: `${AUTH_SITE_URL}/portal-proprietar`,
           },
         });
         if (signupError) throw signupError;
