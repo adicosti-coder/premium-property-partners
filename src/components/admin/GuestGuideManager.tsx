@@ -22,6 +22,7 @@ import { format } from "date-fns";
 interface GuestGuide {
   id: string;
   booking_id: string;
+  public_access_token?: string;
   property_name: string;
   check_in_date: string;
   check_out_date: string;
@@ -182,8 +183,10 @@ const GuestGuideManager = () => {
     }
   };
 
-  const copyLink = (bookingId: string) => {
-    const url = `${window.location.origin}/guide/${bookingId}`;
+  const getGuideLink = (guide: GuestGuide) => `${window.location.origin}/guide/${guide.public_access_token || guide.booking_id}`;
+
+  const copyLink = (guide: GuestGuide) => {
+    const url = getGuideLink(guide);
     navigator.clipboard.writeText(url);
     toast({ title: "Link copiat! 📋" });
   };
@@ -235,11 +238,11 @@ const GuestGuideManager = () => {
                     <TableCell>{g.pin_code || "—"}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => copyLink(g.booking_id)}>
+                        <Button variant="ghost" size="sm" onClick={() => copyLink(g)}>
                           <Copy className="w-3.5 h-3.5" />
                         </Button>
                         <Button variant="ghost" size="sm" asChild>
-                          <a href={`/guide/${g.booking_id}`} target="_blank" rel="noopener noreferrer">
+                          <a href={`/guide/${g.public_access_token || g.booking_id}`} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         </Button>
