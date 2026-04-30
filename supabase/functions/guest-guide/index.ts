@@ -9,12 +9,16 @@ const corsHeaders = {
 const isValidBookingId = (value: unknown): value is string =>
   typeof value === "string" && /^[A-Za-z0-9_-]{10,80}$/.test(value);
 
+const isValidAccessToken = (value: unknown): value is string =>
+  typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { bookingId } = await req.json();
-    if (!isValidBookingId(bookingId)) {
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!isValidAccessToken(bookingId) && !isValidBookingId(bookingId)) {
       return new Response(JSON.stringify({ error: "Invalid booking link" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -26,11 +30,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: guide, error } = await supabase
+    let isAdmin = false;
+    if (authHeader.startsWith("Bearer ")) {
+      const jwt = authHeader.replace("Bearer ", "").trim();
+      const { data: { user } } = await supabase.auth.getUser(jwt);
+      if (user) {
+        const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+        isAdmin = !!data;
+      }
+    }
+
+    const query = supabase
       .from("guest_guides")
-      .select("*")
-      .eq("booking_id", bookingId)
-      .maybeSingle();
+      .select("*");
+
+    const { data: guide, error } = await (isValidAccessToken(bookingId)
+      ? query.eq("public_access_token", bookingId)
+      : isAdmin
+        ? query.eq("booking_id", bookingId)
+        : query.eq("public_access_token", "00000000-0000-4000-8000-000000000000")
+    ).maybeSingle();
 
     if (error) throw error;
     if (!guide) {
