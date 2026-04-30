@@ -1507,6 +1507,7 @@ export type Database = {
           pin_code: string | null
           property_image: string | null
           property_name: string
+          public_access_token: string
           updated_at: string | null
           whatsapp_number: string | null
           wifi_name: string | null
@@ -1529,6 +1530,7 @@ export type Database = {
           pin_code?: string | null
           property_image?: string | null
           property_name: string
+          public_access_token?: string
           updated_at?: string | null
           whatsapp_number?: string | null
           wifi_name?: string | null
@@ -1551,6 +1553,7 @@ export type Database = {
           pin_code?: string | null
           property_image?: string | null
           property_name?: string
+          public_access_token?: string
           updated_at?: string | null
           whatsapp_number?: string | null
           wifi_name?: string | null
