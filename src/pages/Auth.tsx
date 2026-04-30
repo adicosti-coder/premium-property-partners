@@ -14,6 +14,8 @@ import SEOHead from "@/components/SEOHead";
 
 type AuthMode = "login" | "signup" | "reset";
 
+const AUTH_SITE_URL = "https://realtrust.ro";
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -72,7 +74,7 @@ const Auth = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${AUTH_SITE_URL}/reset-password`,
       });
       if (error) throw error;
       toast({
@@ -148,7 +150,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
+            emailRedirectTo: `${AUTH_SITE_URL}/admin`,
           },
         });
         if (error) throw error;
