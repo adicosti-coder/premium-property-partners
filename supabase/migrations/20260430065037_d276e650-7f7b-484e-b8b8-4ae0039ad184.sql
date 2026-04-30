@@ -1,0 +1,1 @@
+ALTER VIEW public.public_site_settings SET (security_invoker = on);
