@@ -40,13 +40,14 @@ const SITE_NAME = "RealTrust"
 const SENDER_DOMAIN = "notify.realtrust.ro"
 const ROOT_DOMAIN = "realtrust.ro"
 const FROM_DOMAIN = "realtrust.ro" // Domain shown in From address (may be root or sender subdomain)
+const SITE_URL = `https://${ROOT_DOMAIN}`
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
 // can always find-and-replace it with the actual recipient when sending test emails,
 // even if the project's domain has changed since the template was scaffolded.
-const SAMPLE_PROJECT_URL = "https://realtrustaparthotel.lovable.app"
+const SAMPLE_PROJECT_URL = SITE_URL
 const SAMPLE_EMAIL = "user@example.test"
 const SAMPLE_DATA: Record<string, object> = {
   signup: {
@@ -220,9 +221,9 @@ async function handleWebhook(req: Request): Promise<Response> {
   // Build template props from payload.data (HookData structure)
   const templateProps = {
     siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
+    siteUrl: SITE_URL,
     recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
+    confirmationUrl: ensureCustomDomainUrl(payload.data.url),
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
