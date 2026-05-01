@@ -380,12 +380,27 @@ export default function InvestitiiPremiumManager() {
     };
 
     let error;
+    let savedId = editingProperty.id;
     if (isNew) {
-      const res = await supabase.from("properties").insert(payload);
+      const res = await supabase.from("properties").insert(payload).select("id").single();
       error = res.error;
+      if (res.data?.id) savedId = res.data.id;
     } else {
       const res = await supabase.from("properties").update(payload).eq("id", editingProperty.id);
       error = res.error;
+    }
+
+    // Save contact details to admin-only table
+    if (!error && savedId) {
+      const hasContact = editingProperty.contact_name || editingProperty.contact_phone || editingProperty.contact_email;
+      if (hasContact) {
+        await supabase.from("property_contact_details" as any).upsert({
+          property_id: savedId,
+          contact_name: editingProperty.contact_name || null,
+          contact_phone: editingProperty.contact_phone || null,
+          contact_email: editingProperty.contact_email || null,
+        }, { onConflict: "property_id" });
+      }
     }
 
     if (error) {
