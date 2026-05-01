@@ -718,13 +718,21 @@ const SEOOptimizerManager = () => {
                     const path = urlToPath(selectedAudit.url);
                     const existing = overrideMap.get(path);
                     const canApply = !!(selectedAudit.suggested_title || selectedAudit.suggested_meta);
+                    const metaLen = (selectedAudit.suggested_meta || "").trim().length;
+                    const metaTooLong = metaLen > 160;
                     return (
                       <>
                         <Button
                           size="sm"
                           variant="default"
                           disabled={!canApply || applyMutation.isPending}
-                          onClick={() => applyMutation.mutate(selectedAudit)}
+                          onClick={() => {
+                            toast.info("Se aplică sugestiile SEO…", {
+                              description: `URL: ${urlToPath(selectedAudit.url)}`,
+                              duration: 2500,
+                            });
+                            applyMutation.mutate(selectedAudit);
+                          }}
                           title={canApply ? "Aplică title, meta description și keywords pe pagina live" : "Audit fără sugestii — generează unul nou"}
                         >
                           {applyMutation.isPending ? (
@@ -735,15 +743,39 @@ const SEOOptimizerManager = () => {
                           {existing ? "Reaplică sugestiile" : "Implementează automat"}
                         </Button>
                         {existing && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={revertMutation.isPending}
-                            onClick={() => revertMutation.mutate(selectedAudit.url)}
-                          >
-                            <Undo2 className="w-3 h-3 mr-2" />
-                            Revert
-                          </Button>
+                          <div className="flex flex-col gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={revertMutation.isPending}
+                              onClick={() => {
+                                toast.info("Se revine la SEO original…", { duration: 2000 });
+                                revertMutation.mutate(selectedAudit.url);
+                              }}
+                            >
+                              {revertMutation.isPending ? (
+                                <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                              ) : (
+                                <Undo2 className="w-3 h-3 mr-2" />
+                              )}
+                              Revert
+                            </Button>
+                            <span className="text-[10px] text-muted-foreground leading-tight">
+                              Ultima aplicare:<br />
+                              {new Date(existing.applied_at).toLocaleString("ro-RO", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        {canApply && metaTooLong && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 self-center">
+                            ⚠ Meta: {metaLen}/160 caractere
+                          </span>
                         )}
                       </>
                     );
@@ -757,7 +789,7 @@ const SEOOptimizerManager = () => {
                     <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>
-                        Aplicat automat: {new Date(existing.applied_at).toLocaleString("ro-RO")}
+                        Activ pe site din: {new Date(existing.applied_at).toLocaleString("ro-RO")}
                       </span>
                     </div>
                   );
