@@ -1,0 +1,173 @@
+import { useEffect, useRef, useState } from "react";
+import { Monitor, Smartphone, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+/**
+ * SERP Preview Live
+ * - Simulates Google SERP snippet (Mobile + Desktop)
+ * - Measures real pixel width using canvas (Arial fallback to match Google)
+ * - Limits: Title ≤ 580px (desktop) / ~600px mobile, Meta ≤ 920px (desktop) / ~990px mobile
+ */
+
+type Device = "desktop" | "mobile";
+
+const LIMITS: Record<Device, { titleMax: number; metaMax: number; titleFont: string; metaFont: string }> = {
+  desktop: {
+    titleMax: 580,
+    metaMax: 920,
+    titleFont: "20px Arial, sans-serif",
+    metaFont: "14px Arial, sans-serif",
+  },
+  mobile: {
+    titleMax: 600,
+    metaMax: 990,
+    titleFont: "18px Arial, sans-serif",
+    metaFont: "14px Arial, sans-serif",
+  },
+};
+
+function measureText(text: string, font: string): number {
+  if (typeof document === "undefined") return 0;
+  const canvas = (measureText as any)._c || ((measureText as any)._c = document.createElement("canvas"));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return 0;
+  ctx.font = font;
+  return Math.round(ctx.measureText(text).width);
+}
+
+function truncateToWidth(text: string, font: string, maxWidth: number): { display: string; truncated: boolean } {
+  if (measureText(text, font) <= maxWidth) return { display: text, truncated: false };
+  let lo = 0, hi = text.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (measureText(text.slice(0, mid) + "…", font) <= maxWidth) lo = mid;
+    else hi = mid - 1;
+  }
+  return { display: text.slice(0, lo).trimEnd() + "…", truncated: true };
+}
+
+interface Props {
+  title: string;
+  description: string;
+  url?: string;
+}
+
+export const SerpPreview = ({ title, description, url = "https://realtrust.ro/" }: Props) => {
+  const [device, setDevice] = useState<Device>("desktop");
+  const [, force] = useState(0);
+  const ready = useRef(false);
+
+  // Ensure measurements after mount (canvas needs DOM)
+  useEffect(() => {
+    ready.current = true;
+    force((v) => v + 1);
+  }, []);
+
+  const cfg = LIMITS[device];
+  const titlePx = ready.current ? measureText(title || "", cfg.titleFont) : 0;
+  const metaPx = ready.current ? measureText(description || "", cfg.metaFont) : 0;
+  const titleOver = titlePx > cfg.titleMax;
+  const metaOver = metaPx > cfg.metaMax;
+
+  const titleShown = ready.current ? truncateToWidth(title || "", cfg.titleFont, cfg.titleMax) : { display: title, truncated: false };
+  const metaShown = ready.current ? truncateToWidth(description || "", cfg.metaFont, cfg.metaMax) : { display: description, truncated: false };
+
+  const displayUrl = (() => {
+    try {
+      const u = new URL(url);
+      return u.hostname.replace(/^www\./, "") + (u.pathname === "/" ? "" : " › " + u.pathname.split("/").filter(Boolean).join(" › "));
+    } catch {
+      return url;
+    }
+  })();
+
+  const PixelBar = ({ value, max, label }: { value: number; max: number; label: string }) => {
+    const pct = Math.min(100, (value / max) * 100);
+    const over = value > max;
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">{label}</span>
+          <span className={`font-mono ${over ? "text-destructive font-semibold" : "text-foreground"}`}>
+            {value}px / {max}px
+          </span>
+        </div>
+        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all ${over ? "bg-destructive" : pct > 85 ? "bg-amber-500" : "bg-emerald-500"}`}
+            style={{ width: `${Math.min(100, pct)}%` }}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-3 border border-border rounded-lg p-3 bg-background">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase text-muted-foreground">SERP Preview Live</p>
+        <div className="inline-flex rounded-md border border-border overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setDevice("desktop")}
+            className={`px-2.5 py-1 text-xs flex items-center gap-1 ${device === "desktop" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+          >
+            <Monitor className="h-3.5 w-3.5" /> Desktop
+          </button>
+          <button
+            type="button"
+            onClick={() => setDevice("mobile")}
+            className={`px-2.5 py-1 text-xs flex items-center gap-1 ${device === "mobile" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+          >
+            <Smartphone className="h-3.5 w-3.5" /> Mobile
+          </button>
+        </div>
+      </div>
+
+      {/* Snippet mock */}
+      <div
+        className={`bg-white rounded-md border border-border p-4 mx-auto ${device === "mobile" ? "max-w-[400px]" : "max-w-full"}`}
+        style={{ fontFamily: "Arial, sans-serif" }}
+      >
+        <div className="flex items-center gap-2 mb-1">
+          <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold">R</div>
+          <div className="leading-tight">
+            <div className="text-[12px] text-gray-800">RealTrust</div>
+            <div className="text-[12px] text-gray-600">{displayUrl}</div>
+          </div>
+        </div>
+        <div
+          className="text-[#1a0dab] hover:underline cursor-pointer leading-snug"
+          style={{ fontSize: device === "mobile" ? "18px" : "20px" }}
+        >
+          {titleShown.display || <span className="text-gray-400 italic">(fără titlu)</span>}
+        </div>
+        <div className="text-[#4d5156] text-[14px] leading-snug mt-1">
+          {metaShown.display || <span className="text-gray-400 italic">(fără meta description)</span>}
+        </div>
+      </div>
+
+      {/* Pixel indicators */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <PixelBar value={titlePx} max={cfg.titleMax} label="Title width" />
+        <PixelBar value={metaPx} max={cfg.metaMax} label="Meta description width" />
+      </div>
+
+      {/* Status badges */}
+      <div className="flex flex-wrap gap-2">
+        {titleOver ? (
+          <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Titlu trunchiat în Google ({device})</Badge>
+        ) : (
+          <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3" /> Titlu OK</Badge>
+        )}
+        {metaOver ? (
+          <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Meta trunchiată ({device})</Badge>
+        ) : (
+          <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3" /> Meta OK</Badge>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SerpPreview;

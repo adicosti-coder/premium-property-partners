@@ -11,6 +11,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Wand2, History, GitCompare, FlaskConical, Layers, ShieldAlert, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { SerpPreview } from "./SerpPreview";
 
 interface Props {
   audit: {
@@ -272,6 +273,14 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
               )}
               {proposal?.meta_description && (
                 <DiffBlock label="Meta Description" before={audit.suggested_meta || "—"} after={proposal.meta_description} />
+              )}
+
+              {(proposal?.title || proposal?.meta_description) && (
+                <SerpPreview
+                  title={proposal?.title || audit.suggested_title || ""}
+                  description={proposal?.meta_description || audit.suggested_meta || ""}
+                  url={audit.url}
+                />
               )}
               {proposal?.json_ld && (
                 <div className="space-y-1">
