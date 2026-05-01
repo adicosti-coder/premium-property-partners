@@ -198,7 +198,8 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
                 {criticalIssues.map((issue: any, idx: number) => {
                   const txt = (issue.issue || "").toLowerCase();
                   let fix: FixType = "all";
-                  if (txt.includes("schema") || txt.includes("json-ld") || txt.includes("structured")) fix = "schema";
+                  if (txt.includes("canonical")) fix = "canonical";
+                  else if (txt.includes("schema") || txt.includes("json-ld") || txt.includes("structured")) fix = "schema";
                   else if (txt.includes("alt") || txt.includes("imagine")) fix = "alt_text";
                   else if (txt.includes("title")) fix = "title";
                   else if (txt.includes("meta") || txt.includes("descri")) fix = "meta";
