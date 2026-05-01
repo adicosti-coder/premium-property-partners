@@ -290,6 +290,7 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
       json_ld: current.json_ld,
       extra_keywords: current.extra_keywords || [],
       alt_text_suggestions: current.alt_text_suggestions || [],
+      canonical_url: current.canonical_url ?? null,
       source_audit_id: current.source_audit_id,
       score_before: null,
       score_after: null,
@@ -297,6 +298,12 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
       applied_by: userId,
       notes: body.notes || null,
     });
+  }
+
+  // Normalize canonical defensively whenever it shows up in the payload
+  const p = body.payload as any;
+  if (p && p.canonical_url) {
+    p.canonical_url = buildCanonicalUrl(String(p.canonical_url));
   }
 
   const p = body.payload as any;
