@@ -10,9 +10,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2, Search, RefreshCw, AlertTriangle, CheckCircle2, Lightbulb,
-  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus, MapPin, Wand2, Undo2,
+  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus, MapPin, Wand2, Undo2, Scissors,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import jsPDF from "jspdf";
 
 const QUICK_URLS = [
@@ -82,6 +86,19 @@ const SEOOptimizerManager = () => {
   const [bulkRunning, setBulkRunning] = useState(false);
   const [dualRunning, setDualRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+  const [revertConfirm, setRevertConfirm] = useState<string | null>(null);
+  const [editedMeta, setEditedMeta] = useState<Record<string, string>>({});
+
+  // Trim a meta description to ~155 chars at the nearest sentence/word boundary.
+  const shortenMeta = (text: string, target = 155): string => {
+    const t = (text || "").replace(/\s+/g, " ").trim();
+    if (t.length <= target) return t;
+    const slice = t.slice(0, target + 5);
+    const punct = Math.max(slice.lastIndexOf(". "), slice.lastIndexOf("! "), slice.lastIndexOf("? "));
+    if (punct > target * 0.6) return slice.slice(0, punct + 1).trim();
+    const space = slice.lastIndexOf(" ");
+    return (space > 0 ? slice.slice(0, space) : slice.slice(0, target)).trim().replace(/[,;:]$/, "") + "…";
+  };
 
   const { data: history = [] } = useQuery({
     queryKey: ["seo-audits-history"],
@@ -181,11 +198,12 @@ const SEOOptimizerManager = () => {
     mutationFn: async (a: AuditRow) => {
       const path = urlToPath(a.url);
 
-      // Meta description length validation (~160 chars optimal, hard cap 200)
-      const metaLen = (a.suggested_meta || "").trim().length;
+      // Use edited meta if user adjusted it inline, else fall back to AI suggestion.
+      const effectiveMeta = (editedMeta[a.id] ?? a.suggested_meta ?? "").trim();
+      const metaLen = effectiveMeta.length;
       if (metaLen > 200) {
         throw new Error(
-          `Meta description prea lungă (${metaLen} caractere). Maxim 200, optim ~160. Editează auditul înainte de aplicare.`
+          `Meta description prea lungă (${metaLen} caractere). Maxim 200, optim ~160. Folosește butonul "Generează meta optim" sau editează manual.`
         );
       }
       if (metaLen > 160) {
@@ -212,13 +230,14 @@ const SEOOptimizerManager = () => {
         .map((i: any) => ({ issue: i.issue, fix: i.fix, severity: i.severity }))
         .slice(0, 10);
 
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: userRes, error: authErr } = await supabase.auth.getUser();
+      if (authErr) throw new Error(`Autentificare eșuată: ${authErr.message}`);
 
       const { error } = await supabase.from("seo_overrides").upsert(
         {
           url_path: path,
           title: a.suggested_title || null,
-          meta_description: a.suggested_meta || null,
+          meta_description: effectiveMeta || null,
           extra_keywords,
           structural_todos,
           source_audit_id: a.id,
@@ -228,7 +247,17 @@ const SEOOptimizerManager = () => {
         },
         { onConflict: "url_path" }
       );
-      if (error) throw error;
+      if (error) {
+        // Distinguish DB connectivity vs RLS vs validation errors
+        const msg = error.message || "";
+        if (/jwt|permission|rls|policy/i.test(msg)) {
+          throw new Error(`Acces refuzat de baza de date (RLS): ${msg}`);
+        }
+        if (/network|fetch|connection|timeout/i.test(msg)) {
+          throw new Error(`Eșec la conectarea cu baza de date: ${msg}`);
+        }
+        throw new Error(`Salvare eșuată: ${msg}`);
+      }
       return path;
     },
     onSuccess: (path) => {
@@ -237,21 +266,42 @@ const SEOOptimizerManager = () => {
       });
       qc.invalidateQueries({ queryKey: ["seo-overrides"] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare implementare"),
+    onError: (e: any) => {
+      toast.error("Eroare la implementare", {
+        description: e?.message || "Cauză necunoscută. Verifică consola pentru detalii.",
+        duration: 6000,
+      });
+    },
   });
 
   const revertMutation = useMutation({
     mutationFn: async (urlFull: string) => {
       const path = urlToPath(urlFull);
       const { error } = await supabase.from("seo_overrides").update({ is_active: false }).eq("url_path", path);
-      if (error) throw error;
+      if (error) {
+        const msg = error.message || "";
+        if (/network|fetch|connection|timeout/i.test(msg)) {
+          throw new Error(`Eșec la conectarea cu baza de date: ${msg}`);
+        }
+        if (/jwt|permission|rls|policy/i.test(msg)) {
+          throw new Error(`Acces refuzat: ${msg}`);
+        }
+        throw new Error(`Revert eșuat: ${msg}`);
+      }
       return path;
     },
     onSuccess: (path) => {
-      toast.success(`Revenit la SEO original pe ${path}`);
+      toast.success(`Revenit la SEO original pe ${path}`, {
+        description: "Pagina folosește acum metadatele implicite din cod.",
+      });
       qc.invalidateQueries({ queryKey: ["seo-overrides"] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare revert"),
+    onError: (e: any) => {
+      toast.error("Eroare la revert", {
+        description: e?.message || "Cauză necunoscută.",
+        duration: 6000,
+      });
+    },
   });
 
   const runBulkAudit = async () => {
@@ -748,10 +798,7 @@ const SEOOptimizerManager = () => {
                               size="sm"
                               variant="outline"
                               disabled={revertMutation.isPending}
-                              onClick={() => {
-                                toast.info("Se revine la SEO original…", { duration: 2000 });
-                                revertMutation.mutate(selectedAudit.url);
-                              }}
+                              onClick={() => setRevertConfirm(selectedAudit.url)}
                             >
                               {revertMutation.isPending ? (
                                 <Loader2 className="w-3 h-3 mr-2 animate-spin" />
@@ -901,18 +948,74 @@ const SEOOptimizerManager = () => {
                     <div className="text-xs text-muted-foreground mt-1">Actual: {selectedAudit.title}</div>
                   )}
                 </div>
-                <div>
-                  <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-between">
-                    <span>META DESCRIPTION SUGERATĂ ({selectedAudit.suggested_meta?.length || 0} char)</span>
-                    <Button size="sm" variant="ghost" onClick={() => copyText(selectedAudit.suggested_meta!, "Meta")}>
-                      <Copy className="w-3 h-3" />
-                    </Button>
-                  </div>
-                  <div className="text-sm">{selectedAudit.suggested_meta}</div>
-                  {selectedAudit.meta_description && (
-                    <div className="text-xs text-muted-foreground mt-1">Actual: {selectedAudit.meta_description}</div>
-                  )}
-                </div>
+                {(() => {
+                  const currentMeta = editedMeta[selectedAudit.id] ?? selectedAudit.suggested_meta ?? "";
+                  const len = currentMeta.length;
+                  const isEdited = editedMeta[selectedAudit.id] !== undefined;
+                  let counterColor = "text-emerald-600 dark:text-emerald-400";
+                  if (len > 200) counterColor = "text-red-600 dark:text-red-400";
+                  else if (len > 160) counterColor = "text-amber-600 dark:text-amber-400";
+                  else if (len < 110) counterColor = "text-amber-600 dark:text-amber-400";
+                  return (
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-between gap-2 flex-wrap">
+                        <span className="flex items-center gap-2">
+                          META DESCRIPTION SUGERATĂ
+                          <span className={`font-mono ${counterColor}`}>{len}/160</span>
+                          {len > 200 && <Badge variant="destructive" className="text-[10px]">peste limita absolută 200</Badge>}
+                          {len > 160 && len <= 200 && <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700 dark:text-amber-400">va fi trunchiată</Badge>}
+                          {len > 0 && len < 110 && <Badge variant="outline" className="text-[10px]">prea scurtă</Badge>}
+                          {isEdited && <Badge variant="secondary" className="text-[10px]">editat</Badge>}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          {len > 200 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const next = shortenMeta(currentMeta, 155);
+                                setEditedMeta((m) => ({ ...m, [selectedAudit.id]: next }));
+                                toast.success("Meta scurtată automat", {
+                                  description: `${len} → ${next.length} caractere`,
+                                });
+                              }}
+                            >
+                              <Scissors className="w-3 h-3 mr-1" />
+                              Generează meta optim
+                            </Button>
+                          )}
+                          {isEdited && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditedMeta((m) => {
+                                const { [selectedAudit.id]: _, ...rest } = m;
+                                return rest;
+                              })}
+                              title="Revino la sugestia AI originală"
+                            >
+                              <Undo2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" onClick={() => copyText(currentMeta, "Meta")}>
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </span>
+                      </div>
+                      <textarea
+                        className="w-full text-sm bg-background border rounded-md p-2 min-h-[64px] resize-y font-normal"
+                        value={currentMeta}
+                        onChange={(e) => setEditedMeta((m) => ({ ...m, [selectedAudit.id]: e.target.value }))}
+                      />
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        Optim: 110–160 caractere · Maxim absolut: 200
+                      </div>
+                      {selectedAudit.meta_description && (
+                        <div className="text-xs text-muted-foreground mt-1">Actual: {selectedAudit.meta_description}</div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
@@ -1197,6 +1300,33 @@ const SEOOptimizerManager = () => {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!revertConfirm} onOpenChange={(o) => !o && setRevertConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Anulezi override-ul SEO?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Pagina <code className="text-xs">{revertConfirm ? urlToPath(revertConfirm) : ""}</code> va reveni la title-ul, meta description și keywords-urile implicite din cod.
+              <br /><br />
+              Acțiunea este reversibilă — poți reaplica oricând sugestiile AI ulterior.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Renunță</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (revertConfirm) {
+                  toast.info("Se revine la SEO original…", { duration: 2000 });
+                  revertMutation.mutate(revertConfirm);
+                }
+                setRevertConfirm(null);
+              }}
+            >
+              Da, anulează override-ul
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
