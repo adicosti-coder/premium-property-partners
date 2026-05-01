@@ -144,6 +144,9 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
     } catch { return false; }
   })();
 
+  const robotsInfo = parseRobots(robots);
+  const indexable = !robotsInfo.noindex;
+
   const PixelBar = ({ value, max, label }: { value: number; max: number; label: string }) => {
     const pct = Math.min(100, (value / max) * 100);
     const over = value > max;
