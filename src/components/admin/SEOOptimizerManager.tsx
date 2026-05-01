@@ -962,10 +962,10 @@ const SEOOptimizerManager = () => {
                   const currentMeta = editedMeta[selectedAudit.id] ?? selectedAudit.suggested_meta ?? "";
                   const len = currentMeta.length;
                   const isEdited = editedMeta[selectedAudit.id] !== undefined;
-                  let counterColor = "text-emerald-600 dark:text-emerald-400";
-                  if (len > 200) counterColor = "text-red-600 dark:text-red-400";
-                  else if (len > 160) counterColor = "text-amber-600 dark:text-amber-400";
-                  else if (len < 110) counterColor = "text-amber-600 dark:text-amber-400";
+                  // Color spec: GREEN strict 140–160 (sweet spot), RED >160, AMBER <140
+                  let counterColor = "text-amber-600 dark:text-amber-400";
+                  if (len > 160) counterColor = "text-red-600 dark:text-red-400";
+                  else if (len >= 140 && len <= 160) counterColor = "text-emerald-600 dark:text-emerald-400";
                   return (
                     <div>
                       <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-between gap-2 flex-wrap">
@@ -973,22 +973,32 @@ const SEOOptimizerManager = () => {
                           META DESCRIPTION SUGERATĂ
                           <span className={`font-mono ${counterColor}`}>{len}/160</span>
                           {len > 200 && <Badge variant="destructive" className="text-[10px]">peste limita absolută 200</Badge>}
-                          {len > 160 && len <= 200 && <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700 dark:text-amber-400">va fi trunchiată</Badge>}
-                          {len > 0 && len < 110 && <Badge variant="outline" className="text-[10px]">prea scurtă</Badge>}
+                          {len > 160 && len <= 200 && <Badge variant="destructive" className="text-[10px]">va fi trunchiată</Badge>}
+                          {len > 0 && len < 140 && <Badge variant="outline" className="text-[10px]">prea scurtă</Badge>}
                           {isEdited && <Badge variant="secondary" className="text-[10px]">editat</Badge>}
                         </span>
                         <span className="flex items-center gap-1">
-                          {len > 200 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSerpPreview(selectedAudit)}
+                            title="Vezi cum arată în Google"
+                          >
+                            <Search className="w-3 h-3 mr-1" />
+                            Previzualizare Google
+                          </Button>
+                          {len > 155 && (
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant={len > 200 ? "destructive" : "outline"}
                               onClick={() => {
                                 const next = shortenMeta(currentMeta, 155);
                                 setEditedMeta((m) => ({ ...m, [selectedAudit.id]: next }));
-                                toast.success("Meta scurtată automat", {
-                                  description: `${len} → ${next.length} caractere`,
+                                toast.success("Meta scurtată automat la 155 caractere", {
+                                  description: `${len} → ${next.length} caractere · fără tăiere de cuvinte`,
                                 });
                               }}
+                              title="Scurtează automat la 155 caractere, fără a tăia cuvintele"
                             >
                               <Scissors className="w-3 h-3 mr-1" />
                               Generează meta optim
