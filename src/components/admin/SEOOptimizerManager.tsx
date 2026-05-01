@@ -1291,19 +1291,24 @@ const SEOOptimizerManager = () => {
                 return (
                 <div
                   key={a.id}
-                  className="w-full rounded-lg border p-3 hover:bg-muted/50 transition-colors flex items-center justify-between gap-3"
+                  className="w-full rounded-lg border p-3 hover:bg-muted/50 transition-colors"
                 >
-                  <button
-                    onClick={() => setSelectedAudit(a)}
-                    className="flex-1 min-w-0 text-left"
-                  >
-                    <div className="font-medium text-sm truncate">{a.url}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(a.created_at).toLocaleString("ro-RO")} · {a.language.toUpperCase()} · {a.word_count} cuvinte
-                      {existing && <span className="ml-2 text-emerald-600 font-medium">· Aplicat</span>}
+                  <div className="flex items-start justify-between gap-2">
+                    <button
+                      onClick={() => setSelectedAudit(a)}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      <div className="font-medium text-sm truncate">{a.url}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(a.created_at).toLocaleString("ro-RO")} · {a.language.toUpperCase()} · {a.word_count} cuvinte
+                        {existing && <span className="ml-2 text-emerald-600 font-medium">· Aplicat</span>}
+                      </div>
+                    </button>
+                    <div className={`text-2xl font-bold shrink-0 ${scoreColor(a.overall_score)}`}>
+                      {a.overall_score ?? "—"}
                     </div>
-                  </button>
-                  <div className="flex items-center gap-2">
+                  </div>
+                  <div className="flex items-center justify-end gap-2 mt-2">
                     <Button
                       size="sm"
                       variant={existing ? "outline" : "default"}
@@ -1317,14 +1322,14 @@ const SEOOptimizerManager = () => {
                         applyMutation.mutate(a);
                       }}
                       title={canApply ? (existing ? "Reaplică sugestiile pe pagina live" : "Implementează automat title, meta și keywords") : "Audit fără sugestii"}
-                      className="min-h-[40px]"
+                      className="min-h-[36px]"
                     >
                       {isPending ? (
-                        <Loader2 className="w-3 h-3 animate-spin sm:mr-2" />
+                        <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
                       ) : (
-                        <Wand2 className="w-3 h-3 sm:mr-2" />
+                        <Wand2 className="w-3 h-3 mr-1.5" />
                       )}
-                      <span className="hidden sm:inline">{existing ? "Reaplică" : "Aplică"}</span>
+                      {existing ? "Reaplică" : "Aplică"}
                     </Button>
                     <Button
                       size="sm"
@@ -1334,9 +1339,6 @@ const SEOOptimizerManager = () => {
                     >
                       <Download className="w-3 h-3" />
                     </Button>
-                    <div className={`text-2xl font-bold ${scoreColor(a.overall_score)}`}>
-                      {a.overall_score ?? "—"}
-                    </div>
                   </div>
                 </div>
                 );
