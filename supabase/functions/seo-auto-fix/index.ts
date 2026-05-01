@@ -309,13 +309,14 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
   const p = body.payload as any;
 
   if (variant === "B") {
-    // Apply as variant B (do not touch the live A version)
-    const variantB = {
+    // Apply as variant B (do not touch the live A version) — variant B can also override canonical
+    const variantB: Record<string, unknown> = {
       title: p.title ?? current?.title ?? null,
       meta_description: p.meta_description ?? current?.meta_description ?? null,
       json_ld: p.json_ld ?? current?.json_ld ?? null,
       extra_keywords: p.extra_keywords ?? current?.extra_keywords ?? [],
     };
+    if (p.canonical_url !== undefined) variantB.canonical_url = p.canonical_url;
     if (current) {
       await sb
         .from("seo_overrides")
@@ -333,6 +334,7 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
         meta_description: variantB.meta_description,
         json_ld: variantB.json_ld,
         extra_keywords: variantB.extra_keywords,
+        canonical_url: p.canonical_url ?? null,
         ab_variant_b: variantB,
         ab_enabled: body.ab_enabled ?? true,
         applied_by: userId,
@@ -353,6 +355,7 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
   if (p.json_ld !== undefined) updates.json_ld = p.json_ld;
   if (p.extra_keywords !== undefined) updates.extra_keywords = p.extra_keywords;
   if (p.alt_text_suggestions !== undefined) updates.alt_text_suggestions = p.alt_text_suggestions;
+  if (p.canonical_url !== undefined) updates.canonical_url = p.canonical_url;
   if (body.audit_id) updates.source_audit_id = body.audit_id;
 
   if (current) {
@@ -365,11 +368,12 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
       json_ld: p.json_ld ?? null,
       extra_keywords: p.extra_keywords ?? [],
       alt_text_suggestions: p.alt_text_suggestions ?? [],
+      canonical_url: p.canonical_url ?? null,
       source_audit_id: body.audit_id ?? null,
       applied_by: userId,
     });
   }
-  return { ok: true, variant: "A", version: nextVersion };
+  return { ok: true, variant: "A", version: nextVersion, canonical_url: p.canonical_url ?? null };
 }
 
 // ============================================================================
