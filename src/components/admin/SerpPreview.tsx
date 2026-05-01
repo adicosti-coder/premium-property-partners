@@ -113,7 +113,7 @@ function formatSerpUrl(raw: string, device: Device): { host: string; crumbs: str
   }
 }
 
-export const SerpPreview = ({ title, description, url = "https://realtrust.ro/", canonical }: Props) => {
+export const SerpPreview = ({ title, description, url = "https://realtrust.ro/", canonical, robots }: Props) => {
   const [device, setDevice] = useState<Device>("desktop");
   const [, force] = useState(0);
   const ready = useRef(false);
