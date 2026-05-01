@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSeoOverride } from "@/hooks/useSeoOverride";
 
@@ -169,10 +170,11 @@ const SEOHead = ({
   const override = useSeoOverride();
   const baseTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;
   const baseDescription = description || defaultDescriptions[language as keyof typeof defaultDescriptions] || defaultDescriptions.ro;
-  // SEO override (from admin SEO AI Optimizer) takes precedence over component defaults,
-  // but explicit per-page overrides via props still win for very specific routes (property/blog detail).
-  const finalTitle = title ? title : (override?.title || baseTitle);
-  const finalDescription = description ? description : (override?.meta_description || baseDescription);
+  // SEO override (from admin SEO AI Optimizer) takes precedence over all runtime defaults,
+  // including explicit per-page props. Otherwise "Implementează automat" cannot affect pages
+  // that already pass title/description into SEOHead.
+  const finalTitle = override?.title || baseTitle;
+  const finalDescription = override?.meta_description || baseDescription;
   const overrideKeywords = override?.extra_keywords?.map((k) => k.keyword).filter(Boolean) || [];
   
   // Canonical URL: ALWAYS absolute on www.realtrust.ro, pathname only (NO query params, NO hash, NO trailing slash except root).
@@ -284,6 +286,31 @@ const SEOHead = ({
     
     finalJsonLd = schemas.length === 1 ? schemas[0] : schemas;
   }
+
+  // Keep static shell meta tags in sync after hydration. The original index.html
+  // meta tags remain in <head>; if we only add Helmet tags, crawlers can read the
+  // stale homepage description first and the SEO audit appears "stuck".
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const syncMeta = (selector: string, attrs: Record<string, string>, content: string) => {
+      const nodes = Array.from(document.head.querySelectorAll<HTMLMetaElement>(selector));
+      const targets = nodes.length ? nodes : [document.createElement("meta")];
+      targets.forEach((node) => {
+        Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+        node.setAttribute("content", content);
+        if (!node.parentElement) document.head.appendChild(node);
+      });
+    };
+
+    document.title = finalTitle;
+    syncMeta('meta[name="title"]', { name: "title" }, finalTitle);
+    syncMeta('meta[name="description"]', { name: "description" }, finalDescription);
+    syncMeta('meta[property="og:title"]', { property: "og:title" }, finalTitle);
+    syncMeta('meta[property="og:description"]', { property: "og:description" }, finalDescription);
+    syncMeta('meta[name="twitter:title"]', { name: "twitter:title" }, finalTitle);
+    syncMeta('meta[name="twitter:description"]', { name: "twitter:description" }, finalDescription);
+  }, [finalTitle, finalDescription]);
 
   return (
     <Helmet>
