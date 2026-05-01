@@ -190,11 +190,29 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
         </div>
       </div>
 
+      {/* Noindex banner — shown above snippet when page can't be indexed */}
+      {!indexable && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2.5 text-xs text-destructive">
+          <Ban className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="space-y-0.5">
+            <p className="font-semibold">Pagina NU poate fi indexată în Google</p>
+            <p className="opacity-90">
+              Robots conține <code className="font-mono">noindex</code> — această pagină nu va apărea în rezultatele de căutare, indiferent de calitatea SEO. Elimină directiva pentru a permite indexarea.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Snippet mock */}
       <div
-        className={`bg-white rounded-md border border-border p-4 mx-auto ${device === "mobile" ? "max-w-[400px]" : "max-w-full"}`}
+        className={`relative bg-white rounded-md border border-border p-4 mx-auto ${device === "mobile" ? "max-w-[400px]" : "max-w-full"} ${!indexable ? "opacity-60 grayscale" : ""}`}
         style={{ fontFamily: "Arial, sans-serif" }}
       >
+        {!indexable && (
+          <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded bg-destructive px-2 py-0.5 text-[10px] font-bold uppercase text-destructive-foreground">
+            <EyeOff className="h-3 w-3" /> Ascuns din SERP
+          </div>
+        )}
         <div className="flex items-center gap-2 mb-1">
           <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold">R</div>
           <div className="leading-tight min-w-0 flex-1">
@@ -217,7 +235,11 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
           {titleShown.display || <span className="text-gray-400 italic">(fără titlu)</span>}
         </div>
         <div className="text-[#4d5156] text-[14px] leading-snug mt-1">
-          {metaShown.display || <span className="text-gray-400 italic">(fără meta description)</span>}
+          {robotsInfo.nosnippet ? (
+            <span className="text-gray-400 italic">(snippet ascuns — directivă nosnippet)</span>
+          ) : (
+            metaShown.display || <span className="text-gray-400 italic">(fără meta description)</span>
+          )}
         </div>
       </div>
 
