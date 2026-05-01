@@ -3746,14 +3746,84 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_override_history: {
+        Row: {
+          alt_text_suggestions: Json | null
+          applied_at: string
+          applied_by: string | null
+          change_type: string
+          extra_keywords: Json | null
+          id: string
+          json_ld: Json | null
+          meta_description: string | null
+          notes: string | null
+          reverted_at: string | null
+          score_after: number | null
+          score_before: number | null
+          source_audit_id: string | null
+          title: string | null
+          url_path: string
+          version_number: number
+        }
+        Insert: {
+          alt_text_suggestions?: Json | null
+          applied_at?: string
+          applied_by?: string | null
+          change_type?: string
+          extra_keywords?: Json | null
+          id?: string
+          json_ld?: Json | null
+          meta_description?: string | null
+          notes?: string | null
+          reverted_at?: string | null
+          score_after?: number | null
+          score_before?: number | null
+          source_audit_id?: string | null
+          title?: string | null
+          url_path: string
+          version_number: number
+        }
+        Update: {
+          alt_text_suggestions?: Json | null
+          applied_at?: string
+          applied_by?: string | null
+          change_type?: string
+          extra_keywords?: Json | null
+          id?: string
+          json_ld?: Json | null
+          meta_description?: string | null
+          notes?: string | null
+          reverted_at?: string | null
+          score_after?: number | null
+          score_before?: number | null
+          source_audit_id?: string | null
+          title?: string | null
+          url_path?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_override_history_source_audit_id_fkey"
+            columns: ["source_audit_id"]
+            isOneToOne: false
+            referencedRelation: "seo_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_overrides: {
         Row: {
+          ab_enabled: boolean
+          ab_variant_b: Json | null
+          ab_winner: string | null
+          alt_text_suggestions: Json | null
           applied_at: string
           applied_by: string | null
           created_at: string
           extra_keywords: Json | null
           id: string
           is_active: boolean
+          json_ld: Json | null
           meta_description: string | null
           source_audit_id: string | null
           structural_todos: Json | null
@@ -3762,12 +3832,17 @@ export type Database = {
           url_path: string
         }
         Insert: {
+          ab_enabled?: boolean
+          ab_variant_b?: Json | null
+          ab_winner?: string | null
+          alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
           created_at?: string
           extra_keywords?: Json | null
           id?: string
           is_active?: boolean
+          json_ld?: Json | null
           meta_description?: string | null
           source_audit_id?: string | null
           structural_todos?: Json | null
@@ -3776,12 +3851,17 @@ export type Database = {
           url_path: string
         }
         Update: {
+          ab_enabled?: boolean
+          ab_variant_b?: Json | null
+          ab_winner?: string | null
+          alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
           created_at?: string
           extra_keywords?: Json | null
           id?: string
           is_active?: boolean
+          json_ld?: Json | null
           meta_description?: string | null
           source_audit_id?: string | null
           structural_todos?: Json | null
