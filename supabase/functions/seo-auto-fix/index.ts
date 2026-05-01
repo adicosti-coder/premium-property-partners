@@ -2,15 +2,16 @@
  * SEO Auto-Fix & Version Control
  *
  * Actions:
- *  - generate_fix    : ask Gemini to produce a fix for a specific issue (title|meta|schema|alt_text|all)
- *                      Returns proposed payload WITHOUT writing anything.
- *  - apply_fix       : write proposal into seo_overrides + create history snapshot.
- *                      Optionally apply as variant B (A/B testing).
- *  - revert          : restore an older version from seo_override_history.
- *  - bulk_fix        : iterate through audits below a score threshold and auto-apply fixes.
- *  - toggle_ab       : enable/disable A/B testing for a path.
- *  - check_regression: re-audit applied URLs and auto-revert if score dropped > delta.
- *  - list_history    : return all versions for a path.
+ *  - generate_fix              : ask Gemini to produce a fix for a specific issue.
+ *  - apply_fix                 : write proposal into seo_overrides + history snapshot.
+ *  - revert                    : restore an older version from seo_override_history.
+ *  - bulk_fix                  : iterate audits below score threshold and auto-apply.
+ *  - toggle_ab                 : enable/disable A/B testing for a path.
+ *  - check_regression          : re-audit applied URLs and auto-revert if score dropped.
+ *  - list_history              : return all versions for a path.
+ *  - check_canonical_consistency : check robots.txt & meta robots vs proposed canonical.
+ *  - one_click_canonical_fix   : generate + (optionally) apply canonical for one or all paths.
+ *  - apply_manual_canonical    : admin override with explicit override of conflicts.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
@@ -34,15 +35,13 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 type FixType = "title" | "meta" | "schema" | "alt_text" | "canonical" | "all";
 
 const BASE_URL = "https://www.realtrust.ro";
+const CANONICAL_HOST = "www.realtrust.ro";
+const ALLOWED_HOSTS = new Set([CANONICAL_HOST, "realtrust.ro"]);
 
-/**
- * Build a normalized, absolute canonical URL from any input (path, full URL, with/without query).
- * Rules:
- *  - Always https + www.realtrust.ro host (strip subdomains like preview/lovable)
- *  - Lowercase pathname (Romanian routes are lowercase by convention)
- *  - Strip trailing slash (except root), collapse duplicate slashes
- *  - Remove all query params and hash (canonical must be parameter-free)
- */
+// ============================================================================
+// Canonical normalization
+// ============================================================================
+
 function buildCanonicalUrl(input: string): string {
   let pathname = "/";
   try {
@@ -54,6 +53,29 @@ function buildCanonicalUrl(input: string): string {
   pathname = pathname.replace(/\/{2,}/g, "/").toLowerCase();
   if (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
   return `${BASE_URL}${pathname}`;
+}
+
+function normalizePath(input: string): string {
+  try {
+    const u = new URL(input, BASE_URL);
+    let p = u.pathname.replace(/\/{2,}/g, "/");
+    if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+    return p || "/";
+  } catch {
+    let p = input.startsWith("/") ? input : `/${input}`;
+    p = p.replace(/\/{2,}/g, "/");
+    if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+    return p || "/";
+  }
+}
+
+function detectPageType(p: string): string {
+  if (p === "/" || p === "") return "homepage";
+  if (p.startsWith("/proprietate/")) return "property_detail";
+  if (p.startsWith("/blog/")) return "article";
+  if (p.startsWith("/imobiliare-timisoara")) return "neighborhood";
+  if (p.startsWith("/calculator-roi") || p.startsWith("/analiza-roi-apartament")) return "tool";
+  return "general";
 }
 
 interface AnyBody {
@@ -68,7 +90,18 @@ interface AnyBody {
   threshold?: number;
   regression_delta?: number;
   notes?: string;
+  // canonical-specific:
+  canonical_url?: string;
+  override_conflicts?: boolean;
+  override_reason?: string;
+  scope?: "single" | "bulk";
+  bulk_threshold?: number;
+  apply_after_check?: boolean;
 }
+
+// ============================================================================
+// HTTP entry
+// ============================================================================
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -76,7 +109,6 @@ serve(async (req) => {
     const body = (await req.json()) as AnyBody;
     const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Admin gate via JWT
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
     if (!token) return json({ error: "Missing auth" }, 401);
@@ -106,6 +138,12 @@ serve(async (req) => {
         return json(await checkRegression(sb, body, userId));
       case "list_history":
         return json(await listHistory(sb, body));
+      case "check_canonical_consistency":
+        return json(await checkCanonicalConsistency(sb, body));
+      case "one_click_canonical_fix":
+        return json(await oneClickCanonicalFix(sb, body, userId));
+      case "apply_manual_canonical":
+        return json(await applyManualCanonical(sb, body, userId));
       default:
         return json({ error: `Unknown action: ${body.action}` }, 400);
     }
@@ -116,31 +154,8 @@ serve(async (req) => {
 });
 
 // ============================================================================
-// Helpers
+// AI helpers
 // ============================================================================
-
-function normalizePath(input: string): string {
-  try {
-    const u = new URL(input, "https://www.realtrust.ro");
-    let p = u.pathname.replace(/\/{2,}/g, "/");
-    if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
-    return p || "/";
-  } catch {
-    let p = input.startsWith("/") ? input : `/${input}`;
-    p = p.replace(/\/{2,}/g, "/");
-    if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
-    return p || "/";
-  }
-}
-
-function detectPageType(p: string): string {
-  if (p === "/" || p === "") return "homepage";
-  if (p.startsWith("/proprietate/")) return "property_detail";
-  if (p.startsWith("/blog/")) return "article";
-  if (p.startsWith("/imobiliare-timisoara")) return "neighborhood";
-  if (p.startsWith("/calculator-roi") || p.startsWith("/analiza-roi-apartament")) return "tool";
-  return "general";
-}
 
 async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
   if (!LOVABLE_API_KEY) throw new Error("AI not configured");
@@ -181,6 +196,129 @@ function safeJson<T = unknown>(text: string): T | null {
     }
     return null;
   }
+}
+
+// ============================================================================
+// Robots.txt — fetch + cache (24h) + parse
+// ============================================================================
+
+interface RobotsRule {
+  user_agent: string;
+  allow: string[];
+  disallow: string[];
+}
+
+interface ParsedRobots {
+  rules: RobotsRule[];
+  sitemaps: string[];
+}
+
+function parseRobotsTxt(raw: string): ParsedRobots {
+  const lines = raw.split(/\r?\n/);
+  const rules: RobotsRule[] = [];
+  const sitemaps: string[] = [];
+  let current: RobotsRule | null = null;
+
+  for (const line of lines) {
+    const clean = line.replace(/#.*$/, "").trim();
+    if (!clean) continue;
+    const m = clean.match(/^([A-Za-z-]+)\s*:\s*(.+)$/);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    const value = m[2].trim();
+
+    if (key === "user-agent") {
+      current = { user_agent: value, allow: [], disallow: [] };
+      rules.push(current);
+    } else if (key === "disallow" && current) {
+      current.disallow.push(value);
+    } else if (key === "allow" && current) {
+      current.allow.push(value);
+    } else if (key === "sitemap") {
+      sitemaps.push(value);
+    }
+  }
+  return { rules, sitemaps };
+}
+
+/** Returns true if path is blocked by robots.txt for User-agent: * */
+function isPathDisallowed(parsed: ParsedRobots, path: string): { blocked: boolean; matchedRule?: string } {
+  // Wildcard rule first
+  const starRule = parsed.rules.find((r) => r.user_agent === "*");
+  if (!starRule) return { blocked: false };
+
+  let bestAllow = -1;
+  let bestDisallow = -1;
+  let matchedDisallow = "";
+
+  for (const a of starRule.allow) {
+    if (a && path.startsWith(a) && a.length > bestAllow) bestAllow = a.length;
+  }
+  for (const d of starRule.disallow) {
+    if (!d) continue; // empty Disallow means allow-all
+    if (path.startsWith(d) && d.length > bestDisallow) {
+      bestDisallow = d.length;
+      matchedDisallow = d;
+    }
+  }
+  // Longest-match wins; allow ties beat disallow
+  if (bestDisallow > bestAllow) return { blocked: true, matchedRule: matchedDisallow };
+  return { blocked: false };
+}
+
+async function getRobotsCached(sb: any, host: string): Promise<{ parsed: ParsedRobots; cached: boolean; fetched_at: string; http_status: number | null; error: string | null; raw: string }> {
+  // Try cache
+  const { data: cached } = await sb
+    .from("seo_robots_cache")
+    .select("*")
+    .eq("host", host)
+    .maybeSingle();
+
+  const now = Date.now();
+  if (cached && new Date(cached.expires_at).getTime() > now) {
+    return {
+      parsed: { rules: (cached.parsed_rules as any) || [], sitemaps: cached.sitemap_urls || [] },
+      cached: true,
+      fetched_at: cached.fetched_at,
+      http_status: cached.http_status,
+      error: cached.fetch_error,
+      raw: cached.raw_content,
+    };
+  }
+
+  // Fetch live
+  const url = `https://${host}/robots.txt`;
+  let raw = "";
+  let status: number | null = null;
+  let error: string | null = null;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    status = res.status;
+    raw = await res.text();
+    if (!res.ok) error = `HTTP ${status}`;
+  } catch (e) {
+    error = (e as Error).message;
+    raw = "";
+  }
+
+  const parsed = parseRobotsTxt(raw);
+  const expires = new Date(now + 24 * 60 * 60 * 1000).toISOString();
+
+  await sb.from("seo_robots_cache").upsert(
+    {
+      host,
+      raw_content: raw,
+      parsed_rules: parsed.rules as any,
+      sitemap_urls: parsed.sitemaps,
+      fetched_at: new Date(now).toISOString(),
+      expires_at: expires,
+      http_status: status,
+      fetch_error: error,
+    },
+    { onConflict: "host" },
+  );
+
+  return { parsed, cached: false, fetched_at: new Date(now).toISOString(), http_status: status, error, raw };
 }
 
 // ============================================================================
@@ -226,9 +364,9 @@ LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice
     alt_text:
       "Suggest alt-text for up to 8 likely images on this page (hero, gallery, property thumbs). Output JSON: {\"alt_text_suggestions\": [{\"image_hint\": \"hero\", \"alt\": \"...\"}, ...]}",
     canonical:
-      `Propose the correct absolute canonical URL for this page. Rules: must use https://www.realtrust.ro as origin (strip subdomains like preview/lovable/staging), lowercase pathname, NO query params, NO hash, NO trailing slash (except root). Detected pageType="${pageType}". Suggested baseline (already normalized): "${suggestedCanonical}". Current canonical found on the page (if any): "${currentCanonicalCandidate || "(none)"}". If the suggested baseline is correct, return it as-is. If the page is a duplicate / pagination / filter variant, propose the canonical of the master page instead. Also explain in 1 short Romanian sentence why. Output JSON: {"canonical_url": "https://www.realtrust.ro/...", "canonical_reason": "..."}`,
+      `Propose the correct absolute canonical URL for this page. Rules: must use https://${CANONICAL_HOST} as origin (strip subdomains like preview/lovable/staging), lowercase pathname, NO query params, NO hash, NO trailing slash (except root). Detected pageType="${pageType}". Suggested baseline (already normalized): "${suggestedCanonical}". Current canonical found on the page (if any): "${currentCanonicalCandidate || "(none)"}". If the suggested baseline is correct, return it as-is. If the page is a duplicate / pagination / filter variant, propose the canonical of the master page instead. Also explain in 1 short Romanian sentence why. Output JSON: {"canonical_url": "https://${CANONICAL_HOST}/...", "canonical_reason": "..."}`,
     all:
-      `Generate a complete SEO fix bundle. Output JSON: {"title": "...", "meta_description": "...", "canonical_url": "${suggestedCanonical}", "json_ld": { schema.org object appropriate for pageType="${pageType}", with @context, @type, name, description, url, image, address (Timișoara), telephone "+40799069256" }, "extra_keywords": [{"keyword": "...", "reason": "..."}, ...]}. All copy in RO. Title 50-60 chars. Meta 140-155 chars. canonical_url MUST be the normalized absolute URL on https://www.realtrust.ro (no query, no hash, no trailing slash).`,
+      `Generate a complete SEO fix bundle. Output JSON: {"title": "...", "meta_description": "...", "canonical_url": "${suggestedCanonical}", "json_ld": { schema.org object appropriate for pageType="${pageType}", with @context, @type, name, description, url, image, address (Timișoara), telephone "+40799069256" }, "extra_keywords": [{"keyword": "...", "reason": "..."}, ...]}. All copy in RO. Title 50-60 chars. Meta 140-155 chars. canonical_url MUST be the normalized absolute URL on https://${CANONICAL_HOST} (no query, no hash, no trailing slash).`,
   };
 
   const system = `You are an expert SEO engineer for a Romanian real estate brand "RealTrust & ApArt Hotel" in Timișoara. Output ONLY valid JSON, no prose. Brand voice: professional, trustworthy, ROI-focused (9.4% net). Always favor local keywords (Timișoara, neighborhood names like Iosefin, Iulius Town, Complex Studențesc, Dumbrăvița, Giroc, ISHO, Aeroport, UVT). Phone: +40799069256. Email: info@realtrust.ro.`;
@@ -237,7 +375,6 @@ LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice
   const raw = await callGemini(system, user);
   const parsed = safeJson<Record<string, unknown>>(raw) || {};
 
-  // Enforce canonical normalization (AI cannot bypass our rules: host, lowercase, no query, no trailing slash)
   if ((parsed as any).canonical_url) {
     (parsed as any).canonical_url = buildCanonicalUrl(String((parsed as any).canonical_url));
   } else if (fixType === "canonical" || fixType === "all") {
@@ -263,14 +400,12 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
   const path = normalizePath(body.url_path);
   const variant = body.variant || "A";
 
-  // Load current override (if any)
   const { data: current } = await sb
     .from("seo_overrides")
     .select("*")
     .eq("url_path", path)
     .maybeSingle();
 
-  // Snapshot current to history before overwriting (only if there is an existing override)
   let nextVersion = 1;
   if (current) {
     const { data: lastVer } = await sb
@@ -300,16 +435,12 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
     });
   }
 
-  // Normalize canonical defensively whenever it shows up in the payload
   const p = body.payload as any;
   if (p && p.canonical_url) {
     p.canonical_url = buildCanonicalUrl(String(p.canonical_url));
   }
 
-  const p = body.payload as any;
-
   if (variant === "B") {
-    // Apply as variant B (do not touch the live A version) — variant B can also override canonical
     const variantB: Record<string, unknown> = {
       title: p.title ?? current?.title ?? null,
       meta_description: p.meta_description ?? current?.meta_description ?? null,
@@ -327,7 +458,6 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
         })
         .eq("url_path", path);
     } else {
-      // Need an A first — promote payload to A and B equal
       await sb.from("seo_overrides").insert({
         url_path: path,
         title: variantB.title,
@@ -343,7 +473,6 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
     return { ok: true, variant: "B", version: nextVersion };
   }
 
-  // Apply as variant A (live)
   const updates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
     applied_by: userId,
@@ -389,7 +518,6 @@ async function revert(sb: any, body: AnyBody, userId: string) {
     .maybeSingle();
   if (error || !ver) throw new Error("Version not found");
 
-  // Snapshot current before reverting
   const { data: current } = await sb
     .from("seo_overrides")
     .select("*")
@@ -449,7 +577,6 @@ async function revert(sb: any, body: AnyBody, userId: string) {
 
 async function bulkFix(sb: any, body: AnyBody, userId: string) {
   const threshold = body.threshold ?? 85;
-  // Get latest audit per URL with score < threshold
   const { data: audits } = await sb
     .from("seo_audits")
     .select("id, url, overall_score, created_at")
@@ -480,14 +607,13 @@ async function bulkFix(sb: any, body: AnyBody, userId: string) {
     } catch (e) {
       results.push({ url: audit.url, status: "error", error: (e as Error).message });
     }
-    // Small delay to avoid rate limits
     await new Promise((r) => setTimeout(r, 600));
   }
   return { ok: true, processed: results.length, results };
 }
 
 // ============================================================================
-// toggle_ab
+// toggle_ab / check_regression / list_history
 // ============================================================================
 
 async function toggleAb(sb: any, body: AnyBody) {
@@ -500,13 +626,8 @@ async function toggleAb(sb: any, body: AnyBody) {
   return { ok: true, ab_enabled: !!body.ab_enabled };
 }
 
-// ============================================================================
-// check_regression
-// ============================================================================
-
 async function checkRegression(sb: any, body: AnyBody, userId: string) {
   const delta = body.regression_delta ?? 5;
-  // Compare last applied score (from history) with newest audit score
   const { data: overrides } = await sb
     .from("seo_overrides")
     .select("url_path, applied_at, source_audit_id")
@@ -520,7 +641,7 @@ async function checkRegression(sb: any, body: AnyBody, userId: string) {
       : { data: null };
     const baseline = srcAudit?.overall_score;
     if (!baseline) continue;
-    const fullUrl = `https://www.realtrust.ro${ov.url_path}`;
+    const fullUrl = `${BASE_URL}${ov.url_path}`;
     const { data: latest } = await sb
       .from("seo_audits")
       .select("id, overall_score, created_at")
@@ -531,7 +652,6 @@ async function checkRegression(sb: any, body: AnyBody, userId: string) {
       .maybeSingle();
     if (!latest?.overall_score) continue;
     if (baseline - latest.overall_score >= delta) {
-      // Find previous history version & revert
       const { data: prevVer } = await sb
         .from("seo_override_history")
         .select("id, version_number")
@@ -549,10 +669,6 @@ async function checkRegression(sb: any, body: AnyBody, userId: string) {
   return { ok: true, reverts };
 }
 
-// ============================================================================
-// list_history
-// ============================================================================
-
 async function listHistory(sb: any, body: AnyBody) {
   if (!body.url_path) throw new Error("url_path required");
   const path = normalizePath(body.url_path);
@@ -563,4 +679,339 @@ async function listHistory(sb: any, body: AnyBody) {
     .order("version_number", { ascending: false })
     .limit(50);
   return { ok: true, history: data || [] };
+}
+
+// ============================================================================
+// CANONICAL CONSISTENCY CHECK
+// ============================================================================
+
+interface ConflictReport {
+  type: "robots_disallow" | "meta_noindex" | "host_mismatch" | "self_canonical_to_blocked" | "host_not_allowed" | "https_required";
+  severity: "critical" | "warning";
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+async function checkCanonicalConsistency(sb: any, body: AnyBody) {
+  if (!body.url_path && !body.canonical_url) throw new Error("url_path or canonical_url required");
+
+  const path = body.url_path ? normalizePath(body.url_path) : null;
+  const proposedCanonical = body.canonical_url
+    ? buildCanonicalUrl(body.canonical_url)
+    : path ? buildCanonicalUrl(path) : "";
+
+  const conflicts: ConflictReport[] = [];
+
+  // 1) Validate scheme + host
+  let canonicalUrl: URL | null = null;
+  try {
+    canonicalUrl = new URL(proposedCanonical);
+  } catch {
+    conflicts.push({
+      type: "host_not_allowed",
+      severity: "critical",
+      message: "URL canonical invalid (nu poate fi parsat).",
+    });
+  }
+  if (canonicalUrl) {
+    if (canonicalUrl.protocol !== "https:") {
+      conflicts.push({
+        type: "https_required",
+        severity: "critical",
+        message: "Canonical trebuie să fie HTTPS.",
+      });
+    }
+    if (!ALLOWED_HOSTS.has(canonicalUrl.hostname)) {
+      conflicts.push({
+        type: "host_not_allowed",
+        severity: "critical",
+        message: `Host "${canonicalUrl.hostname}" nu este permis. Folosește ${CANONICAL_HOST}.`,
+      });
+    }
+  }
+
+  // 2) robots.txt check (cached 24h)
+  const checkPath = canonicalUrl?.pathname || path || "/";
+  const robotsInfo = await getRobotsCached(sb, CANONICAL_HOST);
+  const robotsCheck = isPathDisallowed(robotsInfo.parsed, checkPath);
+  if (robotsCheck.blocked) {
+    conflicts.push({
+      type: "robots_disallow",
+      severity: "critical",
+      message: `Pagina este blocată în robots.txt prin regula "Disallow: ${robotsCheck.matchedRule}". Canonical-ul nu va avea efect — Google nu va crawl-a pagina.`,
+      details: { matched_rule: robotsCheck.matchedRule },
+    });
+  }
+
+  // 3) Check meta robots from latest audit (if path provided)
+  let metaRobots: string | null = null;
+  if (path) {
+    const fullUrl = `${BASE_URL}${path}`;
+    const { data: latestAudit } = await sb
+      .from("seo_audits")
+      .select("raw_analysis, meta")
+      .eq("url", fullUrl)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    metaRobots =
+      (latestAudit as any)?.meta?.robots ||
+      (latestAudit as any)?.raw_analysis?.meta_robots ||
+      (latestAudit as any)?.raw_analysis?.robots ||
+      null;
+    if (metaRobots && /noindex/i.test(metaRobots)) {
+      conflicts.push({
+        type: "meta_noindex",
+        severity: "critical",
+        message: `Pagina are meta robots="${metaRobots}". Setarea unui canonical pe o pagină noindex este contradictorie.`,
+        details: { meta_robots: metaRobots },
+      });
+    }
+  }
+
+  return {
+    ok: true,
+    proposed_canonical: proposedCanonical,
+    url_path: path,
+    conflicts,
+    has_critical: conflicts.some((c) => c.severity === "critical"),
+    robots: {
+      cached: robotsInfo.cached,
+      fetched_at: robotsInfo.fetched_at,
+      http_status: robotsInfo.http_status,
+      error: robotsInfo.error,
+      sitemaps: robotsInfo.parsed.sitemaps,
+    },
+    meta_robots: metaRobots,
+  };
+}
+
+// ============================================================================
+// ONE-CLICK CANONICAL FIX (single page or bulk)
+// ============================================================================
+
+async function oneClickCanonicalFix(sb: any, body: AnyBody, userId: string) {
+  const scope = body.scope || "single";
+  const apply = body.apply_after_check !== false; // default true
+  const overrideConflicts = !!body.override_conflicts;
+
+  if (scope === "single") {
+    if (!body.url_path && !body.audit_id) throw new Error("url_path or audit_id required");
+    let path = body.url_path ? normalizePath(body.url_path) : "";
+    let auditId = body.audit_id || null;
+
+    if (!path && auditId) {
+      const { data: a } = await sb.from("seo_audits").select("url").eq("id", auditId).maybeSingle();
+      if (a?.url) path = normalizePath(a.url);
+    }
+    const proposed = buildCanonicalUrl(path);
+    const consistency = await checkCanonicalConsistency(sb, { action: "check_canonical_consistency", url_path: path, canonical_url: proposed });
+
+    if (consistency.has_critical && !overrideConflicts) {
+      return {
+        ok: false,
+        applied: false,
+        reason: "conflicts_detected",
+        proposed_canonical: proposed,
+        conflicts: consistency.conflicts,
+        meta_robots: consistency.meta_robots,
+      };
+    }
+
+    if (!apply) {
+      return {
+        ok: true,
+        applied: false,
+        proposed_canonical: proposed,
+        conflicts: consistency.conflicts,
+      };
+    }
+
+    // Get current canonical for log
+    const { data: existing } = await sb
+      .from("seo_overrides")
+      .select("canonical_url")
+      .eq("url_path", path)
+      .maybeSingle();
+
+    await applyFix(
+      sb,
+      {
+        action: "apply_fix",
+        url_path: path,
+        payload: { canonical_url: proposed },
+        audit_id: auditId || undefined,
+        notes: overrideConflicts ? `One-click + override conflicts: ${body.override_reason || "no reason"}` : "One-click canonical fix",
+      } as AnyBody,
+      userId,
+    );
+
+    await sb.from("seo_canonical_fix_log").insert({
+      url_path: path,
+      previous_canonical: existing?.canonical_url || null,
+      new_canonical: proposed,
+      fix_source: "one_click_single",
+      conflicts_detected: consistency.conflicts as any,
+      conflict_overridden: overrideConflicts && consistency.has_critical,
+      override_reason: overrideConflicts ? body.override_reason || null : null,
+      applied_by: userId,
+    });
+
+    return {
+      ok: true,
+      applied: true,
+      proposed_canonical: proposed,
+      conflicts: consistency.conflicts,
+      override_used: overrideConflicts && consistency.has_critical,
+    };
+  }
+
+  // BULK
+  const threshold = body.bulk_threshold ?? 90;
+  const { data: audits } = await sb
+    .from("seo_audits")
+    .select("id, url, overall_score, created_at")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  // dedupe to latest per url
+  const seen = new Set<string>();
+  const targets: any[] = [];
+  for (const a of audits || []) {
+    if (seen.has(a.url)) continue;
+    seen.add(a.url);
+    targets.push(a);
+  }
+
+  const results: any[] = [];
+  for (const audit of targets) {
+    const path = normalizePath(audit.url);
+    try {
+      const proposed = buildCanonicalUrl(path);
+
+      // Skip if already correct
+      const { data: existing } = await sb
+        .from("seo_overrides")
+        .select("canonical_url")
+        .eq("url_path", path)
+        .maybeSingle();
+      if (existing?.canonical_url === proposed) {
+        results.push({ url_path: path, status: "skipped", reason: "already_correct" });
+        continue;
+      }
+
+      const consistency = await checkCanonicalConsistency(sb, { action: "check_canonical_consistency", url_path: path, canonical_url: proposed });
+      if (consistency.has_critical && !overrideConflicts) {
+        results.push({
+          url_path: path,
+          status: "skipped",
+          reason: "conflicts",
+          conflicts: consistency.conflicts.map((c) => c.type),
+        });
+        continue;
+      }
+
+      await applyFix(
+        sb,
+        {
+          action: "apply_fix",
+          url_path: path,
+          payload: { canonical_url: proposed },
+          audit_id: audit.id,
+          notes: "Bulk one-click canonical fix",
+        } as AnyBody,
+        userId,
+      );
+      await sb.from("seo_canonical_fix_log").insert({
+        url_path: path,
+        previous_canonical: existing?.canonical_url || null,
+        new_canonical: proposed,
+        fix_source: "one_click_bulk",
+        conflicts_detected: consistency.conflicts as any,
+        conflict_overridden: overrideConflicts && consistency.has_critical,
+        override_reason: overrideConflicts ? body.override_reason || null : null,
+        applied_by: userId,
+      });
+      results.push({ url_path: path, status: "ok", canonical: proposed });
+    } catch (e) {
+      results.push({ url_path: path, status: "error", error: (e as Error).message });
+    }
+    await new Promise((r) => setTimeout(r, 200));
+  }
+
+  return {
+    ok: true,
+    scope: "bulk",
+    threshold,
+    processed: results.length,
+    applied: results.filter((r) => r.status === "ok").length,
+    skipped: results.filter((r) => r.status === "skipped").length,
+    errors: results.filter((r) => r.status === "error").length,
+    results,
+  };
+}
+
+// ============================================================================
+// MANUAL CANONICAL OVERRIDE (admin types URL directly)
+// ============================================================================
+
+async function applyManualCanonical(sb: any, body: AnyBody, userId: string) {
+  if (!body.url_path) throw new Error("url_path required");
+  if (!body.canonical_url) throw new Error("canonical_url required");
+
+  const path = normalizePath(body.url_path);
+  const normalized = buildCanonicalUrl(body.canonical_url);
+
+  const consistency = await checkCanonicalConsistency(sb, {
+    action: "check_canonical_consistency",
+    url_path: path,
+    canonical_url: normalized,
+  });
+
+  if (consistency.has_critical && !body.override_conflicts) {
+    return {
+      ok: false,
+      applied: false,
+      reason: "conflicts_detected",
+      proposed_canonical: normalized,
+      conflicts: consistency.conflicts,
+    };
+  }
+
+  const { data: existing } = await sb
+    .from("seo_overrides")
+    .select("canonical_url")
+    .eq("url_path", path)
+    .maybeSingle();
+
+  await applyFix(
+    sb,
+    {
+      action: "apply_fix",
+      url_path: path,
+      payload: { canonical_url: normalized },
+      audit_id: body.audit_id,
+      notes: `Manual canonical override${body.override_conflicts ? " (conflicts overridden)" : ""}`,
+    } as AnyBody,
+    userId,
+  );
+
+  await sb.from("seo_canonical_fix_log").insert({
+    url_path: path,
+    previous_canonical: existing?.canonical_url || null,
+    new_canonical: normalized,
+    fix_source: "manual_override",
+    conflicts_detected: consistency.conflicts as any,
+    conflict_overridden: !!body.override_conflicts && consistency.has_critical,
+    override_reason: body.override_reason || null,
+    applied_by: userId,
+  });
+
+  return {
+    ok: true,
+    applied: true,
+    proposed_canonical: normalized,
+    conflicts: consistency.conflicts,
+    override_used: !!body.override_conflicts && consistency.has_critical,
+  };
 }
