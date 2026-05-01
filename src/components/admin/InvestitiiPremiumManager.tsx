@@ -142,7 +142,23 @@ export default function InvestitiiPremiumManager() {
     if (error) {
       toast({ title: "Eroare la încărcare", description: error.message, variant: "destructive" });
     } else {
-      setProperties((data || []).map((d: any) => ({
+      const rows = data || [];
+      const ids = rows.map((r: any) => r.id);
+      const contactsMap = new Map<string, { contact_name: string | null; contact_phone: string | null; contact_email: string | null }>();
+      if (ids.length > 0) {
+        const { data: contactRows } = await supabase
+          .from("property_contact_details" as any)
+          .select("property_id, contact_name, contact_phone, contact_email")
+          .in("property_id", ids);
+        (contactRows || []).forEach((c: any) => {
+          contactsMap.set(c.property_id, {
+            contact_name: c.contact_name,
+            contact_phone: c.contact_phone,
+            contact_email: c.contact_email,
+          });
+        });
+      }
+      setProperties(rows.map((d: any) => ({
         ...d,
         capacity: d.capacity ?? 2,
         bedrooms: d.bedrooms ?? 1,
@@ -156,9 +172,9 @@ export default function InvestitiiPremiumManager() {
         check_out_time: d.check_out_time ?? "11:00",
         images: d.images ?? [],
         features: d.features ?? [],
-        contact_name: d.contact_name ?? null,
-        contact_phone: d.contact_phone ?? null,
-        contact_email: d.contact_email ?? null,
+        contact_name: contactsMap.get(d.id)?.contact_name ?? null,
+        contact_phone: contactsMap.get(d.id)?.contact_phone ?? null,
+        contact_email: contactsMap.get(d.id)?.contact_email ?? null,
         source_url: d.source_url ?? null,
         source_platform: d.source_platform ?? null,
         latitude: d.latitude ?? null,
