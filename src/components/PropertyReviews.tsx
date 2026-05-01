@@ -55,15 +55,13 @@ const PropertyReviews = ({ propertyId, propertyName }: PropertyReviewsProps) => 
     queryKey: ["property-reviews", propertyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("property_reviews")
-        .select("id, guest_name, rating, title, content, created_at, source, guest_country, review_date, admin_reply, admin_reply_at")
-        .eq("property_id", propertyId)
-        .eq("is_published", true)
-        .order("review_date", { ascending: false })
-        .limit(50);
+        .rpc("get_public_property_reviews", { p_property_id: propertyId });
 
       if (error) throw error;
-      return data as Review[];
+      const sorted = (data || [])
+        .sort((a: any, b: any) => (b.review_date || b.created_at).localeCompare(a.review_date || a.created_at))
+        .slice(0, 50);
+      return sorted as Review[];
     },
   });
 
