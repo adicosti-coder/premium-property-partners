@@ -3926,43 +3926,103 @@ export type Database = {
       }
       seo_robots_cache: {
         Row: {
+          content_hash: string | null
           created_at: string
           expires_at: string
+          fetch_count: number
           fetch_error: string | null
           fetched_at: string
           host: string
           http_status: number | null
           id: string
+          invalidation_count: number
+          last_change_detected_at: string | null
           parsed_rules: Json
           raw_content: string
           sitemap_urls: string[]
           updated_at: string
         }
         Insert: {
+          content_hash?: string | null
           created_at?: string
           expires_at?: string
+          fetch_count?: number
           fetch_error?: string | null
           fetched_at?: string
           host: string
           http_status?: number | null
           id?: string
+          invalidation_count?: number
+          last_change_detected_at?: string | null
           parsed_rules?: Json
           raw_content: string
           sitemap_urls?: string[]
           updated_at?: string
         }
         Update: {
+          content_hash?: string | null
           created_at?: string
           expires_at?: string
+          fetch_count?: number
           fetch_error?: string | null
           fetched_at?: string
           host?: string
           http_status?: number | null
           id?: string
+          invalidation_count?: number
+          last_change_detected_at?: string | null
           parsed_rules?: Json
           raw_content?: string
           sitemap_urls?: string[]
           updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_robots_cache_log: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          event_type: string
+          fetch_error: string | null
+          host: string
+          http_status: number | null
+          id: string
+          previous_content_hash: string | null
+          raw_size: number | null
+          rules_count: number | null
+          sitemaps_count: number | null
+          trigger_reason: string | null
+          triggered_by: string | null
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          event_type: string
+          fetch_error?: string | null
+          host: string
+          http_status?: number | null
+          id?: string
+          previous_content_hash?: string | null
+          raw_size?: number | null
+          rules_count?: number | null
+          sitemaps_count?: number | null
+          trigger_reason?: string | null
+          triggered_by?: string | null
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          event_type?: string
+          fetch_error?: string | null
+          host?: string
+          http_status?: number | null
+          id?: string
+          previous_content_hash?: string | null
+          raw_size?: number | null
+          rules_count?: number | null
+          sitemaps_count?: number | null
+          trigger_reason?: string | null
+          triggered_by?: string | null
         }
         Relationships: []
       }
