@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Monitor, Smartphone, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Monitor, Smartphone, AlertTriangle, CheckCircle2, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 /**
@@ -49,10 +49,41 @@ function truncateToWidth(text: string, font: string, maxWidth: number): { displa
 interface Props {
   title: string;
   description: string;
+  /** Page URL (used as canonical fallback if `canonical` not provided) */
   url?: string;
+  /** Optional explicit canonical URL — takes precedence over `url` for the displayed link */
+  canonical?: string;
 }
 
-export const SerpPreview = ({ title, description, url = "https://realtrust.ro/" }: Props) => {
+/**
+ * Format URL the way Google renders it in SERP:
+ * - Shows full host (including subdomain like "blog.realtrust.ro")
+ * - Strips leading "www."
+ * - Path segments separated by " › " (decoded, hyphens → spaces capitalized lightly)
+ * - Trailing slash removed
+ */
+function formatSerpUrl(raw: string, device: Device): { host: string; crumbs: string[]; full: string } {
+  try {
+    const u = new URL(raw);
+    const host = u.hostname.replace(/^www\./, "");
+    const segments = u.pathname.split("/").filter(Boolean).map((seg) => {
+      try {
+        return decodeURIComponent(seg).replace(/-/g, " ");
+      } catch {
+        return seg.replace(/-/g, " ");
+      }
+    });
+    // Mobile collapses long paths: keep first + last if more than 2 segments
+    const crumbs = device === "mobile" && segments.length > 2
+      ? [segments[0], "…", segments[segments.length - 1]]
+      : segments;
+    return { host, crumbs, full: u.origin + u.pathname.replace(/\/$/, "") };
+  } catch {
+    return { host: raw, crumbs: [], full: raw };
+  }
+}
+
+export const SerpPreview = ({ title, description, url = "https://realtrust.ro/", canonical }: Props) => {
   const [device, setDevice] = useState<Device>("desktop");
   const [, force] = useState(0);
   const ready = useRef(false);
@@ -72,13 +103,15 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/" 
   const titleShown = ready.current ? truncateToWidth(title || "", cfg.titleFont, cfg.titleMax) : { display: title, truncated: false };
   const metaShown = ready.current ? truncateToWidth(description || "", cfg.metaFont, cfg.metaMax) : { display: description, truncated: false };
 
-  const displayUrl = (() => {
+  // Canonical takes precedence; fall back to provided url
+  const effectiveUrl = (canonical && canonical.trim()) || url;
+  const serp = formatSerpUrl(effectiveUrl, device);
+  const canonicalDiffers = !!canonical && (() => {
     try {
-      const u = new URL(url);
-      return u.hostname.replace(/^www\./, "") + (u.pathname === "/" ? "" : " › " + u.pathname.split("/").filter(Boolean).join(" › "));
-    } catch {
-      return url;
-    }
+      const a = new URL(canonical);
+      const b = new URL(url);
+      return a.origin + a.pathname.replace(/\/$/, "") !== b.origin + b.pathname.replace(/\/$/, "");
+    } catch { return false; }
   })();
 
   const PixelBar = ({ value, max, label }: { value: number; max: number; label: string }) => {
@@ -131,9 +164,17 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/" 
       >
         <div className="flex items-center gap-2 mb-1">
           <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold">R</div>
-          <div className="leading-tight">
-            <div className="text-[12px] text-gray-800">RealTrust</div>
-            <div className="text-[12px] text-gray-600">{displayUrl}</div>
+          <div className="leading-tight min-w-0 flex-1">
+            <div className="text-[12px] text-gray-800 truncate">RealTrust</div>
+            <div className="text-[12px] text-gray-600 flex items-center gap-1 flex-wrap">
+              <span className="truncate">{serp.host}</span>
+              {serp.crumbs.map((c, i) => (
+                <span key={i} className="flex items-center gap-1">
+                  <span className="text-gray-400">›</span>
+                  <span className="truncate">{c}</span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
         <div
@@ -151,6 +192,21 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/" 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <PixelBar value={titlePx} max={cfg.titleMax} label="Title width" />
         <PixelBar value={metaPx} max={cfg.metaMax} label="Meta description width" />
+      </div>
+
+      {/* Canonical / URL info */}
+      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2">
+        <Link2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="font-mono break-all">
+            <span className="font-semibold text-foreground">{canonical ? "Canonical:" : "URL:"}</span> {serp.full}
+          </div>
+          {canonicalDiffers && (
+            <div className="text-amber-700 dark:text-amber-400">
+              ⚠ Canonical diferă de URL-ul paginii — Google va indexa varianta canonical.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Status badges */}
