@@ -213,6 +213,9 @@ KeywordGaps: ${JSON.stringify(audit.keyword_gaps || []).slice(0, 800)}
 LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice(0, 600)}
 `.trim();
 
+  const suggestedCanonical = buildCanonicalUrl(audit.url);
+  const currentCanonicalCandidate = (audit as any).canonical_url || (audit as any).meta?.canonical || null;
+
   const fixInstructions: Record<FixType, string> = {
     title:
       "Generate ONLY a new title (50-60 chars, RO, with primary local keyword). Output JSON: {\"title\": \"...\"}",
@@ -222,8 +225,10 @@ LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice
       `Generate Schema.org JSON-LD appropriate for pageType="${pageType}". Pick the best @type (LocalBusiness/RealEstateAgent for homepage; Product/RealEstateListing for property; Article for blog; Place for neighborhood). Include name, description, url, image, address (Timișoara, RO), telephone "+40799069256", email "info@realtrust.ro" where applicable. Output JSON: {"json_ld": { ... }}`,
     alt_text:
       "Suggest alt-text for up to 8 likely images on this page (hero, gallery, property thumbs). Output JSON: {\"alt_text_suggestions\": [{\"image_hint\": \"hero\", \"alt\": \"...\"}, ...]}",
+    canonical:
+      `Propose the correct absolute canonical URL for this page. Rules: must use https://www.realtrust.ro as origin (strip subdomains like preview/lovable/staging), lowercase pathname, NO query params, NO hash, NO trailing slash (except root). Detected pageType="${pageType}". Suggested baseline (already normalized): "${suggestedCanonical}". Current canonical found on the page (if any): "${currentCanonicalCandidate || "(none)"}". If the suggested baseline is correct, return it as-is. If the page is a duplicate / pagination / filter variant, propose the canonical of the master page instead. Also explain in 1 short Romanian sentence why. Output JSON: {"canonical_url": "https://www.realtrust.ro/...", "canonical_reason": "..."}`,
     all:
-      `Generate a complete SEO fix bundle. Output JSON: {"title": "...", "meta_description": "...", "json_ld": { schema.org object appropriate for pageType="${pageType}", with @context, @type, name, description, url, image, address (Timișoara), telephone "+40799069256" }, "extra_keywords": [{"keyword": "...", "reason": "..."}, ...]}. All copy in RO. Title 50-60 chars. Meta 140-155 chars.`,
+      `Generate a complete SEO fix bundle. Output JSON: {"title": "...", "meta_description": "...", "canonical_url": "${suggestedCanonical}", "json_ld": { schema.org object appropriate for pageType="${pageType}", with @context, @type, name, description, url, image, address (Timișoara), telephone "+40799069256" }, "extra_keywords": [{"keyword": "...", "reason": "..."}, ...]}. All copy in RO. Title 50-60 chars. Meta 140-155 chars. canonical_url MUST be the normalized absolute URL on https://www.realtrust.ro (no query, no hash, no trailing slash).`,
   };
 
   const system = `You are an expert SEO engineer for a Romanian real estate brand "RealTrust & ApArt Hotel" in Timișoara. Output ONLY valid JSON, no prose. Brand voice: professional, trustworthy, ROI-focused (9.4% net). Always favor local keywords (Timișoara, neighborhood names like Iosefin, Iulius Town, Complex Studențesc, Dumbrăvița, Giroc, ISHO, Aeroport, UVT). Phone: +40799069256. Email: info@realtrust.ro.`;
