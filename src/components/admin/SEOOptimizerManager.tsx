@@ -645,6 +645,9 @@ const SEOOptimizerManager = () => {
           <CardDescription>
             Scanează orice pagină din site și primește scor SEO, sugestii de keyword-uri, meta description și oportunități de optimizare generate de AI.
           </CardDescription>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <GlobalCanonicalFixButton />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">
