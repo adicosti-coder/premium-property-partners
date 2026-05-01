@@ -21,6 +21,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
+import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
 
 const QUICK_URLS = [
   // Principal
@@ -875,6 +876,7 @@ const SEOOptimizerManager = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
+            <SEOAutoFixPanel audit={selectedAudit} />
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
               <div className="rounded-lg border p-3">
                 <div className="text-muted-foreground text-xs">Cuvinte</div>
