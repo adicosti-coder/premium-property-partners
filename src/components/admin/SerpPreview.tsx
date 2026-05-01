@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Monitor, Smartphone, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Monitor, Smartphone, AlertTriangle, CheckCircle2, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 /**
