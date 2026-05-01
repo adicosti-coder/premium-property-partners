@@ -291,6 +291,9 @@ const SEOHead = ({
       <title>{finalTitle}</title>
       <meta name="title" content={finalTitle} />
       <meta name="description" content={finalDescription} />
+      {overrideKeywords.length > 0 && (
+        <meta name="keywords" content={overrideKeywords.join(", ")} />
+      )}
       <link rel="canonical" href={finalUrl} />
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       <html lang={language} />
