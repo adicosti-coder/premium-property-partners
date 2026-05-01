@@ -948,18 +948,74 @@ const SEOOptimizerManager = () => {
                     <div className="text-xs text-muted-foreground mt-1">Actual: {selectedAudit.title}</div>
                   )}
                 </div>
-                <div>
-                  <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-between">
-                    <span>META DESCRIPTION SUGERATĂ ({selectedAudit.suggested_meta?.length || 0} char)</span>
-                    <Button size="sm" variant="ghost" onClick={() => copyText(selectedAudit.suggested_meta!, "Meta")}>
-                      <Copy className="w-3 h-3" />
-                    </Button>
-                  </div>
-                  <div className="text-sm">{selectedAudit.suggested_meta}</div>
-                  {selectedAudit.meta_description && (
-                    <div className="text-xs text-muted-foreground mt-1">Actual: {selectedAudit.meta_description}</div>
-                  )}
-                </div>
+                {(() => {
+                  const currentMeta = editedMeta[selectedAudit.id] ?? selectedAudit.suggested_meta ?? "";
+                  const len = currentMeta.length;
+                  const isEdited = editedMeta[selectedAudit.id] !== undefined;
+                  let counterColor = "text-emerald-600 dark:text-emerald-400";
+                  if (len > 200) counterColor = "text-red-600 dark:text-red-400";
+                  else if (len > 160) counterColor = "text-amber-600 dark:text-amber-400";
+                  else if (len < 110) counterColor = "text-amber-600 dark:text-amber-400";
+                  return (
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-between gap-2 flex-wrap">
+                        <span className="flex items-center gap-2">
+                          META DESCRIPTION SUGERATĂ
+                          <span className={`font-mono ${counterColor}`}>{len}/160</span>
+                          {len > 200 && <Badge variant="destructive" className="text-[10px]">peste limita absolută 200</Badge>}
+                          {len > 160 && len <= 200 && <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700 dark:text-amber-400">va fi trunchiată</Badge>}
+                          {len > 0 && len < 110 && <Badge variant="outline" className="text-[10px]">prea scurtă</Badge>}
+                          {isEdited && <Badge variant="secondary" className="text-[10px]">editat</Badge>}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          {len > 200 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const next = shortenMeta(currentMeta, 155);
+                                setEditedMeta((m) => ({ ...m, [selectedAudit.id]: next }));
+                                toast.success("Meta scurtată automat", {
+                                  description: `${len} → ${next.length} caractere`,
+                                });
+                              }}
+                            >
+                              <Scissors className="w-3 h-3 mr-1" />
+                              Generează meta optim
+                            </Button>
+                          )}
+                          {isEdited && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditedMeta((m) => {
+                                const { [selectedAudit.id]: _, ...rest } = m;
+                                return rest;
+                              })}
+                              title="Revino la sugestia AI originală"
+                            >
+                              <Undo2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" onClick={() => copyText(currentMeta, "Meta")}>
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </span>
+                      </div>
+                      <textarea
+                        className="w-full text-sm bg-background border rounded-md p-2 min-h-[64px] resize-y font-normal"
+                        value={currentMeta}
+                        onChange={(e) => setEditedMeta((m) => ({ ...m, [selectedAudit.id]: e.target.value }))}
+                      />
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        Optim: 110–160 caractere · Maxim absolut: 200
+                      </div>
+                      {selectedAudit.meta_description && (
+                        <div className="text-xs text-muted-foreground mt-1">Actual: {selectedAudit.meta_description}</div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
