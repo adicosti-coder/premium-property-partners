@@ -484,10 +484,7 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
         </CardContent>
       </Card>
 
-      {/* Hidden trigger for full bulk modal (kept separate from canonical bulk) */}
-      <Dialog>
-        <button id="bulk-full-fix-trigger" className="hidden" onClick={() => {}} />
-      </Dialog>
+
 
       {/* ===================== Diff Viewer Dialog ===================== */}
       <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
