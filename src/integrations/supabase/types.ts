@@ -3746,6 +3746,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_canonical_fix_log: {
+        Row: {
+          applied_at: string
+          applied_by: string | null
+          conflict_overridden: boolean
+          conflicts_detected: Json | null
+          fix_source: string
+          id: string
+          new_canonical: string
+          override_reason: string | null
+          previous_canonical: string | null
+          url_path: string
+        }
+        Insert: {
+          applied_at?: string
+          applied_by?: string | null
+          conflict_overridden?: boolean
+          conflicts_detected?: Json | null
+          fix_source: string
+          id?: string
+          new_canonical: string
+          override_reason?: string | null
+          previous_canonical?: string | null
+          url_path: string
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string | null
+          conflict_overridden?: boolean
+          conflicts_detected?: Json | null
+          fix_source?: string
+          id?: string
+          new_canonical?: string
+          override_reason?: string | null
+          previous_canonical?: string | null
+          url_path?: string
+        }
+        Relationships: []
+      }
       seo_override_history: {
         Row: {
           alt_text_suggestions: Json | null
@@ -3884,6 +3923,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seo_robots_cache: {
+        Row: {
+          created_at: string
+          expires_at: string
+          fetch_error: string | null
+          fetched_at: string
+          host: string
+          http_status: number | null
+          id: string
+          parsed_rules: Json
+          raw_content: string
+          sitemap_urls: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          fetch_error?: string | null
+          fetched_at?: string
+          host: string
+          http_status?: number | null
+          id?: string
+          parsed_rules?: Json
+          raw_content: string
+          sitemap_urls?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          fetch_error?: string | null
+          fetched_at?: string
+          host?: string
+          http_status?: number | null
+          id?: string
+          parsed_rules?: Json
+          raw_content?: string
+          sitemap_urls?: string[]
+          updated_at?: string
+        }
+        Relationships: []
       }
       shared_poi_links: {
         Row: {
