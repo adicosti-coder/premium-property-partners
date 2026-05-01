@@ -23,6 +23,7 @@ import {
 import jsPDF from "jspdf";
 import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
+import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
 const QUICK_URLS = [
   // Principal
@@ -648,6 +649,9 @@ const SEOOptimizerManager = () => {
           </CardDescription>
           <div className="flex flex-wrap gap-2 pt-2">
             <GlobalCanonicalFixButton />
+          </div>
+          <div className="pt-3">
+            <RobotsCacheStatus />
           </div>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -144,6 +144,12 @@ serve(async (req) => {
         return json(await oneClickCanonicalFix(sb, body, userId));
       case "apply_manual_canonical":
         return json(await applyManualCanonical(sb, body, userId));
+      case "get_robots_status":
+        return json(await getRobotsStatus(sb, (body as any).host || CANONICAL_HOST));
+      case "invalidate_robots_cache":
+        return json(await invalidateRobotsCache(sb, (body as any).host || CANONICAL_HOST, userId, (body as any).reason || ""));
+      case "refresh_robots_cache":
+        return json(await refreshRobotsCache(sb, (body as any).host || CANONICAL_HOST, userId, (body as any).reason || ""));
       default:
         return json({ error: `Unknown action: ${body.action}` }, 400);
     }
@@ -266,28 +272,48 @@ function isPathDisallowed(parsed: ParsedRobots, path: string): { blocked: boolea
   return { blocked: false };
 }
 
-async function getRobotsCached(sb: any, host: string): Promise<{ parsed: ParsedRobots; cached: boolean; fetched_at: string; http_status: number | null; error: string | null; raw: string }> {
-  // Try cache
-  const { data: cached } = await sb
-    .from("seo_robots_cache")
-    .select("*")
-    .eq("host", host)
-    .maybeSingle();
+// Compute SHA-256 hex hash for content-change detection
+async function sha256Hex(input: string): Promise<string> {
+  const buf = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
-  const now = Date.now();
-  if (cached && new Date(cached.expires_at).getTime() > now) {
-    return {
-      parsed: { rules: (cached.parsed_rules as any) || [], sitemaps: cached.sitemap_urls || [] },
-      cached: true,
-      fetched_at: cached.fetched_at,
-      http_status: cached.http_status,
-      error: cached.fetch_error,
-      raw: cached.raw_content,
-    };
+async function logRobotsEvent(sb: any, entry: {
+  host: string;
+  event_type: "fetch_success" | "fetch_error" | "cache_hit" | "cache_expired" | "manual_invalidation" | "manual_refresh" | "content_changed";
+  http_status?: number | null;
+  fetch_error?: string | null;
+  raw_size?: number | null;
+  rules_count?: number | null;
+  sitemaps_count?: number | null;
+  content_hash?: string | null;
+  previous_content_hash?: string | null;
+  triggered_by?: string | null;
+  trigger_reason?: string | null;
+}) {
+  try {
+    await sb.from("seo_robots_cache_log").insert({
+      host: entry.host,
+      event_type: entry.event_type,
+      http_status: entry.http_status ?? null,
+      fetch_error: entry.fetch_error ?? null,
+      raw_size: entry.raw_size ?? null,
+      rules_count: entry.rules_count ?? null,
+      sitemaps_count: entry.sitemaps_count ?? null,
+      content_hash: entry.content_hash ?? null,
+      previous_content_hash: entry.previous_content_hash ?? null,
+      triggered_by: entry.triggered_by ?? null,
+      trigger_reason: entry.trigger_reason ?? null,
+    });
+  } catch (e) {
+    console.warn("[robots-log] failed:", (e as Error).message);
   }
+}
 
-  // Fetch live
+async function fetchRobotsLive(sb: any, host: string, prevHash: string | null, prevFetchCount: number, prevInvCount: number, prevChangeAt: string | null, triggeredBy: string | null, reason: string) {
   const url = `https://${host}/robots.txt`;
+  const now = Date.now();
   let raw = "";
   let status: number | null = null;
   let error: string | null = null;
@@ -303,6 +329,9 @@ async function getRobotsCached(sb: any, host: string): Promise<{ parsed: ParsedR
 
   const parsed = parseRobotsTxt(raw);
   const expires = new Date(now + 24 * 60 * 60 * 1000).toISOString();
+  const hash = raw ? await sha256Hex(raw) : null;
+  const changed = !!hash && !!prevHash && hash !== prevHash;
+  const changeAt = changed ? new Date(now).toISOString() : prevChangeAt;
 
   await sb.from("seo_robots_cache").upsert(
     {
@@ -314,11 +343,218 @@ async function getRobotsCached(sb: any, host: string): Promise<{ parsed: ParsedR
       expires_at: expires,
       http_status: status,
       fetch_error: error,
+      content_hash: hash,
+      last_change_detected_at: changeAt,
+      fetch_count: (prevFetchCount || 0) + 1,
+      invalidation_count: prevInvCount || 0,
     },
     { onConflict: "host" },
   );
 
-  return { parsed, cached: false, fetched_at: new Date(now).toISOString(), http_status: status, error, raw };
+  await logRobotsEvent(sb, {
+    host,
+    event_type: error ? "fetch_error" : "fetch_success",
+    http_status: status,
+    fetch_error: error,
+    raw_size: raw.length,
+    rules_count: parsed.rules.length,
+    sitemaps_count: parsed.sitemaps.length,
+    content_hash: hash,
+    previous_content_hash: prevHash,
+    triggered_by: triggeredBy,
+    trigger_reason: reason,
+  });
+
+  if (changed) {
+    await logRobotsEvent(sb, {
+      host,
+      event_type: "content_changed",
+      content_hash: hash,
+      previous_content_hash: prevHash,
+      triggered_by: triggeredBy,
+      trigger_reason: `Content differs from previous fetch (${prevHash?.slice(0, 8)} → ${hash?.slice(0, 8)})`,
+    });
+  }
+
+  return { parsed, raw, status, error, fetched_at: new Date(now).toISOString(), expires, hash, changed };
+}
+
+async function getRobotsCached(sb: any, host: string): Promise<{ parsed: ParsedRobots; cached: boolean; fetched_at: string; http_status: number | null; error: string | null; raw: string; expires_at?: string; content_hash?: string | null; changed?: boolean }> {
+  const { data: cached } = await sb
+    .from("seo_robots_cache")
+    .select("*")
+    .eq("host", host)
+    .maybeSingle();
+
+  const now = Date.now();
+  if (cached && new Date(cached.expires_at).getTime() > now) {
+    await logRobotsEvent(sb, { host, event_type: "cache_hit", content_hash: cached.content_hash, trigger_reason: "Cache fresh" });
+    return {
+      parsed: { rules: (cached.parsed_rules as any) || [], sitemaps: cached.sitemap_urls || [] },
+      cached: true,
+      fetched_at: cached.fetched_at,
+      http_status: cached.http_status,
+      error: cached.fetch_error,
+      raw: cached.raw_content,
+      expires_at: cached.expires_at,
+      content_hash: cached.content_hash,
+    };
+  }
+
+  if (cached) {
+    await logRobotsEvent(sb, {
+      host,
+      event_type: "cache_expired",
+      previous_content_hash: cached.content_hash,
+      trigger_reason: `Cache expired at ${cached.expires_at}`,
+    });
+  }
+
+  const live = await fetchRobotsLive(
+    sb,
+    host,
+    cached?.content_hash ?? null,
+    cached?.fetch_count ?? 0,
+    cached?.invalidation_count ?? 0,
+    cached?.last_change_detected_at ?? null,
+    null,
+    cached ? "Auto-refresh after cache expiry" : "Initial fetch (no cache)",
+  );
+
+  return {
+    parsed: live.parsed,
+    cached: false,
+    fetched_at: live.fetched_at,
+    http_status: live.status,
+    error: live.error,
+    raw: live.raw,
+    expires_at: live.expires,
+    content_hash: live.hash,
+    changed: live.changed,
+  };
+}
+
+// ============================================================================
+// Robots cache management actions
+// ============================================================================
+
+async function getRobotsStatus(sb: any, host: string) {
+  const { data: cache } = await sb
+    .from("seo_robots_cache")
+    .select("*")
+    .eq("host", host)
+    .maybeSingle();
+
+  const { data: log } = await sb
+    .from("seo_robots_cache_log")
+    .select("*")
+    .eq("host", host)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const now = Date.now();
+  let status: "fresh" | "stale" | "missing" | "error" = "missing";
+  let age_seconds: number | null = null;
+  let ttl_seconds: number | null = null;
+  if (cache) {
+    age_seconds = Math.round((now - new Date(cache.fetched_at).getTime()) / 1000);
+    ttl_seconds = Math.round((new Date(cache.expires_at).getTime() - now) / 1000);
+    if (cache.fetch_error) status = "error";
+    else if (ttl_seconds <= 0) status = "stale";
+    else status = "fresh";
+  }
+
+  return {
+    ok: true,
+    host,
+    cache: cache
+      ? {
+          fetched_at: cache.fetched_at,
+          expires_at: cache.expires_at,
+          http_status: cache.http_status,
+          fetch_error: cache.fetch_error,
+          content_hash: cache.content_hash,
+          last_change_detected_at: cache.last_change_detected_at,
+          rules_count: Array.isArray(cache.parsed_rules) ? cache.parsed_rules.length : 0,
+          sitemaps_count: (cache.sitemap_urls || []).length,
+          raw_size: (cache.raw_content || "").length,
+          fetch_count: cache.fetch_count || 0,
+          invalidation_count: cache.invalidation_count || 0,
+        }
+      : null,
+    status,
+    age_seconds,
+    ttl_seconds,
+    log: log || [],
+  };
+}
+
+async function invalidateRobotsCache(sb: any, host: string, userId: string, reason: string) {
+  const { data: cache } = await sb
+    .from("seo_robots_cache")
+    .select("content_hash, invalidation_count")
+    .eq("host", host)
+    .maybeSingle();
+
+  // Force expiration: set expires_at in the past + bump invalidation count
+  await sb
+    .from("seo_robots_cache")
+    .update({
+      expires_at: new Date(Date.now() - 1000).toISOString(),
+      invalidation_count: (cache?.invalidation_count || 0) + 1,
+    })
+    .eq("host", host);
+
+  await logRobotsEvent(sb, {
+    host,
+    event_type: "manual_invalidation",
+    previous_content_hash: cache?.content_hash ?? null,
+    triggered_by: userId,
+    trigger_reason: reason || "Manual invalidation by admin",
+  });
+
+  return { ok: true, host, invalidated: true };
+}
+
+async function refreshRobotsCache(sb: any, host: string, userId: string, reason: string) {
+  const { data: cache } = await sb
+    .from("seo_robots_cache")
+    .select("content_hash, fetch_count, invalidation_count, last_change_detected_at")
+    .eq("host", host)
+    .maybeSingle();
+
+  await logRobotsEvent(sb, {
+    host,
+    event_type: "manual_refresh",
+    previous_content_hash: cache?.content_hash ?? null,
+    triggered_by: userId,
+    trigger_reason: reason || "Manual refresh requested by admin",
+  });
+
+  const live = await fetchRobotsLive(
+    sb,
+    host,
+    cache?.content_hash ?? null,
+    cache?.fetch_count ?? 0,
+    cache?.invalidation_count ?? 0,
+    cache?.last_change_detected_at ?? null,
+    userId,
+    reason || "Manual refresh",
+  );
+
+  return {
+    ok: true,
+    host,
+    refreshed: true,
+    fetched_at: live.fetched_at,
+    expires_at: live.expires,
+    http_status: live.status,
+    fetch_error: live.error,
+    content_changed: live.changed,
+    content_hash: live.hash,
+    rules_count: live.parsed.rules.length,
+    sitemaps_count: live.parsed.sitemaps.length,
+  };
 }
 
 // ============================================================================
