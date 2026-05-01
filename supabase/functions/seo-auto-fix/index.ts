@@ -31,7 +31,30 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-type FixType = "title" | "meta" | "schema" | "alt_text" | "all";
+type FixType = "title" | "meta" | "schema" | "alt_text" | "canonical" | "all";
+
+const BASE_URL = "https://www.realtrust.ro";
+
+/**
+ * Build a normalized, absolute canonical URL from any input (path, full URL, with/without query).
+ * Rules:
+ *  - Always https + www.realtrust.ro host (strip subdomains like preview/lovable)
+ *  - Lowercase pathname (Romanian routes are lowercase by convention)
+ *  - Strip trailing slash (except root), collapse duplicate slashes
+ *  - Remove all query params and hash (canonical must be parameter-free)
+ */
+function buildCanonicalUrl(input: string): string {
+  let pathname = "/";
+  try {
+    const u = new URL(input, BASE_URL);
+    pathname = u.pathname;
+  } catch {
+    pathname = input.startsWith("/") ? input.split("?")[0].split("#")[0] : "/";
+  }
+  pathname = pathname.replace(/\/{2,}/g, "/").toLowerCase();
+  if (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
+  return `${BASE_URL}${pathname}`;
+}
 
 interface AnyBody {
   action: string;
