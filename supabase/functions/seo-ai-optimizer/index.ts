@@ -244,9 +244,11 @@ function parseScraped(markdown: string, html: string, meta: any) {
   const h2Matches = allH2.filter((t) => !isShellHeading(t));
   const text = markdown || htmlToText(html);
 
+  const detectedTitle = meta.title || titleMatch?.[1]?.trim() || "";
+
   return {
-    title: meta.title || titleMatch?.[1]?.trim() || "",
-    metaDescription: pickBestMetaDescription(metaCandidates),
+    title: detectedTitle,
+    metaDescription: pickBestMetaDescription(metaCandidates, detectedTitle),
     metaCandidatesDebug: metaCandidates,
     h1Count: h1Matches.length,
     h2Count: h2Matches.length,
@@ -316,8 +318,9 @@ function collectMetaDescriptionCandidates(html: string, meta: any): MetaCandidat
  * multiple candidates. Avoids the previous buggy behavior of splitting on
  * commas and returning a truncated fragment like "Aeroport. Calculează ROI gratuit!".
  */
-function pickBestMetaDescription(candidates: MetaCandidate[]): string {
+function pickBestMetaDescription(candidates: MetaCandidate[], pageTitle = ""): string {
   if (!candidates.length) return "";
+  const titleTokens = meaningfulTokens(pageTitle);
   const score = (value: string) => {
     let s = 0;
     // Strongly prefer descriptions in the SEO sweet spot (130–160 chars)
@@ -326,9 +329,16 @@ function pickBestMetaDescription(candidates: MetaCandidate[]): string {
     else if (value.length > 165 && value.length <= 200) s += 4;
     else if (value.length < 60) s -= 5;
     // Prefer descriptions with a CTA verb
-    if (/(calculeaz|contacteaz|descoper|solicit|vezi|invest|află|afla)/i.test(value)) s += 3;
+    if (/(calculeaz|contacteaz|descoper|solicit|vezi|invest|află|afla|obține|obtine|cere|programeaz)/i.test(value)) s += 3;
     // Prefer descriptions mentioning Timișoara (canonical brand keyword)
     if (/timi[șs]oara/i.test(value)) s += 2;
+    const valueTokens = meaningfulTokens(value);
+    const titleOverlap = titleTokens.filter((token) => valueTokens.includes(token)).length;
+    s += Math.min(titleOverlap * 3, 15);
+    // Penalize meta values that look like multiple descriptions concatenated by tooling.
+    if (value.length > 200) s -= 12;
+    if (/[.!?],\s+[A-ZĂÂÎȘȚ]/.test(value)) s -= 8;
+    if ((value.match(/\b(calcul|obțin|obtine|contact|solicit|cere|invest)/gi) || []).length > 3) s -= 4;
     // Penalize descriptions that look like a fragment (start lowercase or with a fragment marker)
     if (/^[a-zăâîșț]/.test(value)) s -= 4;
     // Penalize obvious concatenations (multiple sentences with dot-space-Capital + comma joins)
@@ -339,6 +349,16 @@ function pickBestMetaDescription(candidates: MetaCandidate[]): string {
   };
   const sorted = [...candidates].sort((a, b) => score(b.value) - score(a.value));
   return sorted[0].value;
+}
+
+function meaningfulTokens(value: string): string[] {
+  const stop = new Set(["realtrust", "apart", "hotel", "pentru", "prin", "din", "langa", "lângă", "sau", "care", "este", "sunt", "gratuit", "gratuita", "gratuită"]);
+  const normalized = value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ");
+  return Array.from(new Set(normalized.split(/\s+/).filter((token) => token.length >= 4 && !stop.has(token))));
 }
 
 function htmlToText(html: string): string {
