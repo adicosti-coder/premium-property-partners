@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2, Search, RefreshCw, AlertTriangle, CheckCircle2, Lightbulb,
-  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus, MapPin,
+  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus, MapPin, Wand2, Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
