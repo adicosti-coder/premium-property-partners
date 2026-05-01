@@ -53,6 +53,36 @@ interface Props {
   url?: string;
   /** Optional explicit canonical URL — takes precedence over `url` for the displayed link */
   canonical?: string;
+  /** Robots meta directive string, e.g. "index, follow" or "noindex, nofollow" */
+  robots?: string;
+}
+
+/** Parse robots meta into a normalized set of directives */
+function parseRobots(raw?: string): {
+  directives: string[];
+  noindex: boolean;
+  nofollow: boolean;
+  noarchive: boolean;
+  nosnippet: boolean;
+  noimageindex: boolean;
+  unavailableAfter: string | null;
+} {
+  const tokens = (raw || "")
+    .toLowerCase()
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const has = (k: string) => tokens.some((t) => t === k || t.startsWith(`${k}:`));
+  const unavail = tokens.find((t) => t.startsWith("unavailable_after"));
+  return {
+    directives: tokens,
+    noindex: has("noindex") || has("none"),
+    nofollow: has("nofollow") || has("none"),
+    noarchive: has("noarchive"),
+    nosnippet: has("nosnippet"),
+    noimageindex: has("noimageindex"),
+    unavailableAfter: unavail ? unavail.split(":").slice(1).join(":").trim() : null,
+  };
 }
 
 /**
