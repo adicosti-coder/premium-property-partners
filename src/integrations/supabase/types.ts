@@ -3751,6 +3751,7 @@ export type Database = {
           alt_text_suggestions: Json | null
           applied_at: string
           applied_by: string | null
+          canonical_url: string | null
           change_type: string
           extra_keywords: Json | null
           id: string
@@ -3769,6 +3770,7 @@ export type Database = {
           alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
+          canonical_url?: string | null
           change_type?: string
           extra_keywords?: Json | null
           id?: string
@@ -3787,6 +3789,7 @@ export type Database = {
           alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
+          canonical_url?: string | null
           change_type?: string
           extra_keywords?: Json | null
           id?: string
@@ -3819,6 +3822,7 @@ export type Database = {
           alt_text_suggestions: Json | null
           applied_at: string
           applied_by: string | null
+          canonical_url: string | null
           created_at: string
           extra_keywords: Json | null
           id: string
@@ -3838,6 +3842,7 @@ export type Database = {
           alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
+          canonical_url?: string | null
           created_at?: string
           extra_keywords?: Json | null
           id?: string
@@ -3857,6 +3862,7 @@ export type Database = {
           alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
+          canonical_url?: string | null
           created_at?: string
           extra_keywords?: Json | null
           id?: string
