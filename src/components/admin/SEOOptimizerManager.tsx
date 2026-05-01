@@ -1283,7 +1283,12 @@ const SEOOptimizerManager = () => {
         <CardContent>
           <ScrollArea className="h-96">
             <div className="space-y-2">
-              {filteredHistory.map((a) => (
+              {filteredHistory.map((a) => {
+                const path = urlToPath(a.url);
+                const existing = overrideMap.get(path);
+                const canApply = !!(a.suggested_title || a.suggested_meta);
+                const isPending = applyMutation.isPending && applyMutation.variables?.id === a.id;
+                return (
                 <div
                   key={a.id}
                   className="w-full rounded-lg border p-3 hover:bg-muted/50 transition-colors flex items-center justify-between gap-3"
@@ -1295,9 +1300,32 @@ const SEOOptimizerManager = () => {
                     <div className="font-medium text-sm truncate">{a.url}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(a.created_at).toLocaleString("ro-RO")} · {a.language.toUpperCase()} · {a.word_count} cuvinte
+                      {existing && <span className="ml-2 text-emerald-600 font-medium">· Aplicat</span>}
                     </div>
                   </button>
                   <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={existing ? "outline" : "default"}
+                      disabled={!canApply || isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toast.info("Se aplică sugestiile SEO…", {
+                          description: `URL: ${path}`,
+                          duration: 2500,
+                        });
+                        applyMutation.mutate(a);
+                      }}
+                      title={canApply ? (existing ? "Reaplică sugestiile pe pagina live" : "Implementează automat title, meta și keywords") : "Audit fără sugestii"}
+                      className="min-h-[40px]"
+                    >
+                      {isPending ? (
+                        <Loader2 className="w-3 h-3 animate-spin sm:mr-2" />
+                      ) : (
+                        <Wand2 className="w-3 h-3 sm:mr-2" />
+                      )}
+                      <span className="hidden sm:inline">{existing ? "Reaplică" : "Aplică"}</span>
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"
@@ -1311,7 +1339,8 @@ const SEOOptimizerManager = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
               {filteredHistory.length === 0 && (
                 <div className="text-sm text-muted-foreground text-center py-8">
                   {history.length === 0
