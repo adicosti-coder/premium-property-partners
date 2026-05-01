@@ -4,12 +4,14 @@ import { supabase } from "@/lib/supabaseClient";
 export interface SeoOverride {
   title: string | null;
   meta_description: string | null;
+  canonical_url: string | null;
   json_ld: Record<string, unknown> | Record<string, unknown>[] | null;
   extra_keywords: Array<{ keyword: string; reason?: string }>;
   ab_enabled?: boolean;
   ab_variant_b?: {
     title?: string | null;
     meta_description?: string | null;
+    canonical_url?: string | null;
     json_ld?: Record<string, unknown> | Record<string, unknown>[] | null;
     extra_keywords?: Array<{ keyword: string; reason?: string }>;
   } | null;
