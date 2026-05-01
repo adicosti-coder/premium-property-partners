@@ -492,9 +492,6 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
             <Button size="sm" variant="outline" onClick={() => setHistoryOpen(true)}>
               <History className="h-4 w-4" /> Istoric versiuni
             </Button>
-            <Button size="sm" variant="outline" onClick={() => { setBulkFullResults([]); setBulkOpen(false); document.getElementById("bulk-full-fix-trigger")?.click(); }}>
-              <Layers className="h-4 w-4" /> Bulk full SEO
-            </Button>
             <Button
               size="sm"
               variant="outline"
