@@ -194,6 +194,21 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
         <PixelBar value={metaPx} max={cfg.metaMax} label="Meta description width" />
       </div>
 
+      {/* Canonical / URL info */}
+      <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/40 rounded-md p-2">
+        <Link2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="font-mono break-all">
+            <span className="font-semibold text-foreground">{canonical ? "Canonical:" : "URL:"}</span> {serp.full}
+          </div>
+          {canonicalDiffers && (
+            <div className="text-amber-700 dark:text-amber-400">
+              ⚠ Canonical diferă de URL-ul paginii — Google va indexa varianta canonical.
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Status badges */}
       <div className="flex flex-wrap gap-2">
         {titleOver ? (
