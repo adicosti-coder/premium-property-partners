@@ -235,9 +235,12 @@ const SEOHead = ({
     "priceRange": "$$"
   };
   
+  // SEO override from admin can inject a custom JSON-LD that wins over everything below.
+  const overrideJsonLd = override?.json_ld || null;
   // Determine which JSON-LD to use based on type
-  let finalJsonLd: Record<string, unknown> | Record<string, unknown>[] = jsonLd || defaultJsonLd;
-  if (!jsonLd) {
+  let finalJsonLd: Record<string, unknown> | Record<string, unknown>[] =
+    overrideJsonLd || jsonLd || defaultJsonLd;
+  if (!jsonLd && !overrideJsonLd) {
     const schemas: Record<string, unknown>[] = [defaultJsonLd];
     
     // Add Article schema if type is article
