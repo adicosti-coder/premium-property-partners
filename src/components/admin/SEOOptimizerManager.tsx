@@ -1300,6 +1300,33 @@ const SEOOptimizerManager = () => {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!revertConfirm} onOpenChange={(o) => !o && setRevertConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Anulezi override-ul SEO?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Pagina <code className="text-xs">{revertConfirm ? urlToPath(revertConfirm) : ""}</code> va reveni la title-ul, meta description și keywords-urile implicite din cod.
+              <br /><br />
+              Acțiunea este reversibilă — poți reaplica oricând sugestiile AI ulterior.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Renunță</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (revertConfirm) {
+                  toast.info("Se revine la SEO original…", { duration: 2000 });
+                  revertMutation.mutate(revertConfirm);
+                }
+                setRevertConfirm(null);
+              }}
+            >
+              Da, anulează override-ul
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
