@@ -237,7 +237,21 @@ LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice
   const raw = await callGemini(system, user);
   const parsed = safeJson<Record<string, unknown>>(raw) || {};
 
-  return { fix_type: fixType, url_path: path, page_type: pageType, proposal: parsed };
+  // Enforce canonical normalization (AI cannot bypass our rules: host, lowercase, no query, no trailing slash)
+  if ((parsed as any).canonical_url) {
+    (parsed as any).canonical_url = buildCanonicalUrl(String((parsed as any).canonical_url));
+  } else if (fixType === "canonical" || fixType === "all") {
+    (parsed as any).canonical_url = suggestedCanonical;
+  }
+
+  return {
+    fix_type: fixType,
+    url_path: path,
+    page_type: pageType,
+    suggested_canonical: suggestedCanonical,
+    current_canonical: currentCanonicalCandidate,
+    proposal: parsed,
+  };
 }
 
 // ============================================================================
