@@ -9,7 +9,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Wand2, History, GitCompare, FlaskConical, Layers, ShieldAlert, RotateCcw } from "lucide-react";
+import { Loader2, Wand2, History, GitCompare, FlaskConical, Layers, ShieldAlert, RotateCcw, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { SerpPreview } from "./SerpPreview";
 
