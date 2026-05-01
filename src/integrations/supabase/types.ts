@@ -4814,6 +4814,27 @@ export type Database = {
         Returns: number
       }
       extract_url_domain: { Args: { p_url: string }; Returns: string }
+      get_owner_property_reviews: {
+        Args: { p_property_id?: string }
+        Returns: {
+          admin_reply: string
+          admin_reply_at: string
+          booking_id: string
+          booking_review_id: string
+          content: string
+          created_at: string
+          guest_country: string
+          guest_name: string
+          id: string
+          is_published: boolean
+          property_id: string
+          rating: number
+          review_date: string
+          source: string
+          title: string
+          updated_at: string
+        }[]
+      }
       get_public_profile: {
         Args: { p_user_id: string }
         Returns: {
