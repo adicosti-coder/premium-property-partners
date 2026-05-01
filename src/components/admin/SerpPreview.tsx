@@ -49,10 +49,41 @@ function truncateToWidth(text: string, font: string, maxWidth: number): { displa
 interface Props {
   title: string;
   description: string;
+  /** Page URL (used as canonical fallback if `canonical` not provided) */
   url?: string;
+  /** Optional explicit canonical URL — takes precedence over `url` for the displayed link */
+  canonical?: string;
 }
 
-export const SerpPreview = ({ title, description, url = "https://realtrust.ro/" }: Props) => {
+/**
+ * Format URL the way Google renders it in SERP:
+ * - Shows full host (including subdomain like "blog.realtrust.ro")
+ * - Strips leading "www."
+ * - Path segments separated by " › " (decoded, hyphens → spaces capitalized lightly)
+ * - Trailing slash removed
+ */
+function formatSerpUrl(raw: string, device: Device): { host: string; crumbs: string[]; full: string } {
+  try {
+    const u = new URL(raw);
+    const host = u.hostname.replace(/^www\./, "");
+    const segments = u.pathname.split("/").filter(Boolean).map((seg) => {
+      try {
+        return decodeURIComponent(seg).replace(/-/g, " ");
+      } catch {
+        return seg.replace(/-/g, " ");
+      }
+    });
+    // Mobile collapses long paths: keep first + last if more than 2 segments
+    const crumbs = device === "mobile" && segments.length > 2
+      ? [segments[0], "…", segments[segments.length - 1]]
+      : segments;
+    return { host, crumbs, full: u.origin + u.pathname.replace(/\/$/, "") };
+  } catch {
+    return { host: raw, crumbs: [], full: raw };
+  }
+}
+
+export const SerpPreview = ({ title, description, url = "https://realtrust.ro/", canonical }: Props) => {
   const [device, setDevice] = useState<Device>("desktop");
   const [, force] = useState(0);
   const ready = useRef(false);
