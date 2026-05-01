@@ -798,10 +798,7 @@ const SEOOptimizerManager = () => {
                               size="sm"
                               variant="outline"
                               disabled={revertMutation.isPending}
-                              onClick={() => {
-                                toast.info("Se revine la SEO original…", { duration: 2000 });
-                                revertMutation.mutate(selectedAudit.url);
-                              }}
+                              onClick={() => setRevertConfirm(selectedAudit.url)}
                             >
                               {revertMutation.isPending ? (
                                 <Loader2 className="w-3 h-3 mr-2 animate-spin" />
