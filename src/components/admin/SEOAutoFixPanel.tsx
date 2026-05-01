@@ -11,6 +11,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Wand2, History, GitCompare, FlaskConical, Layers, ShieldAlert, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { SerpPreview } from "./SerpPreview";
 
 interface Props {
   audit: {
