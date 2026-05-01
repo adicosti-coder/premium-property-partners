@@ -103,13 +103,15 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
   const titleShown = ready.current ? truncateToWidth(title || "", cfg.titleFont, cfg.titleMax) : { display: title, truncated: false };
   const metaShown = ready.current ? truncateToWidth(description || "", cfg.metaFont, cfg.metaMax) : { display: description, truncated: false };
 
-  const displayUrl = (() => {
+  // Canonical takes precedence; fall back to provided url
+  const effectiveUrl = (canonical && canonical.trim()) || url;
+  const serp = formatSerpUrl(effectiveUrl, device);
+  const canonicalDiffers = !!canonical && (() => {
     try {
-      const u = new URL(url);
-      return u.hostname.replace(/^www\./, "") + (u.pathname === "/" ? "" : " › " + u.pathname.split("/").filter(Boolean).join(" › "));
-    } catch {
-      return url;
-    }
+      const a = new URL(canonical);
+      const b = new URL(url);
+      return a.origin + a.pathname.replace(/\/$/, "") !== b.origin + b.pathname.replace(/\/$/, "");
+    } catch { return false; }
   })();
 
   const PixelBar = ({ value, max, label }: { value: number; max: number; label: string }) => {
