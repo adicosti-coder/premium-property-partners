@@ -902,7 +902,52 @@ async function checkRegression(sb: any, body: AnyBody, userId: string) {
       }
     }
   }
+  if (reverts.length > 0) {
+    await sendRegressionAlert(sb, reverts).catch((e) => console.warn("[regression-alert]", e));
+  }
   return { ok: true, reverts };
+}
+
+async function sendRegressionAlert(sb: any, reverts: any[]) {
+  const RESEND = Deno.env.get("RESEND_API_KEY");
+  const LOVABLE = Deno.env.get("LOVABLE_API_KEY");
+  if (!RESEND || !LOVABLE) {
+    console.warn("[regression-alert] missing keys");
+    return;
+  }
+  const { data: admins } = await sb
+    .from("profiles")
+    .select("email, id")
+    .in("id",
+      ((await sb.from("user_roles").select("user_id").eq("role", "admin")).data || []).map((r: any) => r.user_id),
+    );
+  const recipients = (admins || []).map((a: any) => a.email).filter(Boolean);
+  if (recipients.length === 0) return;
+  const rows = reverts.map((r: any) => `<tr><td style="padding:8px;border-bottom:1px solid #eee"><code>${r.url_path}</code></td><td style="padding:8px;border-bottom:1px solid #eee">${r.baseline} → ${r.current}</td><td style="padding:8px;border-bottom:1px solid #eee">v${r.reverted_to}</td></tr>`).join("");
+  const html = `
+    <div style="font-family:Inter,system-ui,sans-serif;max-width:640px;margin:0 auto;color:#0f172a">
+      <h2 style="color:#b91c1c;margin:0 0 8px">⚠️ Auto-Revert SEO declanșat</h2>
+      <p>Au fost detectate <strong>${reverts.length}</strong> regresii SEO pe paginile cu override aplicat. Sistemul a revenit automat la versiunea anterioară pentru fiecare.</p>
+      <table style="border-collapse:collapse;width:100%;font-size:14px;margin:16px 0">
+        <thead><tr style="background:#f8fafc"><th align="left" style="padding:8px;border-bottom:2px solid #e2e8f0">Pagină</th><th align="left" style="padding:8px;border-bottom:2px solid #e2e8f0">Scor</th><th align="left" style="padding:8px;border-bottom:2px solid #e2e8f0">Revert la</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p style="font-size:12px;color:#64748b">Verifică panoul SEO Optimizer pentru detalii complete.</p>
+    </div>`;
+  await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${LOVABLE}`,
+      "X-Connection-Api-Key": RESEND,
+    },
+    body: JSON.stringify({
+      from: "RealTrust SEO <onboarding@resend.dev>",
+      to: recipients,
+      subject: `⚠️ ${reverts.length} regresii SEO auto-revertite`,
+      html,
+    }),
+  });
 }
 
 async function listHistory(sb: any, body: AnyBody) {
