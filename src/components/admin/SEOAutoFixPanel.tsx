@@ -274,6 +274,14 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
               {proposal?.meta_description && (
                 <DiffBlock label="Meta Description" before={audit.suggested_meta || "—"} after={proposal.meta_description} />
               )}
+
+              {(proposal?.title || proposal?.meta_description) && (
+                <SerpPreview
+                  title={proposal?.title || audit.suggested_title || ""}
+                  description={proposal?.meta_description || audit.suggested_meta || ""}
+                  url={audit.url}
+                />
+              )}
               {proposal?.json_ld && (
                 <div className="space-y-1">
                   <p className="text-xs font-semibold uppercase text-muted-foreground">Schema.org JSON-LD (nou)</p>
