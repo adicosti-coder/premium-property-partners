@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useSeoOverride } from "@/hooks/useSeoOverride";
 
 const BASE_URL = "https://www.realtrust.ro";
 
