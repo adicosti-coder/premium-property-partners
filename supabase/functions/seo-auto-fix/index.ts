@@ -144,6 +144,12 @@ serve(async (req) => {
         return json(await oneClickCanonicalFix(sb, body, userId));
       case "apply_manual_canonical":
         return json(await applyManualCanonical(sb, body, userId));
+      case "get_robots_status":
+        return json(await getRobotsStatus(sb, (body as any).host || CANONICAL_HOST));
+      case "invalidate_robots_cache":
+        return json(await invalidateRobotsCache(sb, (body as any).host || CANONICAL_HOST, userId, (body as any).reason || ""));
+      case "refresh_robots_cache":
+        return json(await refreshRobotsCache(sb, (body as any).host || CANONICAL_HOST, userId, (body as any).reason || ""));
       default:
         return json({ error: `Unknown action: ${body.action}` }, 400);
     }
