@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Monitor, Smartphone, AlertTriangle, CheckCircle2, Link2 } from "lucide-react";
+import { Monitor, Smartphone, AlertTriangle, CheckCircle2, Link2, Ban, EyeOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 /**
@@ -53,6 +53,36 @@ interface Props {
   url?: string;
   /** Optional explicit canonical URL — takes precedence over `url` for the displayed link */
   canonical?: string;
+  /** Robots meta directive string, e.g. "index, follow" or "noindex, nofollow" */
+  robots?: string;
+}
+
+/** Parse robots meta into a normalized set of directives */
+function parseRobots(raw?: string): {
+  directives: string[];
+  noindex: boolean;
+  nofollow: boolean;
+  noarchive: boolean;
+  nosnippet: boolean;
+  noimageindex: boolean;
+  unavailableAfter: string | null;
+} {
+  const tokens = (raw || "")
+    .toLowerCase()
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const has = (k: string) => tokens.some((t) => t === k || t.startsWith(`${k}:`));
+  const unavail = tokens.find((t) => t.startsWith("unavailable_after"));
+  return {
+    directives: tokens,
+    noindex: has("noindex") || has("none"),
+    nofollow: has("nofollow") || has("none"),
+    noarchive: has("noarchive"),
+    nosnippet: has("nosnippet"),
+    noimageindex: has("noimageindex"),
+    unavailableAfter: unavail ? unavail.split(":").slice(1).join(":").trim() : null,
+  };
 }
 
 /**
@@ -83,7 +113,7 @@ function formatSerpUrl(raw: string, device: Device): { host: string; crumbs: str
   }
 }
 
-export const SerpPreview = ({ title, description, url = "https://realtrust.ro/", canonical }: Props) => {
+export const SerpPreview = ({ title, description, url = "https://realtrust.ro/", canonical, robots }: Props) => {
   const [device, setDevice] = useState<Device>("desktop");
   const [, force] = useState(0);
   const ready = useRef(false);
@@ -113,6 +143,9 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
       return a.origin + a.pathname.replace(/\/$/, "") !== b.origin + b.pathname.replace(/\/$/, "");
     } catch { return false; }
   })();
+
+  const robotsInfo = parseRobots(robots);
+  const indexable = !robotsInfo.noindex;
 
   const PixelBar = ({ value, max, label }: { value: number; max: number; label: string }) => {
     const pct = Math.min(100, (value / max) * 100);
@@ -157,11 +190,29 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
         </div>
       </div>
 
+      {/* Noindex banner — shown above snippet when page can't be indexed */}
+      {!indexable && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-2.5 text-xs text-destructive">
+          <Ban className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="space-y-0.5">
+            <p className="font-semibold">Pagina NU poate fi indexată în Google</p>
+            <p className="opacity-90">
+              Robots conține <code className="font-mono">noindex</code> — această pagină nu va apărea în rezultatele de căutare, indiferent de calitatea SEO. Elimină directiva pentru a permite indexarea.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Snippet mock */}
       <div
-        className={`bg-white rounded-md border border-border p-4 mx-auto ${device === "mobile" ? "max-w-[400px]" : "max-w-full"}`}
+        className={`relative bg-white rounded-md border border-border p-4 mx-auto ${device === "mobile" ? "max-w-[400px]" : "max-w-full"} ${!indexable ? "opacity-60 grayscale" : ""}`}
         style={{ fontFamily: "Arial, sans-serif" }}
       >
+        {!indexable && (
+          <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded bg-destructive px-2 py-0.5 text-[10px] font-bold uppercase text-destructive-foreground">
+            <EyeOff className="h-3 w-3" /> Ascuns din SERP
+          </div>
+        )}
         <div className="flex items-center gap-2 mb-1">
           <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold">R</div>
           <div className="leading-tight min-w-0 flex-1">
@@ -184,7 +235,11 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
           {titleShown.display || <span className="text-gray-400 italic">(fără titlu)</span>}
         </div>
         <div className="text-[#4d5156] text-[14px] leading-snug mt-1">
-          {metaShown.display || <span className="text-gray-400 italic">(fără meta description)</span>}
+          {robotsInfo.nosnippet ? (
+            <span className="text-gray-400 italic">(snippet ascuns — directivă nosnippet)</span>
+          ) : (
+            metaShown.display || <span className="text-gray-400 italic">(fără meta description)</span>
+          )}
         </div>
       </div>
 
@@ -211,8 +266,42 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
 
       {/* Status badges */}
       <div className="flex flex-wrap gap-2">
+        {indexable ? (
+          <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+            <CheckCircle2 className="h-3 w-3" /> Indexabil
+          </Badge>
+        ) : (
+          <Badge variant="destructive" className="gap-1">
+            <Ban className="h-3 w-3" /> noindex
+          </Badge>
+        )}
+        {robotsInfo.nofollow && (
+          <Badge variant="destructive" className="gap-1">
+            <AlertTriangle className="h-3 w-3" /> nofollow
+          </Badge>
+        )}
+        {robotsInfo.nosnippet && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            nosnippet
+          </Badge>
+        )}
+        {robotsInfo.noarchive && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            noarchive
+          </Badge>
+        )}
+        {robotsInfo.noimageindex && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            noimageindex
+          </Badge>
+        )}
+        {robotsInfo.unavailableAfter && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            expiră: {robotsInfo.unavailableAfter}
+          </Badge>
+        )}
         {titleOver ? (
-          <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Titlu trunchiat în Google ({device})</Badge>
+          <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Titlu trunchiat ({device})</Badge>
         ) : (
           <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3" /> Titlu OK</Badge>
         )}

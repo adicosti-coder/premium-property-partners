@@ -281,6 +281,7 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
                   description={proposal?.meta_description || audit.suggested_meta || ""}
                   url={audit.url}
                   canonical={proposal?.canonical_url || proposal?.canonical}
+                  robots={proposal?.robots || (audit as any)?.robots || (audit as any)?.meta_robots}
                 />
               )}
               {proposal?.json_ld && (
