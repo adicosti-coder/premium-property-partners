@@ -23,6 +23,7 @@ import {
 import jsPDF from "jspdf";
 import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
+import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
 const QUICK_URLS = [
   // Principal
