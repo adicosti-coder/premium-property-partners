@@ -1350,6 +1350,81 @@ const SEOOptimizerManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!serpPreview} onOpenChange={(o) => !o && setSerpPreview(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Previzualizare Google SERP
+            </DialogTitle>
+            <DialogDescription>
+              Așa va apărea pagina în rezultatele căutării Google (desktop).
+            </DialogDescription>
+          </DialogHeader>
+          {serpPreview && (() => {
+            const previewMeta = (editedMeta[serpPreview.id] ?? serpPreview.suggested_meta ?? "").trim();
+            const previewTitle = (serpPreview.suggested_title || serpPreview.title || "").trim();
+            // Google trunchiază title la ~60 char și meta la ~160 char (desktop)
+            const displayTitle = previewTitle.length > 60 ? previewTitle.slice(0, 57).trimEnd() + "…" : previewTitle;
+            const displayMeta = previewMeta.length > 160 ? previewMeta.slice(0, 157).trimEnd() + "…" : previewMeta;
+            const path = urlToPath(serpPreview.url);
+            const breadcrumb = `www.realtrust.ro${path === "/" ? "" : " › " + path.replace(/^\//, "").replace(/\//g, " › ")}`;
+            const today = new Date().toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });
+            return (
+              <div className="space-y-4">
+                {/* Desktop SERP card */}
+                <div className="rounded-lg border bg-white dark:bg-zinc-900 p-4 font-sans">
+                  <div className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white text-[10px] font-bold">R</div>
+                    <div className="flex flex-col leading-tight">
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100">RealTrust</span>
+                      <span className="text-zinc-500 text-[11px]">{breadcrumb}</span>
+                    </div>
+                  </div>
+                  <h3 className="mt-2 text-[20px] leading-[1.3] text-[#1a0dab] dark:text-[#8ab4f8] font-normal hover:underline cursor-pointer">
+                    {displayTitle || <span className="italic text-zinc-400">(fără titlu)</span>}
+                  </h3>
+                  <p className="mt-1 text-[14px] leading-[1.58] text-zinc-700 dark:text-zinc-300">
+                    <span className="text-zinc-500">{today} — </span>
+                    {displayMeta || <span className="italic text-zinc-400">(fără meta description)</span>}
+                  </p>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="rounded-md border p-2">
+                    <div className="text-muted-foreground">Title</div>
+                    <div className="font-mono">
+                      <span className={previewTitle.length > 60 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
+                        {previewTitle.length}
+                      </span>
+                      /60 caractere {previewTitle.length > 60 && "· va fi trunchiat"}
+                    </div>
+                  </div>
+                  <div className="rounded-md border p-2">
+                    <div className="text-muted-foreground">Meta description</div>
+                    <div className="font-mono">
+                      <span className={
+                        previewMeta.length > 160 ? "text-red-600 dark:text-red-400"
+                        : previewMeta.length >= 140 ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-amber-600 dark:text-amber-400"
+                      }>
+                        {previewMeta.length}
+                      </span>
+                      /160 caractere {previewMeta.length > 160 && "· va fi trunchiată"}
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground">
+                  Notă: Google poate rescrie automat title/meta în funcție de query. Această previzualizare arată cazul implicit.
+                </p>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
