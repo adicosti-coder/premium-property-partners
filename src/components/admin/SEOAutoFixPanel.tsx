@@ -8,9 +8,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Tabs, TabsContent, TabsList, TabsTrigger,
-} from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Wand2, History, GitCompare, FlaskConical, Layers, ShieldAlert, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
