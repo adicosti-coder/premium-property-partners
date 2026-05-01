@@ -4738,85 +4738,6 @@ export type Database = {
         }
         Relationships: []
       }
-      property_reviews_public: {
-        Row: {
-          admin_reply: string | null
-          admin_reply_at: string | null
-          booking_id: string | null
-          booking_review_id: string | null
-          content: string | null
-          created_at: string | null
-          guest_country: string | null
-          guest_name: string | null
-          id: string | null
-          is_published: boolean | null
-          property_id: string | null
-          rating: number | null
-          review_date: string | null
-          source: string | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          admin_reply?: string | null
-          admin_reply_at?: string | null
-          booking_id?: string | null
-          booking_review_id?: string | null
-          content?: string | null
-          created_at?: string | null
-          guest_country?: string | null
-          guest_name?: string | null
-          id?: string | null
-          is_published?: boolean | null
-          property_id?: string | null
-          rating?: number | null
-          review_date?: string | null
-          source?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          admin_reply?: string | null
-          admin_reply_at?: string | null
-          booking_id?: string | null
-          booking_review_id?: string | null
-          content?: string | null
-          created_at?: string | null
-          guest_country?: string | null
-          guest_name?: string | null
-          id?: string | null
-          is_published?: boolean | null
-          property_id?: string | null
-          rating?: number | null
-          review_date?: string | null
-          source?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "property_reviews_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "booking_availability"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "property_reviews_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "property_reviews_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Functions: {
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
@@ -4847,6 +4768,27 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+        }[]
+      }
+      get_public_property_reviews: {
+        Args: { p_property_id?: string }
+        Returns: {
+          admin_reply: string
+          admin_reply_at: string
+          booking_id: string
+          booking_review_id: string
+          content: string
+          created_at: string
+          guest_country: string
+          guest_name: string
+          id: string
+          is_published: boolean
+          property_id: string
+          rating: number
+          review_date: string
+          source: string
+          title: string
+          updated_at: string
         }[]
       }
       get_shared_poi_link: {
