@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useSeoOverride } from "@/hooks/useSeoOverride";
 
 const BASE_URL = "https://www.realtrust.ro";
 
@@ -165,8 +166,14 @@ const SEOHead = ({
     en: "Short-term rental apartments Timișoara — Old Town, Iosefin, Elisabetin, Student Complex, near UVT and Iulius Town. 9.4% net ROI. Free calculator!"
   };
   
-  const finalTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;
-  const finalDescription = description || defaultDescriptions[language as keyof typeof defaultDescriptions] || defaultDescriptions.ro;
+  const override = useSeoOverride();
+  const baseTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;
+  const baseDescription = description || defaultDescriptions[language as keyof typeof defaultDescriptions] || defaultDescriptions.ro;
+  // SEO override (from admin SEO AI Optimizer) takes precedence over component defaults,
+  // but explicit per-page overrides via props still win for very specific routes (property/blog detail).
+  const finalTitle = title ? title : (override?.title || baseTitle);
+  const finalDescription = description ? description : (override?.meta_description || baseDescription);
+  const overrideKeywords = override?.extra_keywords?.map((k) => k.keyword).filter(Boolean) || [];
   
   // Canonical URL: ALWAYS absolute on www.realtrust.ro, pathname only (NO query params, NO hash, NO trailing slash except root).
   // This ensures Google indexes one version per page regardless of ?lang, ?utm_*, ?id, filters, etc.
@@ -284,6 +291,9 @@ const SEOHead = ({
       <title>{finalTitle}</title>
       <meta name="title" content={finalTitle} />
       <meta name="description" content={finalDescription} />
+      {overrideKeywords.length > 0 && (
+        <meta name="keywords" content={overrideKeywords.join(", ")} />
+      )}
       <link rel="canonical" href={finalUrl} />
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       <html lang={language} />

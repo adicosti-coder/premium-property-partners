@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2, Search, RefreshCw, AlertTriangle, CheckCircle2, Lightbulb,
-  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus, MapPin,
+  Copy, ExternalLink, Sparkles, Download, Layers, TrendingUp, TrendingDown, Minus, MapPin, Wand2, Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -146,6 +146,97 @@ const SEOOptimizerManager = () => {
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     },
     onError: (e: any) => toast.error(e.message || "Eroare audit"),
+  });
+
+  // Active overrides per URL path → shows badge "Aplicat" in UI
+  const { data: overrides = [] } = useQuery({
+    queryKey: ["seo-overrides"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("seo_overrides")
+        .select("url_path, title, meta_description, applied_at, source_audit_id, is_active")
+        .eq("is_active", true);
+      return data || [];
+    },
+  });
+
+  const overrideMap = useMemo(() => {
+    const m = new Map<string, any>();
+    overrides.forEach((o: any) => m.set(o.url_path, o));
+    return m;
+  }, [overrides]);
+
+  const urlToPath = (full: string): string => {
+    try {
+      const u = new URL(full);
+      let p = u.pathname.replace(/\/{2,}/g, "/");
+      if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+      return p || "/";
+    } catch {
+      return full.startsWith("/") ? full : "/";
+    }
+  };
+
+  const applyMutation = useMutation({
+    mutationFn: async (a: AuditRow) => {
+      const path = urlToPath(a.url);
+      const extra_keywords = [
+        ...(Array.isArray(a.local_geo_keywords) ? a.local_geo_keywords : []),
+        ...(Array.isArray(a.keyword_gaps) ? a.keyword_gaps : []),
+      ]
+        .map((k: any) => ({
+          keyword: k.keyword || (typeof k === "string" ? k : ""),
+          reason: k.reason || k.why || null,
+          priority: k.priority || "medium",
+        }))
+        .filter((k) => k.keyword)
+        .slice(0, 12);
+
+      const structural_todos = (a.issues || [])
+        .filter((i: any) => i.severity === "critical" || i.severity === "high")
+        .map((i: any) => ({ issue: i.issue, fix: i.fix, severity: i.severity }))
+        .slice(0, 10);
+
+      const { data: userRes } = await supabase.auth.getUser();
+
+      const { error } = await supabase.from("seo_overrides").upsert(
+        {
+          url_path: path,
+          title: a.suggested_title || null,
+          meta_description: a.suggested_meta || null,
+          extra_keywords,
+          structural_todos,
+          source_audit_id: a.id,
+          applied_by: userRes.user?.id || null,
+          applied_at: new Date().toISOString(),
+          is_active: true,
+        },
+        { onConflict: "url_path" }
+      );
+      if (error) throw error;
+      return path;
+    },
+    onSuccess: (path) => {
+      toast.success(`Implementat pe ${path}`, {
+        description: "Title, meta și keywords se aplică automat la următoarea încărcare.",
+      });
+      qc.invalidateQueries({ queryKey: ["seo-overrides"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Eroare implementare"),
+  });
+
+  const revertMutation = useMutation({
+    mutationFn: async (urlFull: string) => {
+      const path = urlToPath(urlFull);
+      const { error } = await supabase.from("seo_overrides").update({ is_active: false }).eq("url_path", path);
+      if (error) throw error;
+      return path;
+    },
+    onSuccess: (path) => {
+      toast.success(`Revenit la SEO original pe ${path}`);
+      qc.invalidateQueries({ queryKey: ["seo-overrides"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Eroare revert"),
   });
 
   const runBulkAudit = async () => {
@@ -608,7 +699,54 @@ const SEOOptimizerManager = () => {
                     <Lightbulb className="w-3 h-3 mr-2" />
                     Brief implementare
                   </Button>
+                  {(() => {
+                    const path = urlToPath(selectedAudit.url);
+                    const existing = overrideMap.get(path);
+                    const canApply = !!(selectedAudit.suggested_title || selectedAudit.suggested_meta);
+                    return (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          disabled={!canApply || applyMutation.isPending}
+                          onClick={() => applyMutation.mutate(selectedAudit)}
+                          title={canApply ? "Aplică title, meta description și keywords pe pagina live" : "Audit fără sugestii — generează unul nou"}
+                        >
+                          {applyMutation.isPending ? (
+                            <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                          ) : (
+                            <Wand2 className="w-3 h-3 mr-2" />
+                          )}
+                          {existing ? "Reaplică sugestiile" : "Implementează automat"}
+                        </Button>
+                        {existing && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={revertMutation.isPending}
+                            onClick={() => revertMutation.mutate(selectedAudit.url)}
+                          >
+                            <Undo2 className="w-3 h-3 mr-2" />
+                            Revert
+                          </Button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
+                {(() => {
+                  const path = urlToPath(selectedAudit.url);
+                  const existing = overrideMap.get(path);
+                  if (!existing) return null;
+                  return (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>
+                        Aplicat automat: {new Date(existing.applied_at).toLocaleString("ro-RO")}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
               <div className="text-right">
                 <div className={`text-4xl font-bold ${scoreColor(selectedAudit.overall_score)}`}>

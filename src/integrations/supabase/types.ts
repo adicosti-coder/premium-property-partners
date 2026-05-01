@@ -3746,6 +3746,59 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_overrides: {
+        Row: {
+          applied_at: string
+          applied_by: string | null
+          created_at: string
+          extra_keywords: Json | null
+          id: string
+          is_active: boolean
+          meta_description: string | null
+          source_audit_id: string | null
+          structural_todos: Json | null
+          title: string | null
+          updated_at: string
+          url_path: string
+        }
+        Insert: {
+          applied_at?: string
+          applied_by?: string | null
+          created_at?: string
+          extra_keywords?: Json | null
+          id?: string
+          is_active?: boolean
+          meta_description?: string | null
+          source_audit_id?: string | null
+          structural_todos?: Json | null
+          title?: string | null
+          updated_at?: string
+          url_path: string
+        }
+        Update: {
+          applied_at?: string
+          applied_by?: string | null
+          created_at?: string
+          extra_keywords?: Json | null
+          id?: string
+          is_active?: boolean
+          meta_description?: string | null
+          source_audit_id?: string | null
+          structural_todos?: Json | null
+          title?: string | null
+          updated_at?: string
+          url_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_overrides_source_audit_id_fkey"
+            columns: ["source_audit_id"]
+            isOneToOne: false
+            referencedRelation: "seo_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_poi_links: {
         Row: {
           created_at: string
