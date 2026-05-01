@@ -278,14 +278,30 @@ const SEOOptimizerManager = () => {
     mutationFn: async (urlFull: string) => {
       const path = urlToPath(urlFull);
       const { error } = await supabase.from("seo_overrides").update({ is_active: false }).eq("url_path", path);
-      if (error) throw error;
+      if (error) {
+        const msg = error.message || "";
+        if (/network|fetch|connection|timeout/i.test(msg)) {
+          throw new Error(`Eșec la conectarea cu baza de date: ${msg}`);
+        }
+        if (/jwt|permission|rls|policy/i.test(msg)) {
+          throw new Error(`Acces refuzat: ${msg}`);
+        }
+        throw new Error(`Revert eșuat: ${msg}`);
+      }
       return path;
     },
     onSuccess: (path) => {
-      toast.success(`Revenit la SEO original pe ${path}`);
+      toast.success(`Revenit la SEO original pe ${path}`, {
+        description: "Pagina folosește acum metadatele implicite din cod.",
+      });
       qc.invalidateQueries({ queryKey: ["seo-overrides"] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare revert"),
+    onError: (e: any) => {
+      toast.error("Eroare la revert", {
+        description: e?.message || "Cauză necunoscută.",
+        duration: 6000,
+      });
+    },
   });
 
   const runBulkAudit = async () => {
