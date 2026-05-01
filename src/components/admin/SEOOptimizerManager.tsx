@@ -198,11 +198,12 @@ const SEOOptimizerManager = () => {
     mutationFn: async (a: AuditRow) => {
       const path = urlToPath(a.url);
 
-      // Meta description length validation (~160 chars optimal, hard cap 200)
-      const metaLen = (a.suggested_meta || "").trim().length;
+      // Use edited meta if user adjusted it inline, else fall back to AI suggestion.
+      const effectiveMeta = (editedMeta[a.id] ?? a.suggested_meta ?? "").trim();
+      const metaLen = effectiveMeta.length;
       if (metaLen > 200) {
         throw new Error(
-          `Meta description prea lungă (${metaLen} caractere). Maxim 200, optim ~160. Editează auditul înainte de aplicare.`
+          `Meta description prea lungă (${metaLen} caractere). Maxim 200, optim ~160. Folosește butonul "Generează meta optim" sau editează manual.`
         );
       }
       if (metaLen > 160) {
@@ -229,13 +230,14 @@ const SEOOptimizerManager = () => {
         .map((i: any) => ({ issue: i.issue, fix: i.fix, severity: i.severity }))
         .slice(0, 10);
 
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: userRes, error: authErr } = await supabase.auth.getUser();
+      if (authErr) throw new Error(`Autentificare eșuată: ${authErr.message}`);
 
       const { error } = await supabase.from("seo_overrides").upsert(
         {
           url_path: path,
           title: a.suggested_title || null,
-          meta_description: a.suggested_meta || null,
+          meta_description: effectiveMeta || null,
           extra_keywords,
           structural_todos,
           source_audit_id: a.id,
@@ -245,7 +247,17 @@ const SEOOptimizerManager = () => {
         },
         { onConflict: "url_path" }
       );
-      if (error) throw error;
+      if (error) {
+        // Distinguish DB connectivity vs RLS vs validation errors
+        const msg = error.message || "";
+        if (/jwt|permission|rls|policy/i.test(msg)) {
+          throw new Error(`Acces refuzat de baza de date (RLS): ${msg}`);
+        }
+        if (/network|fetch|connection|timeout/i.test(msg)) {
+          throw new Error(`Eșec la conectarea cu baza de date: ${msg}`);
+        }
+        throw new Error(`Salvare eșuată: ${msg}`);
+      }
       return path;
     },
     onSuccess: (path) => {
@@ -254,7 +266,12 @@ const SEOOptimizerManager = () => {
       });
       qc.invalidateQueries({ queryKey: ["seo-overrides"] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare implementare"),
+    onError: (e: any) => {
+      toast.error("Eroare la implementare", {
+        description: e?.message || "Cauză necunoscută. Verifică consola pentru detalii.",
+        duration: 6000,
+      });
+    },
   });
 
   const revertMutation = useMutation({
