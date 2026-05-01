@@ -237,6 +237,17 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
               {genMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
               Generează pachet complet
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => genMutation.mutate("canonical")}
+              disabled={genMutation.isPending}
+            >
+              {genMutation.isPending && genMutation.variables === "canonical"
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Link2 className="h-4 w-4" />}
+              Generează canonical
+            </Button>
             <Button size="sm" variant="outline" onClick={() => setHistoryOpen(true)}>
               <History className="h-4 w-4" /> Istoric versiuni
             </Button>
