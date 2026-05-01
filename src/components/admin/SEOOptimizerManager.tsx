@@ -650,6 +650,9 @@ const SEOOptimizerManager = () => {
           <div className="flex flex-wrap gap-2 pt-2">
             <GlobalCanonicalFixButton />
           </div>
+          <div className="pt-3">
+            <RobotsCacheStatus />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">
