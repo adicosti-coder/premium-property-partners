@@ -42,7 +42,8 @@ const FIX_LABEL: Record<FixType, { label: string; icon: any }> = {
   meta: { label: "Meta Description", icon: Wand2 },
   schema: { label: "Schema.org JSON-LD", icon: Layers },
   alt_text: { label: "Alt-Text imagini", icon: Wand2 },
-  all: { label: "Pachet complet (Title + Meta + Schema + Keywords)", icon: Wand2 },
+  canonical: { label: "Canonical URL", icon: Link2 },
+  all: { label: "Pachet complet (Title + Meta + Canonical + Schema + Keywords)", icon: Wand2 },
 };
 
 export const SEOAutoFixPanel = ({ audit }: Props) => {
