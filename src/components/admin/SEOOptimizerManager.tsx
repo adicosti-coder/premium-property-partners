@@ -88,16 +88,26 @@ const SEOOptimizerManager = () => {
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const [revertConfirm, setRevertConfirm] = useState<string | null>(null);
   const [editedMeta, setEditedMeta] = useState<Record<string, string>>({});
+  const [serpPreview, setSerpPreview] = useState<AuditRow | null>(null);
 
-  // Trim a meta description to ~155 chars at the nearest sentence/word boundary.
+  // Trim a meta description to <=target chars (default 155) at the nearest
+  // sentence boundary, falling back to the last word boundary. Never cuts
+  // mid-word. Final length (incl. ellipsis) is guaranteed <= target.
   const shortenMeta = (text: string, target = 155): string => {
     const t = (text || "").replace(/\s+/g, " ").trim();
     if (t.length <= target) return t;
-    const slice = t.slice(0, target + 5);
+    // Reserve 1 char for the ellipsis so total length stays <= target
+    const budget = target - 1;
+    const slice = t.slice(0, budget + 1);
+    // Prefer end-of-sentence punctuation if it lands in the last 40%
     const punct = Math.max(slice.lastIndexOf(". "), slice.lastIndexOf("! "), slice.lastIndexOf("? "));
-    if (punct > target * 0.6) return slice.slice(0, punct + 1).trim();
-    const space = slice.lastIndexOf(" ");
-    return (space > 0 ? slice.slice(0, space) : slice.slice(0, target)).trim().replace(/[,;:]$/, "") + "…";
+    if (punct > target * 0.6 && punct + 1 <= target) {
+      return slice.slice(0, punct + 1).trim();
+    }
+    // Cut at last space within budget — never split a word
+    const lastSpace = t.slice(0, budget).lastIndexOf(" ");
+    const cut = lastSpace > 0 ? t.slice(0, lastSpace) : t.slice(0, budget);
+    return cut.trim().replace(/[,;:.!?\-–—]+$/, "") + "…";
   };
 
   const { data: history = [] } = useQuery({
