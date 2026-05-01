@@ -86,6 +86,19 @@ const SEOOptimizerManager = () => {
   const [bulkRunning, setBulkRunning] = useState(false);
   const [dualRunning, setDualRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
+  const [revertConfirm, setRevertConfirm] = useState<string | null>(null);
+  const [editedMeta, setEditedMeta] = useState<Record<string, string>>({});
+
+  // Trim a meta description to ~155 chars at the nearest sentence/word boundary.
+  const shortenMeta = (text: string, target = 155): string => {
+    const t = (text || "").replace(/\s+/g, " ").trim();
+    if (t.length <= target) return t;
+    const slice = t.slice(0, target + 5);
+    const punct = Math.max(slice.lastIndexOf(". "), slice.lastIndexOf("! "), slice.lastIndexOf("? "));
+    if (punct > target * 0.6) return slice.slice(0, punct + 1).trim();
+    const space = slice.lastIndexOf(" ");
+    return (space > 0 ? slice.slice(0, space) : slice.slice(0, target)).trim().replace(/[,;:]$/, "") + "…";
+  };
 
   const { data: history = [] } = useQuery({
     queryKey: ["seo-audits-history"],
