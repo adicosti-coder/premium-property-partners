@@ -338,29 +338,8 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
     onError: (e: any) => toast.error(e.message || "Revert eșuat"),
   });
 
-  // ---- Bulk Fix (full SEO)
-  const [bulkFullRunning, setBulkFullRunning] = useState(false);
-  const [bulkFullResults, setBulkFullResults] = useState<any[]>([]);
-  const [bulkFullThreshold, setBulkFullThreshold] = useState(85);
+  // (Bulk full-SEO fix retained as edge action 'bulk_fix' — exposed via canonical bulk dialog if needed in future.)
 
-  const runBulkFullFix = async () => {
-    setBulkFullRunning(true);
-    setBulkFullResults([]);
-    try {
-      const { data, error } = await supabase.functions.invoke("seo-auto-fix", {
-        body: { action: "bulk_fix", threshold: bulkFullThreshold },
-      });
-      if (error) throw error;
-      setBulkFullResults(data?.results || []);
-      const ok = (data?.results || []).filter((r: any) => r.status === "ok").length;
-      toast.success(`Bulk Fix: ${ok}/${data?.results?.length || 0} aplicate`);
-      qc.invalidateQueries({ queryKey: ["seo-overrides"] });
-    } catch (e: any) {
-      toast.error(e.message || "Bulk eșuat");
-    } finally {
-      setBulkFullRunning(false);
-    }
-  };
 
   // ---- Regression check
   const regressionMutation = useMutation({
