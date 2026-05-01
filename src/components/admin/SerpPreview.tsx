@@ -266,8 +266,42 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
 
       {/* Status badges */}
       <div className="flex flex-wrap gap-2">
+        {indexable ? (
+          <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+            <CheckCircle2 className="h-3 w-3" /> Indexabil
+          </Badge>
+        ) : (
+          <Badge variant="destructive" className="gap-1">
+            <Ban className="h-3 w-3" /> noindex
+          </Badge>
+        )}
+        {robotsInfo.nofollow && (
+          <Badge variant="destructive" className="gap-1">
+            <AlertTriangle className="h-3 w-3" /> nofollow
+          </Badge>
+        )}
+        {robotsInfo.nosnippet && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            nosnippet
+          </Badge>
+        )}
+        {robotsInfo.noarchive && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            noarchive
+          </Badge>
+        )}
+        {robotsInfo.noimageindex && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            noimageindex
+          </Badge>
+        )}
+        {robotsInfo.unavailableAfter && (
+          <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+            expiră: {robotsInfo.unavailableAfter}
+          </Badge>
+        )}
         {titleOver ? (
-          <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Titlu trunchiat în Google ({device})</Badge>
+          <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" /> Titlu trunchiat ({device})</Badge>
         ) : (
           <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3" /> Titlu OK</Badge>
         )}
