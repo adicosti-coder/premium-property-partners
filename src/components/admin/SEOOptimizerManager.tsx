@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
 import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
+import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 
 const QUICK_URLS = [
   // Principal
