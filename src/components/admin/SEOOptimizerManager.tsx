@@ -17,6 +17,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import jsPDF from "jspdf";
 
 const QUICK_URLS = [
@@ -88,16 +91,26 @@ const SEOOptimizerManager = () => {
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const [revertConfirm, setRevertConfirm] = useState<string | null>(null);
   const [editedMeta, setEditedMeta] = useState<Record<string, string>>({});
+  const [serpPreview, setSerpPreview] = useState<AuditRow | null>(null);
 
-  // Trim a meta description to ~155 chars at the nearest sentence/word boundary.
+  // Trim a meta description to <=target chars (default 155) at the nearest
+  // sentence boundary, falling back to the last word boundary. Never cuts
+  // mid-word. Final length (incl. ellipsis) is guaranteed <= target.
   const shortenMeta = (text: string, target = 155): string => {
     const t = (text || "").replace(/\s+/g, " ").trim();
     if (t.length <= target) return t;
-    const slice = t.slice(0, target + 5);
+    // Reserve 1 char for the ellipsis so total length stays <= target
+    const budget = target - 1;
+    const slice = t.slice(0, budget + 1);
+    // Prefer end-of-sentence punctuation if it lands in the last 40%
     const punct = Math.max(slice.lastIndexOf(". "), slice.lastIndexOf("! "), slice.lastIndexOf("? "));
-    if (punct > target * 0.6) return slice.slice(0, punct + 1).trim();
-    const space = slice.lastIndexOf(" ");
-    return (space > 0 ? slice.slice(0, space) : slice.slice(0, target)).trim().replace(/[,;:]$/, "") + "…";
+    if (punct > target * 0.6 && punct + 1 <= target) {
+      return slice.slice(0, punct + 1).trim();
+    }
+    // Cut at last space within budget — never split a word
+    const lastSpace = t.slice(0, budget).lastIndexOf(" ");
+    const cut = lastSpace > 0 ? t.slice(0, lastSpace) : t.slice(0, budget);
+    return cut.trim().replace(/[,;:.!?\-–—]+$/, "") + "…";
   };
 
   const { data: history = [] } = useQuery({
@@ -952,10 +965,10 @@ const SEOOptimizerManager = () => {
                   const currentMeta = editedMeta[selectedAudit.id] ?? selectedAudit.suggested_meta ?? "";
                   const len = currentMeta.length;
                   const isEdited = editedMeta[selectedAudit.id] !== undefined;
-                  let counterColor = "text-emerald-600 dark:text-emerald-400";
-                  if (len > 200) counterColor = "text-red-600 dark:text-red-400";
-                  else if (len > 160) counterColor = "text-amber-600 dark:text-amber-400";
-                  else if (len < 110) counterColor = "text-amber-600 dark:text-amber-400";
+                  // Color spec: GREEN strict 140–160 (sweet spot), RED >160, AMBER <140
+                  let counterColor = "text-amber-600 dark:text-amber-400";
+                  if (len > 160) counterColor = "text-red-600 dark:text-red-400";
+                  else if (len >= 140 && len <= 160) counterColor = "text-emerald-600 dark:text-emerald-400";
                   return (
                     <div>
                       <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-between gap-2 flex-wrap">
@@ -963,22 +976,32 @@ const SEOOptimizerManager = () => {
                           META DESCRIPTION SUGERATĂ
                           <span className={`font-mono ${counterColor}`}>{len}/160</span>
                           {len > 200 && <Badge variant="destructive" className="text-[10px]">peste limita absolută 200</Badge>}
-                          {len > 160 && len <= 200 && <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700 dark:text-amber-400">va fi trunchiată</Badge>}
-                          {len > 0 && len < 110 && <Badge variant="outline" className="text-[10px]">prea scurtă</Badge>}
+                          {len > 160 && len <= 200 && <Badge variant="destructive" className="text-[10px]">va fi trunchiată</Badge>}
+                          {len > 0 && len < 140 && <Badge variant="outline" className="text-[10px]">prea scurtă</Badge>}
                           {isEdited && <Badge variant="secondary" className="text-[10px]">editat</Badge>}
                         </span>
                         <span className="flex items-center gap-1">
-                          {len > 200 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSerpPreview(selectedAudit)}
+                            title="Vezi cum arată în Google"
+                          >
+                            <Search className="w-3 h-3 mr-1" />
+                            Previzualizare Google
+                          </Button>
+                          {len > 155 && (
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant={len > 200 ? "destructive" : "outline"}
                               onClick={() => {
                                 const next = shortenMeta(currentMeta, 155);
                                 setEditedMeta((m) => ({ ...m, [selectedAudit.id]: next }));
-                                toast.success("Meta scurtată automat", {
-                                  description: `${len} → ${next.length} caractere`,
+                                toast.success("Meta scurtată automat la 155 caractere", {
+                                  description: `${len} → ${next.length} caractere · fără tăiere de cuvinte`,
                                 });
                               }}
+                              title="Scurtează automat la 155 caractere, fără a tăia cuvintele"
                             >
                               <Scissors className="w-3 h-3 mr-1" />
                               Generează meta optim
@@ -1327,6 +1350,81 @@ const SEOOptimizerManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!serpPreview} onOpenChange={(o) => !o && setSerpPreview(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Previzualizare Google SERP
+            </DialogTitle>
+            <DialogDescription>
+              Așa va apărea pagina în rezultatele căutării Google (desktop).
+            </DialogDescription>
+          </DialogHeader>
+          {serpPreview && (() => {
+            const previewMeta = (editedMeta[serpPreview.id] ?? serpPreview.suggested_meta ?? "").trim();
+            const previewTitle = (serpPreview.suggested_title || serpPreview.title || "").trim();
+            // Google trunchiază title la ~60 char și meta la ~160 char (desktop)
+            const displayTitle = previewTitle.length > 60 ? previewTitle.slice(0, 57).trimEnd() + "…" : previewTitle;
+            const displayMeta = previewMeta.length > 160 ? previewMeta.slice(0, 157).trimEnd() + "…" : previewMeta;
+            const path = urlToPath(serpPreview.url);
+            const breadcrumb = `www.realtrust.ro${path === "/" ? "" : " › " + path.replace(/^\//, "").replace(/\//g, " › ")}`;
+            const today = new Date().toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" });
+            return (
+              <div className="space-y-4">
+                {/* Desktop SERP card */}
+                <div className="rounded-lg border bg-white dark:bg-zinc-900 p-4 font-sans">
+                  <div className="flex items-center gap-2 text-xs text-zinc-700 dark:text-zinc-300">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white text-[10px] font-bold">R</div>
+                    <div className="flex flex-col leading-tight">
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100">RealTrust</span>
+                      <span className="text-zinc-500 text-[11px]">{breadcrumb}</span>
+                    </div>
+                  </div>
+                  <h3 className="mt-2 text-[20px] leading-[1.3] text-[#1a0dab] dark:text-[#8ab4f8] font-normal hover:underline cursor-pointer">
+                    {displayTitle || <span className="italic text-zinc-400">(fără titlu)</span>}
+                  </h3>
+                  <p className="mt-1 text-[14px] leading-[1.58] text-zinc-700 dark:text-zinc-300">
+                    <span className="text-zinc-500">{today} — </span>
+                    {displayMeta || <span className="italic text-zinc-400">(fără meta description)</span>}
+                  </p>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="rounded-md border p-2">
+                    <div className="text-muted-foreground">Title</div>
+                    <div className="font-mono">
+                      <span className={previewTitle.length > 60 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
+                        {previewTitle.length}
+                      </span>
+                      /60 caractere {previewTitle.length > 60 && "· va fi trunchiat"}
+                    </div>
+                  </div>
+                  <div className="rounded-md border p-2">
+                    <div className="text-muted-foreground">Meta description</div>
+                    <div className="font-mono">
+                      <span className={
+                        previewMeta.length > 160 ? "text-red-600 dark:text-red-400"
+                        : previewMeta.length >= 140 ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-amber-600 dark:text-amber-400"
+                      }>
+                        {previewMeta.length}
+                      </span>
+                      /160 caractere {previewMeta.length > 160 && "· va fi trunchiată"}
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground">
+                  Notă: Google poate rescrie automat title/meta în funcție de query. Această previzualizare arată cazul implicit.
+                </p>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
