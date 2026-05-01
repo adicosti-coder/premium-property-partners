@@ -3609,6 +3609,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_ab_metrics: {
+        Row: {
+          clicks: number
+          created_at: string
+          ctr: number | null
+          day: string
+          id: string
+          impressions: number
+          source: string
+          updated_at: string
+          url_path: string
+          variant: string
+        }
+        Insert: {
+          clicks?: number
+          created_at?: string
+          ctr?: number | null
+          day?: string
+          id?: string
+          impressions?: number
+          source?: string
+          updated_at?: string
+          url_path: string
+          variant: string
+        }
+        Update: {
+          clicks?: number
+          created_at?: string
+          ctr?: number | null
+          day?: string
+          id?: string
+          impressions?: number
+          source?: string
+          updated_at?: string
+          url_path?: string
+          variant?: string
+        }
+        Relationships: []
+      }
       seo_audit_snapshots: {
         Row: {
           alert_reason: string | null
@@ -3785,6 +3824,93 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_competitor_snapshots: {
+        Row: {
+          ai_gaps: Json | null
+          ai_summary: string | null
+          competitor_h1: string | null
+          competitor_label: string | null
+          competitor_meta: string | null
+          competitor_schema_types: Json | null
+          competitor_title: string | null
+          competitor_url: string
+          competitor_word_count: number | null
+          created_at: string
+          fetched_at: string
+          id: string
+          our_url_path: string
+        }
+        Insert: {
+          ai_gaps?: Json | null
+          ai_summary?: string | null
+          competitor_h1?: string | null
+          competitor_label?: string | null
+          competitor_meta?: string | null
+          competitor_schema_types?: Json | null
+          competitor_title?: string | null
+          competitor_url: string
+          competitor_word_count?: number | null
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          our_url_path: string
+        }
+        Update: {
+          ai_gaps?: Json | null
+          ai_summary?: string | null
+          competitor_h1?: string | null
+          competitor_label?: string | null
+          competitor_meta?: string | null
+          competitor_schema_types?: Json | null
+          competitor_title?: string | null
+          competitor_url?: string
+          competitor_word_count?: number | null
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          our_url_path?: string
+        }
+        Relationships: []
+      }
+      seo_internal_link_suggestions: {
+        Row: {
+          anchor_text: string
+          applied_at: string | null
+          applied_by: string | null
+          created_at: string
+          id: string
+          reason: string | null
+          relevance_score: number | null
+          source_url_path: string
+          status: string
+          target_url_path: string
+        }
+        Insert: {
+          anchor_text: string
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          relevance_score?: number | null
+          source_url_path: string
+          status?: string
+          target_url_path: string
+        }
+        Update: {
+          anchor_text?: string
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          relevance_score?: number | null
+          source_url_path?: string
+          status?: string
+          target_url_path?: string
+        }
+        Relationships: []
+      }
       seo_override_history: {
         Row: {
           alt_text_suggestions: Json | null
@@ -3803,6 +3929,7 @@ export type Database = {
           source_audit_id: string | null
           title: string | null
           url_path: string
+          validation_status: string | null
           version_number: number
         }
         Insert: {
@@ -3822,6 +3949,7 @@ export type Database = {
           source_audit_id?: string | null
           title?: string | null
           url_path: string
+          validation_status?: string | null
           version_number: number
         }
         Update: {
@@ -3841,6 +3969,7 @@ export type Database = {
           source_audit_id?: string | null
           title?: string | null
           url_path?: string
+          validation_status?: string | null
           version_number?: number
         }
         Relationships: [
@@ -3856,8 +3985,10 @@ export type Database = {
       seo_overrides: {
         Row: {
           ab_enabled: boolean
+          ab_resolved_by: string | null
           ab_variant_b: Json | null
           ab_winner: string | null
+          ab_winner_resolved_at: string | null
           alt_text_suggestions: Json | null
           applied_at: string
           applied_by: string | null
@@ -3867,6 +3998,8 @@ export type Database = {
           id: string
           is_active: boolean
           json_ld: Json | null
+          last_validated_at: string | null
+          last_validation_status: string | null
           meta_description: string | null
           source_audit_id: string | null
           structural_todos: Json | null
@@ -3876,8 +4009,10 @@ export type Database = {
         }
         Insert: {
           ab_enabled?: boolean
+          ab_resolved_by?: string | null
           ab_variant_b?: Json | null
           ab_winner?: string | null
+          ab_winner_resolved_at?: string | null
           alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
@@ -3887,6 +4022,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           json_ld?: Json | null
+          last_validated_at?: string | null
+          last_validation_status?: string | null
           meta_description?: string | null
           source_audit_id?: string | null
           structural_todos?: Json | null
@@ -3896,8 +4033,10 @@ export type Database = {
         }
         Update: {
           ab_enabled?: boolean
+          ab_resolved_by?: string | null
           ab_variant_b?: Json | null
           ab_winner?: string | null
+          ab_winner_resolved_at?: string | null
           alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
@@ -3907,6 +4046,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           json_ld?: Json | null
+          last_validated_at?: string | null
+          last_validation_status?: string | null
           meta_description?: string | null
           source_audit_id?: string | null
           structural_todos?: Json | null
@@ -4025,6 +4166,63 @@ export type Database = {
           triggered_by?: string | null
         }
         Relationships: []
+      }
+      seo_schema_validations: {
+        Row: {
+          errors: Json | null
+          history_id: string | null
+          id: string
+          override_id: string | null
+          raw_response: Json | null
+          schema_types: Json | null
+          status: string
+          url_path: string
+          validated_at: string
+          validator: string
+          warnings: Json | null
+        }
+        Insert: {
+          errors?: Json | null
+          history_id?: string | null
+          id?: string
+          override_id?: string | null
+          raw_response?: Json | null
+          schema_types?: Json | null
+          status: string
+          url_path: string
+          validated_at?: string
+          validator?: string
+          warnings?: Json | null
+        }
+        Update: {
+          errors?: Json | null
+          history_id?: string | null
+          id?: string
+          override_id?: string | null
+          raw_response?: Json | null
+          schema_types?: Json | null
+          status?: string
+          url_path?: string
+          validated_at?: string
+          validator?: string
+          warnings?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_schema_validations_history_id_fkey"
+            columns: ["history_id"]
+            isOneToOne: false
+            referencedRelation: "seo_override_history"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_schema_validations_override_id_fkey"
+            columns: ["override_id"]
+            isOneToOne: false
+            referencedRelation: "seo_overrides"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shared_poi_links: {
         Row: {
