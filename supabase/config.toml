@@ -123,3 +123,5 @@ project_id = "mvzssjyzbwccioqvhjpo"
     verify_jwt = false
   [functions.prospect-ai-scorer]
     verify_jwt = false
+  [functions.seo-track-impression]
+    verify_jwt = false
