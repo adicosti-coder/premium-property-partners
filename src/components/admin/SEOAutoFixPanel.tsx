@@ -24,7 +24,7 @@ interface Props {
   } | null;
 }
 
-type FixType = "title" | "meta" | "schema" | "alt_text" | "all";
+type FixType = "title" | "meta" | "schema" | "alt_text" | "canonical" | "all";
 
 const urlToPath = (full: string): string => {
   try {
