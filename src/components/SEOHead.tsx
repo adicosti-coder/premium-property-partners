@@ -199,7 +199,7 @@ const SEOHead = ({
     if (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
     return `${BASE_URL}${pathname}`;
   };
-  const finalUrl = buildCanonical();
+  const finalUrl = override?.canonical_url || buildCanonical();
 
   // Hreflang alternates — language is a client-side state (LanguageContext), not a URL segment.
   // Both RO and EN share the same canonical pathname; we signal language equivalence to Google.

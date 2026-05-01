@@ -4,12 +4,14 @@ import { supabase } from "@/lib/supabaseClient";
 export interface SeoOverride {
   title: string | null;
   meta_description: string | null;
+  canonical_url: string | null;
   json_ld: Record<string, unknown> | Record<string, unknown>[] | null;
   extra_keywords: Array<{ keyword: string; reason?: string }>;
   ab_enabled?: boolean;
   ab_variant_b?: {
     title?: string | null;
     meta_description?: string | null;
+    canonical_url?: string | null;
     json_ld?: Record<string, unknown> | Record<string, unknown>[] | null;
     extra_keywords?: Array<{ keyword: string; reason?: string }>;
   } | null;
@@ -45,7 +47,7 @@ export function useSeoOverride(pathname?: string): SeoOverride | null {
       try {
         const { data, error } = await supabase
           .from("seo_overrides")
-          .select("title, meta_description, extra_keywords, json_ld, ab_enabled, ab_variant_b")
+          .select("title, meta_description, canonical_url, extra_keywords, json_ld, ab_enabled, ab_variant_b")
           .eq("url_path", path)
           .eq("is_active", true)
           .maybeSingle();
@@ -70,6 +72,7 @@ export function useSeoOverride(pathname?: string): SeoOverride | null {
         setOverride({
           title: useB ? (variantB.title ?? data.title) : data.title,
           meta_description: useB ? (variantB.meta_description ?? data.meta_description) : data.meta_description,
+          canonical_url: useB ? (variantB.canonical_url ?? (data as any).canonical_url) : (data as any).canonical_url ?? null,
           json_ld: useB ? (variantB.json_ld ?? (data as any).json_ld) : (data as any).json_ld,
           extra_keywords: Array.isArray(useB ? variantB.extra_keywords : data.extra_keywords)
             ? ((useB ? variantB.extra_keywords : data.extra_keywords) as any[])

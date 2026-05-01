@@ -9,7 +9,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Wand2, History, GitCompare, FlaskConical, Layers, ShieldAlert, RotateCcw } from "lucide-react";
+import { Loader2, Wand2, History, GitCompare, FlaskConical, Layers, ShieldAlert, RotateCcw, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { SerpPreview } from "./SerpPreview";
 
@@ -24,7 +24,7 @@ interface Props {
   } | null;
 }
 
-type FixType = "title" | "meta" | "schema" | "alt_text" | "all";
+type FixType = "title" | "meta" | "schema" | "alt_text" | "canonical" | "all";
 
 const urlToPath = (full: string): string => {
   try {
@@ -42,7 +42,8 @@ const FIX_LABEL: Record<FixType, { label: string; icon: any }> = {
   meta: { label: "Meta Description", icon: Wand2 },
   schema: { label: "Schema.org JSON-LD", icon: Layers },
   alt_text: { label: "Alt-Text imagini", icon: Wand2 },
-  all: { label: "Pachet complet (Title + Meta + Schema + Keywords)", icon: Wand2 },
+  canonical: { label: "Canonical URL", icon: Link2 },
+  all: { label: "Pachet complet (Title + Meta + Canonical + Schema + Keywords)", icon: Wand2 },
 };
 
 export const SEOAutoFixPanel = ({ audit }: Props) => {
@@ -197,7 +198,8 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
                 {criticalIssues.map((issue: any, idx: number) => {
                   const txt = (issue.issue || "").toLowerCase();
                   let fix: FixType = "all";
-                  if (txt.includes("schema") || txt.includes("json-ld") || txt.includes("structured")) fix = "schema";
+                  if (txt.includes("canonical")) fix = "canonical";
+                  else if (txt.includes("schema") || txt.includes("json-ld") || txt.includes("structured")) fix = "schema";
                   else if (txt.includes("alt") || txt.includes("imagine")) fix = "alt_text";
                   else if (txt.includes("title")) fix = "title";
                   else if (txt.includes("meta") || txt.includes("descri")) fix = "meta";
@@ -234,6 +236,17 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
             <Button size="sm" onClick={() => genMutation.mutate("all")} disabled={genMutation.isPending}>
               {genMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
               Generează pachet complet
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => genMutation.mutate("canonical")}
+              disabled={genMutation.isPending}
+            >
+              {genMutation.isPending && genMutation.variables === "canonical"
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Link2 className="h-4 w-4" />}
+              Generează canonical
             </Button>
             <Button size="sm" variant="outline" onClick={() => setHistoryOpen(true)}>
               <History className="h-4 w-4" /> Istoric versiuni
@@ -275,7 +288,28 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
                 <DiffBlock label="Meta Description" before={audit.suggested_meta || "—"} after={proposal.meta_description} />
               )}
 
-              {(proposal?.title || proposal?.meta_description) && (
+              {proposal?.canonical_url && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <Link2 className="h-3 w-3" /> Canonical URL propus
+                  </p>
+                  <div className="rounded-md border bg-muted/40 p-2 space-y-1">
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">URL pagină:</span>{" "}
+                      <code className="font-mono break-all">{audit.url}</code>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Canonical sugerat:</span>{" "}
+                      <code className="font-mono break-all text-foreground">{proposal.canonical_url}</code>
+                    </div>
+                    {proposal?.canonical_reason && (
+                      <p className="text-xs italic text-muted-foreground">{proposal.canonical_reason}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {(proposal?.title || proposal?.meta_description || proposal?.canonical_url) && (
                 <SerpPreview
                   title={proposal?.title || audit.suggested_title || ""}
                   description={proposal?.meta_description || audit.suggested_meta || ""}

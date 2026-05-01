@@ -31,7 +31,30 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-type FixType = "title" | "meta" | "schema" | "alt_text" | "all";
+type FixType = "title" | "meta" | "schema" | "alt_text" | "canonical" | "all";
+
+const BASE_URL = "https://www.realtrust.ro";
+
+/**
+ * Build a normalized, absolute canonical URL from any input (path, full URL, with/without query).
+ * Rules:
+ *  - Always https + www.realtrust.ro host (strip subdomains like preview/lovable)
+ *  - Lowercase pathname (Romanian routes are lowercase by convention)
+ *  - Strip trailing slash (except root), collapse duplicate slashes
+ *  - Remove all query params and hash (canonical must be parameter-free)
+ */
+function buildCanonicalUrl(input: string): string {
+  let pathname = "/";
+  try {
+    const u = new URL(input, BASE_URL);
+    pathname = u.pathname;
+  } catch {
+    pathname = input.startsWith("/") ? input.split("?")[0].split("#")[0] : "/";
+  }
+  pathname = pathname.replace(/\/{2,}/g, "/").toLowerCase();
+  if (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
+  return `${BASE_URL}${pathname}`;
+}
 
 interface AnyBody {
   action: string;
@@ -190,6 +213,9 @@ KeywordGaps: ${JSON.stringify(audit.keyword_gaps || []).slice(0, 800)}
 LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice(0, 600)}
 `.trim();
 
+  const suggestedCanonical = buildCanonicalUrl(audit.url);
+  const currentCanonicalCandidate = (audit as any).canonical_url || (audit as any).meta?.canonical || null;
+
   const fixInstructions: Record<FixType, string> = {
     title:
       "Generate ONLY a new title (50-60 chars, RO, with primary local keyword). Output JSON: {\"title\": \"...\"}",
@@ -199,8 +225,10 @@ LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice
       `Generate Schema.org JSON-LD appropriate for pageType="${pageType}". Pick the best @type (LocalBusiness/RealEstateAgent for homepage; Product/RealEstateListing for property; Article for blog; Place for neighborhood). Include name, description, url, image, address (Timișoara, RO), telephone "+40799069256", email "info@realtrust.ro" where applicable. Output JSON: {"json_ld": { ... }}`,
     alt_text:
       "Suggest alt-text for up to 8 likely images on this page (hero, gallery, property thumbs). Output JSON: {\"alt_text_suggestions\": [{\"image_hint\": \"hero\", \"alt\": \"...\"}, ...]}",
+    canonical:
+      `Propose the correct absolute canonical URL for this page. Rules: must use https://www.realtrust.ro as origin (strip subdomains like preview/lovable/staging), lowercase pathname, NO query params, NO hash, NO trailing slash (except root). Detected pageType="${pageType}". Suggested baseline (already normalized): "${suggestedCanonical}". Current canonical found on the page (if any): "${currentCanonicalCandidate || "(none)"}". If the suggested baseline is correct, return it as-is. If the page is a duplicate / pagination / filter variant, propose the canonical of the master page instead. Also explain in 1 short Romanian sentence why. Output JSON: {"canonical_url": "https://www.realtrust.ro/...", "canonical_reason": "..."}`,
     all:
-      `Generate a complete SEO fix bundle. Output JSON: {"title": "...", "meta_description": "...", "json_ld": { schema.org object appropriate for pageType="${pageType}", with @context, @type, name, description, url, image, address (Timișoara), telephone "+40799069256" }, "extra_keywords": [{"keyword": "...", "reason": "..."}, ...]}. All copy in RO. Title 50-60 chars. Meta 140-155 chars.`,
+      `Generate a complete SEO fix bundle. Output JSON: {"title": "...", "meta_description": "...", "canonical_url": "${suggestedCanonical}", "json_ld": { schema.org object appropriate for pageType="${pageType}", with @context, @type, name, description, url, image, address (Timișoara), telephone "+40799069256" }, "extra_keywords": [{"keyword": "...", "reason": "..."}, ...]}. All copy in RO. Title 50-60 chars. Meta 140-155 chars. canonical_url MUST be the normalized absolute URL on https://www.realtrust.ro (no query, no hash, no trailing slash).`,
   };
 
   const system = `You are an expert SEO engineer for a Romanian real estate brand "RealTrust & ApArt Hotel" in Timișoara. Output ONLY valid JSON, no prose. Brand voice: professional, trustworthy, ROI-focused (9.4% net). Always favor local keywords (Timișoara, neighborhood names like Iosefin, Iulius Town, Complex Studențesc, Dumbrăvița, Giroc, ISHO, Aeroport, UVT). Phone: +40799069256. Email: info@realtrust.ro.`;
@@ -209,7 +237,21 @@ LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice
   const raw = await callGemini(system, user);
   const parsed = safeJson<Record<string, unknown>>(raw) || {};
 
-  return { fix_type: fixType, url_path: path, page_type: pageType, proposal: parsed };
+  // Enforce canonical normalization (AI cannot bypass our rules: host, lowercase, no query, no trailing slash)
+  if ((parsed as any).canonical_url) {
+    (parsed as any).canonical_url = buildCanonicalUrl(String((parsed as any).canonical_url));
+  } else if (fixType === "canonical" || fixType === "all") {
+    (parsed as any).canonical_url = suggestedCanonical;
+  }
+
+  return {
+    fix_type: fixType,
+    url_path: path,
+    page_type: pageType,
+    suggested_canonical: suggestedCanonical,
+    current_canonical: currentCanonicalCandidate,
+    proposal: parsed,
+  };
 }
 
 // ============================================================================
@@ -248,6 +290,7 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
       json_ld: current.json_ld,
       extra_keywords: current.extra_keywords || [],
       alt_text_suggestions: current.alt_text_suggestions || [],
+      canonical_url: current.canonical_url ?? null,
       source_audit_id: current.source_audit_id,
       score_before: null,
       score_after: null,
@@ -257,16 +300,23 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
     });
   }
 
+  // Normalize canonical defensively whenever it shows up in the payload
+  const p = body.payload as any;
+  if (p && p.canonical_url) {
+    p.canonical_url = buildCanonicalUrl(String(p.canonical_url));
+  }
+
   const p = body.payload as any;
 
   if (variant === "B") {
-    // Apply as variant B (do not touch the live A version)
-    const variantB = {
+    // Apply as variant B (do not touch the live A version) — variant B can also override canonical
+    const variantB: Record<string, unknown> = {
       title: p.title ?? current?.title ?? null,
       meta_description: p.meta_description ?? current?.meta_description ?? null,
       json_ld: p.json_ld ?? current?.json_ld ?? null,
       extra_keywords: p.extra_keywords ?? current?.extra_keywords ?? [],
     };
+    if (p.canonical_url !== undefined) variantB.canonical_url = p.canonical_url;
     if (current) {
       await sb
         .from("seo_overrides")
@@ -284,6 +334,7 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
         meta_description: variantB.meta_description,
         json_ld: variantB.json_ld,
         extra_keywords: variantB.extra_keywords,
+        canonical_url: p.canonical_url ?? null,
         ab_variant_b: variantB,
         ab_enabled: body.ab_enabled ?? true,
         applied_by: userId,
@@ -304,6 +355,7 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
   if (p.json_ld !== undefined) updates.json_ld = p.json_ld;
   if (p.extra_keywords !== undefined) updates.extra_keywords = p.extra_keywords;
   if (p.alt_text_suggestions !== undefined) updates.alt_text_suggestions = p.alt_text_suggestions;
+  if (p.canonical_url !== undefined) updates.canonical_url = p.canonical_url;
   if (body.audit_id) updates.source_audit_id = body.audit_id;
 
   if (current) {
@@ -316,11 +368,12 @@ async function applyFix(sb: any, body: AnyBody, userId: string) {
       json_ld: p.json_ld ?? null,
       extra_keywords: p.extra_keywords ?? [],
       alt_text_suggestions: p.alt_text_suggestions ?? [],
+      canonical_url: p.canonical_url ?? null,
       source_audit_id: body.audit_id ?? null,
       applied_by: userId,
     });
   }
-  return { ok: true, variant: "A", version: nextVersion };
+  return { ok: true, variant: "A", version: nextVersion, canonical_url: p.canonical_url ?? null };
 }
 
 // ============================================================================
@@ -359,6 +412,7 @@ async function revert(sb: any, body: AnyBody, userId: string) {
       json_ld: current.json_ld,
       extra_keywords: current.extra_keywords || [],
       alt_text_suggestions: current.alt_text_suggestions || [],
+      canonical_url: current.canonical_url ?? null,
       source_audit_id: current.source_audit_id,
       change_type: "snapshot_before_revert",
       applied_by: userId,
@@ -373,6 +427,7 @@ async function revert(sb: any, body: AnyBody, userId: string) {
       json_ld: ver.json_ld,
       extra_keywords: ver.extra_keywords || [],
       alt_text_suggestions: ver.alt_text_suggestions || [],
+      canonical_url: ver.canonical_url ?? null,
       updated_at: new Date().toISOString(),
       applied_by: userId,
       applied_at: new Date().toISOString(),
