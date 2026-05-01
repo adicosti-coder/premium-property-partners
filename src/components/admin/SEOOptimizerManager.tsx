@@ -699,7 +699,54 @@ const SEOOptimizerManager = () => {
                     <Lightbulb className="w-3 h-3 mr-2" />
                     Brief implementare
                   </Button>
+                  {(() => {
+                    const path = urlToPath(selectedAudit.url);
+                    const existing = overrideMap.get(path);
+                    const canApply = !!(selectedAudit.suggested_title || selectedAudit.suggested_meta);
+                    return (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          disabled={!canApply || applyMutation.isPending}
+                          onClick={() => applyMutation.mutate(selectedAudit)}
+                          title={canApply ? "Aplică title, meta description și keywords pe pagina live" : "Audit fără sugestii — generează unul nou"}
+                        >
+                          {applyMutation.isPending ? (
+                            <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                          ) : (
+                            <Wand2 className="w-3 h-3 mr-2" />
+                          )}
+                          {existing ? "Reaplică sugestiile" : "Implementează automat"}
+                        </Button>
+                        {existing && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={revertMutation.isPending}
+                            onClick={() => revertMutation.mutate(selectedAudit.url)}
+                          >
+                            <Undo2 className="w-3 h-3 mr-2" />
+                            Revert
+                          </Button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
+                {(() => {
+                  const path = urlToPath(selectedAudit.url);
+                  const existing = overrideMap.get(path);
+                  if (!existing) return null;
+                  return (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>
+                        Aplicat automat: {new Date(existing.applied_at).toLocaleString("ro-RO")}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
               <div className="text-right">
                 <div className={`text-4xl font-bold ${scoreColor(selectedAudit.overall_score)}`}>
