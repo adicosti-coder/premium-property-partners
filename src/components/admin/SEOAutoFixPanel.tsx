@@ -288,7 +288,28 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
                 <DiffBlock label="Meta Description" before={audit.suggested_meta || "—"} after={proposal.meta_description} />
               )}
 
-              {(proposal?.title || proposal?.meta_description) && (
+              {proposal?.canonical_url && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <Link2 className="h-3 w-3" /> Canonical URL propus
+                  </p>
+                  <div className="rounded-md border bg-muted/40 p-2 space-y-1">
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">URL pagină:</span>{" "}
+                      <code className="font-mono break-all">{audit.url}</code>
+                    </div>
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">Canonical sugerat:</span>{" "}
+                      <code className="font-mono break-all text-foreground">{proposal.canonical_url}</code>
+                    </div>
+                    {proposal?.canonical_reason && (
+                      <p className="text-xs italic text-muted-foreground">{proposal.canonical_reason}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {(proposal?.title || proposal?.meta_description || proposal?.canonical_url) && (
                 <SerpPreview
                   title={proposal?.title || audit.suggested_title || ""}
                   description={proposal?.meta_description || audit.suggested_meta || ""}
