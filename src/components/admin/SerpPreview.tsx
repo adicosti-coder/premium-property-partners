@@ -164,9 +164,17 @@ export const SerpPreview = ({ title, description, url = "https://realtrust.ro/",
       >
         <div className="flex items-center gap-2 mb-1">
           <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold">R</div>
-          <div className="leading-tight">
-            <div className="text-[12px] text-gray-800">RealTrust</div>
-            <div className="text-[12px] text-gray-600">{displayUrl}</div>
+          <div className="leading-tight min-w-0 flex-1">
+            <div className="text-[12px] text-gray-800 truncate">RealTrust</div>
+            <div className="text-[12px] text-gray-600 flex items-center gap-1 flex-wrap">
+              <span className="truncate">{serp.host}</span>
+              {serp.crumbs.map((c, i) => (
+                <span key={i} className="flex items-center gap-1">
+                  <span className="text-gray-400">›</span>
+                  <span className="truncate">{c}</span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
         <div
