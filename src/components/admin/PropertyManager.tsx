@@ -86,9 +86,9 @@ interface Property extends PremiumFieldsData {
   booking_review_count: number | null;
   base_price_per_night: number | null;
   weekend_price_per_night: number | null;
-  contact_name: string | null;
-  contact_phone: string | null;
-  contact_email: string | null;
+  contact_name?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
   source_url: string | null;
   source_platform: string | null;
   capacity: number | null;
@@ -415,9 +415,6 @@ export default function PropertyManager() {
         booking_review_count: formData.booking_review_count ? parseInt(formData.booking_review_count) : null,
         base_price_per_night: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
         weekend_price_per_night: formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null,
-        contact_name: formData.contact_name || null,
-        contact_phone: formData.contact_phone || null,
-        contact_email: formData.contact_email || null,
         source_url: formData.source_url || null,
         source_platform: formData.source_platform || null,
         capacity: formData.capacity ? parseInt(formData.capacity) : null,
@@ -499,9 +496,6 @@ export default function PropertyManager() {
           booking_review_count: formData.booking_review_count ? parseInt(formData.booking_review_count) : null,
           base_price_per_night: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
           weekend_price_per_night: formData.weekend_price_per_night ? parseFloat(formData.weekend_price_per_night) : null,
-          contact_name: formData.contact_name || null,
-          contact_phone: formData.contact_phone || null,
-          contact_email: formData.contact_email || null,
           source_url: formData.source_url || null,
           source_platform: formData.source_platform || null,
           capacity: formData.capacity ? parseInt(formData.capacity) : null,

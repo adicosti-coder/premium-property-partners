@@ -1421,13 +1421,20 @@ const ScraperLeads = () => {
           specs.risk_flags.length ? `Detected signals: ${specs.risk_flags.join(", ")}.` : null,
           internalChecklist.length ? `Checklist: ${internalChecklist.join(", ")}.` : null,
         ].filter(Boolean).join("\n"),
-        contact_phone: lead.phone || null,
-        contact_name: contactName !== "—" ? contactName : null,
         source_url: lead.url,
         source_platform: sourcePlatform,
       } as any).select("id,name").single();
 
       if (error) throw error;
+
+      // Save contact details to admin-only table
+      if (insertedProperty?.id && (lead.phone || (contactName !== "—" && contactName))) {
+        await supabase.from("property_contact_details" as any).upsert({
+          property_id: insertedProperty.id,
+          contact_phone: lead.phone || null,
+          contact_name: contactName !== "—" ? contactName : null,
+        }, { onConflict: "property_id" });
+      }
 
       if (lead._origin === "prospect") {
         await supabase.from("prospect_listings" as any).update({ lifecycle_status: "converted" } as any).eq("id", lead.id);

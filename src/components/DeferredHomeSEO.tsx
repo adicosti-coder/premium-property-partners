@@ -9,16 +9,21 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     queryKey: ["homepage-reviews-schema"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("property_reviews")
-        .select("id, guest_name, rating, content, title, created_at, property_id, properties:property_id (name)")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(10);
+        .rpc("get_public_property_reviews");
       if (error) throw error;
-      return (data || []).map((r) => ({
+      const top = (data || [])
+        .sort((a: any, b: any) => b.created_at.localeCompare(a.created_at))
+        .slice(0, 10);
+      const propIds = Array.from(new Set(top.map((r: any) => r.property_id).filter(Boolean)));
+      let nameById = new Map<string, string>();
+      if (propIds.length) {
+        const { data: props } = await supabase.from("properties").select("id, name").in("id", propIds);
+        (props || []).forEach((p: any) => nameById.set(p.id, p.name));
+      }
+      return top.map((r: any) => ({
         id: r.id, guest_name: r.guest_name, rating: r.rating, content: r.content,
         title: r.title, created_at: r.created_at,
-        property_name: (r.properties as { name: string } | null)?.name,
+        property_name: nameById.get(r.property_id),
       })) as DatabaseReview[];
     },
     staleTime: Infinity, gcTime: Infinity,

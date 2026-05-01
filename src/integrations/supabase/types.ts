@@ -2228,9 +2228,6 @@ export type Database = {
           comfort_level: string | null
           compartimentare: string | null
           construction_type: string | null
-          contact_email: string | null
-          contact_name: string | null
-          contact_phone: string | null
           created_at: string
           description_en: string
           description_ro: string
@@ -2309,9 +2306,6 @@ export type Database = {
           comfort_level?: string | null
           compartimentare?: string | null
           construction_type?: string | null
-          contact_email?: string | null
-          contact_name?: string | null
-          contact_phone?: string | null
           created_at?: string
           description_en: string
           description_ro: string
@@ -2390,9 +2384,6 @@ export type Database = {
           comfort_level?: string | null
           compartimentare?: string | null
           construction_type?: string | null
-          contact_email?: string | null
-          contact_name?: string | null
-          contact_phone?: string | null
           created_at?: string
           description_en?: string
           description_ro?: string
@@ -4777,6 +4768,27 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+        }[]
+      }
+      get_public_property_reviews: {
+        Args: { p_property_id?: string }
+        Returns: {
+          admin_reply: string
+          admin_reply_at: string
+          booking_id: string
+          booking_review_id: string
+          content: string
+          created_at: string
+          guest_country: string
+          guest_name: string
+          id: string
+          is_published: boolean
+          property_id: string
+          rating: number
+          review_date: string
+          source: string
+          title: string
+          updated_at: string
         }[]
       }
       get_shared_poi_link: {

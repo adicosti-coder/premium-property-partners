@@ -246,12 +246,14 @@ const PropertyDetail = () => {
               .eq("property_id", propertyId)
               .order("display_order", { ascending: true }),
             supabase
-              .from("property_reviews")
-              .select("id, guest_name, rating, content, title, created_at")
-              .eq("property_id", propertyId)
-              .eq("is_published", true)
-              .order("created_at", { ascending: false })
-              .limit(10),
+              .rpc("get_public_property_reviews", { p_property_id: propertyId })
+              .then((res: any) => ({
+                data: (res.data || [])
+                  .sort((a: any, b: any) => b.created_at.localeCompare(a.created_at))
+                  .slice(0, 10)
+                  .map((r: any) => ({ id: r.id, guest_name: r.guest_name, rating: r.rating, content: r.content, title: r.title, created_at: r.created_at })),
+                error: res.error,
+              })),
           ]);
           if (imagesRes.data) setDbImages(imagesRes.data);
           if (reviewsRes.data) setDbReviews(reviewsRes.data);

@@ -59,9 +59,9 @@ interface InvestProperty {
   estimated_revenue: string | null;
   roi_percentage: string | null;
   capital_necesar: number | null;
-  contact_name: string | null;
-  contact_phone: string | null;
-  contact_email: string | null;
+  contact_name?: string | null;
+  contact_phone?: string | null;
+  contact_email?: string | null;
   source_url: string | null;
   source_platform: string | null;
   created_at: string;
@@ -142,7 +142,23 @@ export default function InvestitiiPremiumManager() {
     if (error) {
       toast({ title: "Eroare la încărcare", description: error.message, variant: "destructive" });
     } else {
-      setProperties((data || []).map((d: any) => ({
+      const rows = data || [];
+      const ids = rows.map((r: any) => r.id);
+      const contactsMap = new Map<string, { contact_name: string | null; contact_phone: string | null; contact_email: string | null }>();
+      if (ids.length > 0) {
+        const { data: contactRows } = await supabase
+          .from("property_contact_details" as any)
+          .select("property_id, contact_name, contact_phone, contact_email")
+          .in("property_id", ids);
+        (contactRows || []).forEach((c: any) => {
+          contactsMap.set(c.property_id, {
+            contact_name: c.contact_name,
+            contact_phone: c.contact_phone,
+            contact_email: c.contact_email,
+          });
+        });
+      }
+      setProperties(rows.map((d: any) => ({
         ...d,
         capacity: d.capacity ?? 2,
         bedrooms: d.bedrooms ?? 1,
@@ -156,9 +172,9 @@ export default function InvestitiiPremiumManager() {
         check_out_time: d.check_out_time ?? "11:00",
         images: d.images ?? [],
         features: d.features ?? [],
-        contact_name: d.contact_name ?? null,
-        contact_phone: d.contact_phone ?? null,
-        contact_email: d.contact_email ?? null,
+        contact_name: contactsMap.get(d.id)?.contact_name ?? null,
+        contact_phone: contactsMap.get(d.id)?.contact_phone ?? null,
+        contact_email: contactsMap.get(d.id)?.contact_email ?? null,
         source_url: d.source_url ?? null,
         source_platform: d.source_platform ?? null,
         latitude: d.latitude ?? null,
@@ -355,9 +371,6 @@ export default function InvestitiiPremiumManager() {
       estimated_revenue: editingProperty.estimated_revenue,
       roi_percentage: editingProperty.roi_percentage,
       capital_necesar: editingProperty.capital_necesar,
-      contact_name: editingProperty.contact_name,
-      contact_phone: editingProperty.contact_phone,
-      contact_email: editingProperty.contact_email,
       source_url: editingProperty.source_url,
       source_platform: editingProperty.source_platform,
       latitude: editingProperty.latitude,
@@ -367,12 +380,27 @@ export default function InvestitiiPremiumManager() {
     };
 
     let error;
+    let savedId = editingProperty.id;
     if (isNew) {
-      const res = await supabase.from("properties").insert(payload);
+      const res = await supabase.from("properties").insert(payload).select("id").single();
       error = res.error;
+      if (res.data?.id) savedId = res.data.id;
     } else {
       const res = await supabase.from("properties").update(payload).eq("id", editingProperty.id);
       error = res.error;
+    }
+
+    // Save contact details to admin-only table
+    if (!error && savedId) {
+      const hasContact = editingProperty.contact_name || editingProperty.contact_phone || editingProperty.contact_email;
+      if (hasContact) {
+        await supabase.from("property_contact_details" as any).upsert({
+          property_id: savedId,
+          contact_name: editingProperty.contact_name || null,
+          contact_phone: editingProperty.contact_phone || null,
+          contact_email: editingProperty.contact_email || null,
+        }, { onConflict: "property_id" });
+      }
     }
 
     if (error) {
