@@ -280,6 +280,7 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
                   title={proposal?.title || audit.suggested_title || ""}
                   description={proposal?.meta_description || audit.suggested_meta || ""}
                   url={audit.url}
+                  canonical={proposal?.canonical_url || proposal?.canonical}
                 />
               )}
               {proposal?.json_ld && (
