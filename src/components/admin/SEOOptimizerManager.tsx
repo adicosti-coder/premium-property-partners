@@ -180,6 +180,21 @@ const SEOOptimizerManager = () => {
   const applyMutation = useMutation({
     mutationFn: async (a: AuditRow) => {
       const path = urlToPath(a.url);
+
+      // Meta description length validation (~160 chars optimal, hard cap 200)
+      const metaLen = (a.suggested_meta || "").trim().length;
+      if (metaLen > 200) {
+        throw new Error(
+          `Meta description prea lungă (${metaLen} caractere). Maxim 200, optim ~160. Editează auditul înainte de aplicare.`
+        );
+      }
+      if (metaLen > 160) {
+        const ok = window.confirm(
+          `Meta description are ${metaLen} caractere (optim ≤160). Google va trunchia la afișare. Continui?`
+        );
+        if (!ok) throw new Error("Aplicare anulată — meta peste limita optimă.");
+      }
+
       const extra_keywords = [
         ...(Array.isArray(a.local_geo_keywords) ? a.local_geo_keywords : []),
         ...(Array.isArray(a.keyword_gaps) ? a.keyword_gaps : []),
