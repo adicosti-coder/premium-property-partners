@@ -7,9 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Loader2, Link2, RefreshCw, Check, X, Pencil, Sparkles,
   AlertTriangle, CheckCircle2, FileWarning, Code2, ExternalLink, Target,
+  ChevronDown, ChevronRight, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
