@@ -15,11 +15,31 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const BASE_URL = "https://www.realtrust.ro";
 
+interface ErrorLocation {
+  block_index: number;
+  line: number;
+  column?: number;
+  snippet: string;
+  message: string;
+  severity: "error" | "warning";
+  field_path?: string;
+}
+
+interface RawBlock {
+  index: number;
+  source: string;
+  parsed: any;
+  parse_error?: string;
+  types: string[];
+}
+
 interface ValidationResult {
   status: "valid" | "warnings" | "invalid" | "error";
   errors: string[];
   warnings: string[];
   schema_types: string[];
+  error_locations: ErrorLocation[];
+  raw_blocks: RawBlock[];
 }
 
 const REQUIRED_FIELDS: Record<string, string[]> = {
