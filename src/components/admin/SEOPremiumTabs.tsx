@@ -590,8 +590,152 @@ const DiffRow = ({ label, ours, theirs }: { label: string; ours: string; theirs:
 };
 
 /* =============================================================
- * TAB 3 — Schema Validator Dashboard
+ * Competitor JSON-LD expandable code blocks + property diff
  * =============================================================*/
+function collectTypeProps(node: any, target: Record<string, Set<string>>) {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) { node.forEach((n) => collectTypeProps(n, target)); return; }
+  const t = node["@type"];
+  const types = Array.isArray(t) ? t : (t ? [t] : []);
+  for (const tt of types) {
+    const ts = String(tt);
+    if (!target[ts]) target[ts] = new Set();
+    Object.keys(node).filter((k) => !k.startsWith("@")).forEach((k) => target[ts].add(k));
+  }
+  if (node["@graph"] && Array.isArray(node["@graph"])) node["@graph"].forEach((g: any) => collectTypeProps(g, target));
+  for (const v of Object.values(node)) {
+    if (v && typeof v === "object") collectTypeProps(v, target);
+  }
+}
+
+const CompetitorJsonLdBlocks = ({ blocks, ourJsonLd }: { blocks: any[]; ourJsonLd: any }) => {
+  if (!blocks.length) return null;
+
+  const ourProps = useMemo(() => {
+    const m: Record<string, Set<string>> = {};
+    if (ourJsonLd) collectTypeProps(ourJsonLd, m);
+    return m;
+  }, [ourJsonLd]);
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase text-muted-foreground">JSON-LD competitor ({blocks.length})</p>
+      {blocks.map((b, i) => (
+        <CompetitorJsonLdBlock key={i} block={b} ourProps={ourProps} />
+      ))}
+    </div>
+  );
+};
+
+const CompetitorJsonLdBlock = ({ block, ourProps }: { block: any; ourProps: Record<string, Set<string>> }) => {
+  const [open, setOpen] = useState(false);
+  const json = block?.json;
+  const valid = block?.valid !== false;
+  const compTypes: string[] = Array.isArray(block?.types) ? block.types : [];
+  const pretty = useMemo(() => {
+    if (typeof json === "string") return json;
+    try { return JSON.stringify(json, null, 2); } catch { return String(json); }
+  }, [json]);
+
+  // Per-type property diff (only for valid blocks).
+  const propDiff = useMemo(() => {
+    if (!valid || typeof json !== "object" || !json) return [] as Array<{ type: string; missingFromUs: string[]; sharedCount: number }>;
+    const compMap: Record<string, Set<string>> = {};
+    collectTypeProps(json, compMap);
+    return Object.entries(compMap).map(([type, props]) => {
+      const ours = ourProps[type] || new Set<string>();
+      const missingFromUs = [...props].filter((p) => !ours.has(p));
+      const sharedCount = [...props].filter((p) => ours.has(p)).length;
+      return { type, missingFromUs, sharedCount };
+    });
+  }, [valid, json, ourProps]);
+
+  const totalMissing = propDiff.reduce((acc, d) => acc + d.missingFromUs.length, 0);
+
+  const copy = () => {
+    navigator.clipboard.writeText(pretty).then(
+      () => toast.success("JSON-LD copiat"),
+      () => toast.error("Nu s-a putut copia"),
+    );
+  };
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className={cn("rounded border", !valid && "border-destructive/50")}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left hover:bg-muted/40"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+              <span className="text-xs font-mono">block#{(block?.index ?? 0) + 1}</span>
+              {!valid && <Badge variant="destructive" className="text-[10px]">JSON invalid</Badge>}
+              {valid && compTypes.slice(0, 3).map((t) => (
+                <Badge key={t} variant={ourProps[t] ? "secondary" : "destructive"} className="text-[10px]" title={ourProps[t] ? "Avem și noi acest tip" : "Lipsește la noi"}>
+                  {t}
+                </Badge>
+              ))}
+              {compTypes.length > 3 && <span className="text-[10px] text-muted-foreground">+{compTypes.length - 3}</span>}
+            </div>
+            {totalMissing > 0 && (
+              <Badge variant="outline" className="shrink-0 text-[10px] border-destructive/40 text-destructive">
+                {totalMissing} props lipsă
+              </Badge>
+            )}
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-t p-2 space-y-2">
+            {!valid && block?.error && (
+              <p className="text-xs text-destructive">Eroare parse: {block.error}</p>
+            )}
+
+            {propDiff.length > 0 && (
+              <div className="space-y-1">
+                {propDiff.map((d) => (
+                  <div key={d.type} className="text-xs space-y-0.5">
+                    <p>
+                      <strong>{d.type}</strong>{" "}
+                      <span className="text-muted-foreground">— {d.sharedCount} comune</span>
+                    </p>
+                    {d.missingFromUs.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {d.missingFromUs.map((p) => (
+                          <Badge key={p} variant="destructive" className="text-[10px]" title="Proprietate Schema.org pe care competitorul o are, dar noi nu">
+                            {p}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-emerald-600 dark:text-emerald-400 text-[11px]">✓ avem toate proprietățile</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="relative">
+              <pre className="rounded bg-muted/60 p-2 text-[11px] font-mono overflow-x-auto max-h-72">
+                <code>{pretty}</code>
+              </pre>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="absolute top-1 right-1 h-6 px-1.5"
+                onClick={copy}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+};
+
+
 const SchemaValidatorTab = ({ path }: { path: string }) => {
   const qc = useQueryClient();
 
