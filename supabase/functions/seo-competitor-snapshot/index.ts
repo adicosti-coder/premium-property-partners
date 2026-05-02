@@ -20,6 +20,7 @@ interface ExtractedSeo {
   meta: string;
   h1: string;
   schema_types: string[];
+  schema_raw: Array<{ index: number; types: string[]; json: any; valid: boolean; error?: string }>;
   word_count: number;
 }
 
@@ -29,17 +30,24 @@ function extractFromHtml(html: string): ExtractedSeo {
   const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const schemaMatches = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   const schemaTypes: string[] = [];
-  for (const m of schemaMatches) {
+  const schemaRaw: ExtractedSeo["schema_raw"] = [];
+  schemaMatches.forEach((m, idx) => {
+    const raw = m[1].trim();
     try {
-      const obj = JSON.parse(m[1].trim());
+      const obj = JSON.parse(raw);
       const list = Array.isArray(obj) ? obj : [obj];
+      const types: string[] = [];
       for (const it of list) {
-        const t = it["@type"];
-        if (Array.isArray(t)) schemaTypes.push(...t);
-        else if (t) schemaTypes.push(String(t));
+        const t = it?.["@type"];
+        if (Array.isArray(t)) types.push(...t.map(String));
+        else if (t) types.push(String(t));
       }
-    } catch {/* ignore */}
-  }
+      schemaTypes.push(...types);
+      schemaRaw.push({ index: idx, types, json: obj, valid: true });
+    } catch (e) {
+      schemaRaw.push({ index: idx, types: [], json: raw.slice(0, 4000), valid: false, error: (e as Error).message });
+    }
+  });
   const text = html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ");
   const words = text.split(/\s+/).filter(Boolean).length;
   return {
@@ -47,6 +55,7 @@ function extractFromHtml(html: string): ExtractedSeo {
     meta: (metaMatch?.[1] || "").trim().slice(0, 500),
     h1: (h1Match?.[1] || "").replace(/<[^>]+>/g, " ").trim().slice(0, 300),
     schema_types: [...new Set(schemaTypes)],
+    schema_raw: schemaRaw,
     word_count: words,
   };
 }
