@@ -485,6 +485,8 @@ export const SEOAutoFixPanel = ({ audit }: Props) => {
         </CardContent>
       </Card>
 
+      {/* ===================== Premium SEO Tabs (Internal Links / Competitor Diff / Schema Validator) ===================== */}
+      <SEOPremiumTabs audit={audit} />
 
 
       {/* ===================== Diff Viewer Dialog ===================== */}
