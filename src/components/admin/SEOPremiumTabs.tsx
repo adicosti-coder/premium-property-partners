@@ -237,9 +237,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
                                 size="sm"
                                 className="h-7 text-xs"
                                 disabled={updateMutation.isPending || !editAnchor.trim()}
-                                onClick={() =>
-                                  updateMutation.mutate({ id: s.id, status: "applied", anchor: editAnchor.trim() })
-                                }
+                                onClick={() => setConfirmApply({ id: s.id, anchor: editAnchor.trim(), target: s.target_url_path })}
                               >
                                 <Check className="h-3 w-3" /> Salvează & aplică
                               </Button>
@@ -258,7 +256,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
                                 size="sm"
                                 className="h-7 text-xs"
                                 disabled={updateMutation.isPending}
-                                onClick={() => updateMutation.mutate({ id: s.id, status: "applied" })}
+                                onClick={() => setConfirmApply({ id: s.id, anchor: s.anchor_text, target: s.target_url_path })}
                               >
                                 <Check className="h-3 w-3" /> Marchează aplicat
                               </Button>
