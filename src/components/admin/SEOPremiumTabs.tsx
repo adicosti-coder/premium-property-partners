@@ -91,6 +91,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
   const qc = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAnchor, setEditAnchor] = useState("");
+  const [confirmApply, setConfirmApply] = useState<{ id: string; anchor: string; target: string } | null>(null);
 
   const { data: suggestions = [], isLoading } = useQuery({
     queryKey: ["seo-internal-links", path],
