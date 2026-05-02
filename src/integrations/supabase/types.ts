@@ -3831,6 +3831,7 @@ export type Database = {
           competitor_h1: string | null
           competitor_label: string | null
           competitor_meta: string | null
+          competitor_schema_raw: Json | null
           competitor_schema_types: Json | null
           competitor_title: string | null
           competitor_url: string
@@ -3846,6 +3847,7 @@ export type Database = {
           competitor_h1?: string | null
           competitor_label?: string | null
           competitor_meta?: string | null
+          competitor_schema_raw?: Json | null
           competitor_schema_types?: Json | null
           competitor_title?: string | null
           competitor_url: string
@@ -3861,6 +3863,7 @@ export type Database = {
           competitor_h1?: string | null
           competitor_label?: string | null
           competitor_meta?: string | null
+          competitor_schema_raw?: Json | null
           competitor_schema_types?: Json | null
           competitor_title?: string | null
           competitor_url?: string
@@ -4169,10 +4172,12 @@ export type Database = {
       }
       seo_schema_validations: {
         Row: {
+          error_locations: Json | null
           errors: Json | null
           history_id: string | null
           id: string
           override_id: string | null
+          raw_blocks: Json | null
           raw_response: Json | null
           schema_types: Json | null
           status: string
@@ -4182,10 +4187,12 @@ export type Database = {
           warnings: Json | null
         }
         Insert: {
+          error_locations?: Json | null
           errors?: Json | null
           history_id?: string | null
           id?: string
           override_id?: string | null
+          raw_blocks?: Json | null
           raw_response?: Json | null
           schema_types?: Json | null
           status: string
@@ -4195,10 +4202,12 @@ export type Database = {
           warnings?: Json | null
         }
         Update: {
+          error_locations?: Json | null
           errors?: Json | null
           history_id?: string | null
           id?: string
           override_id?: string | null
+          raw_blocks?: Json | null
           raw_response?: Json | null
           schema_types?: Json | null
           status?: string

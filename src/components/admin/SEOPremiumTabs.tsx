@@ -7,9 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Loader2, Link2, RefreshCw, Check, X, Pencil, Sparkles,
   AlertTriangle, CheckCircle2, FileWarning, Code2, ExternalLink, Target,
+  ChevronDown, ChevronRight, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -85,6 +91,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
   const qc = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAnchor, setEditAnchor] = useState("");
+  const [confirmApply, setConfirmApply] = useState<{ id: string; anchor: string; target: string } | null>(null);
 
   const { data: suggestions = [], isLoading } = useQuery({
     queryKey: ["seo-internal-links", path],
@@ -230,9 +237,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
                                 size="sm"
                                 className="h-7 text-xs"
                                 disabled={updateMutation.isPending || !editAnchor.trim()}
-                                onClick={() =>
-                                  updateMutation.mutate({ id: s.id, status: "applied", anchor: editAnchor.trim() })
-                                }
+                                onClick={() => setConfirmApply({ id: s.id, anchor: editAnchor.trim(), target: s.target_url_path })}
                               >
                                 <Check className="h-3 w-3" /> Salvează & aplică
                               </Button>
@@ -251,7 +256,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
                                 size="sm"
                                 className="h-7 text-xs"
                                 disabled={updateMutation.isPending}
-                                onClick={() => updateMutation.mutate({ id: s.id, status: "applied" })}
+                                onClick={() => setConfirmApply({ id: s.id, anchor: s.anchor_text, target: s.target_url_path })}
                               >
                                 <Check className="h-3 w-3" /> Marchează aplicat
                               </Button>
@@ -286,6 +291,41 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
           </div>
         </ScrollArea>
       )}
+
+      <AlertDialog open={!!confirmApply} onOpenChange={(o) => !o && setConfirmApply(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmi aplicarea linkului intern?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Marchează ca <strong>aplicat</strong> doar după ce ai inserat efectiv linkul în pagină.</p>
+                {confirmApply && (
+                  <div className="rounded border bg-muted/40 p-2 font-mono text-xs break-all">
+                    &lt;a href="{confirmApply.target}"&gt;{confirmApply.anchor}&lt;/a&gt;
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Statusul se schimbă imediat în "applied" și sugestia va fi mutată în secțiunea Aplicate.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!confirmApply) return;
+                updateMutation.mutate({
+                  id: confirmApply.id,
+                  status: "applied",
+                  anchor: confirmApply.anchor,
+                });
+                setConfirmApply(null);
+              }}
+            >
+              <Check className="h-4 w-4 mr-1" /> Confirm & aplică
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -507,6 +547,12 @@ const CompetitorDiffTab = ({ path }: { path: string }) => {
                       </ul>
                     </div>
                   )}
+
+                  {/* Raw JSON-LD blocks (expandable code blocks) */}
+                  <CompetitorJsonLdBlocks
+                    blocks={Array.isArray(s.competitor_schema_raw) ? s.competitor_schema_raw : []}
+                    ourJsonLd={(ourPage as any)?.json_ld}
+                  />
                 </div>
               );
             })}
@@ -544,8 +590,152 @@ const DiffRow = ({ label, ours, theirs }: { label: string; ours: string; theirs:
 };
 
 /* =============================================================
- * TAB 3 — Schema Validator Dashboard
+ * Competitor JSON-LD expandable code blocks + property diff
  * =============================================================*/
+function collectTypeProps(node: any, target: Record<string, Set<string>>) {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) { node.forEach((n) => collectTypeProps(n, target)); return; }
+  const t = node["@type"];
+  const types = Array.isArray(t) ? t : (t ? [t] : []);
+  for (const tt of types) {
+    const ts = String(tt);
+    if (!target[ts]) target[ts] = new Set();
+    Object.keys(node).filter((k) => !k.startsWith("@")).forEach((k) => target[ts].add(k));
+  }
+  if (node["@graph"] && Array.isArray(node["@graph"])) node["@graph"].forEach((g: any) => collectTypeProps(g, target));
+  for (const v of Object.values(node)) {
+    if (v && typeof v === "object") collectTypeProps(v, target);
+  }
+}
+
+const CompetitorJsonLdBlocks = ({ blocks, ourJsonLd }: { blocks: any[]; ourJsonLd: any }) => {
+  if (!blocks.length) return null;
+
+  const ourProps = useMemo(() => {
+    const m: Record<string, Set<string>> = {};
+    if (ourJsonLd) collectTypeProps(ourJsonLd, m);
+    return m;
+  }, [ourJsonLd]);
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase text-muted-foreground">JSON-LD competitor ({blocks.length})</p>
+      {blocks.map((b, i) => (
+        <CompetitorJsonLdBlock key={i} block={b} ourProps={ourProps} />
+      ))}
+    </div>
+  );
+};
+
+const CompetitorJsonLdBlock = ({ block, ourProps }: { block: any; ourProps: Record<string, Set<string>> }) => {
+  const [open, setOpen] = useState(false);
+  const json = block?.json;
+  const valid = block?.valid !== false;
+  const compTypes: string[] = Array.isArray(block?.types) ? block.types : [];
+  const pretty = useMemo(() => {
+    if (typeof json === "string") return json;
+    try { return JSON.stringify(json, null, 2); } catch { return String(json); }
+  }, [json]);
+
+  // Per-type property diff (only for valid blocks).
+  const propDiff = useMemo(() => {
+    if (!valid || typeof json !== "object" || !json) return [] as Array<{ type: string; missingFromUs: string[]; sharedCount: number }>;
+    const compMap: Record<string, Set<string>> = {};
+    collectTypeProps(json, compMap);
+    return Object.entries(compMap).map(([type, props]) => {
+      const ours = ourProps[type] || new Set<string>();
+      const missingFromUs = [...props].filter((p) => !ours.has(p));
+      const sharedCount = [...props].filter((p) => ours.has(p)).length;
+      return { type, missingFromUs, sharedCount };
+    });
+  }, [valid, json, ourProps]);
+
+  const totalMissing = propDiff.reduce((acc, d) => acc + d.missingFromUs.length, 0);
+
+  const copy = () => {
+    navigator.clipboard.writeText(pretty).then(
+      () => toast.success("JSON-LD copiat"),
+      () => toast.error("Nu s-a putut copia"),
+    );
+  };
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className={cn("rounded border", !valid && "border-destructive/50")}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left hover:bg-muted/40"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+              <span className="text-xs font-mono">block#{(block?.index ?? 0) + 1}</span>
+              {!valid && <Badge variant="destructive" className="text-[10px]">JSON invalid</Badge>}
+              {valid && compTypes.slice(0, 3).map((t) => (
+                <Badge key={t} variant={ourProps[t] ? "secondary" : "destructive"} className="text-[10px]" title={ourProps[t] ? "Avem și noi acest tip" : "Lipsește la noi"}>
+                  {t}
+                </Badge>
+              ))}
+              {compTypes.length > 3 && <span className="text-[10px] text-muted-foreground">+{compTypes.length - 3}</span>}
+            </div>
+            {totalMissing > 0 && (
+              <Badge variant="outline" className="shrink-0 text-[10px] border-destructive/40 text-destructive">
+                {totalMissing} props lipsă
+              </Badge>
+            )}
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-t p-2 space-y-2">
+            {!valid && block?.error && (
+              <p className="text-xs text-destructive">Eroare parse: {block.error}</p>
+            )}
+
+            {propDiff.length > 0 && (
+              <div className="space-y-1">
+                {propDiff.map((d) => (
+                  <div key={d.type} className="text-xs space-y-0.5">
+                    <p>
+                      <strong>{d.type}</strong>{" "}
+                      <span className="text-muted-foreground">— {d.sharedCount} comune</span>
+                    </p>
+                    {d.missingFromUs.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {d.missingFromUs.map((p) => (
+                          <Badge key={p} variant="destructive" className="text-[10px]" title="Proprietate Schema.org pe care competitorul o are, dar noi nu">
+                            {p}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-emerald-600 dark:text-emerald-400 text-[11px]">✓ avem toate proprietățile</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="relative">
+              <pre className="rounded bg-muted/60 p-2 text-[11px] font-mono overflow-x-auto max-h-72">
+                <code>{pretty}</code>
+              </pre>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="absolute top-1 right-1 h-6 px-1.5"
+                onClick={copy}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+};
+
+
 const SchemaValidatorTab = ({ path }: { path: string }) => {
   const qc = useQueryClient();
 
@@ -683,6 +873,12 @@ const SchemaValidatorTab = ({ path }: { path: string }) => {
                     </ul>
                   </div>
                 )}
+
+                {/* Per-block annotated code with inline errors */}
+                <SchemaCodeBlocks
+                  rawBlocks={Array.isArray((latest as any).raw_blocks) ? (latest as any).raw_blocks : []}
+                  errorLocations={Array.isArray((latest as any).error_locations) ? (latest as any).error_locations : []}
+                />
               </div>
             );
           })()}
@@ -737,5 +933,131 @@ const Stat = ({ n, label, tone }: { n: number; label: string; tone?: "ok" | "war
     <p className="text-[10px] uppercase text-muted-foreground">{label}</p>
   </div>
 );
+
+/* =============================================================
+ * Annotated JSON-LD code blocks with per-line errors
+ * =============================================================*/
+interface ErrorLoc {
+  block_index: number;
+  line: number;
+  column?: number;
+  snippet?: string;
+  message: string;
+  severity: "error" | "warning";
+  field_path?: string;
+}
+
+const SchemaCodeBlocks = ({
+  rawBlocks,
+  errorLocations,
+}: {
+  rawBlocks: Array<{ index: number; source: string; parse_error?: string; types?: string[] }>;
+  errorLocations: ErrorLoc[];
+}) => {
+  if (!rawBlocks.length) return null;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] uppercase font-semibold text-muted-foreground">JSON-LD pe pagină ({rawBlocks.length})</p>
+      {rawBlocks.map((b) => {
+        const blockErrs = errorLocations.filter((e) => e.block_index === b.index);
+        return <SchemaCodeBlock key={b.index} block={b} issues={blockErrs} />;
+      })}
+    </div>
+  );
+};
+
+const SchemaCodeBlock = ({
+  block,
+  issues,
+}: {
+  block: { index: number; source: string; parse_error?: string; types?: string[] };
+  issues: ErrorLoc[];
+}) => {
+  const [open, setOpen] = useState(issues.some((i) => i.severity === "error"));
+  const lines = useMemo(() => (block.source || "").split("\n"), [block.source]);
+  const issuesByLine = useMemo(() => {
+    const m: Record<number, ErrorLoc[]> = {};
+    for (const i of issues) {
+      (m[i.line] = m[i.line] || []).push(i);
+    }
+    return m;
+  }, [issues]);
+  const errCount = issues.filter((i) => i.severity === "error").length;
+  const warnCount = issues.filter((i) => i.severity === "warning").length;
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className={cn("rounded border", errCount > 0 && "border-destructive/50", errCount === 0 && warnCount > 0 && "border-amber-400/50")}>
+        <CollapsibleTrigger asChild>
+          <button type="button" className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 hover:bg-muted/40">
+            <div className="flex items-center gap-2 min-w-0">
+              {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+              <span className="text-xs font-mono">block#{block.index + 1}</span>
+              {block.parse_error && <Badge variant="destructive" className="text-[10px]">JSON invalid</Badge>}
+              {(block.types || []).slice(0, 3).map((t) => (
+                <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
+              ))}
+            </div>
+            <div className="flex items-center gap-1">
+              {errCount > 0 && <Badge variant="destructive" className="text-[10px]">{errCount} err</Badge>}
+              {warnCount > 0 && <Badge variant="outline" className="text-[10px] border-amber-400/60">{warnCount} warn</Badge>}
+              {errCount === 0 && warnCount === 0 && <Badge variant="secondary" className="text-[10px]">✓ OK</Badge>}
+            </div>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-t bg-muted/30">
+            <pre className="text-[11px] font-mono overflow-x-auto max-h-96">
+              <code className="block">
+                {lines.map((ln, idx) => {
+                  const lineNo = idx + 1;
+                  const lineIssues = issuesByLine[lineNo] || [];
+                  const hasErr = lineIssues.some((i) => i.severity === "error");
+                  const hasWarn = lineIssues.some((i) => i.severity === "warning");
+                  return (
+                    <div key={lineNo}>
+                      <div
+                        className={cn(
+                          "flex items-start gap-2 px-2 py-px",
+                          hasErr && "bg-destructive/10",
+                          !hasErr && hasWarn && "bg-amber-100/50 dark:bg-amber-950/20",
+                        )}
+                      >
+                        <span className="select-none text-muted-foreground tabular-nums w-8 text-right shrink-0">
+                          {lineNo}
+                        </span>
+                        <span className="whitespace-pre break-all">{ln || " "}</span>
+                      </div>
+                      {lineIssues.map((iss, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            "flex items-start gap-1.5 px-2 py-1 border-l-2 ml-8 text-[11px]",
+                            iss.severity === "error"
+                              ? "border-destructive bg-destructive/5 text-destructive"
+                              : "border-amber-400 bg-amber-50/40 dark:bg-amber-950/10 text-amber-700 dark:text-amber-400",
+                          )}
+                        >
+                          {iss.severity === "error"
+                            ? <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                            : <FileWarning className="h-3 w-3 mt-0.5 shrink-0" />}
+                          <span>
+                            <strong>L{iss.line}{iss.column ? `:${iss.column}` : ""}</strong> — {iss.message}
+                            {iss.field_path && <span className="opacity-70"> ({iss.field_path})</span>}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </code>
+            </pre>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+};
 
 export default SEOPremiumTabs;
