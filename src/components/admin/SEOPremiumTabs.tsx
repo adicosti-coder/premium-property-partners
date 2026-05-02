@@ -291,6 +291,41 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
           </div>
         </ScrollArea>
       )}
+
+      <AlertDialog open={!!confirmApply} onOpenChange={(o) => !o && setConfirmApply(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmi aplicarea linkului intern?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Marchează ca <strong>aplicat</strong> doar după ce ai inserat efectiv linkul în pagină.</p>
+                {confirmApply && (
+                  <div className="rounded border bg-muted/40 p-2 font-mono text-xs break-all">
+                    &lt;a href="{confirmApply.target}"&gt;{confirmApply.anchor}&lt;/a&gt;
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Statusul se schimbă imediat în "applied" și sugestia va fi mutată în secțiunea Aplicate.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!confirmApply) return;
+                updateMutation.mutate({
+                  id: confirmApply.id,
+                  status: "applied",
+                  anchor: confirmApply.anchor,
+                });
+                setConfirmApply(null);
+              }}
+            >
+              <Check className="h-4 w-4 mr-1" /> Confirm & aplică
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
