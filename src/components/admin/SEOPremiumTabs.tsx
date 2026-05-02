@@ -873,6 +873,12 @@ const SchemaValidatorTab = ({ path }: { path: string }) => {
                     </ul>
                   </div>
                 )}
+
+                {/* Per-block annotated code with inline errors */}
+                <SchemaCodeBlocks
+                  rawBlocks={Array.isArray((latest as any).raw_blocks) ? (latest as any).raw_blocks : []}
+                  errorLocations={Array.isArray((latest as any).error_locations) ? (latest as any).error_locations : []}
+                />
               </div>
             );
           })()}
