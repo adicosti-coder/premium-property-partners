@@ -61,17 +61,18 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
   AggregateRating: ["ratingValue", "reviewCount"],
 };
 
-function validateNode(node: any, parent = ""): { errors: string[]; warnings: string[]; types: string[] } {
-  const errors: string[] = [];
-  const warnings: string[] = [];
+interface NodeIssue { message: string; severity: "error" | "warning"; field_path: string }
+
+function validateNode(node: any, parent = ""): { issues: NodeIssue[]; types: string[] } {
+  const issues: NodeIssue[] = [];
   const types: string[] = [];
-  if (!node || typeof node !== "object") return { errors, warnings, types };
+  if (!node || typeof node !== "object") return { issues, types };
   if (Array.isArray(node)) {
-    for (const it of node) {
-      const r = validateNode(it, parent);
-      errors.push(...r.errors); warnings.push(...r.warnings); types.push(...r.types);
-    }
-    return { errors, warnings, types };
+    node.forEach((it, i) => {
+      const r = validateNode(it, `${parent}[${i}]`);
+      issues.push(...r.issues); types.push(...r.types);
+    });
+    return { issues, types };
   }
   const t = node["@type"];
   const typeList = Array.isArray(t) ? t : (t ? [t] : []);
@@ -81,61 +82,134 @@ function validateNode(node: any, parent = ""): { errors: string[]; warnings: str
     if (required) {
       for (const f of required) {
         if (node[f] === undefined || node[f] === null || node[f] === "") {
-          errors.push(`${tt}: lipsește câmpul obligatoriu "${f}"`);
+          issues.push({
+            message: `${tt}: lipsește câmpul obligatoriu "${f}"`,
+            severity: "error",
+            field_path: parent ? `${parent}.${f}` : f,
+          });
         }
       }
     }
   }
   if (typeList.length === 0 && !node["@graph"]) {
-    warnings.push(`${parent || "node"}: lipsă @type`);
+    issues.push({ message: `${parent || "root"}: lipsă @type`, severity: "warning", field_path: parent || "@type" });
   }
   if (node["@graph"] && Array.isArray(node["@graph"])) {
-    for (const g of node["@graph"]) {
-      const r = validateNode(g, "@graph");
-      errors.push(...r.errors); warnings.push(...r.warnings); types.push(...r.types);
-    }
+    node["@graph"].forEach((g: any, i: number) => {
+      const r = validateNode(g, `@graph[${i}]`);
+      issues.push(...r.issues); types.push(...r.types);
+    });
   }
-  // Recurse on object values
   for (const [k, v] of Object.entries(node)) {
     if (k.startsWith("@")) continue;
     if (v && typeof v === "object") {
-      const r = validateNode(v, k);
-      errors.push(...r.errors); warnings.push(...r.warnings); types.push(...r.types);
+      const r = validateNode(v, parent ? `${parent}.${k}` : k);
+      issues.push(...r.issues); types.push(...r.types);
     }
   }
-  return { errors, warnings, types };
+  return { issues, types };
+}
+
+// Find the line/column inside a pretty-printed JSON string for a given dotted path.
+function locateFieldInJson(prettyJson: string, fieldPath: string): { line: number; column: number; snippet: string } {
+  if (!fieldPath) return { line: 1, column: 1, snippet: prettyJson.split("\n")[0] || "" };
+  // Use the last segment as the search key (strip [n] indices).
+  const segments = fieldPath.split(".").map((s) => s.replace(/\[\d+\]$/, ""));
+  const lastKey = segments[segments.length - 1] || fieldPath;
+  const lines = prettyJson.split("\n");
+  // Try to find the key occurrence, preferring nested matches.
+  const needle = `"${lastKey}"`;
+  let bestLine = 1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes(needle)) { bestLine = i + 1; break; }
+  }
+  const lineText = lines[bestLine - 1] || "";
+  const col = Math.max(1, lineText.indexOf(needle) + 1);
+  return { line: bestLine, column: col, snippet: lineText.trim().slice(0, 240) };
+}
+
+function locateJsonParseError(rawJson: string, errMsg: string): { line: number; column: number; snippet: string } {
+  // Most JS engines emit "at position N" or "line X column Y".
+  const posMatch = errMsg.match(/position\s+(\d+)/i);
+  const lcMatch = errMsg.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+  const lines = rawJson.split("\n");
+  let line = 1, column = 1;
+  if (lcMatch) {
+    line = parseInt(lcMatch[1], 10);
+    column = parseInt(lcMatch[2], 10);
+  } else if (posMatch) {
+    const pos = parseInt(posMatch[1], 10);
+    let acc = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (acc + lines[i].length + 1 > pos) { line = i + 1; column = pos - acc + 1; break; }
+      acc += lines[i].length + 1;
+    }
+  }
+  const snippet = (lines[line - 1] || "").trim().slice(0, 240);
+  return { line, column, snippet };
 }
 
 async function validateUrl(url: string): Promise<ValidationResult> {
+  const empty: ValidationResult = { status: "warnings", errors: [], warnings: [], schema_types: [], error_locations: [], raw_blocks: [] };
   try {
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 RealTrustBot SEO Validator" }, signal: AbortSignal.timeout(15000) });
-    if (!res.ok) return { status: "error", errors: [`HTTP ${res.status}`], warnings: [], schema_types: [] };
+    if (!res.ok) return { ...empty, status: "error", errors: [`HTTP ${res.status}`], warnings: [] };
     const html = await res.text();
     const blocks = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
     if (blocks.length === 0) {
-      return { status: "warnings", errors: [], warnings: ["Nu există blocuri JSON-LD pe pagină"], schema_types: [] };
+      return { ...empty, status: "warnings", warnings: ["Nu există blocuri JSON-LD pe pagină"] };
     }
     const allErrors: string[] = [];
     const allWarnings: string[] = [];
     const allTypes: string[] = [];
+    const errorLocations: ErrorLocation[] = [];
+    const rawBlocks: RawBlock[] = [];
+
     for (let i = 0; i < blocks.length; i++) {
       const raw = blocks[i][1].trim();
       try {
         const obj = JSON.parse(raw);
-        const r = validateNode(obj, `block#${i + 1}`);
-        allErrors.push(...r.errors);
-        allWarnings.push(...r.warnings);
-        allTypes.push(...r.types);
+        const pretty = JSON.stringify(obj, null, 2);
+        const { issues, types } = validateNode(obj, "");
+        rawBlocks.push({ index: i, source: pretty, parsed: obj, types: [...new Set(types)] });
+        for (const iss of issues) {
+          const loc = locateFieldInJson(pretty, iss.field_path);
+          errorLocations.push({
+            block_index: i,
+            line: loc.line,
+            column: loc.column,
+            snippet: loc.snippet,
+            message: iss.message,
+            severity: iss.severity,
+            field_path: iss.field_path,
+          });
+          if (iss.severity === "error") allErrors.push(`block#${i + 1} L${loc.line}: ${iss.message}`);
+          else allWarnings.push(`block#${i + 1} L${loc.line}: ${iss.message}`);
+        }
+        allTypes.push(...types);
       } catch (e) {
-        allErrors.push(`block#${i + 1}: JSON invalid (${(e as Error).message.slice(0, 80)})`);
+        const msg = (e as Error).message;
+        const loc = locateJsonParseError(raw, msg);
+        const errStr = `block#${i + 1} L${loc.line}: JSON invalid (${msg.slice(0, 80)})`;
+        allErrors.push(errStr);
+        errorLocations.push({
+          block_index: i,
+          line: loc.line,
+          column: loc.column,
+          snippet: loc.snippet,
+          message: `JSON invalid: ${msg.slice(0, 200)}`,
+          severity: "error",
+        });
+        rawBlocks.push({ index: i, source: raw.slice(0, 8000), parsed: null, parse_error: msg, types: [] });
       }
     }
     const uniqTypes = [...new Set(allTypes)];
-    if (allErrors.length > 0) return { status: "invalid", errors: allErrors, warnings: allWarnings, schema_types: uniqTypes };
-    if (allWarnings.length > 0) return { status: "warnings", errors: [], warnings: allWarnings, schema_types: uniqTypes };
-    return { status: "valid", errors: [], warnings: [], schema_types: uniqTypes };
+    let status: ValidationResult["status"] = "valid";
+    if (allErrors.length > 0) status = "invalid";
+    else if (allWarnings.length > 0) status = "warnings";
+    return { status, errors: allErrors, warnings: allWarnings, schema_types: uniqTypes, error_locations: errorLocations, raw_blocks: rawBlocks };
   } catch (e) {
-    return { status: "error", errors: [(e as Error).message], warnings: [], schema_types: [] };
+    return { ...empty, status: "error", errors: [(e as Error).message] };
   }
 }
 
