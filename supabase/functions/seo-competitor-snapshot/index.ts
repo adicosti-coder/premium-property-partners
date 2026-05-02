@@ -159,6 +159,7 @@ serve(async (req) => {
       competitor_meta: c.meta,
       competitor_h1: c.h1,
       competitor_schema_types: c.schema_types,
+      competitor_schema_raw: c.schema_raw,
       competitor_word_count: c.word_count,
       ai_gaps: gaps.filter((g: any) => g.competitor_url === c.url),
       ai_summary: summary,
