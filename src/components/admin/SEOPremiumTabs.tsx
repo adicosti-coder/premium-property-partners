@@ -934,4 +934,130 @@ const Stat = ({ n, label, tone }: { n: number; label: string; tone?: "ok" | "war
   </div>
 );
 
+/* =============================================================
+ * Annotated JSON-LD code blocks with per-line errors
+ * =============================================================*/
+interface ErrorLoc {
+  block_index: number;
+  line: number;
+  column?: number;
+  snippet?: string;
+  message: string;
+  severity: "error" | "warning";
+  field_path?: string;
+}
+
+const SchemaCodeBlocks = ({
+  rawBlocks,
+  errorLocations,
+}: {
+  rawBlocks: Array<{ index: number; source: string; parse_error?: string; types?: string[] }>;
+  errorLocations: ErrorLoc[];
+}) => {
+  if (!rawBlocks.length) return null;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] uppercase font-semibold text-muted-foreground">JSON-LD pe pagină ({rawBlocks.length})</p>
+      {rawBlocks.map((b) => {
+        const blockErrs = errorLocations.filter((e) => e.block_index === b.index);
+        return <SchemaCodeBlock key={b.index} block={b} issues={blockErrs} />;
+      })}
+    </div>
+  );
+};
+
+const SchemaCodeBlock = ({
+  block,
+  issues,
+}: {
+  block: { index: number; source: string; parse_error?: string; types?: string[] };
+  issues: ErrorLoc[];
+}) => {
+  const [open, setOpen] = useState(issues.some((i) => i.severity === "error"));
+  const lines = useMemo(() => (block.source || "").split("\n"), [block.source]);
+  const issuesByLine = useMemo(() => {
+    const m: Record<number, ErrorLoc[]> = {};
+    for (const i of issues) {
+      (m[i.line] = m[i.line] || []).push(i);
+    }
+    return m;
+  }, [issues]);
+  const errCount = issues.filter((i) => i.severity === "error").length;
+  const warnCount = issues.filter((i) => i.severity === "warning").length;
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className={cn("rounded border", errCount > 0 && "border-destructive/50", errCount === 0 && warnCount > 0 && "border-amber-400/50")}>
+        <CollapsibleTrigger asChild>
+          <button type="button" className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 hover:bg-muted/40">
+            <div className="flex items-center gap-2 min-w-0">
+              {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+              <span className="text-xs font-mono">block#{block.index + 1}</span>
+              {block.parse_error && <Badge variant="destructive" className="text-[10px]">JSON invalid</Badge>}
+              {(block.types || []).slice(0, 3).map((t) => (
+                <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
+              ))}
+            </div>
+            <div className="flex items-center gap-1">
+              {errCount > 0 && <Badge variant="destructive" className="text-[10px]">{errCount} err</Badge>}
+              {warnCount > 0 && <Badge variant="outline" className="text-[10px] border-amber-400/60">{warnCount} warn</Badge>}
+              {errCount === 0 && warnCount === 0 && <Badge variant="secondary" className="text-[10px]">✓ OK</Badge>}
+            </div>
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-t bg-muted/30">
+            <pre className="text-[11px] font-mono overflow-x-auto max-h-96">
+              <code className="block">
+                {lines.map((ln, idx) => {
+                  const lineNo = idx + 1;
+                  const lineIssues = issuesByLine[lineNo] || [];
+                  const hasErr = lineIssues.some((i) => i.severity === "error");
+                  const hasWarn = lineIssues.some((i) => i.severity === "warning");
+                  return (
+                    <div key={lineNo}>
+                      <div
+                        className={cn(
+                          "flex items-start gap-2 px-2 py-px",
+                          hasErr && "bg-destructive/10",
+                          !hasErr && hasWarn && "bg-amber-100/50 dark:bg-amber-950/20",
+                        )}
+                      >
+                        <span className="select-none text-muted-foreground tabular-nums w-8 text-right shrink-0">
+                          {lineNo}
+                        </span>
+                        <span className="whitespace-pre break-all">{ln || " "}</span>
+                      </div>
+                      {lineIssues.map((iss, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            "flex items-start gap-1.5 px-2 py-1 border-l-2 ml-8 text-[11px]",
+                            iss.severity === "error"
+                              ? "border-destructive bg-destructive/5 text-destructive"
+                              : "border-amber-400 bg-amber-50/40 dark:bg-amber-950/10 text-amber-700 dark:text-amber-400",
+                          )}
+                        >
+                          {iss.severity === "error"
+                            ? <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                            : <FileWarning className="h-3 w-3 mt-0.5 shrink-0" />}
+                          <span>
+                            <strong>L{iss.line}{iss.column ? `:${iss.column}` : ""}</strong> — {iss.message}
+                            {iss.field_path && <span className="opacity-70"> ({iss.field_path})</span>}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </code>
+            </pre>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+};
+
 export default SEOPremiumTabs;
