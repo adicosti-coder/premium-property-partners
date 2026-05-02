@@ -238,6 +238,8 @@ serve(async (req) => {
       errors: result.errors,
       warnings: result.warnings,
       schema_types: result.schema_types,
+      error_locations: result.error_locations,
+      raw_blocks: result.raw_blocks,
       validator: "internal_jsonld",
     }).select().single();
 
