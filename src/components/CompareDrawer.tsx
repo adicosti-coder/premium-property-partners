@@ -253,7 +253,7 @@ const CompareDrawer = () => {
 
   const openWhatsApp = (item: ComparableItem) => {
     const msg = encodeURIComponent(
-      `Bună ziua, sunt interesat de proprietatea "${item.title}" văzută pe realtrust.ro`
+      `Bună ziua, doresc detalii despre proprietatea „${item.title}" văzută pe realtrust.ro.`
     );
     window.open(`https://wa.me/40744488844?text=${msg}`, "_blank");
     if (typeof window.gtag === "function") {
