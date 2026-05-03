@@ -1,8 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertTriangle, GitBranch, ExternalLink } from "lucide-react";
+import { AlertTriangle, GitBranch, ExternalLink, Wand2, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+const CANONICAL_HOST = "www.realtrust.ro";
+const urlToPath = (full: string) => {
+  try { const u = new URL(full); let p = u.pathname.replace(/\/{2,}/g, "/"); if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1); return p || "/"; } catch { return full; }
+};
+const toCanonical = (full: string) => `https://${CANONICAL_HOST}${urlToPath(full)}`;
 
 interface AuditRow {
   id: string;
