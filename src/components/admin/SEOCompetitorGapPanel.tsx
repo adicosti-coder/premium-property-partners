@@ -403,6 +403,32 @@ export const SEOCompetitorGapPanel = () => {
 
           {/* OVERVIEW: grouped by our_url_path */}
           <TabsContent value="overview">
+            <div className="flex justify-end mb-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => downloadCSV(
+                  "seo-competitor-overview.csv",
+                  grouped.map((g) => {
+                    const allGaps = g.snaps.flatMap((s) => Array.isArray(s.ai_gaps) ? s.ai_gaps : []);
+                    const avgWords = Math.round(
+                      g.snaps.reduce((a, s) => a + (s.competitor_word_count || 0), 0) / Math.max(g.snaps.length, 1)
+                    );
+                    return {
+                      url_path: g.path,
+                      competitors_count: g.snaps.length,
+                      avg_words: avgWords,
+                      gaps_count: allGaps.length,
+                      top_gaps: allGaps.slice(0, 5).map((x: any) => `${x.area}: ${x.recommendation || x.issue}`).join(" | "),
+                      last_fetched: g.lastFetched,
+                    };
+                  }),
+                )}
+              >
+                <Download className="w-3 h-3" /> Export CSV
+              </Button>
+            </div>
             <ScrollArea className="h-[420px] rounded-md border">
               <ul className="divide-y text-sm">
                 {grouped.map((g) => {
