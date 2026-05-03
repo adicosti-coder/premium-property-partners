@@ -179,8 +179,8 @@ const Imobiliare = () => {
       {/* Breadcrumb + Summary */}
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="Servicii imobiliare complete în Timișoara: vânzări, cumpărări, închirieri clasice. Consultanță profesională, evaluări de piață, suport juridic complet și acces la anunțuri exclusive."
-          summaryEn="Complete real estate services in Timișoara: sales, purchases, classic rentals. Professional consulting, market evaluations, full legal support and access to exclusive listings."
+          summaryRo="Servicii imobiliare în Timișoara: vânzări, cumpărări și închirieri clasice. Consultanță, evaluări de piață pe date publice și suport juridic complet, cu raportare clară la fiecare pas."
+          summaryEn="Real estate services in Timișoara: sales, purchases and classic rentals. Consulting, market evaluations based on public data and full legal support, with clear reporting at every step."
         />
         <PageBreadcrumb items={breadcrumbItems} />
       </div>
@@ -496,7 +496,7 @@ const Imobiliare = () => {
               <Link to="/calculator-roi">
                 <Button variant="hero" size="lg">
                   <Calculator className="w-5 h-5 mr-2" />
-                  {language === "ro" ? "Calculează ROI acum" : "Calculate ROI now"}
+                  {language === "ro" ? "Calculează ROI" : "Calculate ROI"}
                 </Button>
               </Link>
               <Link to="/investitii">

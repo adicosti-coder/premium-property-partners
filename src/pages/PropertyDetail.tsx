@@ -608,8 +608,8 @@ const PropertyDetail = () => {
             return clean.length > 150 ? clean.slice(0, 147) + '...' : clean;
           }
           return language === 'ro'
-            ? `Descoperă ${displayName} — cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
-            : `Discover ${displayName} — premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`;
+            ? `${displayName} în ${property.location}, Timișoara — ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervare directă, fără comisioane suplimentare.`
+            : `${displayName} in ${property.location}, Timișoara — ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct, no extra booking fees.`;
         })()}
         url={`https://www.realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
@@ -1141,8 +1141,8 @@ const PropertyDetail = () => {
                 </div>
                 <p className="text-sm text-muted-foreground italic">
                   {language === 'ro'
-                    ? 'Rata de ocupare medie: 98% | Scor oaspeți: 9.7/10 din 180+ recenzii'
-                    : 'Average occupancy rate: 98% | Guest score: 9.7/10 from 180+ reviews'}
+                    ? 'Ocupare medie ~75% pe an | Scor consolidat oaspeți 9,7/10 (Booking.com)'
+                    : 'Average occupancy ~75% per year | Consolidated guest score 9.7/10 (Booking.com)'}
                 </p>
               </div>
 
@@ -1207,19 +1207,19 @@ const PropertyDetail = () => {
               {staticProperty ? (
                 <div className="bg-card rounded-2xl border p-6 space-y-4 sticky top-24">
                   <h3 className="text-xl font-semibold">
-                    {language === 'ro' ? 'Rezervă Direct & Economisește' : 'Book Direct & Save'}
+                    {language === 'ro' ? 'Rezervă direct, fără intermediari' : 'Book direct, no intermediaries'}
                   </h3>
                   <p className="text-muted-foreground text-sm">
                     {language === 'ro' 
-                      ? `Rezervă direct pe site-ul nostru și beneficiezi de cel mai bun preț garantat pentru ${property.name}.`
-                      : `Book directly on our website and get the best guaranteed price for ${property.name}.`}
+                      ? `Rezervarea directă pentru ${property.name} îți oferă cel mai bun preț disponibil pe site-ul nostru, fără comisioane suplimentare.`
+                      : `Booking ${property.name} directly with us gives you the best available rate on our website, with no extra booking fees.`}
                   </p>
                   <Button 
                     variant="hero" 
                     className="w-full"
                     onClick={openDirectBooking}
                   >
-                    {language === 'ro' ? 'Rezervă Acum' : 'Book Now'}
+                    {language === 'ro' ? 'Verifică disponibilitatea' : 'Check availability'}
                   </Button>
                   {property.bookingUrl && (
                     <a
