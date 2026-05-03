@@ -1887,6 +1887,12 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                               <Input
                                 value={l.target_url_path}
                                 onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, target_url_path: e.target.value } : x))}
+                                onBlur={(e) => {
+                                  const normalized = normalizePath(e.target.value);
+                                  if (normalized !== l.target_url_path) {
+                                    setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, target_url_path: normalized } : x));
+                                  }
+                                }}
                                 className={cn("h-7 text-xs font-mono", targetErr && "border-destructive focus-visible:ring-destructive")}
                                 placeholder="/cartiere/..."
                                 aria-invalid={!!targetErr}
