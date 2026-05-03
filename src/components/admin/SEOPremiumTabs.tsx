@@ -17,7 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import {
   Loader2, Link2, RefreshCw, Check, X, Pencil, Sparkles,
   AlertTriangle, CheckCircle2, FileWarning, Code2, ExternalLink, Target,
-  ChevronDown, ChevronRight, Copy,
+  ChevronDown, ChevronRight, Copy, Gauge, MapPin, Search as SearchIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
