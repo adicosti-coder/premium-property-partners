@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
 import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
+import { SEOQuickWinsPanel } from "./SEOQuickWinsPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
