@@ -13,6 +13,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Loader2, Link2, RefreshCw, Check, X, Pencil, Sparkles,
   AlertTriangle, CheckCircle2, FileWarning, Code2, ExternalLink, Target,
@@ -20,6 +21,22 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+/** Convertește erorile (inclusiv non-2xx de la Edge Functions) într-un mesaj prietenos. */
+const friendlyEdgeError = (e: any, fallback = "Operațiunea nu a putut fi finalizată."): string => {
+  if (!e) return fallback;
+  // FunctionsHttpError de la supabase-js include status + context
+  const status = e?.context?.status ?? e?.status;
+  const raw = (e?.message || "").toString();
+  if (status === 401 || /Missing auth|Invalid token/i.test(raw)) return "Sesiunea a expirat. Reautentifică-te ca admin și reîncearcă.";
+  if (status === 403) return "Nu ai permisiuni de admin pentru această acțiune.";
+  if (status === 400) return raw.replace(/^Edge Function returned a non-2xx status code/i, "").trim() || "Datele trimise nu sunt valide.";
+  if (status === 429) return "Prea multe cereri. Așteaptă câteva secunde și reîncearcă.";
+  if (status && status >= 500) return "Serviciul backend a întâmpinat o problemă temporară. Încearcă din nou într-un minut.";
+  if (/Failed to fetch|NetworkError/i.test(raw)) return "Conexiune instabilă. Verifică internetul și reîncearcă.";
+  if (/non-2xx/i.test(raw)) return "Funcția backend a returnat o eroare. Verifică datele introduse și reîncearcă.";
+  return raw || fallback;
+};
 
 interface Props {
   audit: {
@@ -121,7 +138,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
       toast.success("Sugestii generate");
       qc.invalidateQueries({ queryKey: ["seo-internal-links", path] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare"),
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
   const updateMutation = useMutation({
@@ -145,7 +162,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
       setEditingId(null);
       qc.invalidateQueries({ queryKey: ["seo-internal-links", path] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare"),
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
   const grouped = useMemo(() => {
@@ -301,8 +318,18 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
               <div className="space-y-2 text-sm">
                 <p>Marchează ca <strong>aplicat</strong> doar după ce ai inserat efectiv linkul în pagină.</p>
                 {confirmApply && (
-                  <div className="rounded border bg-muted/40 p-2 font-mono text-xs break-all">
-                    &lt;a href="{confirmApply.target}"&gt;{confirmApply.anchor}&lt;/a&gt;
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] uppercase font-semibold text-muted-foreground">Preview HTML care trebuie inserat</p>
+                    <div className="rounded border bg-muted/40 p-2 font-mono text-xs break-all">
+                      &lt;a href="{confirmApply.target}"&gt;{confirmApply.anchor}&lt;/a&gt;
+                    </div>
+                    <p className="text-[11px] uppercase font-semibold text-muted-foreground pt-1">Cum se va afișa în text</p>
+                    <div className="rounded border bg-background p-2 text-sm leading-relaxed">
+                      … <a href={confirmApply.target} className="text-primary underline underline-offset-2">{confirmApply.anchor}</a> …
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Sursă: <code className="font-mono">{path}</code> → Țintă: <code className="font-mono">{confirmApply.target}</code>
+                    </p>
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">Statusul se schimbă imediat în "applied" și sugestia va fi mutată în secțiunea Aplicate.</p>
@@ -394,12 +421,14 @@ const CompetitorDiffTab = ({ path }: { path: string }) => {
       if ((data as any)?.error) throw new Error((data as any).error);
       return data;
     },
-    onSuccess: () => {
-      toast.success("Snapshot competitor salvat");
+    onSuccess: async () => {
+      toast.success("Snapshot competitor salvat — date brute disponibile imediat");
       setCompetitorUrl("");
-      qc.invalidateQueries({ queryKey: ["seo-competitor-snapshots", path] });
+      // Refetch instant ca rândurile noi (cu competitor_schema_raw) să apară fără reload manual.
+      await qc.invalidateQueries({ queryKey: ["seo-competitor-snapshots", path] });
+      await qc.refetchQueries({ queryKey: ["seo-competitor-snapshots", path], type: "active" });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare"),
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
   return (
@@ -743,7 +772,7 @@ const SchemaAutoDiff = ({
       setEditorOpen(false);
     },
     onError: (e: any) => {
-      const msg = e?.message || "Eroare la aplicare";
+      const msg = friendlyEdgeError(e, "Eroare la aplicare");
       toast.error(msg);
       setEditorError(msg);
     },
@@ -1081,7 +1110,7 @@ const SchemaValidatorTab = ({ path }: { path: string }) => {
       toast.success(`Validare: ${status}`);
       qc.invalidateQueries({ queryKey: ["seo-schema-validations", path] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare"),
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
   const latest = validations[0] as any;
@@ -1301,6 +1330,7 @@ const SchemaCodeBlock = ({
   const warnCount = issues.filter((i) => i.severity === "warning").length;
 
   return (
+    <TooltipProvider delayDuration={150}>
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className={cn("rounded border", errCount > 0 && "border-destructive/50", errCount === 0 && warnCount > 0 && "border-amber-400/50")}>
         <CollapsibleTrigger asChild>
@@ -1308,15 +1338,45 @@ const SchemaCodeBlock = ({
             <div className="flex items-center gap-2 min-w-0">
               {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
               <span className="text-xs font-mono">block#{block.index + 1}</span>
-              {block.parse_error && <Badge variant="destructive" className="text-[10px]">JSON invalid</Badge>}
+              {block.parse_error && (
+                <Tooltip>
+                  <TooltipTrigger asChild><Badge variant="destructive" className="text-[10px] cursor-help">JSON invalid</Badge></TooltipTrigger>
+                  <TooltipContent className="max-w-xs text-xs">{block.parse_error}</TooltipContent>
+                </Tooltip>
+              )}
               {(block.types || []).slice(0, 3).map((t) => (
                 <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
               ))}
             </div>
             <div className="flex items-center gap-1">
-              {errCount > 0 && <Badge variant="destructive" className="text-[10px]">{errCount} err</Badge>}
-              {warnCount > 0 && <Badge variant="outline" className="text-[10px] border-amber-400/60">{warnCount} warn</Badge>}
-              {errCount === 0 && warnCount === 0 && <Badge variant="secondary" className="text-[10px]">✓ OK</Badge>}
+              {errCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild><Badge variant="destructive" className="text-[10px] cursor-help">{errCount} err</Badge></TooltipTrigger>
+                  <TooltipContent className="max-w-sm text-xs">
+                    <strong className="block mb-1">Erori critice (blochează validarea Schema.org):</strong>
+                    {issues.filter(i => i.severity === "error").slice(0, 5).map((i, k) => (
+                      <div key={k}>• L{i.line}: {i.message}</div>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {warnCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild><Badge variant="outline" className="text-[10px] border-amber-400/60 cursor-help">{warnCount} warn</Badge></TooltipTrigger>
+                  <TooltipContent className="max-w-sm text-xs">
+                    <strong className="block mb-1">Avertismente (recomandate, dar nu blocante):</strong>
+                    {issues.filter(i => i.severity === "warning").slice(0, 5).map((i, k) => (
+                      <div key={k}>• L{i.line}: {i.message}</div>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {errCount === 0 && warnCount === 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild><Badge variant="secondary" className="text-[10px] cursor-help">✓ OK</Badge></TooltipTrigger>
+                  <TooltipContent className="text-xs">Block JSON-LD valid, fără probleme detectate.</TooltipContent>
+                </Tooltip>
+              )}
             </div>
           </button>
         </CollapsibleTrigger>
@@ -1371,6 +1431,7 @@ const SchemaCodeBlock = ({
         </CollapsibleContent>
       </div>
     </Collapsible>
+    </TooltipProvider>
   );
 };
 
