@@ -1163,56 +1163,56 @@ Mulțumesc!`,
     
     // Benefits
     benefits: {
-      title: "Investors Choose",
+      title: "Why investors choose",
       titleHighlight: "RealTrust",
-      subtitle: "Premium asset management for owners who want superior net returns, full transparency, and operational peace of mind — without lifting a finger.",
+      subtitle: "We manage properties for owners who want predictable net returns, clear reporting and operations fully handled by our team.",
       items: [
         {
-          title: "Verified Net Returns",
-          description: "• 9.4% documented net ROI\n• +40% vs. classic rent\n• AI dynamic pricing",
+          title: "Net returns calculated transparently",
+          description: "• 9.4% net on public assumptions\n• 75% occupancy, 27% deduction\n• Pricing reviewed weekly",
         },
         {
-          title: "100% Hands-Off Management",
-          description: "• You never get involved\n• Full hotel-grade operations\n• Preventive maintenance included",
+          title: "Operations handled by our team",
+          description: "• You don't deal with guests\n• End-to-end hotel-grade operations\n• Preventive maintenance included",
         },
         {
-          title: "Financial Transparency",
-          description: "• Live dashboard 24/7\n• Detailed monthly P&L\n• Predictable settlement",
+          title: "Clear financial reporting",
+          description: "• Dashboard you can open anytime\n• Detailed monthly P&L\n• Settlement on a fixed date",
         },
       ],
     },
     
     // Owner Benefits
     ownerBenefits: {
-      label: "Owner Benefits",
+      label: "Owner benefits",
       title: "You own the asset.",
-      titleHighlight: "We run the business.",
-      subtitle: "100% hands-off hotel-grade operations: you don't reply to messages, coordinate teams, or handle check-ins. You just receive the monthly report and net income in your account.",
+      titleHighlight: "We run the operation.",
+      subtitle: "Hotel-grade operations fully handled by our team: you don't reply to messages, coordinate suppliers or handle check-ins. You receive the monthly report and the net income in your account.",
       commission: "Management fee",
       commissionValue: "15-25%",
-      commissionSuffix: "of net income — no hidden costs",
+      commissionSuffix: "of net income, no hidden costs",
       items: [
-        { title: "Verified 9.4% net ROI", description: "• +40% vs. classic rent\n• AI dynamic pricing\n• Seasonal optimization" },
-        { title: "Zero day-to-day involvement", description: "• You don't answer messages\n• You don't coordinate teams\n• You don't manage anything" },
-        { title: "Full financial transparency", description: "• Live dashboard 24/7\n• RevPAR, ADR, occupancy\n• Detailed monthly P&L" },
-        { title: "Complete hotel operations", description: "• Dedicated 24/7 team\n• Hotel-grade cleaning\n• Maintenance handled" },
-        { title: "Verified & insured guests", description: "• Full ID verification\n• Booking history\n• Property protection" },
-        { title: "Premium marketing included", description: "• Professional photos\n• Multi-channel listing\n• Conversion optimization" },
-        { title: "Digital concierge 24/7", description: "• Self check-in\n• Bilingual communication\n• Post-stay follow-up" },
-        { title: "Distribution on 30+ channels", description: "• Booking, Airbnb, Expedia\n• Live sync\n• Zero overbooking" },
+        { title: "9.4% net return on transparent assumptions", description: "• 75% occupancy, 27% deduction\n• Weekly dynamic pricing\n• Seasonal adjustment" },
+        { title: "No operational tasks on your side", description: "• Guest communication — on us\n• Team coordination — on us\n• You only receive the report" },
+        { title: "Clear financial reporting", description: "• Dashboard available anytime\n• RevPAR, ADR, occupancy\n• Detailed monthly P&L" },
+        { title: "End-to-end hotel-grade operations", description: "• Dedicated team\n• Hotel-grade cleaning\n• Maintenance handled" },
+        { title: "Verified guests with insurance cover", description: "• ID verification\n• Booking history\n• Damage cover" },
+        { title: "Marketing and photography included", description: "• Professional photos\n• Multi-channel listing\n• Conversion optimization" },
+        { title: "Digital concierge throughout the stay", description: "• Self check-in\n• Bilingual communication\n• Post-stay follow-up" },
+        { title: "Distribution across 30+ channels", description: "• Booking, Airbnb, Expedia\n• Live sync\n• No overbooking" },
       ],
     },
     
     // How It Works
     howItWorks: {
-      label: "Our Process",
-      title: "Structured Methodology",
-      subtitle: "A clear and transparent process, from evaluation to monthly revenue collection.",
+      label: "Our process",
+      title: "A structured process, no surprises",
+      subtitle: "From property evaluation to monthly settlement — clear steps, committed in writing.",
       steps: [
-        { title: "Evaluation & Analysis", description: "• Property audit\n• Market study\n• Income estimate" },
-        { title: "Onboarding & Setup", description: "• Pro photos\n• Multi-channel listing\n• Optimization" },
-        { title: "Operations & Monitoring", description: "• Bookings\n• Maintenance\n• Reporting" },
-        { title: "Monthly Settlement", description: "• Monthly transfer\n• Detailed report\n• ROI analysis" },
+        { title: "Evaluation & analysis", description: "• Property audit\n• Market study\n• Income estimate on public assumptions" },
+        { title: "Onboarding & setup", description: "• Professional photography\n• Multi-channel listing\n• Operational setup" },
+        { title: "Operations & monitoring", description: "• Bookings handled\n• Maintenance coordinated\n• Monthly reporting" },
+        { title: "Monthly settlement", description: "• Transfer on a fixed date\n• Detailed report\n• ROI analysis" },
       ],
     },
     
