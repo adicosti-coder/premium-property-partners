@@ -23,6 +23,8 @@ import {
 import jsPDF from "jspdf";
 import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
 import { SEOQuickWinsPanel } from "./SEOQuickWinsPanel";
+import { SEOSchemaGeneratorPanel } from "./SEOSchemaGeneratorPanel";
+import { SEORedeployPanel } from "./SEORedeployPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
@@ -188,7 +190,7 @@ const SEOOptimizerManager = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("seo_overrides")
-        .select("url_path, title, meta_description, applied_at, source_audit_id, is_active")
+        .select("url_path, title, meta_description, json_ld, applied_at, source_audit_id, is_active")
         .eq("is_active", true);
       return data || [];
     },
@@ -760,6 +762,10 @@ const SEOOptimizerManager = () => {
       </Card>
 
       <SEOQuickWinsPanel history={history} overrides={overrides as any} />
+
+      <SEOSchemaGeneratorPanel history={history} overrides={overrides as any} />
+
+      <SEORedeployPanel overrides={overrides as any} />
 
       {selectedAudit && (
         <Card>
