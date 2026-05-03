@@ -231,9 +231,9 @@ const CompareDrawer = () => {
     if (!code) return;
     const url = getShareUrl(code);
     const titles = items.map((i) => i.title).join(", ");
-    const subject = encodeURIComponent("Comparație proprietăți - RealTrust");
+    const subject = encodeURIComponent("Comparație proprietăți · RealTrust");
     const body = encodeURIComponent(
-      `Am comparat aceste proprietăți pe RealTrust:\n\n${titles}\n\nVezi comparația: ${url}`
+      `Bună ziua,\n\nAtașez analiza comparativă realizată pe realtrust.ro pentru următoarele proprietăți:\n\n${titles}\n\nLink comparație: ${url}\n\nCu stimă,`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`);
     if (typeof window.gtag === "function") {
