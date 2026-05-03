@@ -124,32 +124,32 @@ const AboutUs = () => {
           {
             icon: Shield,
             title: "Transparență",
-            description: "Comunicare deschisă, rapoarte detaliate, fără costuri ascunse."
+            description: "Comunicare clară, rapoarte lunare detaliate și comisioane agreate înainte de semnare."
           },
           {
             icon: Target,
-            title: "Rezultate",
-            description: "Ne măsurăm prin succesul tău: vânzări rapide, randamente superioare."
+            title: "Rezultate măsurabile",
+            description: "Performanța noastră se evaluează în randament net, ocupare și satisfacția oaspeților — nu în promisiuni."
           },
           {
             icon: Heart,
-            title: "Dedicare",
-            description: "Tratăm fiecare proprietate ca și cum ar fi a noastră."
+            title: "Responsabilitate",
+            description: "Tratăm fiecare proprietate cu același nivel de atenție pe care l-am aplica unui imobil propriu."
           },
           {
             icon: TrendingUp,
-            title: "Inovație",
-            description: "Tehnologie modernă și practici de vârf în industrie."
+            title: "Proces continuu",
+            description: "Pricing dinamic săptămânal, audit operațional periodic și optimizări bazate pe date."
           }
         ]
       },
       stats: {
         title: "În Cifre",
         items: [
-          { value: "50+", label: "Proprietăți gestionate" },
-          { value: "+80%", label: "Rată de ocupare" },
-          { value: "4.9★", label: "Rating mediu" },
-          { value: "500+", label: "Oaspeți mulțumiți" }
+          { value: "60+", label: "Proprietăți administrate" },
+          { value: "75%", label: "Ocupare medie anuală" },
+          { value: "9,7/10", label: "Rating consolidat oaspeți" },
+          { value: "9,4%", label: "Randament net țintă" }
         ]
       },
       company: {
@@ -176,9 +176,9 @@ const AboutUs = () => {
         ]
       },
       cta: {
-        title: "Pregătit să Începem?",
-        subtitle: "Contactează-ne pentru o discuție fără obligații despre cum te putem ajuta.",
-        button: "Solicită o Consultație Gratuită"
+        title: "Hai să discutăm",
+        subtitle: "Programează o consultare fără obligații. Îți răspundem în maximum 24 de ore lucrătoare cu pașii recomandați.",
+        button: "Solicită o consultare"
       }
     },
     en: {
@@ -266,32 +266,32 @@ const AboutUs = () => {
           {
             icon: Shield,
             title: "Transparency",
-            description: "Open communication, detailed reports, no hidden costs."
+            description: "Clear communication, detailed monthly reports and commissions agreed before signing."
           },
           {
             icon: Target,
-            title: "Results",
-            description: "We measure ourselves by your success: fast sales, superior returns."
+            title: "Measurable results",
+            description: "Our performance is judged by net yield, occupancy and guest satisfaction — not by promises."
           },
           {
             icon: Heart,
-            title: "Dedication",
-            description: "We treat every property as if it were our own."
+            title: "Accountability",
+            description: "Every property receives the same level of care we would apply to our own assets."
           },
           {
             icon: TrendingUp,
-            title: "Innovation",
-            description: "Modern technology and industry-leading practices."
+            title: "Continuous process",
+            description: "Weekly dynamic pricing, periodic operational audits and data-driven optimisations."
           }
         ]
       },
       stats: {
         title: "In Numbers",
         items: [
-          { value: "50+", label: "Properties managed" },
-          { value: "+80%", label: "Occupancy rate" },
-          { value: "4.9★", label: "Average rating" },
-          { value: "500+", label: "Happy guests" }
+          { value: "60+", label: "Properties under management" },
+          { value: "75%", label: "Average annual occupancy" },
+          { value: "9.7/10", label: "Consolidated guest rating" },
+          { value: "9.4%", label: "Target net yield" }
         ]
       },
       company: {
@@ -315,9 +315,9 @@ const AboutUs = () => {
         ]
       },
       cta: {
-        title: "Ready to Start?",
-        subtitle: "Contact us for a no-obligation discussion about how we can help.",
-        button: "Request a Free Consultation"
+        title: "Let's talk",
+        subtitle: "Schedule a no-obligation consultation. We respond within 24 business hours with the recommended next steps.",
+        button: "Request a consultation"
       }
     }
   };
