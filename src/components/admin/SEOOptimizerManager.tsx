@@ -23,6 +23,8 @@ import {
 import jsPDF from "jspdf";
 import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
 import { SEOQuickWinsPanel } from "./SEOQuickWinsPanel";
+import { SEOSchemaGeneratorPanel } from "./SEOSchemaGeneratorPanel";
+import { SEORedeployPanel } from "./SEORedeployPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
@@ -760,6 +762,10 @@ const SEOOptimizerManager = () => {
       </Card>
 
       <SEOQuickWinsPanel history={history} overrides={overrides as any} />
+
+      <SEOSchemaGeneratorPanel history={history} overrides={overrides as any} />
+
+      <SEORedeployPanel overrides={overrides as any} />
 
       {selectedAudit && (
         <Card>
