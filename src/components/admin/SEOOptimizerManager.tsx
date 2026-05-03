@@ -766,6 +766,8 @@ const SEOOptimizerManager = () => {
         </CardContent>
       </Card>
 
+      <SEOPremiumPlusPanel history={history as any} overrides={overrides as any} />
+
       <SEOQuickWinsPanel history={history} overrides={overrides as any} />
 
       <SEOSchemaGeneratorPanel history={history} overrides={overrides as any} />
