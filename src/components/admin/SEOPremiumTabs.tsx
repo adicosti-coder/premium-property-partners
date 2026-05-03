@@ -1873,14 +1873,16 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                   <div className="space-y-1.5">
                     {editLinks.map((l, idx) => {
                       const anchorErr = l.enabled && !l.anchor_text.trim() ? "Anchor text obligatoriu" : null;
+                      const anchorHint = anchorErr ? "Adaugă un text descriptiv (ex: „apartamente Iosefin Timișoara")." : null;
                       let targetErr: string | null = null;
+                      let targetHint: string | null = null;
                       if (l.enabled) {
                         const t = l.target_url_path;
-                        if (!t.trim()) targetErr = "Path obligatoriu";
-                        else if (/\s/.test(t)) targetErr = "Path-ul nu poate conține spații";
-                        else if (!t.startsWith("/")) targetErr = "Path-ul trebuie să înceapă cu '/'";
-                        else if (!/^\/[a-z0-9/_-]*$/.test(t)) targetErr = "Doar litere mici, cifre, '-', '_', '/'";
-                        else if (duplicateTargets.has(t.trim())) targetErr = "Duplicat: aceeași cale folosită de alt link";
+                        if (!t.trim()) { targetErr = "Path obligatoriu"; targetHint = "Introdu o cale internă, ex: /cartiere/iosefin"; }
+                        else if (/\s/.test(t)) { targetErr = "Path-ul nu poate conține spații"; targetHint = "Folosește cratime în loc de spații (ex: /cartiere/elisabetin)."; }
+                        else if (!t.startsWith("/")) { targetErr = "Path-ul trebuie să înceapă cu '/'"; targetHint = "Adaugă '/' la început (ex: /cartiere/...)."; }
+                        else if (!/^\/[a-z0-9/_-]*$/.test(t)) { targetErr = "Doar litere mici, cifre, '-', '_', '/'"; targetHint = "Elimină diacriticele și caracterele speciale. Apasă Tab pentru auto-normalizare."; }
+                        else if (duplicateTargets.has(t.trim())) { targetErr = "Duplicat: aceeași cale folosită de alt link"; targetHint = "Schimbă target-ul sau debifează linkul concurent."; }
                       }
                       return (
                         <div key={idx} className={cn("rounded border p-2 space-y-1", !l.enabled && "opacity-50")}>
