@@ -1442,4 +1442,225 @@ const SchemaCodeBlock = ({
   );
 };
 
+/* =============================================================
+ * TAB 4 — Benchmark & Gap Analysis (RealTrust vs Competitor)
+ * =============================================================*/
+const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
+  const [ourUrl, setOurUrl] = useState(defaultOurUrl || "https://www.realtrust.ro");
+  const [compUrl, setCompUrl] = useState("");
+  const [result, setResult] = useState<any>(null);
+
+  const benchmark = useMutation({
+    mutationFn: async () => {
+      if (!ourUrl.trim() || !compUrl.trim()) throw new Error("Ambele URL-uri sunt obligatorii");
+      const { data, error } = await supabase.functions.invoke("seo-benchmark", {
+        body: { our_url: ourUrl.trim(), competitor_url: compUrl.trim() },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (data) => {
+      setResult(data);
+      toast.success("Benchmark complet");
+    },
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
+  });
+
+  const copyBest = () => {
+    if (!result?.best_schema) return;
+    const txt = `<script type="application/ld+json">\n${JSON.stringify(result.best_schema, null, 2)}\n</script>`;
+    navigator.clipboard.writeText(txt).then(
+      () => toast.success("Schema „best-in-class” copiată"),
+      () => toast.error("Copiere eșuată"),
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div>
+          <label className="text-xs text-muted-foreground">URL RealTrust</label>
+          <Input value={ourUrl} onChange={(e) => setOurUrl(e.target.value)} className="h-9 mt-0.5" placeholder="https://www.realtrust.ro/..." />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">URL competitor</label>
+          <Input value={compUrl} onChange={(e) => setCompUrl(e.target.value)} className="h-9 mt-0.5" placeholder="https://www.apostu.ro/..." />
+        </div>
+      </div>
+      <Button size="sm" onClick={() => benchmark.mutate()} disabled={benchmark.isPending || !compUrl.trim()}>
+        {benchmark.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Gauge className="h-4 w-4 mr-1.5" />}
+        Compară side-by-side
+      </Button>
+
+      {result && (
+        <div className="space-y-4">
+          {/* PageSpeed */}
+          <BenchmarkSection title="Core Web Vitals (mobile)" icon={<Gauge className="h-4 w-4" />}>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <PsiCol label="RealTrust" data={result.pagespeed?.ours} />
+              <PsiCol label="Competitor" data={result.pagespeed?.theirs} />
+            </div>
+          </BenchmarkSection>
+
+          {/* SERP Preview */}
+          <BenchmarkSection title="SERP Preview" icon={<SearchIcon className="h-4 w-4" />}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <SerpPreview label="RealTrust" data={result.ours} richSnippet={result.rich_snippet_features?.ours} />
+              <SerpPreview label="Competitor" data={result.theirs} richSnippet={result.rich_snippet_features?.theirs} />
+            </div>
+          </BenchmarkSection>
+
+          {/* Headings & Meta */}
+          <BenchmarkSection title="Title / Meta / Headings" icon={<Code2 className="h-4 w-4" />}>
+            <DiffRow label="Title" ours={result.ours?.title || "—"} theirs={result.theirs?.title || "—"} />
+            <div className="mt-2"><DiffRow label="Meta" ours={result.ours?.meta || "—"} theirs={result.theirs?.meta || "—"} /></div>
+            <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+              <HeadingsBox label="H1 noi" items={result.ours?.h1} accent="primary" />
+              <HeadingsBox label="H1 competitor" items={result.theirs?.h1} accent="amber" />
+              <HeadingsBox label={`H2 noi (${result.ours?.h2?.length || 0})`} items={result.ours?.h2} accent="primary" />
+              <HeadingsBox label={`H2 competitor (${result.theirs?.h2?.length || 0})`} items={result.theirs?.h2} accent="amber" />
+            </div>
+          </BenchmarkSection>
+
+          {/* Schema gaps */}
+          <BenchmarkSection title="Schema.org gap" icon={<AlertTriangle className="h-4 w-4" />}>
+            {(!result.schema_gaps || result.schema_gaps.length === 0) ? (
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Avem toate tipurile competitorului.
+              </p>
+            ) : (
+              <div className="space-y-1.5">
+                {result.schema_gaps.map((g: any) => (
+                  <div key={g.type} className="rounded border p-2 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant={g.we_have_type ? "secondary" : "destructive"} className="text-[10px]">{g.type}</Badge>
+                      {!g.we_have_type && <span className="text-[10px] text-destructive">tip lipsă</span>}
+                      {g.missing_props?.length > 0 && (
+                        <span className="text-[10px] text-muted-foreground">{g.missing_props.length} props lipsă</span>
+                      )}
+                    </div>
+                    {g.missing_props?.length > 0 && (
+                      <p className="mt-1 font-mono text-[11px] text-destructive break-all">
+                        {g.missing_props.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </BenchmarkSection>
+
+          {/* Best-in-class schema */}
+          <BenchmarkSection title="Generator Schema „Best-in-Class”" icon={<Sparkles className="h-4 w-4" />}>
+            <div className="flex justify-end mb-1">
+              <Button size="sm" variant="outline" className="h-7" onClick={copyBest}>
+                <Copy className="h-3 w-3 mr-1" /> Copiază &lt;script&gt;
+              </Button>
+            </div>
+            <pre className="rounded bg-muted/60 p-2 text-[11px] font-mono overflow-x-auto max-h-72">
+              <code>{JSON.stringify(result.best_schema, null, 2)}</code>
+            </pre>
+          </BenchmarkSection>
+
+          {/* Local SEO */}
+          <BenchmarkSection title="Local SEO — Cartiere Timișoara" icon={<MapPin className="h-4 w-4" />}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+              <KwBox label="RealTrust găsește" items={result.local_keywords?.ours} accent="primary" />
+              <KwBox label="Competitor găsește" items={result.local_keywords?.theirs} accent="amber" />
+            </div>
+            {result.local_keywords?.only_theirs?.length > 0 && (
+              <p className="mt-2 text-xs text-destructive flex items-start gap-1">
+                <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                Lipsesc la noi: <strong>{result.local_keywords.only_theirs.join(", ")}</strong>
+              </p>
+            )}
+            {result.local_keywords?.only_ours?.length > 0 && (
+              <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400 flex items-start gap-1">
+                <CheckCircle2 className="h-3 w-3 mt-0.5 shrink-0" />
+                Avantaj noi: <strong>{result.local_keywords.only_ours.join(", ")}</strong>
+              </p>
+            )}
+          </BenchmarkSection>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const BenchmarkSection = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) => (
+  <div className="rounded border p-3 space-y-2">
+    <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">{icon}{title}</p>
+    {children}
+  </div>
+);
+
+const PsiCol = ({ label, data }: { label: string; data: any }) => {
+  if (!data) return <div className="rounded border p-2 text-muted-foreground">—</div>;
+  if (data.error) return <div className="rounded border p-2 text-destructive">{label}: {data.error}</div>;
+  const scoreColor = (n: number | null) => n == null ? "text-muted-foreground" : n >= 90 ? "text-emerald-600" : n >= 50 ? "text-amber-600" : "text-destructive";
+  return (
+    <div className="rounded border p-2 space-y-1">
+      <p className="font-semibold">{label}</p>
+      <div className="grid grid-cols-2 gap-1">
+        <div>Performance: <span className={scoreColor(data.performance)}><strong>{data.performance ?? "—"}</strong></span></div>
+        <div>SEO: <span className={scoreColor(data.seo)}><strong>{data.seo ?? "—"}</strong></span></div>
+        <div>A11y: <span className={scoreColor(data.accessibility)}><strong>{data.accessibility ?? "—"}</strong></span></div>
+        <div>Best Pr.: <span className={scoreColor(data.best_practices)}><strong>{data.best_practices ?? "—"}</strong></span></div>
+      </div>
+      <div className="text-[11px] text-muted-foreground space-y-0.5 pt-1 border-t">
+        <div>LCP: {data.lcp || "—"} · FCP: {data.fcp || "—"}</div>
+        <div>CLS: {data.cls || "—"} · TBT: {data.tbt || "—"}</div>
+      </div>
+    </div>
+  );
+};
+
+const SerpPreview = ({ label, data, richSnippet }: { label: string; data: any; richSnippet: any }) => {
+  let domain = "";
+  try { domain = new URL(data?.url || "").hostname.replace(/^www\./, ""); } catch {}
+  return (
+    <div className="rounded border p-3 bg-background">
+      <p className="text-[10px] uppercase text-muted-foreground mb-1">{label}</p>
+      <div className="text-[11px] text-emerald-700 dark:text-emerald-400">{domain}</div>
+      <a href={data?.url} target="_blank" rel="noopener noreferrer" className="text-blue-700 dark:text-blue-400 hover:underline text-base leading-snug block mt-0.5">
+        {data?.title || "(fără title)"}
+      </a>
+      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{data?.meta || "(fără meta description)"}</p>
+      <div className="flex flex-wrap gap-1 mt-2">
+        {richSnippet?.aggregateRating && <Badge variant="outline" className="text-[10px]">★ Rating</Badge>}
+        {richSnippet?.price && <Badge variant="outline" className="text-[10px]">€ Preț</Badge>}
+        {richSnippet?.geo && <Badge variant="outline" className="text-[10px]"><MapPin className="h-2.5 w-2.5 mr-0.5" />Geo</Badge>}
+        {!richSnippet?.aggregateRating && !richSnippet?.price && !richSnippet?.geo && (
+          <span className="text-[10px] text-muted-foreground italic">Fără rich snippets</span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const HeadingsBox = ({ label, items, accent }: { label: string; items?: string[]; accent: "primary" | "amber" }) => (
+  <div className={cn("rounded border-l-2 p-1.5", accent === "primary" ? "border-primary bg-primary/5" : "border-amber-400 bg-amber-50/40 dark:bg-amber-950/20")}>
+    <p className="text-[10px] uppercase text-muted-foreground mb-0.5">{label}</p>
+    {(!items || items.length === 0) ? (
+      <p className="text-muted-foreground italic">—</p>
+    ) : (
+      <ul className="space-y-0.5">
+        {items.slice(0, 8).map((h, i) => <li key={i} className="break-words">• {h}</li>)}
+        {items.length > 8 && <li className="text-muted-foreground">+{items.length - 8} mai multe</li>}
+      </ul>
+    )}
+  </div>
+);
+
+const KwBox = ({ label, items, accent }: { label: string; items?: string[]; accent: "primary" | "amber" }) => (
+  <div className={cn("rounded border p-1.5", accent === "primary" ? "border-primary/40" : "border-amber-400/60")}>
+    <p className="text-[10px] uppercase text-muted-foreground mb-1">{label} ({items?.length || 0})</p>
+    <div className="flex flex-wrap gap-1">
+      {(!items || items.length === 0) && <span className="text-muted-foreground italic">Niciun cuvânt cheie local</span>}
+      {items?.map((k) => <Badge key={k} variant="secondary" className="text-[10px]">{k}</Badge>)}
+    </div>
+  </div>
+);
+
 export default SEOPremiumTabs;
