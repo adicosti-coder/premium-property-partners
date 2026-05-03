@@ -3824,6 +3824,48 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_competitor_schedules: {
+        Row: {
+          competitor_urls: Json
+          created_at: string
+          created_by: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          last_run_at: string | null
+          last_run_status: string | null
+          next_run_at: string
+          our_url_path: string
+          updated_at: string
+        }
+        Insert: {
+          competitor_urls?: Json
+          created_at?: string
+          created_by?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          last_run_status?: string | null
+          next_run_at?: string
+          our_url_path: string
+          updated_at?: string
+        }
+        Update: {
+          competitor_urls?: Json
+          created_at?: string
+          created_by?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          last_run_status?: string | null
+          next_run_at?: string
+          our_url_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seo_competitor_snapshots: {
         Row: {
           ai_gaps: Json | null
