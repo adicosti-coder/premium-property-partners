@@ -64,56 +64,56 @@ export const translations = {
     
     // Benefits
     benefits: {
-      title: "Investitorii Aleg",
+      title: "De ce aleg investitorii",
       titleHighlight: "RealTrust",
-      subtitle: "Asset management premium pentru proprietari care vor randament net superior, transparență totală și liniște operațională — fără implicarea lor zilnică.",
+      subtitle: "Administrăm proprietăți pentru proprietari care vor randament net previzibil, raportare clară și operațiuni gestionate complet de echipa noastră.",
       items: [
         {
-          title: "Randament Net Verificat",
-          description: "• 9.4% ROI net documentat\n• +40% vs. chirie clasică\n• Pricing dinamic AI",
+          title: "Randament net calculat transparent",
+          description: "• 9,4% net pe ipoteze publice\n• Ocupare 75% și deducere 27%\n• Pricing dinamic ajustat săptămânal",
         },
         {
-          title: "Management 100% Hands-Off",
-          description: "• Tu nu te implici niciodată\n• Operare hotelieră completă\n• Mentenanță preventivă inclusă",
+          title: "Operațiuni gestionate de echipa noastră",
+          description: "• Tu nu te ocupi de oaspeți\n• Operare hotelieră end-to-end\n• Mentenanță preventivă inclusă",
         },
         {
-          title: "Transparență Financiară",
-          description: "• Dashboard live 24/7\n• P&L lunar detaliat\n• Decontare predictibilă",
+          title: "Raportare financiară clară",
+          description: "• Dashboard accesibil oricând\n• P&L lunar cu detalii\n• Decontare la dată fixă",
         },
       ],
     },
     
     // Owner Benefits
     ownerBenefits: {
-      label: "Beneficii Proprietari",
+      label: "Beneficii proprietari",
       title: "Tu deții activul.",
-      titleHighlight: "Noi construim afacerea.",
-      subtitle: "Operare hotelieră 100% hands-off: nu răspunzi mesajelor, nu coordonezi echipe, nu gestionezi check-in-uri. Doar primești raportul lunar și venitul net în cont.",
+      titleHighlight: "Noi construim operațiunea.",
+      subtitle: "Operare în regim hotelier gestionată integral de echipa noastră: nu răspunzi mesajelor, nu coordonezi furnizori, nu gestionezi check-in-uri. Primești raportul lunar și venitul net în cont.",
       commission: "Comision de administrare",
       commissionValue: "15-25%",
-      commissionSuffix: "din încasările nete — fără costuri ascunse",
+      commissionSuffix: "din încasările nete, fără costuri ascunse",
       items: [
-        { title: "Randament net 9.4% verificat", description: "• +40% vs. chirie clasică\n• Pricing dinamic AI\n• Optimizare sezonală" },
-        { title: "Zero implicare zilnică", description: "• Tu nu răspunzi la mesaje\n• Tu nu coordonezi echipe\n• Tu nu gestionezi nimic" },
-        { title: "Transparență financiară totală", description: "• Dashboard live 24/7\n• RevPAR, ADR, ocupare\n• P&L detaliat lunar" },
-        { title: "Operare hotelieră completă", description: "• Echipă dedicată 24/7\n• Curățenie hotelieră\n• Mentenanță gestionată" },
-        { title: "Oaspeți verificați și asigurați", description: "• Verificare ID completă\n• Istoric rezervări\n• Protecție proprietate" },
-        { title: "Marketing premium inclus", description: "• Fotografii profesionale\n• Listare multi-canal\n• Optimizare conversie" },
-        { title: "Concierge digital 24/7", description: "• Self check-in\n• Comunicare bilingvă\n• Follow-up post-sejur" },
-        { title: "Distribuție pe 30+ canale", description: "• Booking, Airbnb, Expedia\n• Sincronizare live\n• Zero overbooking" },
+        { title: "Randament net 9,4% pe ipoteze transparente", description: "• Ocupare 75%, deducere 27%\n• Pricing dinamic săptămânal\n• Ajustare sezonieră" },
+        { title: "Fără sarcini operaționale pentru tine", description: "• Comunicarea cu oaspeții — la noi\n• Coordonarea echipelor — la noi\n• Tu primești doar raportul" },
+        { title: "Raportare financiară clară", description: "• Dashboard accesibil oricând\n• RevPAR, ADR, ocupare\n• P&L lunar detaliat" },
+        { title: "Operare hotelieră end-to-end", description: "• Echipă dedicată\n• Curățenie la standard hotelier\n• Mentenanță gestionată" },
+        { title: "Oaspeți verificați și acoperiți de asigurare", description: "• Verificare ID\n• Istoric rezervări\n• Acoperire pentru daune" },
+        { title: "Marketing și foto incluse", description: "• Fotografie profesională\n• Listare multi-canal\n• Optimizare a conversiei" },
+        { title: "Concierge digital pe tot parcursul sejurului", description: "• Self check-in\n• Comunicare bilingvă\n• Follow-up după plecare" },
+        { title: "Distribuție pe 30+ canale", description: "• Booking, Airbnb, Expedia\n• Sincronizare live\n• Fără overbooking" },
       ],
     },
     
     // How It Works
     howItWorks: {
-      label: "Procesul Nostru",
-      title: "Metodologie Structurată",
-      subtitle: "Un proces clar și transparent, de la evaluare până la încasarea veniturilor lunare.",
+      label: "Procesul nostru",
+      title: "Un proces structurat, fără surprize",
+      subtitle: "De la evaluarea proprietății până la decontarea lunară — pași clari, asumați în scris.",
       steps: [
-        { title: "Evaluare & Analiză", description: "• Audit proprietate\n• Studiu piață\n• Estimare venit" },
-        { title: "Onboarding & Setup", description: "• Fotografii pro\n• Listare multi-canal\n• Optimizare" },
-        { title: "Operare & Monitorizare", description: "• Rezervări\n• Mentenanță\n• Raportare" },
-        { title: "Decontare Lunară", description: "• Transfer lunar\n• Raport detaliat\n• Analiză ROI" },
+        { title: "Evaluare și analiză", description: "• Audit al proprietății\n• Studiu de piață\n• Estimare de venit pe ipoteze publice" },
+        { title: "Onboarding și setup", description: "• Fotografie profesională\n• Listare multi-canal\n• Configurare operațională" },
+        { title: "Operare și monitorizare", description: "• Rezervări gestionate\n• Mentenanță coordonată\n• Raportare lunară" },
+        { title: "Decontare lunară", description: "• Transfer la dată fixă\n• Raport detaliat\n• Analiză ROI" },
       ],
     },
     
@@ -259,38 +259,38 @@ export const translations = {
       items: [
         // Profit & ROI
         { 
-          question: "Care este profitul real pe care îl pot obține din apartamentul meu în Timișoara?", 
-          answer: "Estimăm veniturile pe baza datelor de piață actuale, unde un preț mediu pe noapte (ADR) este de aproximativ 55€, cu o rată de ocupare medie de 65%. Apartamentele noastre (ATENEO, GREEN FOREST, FullView Studio, HELIOS) din zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi ating un ROI brut de 10%." 
+          question: "Ce randament pot estima realist din apartamentul meu în Timișoara?", 
+          answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, FullView Studio, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
         },
         // Servicii incluse
         { 
-          question: "Ce servicii sunt incluse în comisionul de management?", 
-          answer: "Oferim un pachet complet care include administrarea rezervărilor pe toate platformele (Airbnb, Booking), comunicarea cu oaspeții și coordonarea curățeniei. Implementăm Self Check-in digitalizat, parcare subterană gratuită și bucătărie complet utilată în fiecare apartament." 
+          question: "Ce servicii sunt incluse în comisionul de administrare?", 
+          answer: "Pachetul acoperă administrarea rezervărilor pe toate canalele (Booking, Airbnb, Expedia și altele), comunicarea cu oaspeții, coordonarea curățeniei și mentenanța uzuală. Implementăm self check-in digital, parcare subterană acolo unde este disponibilă și bucătărie complet echipată în fiecare apartament." 
         },
         // Transparență financiară
         { 
           question: "Cum asigurați transparența veniturilor și a costurilor?", 
-          answer: "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (15-25% comision management + 15-23% comision platforme). Spre deosebire de modelele cu abonamente fixe de tip 39€/lună, modelul nostru bazat pe comision ne motivează să maximizăm gradul tău de ocupare." 
+          answer: "Primești un raport lunar detaliat, cu toate intrările și costurile defalcate (15-25% comision administrare + 15-23% comisioane platforme). Modelul nostru pe comision, în locul abonamentelor fixe, ne motivează să creștem ocuparea și venitul tău net." 
         },
         // Locație & proximitate
         { 
           question: "Ce este în apropiere de apartamentele ApArt Hotel?", 
-          answer: "Apartamentele noastre sunt situate strategic: la 2 minute de Lidl, 5 minute de Gara de Nord, 8 minute de Centrul Vechi și Piața Unirii, 10 minute de Iulius Mall și Amazonia Aquapark. Fiecare proprietate oferă parcare subterană gratuită și acces facil la transport public." 
+          answer: "Apartamentele sunt poziționate central: la 2 minute de Lidl, 5 minute de Gara de Nord, 8 minute de Centrul Vechi și Piața Unirii, 10 minute de Iulius Mall și Amazonia Aquapark. Majoritatea proprietăților oferă parcare subterană și acces facil la transport public." 
         },
         // Verificare oaspeți
         { 
-          question: "Cum sunt selectați oaspeții care se cazează în apartament?", 
-          answer: "Efectuăm un proces riguros de verificare a oaspeților (due diligence), prioritizând clienții business și familiile, pentru a preveni deteriorarea proprietății. Colaborăm cu societăți de Asigurare pentru protecție împotriva daunelor." 
+          question: "Cum sunt selectați oaspeții?", 
+          answer: "Aplicăm un proces de verificare a oaspeților, cu prioritate pe clienți business și familii, pentru a reduce riscul de daune. Avem și acoperire prin asigurare pentru situațiile excepționale." 
         },
         // Self check-in & facilități
         { 
-          question: "Cum funcționează Self Check-in-ul și ce facilități sunt incluse?", 
-          answer: "Primești un cod digital de acces cu instrucțiuni video detaliate pe WhatsApp. Fiecare apartament include: parcare subterană gratuită, bucătărie complet utilată (cafea, sare, ulei incluse), Smart TV cu Netflix, WiFi de mare viteză, încălzire în pardoseală și climatizare modernă." 
+          question: "Cum funcționează self check-in-ul și ce facilități sunt incluse?", 
+          answer: "Primești pe WhatsApp un cod digital de acces și instrucțiuni video. Fiecare apartament include bucătărie complet echipată (cafea, sare, ulei), Smart TV cu Netflix, WiFi de mare viteză, climatizare modernă; majoritatea oferă și parcare subterană și încălzire în pardoseală." 
         },
         // Program referral
         { 
-          question: "Oferiți recompense pentru recomandări?", 
-          answer: "Avem un program activ de Referral: dacă ne recomanzi un nou proprietar care semnează cu noi, poți beneficia de bonusuri de până la 100€, o cazare gratuită într-unul dintre apartamentele noastre (ATENEO, GREEN FOREST, FullView, HELIOS), sau reduceri la comisionul de management." 
+          question: "Aveți program de recomandări?", 
+          answer: "Da. Dacă ne recomanzi un proprietar care semnează un contract de administrare, alegi între bonus de până la 100€, o cazare gratuită în unul dintre apartamentele noastre (ATENEO, GREEN FOREST, FullView, HELIOS) sau o reducere la comisionul de administrare." 
         },
       ],
     },
@@ -1163,56 +1163,56 @@ Mulțumesc!`,
     
     // Benefits
     benefits: {
-      title: "Investors Choose",
+      title: "Why investors choose",
       titleHighlight: "RealTrust",
-      subtitle: "Premium asset management for owners who want superior net returns, full transparency, and operational peace of mind — without lifting a finger.",
+      subtitle: "We manage properties for owners who want predictable net returns, clear reporting and operations fully handled by our team.",
       items: [
         {
-          title: "Verified Net Returns",
-          description: "• 9.4% documented net ROI\n• +40% vs. classic rent\n• AI dynamic pricing",
+          title: "Net returns calculated transparently",
+          description: "• 9.4% net on public assumptions\n• 75% occupancy, 27% deduction\n• Pricing reviewed weekly",
         },
         {
-          title: "100% Hands-Off Management",
-          description: "• You never get involved\n• Full hotel-grade operations\n• Preventive maintenance included",
+          title: "Operations handled by our team",
+          description: "• You don't deal with guests\n• End-to-end hotel-grade operations\n• Preventive maintenance included",
         },
         {
-          title: "Financial Transparency",
-          description: "• Live dashboard 24/7\n• Detailed monthly P&L\n• Predictable settlement",
+          title: "Clear financial reporting",
+          description: "• Dashboard you can open anytime\n• Detailed monthly P&L\n• Settlement on a fixed date",
         },
       ],
     },
     
     // Owner Benefits
     ownerBenefits: {
-      label: "Owner Benefits",
+      label: "Owner benefits",
       title: "You own the asset.",
-      titleHighlight: "We run the business.",
-      subtitle: "100% hands-off hotel-grade operations: you don't reply to messages, coordinate teams, or handle check-ins. You just receive the monthly report and net income in your account.",
+      titleHighlight: "We run the operation.",
+      subtitle: "Hotel-grade operations fully handled by our team: you don't reply to messages, coordinate suppliers or handle check-ins. You receive the monthly report and the net income in your account.",
       commission: "Management fee",
       commissionValue: "15-25%",
-      commissionSuffix: "of net income — no hidden costs",
+      commissionSuffix: "of net income, no hidden costs",
       items: [
-        { title: "Verified 9.4% net ROI", description: "• +40% vs. classic rent\n• AI dynamic pricing\n• Seasonal optimization" },
-        { title: "Zero day-to-day involvement", description: "• You don't answer messages\n• You don't coordinate teams\n• You don't manage anything" },
-        { title: "Full financial transparency", description: "• Live dashboard 24/7\n• RevPAR, ADR, occupancy\n• Detailed monthly P&L" },
-        { title: "Complete hotel operations", description: "• Dedicated 24/7 team\n• Hotel-grade cleaning\n• Maintenance handled" },
-        { title: "Verified & insured guests", description: "• Full ID verification\n• Booking history\n• Property protection" },
-        { title: "Premium marketing included", description: "• Professional photos\n• Multi-channel listing\n• Conversion optimization" },
-        { title: "Digital concierge 24/7", description: "• Self check-in\n• Bilingual communication\n• Post-stay follow-up" },
-        { title: "Distribution on 30+ channels", description: "• Booking, Airbnb, Expedia\n• Live sync\n• Zero overbooking" },
+        { title: "9.4% net return on transparent assumptions", description: "• 75% occupancy, 27% deduction\n• Weekly dynamic pricing\n• Seasonal adjustment" },
+        { title: "No operational tasks on your side", description: "• Guest communication — on us\n• Team coordination — on us\n• You only receive the report" },
+        { title: "Clear financial reporting", description: "• Dashboard available anytime\n• RevPAR, ADR, occupancy\n• Detailed monthly P&L" },
+        { title: "End-to-end hotel-grade operations", description: "• Dedicated team\n• Hotel-grade cleaning\n• Maintenance handled" },
+        { title: "Verified guests with insurance cover", description: "• ID verification\n• Booking history\n• Damage cover" },
+        { title: "Marketing and photography included", description: "• Professional photos\n• Multi-channel listing\n• Conversion optimization" },
+        { title: "Digital concierge throughout the stay", description: "• Self check-in\n• Bilingual communication\n• Post-stay follow-up" },
+        { title: "Distribution across 30+ channels", description: "• Booking, Airbnb, Expedia\n• Live sync\n• No overbooking" },
       ],
     },
     
     // How It Works
     howItWorks: {
-      label: "Our Process",
-      title: "Structured Methodology",
-      subtitle: "A clear and transparent process, from evaluation to monthly revenue collection.",
+      label: "Our process",
+      title: "A structured process, no surprises",
+      subtitle: "From property evaluation to monthly settlement — clear steps, committed in writing.",
       steps: [
-        { title: "Evaluation & Analysis", description: "• Property audit\n• Market study\n• Income estimate" },
-        { title: "Onboarding & Setup", description: "• Pro photos\n• Multi-channel listing\n• Optimization" },
-        { title: "Operations & Monitoring", description: "• Bookings\n• Maintenance\n• Reporting" },
-        { title: "Monthly Settlement", description: "• Monthly transfer\n• Detailed report\n• ROI analysis" },
+        { title: "Evaluation & analysis", description: "• Property audit\n• Market study\n• Income estimate on public assumptions" },
+        { title: "Onboarding & setup", description: "• Professional photography\n• Multi-channel listing\n• Operational setup" },
+        { title: "Operations & monitoring", description: "• Bookings handled\n• Maintenance coordinated\n• Monthly reporting" },
+        { title: "Monthly settlement", description: "• Transfer on a fixed date\n• Detailed report\n• ROI analysis" },
       ],
     },
     
@@ -1358,38 +1358,38 @@ Mulțumesc!`,
       items: [
         // Profit & ROI
         { 
-          question: "What is the real profit I can get from my apartment in Timișoara?", 
-          answer: "We estimate revenues based on current market data, where the average nightly rate (ADR) is approximately €55, with an average occupancy rate of 65%. Our apartments (ATENEO, GREEN FOREST, FullView Studio, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town achieve a gross ROI of 10%." 
+          question: "What net return can I realistically expect from my apartment in Timișoara?", 
+          answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, FullView Studio, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy, 27% deduction). The exact figure for your property comes after the evaluation." 
         },
         // Services included
         { 
           question: "What services are included in the management fee?", 
-          answer: "We offer a complete package that includes booking management across all platforms (Airbnb, Booking), guest communication, and cleaning coordination. We implement digital Self Check-in, free underground parking and fully equipped kitchen in every apartment." 
+          answer: "The package covers booking management across all channels (Booking, Airbnb, Expedia and others), guest communication, cleaning coordination and routine maintenance. We implement digital self check-in, underground parking where available and a fully equipped kitchen in every apartment." 
         },
         // Financial transparency
         { 
-          question: "How do you ensure transparency of revenues and costs?", 
-          answer: "Owners receive detailed monthly reports, where commissions are clearly explained (15-25% management fee + 15-23% platform fee). Unlike fixed subscription models like €39/month, our commission-based model motivates us to maximize your occupancy rate." 
+          question: "How do you ensure transparency of revenue and costs?", 
+          answer: "You receive a detailed monthly report with all income and costs broken down (15-25% management fee + 15-23% platform fees). Our commission-based model, instead of fixed subscriptions, aligns us with growing your occupancy and net income." 
         },
         // Location & proximity
         { 
           question: "What is near the ApArt Hotel apartments?", 
-          answer: "Our apartments are strategically located: 2 minutes from Lidl, 5 minutes from the North Train Station (Gara de Nord), 8 minutes from the Old Town and Piața Unirii, 10 minutes from Iulius Mall and Amazonia Aquapark. Each property offers free underground parking and easy access to public transport." 
+          answer: "The apartments are centrally located: 2 minutes from Lidl, 5 minutes from the North Train Station, 8 minutes from the Old Town and Piața Unirii, 10 minutes from Iulius Mall and Amazonia Aquapark. Most properties offer underground parking and easy access to public transport." 
         },
         // Guest vetting
         { 
-          question: "How are guests who stay in the apartment selected?", 
-          answer: "We perform a rigorous guest vetting process (due diligence), prioritizing business clients and families, to prevent property deterioration. We partner with Insurance companies for damage protection." 
+          question: "How are guests selected?", 
+          answer: "We apply a guest vetting process, prioritizing business clients and families to reduce the risk of damage. We also have insurance cover for exceptional situations." 
         },
         // Self check-in & amenities
         { 
-          question: "How does Self Check-in work and what amenities are included?", 
-          answer: "You receive a digital access code with detailed video instructions via WhatsApp. Each apartment includes: free underground parking, fully equipped kitchen (coffee, salt, oil included), Smart TV with Netflix, high-speed WiFi, underfloor heating and modern air conditioning." 
+          question: "How does self check-in work and what amenities are included?", 
+          answer: "You receive a digital access code and video instructions via WhatsApp. Each apartment includes a fully equipped kitchen (coffee, salt, oil), Smart TV with Netflix, high-speed WiFi and modern air conditioning; most also offer underground parking and underfloor heating." 
         },
         // Referral program
         { 
-          question: "Do you offer rewards for referrals?", 
-          answer: "We have an active Referral program: if you recommend a new property owner who signs with us, you can benefit from bonuses up to €100, a free stay in one of our apartments (ATENEO, GREEN FOREST, FullView, HELIOS), or discounts on the management fee." 
+          question: "Do you have a referral program?", 
+          answer: "Yes. If you refer an owner who signs a management contract, you choose between a bonus of up to €100, a free stay in one of our apartments (ATENEO, GREEN FOREST, FullView, HELIOS) or a discount on the management fee." 
         },
       ],
     },
