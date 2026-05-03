@@ -691,24 +691,24 @@ const PentruProprietari = () => {
                 title: language === "ro" ? "Venit lunar mai mare" : "Higher monthly income",
                 description:
                   language === "ro"
-                    ? "Până la +40% față de chiria clasică, prin tarifare dinamică și ocupare optimizată pe Booking & Airbnb."
-                    : "Up to +40% vs. classic rental, through dynamic pricing and optimized occupancy on Booking & Airbnb.",
+                    ? "Tipic de 1,6× până la 2,5× față de chiria clasică, prin tarifare dinamică și ocupare optimizată pe Booking și Airbnb."
+                    : "Typically 1.6× to 2.5× compared to classic rental, through dynamic pricing and optimized occupancy on Booking and Airbnb.",
               },
               {
                 Icon: Shield,
-                title: language === "ro" ? "Zero stres, zero implicare" : "Zero stress, zero involvement",
+                title: language === "ro" ? "Operațiuni preluate de echipa noastră" : "Operations handled by our team",
                 description:
                   language === "ro"
-                    ? "Oaspeți verificați, curățenie hotelieră, mentenanță și ANAF — preluăm tot, 24/7."
-                    : "Verified guests, hotel-grade cleaning, maintenance and tax compliance — we handle it all, 24/7.",
+                    ? "Oaspeți verificați, curățenie la standard hotelier, mentenanță și conformitate ANAF — gestionate de echipa noastră."
+                    : "Verified guests, hotel-grade cleaning, maintenance and tax compliance — handled by our team.",
               },
               {
                 Icon: BarChart3,
-                title: language === "ro" ? "Transparență totală" : "Full transparency",
+                title: language === "ro" ? "Raportare clară" : "Clear reporting",
                 description:
                   language === "ro"
-                    ? "Rapoarte lunare clare, plăți directe în contul tău și acces 24/7 în portalul proprietarului."
-                    : "Clear monthly reports, direct payments to your account and 24/7 access to the owner portal.",
+                    ? "Rapoarte lunare detaliate, decontare directă în contul tău și acces oricând în portalul proprietarului."
+                    : "Detailed monthly reports, direct settlement to your account and anytime access to the owner portal.",
               },
             ].map(({ Icon, title, description }, idx) => (
               <div
