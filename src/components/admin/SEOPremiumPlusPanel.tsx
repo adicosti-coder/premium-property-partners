@@ -241,10 +241,24 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
                 Prioritate optimizare — top {priorityTargets.length} pagini cu scor mic
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Aplică individual sugestiile AI pentru paginile cu cel mai mic scor (sub 95).
+                Aplică sugestiile AI pentru paginile cu cel mai mic scor (sub 95).
               </p>
             </div>
+            <Button
+              onClick={runPriorityAll}
+              disabled={priorityRunning || priorityTargets.length === 0}
+              className="gap-2"
+              variant="destructive"
+            >
+              {priorityRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              {priorityRunning
+                ? `Rulează ${priorityProgress.done}/${priorityProgress.total}`
+                : `Aplică toate (${priorityTargets.length})`}
+            </Button>
           </div>
+          {priorityRunning && (
+            <Progress value={(priorityProgress.done / Math.max(priorityProgress.total, 1)) * 100} />
+          )}
           {priorityTargets.length > 0 ? (
             <ScrollArea className="h-56 rounded border bg-background">
               <ul className="divide-y text-sm">
