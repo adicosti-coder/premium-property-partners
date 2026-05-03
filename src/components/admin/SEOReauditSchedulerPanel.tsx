@@ -85,7 +85,7 @@ export const SEOReauditSchedulerPanel = ({ history }: Props) => {
     }
     setRunning(false);
     toast.success(`Re-audit: ${ok} OK, ${fail} eșuate`);
-    qc.invalidateQueries({ queryKey: ["seo-audit-history"] });
+    qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
   };
 
   return (
