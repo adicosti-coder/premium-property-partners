@@ -1431,6 +1431,7 @@ const SchemaCodeBlock = ({
         </CollapsibleContent>
       </div>
     </Collapsible>
+    </TooltipProvider>
   );
 };
 
