@@ -553,6 +553,9 @@ const CompetitorDiffTab = ({ path }: { path: string }) => {
                     competitorBlocks={Array.isArray(s.competitor_schema_raw) ? s.competitor_schema_raw : []}
                     competitorLabel={s.competitor_label || "competitor"}
                     ourJsonLd={(ourPage as any)?.json_ld}
+                    path={path}
+                    ourTitle={ourTitle}
+                    ourMeta={ourMeta}
                   />
 
                   {/* Raw JSON-LD blocks (expandable code blocks) */}
