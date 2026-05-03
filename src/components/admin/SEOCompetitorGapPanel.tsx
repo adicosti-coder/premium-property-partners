@@ -475,7 +475,7 @@ export const SEOCompetitorGapPanel = () => {
           {/* TRENDS */}
           <TabsContent value="trends">
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Label className="text-xs">Pagina:</Label>
                 <Select value={trendPath} onValueChange={setTrendPath}>
                   <SelectTrigger className="w-[280px]"><SelectValue placeholder="Alege pagina" /></SelectTrigger>
@@ -485,9 +485,26 @@ export const SEOCompetitorGapPanel = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <span className="text-[10px] text-muted-foreground ml-auto">
-                  Scor competitor = title + meta + word_count + schema (0–100). Scorul nostru vine din auditele SEO.
-                </span>
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  <Flag className="w-3 h-3" /> {pathEvents.length} override-uri aplicate
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto gap-1"
+                  onClick={() => downloadCSV(
+                    `seo-trends-${(trendPath || "all").replace(/\W+/g, "_")}.csv`,
+                    trendData.map((r) => ({
+                      day: r.day,
+                      noi_score: r.Noi ?? "",
+                      competitori_score: r.Competitori ?? "",
+                      override_events: r.eventCount,
+                      event_notes: r.eventNotes,
+                    })),
+                  )}
+                >
+                  <Download className="w-3 h-3" /> Export trend CSV
+                </Button>
               </div>
               <div className="h-[360px] rounded-md border p-3">
                 {trendData.length === 0 ? (
@@ -496,18 +513,49 @@ export const SEOCompetitorGapPanel = () => {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trendData} margin={{ top: 10, right: 20, bottom: 0, left: -10 }}>
+                    <ComposedChart data={trendData} margin={{ top: 10, right: 20, bottom: 0, left: -10 }}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis dataKey="day" tick={{ fontSize: 11 }} />
                       <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value: any, name: any, item: any) => {
+                          if (name === "Eveniment" && item?.payload?.eventCount) {
+                            return [`${item.payload.eventCount} override(s): ${item.payload.eventNotes}`, "Eveniment"];
+                          }
+                          return [value, name];
+                        }}
+                      />
                       <Legend />
+                      {trendData
+                        .filter((d) => d.eventCount > 0)
+                        .map((d) => (
+                          <ReferenceLine key={d.day} x={d.day} stroke="hsl(45 90% 50%)" strokeDasharray="4 2" />
+                        ))}
                       <Line type="monotone" dataKey="Noi" stroke="hsl(var(--primary))" strokeWidth={2} connectNulls dot />
                       <Line type="monotone" dataKey="Competitori" stroke="hsl(0 70% 55%)" strokeWidth={2} connectNulls dot />
-                    </LineChart>
+                      <Scatter
+                        dataKey="Eveniment"
+                        fill="hsl(45 90% 50%)"
+                        shape={(props: any) => {
+                          const { cx, cy } = props;
+                          if (cx == null || cy == null) return null as any;
+                          return (
+                            <g transform={`translate(${cx - 6},${cy - 14})`}>
+                              <path d="M0,0 L0,14 M0,0 L10,3 L0,6 Z" stroke="hsl(45 90% 35%)" fill="hsl(45 90% 50%)" strokeWidth={1} />
+                            </g>
+                          );
+                        }}
+                      />
+                    </ComposedChart>
                   </ResponsiveContainer>
                 )}
               </div>
+              {pathEvents.length > 0 && (
+                <div className="text-[11px] text-muted-foreground">
+                  <Flag className="w-3 h-3 inline mr-1 text-amber-500" />
+                  Stegulețele aurii pe grafic = momentele când s-a aplicat un SEO override (vezi tabelul Istoric pentru detalii).
+                </div>
+              )}
             </div>
           </TabsContent>
 
