@@ -124,32 +124,32 @@ const AboutUs = () => {
           {
             icon: Shield,
             title: "Transparență",
-            description: "Comunicare deschisă, rapoarte detaliate, fără costuri ascunse."
+            description: "Comunicare clară, rapoarte lunare detaliate și comisioane agreate înainte de semnare."
           },
           {
             icon: Target,
-            title: "Rezultate",
-            description: "Ne măsurăm prin succesul tău: vânzări rapide, randamente superioare."
+            title: "Rezultate măsurabile",
+            description: "Performanța noastră se evaluează în randament net, ocupare și satisfacția oaspeților — nu în promisiuni."
           },
           {
             icon: Heart,
-            title: "Dedicare",
-            description: "Tratăm fiecare proprietate ca și cum ar fi a noastră."
+            title: "Responsabilitate",
+            description: "Tratăm fiecare proprietate cu același nivel de atenție pe care l-am aplica unui imobil propriu."
           },
           {
             icon: TrendingUp,
-            title: "Inovație",
-            description: "Tehnologie modernă și practici de vârf în industrie."
+            title: "Proces continuu",
+            description: "Pricing dinamic săptămânal, audit operațional periodic și optimizări bazate pe date."
           }
         ]
       },
       stats: {
         title: "În Cifre",
         items: [
-          { value: "50+", label: "Proprietăți gestionate" },
-          { value: "+80%", label: "Rată de ocupare" },
-          { value: "4.9★", label: "Rating mediu" },
-          { value: "500+", label: "Oaspeți mulțumiți" }
+          { value: "60+", label: "Proprietăți administrate" },
+          { value: "75%", label: "Ocupare medie anuală" },
+          { value: "9,7/10", label: "Rating consolidat oaspeți" },
+          { value: "9,4%", label: "Randament net țintă" }
         ]
       },
       company: {
