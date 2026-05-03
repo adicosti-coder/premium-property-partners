@@ -33,7 +33,7 @@ serve(async (req) => {
     const langLabel = lang === "en" ? "English" : "Romanian";
 
     // Build image content parts (max 5 images to avoid token limits)
-    const imageParts = imageUrls.slice(0, 5).map((url: string) => ({
+    const imageParts = safeUrls.slice(0, 5).map((url: string) => ({
       type: "image_url",
       image_url: { url },
     }));
