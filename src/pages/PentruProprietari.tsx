@@ -153,58 +153,58 @@ const PentruProprietari = () => {
 
   const content = {
     ro: {
-      badge: "Administrare Premium · Timișoara",
-      title: "Venit lunar predictibil din apartamentul tău,",
-      titleHighlight: "fără bătăi de cap",
-      subtitle: "RealTrust este firma de administrare imobile Timișoara care îți gestionează apartamentul în regim hotelier: listare premium, oaspeți verificați, curățenie hotelieră, mentenanță, raportare lunară și conformitate ANAF. Tu primești venitul în cont.",
+      badge: "Administrare proprietăți · Timișoara",
+      title: "Venit lunar previzibil din apartamentul tău,",
+      titleHighlight: "fără sarcini operaționale",
+      subtitle: "Administrăm apartamentul tău în regim hotelier: listare, oaspeți verificați, curățenie la standard hotelier, mentenanță, raportare lunară și conformitate ANAF. Tu primești venitul net în cont.",
       cta: "Calculează venitul tău lunar",
-      secondaryCta: "Vorbește cu un consultant",
-      ctaB: "Calculează în 60 sec",
-      secondaryCtaB: "Vezi pachete fără costuri ascunse",
+      secondaryCta: "Discută cu un consultant",
+      ctaB: "Calculează în 60 de secunde",
+      secondaryCtaB: "Vezi pachetele și costurile",
       variantLabel: "Variantă CTA",
       stats: [
-        { value: "9.4%", label: "ROI Net Verificat", description: "Randament anual confirmat în portofoliu" },
-        { value: "15-25%", label: "Comision Transparent", description: "Fără costuri ascunse, fără surprize" },
-        { value: "+80%", label: "Rată de Ocupare", description: "Media reală a apartamentelor administrate" },
-        { value: "24/7", label: "Operare Hotelieră", description: "Concierge dedicat pentru tine și oaspeți" },
+        { value: "9,4%", label: "ROI net țintă", description: "Calculat pe ipoteze publice (ocupare 75%, deducere 27%)" },
+        { value: "15-25%", label: "Comision clar", description: "Aplicat la încasările nete, fără costuri ascunse" },
+        { value: "~75%", label: "Ocupare medie", description: "Observată în portofoliul administrat" },
+        { value: "24/7", label: "Operare hotelieră", description: "Echipă dedicată pentru tine și pentru oaspeți" },
       ],
       trustPoints: [
         "Contract flexibil, fără perioadă minimă obligatorie",
-        "Banii intră direct în contul tău, lunar",
-        "Rapoarte financiare live, accesibile oricând",
-        "Verificare completă a fiecărui oaspete",
+        "Decontare lunară direct în contul tău",
+        "Rapoarte financiare accesibile oricând",
+        "Verificare a fiecărui oaspete înainte de check-in",
       ],
-      portalTitle: "Portal Dedicat Proprietarilor",
-      portalSubtitle: "Acces 24/7 la rezervări, încasări și raportări — totul într-un singur loc",
-      portalCta: "Intră în Portal",
-      faqTitle: "Întrebări Frecvente",
+      portalTitle: "Portal dedicat proprietarilor",
+      portalSubtitle: "Acces oricând la rezervări, încasări și rapoarte, într-un singur loc",
+      portalCta: "Intră în portal",
+      faqTitle: "Întrebări frecvente",
     },
     en: {
-      badge: "Premium Management · Timișoara",
+      badge: "Property management · Timișoara",
       title: "Predictable monthly income from your apartment,",
-      titleHighlight: "with zero hassle",
-      subtitle: "RealTrust is the Timișoara property management company that runs your apartment as a short-term rental: premium listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You just receive the income.",
+      titleHighlight: "without the operational load",
+      subtitle: "We run your apartment as a short-term rental: listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You receive the net income in your account.",
       cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
-      ctaB: "Calculate in 60 sec",
-      secondaryCtaB: "See packages — no hidden fees",
-      variantLabel: "CTA Variant",
+      ctaB: "Calculate in 60 seconds",
+      secondaryCtaB: "See the packages and costs",
+      variantLabel: "CTA variant",
       stats: [
-        { value: "9.4%", label: "Verified Net ROI", description: "Annual yield confirmed across our portfolio" },
-        { value: "15-25%", label: "Transparent Commission", description: "No hidden fees, no surprises" },
-        { value: "+80%", label: "Occupancy Rate", description: "Real average across managed apartments" },
-        { value: "24/7", label: "Hotel-Grade Operations", description: "Dedicated concierge for you and your guests" },
+        { value: "9.4%", label: "Target net ROI", description: "On public assumptions (75% occupancy, 27% deduction)" },
+        { value: "15-25%", label: "Clear commission", description: "Applied to net income, no hidden costs" },
+        { value: "~75%", label: "Average occupancy", description: "Observed across the managed portfolio" },
+        { value: "24/7", label: "Hotel-grade operations", description: "Dedicated team for you and your guests" },
       ],
       trustPoints: [
-        "Flexible contract, no minimum lock-in period",
-        "Money lands directly in your account, monthly",
-        "Live financial reports, accessible anytime",
-        "Full verification for every guest",
+        "Flexible contract, no minimum lock-in",
+        "Monthly settlement straight into your account",
+        "Financial reports accessible anytime",
+        "Every guest verified before check-in",
       ],
-      portalTitle: "Dedicated Owner Portal",
-      portalSubtitle: "24/7 access to bookings, earnings and reports — all in one place",
-      portalCta: "Enter Portal",
-      faqTitle: "Frequently Asked Questions",
+      portalTitle: "Dedicated owner portal",
+      portalSubtitle: "Access bookings, earnings and reports anytime, in one place",
+      portalCta: "Enter the portal",
+      faqTitle: "Frequently asked questions",
     },
   };
 
@@ -226,12 +226,12 @@ const PentruProprietari = () => {
 
   const seoContent = {
     ro: {
-      title: "Administrare Apartamente Regim Hotelier Timișoara | RealTrust",
-      description: "Oferim administrare completă pentru apartamente în Timișoara: regim hotelier, marketing, oaspeți, curățenie. Atinge un ROI de 9.4% net. Contactează-ne!"
+      title: "Administrare apartamente în regim hotelier — Timișoara | RealTrust",
+      description: "Administrăm apartamente în Timișoara în regim hotelier: listare, oaspeți, curățenie, mentenanță, raportare lunară. ROI net țintă 9,4% pe ipoteze publice."
     },
     en: {
-      title: "Apartment Management Timișoara | RealTrust",
-      description: "Transform your apartment into a passive income source with professional management. 15-25% commission, 85%+ occupancy, full transparency and monthly reports. Free evaluation!"
+      title: "Apartment management in Timișoara | RealTrust",
+      description: "We manage apartments in Timișoara as short-term rentals: listing, guests, cleaning, maintenance, monthly reporting. 9.4% target net ROI on public assumptions."
     }
   };
 
@@ -691,24 +691,24 @@ const PentruProprietari = () => {
                 title: language === "ro" ? "Venit lunar mai mare" : "Higher monthly income",
                 description:
                   language === "ro"
-                    ? "Până la +40% față de chiria clasică, prin tarifare dinamică și ocupare optimizată pe Booking & Airbnb."
-                    : "Up to +40% vs. classic rental, through dynamic pricing and optimized occupancy on Booking & Airbnb.",
+                    ? "Tipic de 1,6× până la 2,5× față de chiria clasică, prin tarifare dinamică și ocupare optimizată pe Booking și Airbnb."
+                    : "Typically 1.6× to 2.5× compared to classic rental, through dynamic pricing and optimized occupancy on Booking and Airbnb.",
               },
               {
                 Icon: Shield,
-                title: language === "ro" ? "Zero stres, zero implicare" : "Zero stress, zero involvement",
+                title: language === "ro" ? "Operațiuni preluate de echipa noastră" : "Operations handled by our team",
                 description:
                   language === "ro"
-                    ? "Oaspeți verificați, curățenie hotelieră, mentenanță și ANAF — preluăm tot, 24/7."
-                    : "Verified guests, hotel-grade cleaning, maintenance and tax compliance — we handle it all, 24/7.",
+                    ? "Oaspeți verificați, curățenie la standard hotelier, mentenanță și conformitate ANAF — gestionate de echipa noastră."
+                    : "Verified guests, hotel-grade cleaning, maintenance and tax compliance — handled by our team.",
               },
               {
                 Icon: BarChart3,
-                title: language === "ro" ? "Transparență totală" : "Full transparency",
+                title: language === "ro" ? "Raportare clară" : "Clear reporting",
                 description:
                   language === "ro"
-                    ? "Rapoarte lunare clare, plăți directe în contul tău și acces 24/7 în portalul proprietarului."
-                    : "Clear monthly reports, direct payments to your account and 24/7 access to the owner portal.",
+                    ? "Rapoarte lunare detaliate, decontare directă în contul tău și acces oricând în portalul proprietarului."
+                    : "Detailed monthly reports, direct settlement to your account and anytime access to the owner portal.",
               },
             ].map(({ Icon, title, description }, idx) => (
               <div
