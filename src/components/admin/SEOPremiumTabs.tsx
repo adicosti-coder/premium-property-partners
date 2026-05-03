@@ -1923,7 +1923,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
             </Button>
             <Button
               onClick={() => applyFull.mutate()}
-              disabled={applyFull.isPending || !!editSchemaError}
+              disabled={applyFull.isPending || !!editSchemaError || !linksValid}
               className="bg-gradient-to-r from-primary to-amber-600 hover:opacity-90"
             >
               {applyFull.isPending
