@@ -31,8 +31,8 @@ const PropertyRequestModal = ({ open, onOpenChange, sourceProperty, sourcePage }
   const [isSuccess, setIsSuccess] = useState(false);
 
   const t = language === "ro" ? {
-    title: "Caută pentru mine",
-    desc: "Spune-ne ce cauți și echipa noastră va identifica opțiunea ideală pentru tine — gratuit și fără obligații.",
+    title: "Caut o proprietate potrivită",
+    desc: "Spune-ne ce cauți și echipa noastră îți va trimite o selecție personalizată, în maximum 24 de ore lucrătoare. Fără cost, fără obligații.",
     name: "Nume",
     phone: "Telefon",
     email: "Email (opțional)",
@@ -41,11 +41,11 @@ const PropertyRequestModal = ({ open, onOpenChange, sourceProperty, sourcePage }
     bedrooms: "Camere",
     preferredArea: "Zonă preferată",
     message: "Detalii suplimentare (opțional)",
-    messagePlaceholder: "Ex: caut un apartament luminos, cu parcare, aproape de centru...",
+    messagePlaceholder: "Ex: apartament luminos, cu parcare, aproape de centru…",
     submit: "Trimite cererea",
-    success: "Cererea ta a fost trimisă cu succes! Te vom contacta în cel mai scurt timp cu opțiuni personalizate.",
-    errorName: "Introduceți numele",
-    errorPhone: "Introduceți un număr de telefon valid",
+    success: "Am primit cererea ta. Un consultant te va contacta în maximum 24 de ore lucrătoare cu o selecție personalizată.",
+    errorName: "Te rugăm să introduci numele",
+    errorPhone: "Te rugăm să introduci un număr de telefon valid",
     types: {
       apartment: "Apartament",
       house: "Casă / Vilă",
@@ -66,8 +66,8 @@ const PropertyRequestModal = ({ open, onOpenChange, sourceProperty, sourcePage }
     rooms: { "1": "1 cameră", "2": "2 camere", "3": "3 camere", "4+": "4+ camere" },
     areas: ["Centru", "Complexul Studențesc", "Lipovei", "Girocului", "Dumbravița", "Circumvalațiunii", "Aradului", "Iosefin", "Fabric", "Elisabetin", "Mehala", "Freidorf", "Calea Sagului", "Altă zonă"],
   } : {
-    title: "Search for me",
-    desc: "Tell us what you're looking for and our team will find the perfect option for you — free and with no obligation.",
+    title: "Find a suitable property",
+    desc: "Tell us what you're looking for and our team will send you a personalised shortlist within 24 business hours. No cost, no obligation.",
     name: "Name",
     phone: "Phone",
     email: "Email (optional)",
@@ -76,9 +76,9 @@ const PropertyRequestModal = ({ open, onOpenChange, sourceProperty, sourcePage }
     bedrooms: "Bedrooms",
     preferredArea: "Preferred area",
     message: "Additional details (optional)",
-    messagePlaceholder: "E.g., looking for a bright apartment, with parking, near the center...",
+    messagePlaceholder: "E.g., bright apartment with parking, close to the centre…",
     submit: "Send request",
-    success: "Your request has been sent! We'll contact you shortly with personalized options.",
+    success: "Request received. A consultant will contact you within 24 business hours with a personalised shortlist.",
     errorName: "Please enter your name",
     errorPhone: "Please enter a valid phone number",
     types: {

@@ -169,14 +169,14 @@ const CompareDrawer = () => {
       setSavedCode(code);
       return code;
     }
-    toast.error("Nu s-a putut salva comparația");
+    toast.error("Comparația nu a putut fi salvată");
     return null;
   };
 
   const handleSave = async () => {
     const code = await ensureSaved("saved");
     if (code) {
-      toast.success("Comparație salvată!", { description: "Linkul a fost generat." });
+      toast.success("Comparație salvată", { description: "Linkul partajabil a fost generat." });
       if (typeof window.gtag === "function") {
         window.gtag("event", "save_comparison", { share_code: code });
       }
@@ -190,12 +190,12 @@ const CompareDrawer = () => {
 
     const copiedOk = await copyTextToClipboard(url);
     if (!copiedOk) {
-      toast.error("Nu s-a putut copia linkul");
+      toast.error("Linkul nu a putut fi copiat");
       return;
     }
 
     setCopied(true);
-    toast.success("Link copiat!");
+    toast.success("Link copiat în clipboard");
     setTimeout(() => setCopied(false), 2000);
     if (typeof window.gtag === "function") {
       window.gtag("event", "share_comparison", { method: "copy_link", share_code: code });
@@ -231,9 +231,9 @@ const CompareDrawer = () => {
     if (!code) return;
     const url = getShareUrl(code);
     const titles = items.map((i) => i.title).join(", ");
-    const subject = encodeURIComponent("Comparație proprietăți - RealTrust");
+    const subject = encodeURIComponent("Comparație proprietăți · RealTrust");
     const body = encodeURIComponent(
-      `Am comparat aceste proprietăți pe RealTrust:\n\n${titles}\n\nVezi comparația: ${url}`
+      `Bună ziua,\n\nAtașez analiza comparativă realizată pe realtrust.ro pentru următoarele proprietăți:\n\n${titles}\n\nLink comparație: ${url}\n\nCu stimă,`
     );
     window.open(`mailto:?subject=${subject}&body=${body}`);
     if (typeof window.gtag === "function") {
@@ -253,7 +253,7 @@ const CompareDrawer = () => {
 
   const openWhatsApp = (item: ComparableItem) => {
     const msg = encodeURIComponent(
-      `Bună ziua, sunt interesat de proprietatea "${item.title}" văzută pe realtrust.ro`
+      `Bună ziua, doresc detalii despre proprietatea „${item.title}" văzută pe realtrust.ro.`
     );
     window.open(`https://wa.me/40744488844?text=${msg}`, "_blank");
     if (typeof window.gtag === "function") {
@@ -278,7 +278,7 @@ const CompareDrawer = () => {
 
   const rows = [
     {
-      label: "Preț",
+      label: "Preț cerere",
       render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, priceBest)}>
           {l.price.toLocaleString("ro-RO")} €
@@ -286,7 +286,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Preț/mp",
+      label: "Preț / mp",
       render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, priceSqmBest)}>
           {l.pricePerSqm.toLocaleString("ro-RO")} €/mp
@@ -294,7 +294,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Suprafață",
+      label: "Suprafață utilă",
       render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, surfaceBest)}>{l.surface} mp</span>
       ),
@@ -313,7 +313,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "ROI chirie clasică",
+      label: "Randament chirie clasică",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold", highlight(idx, roiBest))}>
           {rois[idx].toFixed(1)}%
@@ -321,7 +321,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Chirie regim hotelier",
+      label: "Venit estimat regim hotelier",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold text-primary", highlight(idx, hotelRevBest))}>
           {hotelRevs[idx].toLocaleString("ro-RO")} € / lună
@@ -329,7 +329,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "ROI regim hotelier",
+      label: "Randament regim hotelier",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-bold text-primary", highlight(idx, hotelRoiBest))}>
           {hotelRois[idx].toFixed(1)}%
@@ -337,14 +337,14 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Recomandat",
+      label: "Administrare",
       render: (l: ComparableItem) =>
         l.badge === "administrare" || l.badge === "investitie" ? (
           <div>
             <div className="flex items-center gap-1">
               <span className="text-amber-500">✓</span>
               <Badge className="bg-primary/15 text-primary border-primary/30 text-[10px] leading-tight whitespace-normal">
-                Administrare RealTrust‑ApArt Hotel
+                Inclusă · RealTrust ApArt Hotel
               </Badge>
             </div>
           </div>
@@ -366,10 +366,10 @@ const CompareDrawer = () => {
           "flex items-center gap-2 text-sm font-medium",
           !canCompare && "opacity-70 cursor-default"
         )}
-        aria-label={expanded ? "Închide comparație" : "Deschide comparație"}
+        aria-label={expanded ? "Închide comparația" : "Deschide comparația"}
       >
         <GitCompareArrows className="w-4 h-4" />
-        Compară ({items.length}/3)
+        Comparație ({items.length}/3)
         {canCompare && (expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />)}
       </button>
 
