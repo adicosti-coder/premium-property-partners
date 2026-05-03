@@ -5276,6 +5276,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      check_appointment_phone_rate_limit: {
+        Args: { p_phone: string }
+        Returns: boolean
+      }
       check_cta_rate_limit: { Args: { p_session_id: string }; Returns: boolean }
       cleanup_old_tracking_data: { Args: never; Returns: undefined }
       delete_email: {
@@ -5383,6 +5387,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      redeem_owner_code: { Args: { p_code: string }; Returns: Json }
       validate_chat_session: {
         Args: { p_session_id: string }
         Returns: boolean
