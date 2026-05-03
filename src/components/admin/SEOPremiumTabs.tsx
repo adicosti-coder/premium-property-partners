@@ -1445,10 +1445,13 @@ const SchemaCodeBlock = ({
 /* =============================================================
  * TAB 4 — Benchmark & Gap Analysis (RealTrust vs Competitor)
  * =============================================================*/
+type ApplyMode = null | "schema" | "local_links" | "h2_briefs";
+
 const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
   const [ourUrl, setOurUrl] = useState(defaultOurUrl || "https://www.realtrust.ro");
   const [compUrl, setCompUrl] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [applyMode, setApplyMode] = useState<ApplyMode>(null);
 
   const benchmark = useMutation({
     mutationFn: async () => {
@@ -1465,6 +1468,35 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
       toast.success("Benchmark complet");
     },
     onError: (e: any) => toast.error(friendlyEdgeError(e)),
+  });
+
+  // Compute H2 gaps (titluri pe care le au ei și noi nu, normalizate)
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+  const h2Gaps: string[] = useMemo(() => {
+    if (!result) return [];
+    const ours = new Set((result.ours?.h2 || []).map((x: string) => norm(x)));
+    return (result.theirs?.h2 || []).filter((x: string) => x && !ours.has(norm(x))).slice(0, 8);
+  }, [result]);
+
+  const apply = useMutation({
+    mutationFn: async (mode: Exclude<ApplyMode, null>) => {
+      const body: any = { mode, our_url: ourUrl.trim(), competitor_url: compUrl.trim() };
+      if (mode === "schema") body.best_schema = result.best_schema;
+      if (mode === "local_links") body.missing_keywords = result.local_keywords?.only_theirs || [];
+      if (mode === "h2_briefs") body.h2_titles = h2Gaps;
+      const { data, error } = await supabase.functions.invoke("seo-benchmark-apply", { body });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (data: any) => {
+      const m = data?.mode;
+      if (m === "schema") toast.success("Schema aplicată — live pe site la următoarea reîncărcare");
+      else if (m === "local_links") toast.success(`${data.inserted} linkuri interne adăugate (status pending)`);
+      else if (m === "h2_briefs") toast.success(`${data.generated} drafturi H2 salvate`);
+      setApplyMode(null);
+    },
+    onError: (e: any) => { toast.error(friendlyEdgeError(e)); setApplyMode(null); },
   });
 
   const copyBest = () => {
@@ -1553,9 +1585,12 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
 
           {/* Best-in-class schema */}
           <BenchmarkSection title="Generator Schema „Best-in-Class”" icon={<Sparkles className="h-4 w-4" />}>
-            <div className="flex justify-end mb-1">
+            <div className="flex flex-wrap justify-end gap-2 mb-1">
               <Button size="sm" variant="outline" className="h-7" onClick={copyBest}>
                 <Copy className="h-3 w-3 mr-1" /> Copiază &lt;script&gt;
+              </Button>
+              <Button size="sm" className="h-7" onClick={() => setApplyMode("schema")} disabled={!result.best_schema}>
+                <Sparkles className="h-3 w-3 mr-1" /> Aplică pe site (1-click)
               </Button>
             </div>
             <pre className="rounded bg-muted/60 p-2 text-[11px] font-mono overflow-x-auto max-h-72">
@@ -1570,10 +1605,15 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
               <KwBox label="Competitor găsește" items={result.local_keywords?.theirs} accent="amber" />
             </div>
             {result.local_keywords?.only_theirs?.length > 0 && (
-              <p className="mt-2 text-xs text-destructive flex items-start gap-1">
-                <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                Lipsesc la noi: <strong>{result.local_keywords.only_theirs.join(", ")}</strong>
-              </p>
+              <>
+                <p className="mt-2 text-xs text-destructive flex items-start gap-1">
+                  <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                  Lipsesc la noi: <strong>{result.local_keywords.only_theirs.join(", ")}</strong>
+                </p>
+                <Button size="sm" variant="outline" className="h-7 mt-2" onClick={() => setApplyMode("local_links")}>
+                  <Sparkles className="h-3 w-3 mr-1" /> Generează linkuri interne ({result.local_keywords.only_theirs.length})
+                </Button>
+              </>
             )}
             {result.local_keywords?.only_ours?.length > 0 && (
               <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400 flex items-start gap-1">
@@ -1582,8 +1622,79 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
               </p>
             )}
           </BenchmarkSection>
+
+          {/* H2 Content Briefs */}
+          {h2Gaps.length > 0 && (
+            <BenchmarkSection title={`H2 Content Briefs (${h2Gaps.length} lipsă)`} icon={<Code2 className="h-4 w-4" />}>
+              <p className="text-xs text-muted-foreground">
+                Competitorul are H2-uri pe care noi nu le acoperim. Generăm draft 80-120 cuvinte cu Gemini pentru fiecare.
+              </p>
+              <ul className="mt-1 space-y-0.5 text-xs list-disc list-inside max-h-32 overflow-auto">
+                {h2Gaps.map((h, i) => <li key={i} className="truncate">{h}</li>)}
+              </ul>
+              <Button size="sm" className="h-7 mt-2" onClick={() => setApplyMode("h2_briefs")}>
+                <Sparkles className="h-3 w-3 mr-1" /> Generează drafturi AI
+              </Button>
+            </BenchmarkSection>
+          )}
         </div>
       )}
+
+      {/* Confirm Apply Dialog with preview */}
+      <AlertDialog open={!!applyMode} onOpenChange={(o) => !o && setApplyMode(null)}>
+        <AlertDialogContent className="max-w-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {applyMode === "schema" && "Aplici Schema „Best-in-Class” pe site?"}
+              {applyMode === "local_links" && "Generezi linkuri interne pentru cartiere lipsă?"}
+              {applyMode === "h2_briefs" && "Generezi drafturi AI pentru H2-urile lipsă?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-xs space-y-2">
+                <p className="text-muted-foreground">
+                  Pagina țintă: <code className="font-mono text-foreground">{(() => { try { return new URL(ourUrl).pathname; } catch { return ourUrl; } })()}</code>
+                </p>
+                {applyMode === "schema" && (
+                  <>
+                    <p>Salvăm JSON-LD în <code>seo_overrides.json_ld</code>. Devine activ imediat la următoarea reîncărcare.</p>
+                    <pre className="rounded bg-muted p-2 max-h-40 overflow-auto text-[10px] font-mono">
+                      <code>{JSON.stringify(result?.best_schema, null, 2).slice(0, 1200)}{JSON.stringify(result?.best_schema, null, 2).length > 1200 ? "\n..." : ""}</code>
+                    </pre>
+                  </>
+                )}
+                {applyMode === "local_links" && (
+                  <>
+                    <p>Adăugăm <strong>{result?.local_keywords?.only_theirs?.length || 0}</strong> sugestii (status pending) — necesită aprobare ulterioară din tab Internal Links.</p>
+                    <ul className="list-disc list-inside max-h-32 overflow-auto bg-muted/40 rounded p-2">
+                      {(result?.local_keywords?.only_theirs || []).map((k: string, i: number) => (
+                        <li key={i}>apartamente {k} Timișoara → /cartiere/{k.toLowerCase()}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                {applyMode === "h2_briefs" && (
+                  <>
+                    <p>Gemini va scrie <strong>{h2Gaps.length}</strong> drafturi (80-120 cuv. fiecare). Salvate ca <code>draft</code> — le poți copia în CMS ulterior.</p>
+                    <ul className="list-disc list-inside max-h-32 overflow-auto bg-muted/40 rounded p-2">
+                      {h2Gaps.map((h, i) => <li key={i} className="truncate">{h}</li>)}
+                    </ul>
+                    <p className="text-amber-700 dark:text-amber-400">⚠ Procesul durează ~{h2Gaps.length * 3}s.</p>
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={apply.isPending}>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={apply.isPending}
+              onClick={(e) => { e.preventDefault(); if (applyMode) apply.mutate(applyMode); }}
+            >
+              {apply.isPending ? <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Se aplică...</> : "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
