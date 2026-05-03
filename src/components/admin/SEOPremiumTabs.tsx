@@ -1445,10 +1445,13 @@ const SchemaCodeBlock = ({
 /* =============================================================
  * TAB 4 — Benchmark & Gap Analysis (RealTrust vs Competitor)
  * =============================================================*/
+type ApplyMode = null | "schema" | "local_links" | "h2_briefs";
+
 const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
   const [ourUrl, setOurUrl] = useState(defaultOurUrl || "https://www.realtrust.ro");
   const [compUrl, setCompUrl] = useState("");
   const [result, setResult] = useState<any>(null);
+  const [applyMode, setApplyMode] = useState<ApplyMode>(null);
 
   const benchmark = useMutation({
     mutationFn: async () => {
@@ -1465,6 +1468,35 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
       toast.success("Benchmark complet");
     },
     onError: (e: any) => toast.error(friendlyEdgeError(e)),
+  });
+
+  // Compute H2 gaps (titluri pe care le au ei și noi nu, normalizate)
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+  const h2Gaps: string[] = useMemo(() => {
+    if (!result) return [];
+    const ours = new Set((result.ours?.h2 || []).map((x: string) => norm(x)));
+    return (result.theirs?.h2 || []).filter((x: string) => x && !ours.has(norm(x))).slice(0, 8);
+  }, [result]);
+
+  const apply = useMutation({
+    mutationFn: async (mode: Exclude<ApplyMode, null>) => {
+      const body: any = { mode, our_url: ourUrl.trim(), competitor_url: compUrl.trim() };
+      if (mode === "schema") body.best_schema = result.best_schema;
+      if (mode === "local_links") body.missing_keywords = result.local_keywords?.only_theirs || [];
+      if (mode === "h2_briefs") body.h2_titles = h2Gaps;
+      const { data, error } = await supabase.functions.invoke("seo-benchmark-apply", { body });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (data: any) => {
+      const m = data?.mode;
+      if (m === "schema") toast.success("Schema aplicată — live pe site la următoarea reîncărcare");
+      else if (m === "local_links") toast.success(`${data.inserted} linkuri interne adăugate (status pending)`);
+      else if (m === "h2_briefs") toast.success(`${data.generated} drafturi H2 salvate`);
+      setApplyMode(null);
+    },
+    onError: (e: any) => { toast.error(friendlyEdgeError(e)); setApplyMode(null); },
   });
 
   const copyBest = () => {
