@@ -318,8 +318,18 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
               <div className="space-y-2 text-sm">
                 <p>Marchează ca <strong>aplicat</strong> doar după ce ai inserat efectiv linkul în pagină.</p>
                 {confirmApply && (
-                  <div className="rounded border bg-muted/40 p-2 font-mono text-xs break-all">
-                    &lt;a href="{confirmApply.target}"&gt;{confirmApply.anchor}&lt;/a&gt;
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] uppercase font-semibold text-muted-foreground">Preview HTML care trebuie inserat</p>
+                    <div className="rounded border bg-muted/40 p-2 font-mono text-xs break-all">
+                      &lt;a href="{confirmApply.target}"&gt;{confirmApply.anchor}&lt;/a&gt;
+                    </div>
+                    <p className="text-[11px] uppercase font-semibold text-muted-foreground pt-1">Cum se va afișa în text</p>
+                    <div className="rounded border bg-background p-2 text-sm leading-relaxed">
+                      … <a href={confirmApply.target} className="text-primary underline underline-offset-2">{confirmApply.anchor}</a> …
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Sursă: <code className="font-mono">{path}</code> → Țintă: <code className="font-mono">{confirmApply.target}</code>
+                    </p>
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">Statusul se schimbă imediat în "applied" și sugestia va fi mutată în secțiunea Aplicate.</p>
