@@ -46,6 +46,33 @@ function tokenize(s: string | null | undefined): string[] {
 }
 
 export const SEOCannibalizationPanel = ({ history }: Props) => {
+  const qc = useQueryClient();
+  const [pending, setPending] = useState<string | null>(null);
+
+  const resolveMutation = useMutation({
+    mutationFn: async ({ loserUrl, winnerUrl }: { loserUrl: string; winnerUrl: string }) => {
+      const { data, error } = await supabase.functions.invoke("seo-auto-fix", {
+        body: {
+          action: "apply_manual_canonical",
+          url_path: urlToPath(loserUrl),
+          canonical_url: toCanonical(winnerUrl),
+          override_conflicts: false,
+          notes: "Cannibalization resolver: 301-style canonical to higher-score page",
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      if ((data as any)?.applied === false) throw new Error((data as any)?.reason || "Conflict detectat");
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Canonical aplicat pe pagina pierzătoare");
+      qc.invalidateQueries({ queryKey: ["seo-overrides"] });
+      setPending(null);
+    },
+    onError: (e: any) => { toast.error(e.message || "Eșec aplicare canonical"); setPending(null); },
+  });
+
   const clusters = useMemo(() => {
     // Latest audit per URL
     const latest = new Map<string, AuditRow>();
