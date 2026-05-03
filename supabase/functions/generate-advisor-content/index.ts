@@ -64,6 +64,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Allow either an admin JWT or an internal service-role bearer (used by bulk-generate-ai-cache)
+  const authHeader = req.headers.get("Authorization") || "";
+  const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+  const SERVICE_KEY_ENV = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const isInternal = bearer.length > 0 && SERVICE_KEY_ENV.length > 0 && bearer === SERVICE_KEY_ENV;
+  if (!isInternal) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
+
   try {
     const { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi, language } = await req.json();
 
