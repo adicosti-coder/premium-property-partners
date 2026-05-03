@@ -1207,19 +1207,19 @@ const PropertyDetail = () => {
               {staticProperty ? (
                 <div className="bg-card rounded-2xl border p-6 space-y-4 sticky top-24">
                   <h3 className="text-xl font-semibold">
-                    {language === 'ro' ? 'Rezervă Direct & Economisește' : 'Book Direct & Save'}
+                    {language === 'ro' ? 'Rezervă direct, fără intermediari' : 'Book direct, no intermediaries'}
                   </h3>
                   <p className="text-muted-foreground text-sm">
                     {language === 'ro' 
-                      ? `Rezervă direct pe site-ul nostru și beneficiezi de cel mai bun preț garantat pentru ${property.name}.`
-                      : `Book directly on our website and get the best guaranteed price for ${property.name}.`}
+                      ? `Rezervarea directă pentru ${property.name} îți oferă cel mai bun preț disponibil pe site-ul nostru, fără comisioane suplimentare.`
+                      : `Booking ${property.name} directly with us gives you the best available rate on our website, with no extra booking fees.`}
                   </p>
                   <Button 
                     variant="hero" 
                     className="w-full"
                     onClick={openDirectBooking}
                   >
-                    {language === 'ro' ? 'Rezervă Acum' : 'Book Now'}
+                    {language === 'ro' ? 'Verifică disponibilitatea' : 'Check availability'}
                   </Button>
                   {property.bookingUrl && (
                     <a
