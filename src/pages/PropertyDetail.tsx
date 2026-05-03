@@ -608,8 +608,8 @@ const PropertyDetail = () => {
             return clean.length > 150 ? clean.slice(0, 147) + '...' : clean;
           }
           return language === 'ro'
-            ? `Descoperă ${displayName} — cazare premium în ${property.location}, Timișoara. ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervă direct!`
-            : `Discover ${displayName} — premium accommodation in ${property.location}, Timișoara. ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct!`;
+            ? `${displayName} în ${property.location}, Timișoara — ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervare directă, fără comisioane suplimentare.`
+            : `${displayName} in ${property.location}, Timișoara — ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct, no extra booking fees.`;
         })()}
         url={`https://www.realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
