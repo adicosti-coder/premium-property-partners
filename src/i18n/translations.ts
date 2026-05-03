@@ -45,11 +45,11 @@ export const translations = {
       },
       features: {
         payments: "Investiție",
-        paymentsDesc: "ROI 9.4% net verificat",
-        model: "Hands-Off",
-        modelDesc: "Zero implicare, venit lunar",
-        response: "Suport",
-        responseDesc: "Echipă dedicată non-stop",
+        paymentsDesc: "Randament net 9,4% (ipoteze transparente)",
+        model: "Operare hotelieră",
+        modelDesc: "Tu nu coordonezi nimic — primești venitul lunar",
+        response: "Echipă proprie",
+        responseDesc: "Răspuns în aceeași zi, în orele de program",
       },
     },
     
