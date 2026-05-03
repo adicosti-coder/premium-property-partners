@@ -29,6 +29,7 @@ import { SEOCannibalizationPanel } from "./SEOCannibalizationPanel";
 import { SEOReauditSchedulerPanel } from "./SEOReauditSchedulerPanel";
 import { SEOCompetitorGapPanel } from "./SEOCompetitorGapPanel";
 import { SEOAutoLinkingPanel } from "./SEOAutoLinkingPanel";
+import { SEOPremiumPlusPanel } from "./SEOPremiumPlusPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
