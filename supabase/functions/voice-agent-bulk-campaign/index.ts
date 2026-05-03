@@ -44,10 +44,10 @@ serve(async (req) => {
     const createdBy: string | null = adminCheck.userId ?? null;
     let actorEmail: string | null = null;
     try {
-      const { data: userRes } = await supabase.auth.from
-        ? null as any
-        : await supabase.auth.admin.getUserById(createdBy!);
-      actorEmail = (userRes as any)?.user?.email ?? null;
+      if (createdBy) {
+        const { data: userRes } = await supabase.auth.admin.getUserById(createdBy);
+        actorEmail = userRes?.user?.email ?? null;
+      }
     } catch (_) { /* ignore */ }
 
     // Create campaign run
