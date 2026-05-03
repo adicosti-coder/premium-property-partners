@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +12,16 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Loader2, Swords, ExternalLink, Calendar, Zap, Trash2, TrendingUp, History,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Loader2, Swords, ExternalLink, Calendar, Zap, Trash2, TrendingUp, History, LineChart as LineIcon, Eye, X, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
 
 interface Snapshot {
   id: string;
@@ -42,10 +49,37 @@ interface Schedule {
   last_run_status: string | null;
 }
 
+interface OurSnapshot {
+  url: string;
+  overall_score: number;
+  created_at: string;
+}
+
+interface EditableKeyword { keyword: string; reason: string; }
+interface PreviewState {
+  path: string;
+  title: string;
+  meta_description: string;
+  keywords: EditableKeyword[];
+}
+
+/** Derive a 0–100 "completeness" score for a competitor snapshot. */
+const competitorScore = (s: Snapshot): number => {
+  let score = 0;
+  if (s.competitor_title && s.competitor_title.length >= 20) score += 25;
+  if (s.competitor_meta && s.competitor_meta.length >= 60) score += 25;
+  if ((s.competitor_word_count || 0) >= 400) score += 25;
+  const schemas = Array.isArray(s.competitor_schema_types) ? s.competitor_schema_types : [];
+  if (schemas.length > 0) score += 25;
+  return score;
+};
+
 export const SEOCompetitorGapPanel = () => {
   const [ourPath, setOurPath] = useState("/");
   const [competitors, setCompetitors] = useState("");
   const [scheduleFreq, setScheduleFreq] = useState<"daily" | "weekly" | "monthly">("weekly");
+  const [preview, setPreview] = useState<PreviewState | null>(null);
+  const [trendPath, setTrendPath] = useState<string>("");
 
   const { data: snapshots = [], refetch: refetchSnaps } = useQuery({
     queryKey: ["seo-competitor-snapshots"],
@@ -54,7 +88,7 @@ export const SEOCompetitorGapPanel = () => {
         .from("seo_competitor_snapshots")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
       if (error) throw error;
       return (data || []) as Snapshot[];
     },
@@ -69,6 +103,19 @@ export const SEOCompetitorGapPanel = () => {
         .order("next_run_at", { ascending: true });
       if (error) throw error;
       return (data || []) as Schedule[];
+    },
+  });
+
+  const { data: ourSnaps = [] } = useQuery({
+    queryKey: ["seo-audit-snapshots-trend"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seo_audit_snapshots")
+        .select("url,overall_score,created_at")
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      return (data || []) as OurSnapshot[];
     },
   });
 
@@ -87,6 +134,52 @@ export const SEOCompetitorGapPanel = () => {
     return Array.from(map.values()).sort((a, b) => b.lastFetched.localeCompare(a.lastFetched));
   }, [snapshots]);
 
+  // Default trend selection to first available path
+  useEffect(() => {
+    if (!trendPath && grouped.length > 0) setTrendPath(grouped[0].path);
+  }, [grouped, trendPath]);
+
+  /* ============ Trend dataset for selected path ============ */
+  const trendData = useMemo(() => {
+    if (!trendPath) return [];
+    // Aggregate competitor score per day
+    const byDay = new Map<string, { day: string; competitorScores: number[]; ourScores: number[] }>();
+    const ensure = (day: string) => {
+      let row = byDay.get(day);
+      if (!row) { row = { day, competitorScores: [], ourScores: [] }; byDay.set(day, row); }
+      return row;
+    };
+
+    for (const s of snapshots) {
+      if (s.our_url_path !== trendPath) continue;
+      const day = new Date(s.fetched_at).toISOString().slice(0, 10);
+      ensure(day).competitorScores.push(competitorScore(s));
+    }
+    // Match our audits by url path suffix
+    for (const o of ourSnaps) {
+      try {
+        const u = new URL(o.url);
+        if (u.pathname !== trendPath) continue;
+      } catch {
+        if (!o.url.endsWith(trendPath)) continue;
+      }
+      const day = new Date(o.created_at).toISOString().slice(0, 10);
+      ensure(day).ourScores.push(o.overall_score || 0);
+    }
+
+    return Array.from(byDay.values())
+      .sort((a, b) => a.day.localeCompare(b.day))
+      .map((r) => ({
+        day: r.day,
+        Noi: r.ourScores.length
+          ? Math.round(r.ourScores.reduce((a, b) => a + b, 0) / r.ourScores.length)
+          : null,
+        Competitori: r.competitorScores.length
+          ? Math.round(r.competitorScores.reduce((a, b) => a + b, 0) / r.competitorScores.length)
+          : null,
+      }));
+  }, [snapshots, ourSnaps, trendPath]);
+
   /* ============ Run analysis ============ */
   const run = useMutation({
     mutationFn: async () => {
@@ -103,49 +196,56 @@ export const SEOCompetitorGapPanel = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
-  /* ============ Apply gaps directly to seo_overrides ============ */
-  const applyGaps = useMutation({
-    mutationFn: async (path: string) => {
-      const pathSnaps = snapshots.filter((s) => s.our_url_path === path);
-      const allGaps = pathSnaps.flatMap((s) => Array.isArray(s.ai_gaps) ? s.ai_gaps : []);
-      if (allGaps.length === 0) throw new Error("Niciun gap de aplicat");
+  /* ============ Build preview from gaps (no DB write) ============ */
+  const openPreview = (path: string) => {
+    const pathSnaps = snapshots.filter((s) => s.our_url_path === path);
+    const allGaps = pathSnaps.flatMap((s) => Array.isArray(s.ai_gaps) ? s.ai_gaps : []);
+    if (allGaps.length === 0) { toast.error("Niciun gap de aplicat"); return; }
 
-      // Aggregate keywords from gaps
-      const extra_keywords = allGaps
-        .filter((g: any) => g.keyword || g.recommendation)
-        .slice(0, 15)
-        .map((g: any) => ({
-          keyword: (g.keyword || g.area || "").slice(0, 80),
-          reason: (g.recommendation || g.issue || "").slice(0, 200),
-        }))
-        .filter((k) => k.keyword);
+    const titleGap = allGaps.find((g: any) => /title|titlu/i.test(g.area || "") && g.recommendation);
+    const metaGap = allGaps.find((g: any) => /meta|descrip/i.test(g.area || "") && g.recommendation);
 
-      // Best title/meta suggestion from gaps
-      const titleGap = allGaps.find((g: any) =>
-        /title|titlu/i.test(g.area || "") && g.recommendation
-      );
-      const metaGap = allGaps.find((g: any) =>
-        /meta|descrip/i.test(g.area || "") && g.recommendation
-      );
+    const seen = new Set<string>();
+    const keywords: EditableKeyword[] = [];
+    for (const g of allGaps) {
+      const kw = ((g.keyword || g.area || "") as string).trim().slice(0, 80);
+      if (!kw) continue;
+      const key = kw.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      keywords.push({ keyword: kw, reason: ((g.recommendation || g.issue || "") as string).slice(0, 200) });
+      if (keywords.length >= 15) break;
+    }
 
+    setPreview({
+      path,
+      title: (titleGap?.recommendation || "").slice(0, 70),
+      meta_description: (metaGap?.recommendation || "").slice(0, 160),
+      keywords,
+    });
+  };
+
+  /* ============ Apply edited preview to seo_overrides ============ */
+  const applyPreview = useMutation({
+    mutationFn: async (p: PreviewState) => {
       const { data: userRes } = await supabase.auth.getUser();
       const payload: any = {
-        url_path: path,
-        extra_keywords,
+        url_path: p.path,
+        extra_keywords: p.keywords.filter((k) => k.keyword.trim()),
         applied_by: userRes.user?.id || null,
         applied_at: new Date().toISOString(),
         is_active: true,
       };
-      if (titleGap?.recommendation) payload.title = titleGap.recommendation.slice(0, 70);
-      if (metaGap?.recommendation) payload.meta_description = metaGap.recommendation.slice(0, 160);
+      if (p.title.trim()) payload.title = p.title.trim().slice(0, 70);
+      if (p.meta_description.trim()) payload.meta_description = p.meta_description.trim().slice(0, 160);
 
       const { error } = await supabase
         .from("seo_overrides")
         .upsert(payload, { onConflict: "url_path" });
       if (error) throw error;
-      return path;
+      return p.path;
     },
-    onSuccess: (p) => toast.success(`Gap-uri aplicate pe ${p}`),
+    onSuccess: (p) => { toast.success(`Override aplicat pe ${p}`); setPreview(null); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -197,7 +297,7 @@ export const SEOCompetitorGapPanel = () => {
           <Badge variant="secondary">{schedules.filter((s) => s.is_active).length} programări active</Badge>
         </CardTitle>
         <CardDescription>
-          Compară title/meta/H1/schema cu competitorii. Vizualizare combinată, aplicare automată gap-uri și monitorizare programată.
+          Compară cu competitorii, previzualizează &amp; editează gap-urile înainte de aplicare, monitorizează evoluția în timp.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -242,6 +342,7 @@ export const SEOCompetitorGapPanel = () => {
         <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview"><TrendingUp className="w-4 h-4 mr-1" /> Vedere combinată</TabsTrigger>
+            <TabsTrigger value="trends"><LineIcon className="w-4 h-4 mr-1" /> Trends</TabsTrigger>
             <TabsTrigger value="history"><History className="w-4 h-4 mr-1" /> Istoric ({snapshots.length})</TabsTrigger>
             <TabsTrigger value="schedules"><Calendar className="w-4 h-4 mr-1" /> Programări ({schedules.length})</TabsTrigger>
           </TabsList>
@@ -264,18 +365,26 @@ export const SEOCompetitorGapPanel = () => {
                             {g.snaps.length} competitori · ~{avgWords} cuvinte/medie
                           </span>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          disabled={applyGaps.isPending && applyGaps.variables === g.path}
-                          onClick={() => applyGaps.mutate(g.path)}
-                          className="gap-1"
-                        >
-                          {applyGaps.isPending && applyGaps.variables === g.path
-                            ? <Loader2 className="w-3 h-3 animate-spin" />
-                            : <Zap className="w-3 h-3" />}
-                          Aplică gap-urile
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => { setTrendPath(g.path); }}
+                            className="gap-1"
+                          >
+                            <LineIcon className="w-3 h-3" />
+                            Trend
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => openPreview(g.path)}
+                            className="gap-1"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Previzualizează &amp; aplică
+                          </Button>
+                        </div>
                       </div>
                       <div className="grid gap-1 pl-1">
                         {g.snaps.slice(0, 3).map((s) => (
@@ -307,6 +416,45 @@ export const SEOCompetitorGapPanel = () => {
                 )}
               </ul>
             </ScrollArea>
+          </TabsContent>
+
+          {/* TRENDS */}
+          <TabsContent value="trends">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs">Pagina:</Label>
+                <Select value={trendPath} onValueChange={setTrendPath}>
+                  <SelectTrigger className="w-[280px]"><SelectValue placeholder="Alege pagina" /></SelectTrigger>
+                  <SelectContent>
+                    {grouped.map((g) => (
+                      <SelectItem key={g.path} value={g.path}>{g.path}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  Scor competitor = title + meta + word_count + schema (0–100). Scorul nostru vine din auditele SEO.
+                </span>
+              </div>
+              <div className="h-[360px] rounded-md border p-3">
+                {trendData.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                    Nicio dată pentru această pagină. Rulează cel puțin o programare sau un audit.
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={trendData} margin={{ top: 10, right: 20, bottom: 0, left: -10 }}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="Noi" stroke="hsl(var(--primary))" strokeWidth={2} connectNulls dot />
+                      <Line type="monotone" dataKey="Competitori" stroke="hsl(0 70% 55%)" strokeWidth={2} connectNulls dot />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
           </TabsContent>
 
           {/* HISTORY: raw timeline */}
@@ -381,6 +529,115 @@ export const SEOCompetitorGapPanel = () => {
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      {/* Preview & Edit Dialog */}
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-4 h-4" /> Previzualizare gap-uri pentru <code className="text-xs">{preview?.path}</code>
+            </DialogTitle>
+            <DialogDescription>
+              Editează textul înainte de a fi salvat în <code>seo_overrides</code>.
+            </DialogDescription>
+          </DialogHeader>
+
+          {preview && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs flex justify-between">
+                  <span>Title</span>
+                  <span className="text-muted-foreground">{preview.title.length}/70</span>
+                </Label>
+                <Input
+                  value={preview.title}
+                  maxLength={70}
+                  onChange={(e) => setPreview({ ...preview, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs flex justify-between">
+                  <span>Meta description</span>
+                  <span className="text-muted-foreground">{preview.meta_description.length}/160</span>
+                </Label>
+                <Textarea
+                  value={preview.meta_description}
+                  rows={3}
+                  maxLength={160}
+                  onChange={(e) => setPreview({ ...preview, meta_description: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs flex justify-between">
+                  <span>Keywords ({preview.keywords.length})</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 gap-1"
+                    onClick={() => setPreview({
+                      ...preview,
+                      keywords: [...preview.keywords, { keyword: "", reason: "" }],
+                    })}
+                  >
+                    <Plus className="w-3 h-3" /> Adaugă
+                  </Button>
+                </Label>
+                <ScrollArea className="h-[220px] rounded border">
+                  <ul className="divide-y">
+                    {preview.keywords.map((k, i) => (
+                      <li key={i} className="p-2 grid gap-1 sm:grid-cols-[1fr_2fr_auto] items-start">
+                        <Input
+                          placeholder="keyword"
+                          value={k.keyword}
+                          onChange={(e) => {
+                            const kws = [...preview.keywords];
+                            kws[i] = { ...k, keyword: e.target.value.slice(0, 80) };
+                            setPreview({ ...preview, keywords: kws });
+                          }}
+                        />
+                        <Input
+                          placeholder="motivație / context"
+                          value={k.reason}
+                          onChange={(e) => {
+                            const kws = [...preview.keywords];
+                            kws[i] = { ...k, reason: e.target.value.slice(0, 200) };
+                            setPreview({ ...preview, keywords: kws });
+                          }}
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setPreview({
+                            ...preview,
+                            keywords: preview.keywords.filter((_, idx) => idx !== i),
+                          })}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </li>
+                    ))}
+                    {preview.keywords.length === 0 && (
+                      <li className="p-3 text-xs text-muted-foreground text-center">Niciun keyword.</li>
+                    )}
+                  </ul>
+                </ScrollArea>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPreview(null)}>Anulează</Button>
+            <Button
+              onClick={() => preview && applyPreview.mutate(preview)}
+              disabled={applyPreview.isPending}
+              className="gap-1"
+            >
+              {applyPreview.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+              Aplică în seo_overrides
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
