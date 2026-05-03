@@ -1558,6 +1558,14 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
     onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
+  const linksValid = useMemo(() => {
+    return editLinks.every((l) => {
+      if (!l.enabled) return true;
+      const t = l.target_url_path;
+      return !!l.anchor_text.trim() && !!t.trim() && !/\s/.test(t) && t.startsWith("/");
+    });
+  }, [editLinks]);
+
   const copyBest = () => {
     if (!result?.best_schema) return;
     const txt = `<script type="application/ld+json">\n${JSON.stringify(result.best_schema, null, 2)}\n</script>`;
@@ -1819,33 +1827,51 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                   <p className="text-xs text-muted-foreground">Nu sunt cartiere lipsă față de competitor.</p>
                 ) : (
                   <div className="space-y-1.5">
-                    {editLinks.map((l, idx) => (
-                      <div key={idx} className={cn("rounded border p-2 space-y-1", !l.enabled && "opacity-50")}>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={l.enabled}
-                            onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, enabled: e.target.checked } : x))}
-                            className="h-4 w-4"
-                          />
-                          <Badge variant="outline" className="text-[10px]">{l.keyword}</Badge>
+                    {editLinks.map((l, idx) => {
+                      const anchorErr = l.enabled && !l.anchor_text.trim() ? "Anchor text obligatoriu" : null;
+                      let targetErr: string | null = null;
+                      if (l.enabled) {
+                        const t = l.target_url_path;
+                        if (!t.trim()) targetErr = "Path obligatoriu";
+                        else if (/\s/.test(t)) targetErr = "Path-ul nu poate conține spații";
+                        else if (!t.startsWith("/")) targetErr = "Path-ul trebuie să înceapă cu '/'";
+                      }
+                      return (
+                        <div key={idx} className={cn("rounded border p-2 space-y-1", !l.enabled && "opacity-50")}>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={l.enabled}
+                              onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, enabled: e.target.checked } : x))}
+                              className="h-4 w-4"
+                            />
+                            <Badge variant="outline" className="text-[10px]">{l.keyword}</Badge>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                            <div className="space-y-1">
+                              <Input
+                                value={l.anchor_text}
+                                onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, anchor_text: e.target.value } : x))}
+                                className={cn("h-7 text-xs", anchorErr && "border-destructive focus-visible:ring-destructive")}
+                                placeholder="Anchor text"
+                                aria-invalid={!!anchorErr}
+                              />
+                              {anchorErr && <p className="text-[11px] text-destructive">{anchorErr}</p>}
+                            </div>
+                            <div className="space-y-1">
+                              <Input
+                                value={l.target_url_path}
+                                onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, target_url_path: e.target.value } : x))}
+                                className={cn("h-7 text-xs font-mono", targetErr && "border-destructive focus-visible:ring-destructive")}
+                                placeholder="/cartiere/..."
+                                aria-invalid={!!targetErr}
+                              />
+                              {targetErr && <p className="text-[11px] text-destructive">{targetErr}</p>}
+                            </div>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                          <Input
-                            value={l.anchor_text}
-                            onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, anchor_text: e.target.value } : x))}
-                            className="h-7 text-xs"
-                            placeholder="Anchor text"
-                          />
-                          <Input
-                            value={l.target_url_path}
-                            onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, target_url_path: e.target.value } : x))}
-                            className="h-7 text-xs font-mono"
-                            placeholder="/cartiere/..."
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1897,7 +1923,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
             </Button>
             <Button
               onClick={() => applyFull.mutate()}
-              disabled={applyFull.isPending || !!editSchemaError}
+              disabled={applyFull.isPending || !!editSchemaError || !linksValid}
               className="bg-gradient-to-r from-primary to-amber-600 hover:opacity-90"
             >
               {applyFull.isPending
