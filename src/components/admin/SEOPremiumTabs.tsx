@@ -1580,8 +1580,23 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
     return !!l.anchor_text.trim() && !!t && t.startsWith("/") && !/\s/.test(t) && /^\/[a-z0-9/_-]*$/.test(t);
   };
 
-  const linksValid = useMemo(() => editLinks.every(isLinkValid), [editLinks]);
-  const validLinksCount = useMemo(() => editLinks.filter((l) => l.enabled && isLinkValid(l)).length, [editLinks]);
+  const duplicateTargets = useMemo(() => {
+    const counts = new Map<string, number>();
+    editLinks.forEach((l) => {
+      if (l.enabled && l.target_url_path.trim()) {
+        const k = l.target_url_path.trim();
+        counts.set(k, (counts.get(k) || 0) + 1);
+      }
+    });
+    return new Set(Array.from(counts.entries()).filter(([, n]) => n > 1).map(([k]) => k));
+  }, [editLinks]);
+  const hasDuplicates = duplicateTargets.size > 0;
+  const linksValid = useMemo(() => editLinks.every(isLinkValid) && !hasDuplicates, [editLinks, hasDuplicates]);
+  const validLinksCount = useMemo(
+    () => editLinks.filter((l) => l.enabled && isLinkValid(l) && !duplicateTargets.has(l.target_url_path.trim())).length,
+    [editLinks, duplicateTargets],
+  );
+  const enabledLinksCount = useMemo(() => editLinks.filter((l) => l.enabled).length, [editLinks]);
 
 
   const copyBest = () => {
