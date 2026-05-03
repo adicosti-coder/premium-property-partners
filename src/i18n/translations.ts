@@ -64,56 +64,56 @@ export const translations = {
     
     // Benefits
     benefits: {
-      title: "Investitorii Aleg",
+      title: "De ce aleg investitorii",
       titleHighlight: "RealTrust",
-      subtitle: "Asset management premium pentru proprietari care vor randament net superior, transparență totală și liniște operațională — fără implicarea lor zilnică.",
+      subtitle: "Administrăm proprietăți pentru proprietari care vor randament net previzibil, raportare clară și operațiuni gestionate complet de echipa noastră.",
       items: [
         {
-          title: "Randament Net Verificat",
-          description: "• 9.4% ROI net documentat\n• +40% vs. chirie clasică\n• Pricing dinamic AI",
+          title: "Randament net calculat transparent",
+          description: "• 9,4% net pe ipoteze publice\n• Ocupare 75% și deducere 27%\n• Pricing dinamic ajustat săptămânal",
         },
         {
-          title: "Management 100% Hands-Off",
-          description: "• Tu nu te implici niciodată\n• Operare hotelieră completă\n• Mentenanță preventivă inclusă",
+          title: "Operațiuni gestionate de echipa noastră",
+          description: "• Tu nu te ocupi de oaspeți\n• Operare hotelieră end-to-end\n• Mentenanță preventivă inclusă",
         },
         {
-          title: "Transparență Financiară",
-          description: "• Dashboard live 24/7\n• P&L lunar detaliat\n• Decontare predictibilă",
+          title: "Raportare financiară clară",
+          description: "• Dashboard accesibil oricând\n• P&L lunar cu detalii\n• Decontare la dată fixă",
         },
       ],
     },
     
     // Owner Benefits
     ownerBenefits: {
-      label: "Beneficii Proprietari",
+      label: "Beneficii proprietari",
       title: "Tu deții activul.",
-      titleHighlight: "Noi construim afacerea.",
-      subtitle: "Operare hotelieră 100% hands-off: nu răspunzi mesajelor, nu coordonezi echipe, nu gestionezi check-in-uri. Doar primești raportul lunar și venitul net în cont.",
+      titleHighlight: "Noi construim operațiunea.",
+      subtitle: "Operare în regim hotelier gestionată integral de echipa noastră: nu răspunzi mesajelor, nu coordonezi furnizori, nu gestionezi check-in-uri. Primești raportul lunar și venitul net în cont.",
       commission: "Comision de administrare",
       commissionValue: "15-25%",
-      commissionSuffix: "din încasările nete — fără costuri ascunse",
+      commissionSuffix: "din încasările nete, fără costuri ascunse",
       items: [
-        { title: "Randament net 9.4% verificat", description: "• +40% vs. chirie clasică\n• Pricing dinamic AI\n• Optimizare sezonală" },
-        { title: "Zero implicare zilnică", description: "• Tu nu răspunzi la mesaje\n• Tu nu coordonezi echipe\n• Tu nu gestionezi nimic" },
-        { title: "Transparență financiară totală", description: "• Dashboard live 24/7\n• RevPAR, ADR, ocupare\n• P&L detaliat lunar" },
-        { title: "Operare hotelieră completă", description: "• Echipă dedicată 24/7\n• Curățenie hotelieră\n• Mentenanță gestionată" },
-        { title: "Oaspeți verificați și asigurați", description: "• Verificare ID completă\n• Istoric rezervări\n• Protecție proprietate" },
-        { title: "Marketing premium inclus", description: "• Fotografii profesionale\n• Listare multi-canal\n• Optimizare conversie" },
-        { title: "Concierge digital 24/7", description: "• Self check-in\n• Comunicare bilingvă\n• Follow-up post-sejur" },
-        { title: "Distribuție pe 30+ canale", description: "• Booking, Airbnb, Expedia\n• Sincronizare live\n• Zero overbooking" },
+        { title: "Randament net 9,4% pe ipoteze transparente", description: "• Ocupare 75%, deducere 27%\n• Pricing dinamic săptămânal\n• Ajustare sezonieră" },
+        { title: "Fără sarcini operaționale pentru tine", description: "• Comunicarea cu oaspeții — la noi\n• Coordonarea echipelor — la noi\n• Tu primești doar raportul" },
+        { title: "Raportare financiară clară", description: "• Dashboard accesibil oricând\n• RevPAR, ADR, ocupare\n• P&L lunar detaliat" },
+        { title: "Operare hotelieră end-to-end", description: "• Echipă dedicată\n• Curățenie la standard hotelier\n• Mentenanță gestionată" },
+        { title: "Oaspeți verificați și acoperiți de asigurare", description: "• Verificare ID\n• Istoric rezervări\n• Acoperire pentru daune" },
+        { title: "Marketing și foto incluse", description: "• Fotografie profesională\n• Listare multi-canal\n• Optimizare a conversiei" },
+        { title: "Concierge digital pe tot parcursul sejurului", description: "• Self check-in\n• Comunicare bilingvă\n• Follow-up după plecare" },
+        { title: "Distribuție pe 30+ canale", description: "• Booking, Airbnb, Expedia\n• Sincronizare live\n• Fără overbooking" },
       ],
     },
     
     // How It Works
     howItWorks: {
-      label: "Procesul Nostru",
-      title: "Metodologie Structurată",
-      subtitle: "Un proces clar și transparent, de la evaluare până la încasarea veniturilor lunare.",
+      label: "Procesul nostru",
+      title: "Un proces structurat, fără surprize",
+      subtitle: "De la evaluarea proprietății până la decontarea lunară — pași clari, asumați în scris.",
       steps: [
-        { title: "Evaluare & Analiză", description: "• Audit proprietate\n• Studiu piață\n• Estimare venit" },
-        { title: "Onboarding & Setup", description: "• Fotografii pro\n• Listare multi-canal\n• Optimizare" },
-        { title: "Operare & Monitorizare", description: "• Rezervări\n• Mentenanță\n• Raportare" },
-        { title: "Decontare Lunară", description: "• Transfer lunar\n• Raport detaliat\n• Analiză ROI" },
+        { title: "Evaluare și analiză", description: "• Audit al proprietății\n• Studiu de piață\n• Estimare de venit pe ipoteze publice" },
+        { title: "Onboarding și setup", description: "• Fotografie profesională\n• Listare multi-canal\n• Configurare operațională" },
+        { title: "Operare și monitorizare", description: "• Rezervări gestionate\n• Mentenanță coordonată\n• Raportare lunară" },
+        { title: "Decontare lunară", description: "• Transfer la dată fixă\n• Raport detaliat\n• Analiză ROI" },
       ],
     },
     
