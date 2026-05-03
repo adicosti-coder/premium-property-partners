@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 import {
   scrapeWithFirecrawl,
   extractFromMarkdownWithAI,
