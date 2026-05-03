@@ -587,6 +587,44 @@ export const SEOCompetitorGapPanel = () => {
 
           {/* HISTORY: raw timeline */}
           <TabsContent value="history">
+            <div className="flex justify-end gap-2 mb-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => downloadCSV(
+                  "seo-competitor-history.csv",
+                  snapshots.map((s) => ({
+                    fetched_at: s.fetched_at,
+                    our_url_path: s.our_url_path,
+                    competitor_url: s.competitor_url,
+                    competitor_label: s.competitor_label,
+                    competitor_score: competitorScore(s),
+                    word_count: s.competitor_word_count,
+                    title: s.competitor_title,
+                    meta: s.competitor_meta,
+                    ai_summary: s.ai_summary,
+                  })),
+                )}
+              >
+                <Download className="w-3 h-3" /> Export snapshoturi
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => downloadCSV(
+                  "seo-score-history.csv",
+                  ourSnaps.map((o) => ({
+                    created_at: o.created_at,
+                    url: o.url,
+                    overall_score: o.overall_score,
+                  })),
+                )}
+              >
+                <Download className="w-3 h-3" /> Export istoric scoruri
+              </Button>
+            </div>
             <ScrollArea className="h-[420px] rounded-md border">
               <ul className="divide-y text-sm">
                 {snapshots.map((s) => (
