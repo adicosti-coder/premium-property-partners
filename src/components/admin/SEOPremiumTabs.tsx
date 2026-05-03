@@ -1856,11 +1856,16 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                 <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5" /> 2. Linkuri interne
                   <Badge
-                    variant={editLinks.length > 0 && validLinksCount === editLinks.filter((l) => l.enabled).length && validLinksCount > 0 ? "default" : "secondary"}
+                    variant={enabledLinksCount > 0 && validLinksCount === enabledLinksCount ? "default" : "secondary"}
                     className="text-[10px] ml-1"
                   >
-                    {validLinksCount}/{editLinks.length} linkuri gata
+                    {validLinksCount}/{enabledLinksCount} linkuri valide
                   </Badge>
+                  {hasDuplicates && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      Duplicate detectate
+                    </Badge>
+                  )}
                 </p>
                 {editLinks.length === 0 ? (
                   <p className="text-xs text-muted-foreground">Nu sunt cartiere lipsă față de competitor.</p>
