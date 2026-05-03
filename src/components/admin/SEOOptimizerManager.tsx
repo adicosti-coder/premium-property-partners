@@ -781,6 +781,8 @@ const SEOOptimizerManager = () => {
 
       <SEOCompetitorGapPanel />
 
+      <SEOTrafficROIPanel />
+
       <SEOAutoLinkingPanel history={history as any} />
 
       {selectedAudit && (
