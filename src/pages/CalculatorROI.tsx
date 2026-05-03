@@ -33,23 +33,23 @@ const CalculatorROI = () => {
   const faqItems = [
     {
       question: "Ce randament (ROI) este considerat bun pentru o investiție imobiliară în Timișoara?",
-      answer: "Un ROI net între 6-8% este considerat bun pentru chirie clasică în Timișoara. Regimul hotelier administrat de RealTrust atinge 9.4% net verificat, datorită ocupării medii de 75% și tarifelor optimizate dinamic.",
+      answer: "Pentru chirie clasică în Timișoara, un ROI net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, ținta este 9,4% net, calculat pe ipoteze publice (ocupare 75%, deducere 27% pentru management, costuri și taxe).",
     },
     {
       question: "Cum afectează impozitul pe proprietate ROI-ul?",
-      answer: "Impozitul anual local pentru un apartament în Timișoara variază între 0,08% și 0,2% din valoarea impozabilă. Pentru un apartament de 80.000€, costul anual este 80-160€ — un impact de ~0,1-0,2% pe ROI net, deja inclus în calculele RealTrust.",
+      answer: "Impozitul anual local pentru un apartament în Timișoara variază între 0,08% și 0,2% din valoarea impozabilă. Pentru un apartament de 80.000€, costul anual este 80-160€ — un impact de aproximativ 0,1-0,2% pe ROI net, deja inclus în calcul.",
     },
     {
       question: "Care este diferența între ROI și cash flow?",
-      answer: "ROI măsoară randamentul anual ca procent din investiția totală (ex: 9.4%). Cash flow-ul este venitul net lunar/anual disponibil după toate costurile. O proprietate poate avea ROI bun, dar cash flow scăzut dacă există rată ipotecară mare.",
+      answer: "ROI măsoară randamentul anual ca procent din investiția totală (de ex. 9,4%). Cash flow-ul este venitul net lunar sau anual disponibil după toate costurile. O proprietate poate avea ROI bun și cash flow mai mic dacă există rată ipotecară.",
     },
     {
       question: "În cât timp se amortizează o investiție imobiliară?",
-      answer: "La un ROI net de 9.4%, amortizarea capitalului propriu se realizează în ~10-11 ani. Cu apreciere de 5-8% anual a proprietății în Timișoara, randamentul total (yield + capital appreciation) ajunge la 14-17% pe an.",
+      answer: "La un ROI net de 9,4%, recuperarea capitalului propriu se face în aproximativ 10-11 ani. Dacă proprietatea se apreciază cu 5-8% pe an, randamentul total (yield + apreciere) ajunge la 14-17% pe an, în funcție de zonă.",
     },
     {
       question: "Ce costuri operaționale sunt incluse în calcul?",
-      answer: "Calculatorul RealTrust deduce automat 27% din venitul brut pentru: management (15-20%), curățenie, consumabile, mentenanță, utilități parțial neacoperite și taxe locale. Rezultatul afișat este ROI net real.",
+      answer: "Calculatorul deduce automat 27% din venitul brut pentru: management (15-20%), curățenie, consumabile, mentenanță, utilități parțial neacoperite și taxe locale. Rezultatul afișat este ROI net, după aceste costuri.",
     },
   ];
 
