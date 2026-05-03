@@ -320,12 +320,12 @@ const HeroContent = ({
         <div className="flex items-center gap-6 mt-8 py-4 px-6 bg-card/80 border border-border/50 rounded-xl backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-sm text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</span>
+            <span className="text-sm text-foreground font-medium">{t.hero.features?.paymentsDesc || "Randament calculat transparent"}</span>
           </div>
           <div className="w-px h-5 bg-border" />
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-sm text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</span>
+            <span className="text-sm text-foreground font-medium">{t.hero.features?.modelDesc || "Tu încasezi, noi operăm"}</span>
           </div>
           <div className="w-px h-5 bg-border" />
           <div className="flex items-center gap-2">
