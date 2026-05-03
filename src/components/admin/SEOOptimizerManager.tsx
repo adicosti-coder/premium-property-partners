@@ -190,7 +190,7 @@ const SEOOptimizerManager = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("seo_overrides")
-        .select("url_path, title, meta_description, applied_at, source_audit_id, is_active")
+        .select("url_path, title, meta_description, json_ld, applied_at, source_audit_id, is_active")
         .eq("is_active", true);
       return data || [];
     },
