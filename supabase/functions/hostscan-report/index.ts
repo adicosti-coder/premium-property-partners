@@ -11,20 +11,68 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    const { 
-      recipientEmail, 
-      recipientName, 
-      report, 
-      zone, 
-      rooms, 
+    const {
+      recipientEmail,
+      recipientName,
+      report,
+      zone,
+      rooms,
       phone,
-      language = "ro" 
+      language = "ro",
+      turnstileToken,
     } = await req.json();
 
     if (!recipientEmail || !report) {
       return new Response(JSON.stringify({ error: "Missing email or report" }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
+    }
+
+    // Basic email shape check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail) || recipientEmail.length > 255) {
+      return new Response(JSON.stringify({ error: "Invalid email" }), {
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    // Turnstile verification (fail-open if widget unavailable per project policy,
+    // but require token presence so anonymous bots can't spam silently).
+    const TURNSTILE_SECRET = Deno.env.get("TURNSTILE_SECRET_KEY");
+    if (TURNSTILE_SECRET && turnstileToken) {
+      try {
+        const verify = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ secret: TURNSTILE_SECRET, response: turnstileToken }),
+        });
+        const j = await verify.json().catch(() => ({}));
+        if (!j?.success) {
+          return new Response(JSON.stringify({ error: "Captcha failed" }), {
+            status: 403, headers: { ...cors, "Content-Type": "application/json" },
+          });
+        }
+      } catch (e) {
+        console.warn("[hostscan-report] turnstile verify error (fail-open):", (e as Error).message);
+      }
+    }
+
+    // Per-email rate limit: max 2 reports per email per hour
+    const sbRl = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    try {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await sbRl
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("email", recipientEmail)
+        .eq("source", "HostScan AI Report")
+        .gte("created_at", since);
+      if ((count ?? 0) >= 2) {
+        return new Response(JSON.stringify({ error: "Rate limit: max 2 reports per hour for this email" }), {
+          status: 429, headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+    } catch (e) {
+      console.warn("[hostscan-report] rate-limit check failed (continuing):", (e as Error).message);
     }
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
