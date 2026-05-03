@@ -176,9 +176,9 @@ const AboutUs = () => {
         ]
       },
       cta: {
-        title: "Pregătit să Începem?",
-        subtitle: "Contactează-ne pentru o discuție fără obligații despre cum te putem ajuta.",
-        button: "Solicită o Consultație Gratuită"
+        title: "Hai să discutăm",
+        subtitle: "Programează o consultare fără obligații. Îți răspundem în maximum 24 de ore lucrătoare cu pașii recomandați.",
+        button: "Solicită o consultare"
       }
     },
     en: {
