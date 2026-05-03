@@ -278,7 +278,7 @@ const CompareDrawer = () => {
 
   const rows = [
     {
-      label: "Preț",
+      label: "Preț cerere",
       render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, priceBest)}>
           {l.price.toLocaleString("ro-RO")} €
@@ -286,7 +286,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Preț/mp",
+      label: "Preț / mp",
       render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, priceSqmBest)}>
           {l.pricePerSqm.toLocaleString("ro-RO")} €/mp
@@ -294,7 +294,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Suprafață",
+      label: "Suprafață utilă",
       render: (l: ComparableItem, idx: number) => (
         <span className={highlight(idx, surfaceBest)}>{l.surface} mp</span>
       ),
@@ -313,7 +313,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "ROI chirie clasică",
+      label: "Randament chirie clasică",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold", highlight(idx, roiBest))}>
           {rois[idx].toFixed(1)}%
@@ -321,7 +321,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Chirie regim hotelier",
+      label: "Venit estimat regim hotelier",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-semibold text-primary", highlight(idx, hotelRevBest))}>
           {hotelRevs[idx].toLocaleString("ro-RO")} € / lună
@@ -329,7 +329,7 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "ROI regim hotelier",
+      label: "Randament regim hotelier",
       render: (_l: ComparableItem, idx: number) => (
         <span className={cn("font-bold text-primary", highlight(idx, hotelRoiBest))}>
           {hotelRois[idx].toFixed(1)}%
@@ -337,14 +337,14 @@ const CompareDrawer = () => {
       ),
     },
     {
-      label: "Recomandat",
+      label: "Administrare",
       render: (l: ComparableItem) =>
         l.badge === "administrare" || l.badge === "investitie" ? (
           <div>
             <div className="flex items-center gap-1">
               <span className="text-amber-500">✓</span>
               <Badge className="bg-primary/15 text-primary border-primary/30 text-[10px] leading-tight whitespace-normal">
-                Administrare RealTrust‑ApArt Hotel
+                Inclusă · RealTrust ApArt Hotel
               </Badge>
             </div>
           </div>
