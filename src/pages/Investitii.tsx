@@ -232,8 +232,8 @@ const Investitii = () => {
       
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="RealTrust oferă oportunități de investiții imobiliare în Timișoara cu randament net verificat de 9+ ROI. Due diligence complet, administrare profesională inclusă, raportare lunară."
-          summaryEn="RealTrust offers real estate investment opportunities in Timișoara with verified net yields of 9%+ ROI. Complete due diligence, professional management included."
+          summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net țintă de 9,4% calculat pe ipoteze publice (ocupare 75%, deducere 27%). Due diligence complet, administrare profesională inclusă, raportare lunară."
+          summaryEn="Real estate investment opportunities in Timișoara with a 9.4% target net yield calculated on public assumptions (75% occupancy, 27% deduction). Full due diligence, professional management included, monthly reporting."
         />
       </div>
       
