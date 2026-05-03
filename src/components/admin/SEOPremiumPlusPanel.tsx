@@ -211,7 +211,56 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* MASTER ONE-CLICK */}
+        {/* PRIORITATE OPTIMIZARE */}
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <div className="font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive" />
+                Prioritate optimizare — top {priorityTargets.length} pagini cu scor mic
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Aplică individual sugestiile AI pentru paginile cu cel mai mic scor (sub 95).
+              </p>
+            </div>
+          </div>
+          {priorityTargets.length > 0 ? (
+            <ScrollArea className="h-56 rounded border bg-background">
+              <ul className="divide-y text-sm">
+                {priorityTargets.map((a) => (
+                  <li key={a.id} className="flex items-center justify-between gap-2 px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={(a.overall_score ?? 0) < 80 ? "destructive" : "secondary"}
+                          className="font-mono text-[10px]"
+                        >
+                          {a.overall_score ?? "—"}/100
+                        </Badge>
+                        <span className="truncate text-xs font-mono">{urlToPath(a.url)}</span>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      disabled={applySingleMutation.isPending && applySingleMutation.variables?.id === a.id}
+                      onClick={() => applySingleMutation.mutate(a)}
+                    >
+                      {applySingleMutation.isPending && applySingleMutation.variables?.id === a.id
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <CheckCircle2 className="w-3 h-3" />}
+                      <span className="ml-1">Aplică</span>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">Toate paginile au scor ≥ 95. 🎉</p>
+          )}
+        </div>
+
+
         <div className="rounded-lg border bg-background p-4 space-y-3">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
