@@ -3875,6 +3875,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_content_briefs: {
+        Row: {
+          applied_at: string | null
+          competitor_url: string | null
+          created_at: string
+          draft_content: string | null
+          generated_by: string | null
+          h2_title: string
+          id: string
+          status: string
+          updated_at: string
+          url_path: string
+        }
+        Insert: {
+          applied_at?: string | null
+          competitor_url?: string | null
+          created_at?: string
+          draft_content?: string | null
+          generated_by?: string | null
+          h2_title: string
+          id?: string
+          status?: string
+          updated_at?: string
+          url_path: string
+        }
+        Update: {
+          applied_at?: string | null
+          competitor_url?: string | null
+          created_at?: string
+          draft_content?: string | null
+          generated_by?: string | null
+          h2_title?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          url_path?: string
+        }
+        Relationships: []
+      }
       seo_internal_link_suggestions: {
         Row: {
           anchor_text: string
