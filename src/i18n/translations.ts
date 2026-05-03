@@ -1950,18 +1950,18 @@ Thank you!`,
     realEstatePage: {
       hero: {
         badge: "RealTrust",
-        title: "Real Estate Transactions",
-        titleHighlight: "Made Simple",
-        subtitle: "RealTrust helps you sell, buy, or rent properties in Timișoara. Experience, transparency, and concrete results.",
+        title: "Real estate transactions",
+        titleHighlight: "explained clearly",
+        subtitle: "We support you when selling, buying or renting in Timișoara — public-data evaluations, legal support and clear reporting at every step.",
       },
       services: {
         label: "Services",
-        title: "Premium Real Estate",
-        titleHighlight: "Services",
-        subtitle: "We offer a complete range of real estate services, from evaluation to transaction completion.",
+        title: "Real estate services",
+        titleHighlight: "end-to-end",
+        subtitle: "From initial evaluation to signing at the notary, you work with one dedicated consultant and a clear roadmap.",
         selling: {
-          title: "Property Sales",
-          description: "We sell your property at the best price, in the shortest time possible.",
+          title: "Property sales",
+          description: "We prepare the property for the market and negotiate in your interest, with a realistic timeline.",
           features: [
             "Free and realistic evaluation",
             "Professional photos and video",
