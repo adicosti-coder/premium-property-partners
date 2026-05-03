@@ -16,32 +16,32 @@ const EVAL_FAQS = [
   {
     question: "Cât valorează apartamentul meu din Timișoara?",
     answer:
-      "Valoarea unui apartament în Timișoara depinde de cartier (ex: Circumvalațiunii, ISHO, Complex Studențesc, Iosefin), suprafață utilă, an construcție, etaj, finisaje și dotări. Echipa RealTrust analizează tranzacții comparabile recente din zonă și vă oferă o estimare preț apartament Timișoara în maxim 24 de ore, complet gratuit.",
+      "Valoarea unui apartament în Timișoara depinde de cartier (Circumvalațiunii, ISHO, Complex Studențesc, Iosefin), suprafață utilă, an construcție, etaj, finisaje și dotări. Echipa noastră analizează tranzacții comparabile recente din zonă și îți oferă o estimare în maximum 24 de ore lucrătoare, gratuit și fără obligații.",
   },
   {
-    question: "Care este diferența între estimarea de piață și un raport de evaluare ANEVAR?",
+    question: "Care este diferența dintre estimarea de piață și un raport de evaluare ANEVAR?",
     answer:
-      "Estimarea de piață oferită gratuit de RealTrust reflectă prețul realist de vânzare bazat pe cererea actuală și tranzacții comparabile. Un raport de evaluare proprietate emis de un evaluator ANEVAR Timișoara este un document oficial, contra-cost, necesar pentru bănci (credite ipotecare), instanțe judecătorești sau partaje. Estimarea noastră este ideală pentru a decide prețul de listare la vânzare.",
+      "Estimarea de piață, oferită gratuit, reflectă prețul realist de vânzare în condițiile actuale și se bazează pe tranzacții comparabile. Raportul de evaluare emis de un evaluator ANEVAR este un document oficial, contra-cost, necesar băncilor pentru credite ipotecare, instanțelor sau partajelor. Pentru decizia de listare, estimarea de piață este de obicei suficientă.",
   },
   {
     question: "Cât durează evaluarea gratuită?",
     answer:
-      "Răspundem în maxim 24 de ore lucrătoare. Pentru proprietăți complexe (case, terenuri, spații comerciale) sau zone metropolitane (Dumbrăvița, Ghiroda, Moșnița Nouă, Giroc), poate fi necesară o vizită la fața locului, programată în următoarele 48-72h.",
+      "Răspundem în maximum 24 de ore lucrătoare. Pentru proprietăți complexe (case, terenuri, spații comerciale) sau pentru zone metropolitane (Dumbrăvița, Ghiroda, Moșnița Nouă, Giroc), poate fi utilă o vizită la fața locului, programată în următoarele 48-72 de ore.",
   },
   {
-    question: "Ce date trebuie să furnizez pentru o evaluare corectă?",
+    question: "Ce date sunt necesare pentru o evaluare corectă?",
     answer:
-      "Pentru o estimare precisă avem nevoie de: tipul proprietății (apartament, casă, teren, comercial), cartierul exact, suprafața utilă, anul construcției, etajul, numărul de camere, starea finisajelor (renovat, semi-renovat, vechi) și opțional fotografii. Cu cât detaliile sunt mai exacte, cu atât estimarea este mai apropiată de prețul real de tranzacționare.",
+      "Pentru o estimare apropiată de prețul real de tranzacționare avem nevoie de: tipul proprietății (apartament, casă, teren, comercial), cartierul exact, suprafața utilă, anul construcției, etajul, numărul de camere, starea finisajelor și, opțional, fotografii. Cu cât informațiile sunt mai exacte, cu atât intervalul estimat este mai îngust.",
   },
   {
     question: "Evaluarea gratuită mă obligă să vând prin RealTrust?",
     answer:
-      "Nu. Evaluarea este 100% gratuită și fără obligații. Primiți raportul de estimare și decideți liber dacă doriți să listați proprietatea cu noi sau nu. Mulți proprietari folosesc estimarea doar pentru a-și planifica viitorul financiar sau o moștenire.",
+      "Nu. Evaluarea este gratuită și fără obligații. Primești raportul de estimare și decizi liber dacă vrei să listezi proprietatea cu noi sau nu. Mulți proprietari folosesc estimarea pentru planificare financiară sau pentru o moștenire.",
   },
   {
     question: "Acoperiți și zone metropolitane ca Dumbrăvița sau Giroc?",
     answer:
-      "Da. Oferim evaluare apartament Circumvalațiunii, estimare preț casă Dumbrăvița, precum și pentru Ghiroda, Moșnița Nouă, Giroc, Chișoda și Săcălaz. Cunoaștem prețurile pe metru pătrat și particularitățile fiecărei zone metropolitane din jurul Timișoarei.",
+      "Da. Lucrăm pe Timișoara și pe zonele metropolitane: Dumbrăvița, Ghiroda, Moșnița Nouă, Giroc, Chișoda și Săcălaz. Cunoaștem prețurile pe metru pătrat și particularitățile fiecărei zone din jurul Timișoarei.",
   },
 ];
 
