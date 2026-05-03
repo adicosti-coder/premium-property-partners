@@ -360,9 +360,9 @@ const PentruOaspeti = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title={language === "ro" ? "Cazare Regim Hotelier Timișoara | Apartamente & Garsoniere" : "Short-Term Rental Timișoara | Apartments & Studios"}
+        title={language === "ro" ? "Cazare în regim hotelier în Timișoara | Apartamente și garsoniere" : "Short-Term Rental Timișoara | Apartments & Studios"}
         description={language === "ro" 
-          ? "Cauți cazare în regim hotelier în Timișoara? Apartamente premium lângă UVT, Iulius Town, Aeroport și Centru. Parcare gratuită, self check-in 24/7. Rezervă direct!"
+          ? "Apartamente în regim hotelier în Timișoara, lângă UVT, Iulius Town, aeroport și Centru. Parcare gratuită, self check-in non-stop, rezervare directă fără comision intermediar."
           : "Looking for short-term rental in Timișoara? Premium apartments near UVT, Iulius Town, Airport and Old Town. Free parking, 24/7 self check-in. Book direct!"}
         url="https://www.realtrust.ro/pentru-oaspeti"
         jsonLd={lodgingJsonLd}
