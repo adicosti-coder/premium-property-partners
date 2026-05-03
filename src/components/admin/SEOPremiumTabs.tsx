@@ -1580,8 +1580,23 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
     return !!l.anchor_text.trim() && !!t && t.startsWith("/") && !/\s/.test(t) && /^\/[a-z0-9/_-]*$/.test(t);
   };
 
-  const linksValid = useMemo(() => editLinks.every(isLinkValid), [editLinks]);
-  const validLinksCount = useMemo(() => editLinks.filter((l) => l.enabled && isLinkValid(l)).length, [editLinks]);
+  const duplicateTargets = useMemo(() => {
+    const counts = new Map<string, number>();
+    editLinks.forEach((l) => {
+      if (l.enabled && l.target_url_path.trim()) {
+        const k = l.target_url_path.trim();
+        counts.set(k, (counts.get(k) || 0) + 1);
+      }
+    });
+    return new Set(Array.from(counts.entries()).filter(([, n]) => n > 1).map(([k]) => k));
+  }, [editLinks]);
+  const hasDuplicates = duplicateTargets.size > 0;
+  const linksValid = useMemo(() => editLinks.every(isLinkValid) && !hasDuplicates, [editLinks, hasDuplicates]);
+  const validLinksCount = useMemo(
+    () => editLinks.filter((l) => l.enabled && isLinkValid(l) && !duplicateTargets.has(l.target_url_path.trim())).length,
+    [editLinks, duplicateTargets],
+  );
+  const enabledLinksCount = useMemo(() => editLinks.filter((l) => l.enabled).length, [editLinks]);
 
 
   const copyBest = () => {
@@ -1841,11 +1856,16 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                 <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5" /> 2. Linkuri interne
                   <Badge
-                    variant={editLinks.length > 0 && validLinksCount === editLinks.filter((l) => l.enabled).length && validLinksCount > 0 ? "default" : "secondary"}
+                    variant={enabledLinksCount > 0 && validLinksCount === enabledLinksCount ? "default" : "secondary"}
                     className="text-[10px] ml-1"
                   >
-                    {validLinksCount}/{editLinks.length} linkuri gata
+                    {validLinksCount}/{enabledLinksCount} linkuri valide
                   </Badge>
+                  {hasDuplicates && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      Duplicate detectate
+                    </Badge>
+                  )}
                 </p>
                 {editLinks.length === 0 ? (
                   <p className="text-xs text-muted-foreground">Nu sunt cartiere lipsă față de competitor.</p>
@@ -1860,6 +1880,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                         else if (/\s/.test(t)) targetErr = "Path-ul nu poate conține spații";
                         else if (!t.startsWith("/")) targetErr = "Path-ul trebuie să înceapă cu '/'";
                         else if (!/^\/[a-z0-9/_-]*$/.test(t)) targetErr = "Doar litere mici, cifre, '-', '_', '/'";
+                        else if (duplicateTargets.has(t.trim())) targetErr = "Duplicat: aceeași cale folosită de alt link";
                       }
                       return (
                         <div key={idx} className={cn("rounded border p-2 space-y-1", !l.enabled && "opacity-50")}>
