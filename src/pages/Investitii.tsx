@@ -89,55 +89,55 @@ const Investitii = () => {
 
   const texts = {
     ro: {
-      title: "Investiții Imobiliare",
-      metaDescription: "Investiții imobiliare profitabile în Timișoara cu RealTrust. ROI 9.4% net, randament garantat, ghid gratuit 2026. Descarcă analiza completă.",
+      title: "Investiții imobiliare",
+      metaDescription: "Investiții imobiliare în Timișoara cu RealTrust: ROI net țintă 9,4% pe ipoteze publice, due diligence și administrare inclusă. Analiză gratuită 2026.",
       heroTitle: "Investment",
       heroTitleHighlight: "Deal Room",
-      heroSubtitle: "Oportunități exclusive cu randament verificat. Noi le găsim, noi le administrăm, tu încasezi profitul.",
+      heroSubtitle: "Oportunități selectate, cu randament țintă calculat transparent. Le identificăm, le administrăm, tu primești venitul net.",
       heroBadge: "Deal Room · RealTrust",
-      ctaContact: "Programează o Discuție",
+      ctaContact: "Programează o discuție",
       ctaCalculator: "Calculator ROI",
-      gridTitle: "Oportunități Active",
-      gridSubtitle: "Proprietăți cu potențial de investiție verificat și administrare profesională inclusă.",
-      cardCapital: "Capital Necesar",
-      cardYield: "Randament Anual",
-      cardRevenue: "Venit Lunar Estimat",
-      cardOccupancy: "Grad Ocupare",
-      cardDetails: "Vezi Detalii Complete",
-      cardCta: "Solicită Analiză",
+      gridTitle: "Oportunități active",
+      gridSubtitle: "Proprietăți cu potențial de investiție evaluat și administrare profesională inclusă.",
+      cardCapital: "Capital necesar",
+      cardYield: "Randament anual țintă",
+      cardRevenue: "Venit lunar estimat",
+      cardOccupancy: "Grad de ocupare",
+      cardDetails: "Vezi detalii complete",
+      cardCta: "Solicită analiză",
       noProperties: "Momentan nu avem oportunități disponibile",
-      noPropertiesDesc: "Contactează-ne pentru a fi notificat când apar noi proprietăți de investiție.",
+      noPropertiesDesc: "Lasă-ne datele tale și te anunțăm când apar noi proprietăți de investiție.",
       benefits: [
-        { icon: Shield, title: "Due Diligence Complet", desc: "Verificăm documentația și potențialul fiecărei proprietăți" },
-        { icon: BarChart3, title: "ROI Calculat Realist", desc: "Estimări bazate pe date reale de ocupare și prețuri" },
-        { icon: Building2, title: "Administrare Inclusă", desc: "Operăm proprietatea după achiziție, tu doar încasezi" },
-        { icon: Clock, title: "Suport Continuu", desc: "Raportare lunară și acces la dashboard în timp real" },
+        { icon: Shield, title: "Due diligence complet", desc: "Verificăm documentația și potențialul fiecărei proprietăți" },
+        { icon: BarChart3, title: "ROI calculat realist", desc: "Estimări bazate pe date reale de ocupare și prețuri" },
+        { icon: Building2, title: "Administrare inclusă", desc: "Operăm proprietatea după achiziție, tu primești raportul" },
+        { icon: Clock, title: "Suport continuu", desc: "Raportare lunară și acces oricând la dashboard" },
       ],
     },
     en: {
-      title: "Real Estate Investments",
-      metaDescription: "Real estate investment opportunities in Timișoara with verified 9%+ net yield. Complete due diligence, professional management included.",
+      title: "Real estate investments",
+      metaDescription: "Real estate investment opportunities in Timișoara: 9.4% target net yield on public assumptions, full due diligence, professional management included.",
       heroTitle: "Investment",
       heroTitleHighlight: "Deal Room",
-      heroSubtitle: "Exclusive opportunities with verified returns. We find, manage, you collect the profit.",
+      heroSubtitle: "Curated opportunities with target returns calculated transparently. We source and manage them, you receive the net income.",
       heroBadge: "Deal Room · RealTrust",
-      ctaContact: "Schedule a Discussion",
-      ctaCalculator: "ROI Calculator",
-      gridTitle: "Active Opportunities",
-      gridSubtitle: "Properties with verified investment potential and professional management included.",
-      cardCapital: "Required Capital",
-      cardYield: "Annual Yield",
-      cardRevenue: "Est. Monthly Revenue",
-      cardOccupancy: "Occupancy Rate",
-      cardDetails: "View Full Details",
-      cardCta: "Request Analysis",
+      ctaContact: "Schedule a discussion",
+      ctaCalculator: "ROI calculator",
+      gridTitle: "Active opportunities",
+      gridSubtitle: "Properties with evaluated investment potential and professional management included.",
+      cardCapital: "Required capital",
+      cardYield: "Target annual yield",
+      cardRevenue: "Est. monthly revenue",
+      cardOccupancy: "Occupancy rate",
+      cardDetails: "View full details",
+      cardCta: "Request analysis",
       noProperties: "No opportunities available at the moment",
-      noPropertiesDesc: "Contact us to be notified when new investment properties become available.",
+      noPropertiesDesc: "Leave your details and we'll notify you when new investment properties become available.",
       benefits: [
-        { icon: Shield, title: "Complete Due Diligence", desc: "We verify documentation and potential of each property" },
-        { icon: BarChart3, title: "Realistic ROI Calculations", desc: "Estimates based on real occupancy data and prices" },
-        { icon: Building2, title: "Management Included", desc: "We operate the property after purchase, you just collect" },
-        { icon: Clock, title: "Continuous Support", desc: "Monthly reporting and real-time dashboard access" },
+        { icon: Shield, title: "Full due diligence", desc: "We verify documentation and the potential of each property" },
+        { icon: BarChart3, title: "Realistic ROI calculations", desc: "Estimates based on real occupancy data and prices" },
+        { icon: Building2, title: "Management included", desc: "We operate the property after purchase, you receive the report" },
+        { icon: Clock, title: "Continuous support", desc: "Monthly reporting and anytime access to the dashboard" },
       ],
     },
   };
@@ -147,23 +147,23 @@ const Investitii = () => {
   const faqItems = language === "ro" ? [
     {
       question: "Care este randamentul mediu pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru regim hotelier administrat de RealTrust, randamentul net mediu este de 9.4% anual, verificat pe portofoliul nostru de peste 50 de proprietăți. În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
+      answer: "Pentru regim hotelier administrat de noi, randamentul net țintă este de 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, deducere 27% pentru management, costuri și taxe). În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
     },
     {
-      question: "Care sunt cele mai bune zone pentru investiții imobiliare în Timișoara?",
-      answer: "Zonele cu cel mai mare potențial sunt: ISHO (proximitate Iulius Town), Complex Studențesc (cerere studenți + Bulevardul Vasile Pârvan), Centrul Istoric (turism), Iosefin/Elisabetin (regenerare urbană) și zonele metropolitane Dumbrăvița, Ghiroda și Giroc (case noi).",
+      question: "Care sunt zonele cu cel mai bun potențial pentru investiții?",
+      answer: "Zonele cu potențial ridicat: ISHO (proximitate Iulius Town), Complex Studențesc (cerere studenți și Bulevardul Vasile Pârvan), Centrul Istoric (turism), Iosefin/Elisabetin (regenerare urbană) și zonele metropolitane Dumbrăvița, Ghiroda și Giroc (case noi).",
     },
     {
       question: "Cât capital am nevoie pentru o investiție la cheie în Timișoara?",
-      answer: "Pentru o garsonieră în regim hotelier la cheie (achiziție + amenajare + dotare): între 60.000 € și 85.000 €. Pentru un apartament 2 camere: 95.000 € – 130.000 €. Includem amenajarea completă, mobilier, electrocasnice și fotografii profesionale.",
+      answer: "Pentru o garsonieră în regim hotelier la cheie (achiziție + amenajare + dotare): 60.000 € – 85.000 €. Pentru un apartament 2 camere: 95.000 € – 130.000 €. Includem amenajarea completă, mobilier, electrocasnice și fotografii profesionale.",
     },
     {
-      question: "Ce taxe notariale și de tranzacție am la cumpărarea unui apartament?",
-      answer: "Taxele notariale variază între 0.4% și 1.6% din prețul tranzacției (degresiv). Adăugați aproximativ 0.5% pentru intabulare la Cartea Funciară și impozit pe transfer (1% pentru proprietăți peste 450.000 lei deținute mai puțin de 3 ani). Total estimat: 1.5–2.5% din preț.",
+      question: "Ce taxe notariale și de tranzacție sunt la cumpărarea unui apartament?",
+      answer: "Taxele notariale variază între 0,4% și 1,6% din prețul tranzacției (degresiv). Se adaugă aproximativ 0,5% pentru intabulare la Cartea Funciară și impozitul pe transfer (1% pentru proprietăți peste 450.000 lei deținute mai puțin de 3 ani). Total estimat: 1,5-2,5% din preț.",
     },
     {
       question: "Cum funcționează serviciul de investiție imobiliară la cheie?",
-      answer: "RealTrust gestionează întregul proces: identificarea proprietății potrivite, due diligence, negociere preț, asistență la actul notarial, amenajarea și dotarea apartamentului, listarea pe Booking/Airbnb și administrarea operațională. Tu doar semnezi și încasezi raportul lunar.",
+      answer: "Gestionăm întregul proces: identificarea proprietății potrivite, due diligence, negocierea prețului, asistență la actul notarial, amenajarea și dotarea apartamentului, listarea pe Booking și Airbnb și administrarea operațională. Tu semnezi și primești raportul lunar.",
     },
     {
       question: "Care este evoluția prețurilor imobiliare în Timișoara?",
@@ -172,11 +172,11 @@ const Investitii = () => {
   ] : [
     {
       question: "What is the average yield for a real estate investment in Timișoara?",
-      answer: "For hotel-style management by RealTrust, the average net yield is 9.4% per year, verified across our portfolio of 50+ properties. Classic long-term rentals in Timișoara typically yield 4-5% net.",
+      answer: "For hotel-style management by our team, the target net yield is 9.4% per year, calculated on public assumptions (75% occupancy, 27% deduction for management, costs and taxes). Classic long-term rentals in Timișoara typically yield 4-5% net.",
     },
     {
       question: "What are the best areas for real estate investment in Timișoara?",
-      answer: "Highest potential zones: ISHO (near Iulius Town), Student Complex (student demand + Vasile Pârvan Boulevard), Historic Center (tourism), Iosefin/Elisabetin (urban regeneration), and metropolitan areas Dumbrăvița, Ghiroda and Giroc (new houses).",
+      answer: "Highest-potential zones: ISHO (near Iulius Town), Student Complex (student demand + Vasile Pârvan Boulevard), Historic Center (tourism), Iosefin/Elisabetin (urban regeneration), and metropolitan areas Dumbrăvița, Ghiroda and Giroc (new houses).",
     },
     {
       question: "How much capital do I need for a turnkey investment in Timișoara?",
@@ -188,7 +188,7 @@ const Investitii = () => {
     },
     {
       question: "How does the turnkey real estate investment service work?",
-      answer: "RealTrust manages the entire process: property sourcing, due diligence, price negotiation, notary support, full renovation and furnishing, listing on Booking/Airbnb and operational management. You just sign and collect the monthly report.",
+      answer: "We manage the entire process: property sourcing, due diligence, price negotiation, notary support, full renovation and furnishing, listing on Booking/Airbnb and operational management. You sign and receive the monthly report.",
     },
     {
       question: "What is the price trend for Timișoara real estate?",
@@ -219,7 +219,7 @@ const Investitii = () => {
   return (
     <div className="dark min-h-screen bg-background">
       <SEOHead 
-        title={language === "ro" ? "Investiții Imobiliare Timișoara | Randament 9.4% | RealTrust" : "Real Estate Investments Timișoara | 9.4% Yield | RealTrust"}
+        title={language === "ro" ? "Investiții imobiliare în Timișoara | Randament 9,4% net țintă | RealTrust" : "Real estate investments in Timișoara | 9.4% target net yield | RealTrust"}
         description={t.metaDescription}
         url="https://www.realtrust.ro/investitii"
         jsonLd={speakableSchema}
@@ -232,8 +232,8 @@ const Investitii = () => {
       
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="RealTrust oferă oportunități de investiții imobiliare în Timișoara cu randament net verificat de 9+ ROI. Due diligence complet, administrare profesională inclusă, raportare lunară."
-          summaryEn="RealTrust offers real estate investment opportunities in Timișoara with verified net yields of 9%+ ROI. Complete due diligence, professional management included."
+          summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net țintă de 9,4% calculat pe ipoteze publice (ocupare 75%, deducere 27%). Due diligence complet, administrare profesională inclusă, raportare lunară."
+          summaryEn="Real estate investment opportunities in Timișoara with a 9.4% target net yield calculated on public assumptions (75% occupancy, 27% deduction). Full due diligence, professional management included, monthly reporting."
         />
       </div>
       
@@ -264,10 +264,10 @@ const Investitii = () => {
 
             <div className="flex flex-wrap justify-center gap-6 mb-10">
               {[
-                { value: "9.4%", label: language === "ro" ? "ROI Net Verificat" : "Verified Net ROI" },
-                { value: "98%", label: language === "ro" ? "Rată de Ocupare" : "Occupancy Rate" },
-                { value: "10k+", label: language === "ro" ? "Oaspeți Satisfăcuți" : "Happy Guests" },
-                { value: "4.9★", label: language === "ro" ? "Rating Mediu" : "Average Rating" },
+                { value: "9,4%", label: language === "ro" ? "ROI net țintă" : "Target net ROI" },
+                { value: "~75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
+                { value: "10k+", label: language === "ro" ? "Sejururi în portofoliu" : "Stays in portfolio" },
+                { value: "9,7/10", label: language === "ro" ? "Scor recenzii" : "Reviews score" },
               ].map((stat, i) => (
                 <div key={i} className="text-center px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
                   <p className="text-2xl font-bold font-sans text-primary">{stat.value}</p>

@@ -62,126 +62,126 @@ const PentruOaspeti = () => {
   const content = {
     ro: {
       badge: "Experiența ApArt Hotel",
-      title: "Cazare Premium",
+      title: "Cazare în regim hotelier",
       titleHighlight: "în Timișoara",
-      subtitle: "Apartamente ATENEO, GREEN FOREST, FullView Studio și HELIOS — complet echipate, lângă Iulius Mall, Amazonia Aquapark și Centrul Vechi. Curățenie profesională, parcare subterană gratuită și self check-in 24/7.",
+      subtitle: "Apartamente ATENEO, GREEN FOREST, FullView Studio și HELIOS — complet echipate, lângă Iulius Mall, Amazonia Aquapark și Centrul Vechi. Curățenie profesională, parcare subterană gratuită și self check-in non-stop.",
       stats: [
-        { value: "9.7", label: "Rating Booking.com", icon: Star },
-        { value: "500+", label: "Recenzii 5 stele", icon: Award },
+        { value: "9,7/10", label: "Scor Booking.com", icon: Star },
+        { value: "500+", label: "Recenzii verificate", icon: Award },
         { value: "24/7", label: "Suport disponibil", icon: Clock },
       ],
-      ctaPrimary: "Rezervă Direct",
-      ctaSecondary: "Vezi Toate Apartamentele",
-      benefitsTitle: "De Ce Să Alegi",
-      benefitsTitleHighlight: "ApArt Hotel?",
-      benefitsSubtitle: "Combinăm confortul unui apartament privat cu serviciile unui hotel de lux",
+      ctaPrimary: "Rezervă direct",
+      ctaSecondary: "Vezi toate apartamentele",
+      benefitsTitle: "De ce să alegi",
+      benefitsTitleHighlight: "ApArt Hotel",
+      benefitsSubtitle: "Confortul unui apartament privat, cu serviciile unui hotel.",
       benefits: [
         {
           icon: Sparkles,
-          title: "Curățenie Profesională",
-          description: "Standard hotelier cu verificare în 50+ puncte înainte de fiecare check-in"
+          title: "Curățenie profesională",
+          description: "Standard hotelier, cu verificare în peste 50 de puncte înainte de fiecare check-in."
         },
         {
           icon: Wifi,
-          title: "WiFi High-Speed",
-          description: "Internet de mare viteză inclus, ideal pentru remote work sau streaming"
+          title: "WiFi de mare viteză",
+          description: "Internet rapid inclus, potrivit pentru remote work și streaming."
         },
         {
           icon: Key,
-          title: "Self Check-in",
-          description: "Acces 24/7 cu cod digital, fără a depinde de programul recepției"
+          title: "Self check-in",
+          description: "Acces non-stop cu cod digital, fără să depinzi de programul recepției."
         },
         {
           icon: MapPin,
-          title: "Lângă Iulius Mall & Amazonia",
-          description: "La 2 min de Lidl, 5 min de Gara de Nord, 8 min de Centrul Vechi și Piața Unirii"
+          title: "Lângă Iulius Mall și Amazonia",
+          description: "La 2 minute de Lidl, 5 minute de Gara de Nord și 8 minute de Centrul Vechi și Piața Unirii."
         },
         {
           icon: Shield,
-          title: "Garanție de Calitate",
-          description: "Răspundem în maxim 30 de minute la orice solicitare sau problemă"
+          title: "Răspuns rapid la solicitări",
+          description: "Răspundem de obicei în 30 de minute la orice întrebare sau cerere."
         },
         {
           icon: Heart,
-          title: "Experiență Personalizată",
-          description: "Recomandări locale și servicii adaptate nevoilor tale"
+          title: "Experiență personalizată",
+          description: "Recomandări locale și servicii adaptate sejurului tău."
         }
       ],
       processTitle: "Procesul de",
-      processTitleHighlight: "Rezervare",
-      processSubtitle: "Din momentul rezervării până la check-out, suntem alături de tine",
+      processTitleHighlight: "rezervare",
+      processSubtitle: "De la rezervare la check-out, suntem alături de tine.",
       processSteps: [
         {
           step: "01",
-          title: "Alege Apartamentul",
-          description: "Explorează portofoliul nostru și selectează spațiul perfect pentru sejurul tău"
+          title: "Alegi apartamentul",
+          description: "Explorezi portofoliul și alegi spațiul potrivit pentru sejurul tău."
         },
         {
           step: "02",
-          title: "Rezervă Direct",
-          description: "Beneficiezi de cel mai bun preț garantat și flexibilitate maximă"
+          title: "Rezervi direct",
+          description: "Cel mai bun preț disponibil pentru rezervările directe, cu flexibilitate maximă."
         },
         {
           step: "03",
-          title: "Check-in Online",
-          description: "Completează datele în avans și primești codul de acces"
+          title: "Check-in online",
+          description: "Completezi datele în avans și primești codul de acces pe email și WhatsApp."
         },
         {
           step: "04",
-          title: "Bucură-te de Sejur",
-          description: "Relaxează-te în apartamentul tău cu toate facilitățile premium"
+          title: "Te bucuri de sejur",
+          description: "Te relaxezi în apartament, cu toate facilitățile pregătite."
         }
       ],
       propertiesTitle: "Apartamente",
-      propertiesTitleHighlight: "Premium",
-      propertiesSubtitle: "ATENEO, GREEN FOREST, FullView Studio, HELIOS — fiecare pregătit pentru confortul tău, cu parcare subterană și bucătărie completă",
-      viewAll: "Vezi Toate Apartamentele",
-      viewDetails: "Vezi Detalii",
+      propertiesTitleHighlight: "disponibile",
+      propertiesSubtitle: "ATENEO, GREEN FOREST, FullView Studio și HELIOS — fiecare pregătit pentru confortul tău, cu parcare subterană și bucătărie complet echipată.",
+      viewAll: "Vezi toate apartamentele",
+      viewDetails: "Vezi detalii",
       perNight: "/noapte",
       faqTitle: "Întrebări",
-      faqTitleHighlight: "Frecvente",
+      faqTitleHighlight: "frecvente",
       faqItems: [
         {
-          question: "Oferiți cazare Timișoara cu parcare?",
-          answer: "Da. Toate apartamentele noastre (ATENEO, GREEN FOREST, FullView Studio, HELIOS) includ parcare subterană privată gratuită, securizată 24/7 — ideală pentru călători business care vizitează Continental, Hella sau parcurile industriale din nord."
+          question: "Oferiți cazare în Timișoara cu parcare?",
+          answer: "Da. Toate apartamentele noastre (ATENEO, GREEN FOREST, FullView Studio, HELIOS) includ parcare subterană privată gratuită, securizată non-stop — utilă pentru călători business care vizitează Continental, Hella sau parcurile industriale din nord."
         },
         {
-          question: "Aveți apartament cu 2 camere regim hotelier Timișoara?",
-          answer: "Da, oferim apartamente cu 2 camere în regim hotelier (ATENEO, GREEN FOREST), perfecte pentru familii sau grupuri de până la 4 persoane, cu dormitor separat, living și bucătărie completă."
+          question: "Aveți apartament cu 2 camere în regim hotelier în Timișoara?",
+          answer: "Da, oferim apartamente cu 2 camere în regim hotelier (ATENEO, GREEN FOREST), potrivite pentru familii sau grupuri de până la 4 persoane, cu dormitor separat, living și bucătărie complet echipată."
         },
         {
-          question: "Pot rezerva cazare în Timișoara doar pentru o noapte?",
-          answer: "Da, acceptăm rezervări flexibile — de la cazare pentru o noapte până la sejururi prelungite (long stay) cu tarife preferențiale pentru 7+ nopți."
+          question: "Pot rezerva pentru o singură noapte?",
+          answer: "Da, acceptăm rezervări flexibile — de la o noapte până la sejururi prelungite, cu tarife preferențiale de la 7 nopți în sus."
         },
         {
           question: "Care este ora de check-in și check-out?",
-          answer: "Check-in: de la 15:00 | Check-out: până la 11:00. Pentru flexibilitate, contactează-ne în avans."
+          answer: "Check-in: de la 15:00. Check-out: până la 11:00. Pentru flexibilitate, contactează-ne în avans."
         },
         {
-          question: "Care este politica de anulare și cum se poate plăti?",
-          answer: "Acceptăm plata cu cardul (Visa, Mastercard) și transfer bancar. Politica de anulare este flexibilă pentru rezervări directe — anulare gratuită până cu 48h înainte de check-in."
+          question: "Care este politica de anulare și ce metode de plată acceptați?",
+          answer: "Acceptăm plata cu cardul (Visa, Mastercard) și transferul bancar. Pentru rezervări directe, anularea este gratuită până cu 48 de ore înainte de check-in."
         },
         {
           question: "Pot aduce animale de companie?",
-          answer: "Unele apartamente acceptă animale de companie (pet-friendly). Verifică pagina proprietății sau contactează-ne."
+          answer: "Unele apartamente sunt pet-friendly. Verifică pagina proprietății sau contactează-ne pentru confirmare."
         },
         {
-          question: "Sunt apartamentele potrivite pentru familii cu copii?",
-          answer: "Da, suntem ideali pentru familii — apartamentele sunt aproape de Parcul Copiilor, Amazonia Aquapark și Iulius Town, cu pătuț pentru bebeluși disponibil la cerere."
+          question: "Apartamentele sunt potrivite pentru familii cu copii?",
+          answer: "Da. Apartamentele sunt aproape de Parcul Copiilor, Amazonia Aquapark și Iulius Town, iar pătuțul pentru bebeluși este disponibil la cerere."
         },
         {
           question: "Ce facilități sunt incluse?",
-          answer: "WiFi high-speed, Netflix, AC, bucătărie complet echipată, mașină de spălat, produse de igienă premium, lenjerie de hotel și parcare subterană gratuită."
+          answer: "WiFi de mare viteză, Netflix, aer condiționat, bucătărie complet echipată, mașină de spălat, produse de igienă, lenjerie la standard hotelier și parcare subterană gratuită."
         },
         {
-          question: "Cum funcționează self check-in?",
-          answer: "Primești un cod unic de acces pe email și WhatsApp cu instrucțiuni video detaliate, disponibil 24/7."
+          question: "Cum funcționează self check-in-ul?",
+          answer: "Primești pe email și WhatsApp un cod unic de acces și instrucțiuni video detaliate, disponibile non-stop."
         }
       ],
       ctaTitle: "Pregătit pentru",
-      ctaTitleHighlight: "o experiență unică?",
-      ctaSubtitle: "Rezervă direct și beneficiază de cel mai bun preț garantat",
-      ctaButton: "Rezervă Acum",
+      ctaTitleHighlight: "sejurul tău în Timișoara?",
+      ctaSubtitle: "Rezervă direct și primești cel mai bun preț disponibil pentru rezervările directe.",
+      ctaButton: "Rezervă acum",
       ctaPhone: "Sau sună-ne"
     },
     en: {
@@ -360,9 +360,9 @@ const PentruOaspeti = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title={language === "ro" ? "Cazare Regim Hotelier Timișoara | Apartamente & Garsoniere" : "Short-Term Rental Timișoara | Apartments & Studios"}
+        title={language === "ro" ? "Cazare în regim hotelier în Timișoara | Apartamente și garsoniere" : "Short-Term Rental Timișoara | Apartments & Studios"}
         description={language === "ro" 
-          ? "Cauți cazare în regim hotelier în Timișoara? Apartamente premium lângă UVT, Iulius Town, Aeroport și Centru. Parcare gratuită, self check-in 24/7. Rezervă direct!"
+          ? "Apartamente în regim hotelier în Timișoara, lângă UVT, Iulius Town, aeroport și Centru. Parcare gratuită, self check-in non-stop, rezervare directă fără comision intermediar."
           : "Looking for short-term rental in Timișoara? Premium apartments near UVT, Iulius Town, Airport and Old Town. Free parking, 24/7 self check-in. Book direct!"}
         url="https://www.realtrust.ro/pentru-oaspeti"
         jsonLd={lodgingJsonLd}

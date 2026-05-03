@@ -61,7 +61,7 @@ const ImobiliareTimisoara = () => {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: "RealTrust Imobiliare Timișoara",
-    description: "Agenție imobiliară premium din Timișoara specializată în vânzări, investiții și administrare apartamente în regim hotelier.",
+    description: "Agenție imobiliară din Timișoara, specializată în vânzări, investiții și administrare de apartamente în regim hotelier.",
     url: "https://www.realtrust.ro/imobiliare-timisoara",
     telephone: "+40799069256",
     address: {
@@ -84,8 +84,8 @@ const ImobiliareTimisoara = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Imobiliare Timișoara — Apartamente pe Zone | RealTrust"
-        description="Explorează apartamentele de vânzare din Timișoara pe zone: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO. Prețuri actuale, randamente verificate."
+        title="Imobiliare Timișoara — apartamente pe zone | RealTrust"
+        description="Explorează apartamentele de vânzare din Timișoara, pe cartiere: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO. Prețuri actualizate și randamente calculate transparent."
         url="https://www.realtrust.ro/imobiliare-timisoara"
       />
       <script
@@ -101,10 +101,10 @@ const ImobiliareTimisoara = () => {
           {/* Hero */}
           <div className="text-center mb-12">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-foreground mb-4">
-              Apartamente de Vânzare în Timișoara
+              Apartamente de vânzare în Timișoara
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Explorează piața imobiliară din Timișoara pe cartiere. Prețuri actualizate, proprietăți verificate și administrare profesională RealTrust.
+              Piața imobiliară din Timișoara, organizată pe cartiere: prețuri actualizate, proprietăți evaluate și administrare profesională disponibilă la cerere.
             </p>
           </div>
 
