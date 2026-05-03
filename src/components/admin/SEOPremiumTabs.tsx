@@ -1330,6 +1330,7 @@ const SchemaCodeBlock = ({
   const warnCount = issues.filter((i) => i.severity === "warning").length;
 
   return (
+    <TooltipProvider delayDuration={150}>
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className={cn("rounded border", errCount > 0 && "border-destructive/50", errCount === 0 && warnCount > 0 && "border-amber-400/50")}>
         <CollapsibleTrigger asChild>
@@ -1337,15 +1338,45 @@ const SchemaCodeBlock = ({
             <div className="flex items-center gap-2 min-w-0">
               {open ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
               <span className="text-xs font-mono">block#{block.index + 1}</span>
-              {block.parse_error && <Badge variant="destructive" className="text-[10px]">JSON invalid</Badge>}
+              {block.parse_error && (
+                <Tooltip>
+                  <TooltipTrigger asChild><Badge variant="destructive" className="text-[10px] cursor-help">JSON invalid</Badge></TooltipTrigger>
+                  <TooltipContent className="max-w-xs text-xs">{block.parse_error}</TooltipContent>
+                </Tooltip>
+              )}
               {(block.types || []).slice(0, 3).map((t) => (
                 <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
               ))}
             </div>
             <div className="flex items-center gap-1">
-              {errCount > 0 && <Badge variant="destructive" className="text-[10px]">{errCount} err</Badge>}
-              {warnCount > 0 && <Badge variant="outline" className="text-[10px] border-amber-400/60">{warnCount} warn</Badge>}
-              {errCount === 0 && warnCount === 0 && <Badge variant="secondary" className="text-[10px]">✓ OK</Badge>}
+              {errCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild><Badge variant="destructive" className="text-[10px] cursor-help">{errCount} err</Badge></TooltipTrigger>
+                  <TooltipContent className="max-w-sm text-xs">
+                    <strong className="block mb-1">Erori critice (blochează validarea Schema.org):</strong>
+                    {issues.filter(i => i.severity === "error").slice(0, 5).map((i, k) => (
+                      <div key={k}>• L{i.line}: {i.message}</div>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {warnCount > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild><Badge variant="outline" className="text-[10px] border-amber-400/60 cursor-help">{warnCount} warn</Badge></TooltipTrigger>
+                  <TooltipContent className="max-w-sm text-xs">
+                    <strong className="block mb-1">Avertismente (recomandate, dar nu blocante):</strong>
+                    {issues.filter(i => i.severity === "warning").slice(0, 5).map((i, k) => (
+                      <div key={k}>• L{i.line}: {i.message}</div>
+                    ))}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {errCount === 0 && warnCount === 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild><Badge variant="secondary" className="text-[10px] cursor-help">✓ OK</Badge></TooltipTrigger>
+                  <TooltipContent className="text-xs">Block JSON-LD valid, fără probleme detectate.</TooltipContent>
+                </Tooltip>
+              )}
             </div>
           </button>
         </CollapsibleTrigger>
