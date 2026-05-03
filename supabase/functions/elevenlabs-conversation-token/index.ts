@@ -49,20 +49,17 @@ serve(async (req) => {
 
     console.log("[elevenlabs-conversation-token] API key present, length:", ELEVENLABS_API_KEY.length);
 
-    // Parse request body for language/agentId
-    let agentId = AGENTS.ro; // Default to Romanian
+    // Parse request body. Restrict agentId to the allowlist to prevent quota abuse.
+    const ALLOWED_AGENTS = new Set(Object.values(AGENTS));
+    let agentId = AGENTS.ro;
     try {
       const body = await req.json();
-      console.log("[elevenlabs-conversation-token] Request body:", JSON.stringify(body));
-      if (body.agentId) {
+      if (body.agentId && ALLOWED_AGENTS.has(body.agentId)) {
         agentId = body.agentId;
       } else if (body.language && AGENTS[body.language as keyof typeof AGENTS]) {
         agentId = AGENTS[body.language as keyof typeof AGENTS];
       }
-    } catch {
-      // No body or invalid JSON, use default
-      console.log("[elevenlabs-conversation-token] No body, using default agent");
-    }
+    } catch { /* no body */ }
 
     console.log("[elevenlabs-conversation-token] Fetching token for agent:", agentId);
 
