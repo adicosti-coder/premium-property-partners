@@ -11,22 +11,22 @@ const QuickValueBanner = ({ onCtaClick }: QuickValueBannerProps) => {
 
   const content = {
     ro: {
-      badge: "În 24h primești",
+      badge: "În 24 de ore primești",
       items: [
-        "Estimare venit lunar personalizată",
+        "Estimare de venit lunar personalizată",
         "Recomandări de optimizare",
         "Plan clar de colaborare",
       ],
-      cta: "Obține Analiza Gratuită",
+      cta: "Solicită analiza gratuită",
     },
     en: {
-      badge: "Within 24h you get",
+      badge: "Within 24h you receive",
       items: [
         "Personalized monthly income estimate",
         "Optimization recommendations",
         "Clear partnership plan",
       ],
-      cta: "Get Free Analysis",
+      cta: "Request the free analysis",
     },
   };
 
