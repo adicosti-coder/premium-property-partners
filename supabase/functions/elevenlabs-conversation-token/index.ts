@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,15 +8,32 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Default agents for each language
 const AGENTS = {
-  ro: "agent_2601kgsvskeef4gvytn91he7x8y2", // Romanian agent
-  en: "agent_7201kgswwdaafzab2jqfreqbveb7", // English agent
+  ro: "agent_2601kgsvskeef4gvytn91he7x8y2",
+  en: "agent_7201kgswwdaafzab2jqfreqbveb7",
 };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Require an authenticated user (any signed-in user). Prevents anonymous quota abuse.
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) {
+    return new Response(JSON.stringify({ error: "Auth required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data: userData, error: userErr } = await sb.auth.getUser(token);
+  if (userErr || !userData?.user) {
+    return new Response(JSON.stringify({ error: "Invalid token" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
