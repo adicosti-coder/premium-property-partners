@@ -30,6 +30,7 @@ import { SEOReauditSchedulerPanel } from "./SEOReauditSchedulerPanel";
 import { SEOCompetitorGapPanel } from "./SEOCompetitorGapPanel";
 import { SEOAutoLinkingPanel } from "./SEOAutoLinkingPanel";
 import { SEOPremiumPlusPanel } from "./SEOPremiumPlusPanel";
+import { SEOTrafficROIPanel } from "./SEOTrafficROIPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
