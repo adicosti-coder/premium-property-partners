@@ -851,18 +851,18 @@ Mulțumesc!`,
     realEstatePage: {
       hero: {
         badge: "RealTrust",
-        title: "Tranzacții Imobiliare",
-        titleHighlight: "Fără Complicații",
-        subtitle: "RealTrust te ajută să vinzi, cumperi sau închiriezi proprietăți în Timișoara. Experiență, transparență și rezultate concrete.",
+        title: "Tranzacții imobiliare",
+        titleHighlight: "explicate clar",
+        subtitle: "Te însoțim la vânzare, cumpărare sau închiriere în Timișoara cu evaluări pe date publice, suport juridic și raportare clară la fiecare pas.",
       },
       services: {
         label: "Servicii",
-        title: "Servicii Imobiliare",
-        titleHighlight: "Premium",
-        subtitle: "Oferim o gamă completă de servicii imobiliare, de la evaluare până la finalizarea tranzacției.",
+        title: "Servicii imobiliare",
+        titleHighlight: "complete",
+        subtitle: "De la evaluarea inițială până la semnarea la notar, lucrăm cu un singur consultant alocat și pași clari.",
         selling: {
-          title: "Vânzare Proprietăți",
-          description: "Vindem proprietatea ta la cel mai bun preț, în cel mai scurt timp posibil.",
+          title: "Vânzare proprietăți",
+          description: "Pregătim proprietatea pentru piață și negociem în interesul tău, cu un calendar realist.",
           features: [
             "Evaluare gratuită și realistă",
             "Fotografii și video profesionale",
