@@ -203,7 +203,7 @@ const EvaluareGratuita = () => {
           {/* Step 1 */}
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-foreground">Ce tip de proprietate aveți?</h2>
+              <h2 className="text-xl font-bold text-foreground">Ce tip de proprietate ai?</h2>
               <div className="grid grid-cols-2 gap-3">
                 {PROPERTY_TYPES.map((t) => (
                   <button
