@@ -275,6 +275,7 @@ const Admin = () => {
                       <kbd className="ml-1 rounded border bg-muted px-1 text-[10px]">⌘K</kbd>
                     </Button>
                     <LanguageSwitcher />
+                    <ThemeToggle />
                     <span className="text-xs text-muted-foreground hidden lg:inline">
                       {user.email}
                     </span>
