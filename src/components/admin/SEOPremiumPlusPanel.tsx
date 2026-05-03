@@ -256,20 +256,42 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
                 Aplică sugestiile AI pentru paginile cu cel mai mic scor (sub 95).
               </p>
             </div>
-            <Button
-              onClick={runPriorityAll}
-              disabled={priorityRunning || priorityTargets.length === 0}
-              className="gap-2"
-              variant="destructive"
-            >
-              {priorityRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-              {priorityRunning
-                ? `Rulează ${priorityProgress.done}/${priorityProgress.total}`
-                : `Aplică toate (${priorityTargets.length})`}
-            </Button>
+            <div className="flex items-center gap-2">
+              {failedTargets.length > 0 && !priorityRunning && (
+                <Button
+                  onClick={retryFailed}
+                  variant="outline"
+                  className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Reluare din erori ({failedTargets.length})
+                </Button>
+              )}
+              <Button
+                onClick={runPriorityAll}
+                disabled={priorityRunning || priorityTargets.length === 0}
+                className="gap-2"
+                variant="destructive"
+              >
+                {priorityRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                {priorityRunning
+                  ? `Rulează ${priorityProgress.done}/${priorityProgress.total}`
+                  : `Aplică toate (${priorityTargets.length})`}
+              </Button>
+            </div>
           </div>
           {priorityRunning && (
             <Progress value={(priorityProgress.done / Math.max(priorityProgress.total, 1)) * 100} />
+          )}
+          {!priorityRunning && priorityProgress.total > 0 && (
+            <div className="text-xs text-muted-foreground">
+              ✅ {priorityProgress.ok} aplicate · ❌ {priorityProgress.err} erori
+              {failedTargets.length > 0 && (
+                <span className="ml-2 text-destructive">
+                  · {failedTargets.length} de re-rulat
+                </span>
+              )}
+            </div>
           )}
           {priorityTargets.length > 0 ? (
             <ScrollArea className="h-56 rounded border bg-background">
