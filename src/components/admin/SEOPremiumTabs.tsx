@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -553,6 +554,9 @@ const CompetitorDiffTab = ({ path }: { path: string }) => {
                     competitorBlocks={Array.isArray(s.competitor_schema_raw) ? s.competitor_schema_raw : []}
                     competitorLabel={s.competitor_label || "competitor"}
                     ourJsonLd={(ourPage as any)?.json_ld}
+                    path={path}
+                    ourTitle={ourTitle}
+                    ourMeta={ourMeta}
                   />
 
                   {/* Raw JSON-LD blocks (expandable code blocks) */}
@@ -645,9 +649,55 @@ function previewValue(v: any): string {
   } catch { return String(v); }
 }
 
+// Deep merge: only fill keys that are missing/empty on the target.
+function mergeMissing(target: any, source: any): any {
+  if (source === undefined || source === null) return target;
+  if (target === undefined || target === null || target === "") return source;
+  if (Array.isArray(target) || Array.isArray(source)) return target;
+  if (typeof target === "object" && typeof source === "object") {
+    const out: any = { ...target };
+    for (const [k, v] of Object.entries(source)) {
+      if (k.startsWith("@") && out[k] !== undefined) continue;
+      out[k] = mergeMissing(out[k], v);
+    }
+    return out;
+  }
+  return target;
+}
+
+function applyAdditionsToOurJsonLd(ourJson: any, additions: any[]): any {
+  let base = ourJson ? JSON.parse(JSON.stringify(ourJson)) : { "@context": "https://schema.org", "@graph": [] };
+  const ensureGraph = (n: any): any => {
+    if (n && typeof n === "object" && !Array.isArray(n) && Array.isArray(n["@graph"])) return n;
+    if (Array.isArray(n)) return { "@context": "https://schema.org", "@graph": n };
+    return { "@context": "https://schema.org", "@graph": [n].filter(Boolean) };
+  };
+  base = ensureGraph(base);
+  const graph: any[] = base["@graph"];
+
+  for (const add of additions) {
+    const type = add?.["@type"];
+    const idx = graph.findIndex((n) => {
+      const t = n?.["@type"];
+      return Array.isArray(t) ? t.includes(type) : t === type;
+    });
+    if (idx >= 0) graph[idx] = mergeMissing(graph[idx], add);
+    else graph.push(add);
+  }
+  return base;
+}
+
 const SchemaAutoDiff = ({
-  competitorBlocks, competitorLabel, ourJsonLd,
-}: { competitorBlocks: any[]; competitorLabel: string; ourJsonLd: any }) => {
+  competitorBlocks, competitorLabel, ourJsonLd, path, ourTitle, ourMeta,
+}: {
+  competitorBlocks: any[]; competitorLabel: string; ourJsonLd: any;
+  path: string; ourTitle: string; ourMeta: string;
+}) => {
+  const qc = useQueryClient();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorValue, setEditorValue] = useState("");
+  const [editorError, setEditorError] = useState<string | null>(null);
+
   const diff = useMemo(() => {
     const ours: Record<string, Record<string, any>> = {};
     if (ourJsonLd) collectTypePropsWithValues(ourJsonLd, ours);
@@ -666,7 +716,6 @@ const SchemaAutoDiff = ({
       if (missing.length === 0 && ours[type]) continue;
       rows.push({ type, missing, weHave: !!ours[type] });
     }
-    // Build recommended JSON-LD additions per type (only missing keys, with competitor sample values)
     const recommended = rows
       .filter((r) => r.missing.length > 0)
       .map((r) => {
@@ -677,6 +726,43 @@ const SchemaAutoDiff = ({
     return { rows, recommended };
   }, [competitorBlocks, ourJsonLd]);
 
+  const applyMutation = useMutation({
+    mutationFn: async (additions: any[]) => {
+      if (!Array.isArray(additions) || additions.length === 0) throw new Error("Nimic de aplicat");
+      const merged = applyAdditionsToOurJsonLd(ourJsonLd, additions);
+      const payload: any = { url_path: path, json_ld: merged, updated_at: new Date().toISOString() };
+      if (ourTitle) payload.title = ourTitle;
+      if (ourMeta) payload.meta_description = ourMeta;
+      const { error } = await supabase.from("seo_overrides").upsert(payload, { onConflict: "url_path" });
+      if (error) throw error;
+      return merged;
+    },
+    onSuccess: () => {
+      toast.success("JSON-LD aplicat în seo_overrides");
+      qc.invalidateQueries({ queryKey: ["seo-our-page", path] });
+      setEditorOpen(false);
+    },
+    onError: (e: any) => {
+      const msg = e?.message || "Eroare la aplicare";
+      toast.error(msg);
+      setEditorError(msg);
+    },
+  });
+
+  const totalMissing = diff.rows.reduce((a, r) => a + r.missing.length, 0);
+  const recommendedJson = JSON.stringify(diff.recommended, null, 2);
+
+  const previewMerged = useMemo(() => {
+    try {
+      const parsed = JSON.parse(editorValue || "[]");
+      const additions = Array.isArray(parsed) ? parsed : [parsed];
+      const valid = additions.filter((a) => a && typeof a === "object" && a["@type"]);
+      return JSON.stringify(applyAdditionsToOurJsonLd(ourJsonLd, valid), null, 2);
+    } catch {
+      return "// JSON invalid — corectează stânga";
+    }
+  }, [editorValue, ourJsonLd]);
+
   if (diff.rows.length === 0) {
     return (
       <div className="rounded border border-emerald-300/60 bg-emerald-50/40 dark:bg-emerald-950/20 p-2 text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
@@ -685,14 +771,28 @@ const SchemaAutoDiff = ({
     );
   }
 
-  const totalMissing = diff.rows.reduce((a, r) => a + r.missing.length, 0);
-  const recommendedJson = JSON.stringify(diff.recommended, null, 2);
-
   const copyRec = () => {
     navigator.clipboard.writeText(recommendedJson).then(
       () => toast.success("Snippet recomandat copiat"),
       () => toast.error("Nu s-a putut copia"),
     );
+  };
+
+  const openEditor = () => {
+    setEditorValue(recommendedJson);
+    setEditorError(null);
+    setEditorOpen(true);
+  };
+
+  const handleApply = () => {
+    setEditorError(null);
+    let parsed: any;
+    try { parsed = JSON.parse(editorValue); }
+    catch (e: any) { setEditorError("JSON invalid: " + e.message); return; }
+    const additions = Array.isArray(parsed) ? parsed : [parsed];
+    const valid = additions.filter((a) => a && typeof a === "object" && a["@type"]);
+    if (valid.length === 0) { setEditorError("Niciun obiect valid cu @type"); return; }
+    applyMutation.mutate(valid);
   };
 
   return (
@@ -734,18 +834,91 @@ const SchemaAutoDiff = ({
 
       {diff.recommended.length > 0 && (
         <div className="space-y-1">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <p className="text-[10px] uppercase text-muted-foreground">Recomandare JSON-LD (de adăugat la noi)</p>
-            <Button size="sm" variant="ghost" className="h-6 px-2" onClick={copyRec}>
-              <Copy className="h-3 w-3 mr-1" /> Copiază
-            </Button>
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" className="h-6 px-2" onClick={copyRec}>
+                <Copy className="h-3 w-3 mr-1" /> Copiază
+              </Button>
+              <Button size="sm" variant="default" className="h-6 px-2" onClick={openEditor}>
+                <Pencil className="h-3 w-3 mr-1" /> Editează și aplică
+              </Button>
+            </div>
           </div>
           <pre className="rounded bg-muted/60 p-2 text-[11px] font-mono overflow-x-auto max-h-56">
             <code>{recommendedJson}</code>
           </pre>
         </div>
       )}
+
+      <SchemaApplyDialog
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        editorValue={editorValue}
+        setEditorValue={setEditorValue}
+        editorError={editorError}
+        previewMerged={previewMerged}
+        onApply={handleApply}
+        isApplying={applyMutation.isPending}
+      />
     </div>
+  );
+};
+
+const SchemaApplyDialog = ({
+  open, onOpenChange, editorValue, setEditorValue, editorError, previewMerged, onApply, isApplying,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  editorValue: string;
+  setEditorValue: (v: string) => void;
+  editorError: string | null;
+  previewMerged: string;
+  onApply: () => void;
+  isApplying: boolean;
+}) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Editează JSON-LD recomandat</DialogTitle>
+          <DialogDescription>
+            Doar proprietățile lipsă (sau goale) vor fi adăugate la JSON-LD-ul nostru. Restul rămâne neatins.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase text-muted-foreground">Adăugiri (editabil)</p>
+            <textarea
+              className="w-full h-72 rounded border bg-background p-2 text-[11px] font-mono"
+              value={editorValue}
+              onChange={(e) => setEditorValue(e.target.value)}
+              spellCheck={false}
+            />
+            {editorError && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> {editorError}
+              </p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase text-muted-foreground">Preview JSON-LD final (după merge)</p>
+            <pre className="w-full h-72 rounded border bg-muted/40 p-2 text-[11px] font-mono overflow-auto">
+              <code>{previewMerged}</code>
+            </pre>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isApplying}>Anulează</Button>
+          <Button onClick={onApply} disabled={isApplying}>
+            {isApplying ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
+            Aplică doar proprietățile lipsă
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
