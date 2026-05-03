@@ -32,10 +32,10 @@ const PiataImobiliara = () => {
 
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-3">
-              Piața Imobiliară Timișoara — Aprilie 2026
+              Piața imobiliară Timișoara — aprilie 2026
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Prețuri medii pe metru pătrat, tendințe și comparații între cartiere. Date agregate din surse publice, actualizate lunar.
+              Prețuri medii pe metru pătrat și comparații între cartiere, agregate din surse publice și actualizate lunar. Cifrele sunt orientative; pentru o evaluare aplicată proprietății tale, recomandăm o discuție cu un consultant.
             </p>
           </div>
 
