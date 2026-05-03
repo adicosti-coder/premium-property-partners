@@ -1922,6 +1922,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                                 aria-invalid={!!targetErr}
                               />
                               {targetErr && <p className="text-[11px] text-destructive">{targetErr}</p>}
+                              {targetHint && <p className="text-[10px] text-muted-foreground italic">💡 {targetHint}</p>}
                             </div>
                           </div>
                         </div>
