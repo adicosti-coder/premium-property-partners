@@ -18,6 +18,9 @@ interface RequestBody {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
   try {
     const { url, language = "ro", forceRefresh = false }: RequestBody = await req.json();
     if (!url || !/^https?:\/\//.test(url)) {
