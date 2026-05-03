@@ -13,6 +13,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Loader2, Link2, RefreshCw, Check, X, Pencil, Sparkles,
   AlertTriangle, CheckCircle2, FileWarning, Code2, ExternalLink, Target,
@@ -20,6 +21,22 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+/** Convertește erorile (inclusiv non-2xx de la Edge Functions) într-un mesaj prietenos. */
+const friendlyEdgeError = (e: any, fallback = "Operațiunea nu a putut fi finalizată."): string => {
+  if (!e) return fallback;
+  // FunctionsHttpError de la supabase-js include status + context
+  const status = e?.context?.status ?? e?.status;
+  const raw = (e?.message || "").toString();
+  if (status === 401 || /Missing auth|Invalid token/i.test(raw)) return "Sesiunea a expirat. Reautentifică-te ca admin și reîncearcă.";
+  if (status === 403) return "Nu ai permisiuni de admin pentru această acțiune.";
+  if (status === 400) return raw.replace(/^Edge Function returned a non-2xx status code/i, "").trim() || "Datele trimise nu sunt valide.";
+  if (status === 429) return "Prea multe cereri. Așteaptă câteva secunde și reîncearcă.";
+  if (status && status >= 500) return "Serviciul backend a întâmpinat o problemă temporară. Încearcă din nou într-un minut.";
+  if (/Failed to fetch|NetworkError/i.test(raw)) return "Conexiune instabilă. Verifică internetul și reîncearcă.";
+  if (/non-2xx/i.test(raw)) return "Funcția backend a returnat o eroare. Verifică datele introduse și reîncearcă.";
+  return raw || fallback;
+};
 
 interface Props {
   audit: {
