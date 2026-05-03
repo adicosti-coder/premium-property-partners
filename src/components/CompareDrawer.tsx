@@ -169,14 +169,14 @@ const CompareDrawer = () => {
       setSavedCode(code);
       return code;
     }
-    toast.error("Nu s-a putut salva comparația");
+    toast.error("Comparația nu a putut fi salvată");
     return null;
   };
 
   const handleSave = async () => {
     const code = await ensureSaved("saved");
     if (code) {
-      toast.success("Comparație salvată!", { description: "Linkul a fost generat." });
+      toast.success("Comparație salvată", { description: "Linkul partajabil a fost generat." });
       if (typeof window.gtag === "function") {
         window.gtag("event", "save_comparison", { share_code: code });
       }
@@ -190,12 +190,12 @@ const CompareDrawer = () => {
 
     const copiedOk = await copyTextToClipboard(url);
     if (!copiedOk) {
-      toast.error("Nu s-a putut copia linkul");
+      toast.error("Linkul nu a putut fi copiat");
       return;
     }
 
     setCopied(true);
-    toast.success("Link copiat!");
+    toast.success("Link copiat în clipboard");
     setTimeout(() => setCopied(false), 2000);
     if (typeof window.gtag === "function") {
       window.gtag("event", "share_comparison", { method: "copy_link", share_code: code });
