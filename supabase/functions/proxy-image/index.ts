@@ -1,4 +1,5 @@
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
+import { isUrlAllowed, fetchWithSizeCap } from "../_shared/urlGuard.ts";
 
 /** Convert ArrayBuffer to base64 without exceeding call stack */
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -12,16 +13,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
     }
   }
   return btoa(binary);
-}
-
-async function fetchImage(url: string): Promise<Response> {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)",
-      Accept: "image/*",
-    },
-  });
-  return response;
 }
 
 Deno.serve(async (req) => {
