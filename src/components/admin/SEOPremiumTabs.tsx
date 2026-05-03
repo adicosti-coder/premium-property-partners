@@ -548,6 +548,13 @@ const CompetitorDiffTab = ({ path }: { path: string }) => {
                     </div>
                   )}
 
+                  {/* Auto schema diff: missing properties + recommended snippet */}
+                  <SchemaAutoDiff
+                    competitorBlocks={Array.isArray(s.competitor_schema_raw) ? s.competitor_schema_raw : []}
+                    competitorLabel={s.competitor_label || "competitor"}
+                    ourJsonLd={(ourPage as any)?.json_ld}
+                  />
+
                   {/* Raw JSON-LD blocks (expandable code blocks) */}
                   <CompetitorJsonLdBlocks
                     blocks={Array.isArray(s.competitor_schema_raw) ? s.competitor_schema_raw : []}
