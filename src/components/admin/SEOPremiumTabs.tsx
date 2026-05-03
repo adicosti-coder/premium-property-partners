@@ -1905,6 +1905,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                                 aria-invalid={!!anchorErr}
                               />
                               {anchorErr && <p className="text-[11px] text-destructive">{anchorErr}</p>}
+                              {anchorHint && <p className="text-[10px] text-muted-foreground italic">💡 {anchorHint}</p>}
                             </div>
                             <div className="space-y-1">
                               <Input
