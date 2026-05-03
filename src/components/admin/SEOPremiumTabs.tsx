@@ -1558,13 +1558,31 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
     onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
-  const linksValid = useMemo(() => {
-    return editLinks.every((l) => {
-      if (!l.enabled) return true;
-      const t = l.target_url_path;
-      return !!l.anchor_text.trim() && !!t.trim() && !/\s/.test(t) && t.startsWith("/");
-    });
-  }, [editLinks]);
+  const normalizePath = (raw: string): string => {
+    let v = (raw || "").trim().toLowerCase();
+    // strip diacritics
+    v = v.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // romanian special compatibility (ș/ț already covered by NFD; keep ş/ţ legacy)
+    v = v.replace(/[şș]/g, "s").replace(/[ţț]/g, "t").replace(/[ăâ]/g, "a").replace(/î/g, "i");
+    // spaces -> hyphens
+    v = v.replace(/\s+/g, "-");
+    // remove forbidden chars (keep a-z 0-9 / - _)
+    v = v.replace(/[^a-z0-9/_-]/g, "");
+    // collapse hyphens
+    v = v.replace(/-+/g, "-");
+    if (v && !v.startsWith("/")) v = "/" + v;
+    return v;
+  };
+
+  const isLinkValid = (l: { enabled: boolean; anchor_text: string; target_url_path: string }) => {
+    if (!l.enabled) return true;
+    const t = l.target_url_path;
+    return !!l.anchor_text.trim() && !!t && t.startsWith("/") && !/\s/.test(t) && /^\/[a-z0-9/_-]*$/.test(t);
+  };
+
+  const linksValid = useMemo(() => editLinks.every(isLinkValid), [editLinks]);
+  const validLinksCount = useMemo(() => editLinks.filter((l) => l.enabled && isLinkValid(l)).length, [editLinks]);
+
 
   const copyBest = () => {
     if (!result?.best_schema) return;
