@@ -50,14 +50,18 @@ serve(async (req) => {
 
     const prompt = prompts[mode] || prompts.enhance;
 
-    // Fetch source image and convert to base64
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) throw new Error(`Cannot fetch source image: ${imgRes.status}`);
-    const imgBuf = new Uint8Array(await imgRes.arrayBuffer());
+    // Fetch source image with size cap
+    const fetched = await fetchWithSizeCap(imageUrl);
+    if (!fetched.ok || !fetched.bytes) {
+      return new Response(JSON.stringify({ error: fetched.error || "fetch failed" }), {
+        status: fetched.status || 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const imgBuf = fetched.bytes;
     let binary = "";
     for (let i = 0; i < imgBuf.length; i++) binary += String.fromCharCode(imgBuf[i]);
     const base64 = btoa(binary);
-    const mime = imgRes.headers.get("content-type") || "image/jpeg";
+    const mime = fetched.contentType || "image/jpeg";
     const dataUri = `data:${mime};base64,${base64}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
