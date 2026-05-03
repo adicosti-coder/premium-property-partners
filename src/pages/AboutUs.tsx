@@ -266,32 +266,32 @@ const AboutUs = () => {
           {
             icon: Shield,
             title: "Transparency",
-            description: "Open communication, detailed reports, no hidden costs."
+            description: "Clear communication, detailed monthly reports and commissions agreed before signing."
           },
           {
             icon: Target,
-            title: "Results",
-            description: "We measure ourselves by your success: fast sales, superior returns."
+            title: "Measurable results",
+            description: "Our performance is judged by net yield, occupancy and guest satisfaction — not by promises."
           },
           {
             icon: Heart,
-            title: "Dedication",
-            description: "We treat every property as if it were our own."
+            title: "Accountability",
+            description: "Every property receives the same level of care we would apply to our own assets."
           },
           {
             icon: TrendingUp,
-            title: "Innovation",
-            description: "Modern technology and industry-leading practices."
+            title: "Continuous process",
+            description: "Weekly dynamic pricing, periodic operational audits and data-driven optimisations."
           }
         ]
       },
       stats: {
         title: "In Numbers",
         items: [
-          { value: "50+", label: "Properties managed" },
-          { value: "+80%", label: "Occupancy rate" },
-          { value: "4.9★", label: "Average rating" },
-          { value: "500+", label: "Happy guests" }
+          { value: "60+", label: "Properties under management" },
+          { value: "75%", label: "Average annual occupancy" },
+          { value: "9.7/10", label: "Consolidated guest rating" },
+          { value: "9.4%", label: "Target net yield" }
         ]
       },
       company: {
@@ -315,9 +315,9 @@ const AboutUs = () => {
         ]
       },
       cta: {
-        title: "Ready to Start?",
-        subtitle: "Contact us for a no-obligation discussion about how we can help.",
-        button: "Request a Free Consultation"
+        title: "Let's talk",
+        subtitle: "Schedule a no-obligation consultation. We respond within 24 business hours with the recommended next steps.",
+        button: "Request a consultation"
       }
     }
   };
