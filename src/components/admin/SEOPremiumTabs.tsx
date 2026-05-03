@@ -1500,6 +1500,64 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
     onError: (e: any) => { toast.error(friendlyEdgeError(e)); setApplyMode(null); },
   });
 
+  // ============= Pachet Complet (3-pillar review modal) =============
+  const [fullOpen, setFullOpen] = useState(false);
+  const [editSchema, setEditSchema] = useState<string>("");
+  const [editSchemaError, setEditSchemaError] = useState<string | null>(null);
+  const [editLinks, setEditLinks] = useState<Array<{ keyword: string; target_url_path: string; anchor_text: string; enabled: boolean }>>([]);
+  const [editDrafts, setEditDrafts] = useState<Array<{ h2_title: string; draft_content: string; enabled: boolean }>>([]);
+
+  const previewFull = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("seo-benchmark-apply", {
+        body: {
+          mode: "preview_full",
+          our_url: ourUrl.trim(),
+          competitor_url: compUrl.trim(),
+          h2_titles: h2Gaps,
+          missing_keywords: result?.local_keywords?.only_theirs || [],
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (data: any) => {
+      setEditSchema(JSON.stringify(result?.best_schema || {}, null, 2));
+      setEditSchemaError(null);
+      setEditLinks((data.links || []).map((l: any) => ({ ...l, enabled: true })));
+      setEditDrafts((data.drafts || []).map((d: any) => ({ ...d, enabled: !!d.draft_content })));
+      setFullOpen(true);
+    },
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
+  });
+
+  const applyFull = useMutation({
+    mutationFn: async () => {
+      let parsedSchema: any = null;
+      try { parsedSchema = JSON.parse(editSchema); setEditSchemaError(null); }
+      catch (e: any) { setEditSchemaError(e.message); throw new Error("JSON Schema invalid: " + e.message); }
+      const body = {
+        mode: "apply_full",
+        our_url: ourUrl.trim(),
+        competitor_url: compUrl.trim(),
+        best_schema: parsedSchema,
+        links: editLinks.filter((l) => l.enabled && l.anchor_text && l.target_url_path),
+        drafts: editDrafts.filter((d) => d.enabled && d.h2_title && d.draft_content),
+      };
+      const { data, error } = await supabase.functions.invoke("seo-benchmark-apply", { body });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (data: any) => {
+      const s = data.summary || {};
+      toast.success(`Pachet aplicat: ${s.schema ? "✓ Schema" : "—"} · ${s.links} linkuri · ${s.briefs} drafturi`);
+      setFullOpen(false);
+    },
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
+  });
+
   const copyBest = () => {
     if (!result?.best_schema) return;
     const txt = `<script type="application/ld+json">\n${JSON.stringify(result.best_schema, null, 2)}\n</script>`;
