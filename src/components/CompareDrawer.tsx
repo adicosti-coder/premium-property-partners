@@ -366,10 +366,10 @@ const CompareDrawer = () => {
           "flex items-center gap-2 text-sm font-medium",
           !canCompare && "opacity-70 cursor-default"
         )}
-        aria-label={expanded ? "Închide comparație" : "Deschide comparație"}
+        aria-label={expanded ? "Închide comparația" : "Deschide comparația"}
       >
         <GitCompareArrows className="w-4 h-4" />
-        Compară ({items.length}/3)
+        Comparație ({items.length}/3)
         {canCompare && (expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />)}
       </button>
 
