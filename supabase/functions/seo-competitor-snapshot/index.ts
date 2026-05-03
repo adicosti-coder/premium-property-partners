@@ -130,9 +130,20 @@ serve(async (req) => {
     const { data: role } = await sb.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
     if (!role) return json({ error: "Forbidden" }, 403);
 
-    const { our_url, competitor_urls, our_url_path } = await req.json();
+    const body = await req.json();
+    let { our_url, competitor_urls, our_url_path, competitor_url } = body;
+
+    // Accept single competitor_url (string) or array competitor_urls
+    if (!competitor_urls && competitor_url) {
+      competitor_urls = Array.isArray(competitor_url) ? competitor_url : [competitor_url];
+    }
+    // Derive our_url from our_url_path if missing
+    if (!our_url && our_url_path) {
+      const base = "https://www.realtrust.ro";
+      our_url = `${base}${our_url_path.startsWith("/") ? "" : "/"}${our_url_path}`;
+    }
     if (!our_url || !Array.isArray(competitor_urls) || competitor_urls.length === 0) {
-      return json({ error: "our_url and competitor_urls required" }, 400);
+      return json({ error: "our_url (or our_url_path) and competitor_url(s) required" }, 400);
     }
     const ourPage = await fetchPage(our_url);
     const oursSeo = { ...extractFromHtml(ourPage.html), url: our_url };
