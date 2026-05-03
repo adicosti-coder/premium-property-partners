@@ -240,15 +240,13 @@ const OwnerAuth = () => {
         toast({ title: t.loginSuccess });
         navigate("/portal-proprietar");
       } else {
-        // Verify owner code via edge function (no direct table access)
+        // Pre-validate code via edge function (lightweight check before signup)
         const { data: verifyResult, error: verifyError } = await supabase.functions.invoke(
           "verify-owner-code",
           { body: { code: ownerCode.trim().toUpperCase() } }
         );
 
-        const codeData = verifyResult?.valid ? { id: verifyResult.code_id, property_id: verifyResult.property_id } : null;
-
-        if (verifyError || !codeData) {
+        if (verifyError || !verifyResult?.valid) {
           toast({
             title: t.invalidCode,
             description: t.invalidCodeMessage,
@@ -268,28 +266,22 @@ const OwnerAuth = () => {
         });
         if (signupError) throw signupError;
 
-        if (authData.user) {
-          // Mark code as used
-          await supabase
-            .from("owner_codes")
-            .update({ is_used: true, used_by: authData.user.id })
-            .eq("id", codeData.id);
+        if (authData.user && authData.session) {
+          // Atomically redeem code, link property, and grant owner role server-side
+          const { data: redeemResult, error: redeemError } = await supabase.rpc(
+            "redeem_owner_code" as any,
+            { p_code: ownerCode.trim().toUpperCase() }
+          );
 
-          // Link property to owner
-          await supabase
-            .from("owner_properties")
-            .insert({
-              user_id: authData.user.id,
-              property_id: codeData.property_id,
+          if (redeemError || !(redeemResult as any)?.success) {
+            toast({
+              title: t.invalidCode,
+              description: (redeemResult as any)?.error || t.invalidCodeMessage,
+              variant: "destructive",
             });
-
-          // Add owner role
-          await supabase
-            .from("user_roles")
-            .insert({
-              user_id: authData.user.id,
-              role: "owner" as any,
-            });
+            setIsLoading(false);
+            return;
+          }
         }
 
         toast({
