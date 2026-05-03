@@ -202,12 +202,12 @@ const Hero = () => {
       {!isMobile && (
         <div className="absolute bottom-44 right-6 lg:right-12 z-20 flex flex-col gap-3">
           <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-primary/50 shadow-lg">
-            <span className="text-primary font-bold text-xl">{language === 'ro' ? '+40% Randament' : '+40% Returns'}</span>
-            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'vs Chirie clasică' : 'vs Classic Rent'}</span>
+            <span className="text-primary font-bold text-xl">{language === 'ro' ? 'Randament net 9,4%' : '9.4% net yield'}</span>
+            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Ipoteze transparente: ocupare 75%, deducere 27%' : 'Transparent assumptions: 75% occupancy, 27% costs'}</span>
           </div>
           <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
-            <span className="font-bold text-foreground text-lg">Zero Stress</span>
-            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Operare full' : 'Full Operations'}</span>
+            <span className="font-bold text-foreground text-lg">{language === 'ro' ? 'Tu încasezi, noi operăm' : 'You earn, we operate'}</span>
+            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Operare hotelieră completă' : 'Full hotel-style operations'}</span>
           </div>
         </div>
       )}
@@ -223,7 +223,7 @@ const Hero = () => {
           aria-label={language === 'ro' ? 'Derulează la calculator' : 'Scroll to calculator'}
         >
           <span className="text-sm md:text-base font-bold text-primary-foreground tracking-wide uppercase px-4 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm shadow-lg">
-            {language === 'ro' ? 'Cât poate produce apartamentul tău lunar?' : 'How much can your apartment earn monthly?'}
+            {language === 'ro' ? 'Vezi cât poate produce apartamentul tău' : 'See your apartment’s monthly potential'}
           </span>
           <div className="w-9 h-14 rounded-full border-2 border-primary flex items-start justify-center p-2 shadow-[0_0_16px_hsl(var(--primary)/0.3)]">
             <div className="w-2 h-3.5 bg-primary rounded-full animate-bounce" />
@@ -320,12 +320,12 @@ const HeroContent = ({
         <div className="flex items-center gap-6 mt-8 py-4 px-6 bg-card/80 border border-border/50 rounded-xl backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-sm text-foreground font-medium">{t.hero.features?.paymentsDesc || "Direct la proprietar"}</span>
+            <span className="text-sm text-foreground font-medium">{t.hero.features?.paymentsDesc || "Randament calculat transparent"}</span>
           </div>
           <div className="w-px h-5 bg-border" />
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary" />
-            <span className="text-sm text-foreground font-medium">{t.hero.features?.modelDesc || "Transparent, fără blocaje"}</span>
+            <span className="text-sm text-foreground font-medium">{t.hero.features?.modelDesc || "Tu încasezi, noi operăm"}</span>
           </div>
           <div className="w-px h-5 bg-border" />
           <div className="flex items-center gap-2">
