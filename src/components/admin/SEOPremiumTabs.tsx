@@ -1873,7 +1873,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                   <div className="space-y-1.5">
                     {editLinks.map((l, idx) => {
                       const anchorErr = l.enabled && !l.anchor_text.trim() ? "Anchor text obligatoriu" : null;
-                      const anchorHint = anchorErr ? "Adaugă un text descriptiv (ex: „apartamente Iosefin Timișoara")." : null;
+                      const anchorHint = anchorErr ? 'Adaugă un text descriptiv (ex: „apartamente Iosefin Timișoara").' : null;
                       let targetErr: string | null = null;
                       let targetHint: string | null = null;
                       if (l.enabled) {
