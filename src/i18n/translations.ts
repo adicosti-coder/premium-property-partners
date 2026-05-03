@@ -259,38 +259,38 @@ export const translations = {
       items: [
         // Profit & ROI
         { 
-          question: "Care este profitul real pe care îl pot obține din apartamentul meu în Timișoara?", 
-          answer: "Estimăm veniturile pe baza datelor de piață actuale, unde un preț mediu pe noapte (ADR) este de aproximativ 55€, cu o rată de ocupare medie de 65%. Apartamentele noastre (ATENEO, GREEN FOREST, FullView Studio, HELIOS) din zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi ating un ROI brut de 10%." 
+          question: "Ce randament pot estima realist din apartamentul meu în Timișoara?", 
+          answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, FullView Studio, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
         },
         // Servicii incluse
         { 
-          question: "Ce servicii sunt incluse în comisionul de management?", 
-          answer: "Oferim un pachet complet care include administrarea rezervărilor pe toate platformele (Airbnb, Booking), comunicarea cu oaspeții și coordonarea curățeniei. Implementăm Self Check-in digitalizat, parcare subterană gratuită și bucătărie complet utilată în fiecare apartament." 
+          question: "Ce servicii sunt incluse în comisionul de administrare?", 
+          answer: "Pachetul acoperă administrarea rezervărilor pe toate canalele (Booking, Airbnb, Expedia și altele), comunicarea cu oaspeții, coordonarea curățeniei și mentenanța uzuală. Implementăm self check-in digital, parcare subterană acolo unde este disponibilă și bucătărie complet echipată în fiecare apartament." 
         },
         // Transparență financiară
         { 
           question: "Cum asigurați transparența veniturilor și a costurilor?", 
-          answer: "Proprietarii primesc rapoarte lunare detaliate, unde comisioanele sunt explicate clar (15-25% comision management + 15-23% comision platforme). Spre deosebire de modelele cu abonamente fixe de tip 39€/lună, modelul nostru bazat pe comision ne motivează să maximizăm gradul tău de ocupare." 
+          answer: "Primești un raport lunar detaliat, cu toate intrările și costurile defalcate (15-25% comision administrare + 15-23% comisioane platforme). Modelul nostru pe comision, în locul abonamentelor fixe, ne motivează să creștem ocuparea și venitul tău net." 
         },
         // Locație & proximitate
         { 
           question: "Ce este în apropiere de apartamentele ApArt Hotel?", 
-          answer: "Apartamentele noastre sunt situate strategic: la 2 minute de Lidl, 5 minute de Gara de Nord, 8 minute de Centrul Vechi și Piața Unirii, 10 minute de Iulius Mall și Amazonia Aquapark. Fiecare proprietate oferă parcare subterană gratuită și acces facil la transport public." 
+          answer: "Apartamentele sunt poziționate central: la 2 minute de Lidl, 5 minute de Gara de Nord, 8 minute de Centrul Vechi și Piața Unirii, 10 minute de Iulius Mall și Amazonia Aquapark. Majoritatea proprietăților oferă parcare subterană și acces facil la transport public." 
         },
         // Verificare oaspeți
         { 
-          question: "Cum sunt selectați oaspeții care se cazează în apartament?", 
-          answer: "Efectuăm un proces riguros de verificare a oaspeților (due diligence), prioritizând clienții business și familiile, pentru a preveni deteriorarea proprietății. Colaborăm cu societăți de Asigurare pentru protecție împotriva daunelor." 
+          question: "Cum sunt selectați oaspeții?", 
+          answer: "Aplicăm un proces de verificare a oaspeților, cu prioritate pe clienți business și familii, pentru a reduce riscul de daune. Avem și acoperire prin asigurare pentru situațiile excepționale." 
         },
         // Self check-in & facilități
         { 
-          question: "Cum funcționează Self Check-in-ul și ce facilități sunt incluse?", 
-          answer: "Primești un cod digital de acces cu instrucțiuni video detaliate pe WhatsApp. Fiecare apartament include: parcare subterană gratuită, bucătărie complet utilată (cafea, sare, ulei incluse), Smart TV cu Netflix, WiFi de mare viteză, încălzire în pardoseală și climatizare modernă." 
+          question: "Cum funcționează self check-in-ul și ce facilități sunt incluse?", 
+          answer: "Primești pe WhatsApp un cod digital de acces și instrucțiuni video. Fiecare apartament include bucătărie complet echipată (cafea, sare, ulei), Smart TV cu Netflix, WiFi de mare viteză, climatizare modernă; majoritatea oferă și parcare subterană și încălzire în pardoseală." 
         },
         // Program referral
         { 
-          question: "Oferiți recompense pentru recomandări?", 
-          answer: "Avem un program activ de Referral: dacă ne recomanzi un nou proprietar care semnează cu noi, poți beneficia de bonusuri de până la 100€, o cazare gratuită într-unul dintre apartamentele noastre (ATENEO, GREEN FOREST, FullView, HELIOS), sau reduceri la comisionul de management." 
+          question: "Aveți program de recomandări?", 
+          answer: "Da. Dacă ne recomanzi un proprietar care semnează un contract de administrare, alegi între bonus de până la 100€, o cazare gratuită în unul dintre apartamentele noastre (ATENEO, GREEN FOREST, FullView, HELIOS) sau o reducere la comisionul de administrare." 
         },
       ],
     },
