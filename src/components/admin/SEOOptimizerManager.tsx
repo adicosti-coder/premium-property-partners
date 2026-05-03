@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
 import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
+import { SEOQuickWinsPanel } from "./SEOQuickWinsPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
@@ -757,6 +758,8 @@ const SEOOptimizerManager = () => {
           )}
         </CardContent>
       </Card>
+
+      <SEOQuickWinsPanel history={history} overrides={overrides as any} />
 
       {selectedAudit && (
         <Card>
