@@ -760,7 +760,7 @@ const SchemaAutoDiff = ({
       setEditorOpen(false);
     },
     onError: (e: any) => {
-      const msg = e?.message || "Eroare la aplicare";
+      const msg = friendlyEdgeError(e, "Eroare la aplicare");
       toast.error(msg);
       setEditorError(msg);
     },
