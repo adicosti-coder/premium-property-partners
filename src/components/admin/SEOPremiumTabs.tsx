@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -1499,6 +1500,64 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
     onError: (e: any) => { toast.error(friendlyEdgeError(e)); setApplyMode(null); },
   });
 
+  // ============= Pachet Complet (3-pillar review modal) =============
+  const [fullOpen, setFullOpen] = useState(false);
+  const [editSchema, setEditSchema] = useState<string>("");
+  const [editSchemaError, setEditSchemaError] = useState<string | null>(null);
+  const [editLinks, setEditLinks] = useState<Array<{ keyword: string; target_url_path: string; anchor_text: string; enabled: boolean }>>([]);
+  const [editDrafts, setEditDrafts] = useState<Array<{ h2_title: string; draft_content: string; enabled: boolean }>>([]);
+
+  const previewFull = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("seo-benchmark-apply", {
+        body: {
+          mode: "preview_full",
+          our_url: ourUrl.trim(),
+          competitor_url: compUrl.trim(),
+          h2_titles: h2Gaps,
+          missing_keywords: result?.local_keywords?.only_theirs || [],
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (data: any) => {
+      setEditSchema(JSON.stringify(result?.best_schema || {}, null, 2));
+      setEditSchemaError(null);
+      setEditLinks((data.links || []).map((l: any) => ({ ...l, enabled: true })));
+      setEditDrafts((data.drafts || []).map((d: any) => ({ ...d, enabled: !!d.draft_content })));
+      setFullOpen(true);
+    },
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
+  });
+
+  const applyFull = useMutation({
+    mutationFn: async () => {
+      let parsedSchema: any = null;
+      try { parsedSchema = JSON.parse(editSchema); setEditSchemaError(null); }
+      catch (e: any) { setEditSchemaError(e.message); throw new Error("JSON Schema invalid: " + e.message); }
+      const body = {
+        mode: "apply_full",
+        our_url: ourUrl.trim(),
+        competitor_url: compUrl.trim(),
+        best_schema: parsedSchema,
+        links: editLinks.filter((l) => l.enabled && l.anchor_text && l.target_url_path),
+        drafts: editDrafts.filter((d) => d.enabled && d.h2_title && d.draft_content),
+      };
+      const { data, error } = await supabase.functions.invoke("seo-benchmark-apply", { body });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: (data: any) => {
+      const s = data.summary || {};
+      toast.success(`Pachet aplicat: ${s.schema ? "✓ Schema" : "—"} · ${s.links} linkuri · ${s.briefs} drafturi`);
+      setFullOpen(false);
+    },
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
+  });
+
   const copyBest = () => {
     if (!result?.best_schema) return;
     const txt = `<script type="application/ld+json">\n${JSON.stringify(result.best_schema, null, 2)}\n</script>`;
@@ -1520,10 +1579,24 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
           <Input value={compUrl} onChange={(e) => setCompUrl(e.target.value)} className="h-9 mt-0.5" placeholder="https://www.apostu.ro/..." />
         </div>
       </div>
-      <Button size="sm" onClick={() => benchmark.mutate()} disabled={benchmark.isPending || !compUrl.trim()}>
-        {benchmark.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Gauge className="h-4 w-4 mr-1.5" />}
-        Compară side-by-side
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={() => benchmark.mutate()} disabled={benchmark.isPending || !compUrl.trim()}>
+          {benchmark.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Gauge className="h-4 w-4 mr-1.5" />}
+          Compară side-by-side
+        </Button>
+        {result && (
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-gradient-to-r from-primary to-amber-600 hover:opacity-90"
+            onClick={() => previewFull.mutate()}
+            disabled={previewFull.isPending}
+          >
+            {previewFull.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Sparkles className="h-4 w-4 mr-1.5" />}
+            Apply Pachet Complet (3 piloni)
+          </Button>
+        )}
+      </div>
 
       {result && (
         <div className="space-y-4">
@@ -1695,6 +1768,146 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ============= Pachet Complet — Modul Revizuire ============= */}
+      <Dialog open={fullOpen} onOpenChange={(o) => !applyFull.isPending && setFullOpen(o)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Revizuiește pachetul SEO înainte de aplicare
+            </DialogTitle>
+            <DialogDescription>
+              Editează liber toate cele 3 piloni. Nimic nu se salvează până la „Aplică tot pe site”.
+            </DialogDescription>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 pr-3 -mr-3">
+            <div className="space-y-4">
+              {/* Pillar 1 — Schema */}
+              <div className="rounded border p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" /> 1. JSON-LD Schema (Best-in-Class)
+                  </p>
+                  {editSchemaError ? (
+                    <Badge variant="destructive" className="text-[10px]">JSON invalid</Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-[10px]">JSON valid</Badge>
+                  )}
+                </div>
+                <Textarea
+                  value={editSchema}
+                  onChange={(e) => {
+                    setEditSchema(e.target.value);
+                    try { JSON.parse(e.target.value); setEditSchemaError(null); }
+                    catch (err: any) { setEditSchemaError(err.message); }
+                  }}
+                  className="font-mono text-[11px] min-h-[180px] max-h-[260px]"
+                  spellCheck={false}
+                />
+                {editSchemaError && (
+                  <p className="text-[11px] text-destructive">{editSchemaError}</p>
+                )}
+              </div>
+
+              {/* Pillar 2 — Internal Links */}
+              <div className="rounded border p-3 space-y-2">
+                <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" /> 2. Linkuri interne ({editLinks.filter((l) => l.enabled).length}/{editLinks.length})
+                </p>
+                {editLinks.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nu sunt cartiere lipsă față de competitor.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {editLinks.map((l, idx) => (
+                      <div key={idx} className={cn("rounded border p-2 space-y-1", !l.enabled && "opacity-50")}>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={l.enabled}
+                            onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, enabled: e.target.checked } : x))}
+                            className="h-4 w-4"
+                          />
+                          <Badge variant="outline" className="text-[10px]">{l.keyword}</Badge>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                          <Input
+                            value={l.anchor_text}
+                            onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, anchor_text: e.target.value } : x))}
+                            className="h-7 text-xs"
+                            placeholder="Anchor text"
+                          />
+                          <Input
+                            value={l.target_url_path}
+                            onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, target_url_path: e.target.value } : x))}
+                            className="h-7 text-xs font-mono"
+                            placeholder="/cartiere/..."
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pillar 3 — H2 Drafts */}
+              <div className="rounded border p-3 space-y-2">
+                <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
+                  <Code2 className="h-3.5 w-3.5" /> 3. Drafturi H2 ({editDrafts.filter((d) => d.enabled).length}/{editDrafts.length})
+                </p>
+                {editDrafts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nu sunt H2-uri lipsă față de competitor.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {editDrafts.map((d, idx) => (
+                      <div key={idx} className={cn("rounded border p-2 space-y-1.5", !d.enabled && "opacity-50")}>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={d.enabled}
+                            onChange={(e) => setEditDrafts((cur) => cur.map((x, i) => i === idx ? { ...x, enabled: e.target.checked } : x))}
+                            className="h-4 w-4"
+                          />
+                          <Input
+                            value={d.h2_title}
+                            onChange={(e) => setEditDrafts((cur) => cur.map((x, i) => i === idx ? { ...x, h2_title: e.target.value } : x))}
+                            className="h-7 text-xs font-semibold"
+                          />
+                        </div>
+                        <Textarea
+                          value={d.draft_content}
+                          onChange={(e) => setEditDrafts((cur) => cur.map((x, i) => i === idx ? { ...x, draft_content: e.target.value } : x))}
+                          className="text-xs min-h-[80px]"
+                          placeholder={d.draft_content ? "" : "Gemini nu a generat conținut. Editează manual."}
+                        />
+                        <p className="text-[10px] text-muted-foreground text-right">
+                          {d.draft_content.split(/\s+/).filter(Boolean).length} cuvinte
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="border-t pt-3">
+            <Button variant="outline" onClick={() => setFullOpen(false)} disabled={applyFull.isPending}>
+              Anulează
+            </Button>
+            <Button
+              onClick={() => applyFull.mutate()}
+              disabled={applyFull.isPending || !!editSchemaError}
+              className="bg-gradient-to-r from-primary to-amber-600 hover:opacity-90"
+            >
+              {applyFull.isPending
+                ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Se aplică...</>
+                : <><CheckCircle2 className="h-4 w-4 mr-1.5" />Aplică tot pe site</>
+              }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

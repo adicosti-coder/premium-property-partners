@@ -112,6 +112,78 @@ serve(async (req) => {
       return json({ ok: true, mode, generated: drafts.length, drafts });
     }
 
+    if (mode === "preview_full") {
+      // Generate H2 drafts upfront so admin can review/edit BEFORE persisting anything.
+      const h2_titles: string[] = (body.h2_titles || []).slice(0, 8);
+      const drafts: Array<{ h2_title: string; draft_content: string }> = [];
+      for (const h2 of h2_titles) {
+        const draft = await geminiBrief(h2, url_path);
+        drafts.push({ h2_title: h2, draft_content: draft });
+      }
+      const slugP = (k: string) => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const links = (body.missing_keywords || []).map((kw: string) => ({
+        keyword: kw,
+        target_url_path: `/cartiere/${slugP(kw)}`,
+        anchor_text: `apartamente ${kw} Timișoara`,
+      }));
+      return json({ ok: true, mode, url_path, drafts, links });
+    }
+
+    if (mode === "apply_full") {
+      // Accept fully-edited payload from admin and persist atomically (best-effort sequential).
+      const summary: any = { schema: false, links: 0, briefs: 0 };
+      const competitor_url: string = body.competitor_url || "";
+
+      if (body.best_schema) {
+        const { data: existing } = await sb.from("seo_overrides").select("id").eq("url_path", url_path).maybeSingle();
+        if (existing) {
+          await sb.from("seo_overrides").update({
+            json_ld: body.best_schema, is_active: true,
+            applied_by: u.user.id, applied_at: new Date().toISOString(),
+          }).eq("id", existing.id);
+        } else {
+          await sb.from("seo_overrides").insert({
+            url_path, json_ld: body.best_schema, is_active: true,
+            applied_by: u.user.id, applied_at: new Date().toISOString(),
+          });
+        }
+        summary.schema = true;
+      }
+
+      if (Array.isArray(body.links) && body.links.length > 0) {
+        const rows = body.links
+          .filter((l: any) => l && l.anchor_text && l.target_url_path)
+          .map((l: any) => ({
+            source_url_path: url_path,
+            target_url_path: l.target_url_path,
+            anchor_text: l.anchor_text,
+            reason: l.reason || "Cartier menționat de competitor, lipsă la noi",
+            relevance_score: 80,
+            status: "pending",
+          }));
+        if (rows.length) {
+          const { error } = await sb.from("seo_internal_link_suggestions").insert(rows);
+          if (!error) summary.links = rows.length;
+        }
+      }
+
+      if (Array.isArray(body.drafts) && body.drafts.length > 0) {
+        const rows = body.drafts
+          .filter((d: any) => d && d.h2_title && d.draft_content)
+          .map((d: any) => ({
+            url_path, competitor_url,
+            h2_title: d.h2_title, draft_content: d.draft_content,
+            status: "draft", generated_by: u.user.id,
+          }));
+        if (rows.length) {
+          const { error } = await sb.from("seo_content_briefs").insert(rows);
+          if (!error) summary.briefs = rows.length;
+        }
+      }
+
+      return json({ ok: true, mode, url_path, summary });
+    }
+
     return json({ error: "unknown mode" }, 400);
   } catch (e) {
     console.error("[seo-benchmark-apply]", e);
