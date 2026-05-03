@@ -159,9 +159,9 @@ const EvaluareGratuita = () => {
         <div className="min-h-[80vh] flex items-center justify-center px-4">
           <div className="text-center max-w-md space-y-4">
             <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
-            <h1 className="text-2xl font-bold text-foreground">Cererea a fost trimisă!</h1>
+            <h1 className="text-2xl font-bold text-foreground">Cererea ta a fost trimisă</h1>
             <p className="text-muted-foreground">
-              Vă contactăm în maxim 24 de ore cu o evaluare personalizată.
+              Te contactăm în maximum 24 de ore lucrătoare cu o estimare personalizată pentru proprietatea ta.
             </p>
             <Button asChild variant="outline">
               <a href="/">Înapoi la pagina principală</a>
