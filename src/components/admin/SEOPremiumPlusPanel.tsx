@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Zap, RefreshCw, Globe2, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Sparkles, Zap, RefreshCw, Globe2, Loader2, AlertTriangle, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
