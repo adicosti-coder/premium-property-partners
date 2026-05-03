@@ -157,7 +157,7 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
   // Bulk apply: for missing_meta + missing_title categories, write directly to seo_overrides
   const bulkFixMutation = useMutation({
     mutationFn: async (cat: FixCategory) => {
-      const def = CATEGORIES.find((c) => c.key === cat);
+      const def = stats.find((c) => c.key === cat);
       if (!def || !def.canBulkFix) throw new Error("Categorie fără bulk-fix");
       const targets = def.audits;
       if (!targets.length) throw new Error("Nimic de aplicat");
