@@ -2,8 +2,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
 };
+
+// Constant-time comparison to prevent timing attacks
+function timingSafeEqual(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return result === 0;
+}
 
 interface LeadRecord {
   id: string;
@@ -32,11 +40,12 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify shared secret
-  const webhookSecret = req.headers.get("x-webhook-secret");
-  if (webhookSecret !== "Secret_Leads_2024_!_Sec") {
+  // Verify shared secret against the Supabase service role key (sent by the DB trigger).
+  const webhookSecret = req.headers.get("x-webhook-secret") || "";
+  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!expected || !timingSafeEqual(webhookSecret, expected)) {
     return new Response(
-      JSON.stringify({ error: "Unauthorized - Invalid webhook secret" }),
+      JSON.stringify({ error: "Unauthorized" }),
       { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

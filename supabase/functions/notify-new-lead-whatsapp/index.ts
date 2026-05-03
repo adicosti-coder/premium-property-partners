@@ -6,7 +6,14 @@ const corsHeaders = {
 };
 
 const ADMIN_PHONE = "+40799069256"; // RealTrust WhatsApp
-const SHARED_SECRET = "Secret_Leads_2024_!_Sec";
+
+// Constant-time comparison to prevent timing attacks
+function timingSafeEqual(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return result === 0;
+}
 
 interface LeadRecord {
   id: string;
@@ -30,9 +37,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify shared secret (DB trigger sends it)
-  const secret = req.headers.get("x-webhook-secret");
-  if (secret !== SHARED_SECRET) {
+  // Verify shared secret against Supabase service role key (sent by DB trigger)
+  const secret = req.headers.get("x-webhook-secret") || "";
+  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!expected || !timingSafeEqual(secret, expected)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

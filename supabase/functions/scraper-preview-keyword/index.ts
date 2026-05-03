@@ -110,6 +110,26 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Require admin
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) return new Response(JSON.stringify({ success: false, error: "Auth required" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } });
+    const { data: u } = await userClient.auth.getUser(token);
+    if (!u?.user) return new Response(JSON.stringify({ success: false, error: "Invalid token" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { data: roleRow } = await supabase.from("user_roles").select("role")
+      .eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
+    if (!roleRow) return new Response(JSON.stringify({ success: false, error: "Admin required" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
     if (!firecrawlKey) {
       return new Response(
@@ -124,10 +144,6 @@ Deno.serve(async (req) => {
     const keywordId: string | undefined = body?.keyword_id;
     const limit: number = Math.min(Math.max(Number(body?.limit) || 15, 1), 30);
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     // ── Mode: queries-overview ─ returns final queries for ALL active keywords
     //    (no Firecrawl calls — fast, used to preview the platform-by-platform plan).

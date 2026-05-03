@@ -5,6 +5,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+async function requireAdminOr401(req: Request): Promise<Response | null> {
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return new Response(JSON.stringify({ error: "Auth required" }),
+    { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } });
+  const { data: u } = await userClient.auth.getUser(token);
+  if (!u?.user) return new Response(JSON.stringify({ error: "Invalid token" }),
+    { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data: roleRow } = await admin.from("user_roles").select("role")
+    .eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
+  if (!roleRow) return new Response(JSON.stringify({ error: "Admin required" }),
+    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  return null;
+}
+
+
 // Timișoara zones with scoring weights
 const PREMIUM_ZONES = ['Centru', 'Iosefin', 'Fabric', 'Elisabetin', 'Circumvalațiunii'];
 const GOOD_ZONES = ['Iulius Town', 'Complex Studențesc', 'Dâmbovița', 'Lipovei', 'Soarelui', 'Torontalului'];
