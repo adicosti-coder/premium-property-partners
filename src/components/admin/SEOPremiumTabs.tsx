@@ -1558,13 +1558,31 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
     onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
-  const linksValid = useMemo(() => {
-    return editLinks.every((l) => {
-      if (!l.enabled) return true;
-      const t = l.target_url_path;
-      return !!l.anchor_text.trim() && !!t.trim() && !/\s/.test(t) && t.startsWith("/");
-    });
-  }, [editLinks]);
+  const normalizePath = (raw: string): string => {
+    let v = (raw || "").trim().toLowerCase();
+    // strip diacritics
+    v = v.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // romanian special compatibility (ș/ț already covered by NFD; keep ş/ţ legacy)
+    v = v.replace(/[şș]/g, "s").replace(/[ţț]/g, "t").replace(/[ăâ]/g, "a").replace(/î/g, "i");
+    // spaces -> hyphens
+    v = v.replace(/\s+/g, "-");
+    // remove forbidden chars (keep a-z 0-9 / - _)
+    v = v.replace(/[^a-z0-9/_-]/g, "");
+    // collapse hyphens
+    v = v.replace(/-+/g, "-");
+    if (v && !v.startsWith("/")) v = "/" + v;
+    return v;
+  };
+
+  const isLinkValid = (l: { enabled: boolean; anchor_text: string; target_url_path: string }) => {
+    if (!l.enabled) return true;
+    const t = l.target_url_path;
+    return !!l.anchor_text.trim() && !!t && t.startsWith("/") && !/\s/.test(t) && /^\/[a-z0-9/_-]*$/.test(t);
+  };
+
+  const linksValid = useMemo(() => editLinks.every(isLinkValid), [editLinks]);
+  const validLinksCount = useMemo(() => editLinks.filter((l) => l.enabled && isLinkValid(l)).length, [editLinks]);
+
 
   const copyBest = () => {
     if (!result?.best_schema) return;
@@ -1821,7 +1839,13 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
               {/* Pillar 2 — Internal Links */}
               <div className="rounded border p-3 space-y-2">
                 <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" /> 2. Linkuri interne ({editLinks.filter((l) => l.enabled).length}/{editLinks.length})
+                  <MapPin className="h-3.5 w-3.5" /> 2. Linkuri interne
+                  <Badge
+                    variant={editLinks.length > 0 && validLinksCount === editLinks.filter((l) => l.enabled).length && validLinksCount > 0 ? "default" : "secondary"}
+                    className="text-[10px] ml-1"
+                  >
+                    {validLinksCount}/{editLinks.length} linkuri gata
+                  </Badge>
                 </p>
                 {editLinks.length === 0 ? (
                   <p className="text-xs text-muted-foreground">Nu sunt cartiere lipsă față de competitor.</p>
@@ -1835,6 +1859,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                         if (!t.trim()) targetErr = "Path obligatoriu";
                         else if (/\s/.test(t)) targetErr = "Path-ul nu poate conține spații";
                         else if (!t.startsWith("/")) targetErr = "Path-ul trebuie să înceapă cu '/'";
+                        else if (!/^\/[a-z0-9/_-]*$/.test(t)) targetErr = "Doar litere mici, cifre, '-', '_', '/'";
                       }
                       return (
                         <div key={idx} className={cn("rounded border p-2 space-y-1", !l.enabled && "opacity-50")}>
@@ -1862,6 +1887,12 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                               <Input
                                 value={l.target_url_path}
                                 onChange={(e) => setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, target_url_path: e.target.value } : x))}
+                                onBlur={(e) => {
+                                  const normalized = normalizePath(e.target.value);
+                                  if (normalized !== l.target_url_path) {
+                                    setEditLinks((cur) => cur.map((x, i) => i === idx ? { ...x, target_url_path: normalized } : x));
+                                  }
+                                }}
                                 className={cn("h-7 text-xs font-mono", targetErr && "border-destructive focus-visible:ring-destructive")}
                                 placeholder="/cartiere/..."
                                 aria-invalid={!!targetErr}
