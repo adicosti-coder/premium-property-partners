@@ -1,9 +1,7 @@
-// SEO Benchmark Apply — convertește rezultatele Benchmark în acțiuni:
-//  - mode=schema       → upsert seo_overrides.json_ld pentru url_path
-//  - mode=local_links  → insert seo_internal_link_suggestions (status=pending) pentru cartiere lipsă
-//  - mode=h2_briefs    → generează drafturi H2 cu Gemini și salvează în seo_content_briefs
+// SEO Benchmark Apply — securizat cu requireAdmin + validare strictă input.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,8 +14,29 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
+const PATH_RE = /^\/[a-z0-9/_-]*$/;
+const MAX_ANCHOR = 160;
+const MAX_H2 = 200;
+const MAX_DRAFT = 4000;
+const MAX_KEYWORDS = 20;
+const MAX_DRAFTS = 8;
+
 function pathOf(u: string): string {
   try { return new URL(u).pathname.replace(/\/$/, "") || "/"; } catch { return "/"; }
+}
+
+function sanitizePath(p: unknown): string | null {
+  if (typeof p !== "string") return null;
+  const t = p.trim();
+  if (!t || t.length > 200 || !PATH_RE.test(t)) return null;
+  return t;
+}
+
+function sanitizeStr(s: unknown, max: number): string | null {
+  if (typeof s !== "string") return null;
+  const t = s.trim();
+  if (!t || t.length > max) return null;
+  return t;
 }
 
 async function geminiBrief(h2: string, urlPath: string): Promise<string> {
@@ -45,47 +64,53 @@ Răspunde DOAR cu textul paragrafului, fără markdown.`;
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-    const auth = req.headers.get("Authorization") || "";
-    const token = auth.replace(/^Bearer\s+/i, "");
-    if (!token) return json({ error: "Missing auth" }, 401);
-    const { data: u } = await sb.auth.getUser(token);
-    if (!u?.user) return json({ error: "Invalid token" }, 401);
-    const { data: role } = await sb.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
-    if (!role) return json({ error: "Forbidden" }, 403);
+    // Strict admin gate — JWT + role check
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+    const userId = auth.userId!;
 
-    const body = await req.json();
-    const mode: "schema" | "local_links" | "h2_briefs" = body.mode;
-    const our_url: string = body.our_url;
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    let body: any;
+    try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
+
+    const mode: string = body?.mode;
+    const our_url = sanitizeStr(body?.our_url, 500);
     if (!our_url || !mode) return json({ error: "our_url and mode required" }, 400);
-    const url_path = pathOf(our_url);
+
+    let url_path: string;
+    try { url_path = pathOf(our_url); } catch { return json({ error: "Invalid our_url" }, 400); }
+    if (!PATH_RE.test(url_path)) return json({ error: "Invalid url_path" }, 400);
 
     if (mode === "schema") {
       const best_schema = body.best_schema;
-      if (!best_schema) return json({ error: "best_schema required" }, 400);
-      // Upsert seo_overrides.json_ld
+      if (!best_schema || typeof best_schema !== "object") return json({ error: "best_schema required" }, 400);
+      const schemaStr = JSON.stringify(best_schema);
+      if (schemaStr.length > 50000) return json({ error: "Schema too large" }, 400);
       const { data: existing } = await sb.from("seo_overrides").select("id").eq("url_path", url_path).maybeSingle();
       if (existing) {
         await sb.from("seo_overrides")
-          .update({ json_ld: best_schema, is_active: true, applied_by: u.user.id, applied_at: new Date().toISOString() })
+          .update({ json_ld: best_schema, is_active: true, applied_by: userId, applied_at: new Date().toISOString() })
           .eq("id", existing.id);
       } else {
         await sb.from("seo_overrides").insert({
           url_path, json_ld: best_schema, is_active: true,
-          applied_by: u.user.id, applied_at: new Date().toISOString(),
+          applied_by: userId, applied_at: new Date().toISOString(),
         });
       }
       return json({ ok: true, mode, url_path, applied: true });
     }
 
     if (mode === "local_links") {
-      const keywords: string[] = body.missing_keywords || [];
-      if (!keywords.length) return json({ error: "missing_keywords required" }, 400);
+      const keywords: unknown = body.missing_keywords;
+      if (!Array.isArray(keywords) || keywords.length === 0) return json({ error: "missing_keywords required" }, 400);
+      const clean = (keywords as unknown[]).slice(0, MAX_KEYWORDS).map((k) => sanitizeStr(k, 80)).filter(Boolean) as string[];
+      if (!clean.length) return json({ error: "No valid keywords" }, 400);
       const slug = (k: string) => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-      const rows = keywords.map((kw) => ({
+      const rows = clean.map((kw) => ({
         source_url_path: url_path,
         target_url_path: `/cartiere/${slug(kw)}`,
-        anchor_text: `apartamente ${kw} Timișoara`,
+        anchor_text: `apartamente ${kw} Timișoara`.slice(0, MAX_ANCHOR),
         reason: `Cartier menționat de competitor, lipsă la noi`,
         relevance_score: 80,
         status: "pending",
@@ -96,15 +121,17 @@ serve(async (req) => {
     }
 
     if (mode === "h2_briefs") {
-      const h2_titles: string[] = (body.h2_titles || []).slice(0, 8);
-      const competitor_url: string = body.competitor_url || "";
-      if (!h2_titles.length) return json({ error: "h2_titles required" }, 400);
+      const raw: unknown = body.h2_titles;
+      if (!Array.isArray(raw) || !raw.length) return json({ error: "h2_titles required" }, 400);
+      const h2_titles = (raw as unknown[]).slice(0, MAX_DRAFTS).map((h) => sanitizeStr(h, MAX_H2)).filter(Boolean) as string[];
+      if (!h2_titles.length) return json({ error: "No valid h2_titles" }, 400);
+      const competitor_url = sanitizeStr(body.competitor_url, 500) || "";
       const drafts: any[] = [];
       for (const h2 of h2_titles) {
         const draft = await geminiBrief(h2, url_path);
         drafts.push({
           url_path, competitor_url, h2_title: h2, draft_content: draft,
-          status: "draft", generated_by: u.user.id,
+          status: "draft", generated_by: userId,
         });
       }
       const { error } = await sb.from("seo_content_briefs").insert(drafts);
@@ -113,15 +140,21 @@ serve(async (req) => {
     }
 
     if (mode === "preview_full") {
-      // Generate H2 drafts upfront so admin can review/edit BEFORE persisting anything.
-      const h2_titles: string[] = (body.h2_titles || []).slice(0, 8);
+      const raw: unknown = body.h2_titles;
+      const h2_titles = Array.isArray(raw)
+        ? (raw as unknown[]).slice(0, MAX_DRAFTS).map((h) => sanitizeStr(h, MAX_H2)).filter(Boolean) as string[]
+        : [];
       const drafts: Array<{ h2_title: string; draft_content: string }> = [];
       for (const h2 of h2_titles) {
         const draft = await geminiBrief(h2, url_path);
         drafts.push({ h2_title: h2, draft_content: draft });
       }
       const slugP = (k: string) => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-      const links = (body.missing_keywords || []).map((kw: string) => ({
+      const rawKw: unknown = body.missing_keywords;
+      const kws = Array.isArray(rawKw)
+        ? (rawKw as unknown[]).slice(0, MAX_KEYWORDS).map((k) => sanitizeStr(k, 80)).filter(Boolean) as string[]
+        : [];
+      const links = kws.map((kw) => ({
         keyword: kw,
         target_url_path: `/cartiere/${slugP(kw)}`,
         anchor_text: `apartamente ${kw} Timișoara`,
@@ -130,51 +163,68 @@ serve(async (req) => {
     }
 
     if (mode === "apply_full") {
-      // Accept fully-edited payload from admin and persist atomically (best-effort sequential).
       const summary: any = { schema: false, links: 0, briefs: 0 };
-      const competitor_url: string = body.competitor_url || "";
+      const competitor_url = sanitizeStr(body.competitor_url, 500) || "";
 
-      if (body.best_schema) {
+      // 1. Schema
+      if (body.best_schema && typeof body.best_schema === "object") {
+        const schemaStr = JSON.stringify(body.best_schema);
+        if (schemaStr.length > 50000) return json({ error: "Schema too large" }, 400);
         const { data: existing } = await sb.from("seo_overrides").select("id").eq("url_path", url_path).maybeSingle();
         if (existing) {
           await sb.from("seo_overrides").update({
             json_ld: body.best_schema, is_active: true,
-            applied_by: u.user.id, applied_at: new Date().toISOString(),
+            applied_by: userId, applied_at: new Date().toISOString(),
           }).eq("id", existing.id);
         } else {
           await sb.from("seo_overrides").insert({
             url_path, json_ld: body.best_schema, is_active: true,
-            applied_by: u.user.id, applied_at: new Date().toISOString(),
+            applied_by: userId, applied_at: new Date().toISOString(),
           });
         }
         summary.schema = true;
       }
 
+      // 2. Internal links — strict validation + de-dup
       if (Array.isArray(body.links) && body.links.length > 0) {
-        const rows = body.links
-          .filter((l: any) => l && l.anchor_text && l.target_url_path)
-          .map((l: any) => ({
+        const seen = new Set<string>();
+        const rows: any[] = [];
+        for (const l of (body.links as unknown[]).slice(0, MAX_KEYWORDS)) {
+          if (!l || typeof l !== "object") continue;
+          const anchor = sanitizeStr((l as any).anchor_text, MAX_ANCHOR);
+          const target = sanitizePath((l as any).target_url_path);
+          if (!anchor || !target) continue;
+          if (seen.has(target)) continue;
+          seen.add(target);
+          rows.push({
             source_url_path: url_path,
-            target_url_path: l.target_url_path,
-            anchor_text: l.anchor_text,
-            reason: l.reason || "Cartier menționat de competitor, lipsă la noi",
+            target_url_path: target,
+            anchor_text: anchor,
+            reason: sanitizeStr((l as any).reason, 300) || "Cartier menționat de competitor, lipsă la noi",
             relevance_score: 80,
             status: "pending",
-          }));
+          });
+        }
         if (rows.length) {
           const { error } = await sb.from("seo_internal_link_suggestions").insert(rows);
           if (!error) summary.links = rows.length;
         }
       }
 
+      // 3. H2 drafts — strict validation
       if (Array.isArray(body.drafts) && body.drafts.length > 0) {
-        const rows = body.drafts
-          .filter((d: any) => d && d.h2_title && d.draft_content)
-          .map((d: any) => ({
+        const rows: any[] = [];
+        for (const d of (body.drafts as unknown[]).slice(0, MAX_DRAFTS)) {
+          if (!d || typeof d !== "object") continue;
+          const h2 = sanitizeStr((d as any).h2_title, MAX_H2);
+          const draft = sanitizeStr((d as any).draft_content, MAX_DRAFT);
+          if (!h2 || !draft) continue;
+          rows.push({
             url_path, competitor_url,
-            h2_title: d.h2_title, draft_content: d.draft_content,
-            status: "draft", generated_by: u.user.id,
-          }));
+            h2_title: h2, draft_content: draft,
+            status: "draft", generated_by: userId,
+          });
+        }
         if (rows.length) {
           const { error } = await sb.from("seo_content_briefs").insert(rows);
           if (!error) summary.briefs = rows.length;
