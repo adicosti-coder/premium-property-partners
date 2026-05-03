@@ -1,8 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertTriangle, GitBranch, ExternalLink } from "lucide-react";
+import { AlertTriangle, GitBranch, ExternalLink, Wand2, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+const CANONICAL_HOST = "www.realtrust.ro";
+const urlToPath = (full: string) => {
+  try { const u = new URL(full); let p = u.pathname.replace(/\/{2,}/g, "/"); if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1); return p || "/"; } catch { return full; }
+};
+const toCanonical = (full: string) => `https://${CANONICAL_HOST}${urlToPath(full)}`;
 
 interface AuditRow {
   id: string;
@@ -36,6 +46,33 @@ function tokenize(s: string | null | undefined): string[] {
 }
 
 export const SEOCannibalizationPanel = ({ history }: Props) => {
+  const qc = useQueryClient();
+  const [pending, setPending] = useState<string | null>(null);
+
+  const resolveMutation = useMutation({
+    mutationFn: async ({ loserUrl, winnerUrl }: { loserUrl: string; winnerUrl: string }) => {
+      const { data, error } = await supabase.functions.invoke("seo-auto-fix", {
+        body: {
+          action: "apply_manual_canonical",
+          url_path: urlToPath(loserUrl),
+          canonical_url: toCanonical(winnerUrl),
+          override_conflicts: false,
+          notes: "Cannibalization resolver: 301-style canonical to higher-score page",
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      if ((data as any)?.applied === false) throw new Error((data as any)?.reason || "Conflict detectat");
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Canonical aplicat pe pagina pierzătoare");
+      qc.invalidateQueries({ queryKey: ["seo-overrides"] });
+      setPending(null);
+    },
+    onError: (e: any) => { toast.error(e.message || "Eșec aplicare canonical"); setPending(null); },
+  });
+
   const clusters = useMemo(() => {
     // Latest audit per URL
     const latest = new Map<string, AuditRow>();
@@ -135,6 +172,29 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
                         <Badge key={kw} variant="outline" className="text-[10px] font-normal">{kw}</Badge>
                       ))}
                     </div>
+                    {(() => {
+                      const loserUrl = c.urls[1 - winnerIdx];
+                      const winnerUrl = c.urls[winnerIdx];
+                      const key = `${loserUrl}->${winnerUrl}`;
+                      const isPending = pending === key && resolveMutation.isPending;
+                      return (
+                        <div className="flex justify-end pt-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isPending}
+                            onClick={() => {
+                              if (!confirm(`Aplici canonical de la\n${urlToPath(loserUrl)}\n→ ${toCanonical(winnerUrl)}?`)) return;
+                              setPending(key);
+                              resolveMutation.mutate({ loserUrl, winnerUrl });
+                            }}
+                          >
+                            {isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1" />}
+                            Aplică canonical (loser → winner)
+                          </Button>
+                        </div>
+                      );
+                    })()}
                   </li>
                 );
               })}
