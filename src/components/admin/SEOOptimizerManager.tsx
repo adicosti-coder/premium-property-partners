@@ -120,7 +120,7 @@ const SEOOptimizerManager = () => {
     queryKey: ["seo-audits-history"],
     queryFn: async () => {
       const { data, error } = await supabase.from("seo_audits")
-        .select("*").order("created_at", { ascending: false }).limit(30);
+        .select("*").order("created_at", { ascending: false }).limit(500);
       if (error) throw error;
       return (data || []) as AuditRow[];
     },
