@@ -208,16 +208,31 @@ export const SEOCompetitorGapPanel = () => {
 
     return Array.from(byDay.values())
       .sort((a, b) => a.day.localeCompare(b.day))
-      .map((r) => ({
-        day: r.day,
-        Noi: r.ourScores.length
+      .map((r) => {
+        const ourAvg = r.ourScores.length
           ? Math.round(r.ourScores.reduce((a, b) => a + b, 0) / r.ourScores.length)
-          : null,
-        Competitori: r.competitorScores.length
+          : null;
+        const compAvg = r.competitorScores.length
           ? Math.round(r.competitorScores.reduce((a, b) => a + b, 0) / r.competitorScores.length)
-          : null,
-      }));
-  }, [snapshots, ourSnaps, trendPath]);
+          : null;
+        const evs = overrideEvents.filter(
+          (e) => e.url_path === trendPath && e.applied_at.slice(0, 10) === r.day
+        );
+        return {
+          day: r.day,
+          Noi: ourAvg,
+          Competitori: compAvg,
+          Eveniment: evs.length > 0 ? (ourAvg ?? compAvg ?? 50) : null,
+          eventCount: evs.length,
+          eventNotes: evs.map((e) => `v${e.version_number} (${e.change_type})${e.notes ? ": " + e.notes : ""}`).join(" · "),
+        };
+      });
+  }, [snapshots, ourSnaps, overrideEvents, trendPath]);
+
+  const pathEvents = useMemo(
+    () => overrideEvents.filter((e) => e.url_path === trendPath),
+    [overrideEvents, trendPath]
+  );
 
   /* ============ Run analysis ============ */
   const run = useMutation({
