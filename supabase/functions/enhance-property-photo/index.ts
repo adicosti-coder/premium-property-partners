@@ -19,6 +19,9 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
   try {
     const { imageUrl, mode = "enhance", style = "modern" } = await req.json();
     if (!imageUrl) {
@@ -26,6 +29,14 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const guard = isUrlAllowed(imageUrl);
+    if (!guard.ok) {
+      return new Response(JSON.stringify({ error: `Forbidden URL: ${guard.reason}` }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
