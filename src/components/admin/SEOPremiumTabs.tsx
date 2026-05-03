@@ -138,7 +138,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
       toast.success("Sugestii generate");
       qc.invalidateQueries({ queryKey: ["seo-internal-links", path] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare"),
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
   const updateMutation = useMutation({
@@ -162,7 +162,7 @@ const InternalLinksTab = ({ path, title }: { path: string; title: string }) => {
       setEditingId(null);
       qc.invalidateQueries({ queryKey: ["seo-internal-links", path] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare"),
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
   const grouped = useMemo(() => {
@@ -416,7 +416,7 @@ const CompetitorDiffTab = ({ path }: { path: string }) => {
       setCompetitorUrl("");
       qc.invalidateQueries({ queryKey: ["seo-competitor-snapshots", path] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare"),
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
   return (
@@ -1098,7 +1098,7 @@ const SchemaValidatorTab = ({ path }: { path: string }) => {
       toast.success(`Validare: ${status}`);
       qc.invalidateQueries({ queryKey: ["seo-schema-validations", path] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare"),
+    onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
   const latest = validations[0] as any;
