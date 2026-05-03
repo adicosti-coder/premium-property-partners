@@ -13,16 +13,16 @@
 
 export const HOMEPAGE_SEO = {
   ro: {
-    title: "RealTrust Timișoara | Imobiliare, Regim Hotelier & Investiții",
+    title: "RealTrust Timișoara | Imobiliare, regim hotelier & investiții",
     description:
-      "Investește profitabil în imobiliare Timișoara: regim hotelier, vânzări, închirieri lângă UVT & Iulius Town. Calculează ROI gratuit!",
-    h1: "RealTrust & ApArt Hotel Timișoara — imobiliare, investiții & regim hotelier cu randament garantat.",
+      "Imobiliare Timișoara cu operare hotelieră prin ApArt Hotel: vânzări, închirieri și administrare. Randament net 9,4% calculat transparent. Cere simularea ta.",
+    h1: "RealTrust & ApArt Hotel Timișoara — imobiliare, investiții și operare hotelieră cu randament calculat transparent.",
   },
   en: {
-    title: "RealTrust Timișoara | Real Estate & Short-Term Rentals",
+    title: "RealTrust Timișoara | Real estate & short-term rentals",
     description:
-      "Invest in Timișoara real estate: short-term rentals, sales, rentals near UVT & Iulius Town. Calculate your ROI for free now!",
-    h1: "RealTrust & ApArt Hotel Timișoara — real estate & short-term rentals with guaranteed yield.",
+      "Timișoara real estate with hotel-style operations by ApArt Hotel: sales, rentals and management. 9.4% net yield, calculated transparently. Request your simulation.",
+    h1: "RealTrust & ApArt Hotel Timișoara — real estate, investments and hotel-style operations with transparent yield.",
   },
 } as const;
 
