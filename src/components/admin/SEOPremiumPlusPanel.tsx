@@ -198,6 +198,27 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     onError: (e: any) => toast.error(e.message || "Eșec aplicare"),
   });
 
+  const [priorityRunning, setPriorityRunning] = useState(false);
+  const [priorityProgress, setPriorityProgress] = useState({ done: 0, total: 0, ok: 0, err: 0 });
+
+  const runPriorityAll = async () => {
+    setPriorityRunning(true);
+    setPriorityProgress({ done: 0, total: priorityTargets.length, ok: 0, err: 0 });
+    let ok = 0, err = 0;
+    for (let i = 0; i < priorityTargets.length; i++) {
+      try {
+        await applySingleMutation.mutateAsync(priorityTargets[i]);
+        ok++;
+      } catch {
+        err++;
+      }
+      setPriorityProgress({ done: i + 1, total: priorityTargets.length, ok, err });
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    setPriorityRunning(false);
+    toast.success(`Prioritate optimizare: ${ok} aplicate, ${err} erori`);
+  };
+
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
       <CardHeader>
@@ -220,10 +241,24 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
                 Prioritate optimizare — top {priorityTargets.length} pagini cu scor mic
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Aplică individual sugestiile AI pentru paginile cu cel mai mic scor (sub 95).
+                Aplică sugestiile AI pentru paginile cu cel mai mic scor (sub 95).
               </p>
             </div>
+            <Button
+              onClick={runPriorityAll}
+              disabled={priorityRunning || priorityTargets.length === 0}
+              className="gap-2"
+              variant="destructive"
+            >
+              {priorityRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              {priorityRunning
+                ? `Rulează ${priorityProgress.done}/${priorityProgress.total}`
+                : `Aplică toate (${priorityTargets.length})`}
+            </Button>
           </div>
+          {priorityRunning && (
+            <Progress value={(priorityProgress.done / Math.max(priorityProgress.total, 1)) * 100} />
+          )}
           {priorityTargets.length > 0 ? (
             <ScrollArea className="h-56 rounded border bg-background">
               <ul className="divide-y text-sm">
