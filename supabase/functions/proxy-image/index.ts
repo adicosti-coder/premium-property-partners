@@ -1,4 +1,5 @@
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
+import { isUrlAllowed, fetchWithSizeCap } from "../_shared/urlGuard.ts";
 
 /** Convert ArrayBuffer to base64 without exceeding call stack */
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -12,16 +13,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
     }
   }
   return btoa(binary);
-}
-
-async function fetchImage(url: string): Promise<Response> {
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)",
-      Accept: "image/*",
-    },
-  });
-  return response;
 }
 
 Deno.serve(async (req) => {
@@ -44,21 +35,28 @@ Deno.serve(async (req) => {
         });
       }
 
-      const response = await fetchImage(url);
-      if (!response.ok) {
-        return new Response(`Upstream ${response.status}`, {
-          status: 502,
+      const guard = isUrlAllowed(url);
+      if (!guard.ok) {
+        return new Response(`Forbidden URL: ${guard.reason}`, {
+          status: 403,
           headers: corsHeaders,
         });
       }
 
-      const contentType = response.headers.get("content-type") || "image/jpeg";
-      const body = await response.arrayBuffer();
+      const fetched = await fetchWithSizeCap(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)", Accept: "image/*" },
+      });
+      if (!fetched.ok || !fetched.bytes) {
+        return new Response(fetched.error || "Upstream error", {
+          status: fetched.status || 502,
+          headers: corsHeaders,
+        });
+      }
 
-      return new Response(body, {
+      return new Response(fetched.bytes, {
         headers: {
           ...corsHeaders,
-          "Content-Type": contentType,
+          "Content-Type": fetched.contentType || "image/jpeg",
           "Cache-Control": "public, max-age=86400, s-maxage=604800",
           "Access-Control-Allow-Origin": "*",
         },
@@ -76,20 +74,28 @@ Deno.serve(async (req) => {
         });
       }
 
-      const response = await fetchImage(url);
-      if (!response.ok) {
-        return new Response(JSON.stringify({ error: `Fetch failed: ${response.status}` }), {
-          status: 502,
+      const guard = isUrlAllowed(url);
+      if (!guard.ok) {
+        return new Response(JSON.stringify({ error: `Forbidden URL: ${guard.reason}` }), {
+          status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const contentType = response.headers.get("content-type") || "image/jpeg";
-      const arrayBuffer = await response.arrayBuffer();
-      const base64 = arrayBufferToBase64(arrayBuffer);
+      const fetched = await fetchWithSizeCap(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; RealTrust/1.0)", Accept: "image/*" },
+      });
+      if (!fetched.ok || !fetched.bytes) {
+        return new Response(JSON.stringify({ error: fetched.error || "Fetch failed" }), {
+          status: fetched.status || 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const base64 = arrayBufferToBase64(fetched.bytes.buffer);
 
       return new Response(
-        JSON.stringify({ data: base64, contentType, size: arrayBuffer.byteLength }),
+        JSON.stringify({ data: base64, contentType: fetched.contentType, size: fetched.bytes.byteLength }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isUrlAllowed, fetchWithSizeCap } from "../_shared/urlGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +19,9 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
   try {
     const { imageUrl, mode = "enhance", style = "modern" } = await req.json();
     if (!imageUrl) {
@@ -24,6 +29,14 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const guard = isUrlAllowed(imageUrl);
+    if (!guard.ok) {
+      return new Response(JSON.stringify({ error: `Forbidden URL: ${guard.reason}` }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
@@ -37,14 +50,18 @@ serve(async (req) => {
 
     const prompt = prompts[mode] || prompts.enhance;
 
-    // Fetch source image and convert to base64
-    const imgRes = await fetch(imageUrl);
-    if (!imgRes.ok) throw new Error(`Cannot fetch source image: ${imgRes.status}`);
-    const imgBuf = new Uint8Array(await imgRes.arrayBuffer());
+    // Fetch source image with size cap
+    const fetched = await fetchWithSizeCap(imageUrl);
+    if (!fetched.ok || !fetched.bytes) {
+      return new Response(JSON.stringify({ error: fetched.error || "fetch failed" }), {
+        status: fetched.status || 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const imgBuf = fetched.bytes;
     let binary = "";
     for (let i = 0; i < imgBuf.length; i++) binary += String.fromCharCode(imgBuf[i]);
     const base64 = btoa(binary);
-    const mime = imgRes.headers.get("content-type") || "image/jpeg";
+    const mime = fetched.contentType || "image/jpeg";
     const dataUri = `data:${mime};base64,${base64}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

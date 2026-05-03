@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logAudit } from "../_shared/auditLog.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Bulk Campaign — accepts an array of prospect IDs, creates a
@@ -24,6 +25,10 @@ function jsonResp(body: unknown, status = 200) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Strict admin check (was best-effort & swallowed before)
+  const adminCheck = await requireAdmin(req, corsHeaders);
+  if (!adminCheck.ok) return adminCheck.response!;
+
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -36,15 +41,11 @@ serve(async (req) => {
     if (!ids.length) return jsonResp({ error: "prospect_ids required" }, 400);
     if (ids.length > 50) return jsonResp({ error: "max 50 per campaign" }, 400);
 
-    // Identify caller (admin) from Authorization header — best effort
-    let createdBy: string | null = null;
+    const createdBy: string | null = adminCheck.userId ?? null;
     let actorEmail: string | null = null;
     try {
-      const authHeader = req.headers.get("Authorization") || "";
-      const token = authHeader.replace("Bearer ", "");
-      if (token && token !== SERVICE_KEY) {
-        const { data: userRes } = await supabase.auth.getUser(token);
-        createdBy = userRes?.user?.id ?? null;
+      if (createdBy) {
+        const { data: userRes } = await supabase.auth.admin.getUserById(createdBy);
         actorEmail = userRes?.user?.email ?? null;
       }
     } catch (_) { /* ignore */ }

@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isUrlAllowed } from "../_shared/urlGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,10 +10,20 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
   try {
     const { imageUrls, language } = await req.json();
     if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
       throw new Error("imageUrls array is required");
+    }
+
+    const safeUrls = (imageUrls as string[]).filter((u) => typeof u === "string" && isUrlAllowed(u).ok);
+    if (safeUrls.length === 0) {
+      return new Response(JSON.stringify({ error: "No allowlisted image URLs" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -21,7 +33,7 @@ serve(async (req) => {
     const langLabel = lang === "en" ? "English" : "Romanian";
 
     // Build image content parts (max 5 images to avoid token limits)
-    const imageParts = imageUrls.slice(0, 5).map((url: string) => ({
+    const imageParts = safeUrls.slice(0, 5).map((url: string) => ({
       type: "image_url",
       image_url: { url },
     }));

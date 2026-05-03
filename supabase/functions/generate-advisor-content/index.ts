@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +62,16 @@ IMPORTANT: Răspunde DOAR cu JSON valid, fără markdown, fără backticks, făr
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Allow either an admin JWT or an internal service-role bearer (used by bulk-generate-ai-cache)
+  const authHeader = req.headers.get("Authorization") || "";
+  const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+  const SERVICE_KEY_ENV = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const isInternal = bearer.length > 0 && SERVICE_KEY_ENV.length > 0 && bearer === SERVICE_KEY_ENV;
+  if (!isInternal) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
   }
 
   try {

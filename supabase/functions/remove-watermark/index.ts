@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isUrlAllowed } from "../_shared/urlGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,6 +64,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
   try {
     const apiKey = Deno.env.get("DEWATERMARK_API_KEY");
     if (!apiKey) {
@@ -77,6 +82,15 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (imageUrl) {
+      const guard = isUrlAllowed(imageUrl);
+      if (!guard.ok) {
+        return new Response(JSON.stringify({ error: `Forbidden URL: ${guard.reason}` }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Get image bytes

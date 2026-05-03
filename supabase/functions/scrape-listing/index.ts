@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 import {
   scrapeWithFirecrawl,
   extractFromMarkdownWithAI,
@@ -79,6 +80,9 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
 
   try {
     const { url, listing_type, mode, editedData } = await req.json();

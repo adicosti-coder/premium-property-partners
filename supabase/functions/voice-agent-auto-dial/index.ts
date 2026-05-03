@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logAudit } from "../_shared/auditLog.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Auto-Dial — reads from prospect_listings (lead_score>80, status=new).
@@ -117,9 +118,19 @@ function isGenericSearchProspect(prospect: any): boolean {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Auth: accept either an admin JWT (manual UI / cron via authorized service)
+  // or an internal call bearing the service-role token (DB triggers, bulk-campaign).
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const authHeader = req.headers.get("Authorization") || "";
+  const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+  const isInternal = bearer.length > 0 && bearer === SERVICE_KEY;
+  if (!isInternal) {
+    const adminCheck = await requireAdmin(req, corsHeaders);
+    if (!adminCheck.ok) return adminCheck.response!;
+  }
+
   try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
     const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_FROM_NUMBER");
