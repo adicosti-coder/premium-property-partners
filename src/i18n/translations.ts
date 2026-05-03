@@ -1358,38 +1358,38 @@ Mulțumesc!`,
       items: [
         // Profit & ROI
         { 
-          question: "What is the real profit I can get from my apartment in Timișoara?", 
-          answer: "We estimate revenues based on current market data, where the average nightly rate (ADR) is approximately €55, with an average occupancy rate of 65%. Our apartments (ATENEO, GREEN FOREST, FullView Studio, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town achieve a gross ROI of 10%." 
+          question: "What net return can I realistically expect from my apartment in Timișoara?", 
+          answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, FullView Studio, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy, 27% deduction). The exact figure for your property comes after the evaluation." 
         },
         // Services included
         { 
           question: "What services are included in the management fee?", 
-          answer: "We offer a complete package that includes booking management across all platforms (Airbnb, Booking), guest communication, and cleaning coordination. We implement digital Self Check-in, free underground parking and fully equipped kitchen in every apartment." 
+          answer: "The package covers booking management across all channels (Booking, Airbnb, Expedia and others), guest communication, cleaning coordination and routine maintenance. We implement digital self check-in, underground parking where available and a fully equipped kitchen in every apartment." 
         },
         // Financial transparency
         { 
-          question: "How do you ensure transparency of revenues and costs?", 
-          answer: "Owners receive detailed monthly reports, where commissions are clearly explained (15-25% management fee + 15-23% platform fee). Unlike fixed subscription models like €39/month, our commission-based model motivates us to maximize your occupancy rate." 
+          question: "How do you ensure transparency of revenue and costs?", 
+          answer: "You receive a detailed monthly report with all income and costs broken down (15-25% management fee + 15-23% platform fees). Our commission-based model, instead of fixed subscriptions, aligns us with growing your occupancy and net income." 
         },
         // Location & proximity
         { 
           question: "What is near the ApArt Hotel apartments?", 
-          answer: "Our apartments are strategically located: 2 minutes from Lidl, 5 minutes from the North Train Station (Gara de Nord), 8 minutes from the Old Town and Piața Unirii, 10 minutes from Iulius Mall and Amazonia Aquapark. Each property offers free underground parking and easy access to public transport." 
+          answer: "The apartments are centrally located: 2 minutes from Lidl, 5 minutes from the North Train Station, 8 minutes from the Old Town and Piața Unirii, 10 minutes from Iulius Mall and Amazonia Aquapark. Most properties offer underground parking and easy access to public transport." 
         },
         // Guest vetting
         { 
-          question: "How are guests who stay in the apartment selected?", 
-          answer: "We perform a rigorous guest vetting process (due diligence), prioritizing business clients and families, to prevent property deterioration. We partner with Insurance companies for damage protection." 
+          question: "How are guests selected?", 
+          answer: "We apply a guest vetting process, prioritizing business clients and families to reduce the risk of damage. We also have insurance cover for exceptional situations." 
         },
         // Self check-in & amenities
         { 
-          question: "How does Self Check-in work and what amenities are included?", 
-          answer: "You receive a digital access code with detailed video instructions via WhatsApp. Each apartment includes: free underground parking, fully equipped kitchen (coffee, salt, oil included), Smart TV with Netflix, high-speed WiFi, underfloor heating and modern air conditioning." 
+          question: "How does self check-in work and what amenities are included?", 
+          answer: "You receive a digital access code and video instructions via WhatsApp. Each apartment includes a fully equipped kitchen (coffee, salt, oil), Smart TV with Netflix, high-speed WiFi and modern air conditioning; most also offer underground parking and underfloor heating." 
         },
         // Referral program
         { 
-          question: "Do you offer rewards for referrals?", 
-          answer: "We have an active Referral program: if you recommend a new property owner who signs with us, you can benefit from bonuses up to €100, a free stay in one of our apartments (ATENEO, GREEN FOREST, FullView, HELIOS), or discounts on the management fee." 
+          question: "Do you have a referral program?", 
+          answer: "Yes. If you refer an owner who signs a management contract, you choose between a bonus of up to €100, a free stay in one of our apartments (ATENEO, GREEN FOREST, FullView, HELIOS) or a discount on the management fee." 
         },
       ],
     },
