@@ -273,7 +273,7 @@ const EvaluareGratuita = () => {
           {/* Step 4 */}
           {step === 4 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-foreground">Datele dumneavoastră</h2>
+              <h2 className="text-xl font-bold text-foreground">Datele tale de contact</h2>
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="eval-name">Nume</Label>
