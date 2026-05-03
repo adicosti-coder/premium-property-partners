@@ -159,30 +159,15 @@ export const SEOTrafficROIPanel = () => {
 
   const handleSync = async () => {
     setSyncing(true);
-    toast.info("Sincronizare GA4 în curs…");
+    toast.info("Conectare la GA4 (ultimele 30 de zile)…");
     try {
-      // Simulate import — generate plausible data for known paths
-      const paths = Array.from(new Set([
-        ...audits.map((a) => urlToPath(a.url)),
-        "/", "/pentru-proprietari", "/pentru-oaspeti", "/investitii", "/blog",
-      ])).slice(0, 30);
-      const period = new Date();
-      period.setDate(1);
-      const periodStr = period.toISOString().slice(0, 10);
-      const rows = paths.map((p) => ({
-        url_path: p,
-        sessions: Math.floor(Math.random() * 1500) + 50,
-        conversions: Math.floor(Math.random() * 30),
-        engagement_rate: Math.round(Math.random() * 100) / 100,
-        period_start: periodStr,
-      }));
-      // Stagger to ensure realistic time
-      await new Promise((r) => setTimeout(r, 1200));
-      const { error } = await supabase
-        .from("seo_ga4_metrics" as any)
-        .upsert(rows, { onConflict: "url_path,period_start" });
+      const { data, error } = await supabase.functions.invoke("ga4-analytics-import", {
+        body: { days: 30 },
+      });
       if (error) throw error;
-      toast.success(`Sincronizat ${rows.length} pagini din GA4`);
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const imported = (data as any)?.imported ?? 0;
+      toast.success(`GA4 sincronizat: ${imported} pagini importate`);
       qc.invalidateQueries({ queryKey: ["seo-ga4-metrics"] });
     } catch (e: any) {
       toast.error(e.message || "Eroare la sincronizare GA4");
