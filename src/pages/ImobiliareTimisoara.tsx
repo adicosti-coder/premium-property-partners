@@ -84,8 +84,8 @@ const ImobiliareTimisoara = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Imobiliare Timișoara — Apartamente pe Zone | RealTrust"
-        description="Explorează apartamentele de vânzare din Timișoara pe zone: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO. Prețuri actuale, randamente verificate."
+        title="Imobiliare Timișoara — apartamente pe zone | RealTrust"
+        description="Explorează apartamentele de vânzare din Timișoara, pe cartiere: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO. Prețuri actualizate și randamente calculate transparent."
         url="https://www.realtrust.ro/imobiliare-timisoara"
       />
       <script
