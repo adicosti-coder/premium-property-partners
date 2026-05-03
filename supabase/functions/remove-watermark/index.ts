@@ -64,6 +64,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
   try {
     const apiKey = Deno.env.get("DEWATERMARK_API_KEY");
     if (!apiKey) {
@@ -79,6 +82,15 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (imageUrl) {
+      const guard = isUrlAllowed(imageUrl);
+      if (!guard.ok) {
+        return new Response(JSON.stringify({ error: `Forbidden URL: ${guard.reason}` }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Get image bytes
