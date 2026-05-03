@@ -1558,6 +1558,14 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
     onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
 
+  const linksValid = useMemo(() => {
+    return editLinks.every((l) => {
+      if (!l.enabled) return true;
+      const t = l.target_url_path;
+      return !!l.anchor_text.trim() && !!t.trim() && !/\s/.test(t) && t.startsWith("/");
+    });
+  }, [editLinks]);
+
   const copyBest = () => {
     if (!result?.best_schema) return;
     const txt = `<script type="application/ld+json">\n${JSON.stringify(result.best_schema, null, 2)}\n</script>`;
