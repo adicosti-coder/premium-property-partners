@@ -23,54 +23,54 @@ const ExitIntentPopup = () => {
 
   const t = {
     ro: {
-      guestTitle: "Stai! Nu pleca încă...",
-      guestSubtitle: "Primește 10% reducere la prima rezervare",
-      guestDescription: "Lasă-ne emailul și îți trimitem codul de discount exclusiv, valabil 48 de ore.",
-      guestBadge: "Ofertă Exclusivă",
-      ownerTitle: "Ghid Gratuit pentru Proprietari",
-      ownerSubtitle: "ROI 9.4% — Cum îți maximizezi venitul?",
-      ownerDescription: "Primești analiza completă de piață + strategii dovedite pentru apartamentul tău din Timișoara.",
-      ownerBadge: "Ghid Proprietari 2026",
-      buyerTitle: "Catalogul de Investiții 2026",
-      buyerSubtitle: "Apartamente cu ROI garantat în Timișoara",
-      buyerDescription: "Primești catalogul complet cu proprietăți disponibile, analiză financiară și randamente dovedite.",
-      buyerBadge: "Catalog Investiții",
+      guestTitle: "Înainte să pleci",
+      guestSubtitle: "5% reducere la rezervare directă pe site",
+      guestDescription: "Lasă-ne emailul și primești codul DIRECT5, valabil pentru rezervările făcute direct prin RealTrust.",
+      guestBadge: "Beneficiu rezervare directă",
+      ownerTitle: "Ghid pentru proprietari",
+      ownerSubtitle: "Cum estimăm randamentul net de 9,4%",
+      ownerDescription: "Primești pe email metodologia noastră: ipoteze de ocupare 75%, deducere 27% costuri și taxe, plus exemple reale din portofoliu.",
+      ownerBadge: "Ghid proprietari 2026",
+      buyerTitle: "Catalog de investiții",
+      buyerSubtitle: "Apartamente analizate pentru regim hotelier",
+      buyerDescription: "Primești catalogul cu proprietăți disponibile, randamentul net estimat și ipotezele folosite — fără presiune comercială.",
+      buyerBadge: "Catalog investiții",
       placeholder: "email@exemplu.com",
-      cta: isBuyerPath ? "Descarcă Catalogul!" : isOwnerPath ? "Vreau Ghidul Gratuit!" : "Vreau reducerea!",
-      noThanks: "Nu, mulțumesc",
-      successTitle: "🎉 Verifică-ți emailul!",
+      cta: isBuyerPath ? "Trimite-mi catalogul" : isOwnerPath ? "Trimite-mi ghidul" : "Trimite-mi codul",
+      noThanks: "Nu acum, mulțumesc",
+      successTitle: "Verifică-ți emailul",
       successMessage: isBuyerPath
-        ? "Ți-am trimis catalogul de investiții. Îl găsești în inbox în câteva minute!"
+        ? "Ți-am trimis catalogul de investiții. Ar trebui să ajungă în câteva minute."
         : isOwnerPath
-        ? "Ți-am trimis ghidul gratuit. Îl găsești în inbox în câteva minute!"
-        : "Ți-am trimis codul de reducere. Folosește-l în următoarele 48 de ore!",
-      invalidEmail: "Te rugăm să introduci un email valid",
-      errorMessage: "A apărut o eroare. Încearcă din nou.",
+        ? "Ți-am trimis ghidul. Ar trebui să ajungă în câteva minute."
+        : "Ți-am trimis codul DIRECT5. Îl poți folosi la rezervările făcute direct pe site.",
+      invalidEmail: "Te rugăm să introduci un email valid.",
+      errorMessage: "Ceva nu a funcționat. Te rugăm să încerci din nou.",
     },
     en: {
-      guestTitle: "Wait! Don't leave yet...",
-      guestSubtitle: "Get 10% off your first booking",
-      guestDescription: "Leave your email and we'll send you an exclusive discount code, valid for 48 hours.",
-      guestBadge: "Exclusive Offer",
-      ownerTitle: "Free Guide for Property Owners",
-      ownerSubtitle: "9.4% ROI — How to maximize your income?",
-      ownerDescription: "Get the complete market analysis + proven strategies for your Timișoara apartment.",
-      ownerBadge: "Owners Guide 2026",
-      buyerTitle: "Investment Catalog 2026",
-      buyerSubtitle: "Apartments with guaranteed ROI in Timișoara",
-      buyerDescription: "Get the complete catalog with available properties, financial analysis and proven returns.",
-      buyerBadge: "Investment Catalog",
+      guestTitle: "Before you go",
+      guestSubtitle: "5% off when you book directly on our site",
+      guestDescription: "Leave your email and we'll send you the DIRECT5 code, valid for bookings made directly through RealTrust.",
+      guestBadge: "Direct booking benefit",
+      ownerTitle: "Owners' guide",
+      ownerSubtitle: "How we estimate the 9.4% net yield",
+      ownerDescription: "We'll email you our methodology: 75% occupancy assumption, 27% costs and taxes deduction, plus real examples from our portfolio.",
+      ownerBadge: "Owners guide 2026",
+      buyerTitle: "Investment catalog",
+      buyerSubtitle: "Apartments analysed for short-term rental",
+      buyerDescription: "Get the catalog with available properties, estimated net yield and the assumptions used — no sales pressure.",
+      buyerBadge: "Investment catalog",
       placeholder: "email@example.com",
-      cta: isBuyerPath ? "Download the Catalog!" : isOwnerPath ? "I want the Free Guide!" : "I want the discount!",
-      noThanks: "No, thanks",
-      successTitle: "🎉 Check your email!",
+      cta: isBuyerPath ? "Send me the catalog" : isOwnerPath ? "Send me the guide" : "Send me the code",
+      noThanks: "Not now, thanks",
+      successTitle: "Please check your email",
       successMessage: isBuyerPath
-        ? "We've sent you the investment catalog. You'll find it in your inbox in a few minutes!"
+        ? "We've sent you the investment catalog. It should arrive within a few minutes."
         : isOwnerPath
-        ? "We've sent you the free guide. You'll find it in your inbox in a few minutes!"
-        : "We've sent you the discount code. Use it within the next 48 hours!",
-      invalidEmail: "Please enter a valid email",
-      errorMessage: "An error occurred. Please try again.",
+        ? "We've sent you the guide. It should arrive within a few minutes."
+        : "We've sent you the DIRECT5 code. You can use it on bookings made directly through our site.",
+      invalidEmail: "Please enter a valid email address.",
+      errorMessage: "Something went wrong. Please try again.",
     },
   };
 

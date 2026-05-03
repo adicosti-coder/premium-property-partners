@@ -14,8 +14,8 @@ const MobileCTABar = () => {
   
   
   const translations = {
-    ro: { call: "Sună", whatsapp: "WhatsApp", guests: "Rezervă Cazare", owners: "Câștigă" },
-    en: { call: "Call", whatsapp: "WhatsApp", guests: "Book Stay", owners: "Earn" }
+    ro: { call: "Sună", whatsapp: "WhatsApp", guests: "Rezervă", owners: "Proprietari" },
+    en: { call: "Call", whatsapp: "WhatsApp", guests: "Book stay", owners: "Owners" }
   };
   
   const t = translations[language as keyof typeof translations] || translations.ro;
@@ -38,8 +38,8 @@ const MobileCTABar = () => {
     trackWhatsApp();
     fireContactClick("whatsapp");
     const message = encodeURIComponent(language === 'ro' 
-      ? "Bună! Sunt interesat de serviciile RealTrust." 
-      : "Hello! I'm interested in RealTrust services.");
+      ? "Bună ziua, aș dori câteva detalii despre serviciile RealTrust." 
+      : "Hello, I'd like a few details about RealTrust's services.");
     window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
@@ -101,7 +101,7 @@ const MobileCTABar = () => {
         {/* Guests Button */}
         <button
           onClick={scrollToGuests}
-          aria-label={language === 'ro' ? 'Rezervă cazare în regim hotelier' : 'Book hotel accommodation'}
+          aria-label={language === 'ro' ? 'Vezi apartamentele și verifică disponibilitatea' : 'See apartments and check availability'}
           className={cn(
             "flex flex-col items-center justify-center min-h-[48px] py-3 px-1 bg-booking-blue",
             "active:scale-95 transition-all duration-150",
@@ -115,7 +115,7 @@ const MobileCTABar = () => {
         {/* Owners Button */}
         <button
           onClick={scrollToOwners}
-          aria-label={language === 'ro' ? 'Câștigă din proprietatea ta' : 'Earn from your property'}
+          aria-label={language === 'ro' ? 'Servicii pentru proprietari' : 'Services for property owners'}
           className={cn(
             "flex flex-col items-center justify-center min-h-[48px] py-3 px-1 bg-primary",
             "active:scale-95 transition-all duration-150",
