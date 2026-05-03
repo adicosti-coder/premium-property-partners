@@ -411,10 +411,12 @@ const CompetitorDiffTab = ({ path }: { path: string }) => {
       if ((data as any)?.error) throw new Error((data as any).error);
       return data;
     },
-    onSuccess: () => {
-      toast.success("Snapshot competitor salvat");
+    onSuccess: async () => {
+      toast.success("Snapshot competitor salvat — date brute disponibile imediat");
       setCompetitorUrl("");
-      qc.invalidateQueries({ queryKey: ["seo-competitor-snapshots", path] });
+      // Refetch instant ca rândurile noi (cu competitor_schema_raw) să apară fără reload manual.
+      await qc.invalidateQueries({ queryKey: ["seo-competitor-snapshots", path] });
+      await qc.refetchQueries({ queryKey: ["seo-competitor-snapshots", path], type: "active" });
     },
     onError: (e: any) => toast.error(friendlyEdgeError(e)),
   });
