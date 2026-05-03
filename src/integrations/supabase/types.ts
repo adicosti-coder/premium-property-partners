@@ -3956,6 +3956,39 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_ga4_metrics: {
+        Row: {
+          conversions: number
+          created_at: string
+          engagement_rate: number
+          id: string
+          period_start: string
+          sessions: number
+          updated_at: string
+          url_path: string
+        }
+        Insert: {
+          conversions?: number
+          created_at?: string
+          engagement_rate?: number
+          id?: string
+          period_start: string
+          sessions?: number
+          updated_at?: string
+          url_path: string
+        }
+        Update: {
+          conversions?: number
+          created_at?: string
+          engagement_rate?: number
+          id?: string
+          period_start?: string
+          sessions?: number
+          updated_at?: string
+          url_path?: string
+        }
+        Relationships: []
+      }
       seo_internal_link_suggestions: {
         Row: {
           anchor_text: string
