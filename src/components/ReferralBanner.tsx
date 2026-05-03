@@ -15,16 +15,16 @@ const ReferralBanner = ({ variant = "inline", className }: ReferralBannerProps) 
 
   const t = {
     ro: {
-      title: "Weekend Gratuit!",
-      subtitle: "Recomandă-ne la un prieten cu apartament și poți câștiga 2 nopți gratis sau un comision",
-      cta: "Află cum",
-      badge: "Nou",
+      title: "Cazare gratis sau comision",
+      subtitle: "Recomandă-ne un proprietar din Timișoara care își listează apartamentul cu noi și alegi: 2 nopți de cazare sau un comision la prima lună de venit.",
+      cta: "Vezi cum funcționează",
+      badge: "Program parteneri",
     },
     en: {
-      title: "Free Weekend!",
-      subtitle: "Refer a friend with an apartment and win 2 free nights or a commission",
-      cta: "Learn how",
-      badge: "New",
+      title: "Free stay or commission",
+      subtitle: "Refer a Timișoara owner who lists their apartment with us and choose: 2 nights of accommodation or a commission on the first month of revenue.",
+      cta: "See how it works",
+      badge: "Partner program",
     },
   };
 
