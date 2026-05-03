@@ -101,10 +101,10 @@ const ImobiliareTimisoara = () => {
           {/* Hero */}
           <div className="text-center mb-12">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-foreground mb-4">
-              Apartamente de Vânzare în Timișoara
+              Apartamente de vânzare în Timișoara
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Explorează piața imobiliară din Timișoara pe cartiere. Prețuri actualizate, proprietăți verificate și administrare profesională RealTrust.
+              Piața imobiliară din Timișoara, organizată pe cartiere: prețuri actualizate, proprietăți evaluate și administrare profesională disponibilă la cerere.
             </p>
           </div>
 
