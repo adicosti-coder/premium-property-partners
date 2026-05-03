@@ -142,6 +142,22 @@ export const SEOCompetitorGapPanel = () => {
     },
   });
 
+  const { data: overrideEvents = [] } = useQuery({
+    queryKey: ["seo-override-history-events"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seo_override_history")
+        .select("url_path,applied_at,version_number,change_type,score_before,score_after,notes")
+        .order("applied_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data || []) as Array<{
+        url_path: string; applied_at: string; version_number: number;
+        change_type: string; score_before: number | null; score_after: number | null; notes: string | null;
+      }>;
+    },
+  });
+
   /* ============ Group: combined overview by our_url_path ============ */
   const grouped = useMemo(() => {
     const map = new Map<string, { path: string; snaps: Snapshot[]; lastFetched: string }>();
