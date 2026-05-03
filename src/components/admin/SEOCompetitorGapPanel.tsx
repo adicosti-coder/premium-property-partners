@@ -16,12 +16,35 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-  Loader2, Swords, ExternalLink, Calendar, Zap, Trash2, TrendingUp, History, LineChart as LineIcon, Eye, X, Plus,
+  Loader2, Swords, ExternalLink, Calendar, Zap, Trash2, TrendingUp, History, LineChart as LineIcon, Eye, X, Plus, Download, Flag,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Scatter, ReferenceLine,
 } from "recharts";
+
+/* ============ CSV helpers ============ */
+const csvEscape = (v: any): string => {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
+const downloadCSV = (filename: string, rows: Record<string, any>[]) => {
+  if (rows.length === 0) { toast.error("Nimic de exportat"); return; }
+  const headers = Array.from(
+    rows.reduce((set, r) => { Object.keys(r).forEach((k) => set.add(k)); return set; }, new Set<string>())
+  );
+  const csv = [
+    headers.join(","),
+    ...rows.map((r) => headers.map((h) => csvEscape(r[h])).join(",")),
+  ].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+};
 
 interface Snapshot {
   id: string;
