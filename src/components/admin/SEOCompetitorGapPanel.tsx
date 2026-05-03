@@ -16,12 +16,35 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-  Loader2, Swords, ExternalLink, Calendar, Zap, Trash2, TrendingUp, History, LineChart as LineIcon, Eye, X, Plus,
+  Loader2, Swords, ExternalLink, Calendar, Zap, Trash2, TrendingUp, History, LineChart as LineIcon, Eye, X, Plus, Download, Flag,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Scatter, ReferenceLine,
 } from "recharts";
+
+/* ============ CSV helpers ============ */
+const csvEscape = (v: any): string => {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  if (/[",\n;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
+const downloadCSV = (filename: string, rows: Record<string, any>[]) => {
+  if (rows.length === 0) { toast.error("Nimic de exportat"); return; }
+  const headers = Array.from(
+    rows.reduce<Set<string>>((set, r) => { Object.keys(r).forEach((k) => set.add(k)); return set; }, new Set<string>())
+  );
+  const csv = [
+    headers.join(","),
+    ...rows.map((r) => headers.map((h) => csvEscape(r[h])).join(",")),
+  ].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+};
 
 interface Snapshot {
   id: string;
@@ -119,6 +142,22 @@ export const SEOCompetitorGapPanel = () => {
     },
   });
 
+  const { data: overrideEvents = [] } = useQuery({
+    queryKey: ["seo-override-history-events"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seo_override_history")
+        .select("url_path,applied_at,version_number,change_type,score_before,score_after,notes")
+        .order("applied_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data || []) as Array<{
+        url_path: string; applied_at: string; version_number: number;
+        change_type: string; score_before: number | null; score_after: number | null; notes: string | null;
+      }>;
+    },
+  });
+
   /* ============ Group: combined overview by our_url_path ============ */
   const grouped = useMemo(() => {
     const map = new Map<string, { path: string; snaps: Snapshot[]; lastFetched: string }>();
@@ -169,16 +208,31 @@ export const SEOCompetitorGapPanel = () => {
 
     return Array.from(byDay.values())
       .sort((a, b) => a.day.localeCompare(b.day))
-      .map((r) => ({
-        day: r.day,
-        Noi: r.ourScores.length
+      .map((r) => {
+        const ourAvg = r.ourScores.length
           ? Math.round(r.ourScores.reduce((a, b) => a + b, 0) / r.ourScores.length)
-          : null,
-        Competitori: r.competitorScores.length
+          : null;
+        const compAvg = r.competitorScores.length
           ? Math.round(r.competitorScores.reduce((a, b) => a + b, 0) / r.competitorScores.length)
-          : null,
-      }));
-  }, [snapshots, ourSnaps, trendPath]);
+          : null;
+        const evs = overrideEvents.filter(
+          (e) => e.url_path === trendPath && e.applied_at.slice(0, 10) === r.day
+        );
+        return {
+          day: r.day,
+          Noi: ourAvg,
+          Competitori: compAvg,
+          Eveniment: evs.length > 0 ? (ourAvg ?? compAvg ?? 50) : null,
+          eventCount: evs.length,
+          eventNotes: evs.map((e) => `v${e.version_number} (${e.change_type})${e.notes ? ": " + e.notes : ""}`).join(" · "),
+        };
+      });
+  }, [snapshots, ourSnaps, overrideEvents, trendPath]);
+
+  const pathEvents = useMemo(
+    () => overrideEvents.filter((e) => e.url_path === trendPath),
+    [overrideEvents, trendPath]
+  );
 
   /* ============ Run analysis ============ */
   const run = useMutation({
@@ -349,6 +403,32 @@ export const SEOCompetitorGapPanel = () => {
 
           {/* OVERVIEW: grouped by our_url_path */}
           <TabsContent value="overview">
+            <div className="flex justify-end mb-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => downloadCSV(
+                  "seo-competitor-overview.csv",
+                  grouped.map((g) => {
+                    const allGaps = g.snaps.flatMap((s) => Array.isArray(s.ai_gaps) ? s.ai_gaps : []);
+                    const avgWords = Math.round(
+                      g.snaps.reduce((a, s) => a + (s.competitor_word_count || 0), 0) / Math.max(g.snaps.length, 1)
+                    );
+                    return {
+                      url_path: g.path,
+                      competitors_count: g.snaps.length,
+                      avg_words: avgWords,
+                      gaps_count: allGaps.length,
+                      top_gaps: allGaps.slice(0, 5).map((x: any) => `${x.area}: ${x.recommendation || x.issue}`).join(" | "),
+                      last_fetched: g.lastFetched,
+                    };
+                  }),
+                )}
+              >
+                <Download className="w-3 h-3" /> Export CSV
+              </Button>
+            </div>
             <ScrollArea className="h-[420px] rounded-md border">
               <ul className="divide-y text-sm">
                 {grouped.map((g) => {
@@ -421,7 +501,7 @@ export const SEOCompetitorGapPanel = () => {
           {/* TRENDS */}
           <TabsContent value="trends">
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Label className="text-xs">Pagina:</Label>
                 <Select value={trendPath} onValueChange={setTrendPath}>
                   <SelectTrigger className="w-[280px]"><SelectValue placeholder="Alege pagina" /></SelectTrigger>
@@ -431,9 +511,26 @@ export const SEOCompetitorGapPanel = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <span className="text-[10px] text-muted-foreground ml-auto">
-                  Scor competitor = title + meta + word_count + schema (0–100). Scorul nostru vine din auditele SEO.
-                </span>
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  <Flag className="w-3 h-3" /> {pathEvents.length} override-uri aplicate
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto gap-1"
+                  onClick={() => downloadCSV(
+                    `seo-trends-${(trendPath || "all").replace(/\W+/g, "_")}.csv`,
+                    trendData.map((r) => ({
+                      day: r.day,
+                      noi_score: r.Noi ?? "",
+                      competitori_score: r.Competitori ?? "",
+                      override_events: r.eventCount,
+                      event_notes: r.eventNotes,
+                    })),
+                  )}
+                >
+                  <Download className="w-3 h-3" /> Export trend CSV
+                </Button>
               </div>
               <div className="h-[360px] rounded-md border p-3">
                 {trendData.length === 0 ? (
@@ -442,23 +539,92 @@ export const SEOCompetitorGapPanel = () => {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trendData} margin={{ top: 10, right: 20, bottom: 0, left: -10 }}>
+                    <ComposedChart data={trendData} margin={{ top: 10, right: 20, bottom: 0, left: -10 }}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis dataKey="day" tick={{ fontSize: 11 }} />
                       <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value: any, name: any, item: any) => {
+                          if (name === "Eveniment" && item?.payload?.eventCount) {
+                            return [`${item.payload.eventCount} override(s): ${item.payload.eventNotes}`, "Eveniment"];
+                          }
+                          return [value, name];
+                        }}
+                      />
                       <Legend />
+                      {trendData
+                        .filter((d) => d.eventCount > 0)
+                        .map((d) => (
+                          <ReferenceLine key={d.day} x={d.day} stroke="hsl(45 90% 50%)" strokeDasharray="4 2" />
+                        ))}
                       <Line type="monotone" dataKey="Noi" stroke="hsl(var(--primary))" strokeWidth={2} connectNulls dot />
                       <Line type="monotone" dataKey="Competitori" stroke="hsl(0 70% 55%)" strokeWidth={2} connectNulls dot />
-                    </LineChart>
+                      <Scatter
+                        dataKey="Eveniment"
+                        fill="hsl(45 90% 50%)"
+                        shape={(props: any) => {
+                          const { cx, cy } = props;
+                          if (cx == null || cy == null) return null as any;
+                          return (
+                            <g transform={`translate(${cx - 6},${cy - 14})`}>
+                              <path d="M0,0 L0,14 M0,0 L10,3 L0,6 Z" stroke="hsl(45 90% 35%)" fill="hsl(45 90% 50%)" strokeWidth={1} />
+                            </g>
+                          );
+                        }}
+                      />
+                    </ComposedChart>
                   </ResponsiveContainer>
                 )}
               </div>
+              {pathEvents.length > 0 && (
+                <div className="text-[11px] text-muted-foreground">
+                  <Flag className="w-3 h-3 inline mr-1 text-amber-500" />
+                  Stegulețele aurii pe grafic = momentele când s-a aplicat un SEO override (vezi tabelul Istoric pentru detalii).
+                </div>
+              )}
             </div>
           </TabsContent>
 
           {/* HISTORY: raw timeline */}
           <TabsContent value="history">
+            <div className="flex justify-end gap-2 mb-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => downloadCSV(
+                  "seo-competitor-history.csv",
+                  snapshots.map((s) => ({
+                    fetched_at: s.fetched_at,
+                    our_url_path: s.our_url_path,
+                    competitor_url: s.competitor_url,
+                    competitor_label: s.competitor_label,
+                    competitor_score: competitorScore(s),
+                    word_count: s.competitor_word_count,
+                    title: s.competitor_title,
+                    meta: s.competitor_meta,
+                    ai_summary: s.ai_summary,
+                  })),
+                )}
+              >
+                <Download className="w-3 h-3" /> Export snapshoturi
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1"
+                onClick={() => downloadCSV(
+                  "seo-score-history.csv",
+                  ourSnaps.map((o) => ({
+                    created_at: o.created_at,
+                    url: o.url,
+                    overall_score: o.overall_score,
+                  })),
+                )}
+              >
+                <Download className="w-3 h-3" /> Export istoric scoruri
+              </Button>
+            </div>
             <ScrollArea className="h-[420px] rounded-md border">
               <ul className="divide-y text-sm">
                 {snapshots.map((s) => (
