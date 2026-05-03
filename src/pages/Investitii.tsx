@@ -147,23 +147,23 @@ const Investitii = () => {
   const faqItems = language === "ro" ? [
     {
       question: "Care este randamentul mediu pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru regim hotelier administrat de RealTrust, randamentul net mediu este de 9.4% anual, verificat pe portofoliul nostru de peste 50 de proprietăți. În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
+      answer: "Pentru regim hotelier administrat de noi, randamentul net țintă este de 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, deducere 27% pentru management, costuri și taxe). În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
     },
     {
-      question: "Care sunt cele mai bune zone pentru investiții imobiliare în Timișoara?",
-      answer: "Zonele cu cel mai mare potențial sunt: ISHO (proximitate Iulius Town), Complex Studențesc (cerere studenți + Bulevardul Vasile Pârvan), Centrul Istoric (turism), Iosefin/Elisabetin (regenerare urbană) și zonele metropolitane Dumbrăvița, Ghiroda și Giroc (case noi).",
+      question: "Care sunt zonele cu cel mai bun potențial pentru investiții?",
+      answer: "Zonele cu potențial ridicat: ISHO (proximitate Iulius Town), Complex Studențesc (cerere studenți și Bulevardul Vasile Pârvan), Centrul Istoric (turism), Iosefin/Elisabetin (regenerare urbană) și zonele metropolitane Dumbrăvița, Ghiroda și Giroc (case noi).",
     },
     {
       question: "Cât capital am nevoie pentru o investiție la cheie în Timișoara?",
-      answer: "Pentru o garsonieră în regim hotelier la cheie (achiziție + amenajare + dotare): între 60.000 € și 85.000 €. Pentru un apartament 2 camere: 95.000 € – 130.000 €. Includem amenajarea completă, mobilier, electrocasnice și fotografii profesionale.",
+      answer: "Pentru o garsonieră în regim hotelier la cheie (achiziție + amenajare + dotare): 60.000 € – 85.000 €. Pentru un apartament 2 camere: 95.000 € – 130.000 €. Includem amenajarea completă, mobilier, electrocasnice și fotografii profesionale.",
     },
     {
-      question: "Ce taxe notariale și de tranzacție am la cumpărarea unui apartament?",
-      answer: "Taxele notariale variază între 0.4% și 1.6% din prețul tranzacției (degresiv). Adăugați aproximativ 0.5% pentru intabulare la Cartea Funciară și impozit pe transfer (1% pentru proprietăți peste 450.000 lei deținute mai puțin de 3 ani). Total estimat: 1.5–2.5% din preț.",
+      question: "Ce taxe notariale și de tranzacție sunt la cumpărarea unui apartament?",
+      answer: "Taxele notariale variază între 0,4% și 1,6% din prețul tranzacției (degresiv). Se adaugă aproximativ 0,5% pentru intabulare la Cartea Funciară și impozitul pe transfer (1% pentru proprietăți peste 450.000 lei deținute mai puțin de 3 ani). Total estimat: 1,5-2,5% din preț.",
     },
     {
       question: "Cum funcționează serviciul de investiție imobiliară la cheie?",
-      answer: "RealTrust gestionează întregul proces: identificarea proprietății potrivite, due diligence, negociere preț, asistență la actul notarial, amenajarea și dotarea apartamentului, listarea pe Booking/Airbnb și administrarea operațională. Tu doar semnezi și încasezi raportul lunar.",
+      answer: "Gestionăm întregul proces: identificarea proprietății potrivite, due diligence, negocierea prețului, asistență la actul notarial, amenajarea și dotarea apartamentului, listarea pe Booking și Airbnb și administrarea operațională. Tu semnezi și primești raportul lunar.",
     },
     {
       question: "Care este evoluția prețurilor imobiliare în Timișoara?",
@@ -172,11 +172,11 @@ const Investitii = () => {
   ] : [
     {
       question: "What is the average yield for a real estate investment in Timișoara?",
-      answer: "For hotel-style management by RealTrust, the average net yield is 9.4% per year, verified across our portfolio of 50+ properties. Classic long-term rentals in Timișoara typically yield 4-5% net.",
+      answer: "For hotel-style management by our team, the target net yield is 9.4% per year, calculated on public assumptions (75% occupancy, 27% deduction for management, costs and taxes). Classic long-term rentals in Timișoara typically yield 4-5% net.",
     },
     {
       question: "What are the best areas for real estate investment in Timișoara?",
-      answer: "Highest potential zones: ISHO (near Iulius Town), Student Complex (student demand + Vasile Pârvan Boulevard), Historic Center (tourism), Iosefin/Elisabetin (urban regeneration), and metropolitan areas Dumbrăvița, Ghiroda and Giroc (new houses).",
+      answer: "Highest-potential zones: ISHO (near Iulius Town), Student Complex (student demand + Vasile Pârvan Boulevard), Historic Center (tourism), Iosefin/Elisabetin (urban regeneration), and metropolitan areas Dumbrăvița, Ghiroda and Giroc (new houses).",
     },
     {
       question: "How much capital do I need for a turnkey investment in Timișoara?",
@@ -188,7 +188,7 @@ const Investitii = () => {
     },
     {
       question: "How does the turnkey real estate investment service work?",
-      answer: "RealTrust manages the entire process: property sourcing, due diligence, price negotiation, notary support, full renovation and furnishing, listing on Booking/Airbnb and operational management. You just sign and collect the monthly report.",
+      answer: "We manage the entire process: property sourcing, due diligence, price negotiation, notary support, full renovation and furnishing, listing on Booking/Airbnb and operational management. You sign and receive the monthly report.",
     },
     {
       question: "What is the price trend for Timișoara real estate?",
