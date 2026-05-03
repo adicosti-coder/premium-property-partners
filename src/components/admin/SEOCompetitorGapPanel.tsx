@@ -33,7 +33,7 @@ const csvEscape = (v: any): string => {
 const downloadCSV = (filename: string, rows: Record<string, any>[]) => {
   if (rows.length === 0) { toast.error("Nimic de exportat"); return; }
   const headers = Array.from(
-    rows.reduce((set, r) => { Object.keys(r).forEach((k) => set.add(k)); return set; }, new Set<string>())
+    rows.reduce<Set<string>>((set, r) => { Object.keys(r).forEach((k) => set.add(k)); return set; }, new Set<string>())
   );
   const csv = [
     headers.join(","),
