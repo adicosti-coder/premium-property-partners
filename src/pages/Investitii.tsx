@@ -264,10 +264,10 @@ const Investitii = () => {
 
             <div className="flex flex-wrap justify-center gap-6 mb-10">
               {[
-                { value: "9.4%", label: language === "ro" ? "ROI Net Verificat" : "Verified Net ROI" },
-                { value: "98%", label: language === "ro" ? "Rată de Ocupare" : "Occupancy Rate" },
-                { value: "10k+", label: language === "ro" ? "Oaspeți Satisfăcuți" : "Happy Guests" },
-                { value: "4.9★", label: language === "ro" ? "Rating Mediu" : "Average Rating" },
+                { value: "9,4%", label: language === "ro" ? "ROI net țintă" : "Target net ROI" },
+                { value: "~75%", label: language === "ro" ? "Ocupare medie" : "Average occupancy" },
+                { value: "10k+", label: language === "ro" ? "Sejururi în portofoliu" : "Stays in portfolio" },
+                { value: "9,7/10", label: language === "ro" ? "Scor recenzii" : "Reviews score" },
               ].map((stat, i) => (
                 <div key={i} className="text-center px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
                   <p className="text-2xl font-bold font-sans text-primary">{stat.value}</p>
