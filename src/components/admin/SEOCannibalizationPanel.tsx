@@ -172,6 +172,29 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
                         <Badge key={kw} variant="outline" className="text-[10px] font-normal">{kw}</Badge>
                       ))}
                     </div>
+                    {(() => {
+                      const loserUrl = c.urls[1 - winnerIdx];
+                      const winnerUrl = c.urls[winnerIdx];
+                      const key = `${loserUrl}->${winnerUrl}`;
+                      const isPending = pending === key && resolveMutation.isPending;
+                      return (
+                        <div className="flex justify-end pt-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isPending}
+                            onClick={() => {
+                              if (!confirm(`Aplici canonical de la\n${urlToPath(loserUrl)}\n→ ${toCanonical(winnerUrl)}?`)) return;
+                              setPending(key);
+                              resolveMutation.mutate({ loserUrl, winnerUrl });
+                            }}
+                          >
+                            {isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1" />}
+                            Aplică canonical (loser → winner)
+                          </Button>
+                        </div>
+                      );
+                    })()}
                   </li>
                 );
               })}
