@@ -1880,6 +1880,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
                         else if (/\s/.test(t)) targetErr = "Path-ul nu poate conține spații";
                         else if (!t.startsWith("/")) targetErr = "Path-ul trebuie să înceapă cu '/'";
                         else if (!/^\/[a-z0-9/_-]*$/.test(t)) targetErr = "Doar litere mici, cifre, '-', '_', '/'";
+                        else if (duplicateTargets.has(t.trim())) targetErr = "Duplicat: aceeași cale folosită de alt link";
                       }
                       return (
                         <div key={idx} className={cn("rounded border p-2 space-y-1", !l.enabled && "opacity-50")}>
