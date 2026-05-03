@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Zap, RefreshCw, Globe2, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Sparkles, Zap, RefreshCw, Globe2, Loader2, AlertTriangle, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -156,6 +156,48 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     onError: (e: any) => toast.error(e.message || "Eșec ping"),
   });
 
+  /* ============ 4. PRIORITATE OPTIMIZARE (lowest scoring pages) ============ */
+  const priorityTargets = useMemo(() => {
+    const seen = new Set<string>();
+    return history
+      .filter((a) => {
+        const k = urlToPath(a.url);
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return (a.overall_score ?? 100) < 95 && (a.suggested_title || a.suggested_meta);
+      })
+      .sort((a, b) => (a.overall_score ?? 100) - (b.overall_score ?? 100))
+      .slice(0, 10);
+  }, [history]);
+
+  const applySingleMutation = useMutation({
+    mutationFn: async (a: AuditRow) => {
+      const path = urlToPath(a.url);
+      const extra_keywords = [
+        ...(Array.isArray(a.local_geo_keywords) ? a.local_geo_keywords : []),
+        ...(Array.isArray(a.keyword_gaps) ? a.keyword_gaps : []),
+      ]
+        .map((k: any) => ({ keyword: k.keyword || (typeof k === "string" ? k : ""), reason: k.reason || null }))
+        .filter((k) => k.keyword)
+        .slice(0, 12);
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error } = await supabase.from("seo_overrides").upsert({
+        url_path: path,
+        title: a.suggested_title || null,
+        meta_description: (a.suggested_meta || "").slice(0, 160) || null,
+        extra_keywords,
+        source_audit_id: a.id,
+        applied_by: userRes.user?.id || null,
+        applied_at: new Date().toISOString(),
+        is_active: true,
+      }, { onConflict: "url_path" });
+      if (error) throw error;
+      return path;
+    },
+    onSuccess: (path) => toast.success(`Aplicat: ${path}`),
+    onError: (e: any) => toast.error(e.message || "Eșec aplicare"),
+  });
+
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
       <CardHeader>
@@ -169,7 +211,56 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* MASTER ONE-CLICK */}
+        {/* PRIORITATE OPTIMIZARE */}
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <div className="font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive" />
+                Prioritate optimizare — top {priorityTargets.length} pagini cu scor mic
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Aplică individual sugestiile AI pentru paginile cu cel mai mic scor (sub 95).
+              </p>
+            </div>
+          </div>
+          {priorityTargets.length > 0 ? (
+            <ScrollArea className="h-56 rounded border bg-background">
+              <ul className="divide-y text-sm">
+                {priorityTargets.map((a) => (
+                  <li key={a.id} className="flex items-center justify-between gap-2 px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={(a.overall_score ?? 0) < 80 ? "destructive" : "secondary"}
+                          className="font-mono text-[10px]"
+                        >
+                          {a.overall_score ?? "—"}/100
+                        </Badge>
+                        <span className="truncate text-xs font-mono">{urlToPath(a.url)}</span>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      disabled={applySingleMutation.isPending && applySingleMutation.variables?.id === a.id}
+                      onClick={() => applySingleMutation.mutate(a)}
+                    >
+                      {applySingleMutation.isPending && applySingleMutation.variables?.id === a.id
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <CheckCircle2 className="w-3 h-3" />}
+                      <span className="ml-1">Aplică</span>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">Toate paginile au scor ≥ 95. 🎉</p>
+          )}
+        </div>
+
+
         <div className="rounded-lg border bg-background p-4 space-y-3">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
