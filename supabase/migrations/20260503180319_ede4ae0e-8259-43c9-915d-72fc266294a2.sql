@@ -1,0 +1,1 @@
+DELETE FROM public.seo_audits WHERE url = 'https://realtrust.ro/' AND overall_score = 0 AND title ILIKE '%DreamHost%';
