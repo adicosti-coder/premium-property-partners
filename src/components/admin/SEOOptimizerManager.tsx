@@ -25,6 +25,10 @@ import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
 import { SEOQuickWinsPanel } from "./SEOQuickWinsPanel";
 import { SEOSchemaGeneratorPanel } from "./SEOSchemaGeneratorPanel";
 import { SEORedeployPanel } from "./SEORedeployPanel";
+import { SEOCannibalizationPanel } from "./SEOCannibalizationPanel";
+import { SEOReauditSchedulerPanel } from "./SEOReauditSchedulerPanel";
+import { SEOCompetitorGapPanel } from "./SEOCompetitorGapPanel";
+import { SEOAutoLinkingPanel } from "./SEOAutoLinkingPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 
@@ -766,6 +770,14 @@ const SEOOptimizerManager = () => {
       <SEOSchemaGeneratorPanel history={history} overrides={overrides as any} />
 
       <SEORedeployPanel overrides={overrides as any} />
+
+      <SEOCannibalizationPanel history={history as any} />
+
+      <SEOReauditSchedulerPanel history={history as any} />
+
+      <SEOCompetitorGapPanel />
+
+      <SEOAutoLinkingPanel history={history as any} />
 
       {selectedAudit && (
         <Card>
