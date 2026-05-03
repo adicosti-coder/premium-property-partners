@@ -548,6 +548,13 @@ const CompetitorDiffTab = ({ path }: { path: string }) => {
                     </div>
                   )}
 
+                  {/* Auto schema diff: missing properties + recommended snippet */}
+                  <SchemaAutoDiff
+                    competitorBlocks={Array.isArray(s.competitor_schema_raw) ? s.competitor_schema_raw : []}
+                    competitorLabel={s.competitor_label || "competitor"}
+                    ourJsonLd={(ourPage as any)?.json_ld}
+                  />
+
                   {/* Raw JSON-LD blocks (expandable code blocks) */}
                   <CompetitorJsonLdBlocks
                     blocks={Array.isArray(s.competitor_schema_raw) ? s.competitor_schema_raw : []}
@@ -607,6 +614,140 @@ function collectTypeProps(node: any, target: Record<string, Set<string>>) {
     if (v && typeof v === "object") collectTypeProps(v, target);
   }
 }
+
+// Collect properties WITH a sample value per type (first occurrence wins)
+function collectTypePropsWithValues(node: any, target: Record<string, Record<string, any>>) {
+  if (!node || typeof node !== "object") return;
+  if (Array.isArray(node)) { node.forEach((n) => collectTypePropsWithValues(n, target)); return; }
+  const t = node["@type"];
+  const types = Array.isArray(t) ? t : (t ? [t] : []);
+  for (const tt of types) {
+    const ts = String(tt);
+    if (!target[ts]) target[ts] = {};
+    for (const [k, v] of Object.entries(node)) {
+      if (k.startsWith("@")) continue;
+      if (target[ts][k] === undefined) target[ts][k] = v;
+    }
+  }
+  if (node["@graph"] && Array.isArray(node["@graph"])) node["@graph"].forEach((g: any) => collectTypePropsWithValues(g, target));
+  for (const v of Object.values(node)) {
+    if (v && typeof v === "object") collectTypePropsWithValues(v, target);
+  }
+}
+
+function previewValue(v: any): string {
+  if (v === null || v === undefined) return "—";
+  if (typeof v === "string") return v.length > 80 ? v.slice(0, 77) + "…" : v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  try {
+    const s = JSON.stringify(v);
+    return s.length > 100 ? s.slice(0, 97) + "…" : s;
+  } catch { return String(v); }
+}
+
+const SchemaAutoDiff = ({
+  competitorBlocks, competitorLabel, ourJsonLd,
+}: { competitorBlocks: any[]; competitorLabel: string; ourJsonLd: any }) => {
+  const diff = useMemo(() => {
+    const ours: Record<string, Record<string, any>> = {};
+    if (ourJsonLd) collectTypePropsWithValues(ourJsonLd, ours);
+    const theirs: Record<string, Record<string, any>> = {};
+    for (const b of competitorBlocks) {
+      if (b?.valid !== false && b?.json && typeof b.json === "object") {
+        collectTypePropsWithValues(b.json, theirs);
+      }
+    }
+    const rows: Array<{ type: string; missing: Array<{ key: string; sample: any }>; weHave: boolean }> = [];
+    for (const [type, props] of Object.entries(theirs)) {
+      const ourProps = ours[type] || {};
+      const missing = Object.entries(props)
+        .filter(([k]) => ourProps[k] === undefined || ourProps[k] === null || ourProps[k] === "")
+        .map(([key, sample]) => ({ key, sample }));
+      if (missing.length === 0 && ours[type]) continue;
+      rows.push({ type, missing, weHave: !!ours[type] });
+    }
+    // Build recommended JSON-LD additions per type (only missing keys, with competitor sample values)
+    const recommended = rows
+      .filter((r) => r.missing.length > 0)
+      .map((r) => {
+        const obj: Record<string, any> = { "@context": "https://schema.org", "@type": r.type };
+        for (const m of r.missing) obj[m.key] = m.sample;
+        return obj;
+      });
+    return { rows, recommended };
+  }, [competitorBlocks, ourJsonLd]);
+
+  if (diff.rows.length === 0) {
+    return (
+      <div className="rounded border border-emerald-300/60 bg-emerald-50/40 dark:bg-emerald-950/20 p-2 text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+        <CheckCircle2 className="h-3.5 w-3.5" /> Schema match: avem toate tipurile și proprietățile cheie ale competitorului.
+      </div>
+    );
+  }
+
+  const totalMissing = diff.rows.reduce((a, r) => a + r.missing.length, 0);
+  const recommendedJson = JSON.stringify(diff.recommended, null, 2);
+
+  const copyRec = () => {
+    navigator.clipboard.writeText(recommendedJson).then(
+      () => toast.success("Snippet recomandat copiat"),
+      () => toast.error("Nu s-a putut copia"),
+    );
+  };
+
+  return (
+    <div className="space-y-2 rounded border border-amber-300/60 bg-amber-50/40 dark:bg-amber-950/20 p-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase text-amber-800 dark:text-amber-300 flex items-center gap-1">
+          <AlertTriangle className="h-3.5 w-3.5" /> Schema diff vs {competitorLabel}
+        </p>
+        <Badge variant="outline" className="text-[10px] border-destructive/40 text-destructive">
+          {totalMissing} props lipsă
+        </Badge>
+      </div>
+
+      <div className="space-y-1.5">
+        {diff.rows.map((r) => (
+          <div key={r.type} className="rounded bg-background/60 border p-1.5 text-xs space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Badge variant={r.weHave ? "secondary" : "destructive"} className="text-[10px]">{r.type}</Badge>
+              {!r.weHave && <span className="text-[10px] text-destructive">tip lipsă la noi</span>}
+              {r.weHave && r.missing.length > 0 && (
+                <span className="text-[10px] text-muted-foreground">avem tipul, lipsesc {r.missing.length} proprietăți</span>
+              )}
+            </div>
+            {r.missing.length > 0 && (
+              <table className="w-full text-[11px]">
+                <tbody>
+                  {r.missing.map((m) => (
+                    <tr key={m.key} className="border-t border-border/40">
+                      <td className="py-0.5 pr-2 font-mono text-destructive whitespace-nowrap align-top">{m.key}</td>
+                      <td className="py-0.5 text-muted-foreground break-all">{previewValue(m.sample)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {diff.recommended.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase text-muted-foreground">Recomandare JSON-LD (de adăugat la noi)</p>
+            <Button size="sm" variant="ghost" className="h-6 px-2" onClick={copyRec}>
+              <Copy className="h-3 w-3 mr-1" /> Copiază
+            </Button>
+          </div>
+          <pre className="rounded bg-muted/60 p-2 text-[11px] font-mono overflow-x-auto max-h-56">
+            <code>{recommendedJson}</code>
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CompetitorJsonLdBlocks = ({ blocks, ourJsonLd }: { blocks: any[]; ourJsonLd: any }) => {
   if (!blocks.length) return null;
