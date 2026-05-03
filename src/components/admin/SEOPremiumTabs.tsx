@@ -73,7 +73,7 @@ export const SEOPremiumTabs = ({ audit }: Props) => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="links">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="links" className="gap-1.5">
               <Link2 className="h-3.5 w-3.5" /> Internal Links
             </TabsTrigger>
@@ -82,6 +82,9 @@ export const SEOPremiumTabs = ({ audit }: Props) => {
             </TabsTrigger>
             <TabsTrigger value="schema" className="gap-1.5">
               <Code2 className="h-3.5 w-3.5" /> Schema Validator
+            </TabsTrigger>
+            <TabsTrigger value="benchmark" className="gap-1.5">
+              <Gauge className="h-3.5 w-3.5" /> Benchmark
             </TabsTrigger>
           </TabsList>
 
@@ -95,6 +98,10 @@ export const SEOPremiumTabs = ({ audit }: Props) => {
 
           <TabsContent value="schema" className="mt-4">
             <SchemaValidatorTab path={path} />
+          </TabsContent>
+
+          <TabsContent value="benchmark" className="mt-4">
+            <BenchmarkTab defaultOurUrl={audit.url} />
           </TabsContent>
         </Tabs>
       </CardContent>
