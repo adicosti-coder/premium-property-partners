@@ -227,8 +227,8 @@ const ComplexLanding = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={`Apartament ${complex.name} în regim hotelier — Timișoara | RealTrust`}
-        description={`Apartamente în regim hotelier în ${complex.name} Timișoara. ROI ${complex.roi} net, venit lunar ${complex.avgIncome}, ocupare ${complex.occupancy}. Administrare completă RealTrust.`}
+        title={`Apartament în ${complex.name}, în regim hotelier — Timișoara | RealTrust`}
+        description={`Apartamente în regim hotelier în ${complex.name}, Timișoara. ROI net țintă ${complex.roi} pe ipoteze publice (ocupare 75%, deducere 27%), venit lunar estimat ${complex.avgIncome}, ocupare ${complex.occupancy}. Administrare end-to-end.`}
         url={`https://www.realtrust.ro/complexe/${complex.slug}`}
         jsonLd={jsonLd}
         breadcrumbItems={[
