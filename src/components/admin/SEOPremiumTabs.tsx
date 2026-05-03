@@ -1579,10 +1579,24 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
           <Input value={compUrl} onChange={(e) => setCompUrl(e.target.value)} className="h-9 mt-0.5" placeholder="https://www.apostu.ro/..." />
         </div>
       </div>
-      <Button size="sm" onClick={() => benchmark.mutate()} disabled={benchmark.isPending || !compUrl.trim()}>
-        {benchmark.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Gauge className="h-4 w-4 mr-1.5" />}
-        Compară side-by-side
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={() => benchmark.mutate()} disabled={benchmark.isPending || !compUrl.trim()}>
+          {benchmark.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Gauge className="h-4 w-4 mr-1.5" />}
+          Compară side-by-side
+        </Button>
+        {result && (
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-gradient-to-r from-primary to-amber-600 hover:opacity-90"
+            onClick={() => previewFull.mutate()}
+            disabled={previewFull.isPending}
+          >
+            {previewFull.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Sparkles className="h-4 w-4 mr-1.5" />}
+            Apply Pachet Complet (3 piloni)
+          </Button>
+        )}
+      </div>
 
       {result && (
         <div className="space-y-4">
