@@ -104,7 +104,8 @@ export default function VoiceAgentManager() {
   };
 
   const VOICES = [
-    { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald, recomandat)" },
+    { id: "S98OhkhaxeAKHEbhoLi7", name: "Andrei (masculin, RO — Digital Concierge, recomandat)" },
+    { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald)" },
     { id: "XrExE9yKIg1WjnnlVkGX", name: "Matilda (feminin, profesional)" },
     { id: "FGY2WhTYpPnrIDTdsKH5", name: "Laura (feminin, energic)" },
     { id: "cgSgspJ2msm6clMCkdW9", name: "Jessica (feminin, expresiv)" },
