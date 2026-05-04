@@ -5418,6 +5418,8 @@ export type Database = {
           ended_at: string | null
           error_message: string | null
           extracted_entities: Json
+          followup_draft: Json | null
+          followup_status: string | null
           from_number: string | null
           id: string
           initiated_by: string | null
@@ -5455,6 +5457,8 @@ export type Database = {
           ended_at?: string | null
           error_message?: string | null
           extracted_entities?: Json
+          followup_draft?: Json | null
+          followup_status?: string | null
           from_number?: string | null
           id?: string
           initiated_by?: string | null
@@ -5492,6 +5496,8 @@ export type Database = {
           ended_at?: string | null
           error_message?: string | null
           extracted_entities?: Json
+          followup_draft?: Json | null
+          followup_status?: string | null
           from_number?: string | null
           id?: string
           initiated_by?: string | null
