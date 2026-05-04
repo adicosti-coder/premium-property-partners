@@ -240,23 +240,84 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
     toast.success(`Prompt combinat copiat (${sel.length} probleme)`);
   };
 
-  // Auto-Fix: invokes seo-auto-fix edge function (same one used elsewhere)
+  // Apply Fix: generate proposal AND apply it in one click, then mark as done.
+  // Stores the resulting version_id in seo_local_rec_status.note for safe Undo.
   const runAutoFix = async (recIndex: number, fix_type: FixType) => {
     setAutoFixingIdx(recIndex);
     try {
-      const { data, error } = await supabase.functions.invoke("seo-auto-fix", {
+      // 1) generate
+      const gen = await supabase.functions.invoke("seo-auto-fix", {
         body: { action: "generate_fix", audit_id: auditId, fix_type },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success(`Propunere AI generată (${fix_type})`, {
-        description: "Deschide tab-ul Auto-Fix pentru a o aplica.",
+      if (gen.error) throw gen.error;
+      if (gen.data?.error) throw new Error(gen.data.error);
+      const proposal = gen.data?.proposal;
+      const url_path = gen.data?.url_path;
+      if (!proposal || !url_path) throw new Error("Răspuns AI invalid");
+
+      // 2) apply
+      const app = await supabase.functions.invoke("seo-auto-fix", {
+        body: { action: "apply_fix", audit_id: auditId, url_path, payload: proposal, variant: "A" },
       });
-      // Mark as 'doing' so admin sees it's actively being addressed
+      if (app.error) throw app.error;
+      if (app.data?.error) throw new Error(app.data.error);
+
+      // 3) find latest history version_id for undo
+      const { data: histRow } = await supabase
+        .from("seo_override_history")
+        .select("id, version_number")
+        .eq("url_path", url_path)
+        .order("version_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const noteData = JSON.stringify({
+        version_id: histRow?.id ?? null,
+        version_number: histRow?.version_number ?? null,
+        url_path,
+        fix_type,
+        applied_at: new Date().toISOString(),
+      });
+
       const e = enriched.find((x) => x.recIndex === recIndex);
-      if (e) upsertStatus.mutate({ recIndex, hash: e.hash, status: "doing" });
+      if (e) upsertStatus.mutate({ recIndex, hash: e.hash, status: "done", note: noteData });
+
+      toast.success(`Fix aplicat (${fix_type})`, {
+        description: histRow ? `v${histRow.version_number} salvat. Folosește Undo dacă e nevoie.` : "Aplicat.",
+      });
     } catch (e: any) {
-      toast.error(e.message || "Eroare Auto-Fix");
+      toast.error(e.message || "Eroare Apply Fix");
+    } finally {
+      setAutoFixingIdx(null);
+    }
+  };
+
+  // Undo per item: revert to the version snapshot BEFORE the apply.
+  const undoFix = async (recIndex: number) => {
+    const row = statusByIndex.get(recIndex);
+    if (!row?.note) {
+      toast.error("Nimic de anulat (lipsește snapshot-ul).");
+      return;
+    }
+    let parsed: any = null;
+    try { parsed = JSON.parse(row.note); } catch { /* */ }
+    const versionId = parsed?.version_id;
+    if (!versionId) {
+      toast.error("Versiunea anterioară nu este disponibilă.");
+      return;
+    }
+    setAutoFixingIdx(recIndex);
+    try {
+      const r = await supabase.functions.invoke("seo-auto-fix", {
+        body: { action: "revert", version_id: versionId },
+      });
+      if (r.error) throw r.error;
+      if (r.data?.error) throw new Error(r.data.error);
+      const e = enriched.find((x) => x.recIndex === recIndex);
+      if (e) upsertStatus.mutate({ recIndex, hash: e.hash, status: "open", note: null });
+      toast.success("Fix anulat — valoarea anterioară restaurată.");
+    } catch (e: any) {
+      toast.error(e.message || "Undo eșuat");
     } finally {
       setAutoFixingIdx(null);
     }
