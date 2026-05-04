@@ -663,7 +663,7 @@ export default function VoiceAgentManager() {
             AI Voice Agent — Outbound Call
           </CardTitle>
           <CardDescription>
-            Sună automat un lead. Ana (AI) calificează interesul, programează vizionări și salvează transcript-ul.
+            Sună automat un lead. Andrei (AI) califică interesul, programează vizionări și salvează transcript-ul.
             Necesită conectorul Twilio + secret <code>TWILIO_FROM_NUMBER</code>.
           </CardDescription>
         </CardHeader>
@@ -690,7 +690,7 @@ export default function VoiceAgentManager() {
             <Textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Suprascrie prompt-ul implicit al asistentei Ana..."
+              placeholder="Suprascrie prompt-ul implicit al asistentului Andrei..."
               rows={3}
             />
           </div>
@@ -833,7 +833,7 @@ export default function VoiceAgentManager() {
                       {(selectedCall.transcript || []).map((t: any, i: number) => (
                         <div key={i} className={`flex ${t.role === "user" ? "justify-end" : "justify-start"}`}>
                           <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${t.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                            <div className="text-xs opacity-70 mb-0.5">{t.role === "user" ? "Client" : "Ana (AI)"}</div>
+                            <div className="text-xs opacity-70 mb-0.5">{t.role === "user" ? "Client" : "Andrei (AI)"}</div>
                             {t.text}
                           </div>
                         </div>
