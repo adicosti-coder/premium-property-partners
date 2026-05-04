@@ -609,7 +609,49 @@ LocalEntitiesMissing: ${JSON.stringify(audit.local_entities_missing || []).slice
   const user = `${baseContext}\n\nTASK: ${fixInstructions[fixType]}`;
 
   const raw = await callGemini(system, user);
-  const parsed = safeJson<Record<string, unknown>>(raw) || {};
+  const parsed = (safeJson<Record<string, unknown>>(raw) || {}) as Record<string, unknown>;
+
+  // ── Normalize Gemini output to expected shape ─────────────────────────────
+  // For "schema" fix: accept either { json_ld: {...} } OR a bare schema.org object
+  // (i.e. one that has @context / @type at top level) — wrap it.
+  if (fixType === "schema") {
+    const hasJsonLd = parsed.json_ld && typeof parsed.json_ld === "object";
+    const looksLikeSchema =
+      !hasJsonLd &&
+      ((parsed as any)["@context"] || (parsed as any)["@type"]);
+    if (!hasJsonLd && looksLikeSchema) {
+      const bare = { ...parsed };
+      // Remove non-schema keys we may have added later
+      parsed.json_ld = bare;
+    }
+    // Final safety net: if still no json_ld, build a minimal LocalBusiness
+    if (!parsed.json_ld) {
+      parsed.json_ld = {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "RealTrust & ApArt Hotel Timișoara",
+        "url": `https://${CANONICAL_HOST}${path}`,
+        "telephone": "+40799069256",
+        "email": "info@realtrust.ro",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Timișoara",
+          "addressRegion": "Timiș",
+          "addressCountry": "RO",
+        },
+      };
+    }
+  }
+
+  // For "alt_text" fix: accept either { alt_text_suggestions: [...] } OR a bare array
+  if (fixType === "alt_text") {
+    if (!parsed.alt_text_suggestions && Array.isArray((parsed as any).suggestions)) {
+      parsed.alt_text_suggestions = (parsed as any).suggestions;
+    }
+    if (!Array.isArray(parsed.alt_text_suggestions)) {
+      parsed.alt_text_suggestions = [];
+    }
+  }
 
   if ((parsed as any).canonical_url) {
     (parsed as any).canonical_url = buildCanonicalUrl(String((parsed as any).canonical_url));
