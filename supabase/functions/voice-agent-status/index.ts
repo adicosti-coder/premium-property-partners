@@ -24,6 +24,14 @@ async function pushDebugLog(supabase: any, sessionId: string, entry: Record<stri
 
 serve(async (req) => {
   try {
+    // Verify Twilio HMAC signature for POST callbacks
+    let twilioForm: URLSearchParams | null = null;
+    if (req.method === "POST") {
+      const verification = await verifyTwilioRequest(req.clone());
+      if (!verification.ok) return verification.response;
+      twilioForm = verification.params;
+    }
+
     const url = new URL(req.url);
     const sessionId = url.searchParams.get("sessionId");
     if (!sessionId) return new Response("ok");
@@ -34,7 +42,7 @@ serve(async (req) => {
     const MAKE_WEBHOOK_URL = Deno.env.get("MAKE_WEBHOOK_URL");
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    const form = await req.formData();
+    const form = twilioForm ?? new URLSearchParams();
     const callStatus = String(form.get("CallStatus") || "");
     const duration = parseInt(String(form.get("CallDuration") || "0"), 10);
     const recordingUrl = String(form.get("RecordingUrl") || "");
