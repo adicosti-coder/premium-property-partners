@@ -238,14 +238,16 @@ async function ttsToCachedUrlDetailed(
       return { url: mem.url, latencyMs: Date.now() - t0, cached: true };
     }
 
-    // (2) Warm path: try signed URL directly (skip list() = -150ms).
-    // createSignedUrl returns an error if the object doesn't exist.
-    const { data: signed, error: signedErr } = await supabase.storage
+    // (2) Warm path: check storage once, then cache the signed URL in memory.
+    const { data: existing } = await supabase.storage
       .from("voice-recordings")
-      .createSignedUrl(filePath, 60 * 60 * 24 * 7);
-    if (!signedErr && signed?.signedUrl) {
-      memCache.set(cacheKey, { url: signed.signedUrl, exp: Date.now() + 6 * 24 * 60 * 60 * 1000 });
-      return { url: signed.signedUrl, latencyMs: Date.now() - t0, cached: true };
+      .list("tts-cache", { search: `${cacheKey}.ulaw`, limit: 1 });
+    if (existing && existing.length > 0) {
+      const url = await getSignedStorageUrl(supabase, filePath);
+      if (url) {
+        memCache.set(cacheKey, { url, exp: Date.now() + 6 * 24 * 60 * 60 * 1000 });
+      }
+      return { url, latencyMs: Date.now() - t0, cached: true };
     }
 
     const res = await fetch(
