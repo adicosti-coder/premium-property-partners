@@ -10,6 +10,7 @@ import {
 import {
   AlertTriangle, Wand2, Copy, Sparkles, ShieldAlert, Loader2,
   CheckCircle2, Circle, PlayCircle, Filter, ChevronDown, ChevronUp,
+  Undo2, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ interface StatusRow {
   rec_index: number;
   rec_hash: string | null;
   status: Status;
+  note: string | null;
   updated_by: string | null;
   updated_at: string;
 }
@@ -134,21 +136,20 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
   }, [statusRows]);
 
   const upsertStatus = useMutation({
-    mutationFn: async (vars: { recIndex: number; hash: string; status: Status }) => {
+    mutationFn: async (vars: { recIndex: number; hash: string; status: Status; note?: string | null }) => {
       const { data: u } = await supabase.auth.getUser();
+      const payload: any = {
+        audit_id: auditId,
+        rec_index: vars.recIndex,
+        rec_hash: vars.hash,
+        status: vars.status,
+        updated_by: u.user?.id ?? null,
+        updated_at: new Date().toISOString(),
+      };
+      if (vars.note !== undefined) payload.note = vars.note;
       const { error } = await supabase
         .from("seo_local_rec_status")
-        .upsert(
-          {
-            audit_id: auditId,
-            rec_index: vars.recIndex,
-            rec_hash: vars.hash,
-            status: vars.status,
-            updated_by: u.user?.id ?? null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "audit_id,rec_index" }
-        );
+        .upsert(payload, { onConflict: "audit_id,rec_index" });
       if (error) throw error;
     },
     onMutate: async (vars) => {
@@ -162,6 +163,7 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
         rec_index: vars.recIndex,
         rec_hash: vars.hash,
         status: vars.status,
+        note: vars.note !== undefined ? vars.note : (i >= 0 ? next[i].note : null),
         updated_by: i >= 0 ? next[i].updated_by : null,
         updated_at: new Date().toISOString(),
       };
@@ -238,23 +240,84 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
     toast.success(`Prompt combinat copiat (${sel.length} probleme)`);
   };
 
-  // Auto-Fix: invokes seo-auto-fix edge function (same one used elsewhere)
+  // Apply Fix: generate proposal AND apply it in one click, then mark as done.
+  // Stores the resulting version_id in seo_local_rec_status.note for safe Undo.
   const runAutoFix = async (recIndex: number, fix_type: FixType) => {
     setAutoFixingIdx(recIndex);
     try {
-      const { data, error } = await supabase.functions.invoke("seo-auto-fix", {
+      // 1) generate
+      const gen = await supabase.functions.invoke("seo-auto-fix", {
         body: { action: "generate_fix", audit_id: auditId, fix_type },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success(`Propunere AI generată (${fix_type})`, {
-        description: "Deschide tab-ul Auto-Fix pentru a o aplica.",
+      if (gen.error) throw gen.error;
+      if (gen.data?.error) throw new Error(gen.data.error);
+      const proposal = gen.data?.proposal;
+      const url_path = gen.data?.url_path;
+      if (!proposal || !url_path) throw new Error("Răspuns AI invalid");
+
+      // 2) apply
+      const app = await supabase.functions.invoke("seo-auto-fix", {
+        body: { action: "apply_fix", audit_id: auditId, url_path, payload: proposal, variant: "A" },
       });
-      // Mark as 'doing' so admin sees it's actively being addressed
+      if (app.error) throw app.error;
+      if (app.data?.error) throw new Error(app.data.error);
+
+      // 3) find latest history version_id for undo
+      const { data: histRow } = await supabase
+        .from("seo_override_history")
+        .select("id, version_number")
+        .eq("url_path", url_path)
+        .order("version_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const noteData = JSON.stringify({
+        version_id: histRow?.id ?? null,
+        version_number: histRow?.version_number ?? null,
+        url_path,
+        fix_type,
+        applied_at: new Date().toISOString(),
+      });
+
       const e = enriched.find((x) => x.recIndex === recIndex);
-      if (e) upsertStatus.mutate({ recIndex, hash: e.hash, status: "doing" });
+      if (e) upsertStatus.mutate({ recIndex, hash: e.hash, status: "done", note: noteData });
+
+      toast.success(`Fix aplicat (${fix_type})`, {
+        description: histRow ? `v${histRow.version_number} salvat. Folosește Undo dacă e nevoie.` : "Aplicat.",
+      });
     } catch (e: any) {
-      toast.error(e.message || "Eroare Auto-Fix");
+      toast.error(e.message || "Eroare Apply Fix");
+    } finally {
+      setAutoFixingIdx(null);
+    }
+  };
+
+  // Undo per item: revert to the version snapshot BEFORE the apply.
+  const undoFix = async (recIndex: number) => {
+    const row = statusByIndex.get(recIndex);
+    if (!row?.note) {
+      toast.error("Nimic de anulat (lipsește snapshot-ul).");
+      return;
+    }
+    let parsed: any = null;
+    try { parsed = JSON.parse(row.note); } catch { /* */ }
+    const versionId = parsed?.version_id;
+    if (!versionId) {
+      toast.error("Versiunea anterioară nu este disponibilă.");
+      return;
+    }
+    setAutoFixingIdx(recIndex);
+    try {
+      const r = await supabase.functions.invoke("seo-auto-fix", {
+        body: { action: "revert", version_id: versionId },
+      });
+      if (r.error) throw r.error;
+      if (r.data?.error) throw new Error(r.data.error);
+      const e = enriched.find((x) => x.recIndex === recIndex);
+      if (e) upsertStatus.mutate({ recIndex, hash: e.hash, status: "open", note: null });
+      toast.success("Fix anulat — valoarea anterioară restaurată.");
+    } catch (e: any) {
+      toast.error(e.message || "Undo eșuat");
     } finally {
       setAutoFixingIdx(null);
     }
@@ -389,16 +452,20 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
           {/* Issue list */}
           <div className="space-y-2">
             {filtered.map((e) => {
-              const st = statusByIndex.get(e.recIndex)?.status || "open";
-              const StatusIcon = STATUS_META[st].icon;
-              const updatedAt = statusByIndex.get(e.recIndex)?.updated_at;
+              const row = statusByIndex.get(e.recIndex);
+              const st = row?.status || "open";
+              const updatedAt = row?.updated_at;
+              let undoMeta: any = null;
+              try { undoMeta = row?.note ? JSON.parse(row.note) : null; } catch { /* */ }
+              const canUndo = st === "done" && !!undoMeta?.version_id;
+              const isResolved = st === "done";
               return (
                 <div
                   key={e.recIndex}
                   className={cn(
-                    "rounded-lg border p-3 transition-all",
+                    "rounded-lg border transition-all",
                     SEVERITY_STYLE[e.severity] || "border-muted",
-                    st === "done" && "opacity-60"
+                    isResolved ? "p-2 opacity-70" : "p-3"
                   )}
                 >
                   <div className="flex items-start gap-2">
@@ -414,61 +481,84 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
                       {e.severity}
                     </Badge>
                     <div className="flex-1 min-w-0 text-sm">
-                      <div className={cn("font-medium", st === "done" && "line-through")}>{e.issue}</div>
-                      {e.fix && <div className="text-muted-foreground text-xs mt-1">→ {e.fix}</div>}
+                      <div className={cn("font-medium", isResolved && "line-through text-muted-foreground")}>
+                        {e.issue}
+                      </div>
+                      {!isResolved && e.fix && (
+                        <div className="text-muted-foreground text-xs mt-1">→ {e.fix}</div>
+                      )}
                       {updatedAt && (
                         <div className="text-[10px] text-muted-foreground mt-1">
-                          Actualizat {relativeTime(updatedAt)}
+                          {isResolved && undoMeta?.version_number ? `Aplicat (v${undoMeta.version_number}) · ` : ""}
+                          {relativeTime(updatedAt)}
                         </div>
                       )}
                     </div>
+                    {isResolved && canUndo && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => undoFix(e.recIndex)}
+                        disabled={autoFixingIdx !== null}
+                      >
+                        {autoFixingIdx === e.recIndex ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Undo2 className="h-3 w-3" />
+                        )}
+                        Undo
+                      </Button>
+                    )}
                   </div>
 
-                  {/* Action row */}
-                  <div className="flex flex-wrap items-center gap-1.5 mt-2 pl-7">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => runAutoFix(e.recIndex, e.fixType)}
-                      disabled={autoFixingIdx !== null}
-                    >
-                      {autoFixingIdx === e.recIndex ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Wand2 className="h-3 w-3" />
-                      )}
-                      Auto-Fix ({e.fixType})
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => copyPrompt(e)}
-                    >
-                      <Copy className="h-3 w-3" /> Prompt AI
-                    </Button>
+                  {/* Action row — hidden when collapsed/resolved */}
+                  {!isResolved && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2 pl-7">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => runAutoFix(e.recIndex, e.fixType)}
+                        disabled={autoFixingIdx !== null}
+                      >
+                        {autoFixingIdx === e.recIndex ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Zap className="h-3 w-3" />
+                        )}
+                        Aplică Fix ({e.fixType})
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => copyPrompt(e)}
+                      >
+                        <Copy className="h-3 w-3" /> Prompt AI
+                      </Button>
 
-                    {/* Status pill cycle */}
-                    <div className="ml-auto flex items-center gap-1">
-                      {(["open", "doing", "done"] as Status[]).map((s) => {
-                        const Active = STATUS_META[s].icon;
-                        const isActive = st === s;
-                        return (
-                          <Button
-                            key={s}
-                            size="sm"
-                            variant={isActive ? "secondary" : "ghost"}
-                            className={cn("h-7 px-2 gap-1 text-[11px]", isActive && STATUS_META[s].cls)}
-                            onClick={() => upsertStatus.mutate({ recIndex: e.recIndex, hash: e.hash, status: s })}
-                          >
-                            <Active className="h-3 w-3" />
-                            {STATUS_META[s].label}
-                          </Button>
-                        );
-                      })}
+                      {/* Status pill cycle */}
+                      <div className="ml-auto flex items-center gap-1">
+                        {(["open", "doing", "done"] as Status[]).map((s) => {
+                          const Active = STATUS_META[s].icon;
+                          const isActive = st === s;
+                          return (
+                            <Button
+                              key={s}
+                              size="sm"
+                              variant={isActive ? "secondary" : "ghost"}
+                              className={cn("h-7 px-2 gap-1 text-[11px]", isActive && STATUS_META[s].cls)}
+                              onClick={() => upsertStatus.mutate({ recIndex: e.recIndex, hash: e.hash, status: s })}
+                            >
+                              <Active className="h-3 w-3" />
+                              {STATUS_META[s].label}
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
