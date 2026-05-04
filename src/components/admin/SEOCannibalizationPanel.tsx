@@ -48,6 +48,7 @@ function tokenize(s: string | null | undefined): string[] {
 export const SEOCannibalizationPanel = ({ history }: Props) => {
   const qc = useQueryClient();
   const [pending, setPending] = useState<string | null>(null);
+  const [severityFilter, setSeverityFilter] = useState<"all" | "critical" | "warning" | "info">("all");
 
   const resolveMutation = useMutation({
     mutationFn: async ({ loserUrl, winnerUrl }: { loserUrl: string; winnerUrl: string }) => {
@@ -121,9 +122,18 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
     return Array.from(pairs.values()).sort((x, y) => y.shared.length - x.shared.length);
   }, [history]);
 
+  const getSeverity = (sharedLen: number): "critical" | "warning" | "info" =>
+    sharedLen >= 5 ? "critical" : sharedLen >= 4 ? "warning" : "info";
+
   const totalShared = clusters.reduce((acc, c) => acc + c.shared.length, 0);
   const avgShared = clusters.length ? Math.round(totalShared / clusters.length) : 0;
-  const criticalCount = clusters.filter((c) => c.shared.length >= 5).length;
+  const criticalCount = clusters.filter((c) => getSeverity(c.shared.length) === "critical").length;
+  const warningCount = clusters.filter((c) => getSeverity(c.shared.length) === "warning").length;
+  const infoCount = clusters.filter((c) => getSeverity(c.shared.length) === "info").length;
+
+  const filteredClusters = severityFilter === "all"
+    ? clusters
+    : clusters.filter((c) => getSeverity(c.shared.length) === severityFilter);
 
   return (
     <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-orange-50/30 dark:to-orange-950/20">
@@ -175,6 +185,36 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
             </div>
           </div>
         )}
+
+        {/* Severity filter chips */}
+        {clusters.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-4">
+            {([
+              { key: "all", label: "Toate", count: clusters.length, active: "bg-foreground text-background", dot: "bg-foreground" },
+              { key: "critical", label: "Critic", count: criticalCount, active: "bg-rose-500 text-white", dot: "bg-rose-500" },
+              { key: "warning", label: "Atenție", count: warningCount, active: "bg-orange-500 text-white", dot: "bg-orange-500" },
+              { key: "info", label: "Info", count: infoCount, active: "bg-amber-500 text-white", dot: "bg-amber-500" },
+            ] as const).map((f) => {
+              const isActive = severityFilter === f.key;
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setSeverityFilter(f.key as any)}
+                  className={`group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
+                    isActive
+                      ? `${f.active} shadow-md`
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-white/80" : f.dot}`} />
+                  {f.label}
+                  <span className={`tabular-nums ${isActive ? "opacity-90" : "opacity-60"}`}>{f.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="relative">
@@ -188,10 +228,16 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
               <p className="text-xs text-muted-foreground max-w-xs">Toate paginile auditate au focus distinct pe keyword-uri.</p>
             </div>
           </div>
+        ) : filteredClusters.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center space-y-2">
+            <Target className="w-8 h-8 text-muted-foreground/50" />
+            <p className="text-sm font-medium">Nicio potrivire pentru filtrul curent</p>
+            <button onClick={() => setSeverityFilter("all")} className="text-xs text-primary hover:underline">Resetează filtrul</button>
+          </div>
         ) : (
           <ScrollArea className="h-[420px] pr-3 -mr-3">
             <ul className="space-y-3">
-              {clusters.slice(0, 50).map((c, i) => {
+              {filteredClusters.slice(0, 50).map((c, i) => {
                 const winnerIdx = (c.scores[0] ?? 0) >= (c.scores[1] ?? 0) ? 0 : 1;
                 const severity = c.shared.length >= 5 ? "critical" : c.shared.length >= 4 ? "warning" : "info";
                 const sevConfig = {
