@@ -612,14 +612,6 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
     a.click();
     URL.revokeObjectURL(u);
   };
-    const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
-    const u = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = u;
-    a.download = `seo-quick-wins-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(u);
-  };
 
   if (!latestPerUrl.length) return null;
 
