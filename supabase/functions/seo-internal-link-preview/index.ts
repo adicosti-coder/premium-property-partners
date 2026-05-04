@@ -62,8 +62,9 @@ serve(async (req) => {
     const best = ranked[0];
     if (!best || best.s === 0) return json({ ok: true, paragraph: paragraphs[0], score: 0 });
 
-    // Build preview with anchor inserted
+    // Build preview with anchor inserted, wrap inserted segment in <mark> for visual highlight
     const anchorHtml = `<a href="${target_url_path}"><strong>${anchor_text}</strong></a>`;
+    const insertion = `<mark> ${anchorHtml} </mark>`;
     const lower = best.p.toLowerCase();
     const tokens = anchor_text.toLowerCase().split(/\s+/).filter((t: string) => t.length > 3);
     let insertAt = -1;
@@ -72,16 +73,31 @@ serve(async (req) => {
       if (i >= 0) { insertAt = i; break; }
     }
     let highlighted = best.p;
+    let modifiedSentence = "";
     if (insertAt >= 0) {
-      // Replace first sentence boundary near match
       const end = best.p.indexOf(".", insertAt);
       const cut = end > 0 ? end + 1 : best.p.length;
-      highlighted = best.p.slice(0, cut) + ` ${anchorHtml} ` + best.p.slice(cut);
+      // Identify sentence that contains the insertion point
+      const sentStart = Math.max(
+        best.p.lastIndexOf(".", insertAt) + 1,
+        0
+      );
+      modifiedSentence = best.p.slice(sentStart, cut).trim();
+      highlighted = best.p.slice(0, cut) + insertion + best.p.slice(cut);
     } else {
-      highlighted = `${best.p} ${anchorHtml}`;
+      modifiedSentence = best.p.slice(-160);
+      highlighted = `${best.p} ${insertion}`;
     }
 
-    return json({ ok: true, paragraph: best.p, preview_html: highlighted, score: best.s, total: paragraphs.length });
+    return json({
+      ok: true,
+      paragraph: best.p,
+      preview_html: highlighted,
+      modified_sentence: modifiedSentence,
+      anchor_html: anchorHtml,
+      score: best.s,
+      total: paragraphs.length,
+    });
   } catch (e) {
     return json({ ok: false, error: (e as Error).message }, 500);
   }
