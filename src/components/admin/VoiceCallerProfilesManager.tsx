@@ -80,8 +80,9 @@ export default function VoiceCallerProfilesManager() {
       .from("voice_caller_profiles")
       .select("*")
       .order("last_call_at", { ascending: false, nullsFirst: false })
-      .limit(200);
-    if (!showArchived) q = q.is("archived_at", null);
+      .limit(500);
+    if (filterMode === "active") q = q.is("archived_at", null);
+    else if (filterMode === "archived") q = q.not("archived_at", "is", null);
     const { data, error } = await q;
     if (error) {
       toast({ title: "Eroare la încărcare", description: error.message, variant: "destructive" });
@@ -91,7 +92,18 @@ export default function VoiceCallerProfilesManager() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [showArchived]);
+  const loadAuxiliary = async () => {
+    const [auditRes, metricsRes] = await Promise.all([
+      supabase.from("voice_caller_audit_log").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("voice_memory_lookup_metrics").select("id, lookup_ms, hit, is_slow, created_at")
+        .order("created_at", { ascending: false }).limit(100),
+    ]);
+    if (auditRes.data) setAuditLog(auditRes.data as AuditEntry[]);
+    if (metricsRes.data) setMetrics(metricsRes.data as LatencyMetric[]);
+  };
+
+  useEffect(() => { load(); }, [filterMode]);
+  useEffect(() => { loadAuxiliary(); }, []);
 
   const filtered = profiles.filter(p => {
     if (!search) return true;
@@ -108,40 +120,76 @@ export default function VoiceCallerProfilesManager() {
     const { error } = await supabase
       .from("voice_caller_profiles")
       .update({
-        preferred_branch: null,
-        budget_min: null,
-        budget_max: null,
-        preferred_zones: [],
-        property_types: [],
-        rooms_min: null,
-        rooms_max: null,
-        timeline: null,
-        notes: null,
-        last_objection: null,
-        mentioned_property_ids: [],
-        call_count: 0,
-        last_call_at: null,
-        last_session_id: null,
+        preferred_branch: null, budget_min: null, budget_max: null,
+        preferred_zones: [], property_types: [],
+        rooms_min: null, rooms_max: null, timeline: null,
+        notes: null, last_objection: null, mentioned_property_ids: [],
+        call_count: 0, last_call_at: null, last_session_id: null,
       })
       .eq("id", p.id);
     if (error) {
       toast({ title: "Reset eșuat", description: error.message, variant: "destructive" });
     } else {
+      await logAudit(p, "reset", { previous_call_count: p.call_count });
       toast({ title: "Memorie ștearsă", description: `Andrei nu mai ține minte ${p.phone_normalized}.` });
-      load();
+      load(); loadAuxiliary();
+    }
+  };
+
+  const gdprDelete = async (p: CallerProfile) => {
+    // Audit BEFORE delete (FK ON DELETE SET NULL keeps the log readable)
+    await logAudit(p, "gdpr_delete", { phone: p.phone_normalized, call_count: p.call_count });
+    const { error } = await supabase.from("voice_caller_profiles").delete().eq("id", p.id);
+    if (error) {
+      toast({ title: "Ștergere GDPR eșuată", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Profil șters complet", description: `Toate datele pentru ${p.phone_normalized} au fost șterse (GDPR).` });
+      load(); loadAuxiliary();
     }
   };
 
   const archiveProfile = async (p: CallerProfile) => {
+    const newArchived = p.archived_at ? null : new Date().toISOString();
     const { error } = await supabase
       .from("voice_caller_profiles")
-      .update({ archived_at: p.archived_at ? null : new Date().toISOString() })
+      .update({ archived_at: newArchived })
       .eq("id", p.id);
     if (error) {
       toast({ title: "Eroare", description: error.message, variant: "destructive" });
     } else {
-      load();
+      await logAudit(p, newArchived ? "archive" : "reactivate");
+      load(); loadAuxiliary();
     }
+  };
+
+  const exportCSV = async () => {
+    toast({ title: "Se exportă…", description: "Se generează CSV-ul cu toate profilurile." });
+    const { data, error } = await supabase
+      .from("voice_caller_profiles")
+      .select("*")
+      .order("last_call_at", { ascending: false, nullsFirst: false });
+    if (error || !data) {
+      toast({ title: "Export eșuat", description: error?.message || "Fără date", variant: "destructive" });
+      return;
+    }
+    const headers = Object.keys(data[0] || {});
+    const escape = (v: any) => {
+      if (v === null || v === undefined) return "";
+      const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const csv = [
+      headers.join(","),
+      ...data.map(row => headers.map(h => escape((row as any)[h])).join(",")),
+    ].join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `voice_caller_profiles_${format(new Date(), "yyyy-MM-dd_HHmm")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Export gata", description: `${data.length} profiluri exportate.` });
   };
 
   const stats = {
