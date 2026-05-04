@@ -5,8 +5,8 @@ import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
 /* ──────────────────────────────────────────────────────────────
    Twilio TwiML webhook — drives the conversational flow.
    3 branches: Vânzare / Închiriere / Regim Hotelier (cazare).
-   Voice: ElevenLabs (Sarah) cached MP3 via <Play>.
-   Fallback: Polly.Carmen <Say> if TTS fails.
+   Voice: ElevenLabs Andrei cached telephony audio via <Play>.
+   Fallback: Romanian <Say> only for hard failures.
 ─────────────────────────────────────────────────────────────── */
 
 const xmlResponse = (xml: string, status = 200) =>
@@ -15,7 +15,9 @@ const xmlResponse = (xml: string, status = 200) =>
     headers: { "Content-Type": "text/xml" },
   });
 
-const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="alice">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
+const ANDREI_VOICE_ID = "S98OhkhaxeAKHEbhoLi7";
+const ANDREI_MODEL_ID = "eleven_turbo_v2_5";
+const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="Polly.Carmen">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
 
 function escapeXml(s: string) {
   return s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]!));
@@ -159,8 +161,8 @@ interface VoiceSettings {
 }
 
 /**
- * Generate or fetch cached MP3, return public URL.
- * Returns null on failure → caller falls back to <Say>.
+ * Generate or fetch cached telephony audio, return public URL.
+ * Uses 8kHz μ-law to avoid MP3 transcoding artifacts in Twilio calls.
  */
 async function ttsToCachedUrl(
   text: string,
@@ -170,18 +172,18 @@ async function ttsToCachedUrl(
 ): Promise<string | null> {
   try {
     const cacheKey = await sha256(JSON.stringify({ text, ...v }));
-    const filePath = `tts-cache/${cacheKey}.mp3`;
+    const filePath = `tts-cache/${cacheKey}.ulaw`;
 
     const { data: existing } = await supabase.storage
       .from("voice-recordings")
-      .list("tts-cache", { search: `${cacheKey}.mp3`, limit: 1 });
+      .list("tts-cache", { search: `${cacheKey}.ulaw`, limit: 1 });
 
     if (existing && existing.length > 0) {
       return await getSignedStorageUrl(supabase, filePath);
     }
 
     const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=mp3_22050_32`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=ulaw_8000`,
       {
         method: "POST",
         headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
@@ -206,7 +208,7 @@ async function ttsToCachedUrl(
 
     const { error: upErr } = await supabase.storage
       .from("voice-recordings")
-      .upload(filePath, new Uint8Array(audioBuffer), { contentType: "audio/mpeg", upsert: true });
+      .upload(filePath, new Uint8Array(audioBuffer), { contentType: "audio/ulaw", upsert: true });
     if (upErr) {
       console.error("Storage upload failed:", upErr.message);
       return null;
