@@ -807,16 +807,28 @@ serve(async (req) => {
       shouldHangup = true;
     }
 
-    // Generate ElevenLabs MP3 (cached) — falls back to Polly if it fails
+    // Generate ElevenLabs audio (cached) — falls back to Polly if it fails
     let audioUrl: string | null = null;
     let ttsError: string | null = null;
+    let ttsCached = false;
+    let ttsLatencyMs = 0;
+    profile.ai_done_ms = Date.now() - turnT0;
     if (useElevenLabs) {
       try {
-        audioUrl = await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!, sessionId);
-        if (!audioUrl) ttsError = "ElevenLabs returned no URL (see function logs)";
+        const ttsResult = await ttsToCachedUrlDetailed(aiReply, voice, supabase, ELEVENLABS_API_KEY!, sessionId);
+        audioUrl = ttsResult.url;
+        ttsCached = ttsResult.cached;
+        ttsLatencyMs = ttsResult.latencyMs;
+        if (!audioUrl) ttsError = ttsResult.errorType || "ElevenLabs returned no URL";
       } catch (e: any) {
         ttsError = String(e?.message || e);
       }
+    }
+    profile.tts_done_ms = Date.now() - turnT0;
+    profile.total_handler_ms = Date.now() - turnT0;
+    const TARGET_MS = 1000;
+    if (profile.total_handler_ms > TARGET_MS) {
+      console.warn(`[voice-twiml][SLOW TURN] session=${sessionId} turn=${turn} total=${profile.total_handler_ms}ms ai=${profile.ai_done_ms}ms tts=${ttsLatencyMs}ms cached=${ttsCached}`);
     }
 
     // Defer non-critical DB writes so we can return TwiML immediately.
