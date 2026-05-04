@@ -734,7 +734,7 @@ serve(async (req) => {
       console.error("[voice-twiml] failed to load voice_agent_scripts:", e);
     }
 
-    const memoryAddon = `${callerMemoryBlock}${liveBlock}`;
+    const memoryAddon = `${callerMemoryBlock}${liveBlock}${marketDataBlock}`;
     const baseSystemPrompt = dbSystemPromptOverride
       ? `${dbSystemPromptOverride}\n\n${leadContext}${sentimentBlock}${memoryAddon}`
       : `${systemPromptForBranch(branch, leadContext, objective, sentimentBlock)}${memoryAddon}`;
