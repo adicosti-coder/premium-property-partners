@@ -214,6 +214,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
             source_url_path: urlToPath(a.url),
             source_title: a.title || a.url,
             source_context: a.suggested_meta || "",
+            auto_apply_threshold: autoApply ? autoThreshold : 0,
           },
         });
         if (error) throw error;
