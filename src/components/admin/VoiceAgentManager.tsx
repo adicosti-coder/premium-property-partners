@@ -576,6 +576,58 @@ export default function VoiceAgentManager() {
         </CardContent>
       </Card>
 
+      {/* LANGUAGE TEST — fără telefon */}
+      <Card className="border-2 border-amber-500/40 bg-gradient-to-br from-amber-50/40 to-transparent dark:from-amber-950/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-amber-600" />
+            🇷🇴 Test limbă română (fără apel telefonic)
+            {langTestResult && (
+              <Badge
+                className={
+                  langTestResult.summary.verdict === "PASS"
+                    ? "bg-green-500/15 text-green-700 border border-green-500/40"
+                    : langTestResult.summary.verdict === "WARN"
+                    ? "bg-amber-500/15 text-amber-700 border border-amber-500/40"
+                    : "bg-red-500/15 text-red-700 border border-red-500/40"
+                }
+              >
+                {langTestResult.summary.verdict} — {langTestResult.summary.passed}/{langTestResult.summary.total}
+              </Badge>
+            )}
+          </CardTitle>
+          <CardDescription>
+            Forțează agentul să răspundă la 6 scenarii (inclusiv provocări în engleză tip "Hello, please switch to English")
+            și verifică automat că răspunsul rămâne EXCLUSIV în română. Orice cuvânt englezesc detectat = test eșuat.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button
+            onClick={runLanguageTest}
+            disabled={langTestRunning}
+            size="lg"
+            variant="outline"
+            className="w-full border-amber-500/40 hover:bg-amber-500/10"
+          >
+            {langTestRunning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Bot className="h-4 w-4 mr-2" />}
+            {langTestRunning ? "Rulez 6 scenarii..." : "🧪 Verifică limba română (fără să sune)"}
+          </Button>
+          {langTestResult && (
+            <Button
+              onClick={() => setLangTestOpen(true)}
+              variant="ghost"
+              size="sm"
+              className="w-full"
+            >
+              Vezi detalii ({langTestResult.summary.pass_rate}% trecut, {langTestResult.summary.duration_ms} ms)
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground">
+            ✓ 6 scenarii (RO + capcane EN) &nbsp; ✓ Detector strict de engleză &nbsp; ✓ Violările se salvează în log
+          </p>
+        </CardContent>
+      </Card>
+
       {/* FULL DIAGNOSTIC TEST */}
       <Card className="border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50/40 to-transparent dark:from-emerald-950/10">
         <CardHeader>
