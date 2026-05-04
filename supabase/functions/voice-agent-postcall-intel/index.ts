@@ -1,0 +1,165 @@
+// Post-call intelligence for Andrei:
+// Reads a finalized voice_call_sessions row, calls Gemini to produce
+// a structured follow-up draft (WhatsApp + email + next-best-actions),
+// and persists it on the session for admin one-click approval.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { sessionId, force } = await req.json();
+    if (!sessionId || typeof sessionId !== "string") {
+      return new Response(JSON.stringify({ error: "sessionId required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
+    const { data: session, error } = await supabase
+      .from("voice_call_sessions")
+      .select("id, to_number, transcript, ai_summary, ai_outcome, ai_sentiment, next_action, appointment_scheduled_at, prospect_listing_id, lead_id, followup_draft, call_objective")
+      .eq("id", sessionId)
+      .maybeSingle();
+
+    if (error || !session) {
+      return new Response(JSON.stringify({ error: "session not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (session.followup_draft && !force) {
+      return new Response(JSON.stringify({ ok: true, skipped: "already_exists" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY missing" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const transcript = Array.isArray(session.transcript) ? session.transcript : [];
+    const transcriptText = transcript
+      .map((t: any) => `${t.role === "user" ? "Client" : "Andrei"}: ${t.text}`)
+      .join("\n")
+      .slice(0, 7000);
+
+    const systemPrompt = `Ești un asistent de top pentru o agenție imobiliară premium din Timișoara (RealTrust).
+După apelul telefonic al lui Andrei (concierge vocal AI), generezi un PACHET DE FOLLOW-UP în română, cu diacritice, NICIODATĂ engleză.
+
+REGULI:
+• Toate textele sunt în română cu diacritice (ă, â, î, ș, ț).
+• WhatsApp: cald, scurt (max 350 caractere), conversațional, cu 1-2 emoji discrete (🏡 ✅ 📞), fără markdown, fără linkuri inventate.
+• Email: subiect clar (max 60 caractere) + body profesional dar prietenos (max 800 caractere), salutare "Bună ziua,", semnătură "Echipa RealTrust Timișoara".
+• Next-best-actions: 3 acțiuni CONCRETE, fiecare pe sub 12 cuvinte, în ordinea priorității.
+• Priority: "high" dacă outcome=interesat/programare, "medium" dacă callback, "low" altfel.
+• Dacă transcript-ul e gol sau apelul a eșuat, generezi totuși un follow-up scurt de re-contactare.`;
+
+    const userMsg = `Apel:
+- Outcome: ${session.ai_outcome || "necunoscut"}
+- Sentiment: ${session.ai_sentiment || "neutru"}
+- Sumar: ${session.ai_summary || "(fără sumar)"}
+- Următoarea acțiune sugerată: ${session.next_action || "(nespecificată)"}
+- Programare propusă: ${session.appointment_scheduled_at || "(niciuna)"}
+
+Transcript (ultimele 7000 caractere):
+${transcriptText || "(transcript indisponibil)"}
+
+Generează acum pachetul de follow-up.`;
+
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userMsg },
+        ],
+        tools: [{
+          type: "function",
+          function: {
+            name: "create_followup_pack",
+            description: "Returnează pachetul de follow-up structurat în română.",
+            parameters: {
+              type: "object",
+              properties: {
+                whatsapp_message: { type: "string", description: "Mesaj WhatsApp în română, max 350 caractere." },
+                email_subject: { type: "string", description: "Subiect email max 60 caractere." },
+                email_body: { type: "string", description: "Body email în română, max 800 caractere." },
+                next_actions: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "3 acțiuni concrete pentru tine, sub 12 cuvinte fiecare.",
+                },
+                priority: { type: "string", enum: ["high", "medium", "low"] },
+                recommended_callback_window: {
+                  type: "string",
+                  description: "Interval recomandat pentru re-contact, ex: 'mâine 10-12' sau 'în 3 zile'.",
+                },
+              },
+              required: ["whatsapp_message", "email_subject", "email_body", "next_actions", "priority", "recommended_callback_window"],
+              additionalProperties: false,
+            },
+          },
+        }],
+        tool_choice: { type: "function", function: { name: "create_followup_pack" } },
+      }),
+    });
+
+    if (!aiRes.ok) {
+      const t = await aiRes.text();
+      console.error("[postcall-intel] AI error", aiRes.status, t.slice(0, 300));
+      if (aiRes.status === 429 || aiRes.status === 402) {
+        return new Response(JSON.stringify({ error: aiRes.status === 429 ? "rate_limited" : "credits_exhausted" }), {
+          status: aiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ error: "ai_failed" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const aiData = await aiRes.json();
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    let draft: any = null;
+    try {
+      draft = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : null;
+    } catch (e) {
+      console.error("[postcall-intel] failed to parse tool_call args", e);
+    }
+
+    if (!draft) {
+      return new Response(JSON.stringify({ error: "ai_no_draft" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    draft.generated_at = new Date().toISOString();
+    draft.model = "google/gemini-2.5-flash";
+
+    await supabase
+      .from("voice_call_sessions")
+      .update({ followup_draft: draft, followup_status: "pending_review" })
+      .eq("id", sessionId);
+
+    return new Response(JSON.stringify({ ok: true, draft }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e: any) {
+    console.error("[postcall-intel] exception", e);
+    return new Response(JSON.stringify({ error: String(e?.message || e) }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
