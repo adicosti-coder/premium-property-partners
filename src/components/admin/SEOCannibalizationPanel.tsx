@@ -48,6 +48,7 @@ function tokenize(s: string | null | undefined): string[] {
 export const SEOCannibalizationPanel = ({ history }: Props) => {
   const qc = useQueryClient();
   const [pending, setPending] = useState<string | null>(null);
+  const [severityFilter, setSeverityFilter] = useState<"all" | "critical" | "warning" | "info">("all");
 
   const resolveMutation = useMutation({
     mutationFn: async ({ loserUrl, winnerUrl }: { loserUrl: string; winnerUrl: string }) => {
