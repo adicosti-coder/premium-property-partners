@@ -847,6 +847,9 @@ serve(async (req) => {
           aiError,
           audioUrl,
           ttsError,
+          ttsCached,
+          ttsLatencyMs,
+          profile,
           voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
           shouldHangup,
         });
