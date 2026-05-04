@@ -3648,6 +3648,51 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_audit_log: {
+        Row: {
+          action: string
+          applied_at: string
+          applied_by: string | null
+          audit_id: string | null
+          batch_id: string
+          category: string | null
+          id: string
+          payload: Json | null
+          reverted: boolean
+          reverted_at: string | null
+          source: string
+          url_path: string
+        }
+        Insert: {
+          action: string
+          applied_at?: string
+          applied_by?: string | null
+          audit_id?: string | null
+          batch_id: string
+          category?: string | null
+          id?: string
+          payload?: Json | null
+          reverted?: boolean
+          reverted_at?: string | null
+          source?: string
+          url_path: string
+        }
+        Update: {
+          action?: string
+          applied_at?: string
+          applied_by?: string | null
+          audit_id?: string | null
+          batch_id?: string
+          category?: string | null
+          id?: string
+          payload?: Json | null
+          reverted?: boolean
+          reverted_at?: string | null
+          source?: string
+          url_path?: string
+        }
+        Relationships: []
+      }
       seo_audit_snapshots: {
         Row: {
           alert_reason: string | null
