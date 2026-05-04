@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Link2, ArrowRight, CheckCircle2, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Loader2, Link2, ArrowRight, CheckCircle2, X, Download, Copy, Trash2,
+  RefreshCcw, Filter, Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 
 interface AuditRow {
@@ -20,6 +27,9 @@ interface Props {
   history: AuditRow[];
 }
 
+type StatusFilter = "all" | "proposed" | "applied" | "rejected";
+type SortKey = "recent" | "score" | "source";
+
 const urlToPath = (full: string): string => {
   try {
     const u = new URL(full);
@@ -29,10 +39,23 @@ const urlToPath = (full: string): string => {
   } catch { return "/"; }
 };
 
+const scoreColor = (n?: number | null) => {
+  if (!n && n !== 0) return "text-muted-foreground";
+  if (n >= 80) return "text-emerald-600 font-semibold";
+  if (n >= 60) return "text-amber-600";
+  return "text-red-600";
+};
+
 export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const qc = useQueryClient();
   const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [progress, setProgress] = useState({ done: 0, total: 0, ok: 0, fail: 0 });
+  const [batchSize, setBatchSize] = useState<number>(15);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("recent");
+  const [minScore, setMinScore] = useState<number>(0);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const sources = useMemo(() => {
     const m = new Map<string, AuditRow>();
@@ -40,18 +63,55 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     return Array.from(m.values());
   }, [history]);
 
-  const { data: suggestions = [] } = useQuery({
+  const { data: suggestions = [], isFetching, refetch } = useQuery({
     queryKey: ["seo-internal-link-suggestions"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("seo_internal_link_suggestions")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(500);
       if (error) throw error;
       return data || [];
     },
   });
+
+  const counts = useMemo(() => {
+    const c = { all: suggestions.length, proposed: 0, applied: 0, rejected: 0 } as Record<string, number>;
+    suggestions.forEach((s: any) => { c[s.status as string] = (c[s.status as string] || 0) + 1; });
+    return c;
+  }, [suggestions]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let list = suggestions.filter((s: any) => {
+      if (statusFilter !== "all" && s.status !== statusFilter) return false;
+      if (minScore > 0 && (s.relevance_score || 0) < minScore) return false;
+      if (!q) return true;
+      return [s.source_url_path, s.target_url_path, s.anchor_text, s.reason]
+        .filter(Boolean).some((v: string) => v.toLowerCase().includes(q));
+    });
+    if (sortKey === "score") list = [...list].sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+    if (sortKey === "source") list = [...list].sort((a, b) => (a.source_url_path || "").localeCompare(b.source_url_path || ""));
+    return list;
+  }, [suggestions, search, statusFilter, minScore, sortKey]);
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((s: any) => selected.has(s.id));
+  const toggleAllFiltered = () => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (allFilteredSelected) filtered.forEach((s: any) => next.delete(s.id));
+      else filtered.forEach((s: any) => next.add(s.id));
+      return next;
+    });
+  };
+  const toggleOne = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -64,10 +124,79 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const runBulk = async () => {
+  const bulkSetStatus = async (status: "applied" | "rejected" | "proposed") => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    const t = toast.loading(`Actualizez ${ids.length} sugestii...`);
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      try {
+        await supabase.functions.invoke("seo-internal-links", {
+          body: { action: "update_status", suggestion_id: id, status },
+        });
+        ok++;
+      } catch { fail++; }
+    }
+    toast.dismiss(t);
+    toast.success(`${ok} actualizate${fail ? `, ${fail} eșuate` : ""}`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+  };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(`Ștergi definitiv ${ids.length} sugestii?`)) return;
+    const { error } = await supabase.from("seo_internal_link_suggestions").delete().in("id", ids);
+    if (error) return toast.error(error.message);
+    toast.success(`${ids.length} șterse`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+  };
+
+  const copyMarkdown = () => {
+    const rows = (selected.size ? filtered.filter((s: any) => selected.has(s.id)) : filtered);
+    if (!rows.length) return toast.info("Nimic de copiat");
+    const byPage = new Map<string, any[]>();
+    rows.forEach((s: any) => {
+      const k = s.source_url_path;
+      if (!byPage.has(k)) byPage.set(k, []);
+      byPage.get(k)!.push(s);
+    });
+    const md = Array.from(byPage.entries()).map(([page, items]) => {
+      const lines = items.map(i => `- [${i.anchor_text}](${i.target_url_path})${i.reason ? ` — ${i.reason}` : ""}`).join("\n");
+      return `### ${page}\n${lines}`;
+    }).join("\n\n");
+    navigator.clipboard.writeText(md);
+    toast.success(`Markdown copiat (${rows.length} linkuri)`);
+  };
+
+  const exportCsv = () => {
+    const rows = filtered;
+    if (!rows.length) return toast.info("Nimic de exportat");
+    const header = ["source", "target", "anchor", "score", "status", "reason", "created_at"];
+    const csv = [header.join(",")].concat(
+      rows.map((s: any) => [
+        s.source_url_path, s.target_url_path, s.anchor_text, s.relevance_score ?? "",
+        s.status, (s.reason || "").replace(/"/g, '""'), s.created_at,
+      ].map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+    ).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `internal-links-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  const runBulk = async (onlyMissing = false) => {
     setRunning(true);
-    const targets = sources.slice(0, 15);
-    setProgress({ done: 0, total: targets.length });
+    let pool = sources;
+    if (onlyMissing) {
+      const have = new Set(suggestions.map((s: any) => s.source_url_path));
+      pool = sources.filter(s => !have.has(urlToPath(s.url)));
+    }
+    const targets = pool.slice(0, batchSize);
+    setProgress({ done: 0, total: targets.length, ok: 0, fail: 0 });
     let ok = 0, fail = 0;
     for (let i = 0; i < targets.length; i++) {
       try {
@@ -83,60 +212,169 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
         if (error) throw error;
         ok++;
       } catch { fail++; }
-      setProgress({ done: i + 1, total: targets.length });
+      setProgress({ done: i + 1, total: targets.length, ok, fail });
     }
     setRunning(false);
-    toast.success(`Auto-linking: ${ok} OK, ${fail} eșuate`);
+    toast.success(`Auto-linking finalizat: ${ok} OK${fail ? `, ${fail} eșuate` : ""}`);
+    qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+  };
+
+  const bulkApplyHighScore = async (threshold = 85) => {
+    const targets = suggestions.filter((s: any) => s.status === "proposed" && (s.relevance_score || 0) >= threshold);
+    if (!targets.length) return toast.info(`Nicio sugestie ≥ ${threshold}`);
+    if (!confirm(`Aplici automat ${targets.length} sugestii cu scor ≥ ${threshold}?`)) return;
+    const t = toast.loading(`Aplic ${targets.length}...`);
+    let ok = 0, fail = 0;
+    for (const s of targets) {
+      try {
+        await supabase.functions.invoke("seo-internal-links", {
+          body: { action: "update_status", suggestion_id: (s as any).id, status: "applied" },
+        });
+        ok++;
+      } catch { fail++; }
+    }
+    toast.dismiss(t);
+    toast.success(`${ok} aplicate${fail ? `, ${fail} eșuate` : ""}`);
     qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
   };
 
   return (
     <Card className="border-cyan-200 dark:border-cyan-900">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 flex-wrap">
           <Link2 className="w-5 h-5 text-cyan-600" />
           Auto-Internal-Linking AI
-          <Badge variant="outline" className="ml-2">{suggestions.length} sugestii</Badge>
+          <Badge variant="outline">{counts.all} total</Badge>
+          <Badge variant="secondary">{counts.proposed || 0} propuse</Badge>
+          <Badge className="bg-emerald-600">{counts.applied || 0} aplicate</Badge>
         </CardTitle>
         <CardDescription>
-          AI propune anchor + țintă pentru linkuri interne contextuale între paginile auditate.
+          AI propune anchor + țintă pentru linkuri interne contextuale. Filtrează, aplică în masă, exportă CSV.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button onClick={runBulk} disabled={running} className="gap-2">
-          {running ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Generez {progress.done}/{progress.total}</>
-          ) : (
-            <><Link2 className="w-4 h-4" /> Generează sugestii ({Math.min(sources.length, 15)} pagini)</>
-          )}
-        </Button>
-        {running && <Progress value={(progress.done / Math.max(progress.total, 1)) * 100} />}
+        {/* Generation controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={String(batchSize)} onValueChange={(v) => setBatchSize(Number(v))}>
+            <SelectTrigger className="w-[110px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[5, 10, 15, 25, 50].map(n => <SelectItem key={n} value={String(n)}>{n} pagini</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => runBulk(false)} disabled={running} className="gap-2">
+            {running ? <><Loader2 className="w-4 h-4 animate-spin" /> {progress.done}/{progress.total}</>
+              : <><Sparkles className="w-4 h-4" /> Generează ({Math.min(sources.length, batchSize)})</>}
+          </Button>
+          <Button onClick={() => runBulk(true)} disabled={running} variant="outline" className="gap-2">
+            <RefreshCcw className="w-4 h-4" /> Doar pagini noi
+          </Button>
+          <Button onClick={() => bulkApplyHighScore(85)} variant="outline" className="gap-2">
+            <CheckCircle2 className="w-4 h-4" /> Aplică auto ≥85
+          </Button>
+          <Button onClick={exportCsv} variant="ghost" className="gap-2 ml-auto">
+            <Download className="w-4 h-4" /> Export CSV
+          </Button>
+          <Button onClick={() => refetch()} variant="ghost" size="icon" disabled={isFetching}>
+            <RefreshCcw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+        {running && (
+          <div className="space-y-1">
+            <Progress value={(progress.done / Math.max(progress.total, 1)) * 100} />
+            <p className="text-xs text-muted-foreground">
+              {progress.ok} OK · {progress.fail} eșuate · {progress.done}/{progress.total}
+            </p>
+          </div>
+        )}
 
-        <ScrollArea className="h-64 rounded-md border">
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[180px]">
+            <Filter className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Caută sursă, țintă, anchor..." className="pl-8 h-9" />
+          </div>
+          <Select value={String(minScore)} onValueChange={(v) => setMinScore(Number(v))}>
+            <SelectTrigger className="w-[120px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[0, 50, 70, 80, 90].map(n => <SelectItem key={n} value={String(n)}>{n === 0 ? "Orice scor" : `≥ ${n}`}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+            <SelectTrigger className="w-[140px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Recente</SelectItem>
+              <SelectItem value="score">Scor</SelectItem>
+              <SelectItem value="source">Sursă</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="all">Toate ({counts.all})</TabsTrigger>
+            <TabsTrigger value="proposed">Propuse ({counts.proposed || 0})</TabsTrigger>
+            <TabsTrigger value="applied">Aplicate ({counts.applied || 0})</TabsTrigger>
+            <TabsTrigger value="rejected">Respinse ({counts.rejected || 0})</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Bulk action bar */}
+        {selected.size > 0 && (
+          <div className="flex flex-wrap items-center gap-2 p-2 rounded-md border bg-muted/40">
+            <span className="text-sm font-medium px-1">{selected.size} selectate</span>
+            <Button size="sm" variant="outline" onClick={() => bulkSetStatus("applied")} className="gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Aplică
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => bulkSetStatus("rejected")} className="gap-1">
+              <X className="w-3.5 h-3.5" /> Respinge
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => bulkSetStatus("proposed")}>Resetează</Button>
+            <Button size="sm" variant="ghost" onClick={copyMarkdown} className="gap-1">
+              <Copy className="w-3.5 h-3.5" /> Markdown
+            </Button>
+            <Button size="sm" variant="ghost" onClick={bulkDelete} className="gap-1 text-red-600 ml-auto">
+              <Trash2 className="w-3.5 h-3.5" /> Șterge
+            </Button>
+          </div>
+        )}
+
+        {/* Header with select-all */}
+        <div className="flex items-center gap-2 px-3 py-1.5 border rounded-md bg-muted/30 text-xs">
+          <Checkbox checked={allFilteredSelected} onCheckedChange={toggleAllFiltered} />
+          <span className="text-muted-foreground">Selectează toate filtrate ({filtered.length})</span>
+        </div>
+
+        <ScrollArea className="h-[420px] rounded-md border">
           <ul className="divide-y text-sm">
-            {suggestions.map((s: any) => (
-              <li key={s.id} className="px-3 py-2 flex items-center gap-2">
+            {filtered.map((s: any) => (
+              <li key={s.id} className="px-3 py-2 flex items-start gap-2 hover:bg-muted/40">
+                <Checkbox className="mt-1" checked={selected.has(s.id)} onCheckedChange={() => toggleOne(s.id)} />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 text-xs">
+                  <div className="flex items-center gap-1.5 text-xs flex-wrap">
                     <Badge variant="outline" className="font-normal">{s.source_url_path}</Badge>
                     <ArrowRight className="w-3 h-3" />
                     <Badge variant="outline" className="font-normal">{s.target_url_path}</Badge>
-                    {s.relevance_score && <span className="text-muted-foreground">· {s.relevance_score}</span>}
+                    {s.relevance_score != null && (
+                      <span className={scoreColor(s.relevance_score)}>· {s.relevance_score}</span>
+                    )}
                   </div>
-                  <p className="text-sm mt-0.5 truncate">"{s.anchor_text}"</p>
-                  {s.reason && <p className="text-xs text-muted-foreground truncate">{s.reason}</p>}
+                  <p className="text-sm mt-0.5 truncate font-medium">"{s.anchor_text}"</p>
+                  {s.reason && <p className="text-xs text-muted-foreground line-clamp-2">{s.reason}</p>}
                 </div>
                 <div className="flex gap-1 shrink-0">
                   {s.status === "applied" ? (
-                    <Badge variant="default" className="gap-1"><CheckCircle2 className="w-3 h-3" /> aplicat</Badge>
+                    <Badge className="gap-1 bg-emerald-600"><CheckCircle2 className="w-3 h-3" /> aplicat</Badge>
                   ) : s.status === "rejected" ? (
                     <Badge variant="secondary">respins</Badge>
                   ) : (
                     <>
-                      <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ id: s.id, status: "applied" })}>
+                      <Button size="sm" variant="outline" title="Aplică"
+                        onClick={() => updateStatus.mutate({ id: s.id, status: "applied" })}>
                         <CheckCircle2 className="w-3 h-3" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => updateStatus.mutate({ id: s.id, status: "rejected" })}>
+                      <Button size="sm" variant="ghost" title="Respinge"
+                        onClick={() => updateStatus.mutate({ id: s.id, status: "rejected" })}>
                         <X className="w-3 h-3" />
                       </Button>
                     </>
@@ -144,8 +382,10 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
                 </div>
               </li>
             ))}
-            {suggestions.length === 0 && (
-              <li className="px-3 py-4 text-muted-foreground text-center">Nicio sugestie încă.</li>
+            {filtered.length === 0 && (
+              <li className="px-3 py-8 text-muted-foreground text-center text-sm">
+                {suggestions.length === 0 ? "Nicio sugestie încă. Apasă „Generează”." : "Niciun rezultat pentru filtrele curente."}
+              </li>
             )}
           </ul>
         </ScrollArea>
