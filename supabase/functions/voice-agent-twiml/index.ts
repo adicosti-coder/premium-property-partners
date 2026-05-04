@@ -321,14 +321,14 @@ function detectBranch(listingType?: string | null, propertyType?: string | null)
  * - benefit hook scurt (un singur diferențiator), nu pitch lung
  */
 function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary: string): string {
-  const ctx = contextSummary ? `, pentru ${contextSummary}` : "";
+  const ctx = contextSummary ? `, despre ${contextSummary}` : "";
   if (branch === "vanzare") {
-    return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Am cumpărători activi pe zonă și aș vrea să discutăm un minut.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Am cumpărători activi pe zonă.`;
   }
   if (branch === "inchiriere") {
-    return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă rețin un minut${ctx}? Lucrăm cu chiriași verificați și plata e garantată lunar.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă rețin un minut${ctx}? Avem chiriași verificați și plata garantată.`;
   }
-  return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Putem crește veniturile cu 40% față de chiria clasică, fără bătăi de cap.`;
+  return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Putem crește veniturile cu 40%, fără bătăi de cap.`;
 }
 
 function sentimentDirective(sentiment?: string | null, urgency?: number | null): string {
