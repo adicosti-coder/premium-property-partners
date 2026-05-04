@@ -599,6 +599,17 @@ serve(async (req) => {
       }
 
       aiReply = normalizeAiReply(aiReply, openingLine(branch, contextSummary));
+      // Retry once if the first attempt failed the language gate
+      if (aiRawReply && !isRomanianReply(aiRawReply) && customPrompt && LOVABLE_API_KEY) {
+        await logLanguageViolation(supabase, sessionId, turn, aiRawReply, "english_in_opening");
+        const retried = await retryInRomanian(LOVABLE_API_KEY, systemPrompt, [
+          { role: "user", content: "Începe apelul acum. Generează doar prima replică, foarte scurtă, exclusiv în română." },
+        ]);
+        if (retried && isRomanianReply(retried)) {
+          aiReply = retried;
+          aiRawReply = retried;
+        }
+      }
     } else if (LOVABLE_API_KEY) {
       const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -615,6 +626,20 @@ serve(async (req) => {
       if (aiRes.ok) {
         const aiData = await aiRes.json();
         aiRawReply = aiData.choices?.[0]?.message?.content?.trim() || "";
+        if (aiRawReply && !isRomanianReply(aiRawReply)) {
+          // Retry once with stricter instruction before falling back
+          await logLanguageViolation(supabase, sessionId, turn, aiRawReply, "english_in_turn");
+          const retried = await retryInRomanian(
+            LOVABLE_API_KEY,
+            systemPrompt,
+            transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
+          );
+          if (retried && isRomanianReply(retried)) {
+            aiRawReply = retried;
+          } else {
+            await logLanguageViolation(supabase, sessionId, turn, retried || "(empty)", "retry_also_english");
+          }
+        }
         aiReply = normalizeAiReply(
           aiRawReply,
           "Mulțumesc pentru timp. O zi frumoasă! La revedere.",
