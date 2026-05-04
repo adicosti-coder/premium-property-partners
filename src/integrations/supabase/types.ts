@@ -5511,6 +5511,47 @@ export type Database = {
           },
         ]
       }
+      voice_caller_audit_log: {
+        Row: {
+          action: string
+          actor_label: string | null
+          actor_user_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          phone_normalized: string | null
+          profile_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_label?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          phone_normalized?: string | null
+          profile_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_label?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          phone_normalized?: string | null
+          profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_caller_audit_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "voice_caller_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_caller_profiles: {
         Row: {
           archived_at: string | null
@@ -5622,6 +5663,39 @@ export type Database = {
           total_targets?: number
           updated_at?: string
           zone?: string | null
+        }
+        Relationships: []
+      }
+      voice_memory_lookup_metrics: {
+        Row: {
+          created_at: string
+          hit: boolean
+          id: number
+          is_slow: boolean | null
+          lookup_ms: number
+          phone_normalized: string | null
+          session_id: string | null
+          turn: number | null
+        }
+        Insert: {
+          created_at?: string
+          hit?: boolean
+          id?: number
+          is_slow?: boolean | null
+          lookup_ms: number
+          phone_normalized?: string | null
+          session_id?: string | null
+          turn?: number | null
+        }
+        Update: {
+          created_at?: string
+          hit?: boolean
+          id?: number
+          is_slow?: boolean | null
+          lookup_ms?: number
+          phone_normalized?: string | null
+          session_id?: string | null
+          turn?: number | null
         }
         Relationships: []
       }
@@ -5890,6 +5964,7 @@ export type Database = {
         Args: { p_session_id: string }
         Returns: boolean
       }
+      voice_caller_archive_stale: { Args: never; Returns: number }
     }
     Enums: {
       agency_keyword_type: "hard" | "soft" | "owner"
