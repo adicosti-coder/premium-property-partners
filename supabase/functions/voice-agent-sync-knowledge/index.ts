@@ -122,11 +122,37 @@ Deno.serve(async (req) => {
     });
   }
 
+  // ── 2.5 General fallback chunks (always present, used when zone-specific KB is empty) ──
+  const allLeadPrices = (leads || []).map((l: any) => Number(l.original_price || 0)).filter((p) => p > 0);
+  if (allLeadPrices.length >= 5) {
+    const med = Math.round(median(allLeadPrices));
+    chunks.push({
+      content: `Tendință generală Timișoara (ultimele 90 zile, toate zonele combinate): preț median anunțuri ${med.toLocaleString("ro-RO")} EUR pe ${allLeadPrices.length} listări analizate. Randament regim hotelier RealTrust: 9,4% net verificat, ocupare medie 75%.`,
+      metadata: { scope: "timisoara_global", median_price_eur: med, sample_size: allLeadPrices.length },
+      tags: ["general", "timisoara", "fallback"],
+      zone: null,
+      listing_type: null,
+      source: "general_market",
+      confidence: 0.95,
+    });
+  } else {
+    // Hard fallback (no scraper data): static baseline so Andrei is never empty-handed
+    chunks.push({
+      content: `Context general Timișoara: piață imobiliară activă, randament regim hotelier RealTrust 9,4% net (verificat), ocupare medie 75%, gestionare completă fără bătăi de cap pentru proprietar. Cerere mare în Cetate, Iosefin, Dumbrăvița, Aradului.`,
+      metadata: { scope: "timisoara_static" },
+      tags: ["general", "timisoara", "fallback", "static"],
+      zone: null,
+      listing_type: null,
+      source: "general_market",
+      confidence: 0.7,
+    });
+  }
+
   // ── 3. Replace knowledge base atomically ──
   const { error: delErr } = await supabase
     .from("voice_agent_knowledge_chunks")
     .delete()
-    .in("source", ["scraper_leads_aggregate", "properties_aggregate"]);
+    .in("source", ["scraper_leads_aggregate", "properties_aggregate", "general_market"]);
   if (delErr) console.error("[sync-knowledge] delete err:", delErr.message);
 
   let inserted = 0;
