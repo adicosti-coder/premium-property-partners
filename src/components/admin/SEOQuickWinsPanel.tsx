@@ -193,7 +193,45 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
   const [regenerating, setRegenerating] = useState(false);
   const [reauditing, setReauditing] = useState(false);
   const [undoing, setUndoing] = useState(false);
-  const [lastBatch, setLastBatch] = useState<{ category: FixCategory; paths: string[]; ts: string } | null>(null);
+  const [lastBatch, setLastBatch] = useState<{ batchId: string; category: FixCategory; paths: string[]; ts: string } | null>(null);
+  const [showStaleList, setShowStaleList] = useState(false);
+
+  // Persisted last batch from seo_audit_log
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("seo_audit_log" as any)
+        .select("batch_id,category,url_path,applied_at,reverted")
+        .eq("reverted", false)
+        .in("action", ["preview_apply", "ai_fix"])
+        .order("applied_at", { ascending: false })
+        .limit(50);
+      if (!data?.length) return;
+      const top: any = data[0];
+      const sameBatch = data.filter((d: any) => d.batch_id === top.batch_id);
+      setLastBatch({
+        batchId: top.batch_id,
+        category: top.category as FixCategory,
+        paths: sameBatch.map((d: any) => d.url_path),
+        ts: top.applied_at,
+      });
+    })();
+  }, []);
+
+  // GA4 metrics for export
+  const { data: ga4Metrics } = useQuery({
+    queryKey: ["seo-ga4-metrics-quickwins"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("seo_ga4_metrics" as any)
+        .select("url_path,sessions,conversions")
+        .order("period_start", { ascending: false })
+        .limit(500);
+      return (data || []) as any[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
 
   const latestPerUrl = useMemo(() => {
     const m = new Map<string, AuditRow>();
