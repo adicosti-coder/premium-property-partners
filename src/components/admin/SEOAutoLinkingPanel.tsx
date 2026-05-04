@@ -448,6 +448,46 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           </ul>
         </ScrollArea>
       </CardContent>
+
+      <Dialog open={!!previewFor} onOpenChange={(o) => !o && setPreviewFor(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-4 h-4" /> Preview inserare link
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {previewFor?.source_url_path} → <strong>{previewFor?.target_url_path}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-xs text-muted-foreground">
+              Anchor sugerat: <span className="font-medium text-foreground">"{previewFor?.anchor_text}"</span>
+            </div>
+            {previewData.loading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+                <Loader2 className="w-4 h-4 animate-spin" /> Caut paragraful potrivit...
+              </div>
+            ) : previewData.error ? (
+              <p className="text-sm text-red-600">{previewData.error}</p>
+            ) : (
+              <div
+                className="prose prose-sm dark:prose-invert max-w-none p-4 rounded-md border bg-muted/30 leading-relaxed [&_a]:text-cyan-600 [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: previewData.html || "—" }}
+              />
+            )}
+            {previewFor && previewFor.status === "proposed" && (
+              <div className="flex gap-2 justify-end pt-2">
+                <Button variant="outline" onClick={() => { updateStatus.mutate({ id: previewFor.id, status: "rejected" }); setPreviewFor(null); }}>
+                  <X className="w-4 h-4 mr-1" /> Respinge
+                </Button>
+                <Button onClick={() => { updateStatus.mutate({ id: previewFor.id, status: "applied" }); setPreviewFor(null); }}>
+                  <CheckCircle2 className="w-4 h-4 mr-1" /> Aplică
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
