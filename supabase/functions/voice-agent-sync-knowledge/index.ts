@@ -33,12 +33,12 @@ Deno.serve(async (req) => {
     confidence: number;
   }> = [];
 
-  // ── 1. Aggregate scraper_leads by zone + listing_type ──
+  // ── 1. Aggregate prospect_listings (scraper) by zone + category ──
   const { data: leads, error: leadsErr } = await supabase
-    .from("scraper_leads")
-    .select("neighborhood_slug, listing_type, original_price, title, source, created_at")
-    .gte("created_at", new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString())
-    .not("neighborhood_slug", "is", null)
+    .from("prospect_listings")
+    .select("zone, category, price, title, source_platform, scraped_at")
+    .gte("scraped_at", new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString())
+    .not("zone", "is", null)
     .limit(2000);
 
   if (leadsErr) console.error("[sync-knowledge] leads err:", leadsErr.message);
@@ -46,16 +46,17 @@ Deno.serve(async (req) => {
   // Group: zone|listing_type → prices + sample titles
   const groups = new Map<string, { zone: string; type: string; prices: number[]; titles: string[]; sources: Set<string> }>();
   for (const l of leads || []) {
-    const zone = (l as any).neighborhood_slug as string;
-    const type = ((l as any).listing_type || "vanzare") as string;
-    const price = Number((l as any).original_price || 0);
+    const zone = ((l as any).zone as string || "").toString().trim().toLowerCase().replace(/\s+/g, "-");
+    const cat = ((l as any).category || "vanzare") as string;
+    const type = cat === "hotelier" ? "regim_hotelier" : cat;
+    const price = Number((l as any).price || 0);
     if (!zone || price <= 0) continue;
     const key = `${zone}|${type}`;
     if (!groups.has(key)) groups.set(key, { zone, type, prices: [], titles: [], sources: new Set() });
     const g = groups.get(key)!;
     g.prices.push(price);
     if (g.titles.length < 3 && (l as any).title) g.titles.push((l as any).title);
-    if ((l as any).source) g.sources.add((l as any).source);
+    if ((l as any).source_platform) g.sources.add((l as any).source_platform);
   }
 
   for (const [, g] of groups) {
@@ -85,17 +86,18 @@ Deno.serve(async (req) => {
     });
   }
 
-  // ── 2. Aggregate properties (RealTrust portfolio) by zone ──
+  // ── 2. Aggregate properties (RealTrust portfolio) by location ──
   const { data: props } = await supabase
     .from("properties")
-    .select("zone, name, base_price, max_guests, bedrooms")
-    .not("zone", "is", null)
+    .select("location, name, base_price_per_night, capacity, bedrooms")
+    .eq("is_active", true)
+    .not("location", "is", null)
     .limit(500);
 
   const propGroups = new Map<string, { zone: string; prices: number[]; names: string[] }>();
   for (const p of props || []) {
-    const zone = (p as any).zone as string;
-    const price = Number((p as any).base_price || 0);
+    const zone = ((p as any).location as string || "").toString().trim().toLowerCase().replace(/\s+/g, "-");
+    const price = Number((p as any).base_price_per_night || 0);
     if (!zone || price <= 0) continue;
     if (!propGroups.has(zone)) propGroups.set(zone, { zone, prices: [], names: [] });
     const g = propGroups.get(zone)!;
@@ -123,7 +125,7 @@ Deno.serve(async (req) => {
   }
 
   // ── 2.5 General fallback chunks (always present, used when zone-specific KB is empty) ──
-  const allLeadPrices = (leads || []).map((l: any) => Number(l.original_price || 0)).filter((p) => p > 0);
+  const allLeadPrices = (leads || []).map((l: any) => Number(l.price || 0)).filter((p) => p > 0);
   if (allLeadPrices.length >= 5) {
     const med = Math.round(median(allLeadPrices));
     chunks.push({
