@@ -59,10 +59,12 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const [sortKey, setSortKey] = useState<SortKey>("recent");
   const [minScore, setMinScore] = useState<number>(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [autoApply, setAutoApply] = useState<boolean>(() => localStorage.getItem("seo-il-auto-apply") === "1");
-  const [autoThreshold, setAutoThreshold] = useState<number>(() => Number(localStorage.getItem("seo-il-auto-threshold") || 85));
+  const [autoApply, setAutoApply] = useState<boolean>(false);
+  const [autoThreshold, setAutoThreshold] = useState<number>(85);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [previewFor, setPreviewFor] = useState<any | null>(null);
   const [previewData, setPreviewData] = useState<{ html?: string; loading: boolean; error?: string }>({ loading: false });
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; ok: number; fail: number; label: string } | null>(null);
 
   const sources = useMemo(() => {
     const m = new Map<string, AuditRow>();
