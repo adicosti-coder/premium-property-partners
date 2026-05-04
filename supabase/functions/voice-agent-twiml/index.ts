@@ -239,13 +239,11 @@ async function ttsToCachedUrlDetailed(
     }
 
     // (2) Warm path: try signed URL directly (skip list() = -150ms).
-    // If the file exists, this returns instantly; if not, it errors and we generate.
-    const { data: signed } = await supabase.storage
+    // createSignedUrl returns an error if the object doesn't exist.
+    const { data: signed, error: signedErr } = await supabase.storage
       .from("voice-recordings")
       .createSignedUrl(filePath, 60 * 60 * 24 * 7);
-    if (signed?.signedUrl) {
-      // HEAD verify is too slow; trust the signed URL — Twilio will fetch it.
-      // If it 404s, ElevenLabs will be re-triggered on the next turn.
+    if (!signedErr && signed?.signedUrl) {
       memCache.set(cacheKey, { url: signed.signedUrl, exp: Date.now() + 6 * 24 * 60 * 60 * 1000 });
       return { url: signed.signedUrl, latencyMs: Date.now() - t0, cached: true };
     }
