@@ -459,6 +459,8 @@ function composeSystemPrompt(
 }
 
 serve(async (req) => {
+  const turnT0 = Date.now();
+  const profile: Record<string, number> = {};
   try {
     // Twilio HMAC verification — SOFT CHECK ONLY.
     // Edge runtime rewrites req.url (drops /functions/v1/, switches scheme),
