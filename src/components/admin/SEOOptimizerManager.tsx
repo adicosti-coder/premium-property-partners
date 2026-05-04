@@ -33,6 +33,7 @@ import { SEOPremiumPlusPanel } from "./SEOPremiumPlusPanel";
 import { SEOTrafficROIPanel } from "./SEOTrafficROIPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
+import { LocalSEORecommendations } from "./LocalSEORecommendations";
 
 const QUICK_URLS = [
   // Principal
@@ -1153,16 +1154,11 @@ const SEOOptimizerManager = () => {
                       )}
 
                       {selectedAudit.local_recommendations && selectedAudit.local_recommendations.length > 0 && (
-                        <div>
-                          <div className="text-xs font-semibold mb-2 text-primary">
-                            📋 Recomandări concrete Local SEO
-                          </div>
-                          <ul className="list-disc pl-5 space-y-1 text-sm">
-                            {selectedAudit.local_recommendations.map((r: any, i: number) => (
-                              <li key={i}>{typeof r === "string" ? r : JSON.stringify(r)}</li>
-                            ))}
-                          </ul>
-                        </div>
+                        <LocalSEORecommendations
+                          recommendations={selectedAudit.local_recommendations as any}
+                          auditId={selectedAudit.id}
+                          url={selectedAudit.url}
+                        />
                       )}
                     </div>
                   </AccordionContent>
