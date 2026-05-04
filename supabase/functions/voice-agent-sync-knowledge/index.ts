@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     const g = groups.get(key)!;
     g.prices.push(price);
     if (g.titles.length < 3 && (l as any).title) g.titles.push((l as any).title);
-    if ((l as any).source) g.sources.add((l as any).source);
+    if ((l as any).source_platform) g.sources.add((l as any).source_platform);
   }
 
   for (const [, g] of groups) {
