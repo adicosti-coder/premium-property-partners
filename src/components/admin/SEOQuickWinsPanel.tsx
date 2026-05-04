@@ -158,8 +158,18 @@ const CATEGORIES: CategoryDef[] = [
     label: "Fără Schema.org",
     icon: Layers,
     color: "text-blue-600",
-    matches: (a) =>
-      (a.issues || []).some((i: any) => /schema|json-ld|structured/i.test(i.issue || "")),
+    matches: (a, ovr) => {
+      // If an override already has json_ld, treat as solved
+      const ovrJsonLd = (ovr as any)?.json_ld;
+      const hasOvrSchema =
+        ovrJsonLd &&
+        ((Array.isArray(ovrJsonLd) && ovrJsonLd.length > 0) ||
+          (typeof ovrJsonLd === "object" && Object.keys(ovrJsonLd).length > 0));
+      if (hasOvrSchema) return false;
+      return (a.issues || []).some((i: any) =>
+        /schema|json-ld|structured/i.test(i.issue || ""),
+      );
+    },
     fixMode: "ai",
     fixType: "schema",
   },
@@ -168,8 +178,14 @@ const CATEGORIES: CategoryDef[] = [
     label: "Imagini fără alt-text",
     icon: ImageIcon,
     color: "text-purple-600",
-    matches: (a) =>
-      (a.issues || []).some((i: any) => /\balt\b|alt[-\s]?text/i.test(i.issue || "")),
+    matches: (a, ovr) => {
+      const ovrAlt = (ovr as any)?.alt_text_suggestions;
+      const hasOvrAlt = Array.isArray(ovrAlt) && ovrAlt.length > 0;
+      if (hasOvrAlt) return false;
+      return (a.issues || []).some((i: any) =>
+        /\balt\b|alt[-\s]?text/i.test(i.issue || ""),
+      );
+    },
     fixMode: "ai",
     fixType: "alt_text",
   },
