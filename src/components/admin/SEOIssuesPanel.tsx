@@ -136,21 +136,20 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
   }, [statusRows]);
 
   const upsertStatus = useMutation({
-    mutationFn: async (vars: { recIndex: number; hash: string; status: Status }) => {
+    mutationFn: async (vars: { recIndex: number; hash: string; status: Status; note?: string | null }) => {
       const { data: u } = await supabase.auth.getUser();
+      const payload: any = {
+        audit_id: auditId,
+        rec_index: vars.recIndex,
+        rec_hash: vars.hash,
+        status: vars.status,
+        updated_by: u.user?.id ?? null,
+        updated_at: new Date().toISOString(),
+      };
+      if (vars.note !== undefined) payload.note = vars.note;
       const { error } = await supabase
         .from("seo_local_rec_status")
-        .upsert(
-          {
-            audit_id: auditId,
-            rec_index: vars.recIndex,
-            rec_hash: vars.hash,
-            status: vars.status,
-            updated_by: u.user?.id ?? null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "audit_id,rec_index" }
-        );
+        .upsert(payload, { onConflict: "audit_id,rec_index" });
       if (error) throw error;
     },
     onMutate: async (vars) => {
@@ -164,6 +163,7 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
         rec_index: vars.recIndex,
         rec_hash: vars.hash,
         status: vars.status,
+        note: vars.note !== undefined ? vars.note : (i >= 0 ? next[i].note : null),
         updated_by: i >= 0 ? next[i].updated_by : null,
         updated_at: new Date().toISOString(),
       };
