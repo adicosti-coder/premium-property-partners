@@ -33,11 +33,45 @@ interface CallerProfile {
   created_at: string;
 }
 
+interface AuditEntry {
+  id: string;
+  profile_id: string | null;
+  phone_normalized: string | null;
+  action: string;
+  actor_label: string | null;
+  details: any;
+  created_at: string;
+}
+
+interface LatencyMetric {
+  id: number;
+  lookup_ms: number;
+  hit: boolean;
+  is_slow: boolean;
+  created_at: string;
+}
+
+type FilterMode = "active" | "archived" | "all";
+
+async function logAudit(profile: CallerProfile, action: string, details: any = {}) {
+  const { data: auth } = await supabase.auth.getUser();
+  await supabase.from("voice_caller_audit_log").insert({
+    profile_id: profile.id,
+    phone_normalized: profile.phone_normalized,
+    action,
+    actor_user_id: auth?.user?.id ?? null,
+    actor_label: "admin",
+    details,
+  });
+}
+
 export default function VoiceCallerProfilesManager() {
   const [profiles, setProfiles] = useState<CallerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [showArchived, setShowArchived] = useState(false);
+  const [filterMode, setFilterMode] = useState<FilterMode>("active");
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [metrics, setMetrics] = useState<LatencyMetric[]>([]);
   const { toast } = useToast();
 
   const load = async () => {
