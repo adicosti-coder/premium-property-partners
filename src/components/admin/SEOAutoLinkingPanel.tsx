@@ -302,7 +302,13 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
       });
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || "Preview indisponibil");
-      setPreviewData({ loading: false, html: data.preview_html || data.paragraph || "—" });
+      const rawHtml = data.preview_html || data.paragraph || "—";
+      const safe = DOMPurify.sanitize(rawHtml, {
+        ALLOWED_TAGS: ["a", "strong", "em", "b", "i", "br", "span", "mark"],
+        ALLOWED_ATTR: ["href", "title"],
+        ALLOWED_URI_REGEXP: /^(?:\/|https?:\/\/)/i,
+      });
+      setPreviewData({ loading: false, html: safe });
     } catch (e: any) {
       setPreviewData({ loading: false, error: e.message });
     }
