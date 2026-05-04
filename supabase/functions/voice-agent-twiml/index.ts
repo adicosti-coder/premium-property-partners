@@ -438,8 +438,8 @@ serve(async (req) => {
       ? `${dbSystemPromptOverride}\n\n${leadContext}${sentimentBlock}`
       : systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
     const systemPrompt = customPrompt
-      ? `${baseSystemPrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customPrompt}`
-      : baseSystemPrompt;
+      ? `${ROMANIAN_VOICE_GUARD}\n\n${baseSystemPrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customPrompt}`
+      : `${ROMANIAN_VOICE_GUARD}\n\n${baseSystemPrompt}`;
 
     // Upsert test log row at turn 0 — finalized later by voice-agent-status
     if (turn === 0) {
@@ -535,6 +535,7 @@ serve(async (req) => {
           messages: [
             { role: "system", content: systemPrompt },
             ...transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
+            { role: "user", content: "Continuă conversația. Răspunde exclusiv în română, cu diacritice, în maximum 2 propoziții." },
           ],
         }),
       });
