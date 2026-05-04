@@ -45,7 +45,8 @@ const xmlResponse = (xml: string, status = 200) =>
   });
 
 const ANDREI_VOICE_ID = "S98OhkhaxeAKHEbhoLi7";
-const ANDREI_MODEL_ID = "eleven_turbo_v2_5";
+// flash_v2_5 = ~50% faster than turbo, identical RO quality for short replies
+const ANDREI_MODEL_ID = "eleven_flash_v2_5";
 const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="Polly.Carmen">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
 
 function escapeXml(s: string) {
@@ -411,9 +412,12 @@ function speakXml(text: string, audioUrl: string | null): string {
   return `<Say language="ro-RO" voice="Polly.Carmen">${escapeXml(text)}</Say>`;
 }
 
-function gatherXml(actionUrl: string): string {
+function gatherXml(actionUrl: string, innerXml = ""): string {
   const safeUrl = escapeXml(actionUrl);
-  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" speechTimeout="auto" timeout="6" action="${safeUrl}" method="POST"/>`;
+  // bargeIn=true → user can interrupt the agent (natural conversation)
+  // speechTimeout=1 → end-of-speech detected ~1s after silence (vs ~2s on auto)
+  // actionOnEmptyResult=true → if user says nothing, still go to next turn (no dead air)
+  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="1" timeout="5" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
 }
 
 function isCustomPrompt(prompt?: string | null): boolean {
