@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import VoiceAgentScriptsEditor from "./VoiceAgentScriptsEditor";
+import VoiceAgentMonitoring from "./VoiceAgentMonitoring";
 
 interface VoiceCall {
   id: string;
@@ -348,6 +349,7 @@ export default function VoiceAgentManager() {
 
   return (
     <div className="space-y-6">
+      <VoiceAgentMonitoring />
       {/* QUICK LINK to unified dashboard */}
       <Card className="border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
         <CardContent className="pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

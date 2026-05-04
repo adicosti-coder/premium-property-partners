@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { applyLexiconToText } from "../_shared/voiceLexicon.ts";
 
 /* ──────────────────────────────────────────────────────────────
    ElevenLabs TTS for Voice Agent
@@ -128,18 +129,40 @@ serve(async (req) => {
       };
     }
 
+    // Apply phonetic lexicon BEFORE TTS (Iosefin → Yosefin, ApArt → Ap-Art etc.)
+    const phoneticText = await applyLexiconToText(supabase, text);
+
+    // Best-effort: log TTS failures so the admin Debug Live panel sees them.
+    const tryLogTtsError = async (err: any, status?: number) => {
+      try {
+        await supabase.from("voice_agent_tts_errors").insert({
+          source: "elevenlabs",
+          error_type: status ? "elevenlabs_http_error" : "exception",
+          http_status: status ?? null,
+          message: String(err?.message || err).slice(0, 1000),
+          text_snippet: phoneticText.slice(0, 300),
+          voice_id: voiceSettings.voice_id,
+        });
+      } catch { /* non-fatal */ }
+    };
+
     // PREVIEW MODE: return base64 audio directly (don't cache)
     if (mode === "preview") {
-      const audioBuffer = await generateMp3(text, voiceSettings, ELEVENLABS_API_KEY);
-      const { encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
-      const base64 = encode(new Uint8Array(audioBuffer));
-      return new Response(JSON.stringify({ audioContent: base64, mime: "audio/mpeg" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      try {
+        const audioBuffer = await generateMp3(phoneticText, voiceSettings, ELEVENLABS_API_KEY);
+        const { encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
+        const base64 = encode(new Uint8Array(audioBuffer));
+        return new Response(JSON.stringify({ audioContent: base64, mime: "audio/mpeg" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (e: any) {
+        await tryLogTtsError(e);
+        throw e;
+      }
     }
 
     // CACHE MODE: hash text + settings → check storage → generate if missing
-    const cacheKey = await sha256(JSON.stringify({ text, ...voiceSettings }));
+    const cacheKey = await sha256(JSON.stringify({ text: phoneticText, ...voiceSettings }));
     const filePath = `tts-cache/${cacheKey}.mp3`;
 
     // Check if already cached
@@ -155,7 +178,13 @@ serve(async (req) => {
     }
 
     // Generate fresh
-    const audioBuffer = await generateMp3(text, voiceSettings, ELEVENLABS_API_KEY);
+    let audioBuffer: ArrayBuffer;
+    try {
+      audioBuffer = await generateMp3(phoneticText, voiceSettings, ELEVENLABS_API_KEY);
+    } catch (e: any) {
+      await tryLogTtsError(e);
+      throw e;
+    }
 
     const { error: upErr } = await supabase.storage
       .from("voice-recordings")
