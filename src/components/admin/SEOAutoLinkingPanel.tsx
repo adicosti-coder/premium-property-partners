@@ -578,6 +578,47 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           </ul>
         </ScrollArea>
 
+        {/* Auto-runs (bulk operations) with Revert All */}
+        {autoRuns.filter((r: any) => !r.run_id.startsWith("single:")).length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Zap className="w-4 h-4 text-amber-600" />
+              Rulări auto-linking (Revert All)
+            </div>
+            <ScrollArea className="h-32 rounded-md border">
+              <ul className="divide-y text-xs">
+                {autoRuns.filter((r: any) => !r.run_id.startsWith("single:")).map((r: any) => {
+                  const active = r.count - r.reverted;
+                  return (
+                    <li key={r.run_id} className="px-3 py-2 flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded">{r.run_id.slice(-12)}</code>
+                          <span className="text-muted-foreground">
+                            {new Date(r.last_at).toLocaleString("ro-RO")}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-muted-foreground">
+                          {r.count} link-uri · {r.pages_count} pagini
+                          {r.reverted > 0 && <span className="ml-1">· {r.reverted} anulate</span>}
+                        </p>
+                      </div>
+                      {active > 0 ? (
+                        <Button size="sm" variant="outline" className="text-red-600"
+                          onClick={() => revertRun(r.run_id, active)}>
+                          Revert All ({active})
+                        </Button>
+                      ) : (
+                        <Badge variant="secondary">complet anulat</Badge>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </ScrollArea>
+          </div>
+        )}
+
         {/* Auto-applied log with revert */}
         {autoLogs.length > 0 && (
           <div className="space-y-2">
