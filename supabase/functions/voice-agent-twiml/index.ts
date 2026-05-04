@@ -659,14 +659,43 @@ serve(async (req) => {
         if (zones.length > 0) {
           kbQuery = kbQuery.or(zones.map((z) => `zone.ilike.%${z}%`).join(","));
         }
-        const { data: kbChunks } = await kbQuery;
-        const kbMs = Date.now() - kbT0;
-        console.log(`[voice-twiml][kb-lookup] session=${sessionId} zones=[${zones.join(",")}] hits=${kbChunks?.length || 0} ms=${kbMs}`);
-        if (kbMs > 200) console.warn(`[voice-twiml][kb-lookup][SLOW] session=${sessionId} ms=${kbMs}`);
+        let { data: kbChunks } = await kbQuery;
+        let kbMs = Date.now() - kbT0;
+        let usedFallback = false;
+
+        // FALLBACK: dacă filtrarea pe zonă nu returnează nimic, injectăm setul general (Timișoara)
+        if ((!kbChunks || kbChunks.length === 0)) {
+          usedFallback = true;
+          const fbT0 = Date.now();
+          const { data: fbChunks } = await supabase
+            .from("voice_agent_knowledge_chunks")
+            .select("content, zone, listing_type, confidence")
+            .or("source.eq.general_market,zone.is.null")
+            .order("confidence", { ascending: false })
+            .limit(5);
+          if (!fbChunks || fbChunks.length === 0) {
+            // ultimă plasă: top 5 globale
+            const { data: anyChunks } = await supabase
+              .from("voice_agent_knowledge_chunks")
+              .select("content, zone, listing_type, confidence")
+              .order("confidence", { ascending: false })
+              .limit(5);
+            kbChunks = anyChunks || [];
+          } else {
+            kbChunks = fbChunks;
+          }
+          kbMs = Date.now() - kbT0 + (Date.now() - fbT0);
+        }
+
+        console.log(`[voice-twiml][kb-lookup] session=${sessionId} zones=[${zones.join(",")}] hits=${kbChunks?.length || 0} ms=${kbMs} fallback=${usedFallback}`);
+        if (kbMs > 200) console.warn(`[voice-twiml][kb-lookup][SLOW] session=${sessionId} ms=${kbMs} — continuă fără blocare`);
 
         if (kbChunks && kbChunks.length > 0) {
           const lines = kbChunks.map((c, i) => `${i + 1}. ${c.content}`).join("\n");
-          marketDataBlock = `\n\n📊 DATE REALE PIAȚĂ (CONTEXT ACTUAL):\n${lines}\n\nFolosește datele de piață furnizate pentru a oferi autoritate și cifre concrete în discuție. NU inventa statistici, folosește-le DOAR pe cele din acest context.`;
+          const header = usedFallback
+            ? "📊 DATE REALE PIAȚĂ (CONTEXT GENERAL TIMIȘOARA — fallback)"
+            : "📊 DATE REALE PIAȚĂ (CONTEXT ACTUAL)";
+          marketDataBlock = `\n\n${header}:\n${lines}\n\nFolosește datele de piață furnizate pentru a oferi autoritate și cifre concrete în discuție. NU inventa statistici, folosește-le DOAR pe cele din acest context.`;
         }
       } catch (e) {
         console.error("[voice-twiml][kb-lookup] error:", e);
