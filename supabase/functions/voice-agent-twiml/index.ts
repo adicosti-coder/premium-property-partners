@@ -320,10 +320,10 @@ BENEFICII DE MENȚIONAT (DOAR DACĂ ÎNTREABĂ):
 CTA FINAL: "Putem face analiza în 30 de minute, pe Zoom sau la biroul nostru… Preferați online, sau față în față?"`;
 }
 
-/** Build TwiML reply: <Play> if TTS URL, else <Say> Polly fallback (with cascading fallback). */
+/** Build TwiML reply: <Play> if TTS URL, else clear Romanian Polly fallback. */
 function speakXml(text: string, audioUrl: string | null): string {
   if (audioUrl) return `<Play>${escapeXml(audioUrl)}</Play>`;
-  return `<Say language="ro-RO" voice="alice">${escapeXml(text)}</Say>`;
+  return `<Say language="ro-RO" voice="Polly.Carmen">${escapeXml(text)}</Say>`;
 }
 
 function gatherXml(actionUrl: string): string {
@@ -397,15 +397,15 @@ serve(async (req) => {
       .maybeSingle();
 
     const elevenLabsMinScore = Number(vSettings?.elevenlabs_min_score ?? 90);
-    const elevenLabsAvailable = (vSettings?.tts_provider === "elevenlabs") && !!ELEVENLABS_API_KEY;
+    const elevenLabsAvailable = !!ELEVENLABS_API_KEY;
     const voice: VoiceSettings = {
-      voice_id: vSettings?.elevenlabs_voice_id || "S98OhkhaxeAKHEbhoLi7",
-      model_id: vSettings?.elevenlabs_model_id || "eleven_multilingual_v2",
-      stability: Number(vSettings?.voice_stability) || 0.55,
-      similarity_boost: Number(vSettings?.voice_similarity_boost) || 0.80,
-      style: Number(vSettings?.voice_style) || 0.40,
-      speed: Number(vSettings?.voice_speed) || 1.0,
-      use_speaker_boost: vSettings?.voice_use_speaker_boost !== false,
+      voice_id: ANDREI_VOICE_ID,
+      model_id: ANDREI_MODEL_ID,
+      stability: 0.62,
+      similarity_boost: 0.88,
+      style: 0.22,
+      speed: 0.92,
+      use_speaker_boost: true,
     };
 
     // Determine branch + context
@@ -451,9 +451,9 @@ serve(async (req) => {
       }
     }
 
-    // HYBRID DECISION: ElevenLabs if (a) lead score meets threshold OR (b) it's a manual test call (no prospect/lead linked)
+    // Premium mode: always use Andrei/ElevenLabs when the API key exists.
     const isManualCall = !session.prospect_listing_id && !session.lead_id;
-    const useElevenLabs = elevenLabsAvailable && (forceElevenLabs || isManualCall || leadScore >= elevenLabsMinScore);
+    const useElevenLabs = elevenLabsAvailable;
     console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} manual=${isManualCall} useElevenLabs=${useElevenLabs}`);
 
     const objective = session.call_objective || "qualify";
