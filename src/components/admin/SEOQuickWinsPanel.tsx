@@ -699,7 +699,64 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
               </Button>
             </>
           )}
+          {stalePages.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowStaleList((v) => !v)}
+              title="Audituri >7 zile"
+            >
+              <AlertTriangle className="h-3 w-3 mr-1 text-amber-600" />
+              Audituri vechi ({stalePages.length})
+            </Button>
+          )}
         </div>
+
+        {/* Stale list */}
+        {showStaleList && stalePages.length > 0 && (
+          <div className="rounded-md border bg-background p-2 space-y-1 max-h-64 overflow-y-auto">
+            <div className="text-xs font-medium mb-1">
+              Pagini neauditate de peste 7 zile
+            </div>
+            {stalePages.map((s) => (
+              <div
+                key={s.audit.id}
+                className="flex items-center gap-2 text-xs py-1 border-b last:border-0"
+              >
+                <Badge variant="destructive" className="text-[10px] shrink-0">
+                  {s.days}z
+                </Badge>
+                <span className="font-mono truncate flex-1">{s.path}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2"
+                  onClick={() => reauditPaths([s.path])}
+                  disabled={reauditing}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Reîmprospătează
+                </Button>
+              </div>
+            ))}
+            <div className="pt-2">
+              <Button
+                size="sm"
+                variant="default"
+                className="w-full"
+                onClick={() => reauditPaths(stalePages.map((s) => s.path))}
+                disabled={reauditing}
+              >
+                {reauditing ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3 mr-1" />
+                )}
+                Reîmprospătează toate ({stalePages.length})
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Categories */}
         <div className="grid gap-2 sm:grid-cols-2">
