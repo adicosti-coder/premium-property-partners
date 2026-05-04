@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -193,7 +193,45 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
   const [regenerating, setRegenerating] = useState(false);
   const [reauditing, setReauditing] = useState(false);
   const [undoing, setUndoing] = useState(false);
-  const [lastBatch, setLastBatch] = useState<{ category: FixCategory; paths: string[]; ts: string } | null>(null);
+  const [lastBatch, setLastBatch] = useState<{ batchId: string; category: FixCategory; paths: string[]; ts: string } | null>(null);
+  const [showStaleList, setShowStaleList] = useState(false);
+
+  // Persisted last batch from seo_audit_log
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("seo_audit_log" as any)
+        .select("batch_id,category,url_path,applied_at,reverted")
+        .eq("reverted", false)
+        .in("action", ["preview_apply", "ai_fix"])
+        .order("applied_at", { ascending: false })
+        .limit(50);
+      if (!data?.length) return;
+      const top: any = data[0];
+      const sameBatch = data.filter((d: any) => d.batch_id === top.batch_id);
+      setLastBatch({
+        batchId: top.batch_id,
+        category: top.category as FixCategory,
+        paths: sameBatch.map((d: any) => d.url_path),
+        ts: top.applied_at,
+      });
+    })();
+  }, []);
+
+  // GA4 metrics for export
+  const { data: ga4Metrics } = useQuery({
+    queryKey: ["seo-ga4-metrics-quickwins"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("seo_ga4_metrics" as any)
+        .select("url_path,sessions,conversions")
+        .order("period_start", { ascending: false })
+        .limit(500);
+      return (data || []) as any[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
 
   const latestPerUrl = useMemo(() => {
     const m = new Map<string, AuditRow>();
@@ -365,7 +403,25 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
 
     setBulkRunning(null);
     setPreviewCat(null);
-    setLastBatch({ category: cat, paths: appliedPaths, ts: new Date().toISOString() });
+    const batchId = crypto.randomUUID();
+    if (appliedPaths.length) {
+      try {
+        await supabase.from("seo_audit_log" as any).insert(
+          appliedPaths.map((p) => ({
+            batch_id: batchId,
+            action: "preview_apply",
+            category: cat,
+            url_path: p,
+            source: "manual",
+            applied_by: userId,
+            payload: { category: cat },
+          }))
+        );
+      } catch (e) {
+        console.warn("audit_log insert failed", e);
+      }
+    }
+    setLastBatch({ batchId, category: cat, paths: appliedPaths, ts: new Date().toISOString() });
     toast.success(`${success}/${selected.length} pagini actualizate. Re-audit recomandat.`);
     qc.invalidateQueries({ queryKey: ["seo-overrides"] });
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
@@ -414,9 +470,28 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
       }
       return { success, total: targets.length, paths, cat };
     },
-    onSuccess: ({ success, total, paths, cat }) => {
+    onSuccess: async ({ success, total, paths, cat }) => {
+      const batchId = crypto.randomUUID();
+      const { data: userRes } = await supabase.auth.getUser();
+      if (paths.length) {
+        try {
+          await supabase.from("seo_audit_log" as any).insert(
+            paths.map((p) => ({
+              batch_id: batchId,
+              action: "ai_fix",
+              category: cat,
+              url_path: p,
+              source: "manual",
+              applied_by: userRes.user?.id || null,
+              payload: { category: cat },
+            }))
+          );
+        } catch (e) {
+          console.warn("audit_log insert failed", e);
+        }
+      }
       toast.success(`AI fix: ${success}/${total} aplicate`);
-      setLastBatch({ category: cat, paths, ts: new Date().toISOString() });
+      setLastBatch({ batchId, category: cat, paths, ts: new Date().toISOString() });
       setBulkRunning(null);
       qc.invalidateQueries({ queryKey: ["seo-overrides"] });
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
@@ -467,25 +542,67 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
         console.warn("revert failed", p, e);
       }
     }
+    try {
+      await supabase
+        .from("seo_audit_log" as any)
+        .update({ reverted: true, reverted_at: new Date().toISOString() })
+        .eq("batch_id", lastBatch.batchId);
+    } catch (e) {
+      console.warn("audit_log revert update failed", e);
+    }
     setUndoing(false);
     toast.success(`Anulat ${success}/${lastBatch.paths.length}`);
     setLastBatch(null);
     qc.invalidateQueries({ queryKey: ["seo-overrides"] });
   };
 
-  // ---- Export CSV ----
+  // ---- Stale pages (>7 days) ----
+  const stalePages = useMemo(
+    () =>
+      latestPerUrl
+        .map((a) => ({
+          audit: a,
+          path: urlToPath(a.url),
+          days: Math.floor((Date.now() - new Date(a.created_at).getTime()) / 86400000),
+        }))
+        .filter((s) => s.days > 7)
+        .sort((a, b) => b.days - a.days),
+    [latestPerUrl]
+  );
+
+  // ---- Export CSV (URL, Score, Sessions, Conversions, unresolved AI suggestions) ----
   const exportCSV = () => {
-    const rows: string[] = ["category,url,score,title_len,meta_len,suggested_title,suggested_meta"];
+    const ga4Map = new Map<string, { sessions: number; conversions: number }>();
+    (ga4Metrics || []).forEach((m: any) => {
+      const prev = ga4Map.get(m.url_path) || { sessions: 0, conversions: 0 };
+      ga4Map.set(m.url_path, {
+        sessions: prev.sessions + (m.sessions || 0),
+        conversions: prev.conversions + (m.conversions || 0),
+      });
+    });
+
+    const issueIndex = new Map<string, string[]>();
     for (const c of stats) {
       for (const a of c.audits) {
-        const t = (a.title || "").replace(/"/g, '""');
-        const m = (a.meta_description || "").replace(/"/g, '""');
-        const st = (a.suggested_title || "").replace(/"/g, '""');
-        const sm = (a.suggested_meta || "").replace(/"/g, '""');
-        rows.push(
-          `"${c.key}","${a.url}",${a.overall_score ?? ""},${t.length},${m.length},"${st}","${sm}"`
-        );
+        const arr = issueIndex.get(a.id) || [];
+        arr.push(c.label);
+        issueIndex.set(a.id, arr);
       }
+    }
+
+    const rows: string[] = [
+      "url,url_path,seo_score,age_days,ga4_sessions,ga4_conversions,unresolved_issues,suggested_title,suggested_meta",
+    ];
+    for (const a of latestPerUrl) {
+      const path = urlToPath(a.url);
+      const ga = ga4Map.get(path) || { sessions: 0, conversions: 0 };
+      const days = Math.floor((Date.now() - new Date(a.created_at).getTime()) / 86400000);
+      const issues = (issueIndex.get(a.id) || []).join(" | ").replace(/"/g, '""');
+      const st = (a.suggested_title || "").replace(/"/g, '""');
+      const sm = (a.suggested_meta || "").replace(/"/g, '""');
+      rows.push(
+        `"${a.url}","${path}",${a.overall_score ?? ""},${days},${ga.sessions},${ga.conversions},"${issues}","${st}","${sm}"`
+      );
     }
     const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
     const u = URL.createObjectURL(blob);
@@ -582,7 +699,64 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
               </Button>
             </>
           )}
+          {stalePages.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowStaleList((v) => !v)}
+              title="Audituri >7 zile"
+            >
+              <AlertTriangle className="h-3 w-3 mr-1 text-amber-600" />
+              Audituri vechi ({stalePages.length})
+            </Button>
+          )}
         </div>
+
+        {/* Stale list */}
+        {showStaleList && stalePages.length > 0 && (
+          <div className="rounded-md border bg-background p-2 space-y-1 max-h-64 overflow-y-auto">
+            <div className="text-xs font-medium mb-1">
+              Pagini neauditate de peste 7 zile
+            </div>
+            {stalePages.map((s) => (
+              <div
+                key={s.audit.id}
+                className="flex items-center gap-2 text-xs py-1 border-b last:border-0"
+              >
+                <Badge variant="destructive" className="text-[10px] shrink-0">
+                  {s.days}z
+                </Badge>
+                <span className="font-mono truncate flex-1">{s.path}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2"
+                  onClick={() => reauditPaths([s.path])}
+                  disabled={reauditing}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Reîmprospătează
+                </Button>
+              </div>
+            ))}
+            <div className="pt-2">
+              <Button
+                size="sm"
+                variant="default"
+                className="w-full"
+                onClick={() => reauditPaths(stalePages.map((s) => s.path))}
+                disabled={reauditing}
+              >
+                {reauditing ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3 mr-1" />
+                )}
+                Reîmprospătează toate ({stalePages.length})
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Categories */}
         <div className="grid gap-2 sm:grid-cols-2">
