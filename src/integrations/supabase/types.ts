@@ -5057,6 +5057,45 @@ export type Database = {
           },
         ]
       }
+      voice_agent_knowledge_chunks: {
+        Row: {
+          confidence: number | null
+          content: string
+          created_at: string
+          id: string
+          listing_type: string | null
+          metadata: Json
+          refreshed_at: string
+          source: string
+          tags: string[]
+          zone: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          content: string
+          created_at?: string
+          id?: string
+          listing_type?: string | null
+          metadata?: Json
+          refreshed_at?: string
+          source?: string
+          tags?: string[]
+          zone?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          content?: string
+          created_at?: string
+          id?: string
+          listing_type?: string | null
+          metadata?: Json
+          refreshed_at?: string
+          source?: string
+          tags?: string[]
+          zone?: string | null
+        }
+        Relationships: []
+      }
       voice_agent_language_violations: {
         Row: {
           created_at: string
