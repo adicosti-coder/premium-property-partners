@@ -442,7 +442,18 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           </div>
         )}
 
-        {/* Header with select-all */}
+        {/* Bulk progress bar */}
+        {bulkProgress && (
+          <div className="space-y-1 p-2 rounded-md border bg-muted/30">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium">{bulkProgress.label} {bulkProgress.done}/{bulkProgress.total}</span>
+              <span className="text-muted-foreground">
+                ✓ {bulkProgress.ok} {bulkProgress.fail > 0 && <span className="text-red-600">· ✗ {bulkProgress.fail}</span>}
+              </span>
+            </div>
+            <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} className="h-1.5" />
+          </div>
+        )}
         <div className="flex items-center gap-2 px-3 py-1.5 border rounded-md bg-muted/30 text-xs">
           <Checkbox checked={allFilteredSelected} onCheckedChange={toggleAllFiltered} />
           <span className="text-muted-foreground">Selectează toate filtrate ({filtered.length})</span>
