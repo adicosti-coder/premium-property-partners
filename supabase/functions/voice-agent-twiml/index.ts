@@ -740,7 +740,7 @@ serve(async (req) => {
           messages: [
             { role: "system", content: systemPrompt },
             ...transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
-            { role: "user", content: "Continuă conversația. Răspunde exclusiv în română, cu diacritice, în maximum 2 propoziții." },
+            { role: "user", content: "Continuă conversația. Răspunde EXCLUSIV în română, cu diacritice. MAXIM 1 propoziție scurtă (sub 15 cuvinte). Nu folosi „...”. Mergi direct la subiect." },
           ],
         }),
       });
