@@ -5,8 +5,8 @@ import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
 /* ──────────────────────────────────────────────────────────────
    Twilio TwiML webhook — drives the conversational flow.
    3 branches: Vânzare / Închiriere / Regim Hotelier (cazare).
-   Voice: ElevenLabs (Sarah) cached MP3 via <Play>.
-   Fallback: Polly.Carmen <Say> if TTS fails.
+   Voice: ElevenLabs Andrei cached telephony audio via <Play>.
+   Fallback: Romanian <Say> only for hard failures.
 ─────────────────────────────────────────────────────────────── */
 
 const xmlResponse = (xml: string, status = 200) =>
@@ -15,7 +15,9 @@ const xmlResponse = (xml: string, status = 200) =>
     headers: { "Content-Type": "text/xml" },
   });
 
-const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="alice">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
+const ANDREI_VOICE_ID = "S98OhkhaxeAKHEbhoLi7";
+const ANDREI_MODEL_ID = "eleven_turbo_v2_5";
+const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="Polly.Carmen">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
 
 function escapeXml(s: string) {
   return s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]!));
@@ -88,7 +90,7 @@ function isRomanianReply(text: string): boolean {
 const ROMANIAN_VOICE_GUARD = `REGULĂ ABSOLUTĂ, PRIORITARĂ PESTE ORICE ALTĂ INSTRUCȚIUNE:
 Răspunzi DOAR în limba română din România, cu diacritice (ă, â, î, ș, ț). Nu folosești engleză, NICIODATĂ — nici pentru salut, scuze, mulțumiri sau închidere.
 Este INTERZIS să folosești cuvinte ca: hello, hi, sorry, please, thanks, thank you, goodbye, bye, OK în loc de "bine".
-Ești Ana din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci INTERN și răspunzi strict în română.
+Ești Andrei din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci INTERN și răspunzi strict în română.
 Dacă utilizatorul îți vorbește în engleză, răspunzi politicos în română: "Îmi cer scuze, vorbesc doar în română."`;
 
 async function logLanguageViolation(
@@ -159,8 +161,8 @@ interface VoiceSettings {
 }
 
 /**
- * Generate or fetch cached MP3, return public URL.
- * Returns null on failure → caller falls back to <Say>.
+ * Generate or fetch cached telephony audio, return public URL.
+ * Uses 8kHz μ-law to avoid MP3 transcoding artifacts in Twilio calls.
  */
 async function ttsToCachedUrl(
   text: string,
@@ -170,18 +172,18 @@ async function ttsToCachedUrl(
 ): Promise<string | null> {
   try {
     const cacheKey = await sha256(JSON.stringify({ text, ...v }));
-    const filePath = `tts-cache/${cacheKey}.mp3`;
+    const filePath = `tts-cache/${cacheKey}.ulaw`;
 
     const { data: existing } = await supabase.storage
       .from("voice-recordings")
-      .list("tts-cache", { search: `${cacheKey}.mp3`, limit: 1 });
+      .list("tts-cache", { search: `${cacheKey}.ulaw`, limit: 1 });
 
     if (existing && existing.length > 0) {
       return await getSignedStorageUrl(supabase, filePath);
     }
 
     const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=mp3_22050_32`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=ulaw_8000`,
       {
         method: "POST",
         headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
@@ -206,7 +208,7 @@ async function ttsToCachedUrl(
 
     const { error: upErr } = await supabase.storage
       .from("voice-recordings")
-      .upload(filePath, new Uint8Array(audioBuffer), { contentType: "audio/mpeg", upsert: true });
+      .upload(filePath, new Uint8Array(audioBuffer), { contentType: "audio/ulaw", upsert: true });
     if (upErr) {
       console.error("Storage upload failed:", upErr.message);
       return null;
@@ -235,12 +237,12 @@ function detectBranch(listingType?: string | null, propertyType?: string | null)
 function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary: string): string {
   const ctx = contextSummary ? `, pentru ${contextSummary}` : "";
   if (branch === "vanzare") {
-    return `Bună ziua, sunt Ana de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Am cumpărători activi pe zonă și aș vrea să discutăm un minut.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Am cumpărători activi pe zonă și aș vrea să discutăm un minut.`;
   }
   if (branch === "inchiriere") {
-    return `Bună ziua, sunt Ana de la RealTrust Timișoara… Vă rețin un minut${ctx}? Lucrăm cu chiriași verificați și plata e garantată lunar.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă rețin un minut${ctx}? Lucrăm cu chiriași verificați și plata e garantată lunar.`;
   }
-  return `Bună ziua, sunt Ana de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Putem crește veniturile cu 40% față de chiria clasică, fără bătăi de cap.`;
+  return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Putem crește veniturile cu 40% față de chiria clasică, fără bătăi de cap.`;
 }
 
 function sentimentDirective(sentiment?: string | null, urgency?: number | null): string {
@@ -262,7 +264,7 @@ function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", lead
     : objective === "schedule" ? "programare vizionare/întâlnire"
     : "follow-up amabil";
 
-  const common = `Ești Ana, concierge vocal RealTrust Timișoara — agenție imobiliară premium.
+  const common = `Ești Andrei, concierge vocal RealTrust Timișoara — agenție imobiliară premium.
 
 REGULI CRITICE DE STIL VOCAL:
 • Vorbești EXCLUSIV în română, cu diacritice (ă, â, î, ș, ț) — niciodată engleză.
@@ -318,10 +320,10 @@ BENEFICII DE MENȚIONAT (DOAR DACĂ ÎNTREABĂ):
 CTA FINAL: "Putem face analiza în 30 de minute, pe Zoom sau la biroul nostru… Preferați online, sau față în față?"`;
 }
 
-/** Build TwiML reply: <Play> if TTS URL, else <Say> Polly fallback (with cascading fallback). */
+/** Build TwiML reply: <Play> if TTS URL, else clear Romanian Polly fallback. */
 function speakXml(text: string, audioUrl: string | null): string {
   if (audioUrl) return `<Play>${escapeXml(audioUrl)}</Play>`;
-  return `<Say language="ro-RO" voice="alice">${escapeXml(text)}</Say>`;
+  return `<Say language="ro-RO" voice="Polly.Carmen">${escapeXml(text)}</Say>`;
 }
 
 function gatherXml(actionUrl: string): string {
@@ -395,15 +397,15 @@ serve(async (req) => {
       .maybeSingle();
 
     const elevenLabsMinScore = Number(vSettings?.elevenlabs_min_score ?? 90);
-    const elevenLabsAvailable = (vSettings?.tts_provider === "elevenlabs") && !!ELEVENLABS_API_KEY;
+    const elevenLabsAvailable = !!ELEVENLABS_API_KEY;
     const voice: VoiceSettings = {
-      voice_id: vSettings?.elevenlabs_voice_id || "S98OhkhaxeAKHEbhoLi7",
-      model_id: vSettings?.elevenlabs_model_id || "eleven_multilingual_v2",
-      stability: Number(vSettings?.voice_stability) || 0.55,
-      similarity_boost: Number(vSettings?.voice_similarity_boost) || 0.80,
-      style: Number(vSettings?.voice_style) || 0.40,
-      speed: Number(vSettings?.voice_speed) || 1.0,
-      use_speaker_boost: vSettings?.voice_use_speaker_boost !== false,
+      voice_id: ANDREI_VOICE_ID,
+      model_id: ANDREI_MODEL_ID,
+      stability: 0.62,
+      similarity_boost: 0.88,
+      style: 0.22,
+      speed: 0.92,
+      use_speaker_boost: true,
     };
 
     // Determine branch + context
@@ -449,9 +451,9 @@ serve(async (req) => {
       }
     }
 
-    // HYBRID DECISION: ElevenLabs if (a) lead score meets threshold OR (b) it's a manual test call (no prospect/lead linked)
+    // Premium mode: always use Andrei/ElevenLabs when the API key exists.
     const isManualCall = !session.prospect_listing_id && !session.lead_id;
-    const useElevenLabs = elevenLabsAvailable && (forceElevenLabs || isManualCall || leadScore >= elevenLabsMinScore);
+    const useElevenLabs = elevenLabsAvailable;
     console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} manual=${isManualCall} useElevenLabs=${useElevenLabs}`);
 
     const objective = session.call_objective || "qualify";

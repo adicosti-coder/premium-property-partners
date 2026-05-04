@@ -58,7 +58,7 @@ export default function VoiceAgentManager() {
   const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null);
   const [autoSettings, setAutoSettings] = useState<any>(null);
   const [testingAuto, setTestingAuto] = useState(false);
-  const [previewText, setPreviewText] = useState("Bună ziua, sunt Ana de la RealTrust Timișoara. Am observat anunțul dumneavoastră și aș vrea să discutăm un minut despre o oportunitate.");
+  const [previewText, setPreviewText] = useState("Bună ziua, sunt Andrei de la RealTrust Timișoara. Am observat anunțul dumneavoastră și aș vrea să discutăm un minut despre o oportunitate.");
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewAudio, setPreviewAudio] = useState<string | null>(null);
   const [testNumber, setTestNumber] = useState<string>(() => localStorage.getItem("voice_test_number") || "+40");
@@ -105,12 +105,6 @@ export default function VoiceAgentManager() {
 
   const VOICES = [
     { id: "S98OhkhaxeAKHEbhoLi7", name: "Andrei (masculin, RO — Digital Concierge, recomandat)" },
-    { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald)" },
-    { id: "XrExE9yKIg1WjnnlVkGX", name: "Matilda (feminin, profesional)" },
-    { id: "FGY2WhTYpPnrIDTdsKH5", name: "Laura (feminin, energic)" },
-    { id: "cgSgspJ2msm6clMCkdW9", name: "Jessica (feminin, expresiv)" },
-    { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice (feminin, britanic)" },
-    { id: "pFZP5JQG7iQjIQuC4Bku", name: "Lily (feminin, suav)" },
   ];
 
   const previewVoice = async () => {
@@ -261,7 +255,7 @@ export default function VoiceAgentManager() {
         body: {
           toNumber: testNumber,
           objective: "qualify",
-          customPrompt: "TEST DIAGNOSTIC: Ești Ana de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
+          customPrompt: "TEST DIAGNOSTIC: Ești Andrei de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
         },
       });
       if (error || data?.error) {
@@ -287,7 +281,7 @@ export default function VoiceAgentManager() {
         body: {
           toNumber: call.to_number,
           objective: call.call_objective || "qualify",
-          customPrompt: "TEST DIAGNOSTIC: Ești Ana de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
+          customPrompt: "TEST DIAGNOSTIC: Ești Andrei de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
         },
       });
       if (error || data?.error) {
@@ -449,34 +443,28 @@ export default function VoiceAgentManager() {
             {autoSettings?.tts_provider === "elevenlabs" && <Badge className="bg-amber-500/15 text-amber-700 border border-amber-500/40">ACTIV</Badge>}
           </CardTitle>
           <CardDescription>
-            Mod hibrid: ElevenLabs se folosește DOAR pentru lead-urile cu scor mare. Sub prag, se folosește vocea Polly Carmen (gratis). Economisești ~$0.30/apel pe leads slabe.
+            Mod premium: toate apelurile folosesc Andrei, aceeași voce ElevenLabs ca Digital Concierge. Fără fallback pe voci feminine pentru apelurile normale.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between p-3 rounded-lg border bg-background">
             <div>
               <div className="font-medium text-sm">Activează ElevenLabs (mod hibrid)</div>
-              <div className="text-xs text-muted-foreground">Dacă e oprit, toate apelurile folosesc Polly (robotic, dar gratis).</div>
+              <div className="text-xs text-muted-foreground">Blocat pe modul premium pentru claritate maximă în română.</div>
             </div>
             <Switch
-              checked={autoSettings?.tts_provider === "elevenlabs"}
-              onCheckedChange={(v) => saveSettings({ tts_provider: v ? "elevenlabs" : "polly" })}
+              checked={true}
+              disabled
             />
           </div>
 
           <div className="p-3 rounded-lg border bg-amber-50/40 dark:bg-amber-950/10">
             <div className="flex justify-between text-xs mb-2">
-              <span className="font-medium">Prag scor pentru ElevenLabs</span>
-              <span className="font-mono text-amber-700">≥ {autoSettings?.elevenlabs_min_score ?? 90}</span>
+              <span className="font-medium">Regim voce apeluri</span>
+              <span className="font-mono text-amber-700">Premium Plus</span>
             </div>
-            <Slider
-              min={50} max={100} step={5}
-              value={[Number(autoSettings?.elevenlabs_min_score ?? 90)]}
-              onValueChange={([v]) => setAutoSettings({ ...autoSettings, elevenlabs_min_score: v })}
-              onValueCommit={([v]) => saveSettings({ elevenlabs_min_score: v })}
-            />
-            <div className="text-[11px] text-muted-foreground mt-2">
-              Lead-urile cu scor ≥ acest prag → voce premium ElevenLabs (~$0.34/apel). Sub prag → Polly Carmen (~$0.04/apel).
+            <div className="text-[11px] text-muted-foreground">
+              Toate apelurile folosesc Andrei ElevenLabs, optimizat pentru telefon. Fallback-ul vocal intră doar dacă serviciul audio extern nu răspunde.
             </div>
           </div>
 
@@ -484,7 +472,7 @@ export default function VoiceAgentManager() {
             <div>
               <label className="text-xs font-medium mb-1 block text-muted-foreground">Voce</label>
               <Select
-                value={autoSettings?.elevenlabs_voice_id || "EXAVITQu4vr4xnSDxMaL"}
+                value={autoSettings?.elevenlabs_voice_id || "S98OhkhaxeAKHEbhoLi7"}
                 onValueChange={(v) => saveSettings({ elevenlabs_voice_id: v })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -496,7 +484,7 @@ export default function VoiceAgentManager() {
             <div>
               <label className="text-xs font-medium mb-1 block text-muted-foreground">Model</label>
               <Select
-                value={autoSettings?.elevenlabs_model_id || "eleven_multilingual_v2"}
+                value={autoSettings?.elevenlabs_model_id || "eleven_turbo_v2_5"}
                 onValueChange={(v) => saveSettings({ elevenlabs_model_id: v })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -675,7 +663,7 @@ export default function VoiceAgentManager() {
             AI Voice Agent — Outbound Call
           </CardTitle>
           <CardDescription>
-            Sună automat un lead. Ana (AI) calificează interesul, programează vizionări și salvează transcript-ul.
+            Sună automat un lead. Andrei (AI) califică interesul, programează vizionări și salvează transcript-ul.
             Necesită conectorul Twilio + secret <code>TWILIO_FROM_NUMBER</code>.
           </CardDescription>
         </CardHeader>
@@ -702,7 +690,7 @@ export default function VoiceAgentManager() {
             <Textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Suprascrie prompt-ul implicit al asistentei Ana..."
+              placeholder="Suprascrie prompt-ul implicit al asistentului Andrei..."
               rows={3}
             />
           </div>
@@ -845,7 +833,7 @@ export default function VoiceAgentManager() {
                       {(selectedCall.transcript || []).map((t: any, i: number) => (
                         <div key={i} className={`flex ${t.role === "user" ? "justify-end" : "justify-start"}`}>
                           <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${t.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                            <div className="text-xs opacity-70 mb-0.5">{t.role === "user" ? "Client" : "Ana (AI)"}</div>
+                            <div className="text-xs opacity-70 mb-0.5">{t.role === "user" ? "Client" : "Andrei (AI)"}</div>
                             {t.text}
                           </div>
                         </div>

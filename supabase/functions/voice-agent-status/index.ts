@@ -170,7 +170,7 @@ serve(async (req) => {
 
       let parsed: any = fallbackReport;
       const transcriptText = transcript
-        .map((t: any) => `${t.role === "user" ? "Client" : "Ana"}: ${t.text}`)
+        .map((t: any) => `${t.role === "user" ? "Client" : "Andrei"}: ${t.text}`)
         .join("\n")
         .slice(0, 6000);
 
@@ -262,7 +262,7 @@ serve(async (req) => {
 
         const transcriptShort = transcript
           .slice(-12)
-          .map((t: any) => `${t.role === "user" ? "👤 Client" : "🤖 Ana"}: ${t.text}`)
+          .map((t: any) => `${t.role === "user" ? "👤 Client" : "🤖 Andrei"}: ${t.text}`)
           .join("\n");
 
         const recordingLink = latestRecordingUrl;

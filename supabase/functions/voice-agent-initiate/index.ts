@@ -100,7 +100,7 @@ serve(async (req) => {
 
     const agentPrompt = hasCustomPrompt
       ? `__CUSTOM_PROMPT__\n${customPrompt.trim()}`
-      : `Ești Ana, un asistent vocal al RealTrust, agenție de imobiliare premium din Timișoara. Suni amabil un potențial client. ${leadContext} Obiectiv: ${objective === "qualify" ? "calificare interes (buget, timeline, tip proprietate)" : objective === "schedule" ? "programare vizionare/întâlnire" : "follow-up"}. Vorbești scurt, natural, în limba română. Maxim 2-3 propoziții per replică. Dacă nu răspunde sau pare deranjat, închizi politicos.`;
+      : `Ești Andrei, concierge vocal RealTrust, agenție de imobiliare premium din Timișoara. Suni amabil un potențial client. ${leadContext} Obiectiv: ${objective === "qualify" ? "calificare interes (buget, timeline, tip proprietate)" : objective === "schedule" ? "programare vizionare/întâlnire" : "follow-up"}. Vorbești scurt, natural, în limba română. Maxim 2-3 propoziții per replică. Dacă nu răspunde sau pare deranjat, închizi politicos.`;
 
     // Create session row first (so webhook can find it via call_sid)
     const { data: session, error: sessErr } = await supabase

@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 /* ──────────────────────────────────────────────────────────────
    ElevenLabs TTS for Voice Agent
-   - Generates MP3 from text using ElevenLabs (Sarah voice by default)
+   - Generates MP3 from text using ElevenLabs Andrei voice by default
    - Caches MP3 in storage bucket `voice-recordings/tts-cache/`
    - Returns public URL that Twilio <Play> can fetch
    - Supports preview mode (returns base64 audio inline)
@@ -13,6 +13,9 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const ANDREI_VOICE_ID = "S98OhkhaxeAKHEbhoLi7";
+const ANDREI_MODEL_ID = "eleven_turbo_v2_5";
 
 async function sha256(text: string): Promise<string> {
   const enc = new TextEncoder().encode(text);
@@ -115,12 +118,12 @@ serve(async (req) => {
         .eq("id", 1)
         .maybeSingle();
       voiceSettings = {
-        voice_id: settings?.elevenlabs_voice_id || "S98OhkhaxeAKHEbhoLi7",
-        model_id: settings?.elevenlabs_model_id || "eleven_multilingual_v2",
-        stability: Number(settings?.voice_stability) || 0.55,
-        similarity_boost: Number(settings?.voice_similarity_boost) || 0.80,
-        style: Number(settings?.voice_style) || 0.40,
-        speed: Number(settings?.voice_speed) || 1.0,
+        voice_id: settings?.elevenlabs_voice_id || ANDREI_VOICE_ID,
+        model_id: settings?.elevenlabs_model_id || ANDREI_MODEL_ID,
+        stability: Number(settings?.voice_stability) || 0.62,
+        similarity_boost: Number(settings?.voice_similarity_boost) || 0.88,
+        style: Number(settings?.voice_style) || 0.22,
+        speed: Number(settings?.voice_speed) || 0.92,
         use_speaker_boost: settings?.voice_use_speaker_boost !== false,
       };
     }
