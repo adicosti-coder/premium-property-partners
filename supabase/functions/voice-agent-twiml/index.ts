@@ -890,9 +890,13 @@ serve(async (req) => {
             { role: "user", content: (() => {
               const u = userSpeech.toLowerCase();
               const wantsDetail = /(de ce|cum|explica|spune-?mi mai|detalii|exact|mai multe|cât|ce înseamnă|cum funcționează)/i.test(u);
+              const objects = /(scump|comision|nu mai|deja|singur|criza|criză|prea mult|nu pot|ocupat|vorbim altă|alt[ăa] dată)/i.test(u);
+              if (objects) {
+                return "Apelantul ridică o obiecție. Începe cu o confirmare empatică ULTRA-scurtă (\"înțeleg perfect.\" / \"vă înțeleg.\"), apoi UN argument concret, calm, în română cu diacritice. MAXIM 18 cuvinte total. NU insista, NU repeta același argument.";
+              }
               return wantsDetail
-                ? "Continuă conversația în română cu diacritice. Maxim 2 propoziții, sub 30 de cuvinte. Răspunde concret la întrebare, fără preambul."
-                : "Continuă conversația în română cu diacritice. MAXIM 1 propoziție FOARTE scurtă (sub 12 cuvinte). Confirmă scurt și pune următoarea întrebare. Fără „...”, fără preambul.";
+                ? "Răspunde concret la întrebare în română cu diacritice. Începe cu o confirmare scurtă (\"sigur, vă explic.\" / \"da, desigur.\"). MAXIM 2 propoziții, sub 30 de cuvinte."
+                : "Începe cu o confirmare ULTRA-scurtă (\"mhm.\" / \"perfect.\" / \"am înțeles.\"), apoi UN singur lucru: confirmare scurtă a ce ai auzit SAU următoarea întrebare. MAXIM 1 propoziție, sub 14 cuvinte. Fără preambul, fără „...”.";
             })() },
           ],
         }),
