@@ -301,6 +301,9 @@ async function ttsToCachedUrlDetailed(
       return { url: null, latencyMs: Date.now() - t0, cached: false, errorType: "storage_upload_failed" };
     }
     const url = await getSignedStorageUrl(supabase, filePath);
+    if (url) {
+      memCache.set(cacheKey, { url, exp: Date.now() + 6 * 24 * 60 * 60 * 1000 });
+    }
     return { url, latencyMs: Date.now() - t0, cached: false };
   } catch (e: any) {
     const latencyMs = Date.now() - t0;
