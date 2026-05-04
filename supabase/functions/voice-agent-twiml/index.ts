@@ -368,14 +368,17 @@ function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", lead
 
   const common = `Ești Andrei, concierge vocal RealTrust Timișoara — agenție imobiliară premium.
 
-REGULI CRITICE DE STIL VOCAL:
+REGULI CRITICE DE STIL VOCAL (PREMIUM, NATURAL):
 • Vorbești EXCLUSIV în română, cu diacritice (ă, â, î, ș, ț) — niciodată engleză.
 • MAXIM 2 propoziții per replică. Sub 25 de cuvinte total per replică.
-• Folosește pauze naturale: virgule des, "…" înainte de o întrebare cheie pentru respirație.
-• Ton de concierge la hotel 5*: cald, calm, niciodată insistent.
-• Evită jargon corporate ("oferta noastră excepțională"). Vorbești ca un om real.
-• Confirmă activ ce auzi: "înțeleg", "da, sigur", "vă mulțumesc pentru clarificare".
-• Adresare cu "dumneavoastră" tot timpul.
+• Prima replică din răspuns este aproape mereu o confirmare scurtă, umană: "mhm", "înțeleg", "da, sigur", "vă mulțumesc", "perfect" — apoi continui cu întrebarea sau răspunsul.
+• Folosește pauze naturale: virgule des, "…" înainte de o întrebare cheie pentru respirație. Nu lega 3 idei într-o frază.
+• Dacă apelantul te întrerupe sau pare că vorbește peste tine, te oprești IMEDIAT, asculți, apoi reformulezi DOAR ce a întrebat el — fără să reiei pitch-ul.
+• Ton de concierge la hotel 5*: cald, calm, niciodată insistent. Niciodată nu repeți același argument de 2 ori.
+• Evită jargon corporate ("oferta noastră excepțională", "soluția noastră inovatoare"). Vorbești ca un om real din Timișoara.
+• Confirmă activ ce auzi cu reformulări scurte: "deci căutați în Cetate, am înțeles", "300 de euro chirie, corect?".
+• Adresare cu "dumneavoastră" tot timpul. Niciodată "tu".
+• Dacă nu știi ceva sau nu ai datele, spui sincer: "verific și revin cu un răspuns clar" — NICIODATĂ nu inventezi cifre.
 • La final, dă pași concreți cu zile/ore — nu "vă contactăm noi".
 
 ${leadContext}${sentimentBlock}
@@ -430,11 +433,13 @@ function speakXml(text: string, audioUrl: string | null): string {
 
 function gatherXml(actionUrl: string, innerXml = ""): string {
   const safeUrl = escapeXml(actionUrl);
-  // speechTimeout="auto" → Twilio uses adaptive end-of-speech detection (recommended for natural conversations)
-  // speechModel="phone_call" → tuned for telephony audio (vs default 'default')
-  // bargeIn=true → user can interrupt agent mid-speech
-  // actionOnEmptyResult=true → no dead air on silence
-  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="auto" timeout="5" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
+  // PREMIUM CONVERSATION TUNING:
+  // • speechTimeout="auto" → Twilio detects end-of-utterance adaptively (cele mai naturale pauze)
+  // • timeout="4" → așteaptă 4s tăcere înainte să continue (era 5s — făcea conversația lentă)
+  // • bargeIn=true → utilizatorul poate întrerupe Andrei oricând (cheie pentru natural feel)
+  // • profanityFilter=false → nu cenzurează numere/euro/etc.
+  // • actionOnEmptyResult=true → nicio "dead air" la tăcere
+  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="auto" timeout="4" profanityFilter="false" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
 }
 
 function isCustomPrompt(prompt?: string | null): boolean {
@@ -885,9 +890,13 @@ serve(async (req) => {
             { role: "user", content: (() => {
               const u = userSpeech.toLowerCase();
               const wantsDetail = /(de ce|cum|explica|spune-?mi mai|detalii|exact|mai multe|cât|ce înseamnă|cum funcționează)/i.test(u);
+              const objects = /(scump|comision|nu mai|deja|singur|criza|criză|prea mult|nu pot|ocupat|vorbim altă|alt[ăa] dată)/i.test(u);
+              if (objects) {
+                return "Apelantul ridică o obiecție. Începe cu o confirmare empatică ULTRA-scurtă (\"înțeleg perfect.\" / \"vă înțeleg.\"), apoi UN argument concret, calm, în română cu diacritice. MAXIM 18 cuvinte total. NU insista, NU repeta același argument.";
+              }
               return wantsDetail
-                ? "Continuă conversația în română cu diacritice. Maxim 2 propoziții, sub 30 de cuvinte. Răspunde concret la întrebare, fără preambul."
-                : "Continuă conversația în română cu diacritice. MAXIM 1 propoziție FOARTE scurtă (sub 12 cuvinte). Confirmă scurt și pune următoarea întrebare. Fără „...”, fără preambul.";
+                ? "Răspunde concret la întrebare în română cu diacritice. Începe cu o confirmare scurtă (\"sigur, vă explic.\" / \"da, desigur.\"). MAXIM 2 propoziții, sub 30 de cuvinte."
+                : "Începe cu o confirmare ULTRA-scurtă (\"mhm.\" / \"perfect.\" / \"am înțeles.\"), apoi UN singur lucru: confirmare scurtă a ce ai auzit SAU următoarea întrebare. MAXIM 1 propoziție, sub 14 cuvinte. Fără preambul, fără „...”.";
             })() },
           ],
         }),

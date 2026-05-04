@@ -283,6 +283,21 @@ serve(async (req) => {
         tts_errors_count: Number(clarityDetails.tts_errors || 0),
       }).eq("id", sessionId);
 
+      // POST-CALL INTELLIGENCE: generate WhatsApp/email draft + next-best-actions
+      // Fire-and-forget — admins approve from the panel
+      try {
+        fetch(`${SUPABASE_URL}/functions/v1/voice-agent-postcall-intel`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify({ sessionId }),
+        }).catch((e) => console.error("[voice-status] postcall-intel trigger failed", e));
+      } catch (e) {
+        console.error("[voice-status] postcall-intel exception", e);
+      }
+
       // Finalize script test log (if any was created at turn 0)
       try {
         const finalLogStatus = reportStatusReached
