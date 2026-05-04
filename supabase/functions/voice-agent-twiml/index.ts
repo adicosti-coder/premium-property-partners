@@ -890,6 +890,21 @@ serve(async (req) => {
           voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
           shouldHangup,
         });
+        // EVOLUȚIE: extrage entități după fiecare turn cu input real (fiecare 2 turn-uri sau la hangup)
+        if (userSpeech && (turn % 2 === 1 || shouldHangup)) {
+          try {
+            await fetch(`${SUPABASE_URL}/functions/v1/voice-agent-extract-entities`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${SERVICE_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ sessionId }),
+            });
+          } catch (e) {
+            console.error("[voice-twiml] extract-entities trigger failed:", e);
+          }
+        }
       } catch (e) {
         console.error("[voice-twiml] deferred write failed:", e);
       }
