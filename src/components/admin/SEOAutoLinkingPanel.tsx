@@ -417,6 +417,10 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
                   {s.reason && <p className="text-xs text-muted-foreground line-clamp-2">{s.reason}</p>}
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <Button size="sm" variant="ghost" title="Preview paragraf"
+                    onClick={() => openPreview(s)}>
+                    <Eye className="w-3.5 h-3.5" />
+                  </Button>
                   {s.status === "applied" ? (
                     <Badge className="gap-1 bg-emerald-600"><CheckCircle2 className="w-3 h-3" /> aplicat</Badge>
                   ) : s.status === "rejected" ? (
