@@ -507,6 +507,48 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
             )}
           </ul>
         </ScrollArea>
+
+        {/* Auto-applied log with revert */}
+        {autoLogs.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Zap className="w-4 h-4 text-amber-600" />
+              Auto-aplicate recent ({autoLogs.filter((l: any) => !l.reverted).length} active)
+            </div>
+            <ScrollArea className="h-40 rounded-md border">
+              <ul className="divide-y text-xs">
+                {autoLogs.map((l: any) => (
+                  <li key={l.id} className="px-3 py-2 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <Badge variant="outline" className="font-normal">{l.payload?.source_url_path}</Badge>
+                        <ArrowRight className="w-3 h-3" />
+                        <Badge variant="outline" className="font-normal">{l.payload?.target_url_path}</Badge>
+                      </div>
+                      <p className="mt-0.5 truncate">"{l.payload?.anchor_text}" · scor {l.payload?.relevance_score}</p>
+                    </div>
+                    {l.reverted ? (
+                      <Badge variant="secondary">anulat</Badge>
+                    ) : (
+                      <Button size="sm" variant="ghost" className="text-red-600"
+                        onClick={async () => {
+                          const { error } = await supabase.functions.invoke("seo-internal-links", {
+                            body: { action: "revert_log", log_id: l.id },
+                          });
+                          if (error) return toast.error(error.message);
+                          toast.success("Link anulat");
+                          qc.invalidateQueries({ queryKey: ["seo-auto-link-logs"] });
+                          qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+                        }}>
+                        Anulează
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </div>
+        )}
       </CardContent>
 
       <Dialog open={!!previewFor} onOpenChange={(o) => !o && setPreviewFor(null)}>
