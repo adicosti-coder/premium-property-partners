@@ -174,20 +174,23 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const bulkSetStatus = async (status: "applied" | "rejected" | "proposed") => {
     const ids = Array.from(selected);
     if (!ids.length) return;
-    const t = toast.loading(`Actualizez ${ids.length} sugestii...`);
+    const label = status === "applied" ? "Aplic" : status === "rejected" ? "Resping" : "Resetez";
+    setBulkProgress({ done: 0, total: ids.length, ok: 0, fail: 0, label });
     let ok = 0, fail = 0;
-    for (const id of ids) {
+    for (let i = 0; i < ids.length; i++) {
       try {
         await supabase.functions.invoke("seo-internal-links", {
-          body: { action: "update_status", suggestion_id: id, status },
+          body: { action: "update_status", suggestion_id: ids[i], status, auto: false },
         });
         ok++;
       } catch { fail++; }
+      setBulkProgress({ done: i + 1, total: ids.length, ok, fail, label });
     }
-    toast.dismiss(t);
+    setTimeout(() => setBulkProgress(null), 1500);
     toast.success(`${ok} actualizate${fail ? `, ${fail} eșuate` : ""}`);
     setSelected(new Set());
     qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-logs"] });
   };
 
   const bulkDelete = async () => {
