@@ -696,11 +696,24 @@ serve(async (req) => {
         if (kbMs > 200) console.warn(`[voice-twiml][kb-lookup][SLOW] session=${sessionId} ms=${kbMs} — continuă fără blocare`);
 
         if (kbChunks && kbChunks.length > 0) {
-          const lines = kbChunks.map((c, i) => `${i + 1}. ${c.content}`).join("\n");
-          const header = usedFallback
-            ? "📊 DATE REALE PIAȚĂ (CONTEXT GENERAL TIMIȘOARA — fallback)"
-            : "📊 DATE REALE PIAȚĂ (CONTEXT ACTUAL)";
-          marketDataBlock = `\n\n${header}:\n${lines}\n\nFolosește datele de piață furnizate pentru a oferi autoritate și cifre concrete în discuție. NU inventa statistici, folosește-le DOAR pe cele din acest context.`;
+          const marketLines: string[] = [];
+          const portfolioLines: string[] = [];
+          for (const c of kbChunks as any[]) {
+            if (c.source === "properties_aggregate") portfolioLines.push(`- ${c.content}`);
+            else marketLines.push(`- ${c.content}`);
+          }
+          const sections: string[] = [];
+          if (marketLines.length) sections.push(`📊 CIFRE DE PIAȚĂ (folosește-le ca observații proprii, nu ca "bază de date"):\n${marketLines.join("\n")}`);
+          if (portfolioLines.length) sections.push(`🏆 PORTOFOLIU REALTRUST APART HOTEL în zona apelantului (folosește-le ca social proof natural):\n${portfolioLines.join("\n")}`);
+
+          marketDataBlock = `\n\n${sections.join("\n\n")}\n\n` +
+            `REGULI DE FOLOSIRE A DATELOR (CRITIC):\n` +
+            `1. NICIODATĂ nu spune "conform bazei de date", "am X grupuri", "sistemul arată", "în KB", "fallback" sau orice referință tehnică. Vorbește ca un consultant care cunoaște piața din experiență.\n` +
+            `2. Formulează natural: "Analizând tranzacțiile recente din [Zonă], observ un randament/preț median de [X]…" sau "Din ce văd în piață acum în [Zonă]…".\n` +
+            `3. Pentru portofoliu: "Gestionăm deja câteva apartamente similare în [Zonă] și obținem constant rezultate peste media pieței" — folosește ca social proof, fără cifre tehnice de portofoliu.\n` +
+            `4. Prioritizează cifrele specifice zonei apelantului. Dacă ai doar context general, integrează-l subtil ("piața din Timișoara arată acum…") fără să menționezi vreodată că nu ai date pe zona lui.\n` +
+            `5. NU inventa cifre. Folosește DOAR numerele din contextul de mai sus. Dacă o cifră nu e aici, nu o spune.\n` +
+            `6. Maxim o cifră concretă pe replică — concierge, nu raport statistic.`;
         }
       } catch (e) {
         console.error("[voice-twiml][kb-lookup] error:", e);
