@@ -5441,6 +5441,84 @@ export type Database = {
         }
         Relationships: []
       }
+      property_listings_public: {
+        Row: {
+          annual_operating_costs: number | null
+          bathrooms: number | null
+          created_at: string | null
+          description: string | null
+          estimated_monthly_revenue: number | null
+          id: string | null
+          images: string[] | null
+          initial_setup_cost: number | null
+          investment_score: number | null
+          listing_category:
+            | Database["public"]["Enums"]["listing_category"]
+            | null
+          location: string | null
+          price: number | null
+          property_type: string | null
+          roi_percentage: number | null
+          rooms: number | null
+          size: number | null
+          status: Database["public"]["Enums"]["listing_status"] | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          annual_operating_costs?: number | null
+          bathrooms?: number | null
+          created_at?: string | null
+          description?: string | null
+          estimated_monthly_revenue?: number | null
+          id?: string | null
+          images?: string[] | null
+          initial_setup_cost?: number | null
+          investment_score?: number | null
+          listing_category?:
+            | Database["public"]["Enums"]["listing_category"]
+            | null
+          location?: string | null
+          price?: number | null
+          property_type?: string | null
+          roi_percentage?: number | null
+          rooms?: number | null
+          size?: number | null
+          status?: Database["public"]["Enums"]["listing_status"] | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          annual_operating_costs?: number | null
+          bathrooms?: number | null
+          created_at?: string | null
+          description?: string | null
+          estimated_monthly_revenue?: number | null
+          id?: string | null
+          images?: string[] | null
+          initial_setup_cost?: number | null
+          investment_score?: number | null
+          listing_category?:
+            | Database["public"]["Enums"]["listing_category"]
+            | null
+          location?: string | null
+          price?: number | null
+          property_type?: string | null
+          roi_percentage?: number | null
+          rooms?: number | null
+          size?: number | null
+          status?: Database["public"]["Enums"]["listing_status"] | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
