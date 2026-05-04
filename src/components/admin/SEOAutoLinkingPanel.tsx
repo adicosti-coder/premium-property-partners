@@ -322,6 +322,25 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           </div>
         )}
 
+        {/* Auto-apply rule bar */}
+        <div className="flex flex-wrap items-center gap-3 p-2.5 rounded-md border border-amber-300 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20">
+          <Zap className="w-4 h-4 text-amber-600" />
+          <div className="flex items-center gap-2">
+            <Switch id="auto-apply" checked={autoApply} onCheckedChange={toggleAutoApply} />
+            <Label htmlFor="auto-apply" className="text-sm font-medium cursor-pointer">
+              Auto-Apply: aplică automat sugestiile cu scor ≥
+            </Label>
+          </div>
+          <Select value={String(autoThreshold)} onValueChange={(v) => updateAutoThreshold(Number(v))}>
+            <SelectTrigger className="w-[80px] h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[75, 80, 85, 90, 95].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <span className="text-xs text-muted-foreground ml-auto">
+            {autoApply ? "Activ — sugestiile peste prag sunt marcate „aplicat”." : "Dezactivat — toate sugestiile rămân „propuse”."}
+          </span>
+        </div>
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px]">
