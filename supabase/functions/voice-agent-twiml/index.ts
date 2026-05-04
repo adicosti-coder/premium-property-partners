@@ -212,6 +212,10 @@ async function ttsToCachedUrl(
   return result.url;
 }
 
+// In-memory cache (per edge instance) — signed URLs valid 7 days, so we
+// keep them for 6 days max to avoid serving stale links.
+const memCache = new Map<string, { url: string; exp: number }>();
+
 async function ttsToCachedUrlDetailed(
   text: string,
   v: VoiceSettings,
@@ -228,13 +232,22 @@ async function ttsToCachedUrlDetailed(
     const cacheKey = await sha256(JSON.stringify({ text: phoneticText, ...v }));
     const filePath = `tts-cache/${cacheKey}.ulaw`;
 
-    const { data: existing } = await supabase.storage
-      .from("voice-recordings")
-      .list("tts-cache", { search: `${cacheKey}.ulaw`, limit: 1 });
+    // (1) Hot path: in-memory cache → instant (<1ms)
+    const mem = memCache.get(cacheKey);
+    if (mem && mem.exp > Date.now()) {
+      return { url: mem.url, latencyMs: Date.now() - t0, cached: true };
+    }
 
-    if (existing && existing.length > 0) {
-      const url = await getSignedStorageUrl(supabase, filePath);
-      return { url, latencyMs: Date.now() - t0, cached: true };
+    // (2) Warm path: try signed URL directly (skip list() = -150ms).
+    // If the file exists, this returns instantly; if not, it errors and we generate.
+    const { data: signed } = await supabase.storage
+      .from("voice-recordings")
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+    if (signed?.signedUrl) {
+      // HEAD verify is too slow; trust the signed URL — Twilio will fetch it.
+      // If it 404s, ElevenLabs will be re-triggered on the next turn.
+      memCache.set(cacheKey, { url: signed.signedUrl, exp: Date.now() + 6 * 24 * 60 * 60 * 1000 });
+      return { url: signed.signedUrl, latencyMs: Date.now() - t0, cached: true };
     }
 
     const res = await fetch(
