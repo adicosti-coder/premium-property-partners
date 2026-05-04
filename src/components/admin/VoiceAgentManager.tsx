@@ -16,6 +16,7 @@ import VoiceAgentScriptsEditor from "./VoiceAgentScriptsEditor";
 import VoiceAgentMonitoring from "./VoiceAgentMonitoring";
 import VoiceCallerProfilesManager from "./VoiceCallerProfilesManager";
 import VoiceAgentKnowledgeBase from "./VoiceAgentKnowledgeBase";
+import VoiceAgentFollowupQueue from "./VoiceAgentFollowupQueue";
 
 interface VoiceCall {
   id: string;
