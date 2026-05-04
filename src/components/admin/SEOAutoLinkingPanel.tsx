@@ -434,7 +434,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           <div className="flex items-center gap-2">
             <Switch id="auto-apply" checked={autoApply} onCheckedChange={toggleAutoApply} disabled={!settingsLoaded} />
             <Label htmlFor="auto-apply" className="text-sm font-medium cursor-pointer">
-              Auto-Apply: aplică automat sugestiile cu scor ≥
+              Auto-Apply ≥
             </Label>
           </div>
           <Select value={String(autoThreshold)} onValueChange={(v) => updateAutoThreshold(Number(v))}>
@@ -443,10 +443,23 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
               {[75, 80, 85, 90, 95].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
             </SelectContent>
           </Select>
-          <span className="text-xs text-muted-foreground ml-auto">
-            {autoApply ? "Activ — sugestiile peste prag sunt marcate „aplicat”." : "Dezactivat — toate sugestiile rămân „propuse”."}
-          </span>
+          <Label className="text-sm font-medium">Max/pagină:</Label>
+          <Select value={String(maxAutoPerPage)} onValueChange={(v) => updateMaxPerPage(Number(v))}>
+            <SelectTrigger className="w-[70px] h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button onClick={exportAutoApplyCsv} variant="ghost" size="sm" className="gap-1 ml-auto">
+            <Download className="w-3.5 h-3.5" /> Export Auto-Apply
+          </Button>
         </div>
+        <p className="text-xs text-muted-foreground -mt-2">
+          {autoApply
+            ? `Activ — max ${maxAutoPerPage} link-uri auto/pagină pentru a păstra textul natural.`
+            : "Dezactivat — toate sugestiile rămân „propuse”."}
+        </p>
+
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px]">
