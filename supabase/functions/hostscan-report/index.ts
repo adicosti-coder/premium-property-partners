@@ -82,12 +82,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    const scorePercent = Math.round((report.scor / report.max_scor) * 100);
-    const scoreColor = report.scor >= 100 ? "#10b981" : report.scor >= 70 ? "#f59e0b" : "#ef4444";
+    // HTML-escape all user-supplied report fields to prevent injection in email body
+    const esc = (s: unknown) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 
-    const recomandariHTML = (report.recomandari || [])
-      .map((r: string) => `<li style="margin-bottom:6px;color:#374151;">✅ ${r}</li>`)
+    const scoreNum = Number(report.scor) || 0;
+    const maxScoreNum = Number(report.max_scor) || 100;
+    const scorePercent = Math.round((scoreNum / maxScoreNum) * 100);
+    const scoreColor = scoreNum >= 100 ? "#10b981" : scoreNum >= 70 ? "#f59e0b" : "#ef4444";
+
+    const recomandariHTML = (Array.isArray(report.recomandari) ? report.recomandari : [])
+      .slice(0, 20)
+      .map((r: unknown) => `<li style="margin-bottom:6px;color:#374151;">✅ ${esc(String(r).slice(0, 300))}</li>`)
       .join("");
+
+    const safeZona = esc(String(report.zona || zone || "").slice(0, 100));
+    const safeCategorie = esc(String(report.categorie || "Standard").slice(0, 80));
+    const safeRoi = esc(String(report.roi_estimat || "").slice(0, 40));
+    const safeTarif = esc(String(report.tarif_noapte ?? "").toString().slice(0, 20));
+    const safeNote = esc(String(report.note_consultant || "").slice(0, 1000));
+    const safeScor = esc(String(scoreNum));
+    const safeMax = esc(String(maxScoreNum));
 
     const htmlContent = `
 <!DOCTYPE html>
