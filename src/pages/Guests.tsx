@@ -489,12 +489,12 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
 
   const seoContent = {
     ro: {
-      title: "Apartamente Timișoara | Cazare Regim Hotelier",
-      description: "Cazare în regim hotelier Timișoara — ATENEO, GREEN FOREST, HELIOS, FullView Studio. Self check-in 24/7, parcare subterană gratuită, rating 9.7 Booking.com."
+      title: "Cazare Regim Hotelier Timișoara | ApArt Hotel — de la 250 RON",
+      description: "Apartamente regim hotelier în Timișoara — Cetate, Iosefin, Fabric, Dumbrăvița. Check-in digital 24/7, Wi-Fi, parcare. 9.7/10 Booking. Rezervă direct."
     },
     en: {
-      title: "Apartments Timișoara | Short-Term Accommodation",
-      description: "Premium short-term accommodation in Timișoara. Fully furnished apartments with self check-in, free WiFi and professional cleaning. Book direct on our site and save 5%!"
+      title: "Short-Term Accommodation Timișoara | ApArt Hotel — from 250 RON",
+      description: "Hotel-style apartments in Timișoara — Cetate, Iosefin, Fabric, Dumbrăvița. Self check-in 24/7, Wi-Fi, parking. 9.7/10 Booking. Book direct."
     }
   };
 
