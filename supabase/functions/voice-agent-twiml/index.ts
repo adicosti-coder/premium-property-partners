@@ -1,6 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
+import { applyLexiconToText } from "../_shared/voiceLexicon.ts";
+
+async function logTtsError(
+  supabase: any,
+  payload: {
+    sessionId?: string | null;
+    error_type: string;
+    http_status?: number | null;
+    message?: string | null;
+    text_snippet?: string | null;
+    voice_id?: string | null;
+    latency_ms?: number | null;
+  },
+) {
+  try {
+    await supabase.from("voice_agent_tts_errors").insert({
+      session_id: payload.sessionId ?? null,
+      source: "elevenlabs",
+      error_type: payload.error_type,
+      http_status: payload.http_status ?? null,
+      message: (payload.message ?? "").slice(0, 1000),
+      text_snippet: (payload.text_snippet ?? "").slice(0, 300),
+      voice_id: payload.voice_id ?? null,
+      latency_ms: payload.latency_ms ?? null,
+    });
+  } catch (_e) {
+    // best-effort
+  }
+}
 
 /* ──────────────────────────────────────────────────────────────
    Twilio TwiML webhook — drives the conversational flow.
@@ -164,14 +193,38 @@ interface VoiceSettings {
  * Generate or fetch cached telephony audio, return public URL.
  * Uses 8kHz μ-law to avoid MP3 transcoding artifacts in Twilio calls.
  */
+export interface TtsResult {
+  url: string | null;
+  latencyMs: number;
+  cached: boolean;
+  errorType?: string;
+}
+
 async function ttsToCachedUrl(
   text: string,
   v: VoiceSettings,
   supabase: any,
-  apiKey: string
+  apiKey: string,
+  sessionId?: string | null,
 ): Promise<string | null> {
+  const result = await ttsToCachedUrlDetailed(text, v, supabase, apiKey, sessionId);
+  return result.url;
+}
+
+async function ttsToCachedUrlDetailed(
+  text: string,
+  v: VoiceSettings,
+  supabase: any,
+  apiKey: string,
+  sessionId?: string | null,
+): Promise<TtsResult> {
+  const t0 = Date.now();
   try {
-    const cacheKey = await sha256(JSON.stringify({ text, ...v }));
+    // Apply phonetic lexicon BEFORE caching key, so different pronunciations
+    // map to different cached audio.
+    const phoneticText = await applyLexiconToText(supabase, text);
+
+    const cacheKey = await sha256(JSON.stringify({ text: phoneticText, ...v }));
     const filePath = `tts-cache/${cacheKey}.ulaw`;
 
     const { data: existing } = await supabase.storage
@@ -179,7 +232,8 @@ async function ttsToCachedUrl(
       .list("tts-cache", { search: `${cacheKey}.ulaw`, limit: 1 });
 
     if (existing && existing.length > 0) {
-      return await getSignedStorageUrl(supabase, filePath);
+      const url = await getSignedStorageUrl(supabase, filePath);
+      return { url, latencyMs: Date.now() - t0, cached: true };
     }
 
     const res = await fetch(
@@ -188,7 +242,7 @@ async function ttsToCachedUrl(
         method: "POST",
         headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
         body: JSON.stringify({
-          text,
+          text: phoneticText,
           model_id: v.model_id,
           voice_settings: {
             stability: v.stability,
@@ -200,9 +254,20 @@ async function ttsToCachedUrl(
         }),
       }
     );
+    const latencyMs = Date.now() - t0;
     if (!res.ok) {
-      console.error("ElevenLabs TTS failed:", res.status, await res.text());
-      return null;
+      const body = await res.text();
+      console.error("ElevenLabs TTS failed:", res.status, body);
+      await logTtsError(supabase, {
+        sessionId,
+        error_type: "elevenlabs_http_error",
+        http_status: res.status,
+        message: body,
+        text_snippet: phoneticText,
+        voice_id: v.voice_id,
+        latency_ms: latencyMs,
+      });
+      return { url: null, latencyMs, cached: false, errorType: "elevenlabs_http_error" };
     }
     const audioBuffer = await res.arrayBuffer();
 
@@ -211,14 +276,34 @@ async function ttsToCachedUrl(
       .upload(filePath, new Uint8Array(audioBuffer), { contentType: "audio/ulaw", upsert: true });
     if (upErr) {
       console.error("Storage upload failed:", upErr.message);
-      return null;
+      await logTtsError(supabase, {
+        sessionId,
+        error_type: "storage_upload_failed",
+        message: upErr.message,
+        text_snippet: phoneticText,
+        voice_id: v.voice_id,
+        latency_ms: Date.now() - t0,
+      });
+      return { url: null, latencyMs: Date.now() - t0, cached: false, errorType: "storage_upload_failed" };
     }
-    return await getSignedStorageUrl(supabase, filePath);
-  } catch (e) {
+    const url = await getSignedStorageUrl(supabase, filePath);
+    return { url, latencyMs: Date.now() - t0, cached: false };
+  } catch (e: any) {
+    const latencyMs = Date.now() - t0;
     console.error("ttsToCachedUrl exception:", e);
-    return null;
+    await logTtsError(supabase, {
+      sessionId,
+      error_type: "exception",
+      message: String(e?.message || e),
+      text_snippet: text,
+      voice_id: v.voice_id,
+      latency_ms: latencyMs,
+    });
+    return { url: null, latencyMs, cached: false, errorType: "exception" };
   }
 }
+
+export { ttsToCachedUrlDetailed };
 
 function detectBranch(listingType?: string | null, propertyType?: string | null): "vanzare" | "inchiriere" | "cazare" {
   const t = (listingType || propertyType || "").toLowerCase();
