@@ -217,28 +217,39 @@ export default function VoiceCallerProfilesManager() {
           <Badge variant="outline">Cu &gt;1 apel: {stats.multiCall}</Badge>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Caută telefon, zonă, notă…"
+              placeholder="Caută telefon, nume, zonă, notă…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
             />
           </div>
-          <Button
-            variant={showArchived ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowArchived(s => !s)}
-          >
-            <Archive className="w-4 h-4 mr-2" />
-            {showArchived ? "Ascunde arhivate" : "Arată arhivate"}
+          <div className="flex gap-1 border rounded-md p-0.5">
+            {(["active", "archived", "all"] as FilterMode[]).map(m => (
+              <Button
+                key={m}
+                size="sm"
+                variant={filterMode === m ? "default" : "ghost"}
+                onClick={() => setFilterMode(m)}
+                className="h-7 px-2 text-xs"
+              >
+                {m === "active" ? "Active" : m === "archived" ? "Arhivate" : "Toate"}
+              </Button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={exportCSV}>
+            <Download className="w-4 h-4 mr-1" /> Export CSV
           </Button>
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => { load(); loadAuxiliary(); }} disabled={loading}>
             Reîncarcă
           </Button>
         </div>
+
+        {/* Dashboard latență */}
+        <LatencyDashboard metrics={metrics} />
 
         {loading ? (
           <div className="text-center py-8 text-muted-foreground text-sm">Se încarcă…</div>
