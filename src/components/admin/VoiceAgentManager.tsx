@@ -105,12 +105,6 @@ export default function VoiceAgentManager() {
 
   const VOICES = [
     { id: "S98OhkhaxeAKHEbhoLi7", name: "Andrei (masculin, RO — Digital Concierge, recomandat)" },
-    { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald)" },
-    { id: "XrExE9yKIg1WjnnlVkGX", name: "Matilda (feminin, profesional)" },
-    { id: "FGY2WhTYpPnrIDTdsKH5", name: "Laura (feminin, energic)" },
-    { id: "cgSgspJ2msm6clMCkdW9", name: "Jessica (feminin, expresiv)" },
-    { id: "Xb7hH8MSUJpSbSDYk0k2", name: "Alice (feminin, britanic)" },
-    { id: "pFZP5JQG7iQjIQuC4Bku", name: "Lily (feminin, suav)" },
   ];
 
   const previewVoice = async () => {
@@ -449,18 +443,18 @@ export default function VoiceAgentManager() {
             {autoSettings?.tts_provider === "elevenlabs" && <Badge className="bg-amber-500/15 text-amber-700 border border-amber-500/40">ACTIV</Badge>}
           </CardTitle>
           <CardDescription>
-            Mod hibrid: ElevenLabs se folosește DOAR pentru lead-urile cu scor mare. Sub prag, se folosește vocea Polly Carmen (gratis). Economisești ~$0.30/apel pe leads slabe.
+            Mod premium: toate apelurile folosesc Andrei, aceeași voce ElevenLabs ca Digital Concierge. Fără fallback pe voci feminine pentru apelurile normale.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex items-center justify-between p-3 rounded-lg border bg-background">
             <div>
               <div className="font-medium text-sm">Activează ElevenLabs (mod hibrid)</div>
-              <div className="text-xs text-muted-foreground">Dacă e oprit, toate apelurile folosesc Polly (robotic, dar gratis).</div>
+              <div className="text-xs text-muted-foreground">Blocat pe modul premium pentru claritate maximă în română.</div>
             </div>
             <Switch
-              checked={autoSettings?.tts_provider === "elevenlabs"}
-              onCheckedChange={(v) => saveSettings({ tts_provider: v ? "elevenlabs" : "polly" })}
+              checked={true}
+              disabled
             />
           </div>
 
@@ -484,7 +478,7 @@ export default function VoiceAgentManager() {
             <div>
               <label className="text-xs font-medium mb-1 block text-muted-foreground">Voce</label>
               <Select
-                value={autoSettings?.elevenlabs_voice_id || "EXAVITQu4vr4xnSDxMaL"}
+                value={autoSettings?.elevenlabs_voice_id || "S98OhkhaxeAKHEbhoLi7"}
                 onValueChange={(v) => saveSettings({ elevenlabs_voice_id: v })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -496,7 +490,7 @@ export default function VoiceAgentManager() {
             <div>
               <label className="text-xs font-medium mb-1 block text-muted-foreground">Model</label>
               <Select
-                value={autoSettings?.elevenlabs_model_id || "eleven_multilingual_v2"}
+                value={autoSettings?.elevenlabs_model_id || "eleven_turbo_v2_5"}
                 onValueChange={(v) => saveSettings({ elevenlabs_model_id: v })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
