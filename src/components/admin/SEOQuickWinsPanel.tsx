@@ -455,38 +455,57 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
       setBulkProgress({ done: 0, total: targets.length });
 
       let success = 0;
+      const failures: { path: string; reason: string }[] = [];
       const paths: string[] = [];
 
       for (let i = 0; i < targets.length; i++) {
         const a = targets[i];
         const path = urlToPath(a.url);
         try {
-          const { data: gen } = await supabase.functions.invoke("seo-auto-fix", {
+          const { data: gen, error: genErr } = await supabase.functions.invoke("seo-auto-fix", {
             body: { action: "generate_fix", audit_id: a.id, fix_type: def.fixType },
           });
-          if (gen?.proposal) {
-            const { error } = await supabase.functions.invoke("seo-auto-fix", {
-              body: {
-                action: "apply_fix",
-                url_path: path,
-                payload: gen.proposal,
-                audit_id: a.id,
-                variant: "A",
-              },
-            });
-            if (!error) {
-              success++;
-              paths.push(path);
+          if (genErr) throw new Error(genErr.message || "generate_fix failed");
+          if (!gen?.proposal) throw new Error("AI nu a returnat propunere");
+
+          // Sanity-check by fix type so we don't write empty overrides
+          const proposal = gen.proposal as Record<string, unknown>;
+          if (def.fixType === "schema") {
+            const jl = (proposal as any).json_ld;
+            const ok =
+              jl &&
+              ((Array.isArray(jl) && jl.length > 0) ||
+                (typeof jl === "object" && Object.keys(jl).length > 0));
+            if (!ok) throw new Error("Propunerea AI nu conține json_ld valid");
+          } else if (def.fixType === "alt_text") {
+            const alts = (proposal as any).alt_text_suggestions;
+            if (!Array.isArray(alts) || alts.length === 0) {
+              throw new Error("Propunerea AI nu conține alt-text");
             }
           }
-        } catch (e) {
-          console.warn("AI fix failed for", path, e);
+
+          const { error: applyErr } = await supabase.functions.invoke("seo-auto-fix", {
+            body: {
+              action: "apply_fix",
+              url_path: path,
+              payload: proposal,
+              audit_id: a.id,
+              variant: "A",
+            },
+          });
+          if (applyErr) throw new Error(applyErr.message || "apply_fix failed");
+          success++;
+          paths.push(path);
+        } catch (e: any) {
+          const reason = e?.message || String(e);
+          console.warn("AI fix failed for", path, reason);
+          failures.push({ path, reason });
         }
         setBulkProgress({ done: i + 1, total: targets.length });
       }
-      return { success, total: targets.length, paths, cat };
+      return { success, total: targets.length, paths, cat, failures };
     },
-    onSuccess: async ({ success, total, paths, cat }) => {
+    onSuccess: async ({ success, total, paths, cat, failures }) => {
       const batchId = crypto.randomUUID();
       const { data: userRes } = await supabase.auth.getUser();
       if (paths.length) {
@@ -506,11 +525,23 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
           console.warn("audit_log insert failed", e);
         }
       }
-      toast.success(`AI fix: ${success}/${total} aplicate`);
+      if (success > 0) {
+        toast.success(`AI fix: ${success}/${total} aplicate`);
+      }
+      if (failures.length > 0) {
+        const first = failures[0];
+        toast.error(
+          `${failures.length} eșuat${failures.length === 1 ? "" : "e"}: ${first.reason}${
+            failures.length > 1 ? ` (+${failures.length - 1} altele)` : ""
+          }`,
+          { duration: 8000 },
+        );
+      }
       setLastBatch({ batchId, category: cat, paths, ts: new Date().toISOString() });
       setBulkRunning(null);
       qc.invalidateQueries({ queryKey: ["seo-overrides"] });
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
+      qc.invalidateQueries({ queryKey: ["seo-audits"] });
     },
     onError: (e: any) => {
       setBulkRunning(null);
