@@ -34,6 +34,7 @@ import { SEOTrafficROIPanel } from "./SEOTrafficROIPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
 import { LocalSEORecommendations } from "./LocalSEORecommendations";
+import { SEOIssuesPanel } from "./SEOIssuesPanel";
 
 const QUICK_URLS = [
   // Principal
