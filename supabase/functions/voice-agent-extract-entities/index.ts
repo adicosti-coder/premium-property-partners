@@ -140,6 +140,7 @@ serve(async (req) => {
           rooms_max: merged.rooms_max ?? undefined,
           timeline: merged.timeline ?? undefined,
           notes: merged.summary || existing.notes,
+          last_objection: next.last_objection || undefined,
           last_session_id: sessionId,
           last_call_at: new Date().toISOString(),
           call_count: isFirstLink ? (existing.call_count || 0) + 1 : existing.call_count,
