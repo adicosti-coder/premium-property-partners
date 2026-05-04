@@ -115,7 +115,7 @@ serve(async (req) => {
         .eq("id", 1)
         .maybeSingle();
       voiceSettings = {
-        voice_id: settings?.elevenlabs_voice_id || "EXAVITQu4vr4xnSDxMaL",
+        voice_id: settings?.elevenlabs_voice_id || "S98OhkhaxeAKHEbhoLi7",
         model_id: settings?.elevenlabs_model_id || "eleven_multilingual_v2",
         stability: Number(settings?.voice_stability) || 0.55,
         similarity_boost: Number(settings?.voice_similarity_boost) || 0.80,

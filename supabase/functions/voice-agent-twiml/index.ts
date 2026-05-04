@@ -397,7 +397,7 @@ serve(async (req) => {
     const elevenLabsMinScore = Number(vSettings?.elevenlabs_min_score ?? 90);
     const elevenLabsAvailable = (vSettings?.tts_provider === "elevenlabs") && !!ELEVENLABS_API_KEY;
     const voice: VoiceSettings = {
-      voice_id: vSettings?.elevenlabs_voice_id || "EXAVITQu4vr4xnSDxMaL",
+      voice_id: vSettings?.elevenlabs_voice_id || "S98OhkhaxeAKHEbhoLi7",
       model_id: vSettings?.elevenlabs_model_id || "eleven_multilingual_v2",
       stability: Number(vSettings?.voice_stability) || 0.55,
       similarity_boost: Number(vSettings?.voice_similarity_boost) || 0.80,
