@@ -5513,6 +5513,7 @@ export type Database = {
       }
       voice_caller_profiles: {
         Row: {
+          archived_at: string | null
           budget_max: number | null
           budget_min: number | null
           call_count: number
@@ -5521,6 +5522,7 @@ export type Database = {
           display_name: string | null
           id: string
           last_call_at: string | null
+          last_objection: string | null
           last_session_id: string | null
           mentioned_property_ids: string[] | null
           notes: string | null
@@ -5534,6 +5536,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           budget_max?: number | null
           budget_min?: number | null
           call_count?: number
@@ -5542,6 +5545,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           last_call_at?: string | null
+          last_objection?: string | null
           last_session_id?: string | null
           mentioned_property_ids?: string[] | null
           notes?: string | null
@@ -5555,6 +5559,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           budget_max?: number | null
           budget_min?: number | null
           call_count?: number
@@ -5563,6 +5568,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           last_call_at?: string | null
+          last_objection?: string | null
           last_session_id?: string | null
           mentioned_property_ids?: string[] | null
           notes?: string | null

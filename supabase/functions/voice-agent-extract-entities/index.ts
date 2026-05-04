@@ -22,7 +22,8 @@ Primești ULTIMELE replici dintr-un apel telefonic. Returnează DOAR un JSON val
   "rooms_max": number|null,
   "timeline": "urgent"|"1-3 luni"|"3-6 luni"|"explorare"|null,
   "branch": "vanzare"|"inchiriere"|"cazare"|null,
-  "summary": string              // 1 frază scurtă, în română, ce vrea apelantul
+  "summary": string,             // 1 frază scurtă, în română, ce vrea apelantul
+  "last_objection": string|null  // ultima obiecție clară a apelantului (ex: "preț prea mare", "vrea zonă centrală"), sau null
 }
 Reguli: dacă o valoare nu este menționată CLAR, pune null sau []. Bugetul mereu în EUR. NU inventa.`;
 
@@ -139,6 +140,7 @@ serve(async (req) => {
           rooms_max: merged.rooms_max ?? undefined,
           timeline: merged.timeline ?? undefined,
           notes: merged.summary || existing.notes,
+          last_objection: next.last_objection || undefined,
           last_session_id: sessionId,
           last_call_at: new Date().toISOString(),
           call_count: isFirstLink ? (existing.call_count || 0) + 1 : existing.call_count,
@@ -156,6 +158,7 @@ serve(async (req) => {
           rooms_max: merged.rooms_max ?? null,
           timeline: merged.timeline || null,
           notes: merged.summary || null,
+          last_objection: next.last_objection || null,
           call_count: 1,
           last_call_at: new Date().toISOString(),
           last_session_id: sessionId,
