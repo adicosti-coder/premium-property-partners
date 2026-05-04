@@ -10,6 +10,7 @@ import {
 import {
   AlertTriangle, Wand2, Copy, Sparkles, ShieldAlert, Loader2,
   CheckCircle2, Circle, PlayCircle, Filter, ChevronDown, ChevronUp,
+  Undo2, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
