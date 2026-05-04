@@ -61,10 +61,14 @@ function hasEnglishSignals(text: string): boolean {
   return /\b(hello|sorry|please|thank you|goodbye|good morning|good afternoon|application error|an error has occurred)\b/i.test(text);
 }
 
+const ROMANIAN_VOICE_GUARD = `REGULĂ ABSOLUTĂ, PRIORITARĂ PESTE ORICE ALTĂ INSTRUCȚIUNE:
+Răspunzi DOAR în limba română din România, cu diacritice. Nu folosești engleză, nici pentru salut, scuze sau închidere.
+Ești Ana din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci și răspunzi strict în română.`;
+
 function normalizeAiReply(text: string, fallback: string): string {
   const cleaned = String(text || "").replace(/^['"`]+|['"`]+$/g, "").trim();
   if (!cleaned) return fallback;
-  if (!hasRomanianSignals(cleaned) && hasEnglishSignals(cleaned)) return fallback;
+  if (hasEnglishSignals(cleaned)) return fallback;
   return cleaned;
 }
 
@@ -241,9 +245,7 @@ CTA FINAL: "Putem face analiza în 30 de minute, pe Zoom sau la biroul nostru…
 /** Build TwiML reply: <Play> if TTS URL, else <Say> Polly fallback (with cascading fallback). */
 function speakXml(text: string, audioUrl: string | null): string {
   if (audioUrl) return `<Play>${escapeXml(audioUrl)}</Play>`;
-  // Twilio: try Polly Carmen (Romanian neural) first; if account doesn't have it, Twilio falls back to default voice automatically.
-  // Use generic <Say> without specifying voice — Twilio uses Google TTS Romanian which is universally available.
-  return `<Say language="ro-RO">${escapeXml(text)}</Say>`;
+  return `<Say language="ro-RO" voice="alice">${escapeXml(text)}</Say>`;
 }
 
 function gatherXml(actionUrl: string): string {
@@ -294,7 +296,7 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     if (!sessionId) {
-      return xmlResponse(`<Response><Say language="ro-RO">Eroare configurare. La revedere.</Say><Hangup/></Response>`);
+      return xmlResponse(`<Response><Say language="ro-RO" voice="alice">Eroare configurare. La revedere.</Say><Hangup/></Response>`);
     }
 
     const { data: session } = await supabase
@@ -436,8 +438,8 @@ serve(async (req) => {
       ? `${dbSystemPromptOverride}\n\n${leadContext}${sentimentBlock}`
       : systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
     const systemPrompt = customPrompt
-      ? `${baseSystemPrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customPrompt}`
-      : baseSystemPrompt;
+      ? `${ROMANIAN_VOICE_GUARD}\n\n${baseSystemPrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customPrompt}`
+      : `${ROMANIAN_VOICE_GUARD}\n\n${baseSystemPrompt}`;
 
     // Upsert test log row at turn 0 — finalized later by voice-agent-status
     if (turn === 0) {
@@ -533,6 +535,7 @@ serve(async (req) => {
           messages: [
             { role: "system", content: systemPrompt },
             ...transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
+            { role: "user", content: "Continuă conversația. Răspunde exclusiv în română, cu diacritice, în maximum 2 propoziții." },
           ],
         }),
       });
@@ -603,6 +606,6 @@ serve(async (req) => {
     );
   } catch (e: any) {
     console.error("voice-agent-twiml error:", e);
-    return xmlResponse(`<Response><Say language="ro-RO">A apărut o eroare. La revedere.</Say><Hangup/></Response>`);
+    return xmlResponse(`<Response><Say language="ro-RO" voice="alice">A apărut o eroare. La revedere.</Say><Hangup/></Response>`);
   }
 });
