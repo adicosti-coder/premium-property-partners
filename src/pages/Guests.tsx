@@ -590,10 +590,11 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
               }`}
               style={{ transitionDelay: '300ms' }}
             >
-              {language === 'ro' ? 'Găsește' : 'Find'}{' '}
-              <span className="text-slate-700 dark:text-slate-200">
-                {language === 'ro' ? 'Apartamentul Perfect' : 'Your Perfect Stay'}
-              </span>
+              {language === 'ro' ? (
+                <>Cazare Regim Hotelier <span className="text-slate-700 dark:text-slate-200">Timișoara</span> — Apartamente ApArt Hotel</>
+              ) : (
+                <>Short-Term <span className="text-slate-700 dark:text-slate-200">Stays in Timișoara</span> — ApArt Hotel Apartments</>
+              )}
             </h1>
             <p 
               className={`text-lg text-muted-foreground mb-8 transition-all duration-700 ${
