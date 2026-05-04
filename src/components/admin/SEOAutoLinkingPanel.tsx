@@ -683,10 +683,25 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
             ) : previewData.error ? (
               <p className="text-sm text-red-600">{previewData.error}</p>
             ) : (
-              <div
-                className="prose prose-sm dark:prose-invert max-w-none p-4 rounded-md border bg-muted/30 leading-relaxed [&_a]:text-cyan-600 [&_a]:underline"
-                dangerouslySetInnerHTML={{ __html: previewData.html || "—" }}
-              />
+              <>
+                {previewData.modifiedSentence && (
+                  <div className="p-3 rounded-md border-2 border-amber-400 bg-amber-50/70 dark:bg-amber-950/30">
+                    <p className="text-[11px] uppercase tracking-wide text-amber-700 dark:text-amber-400 font-semibold mb-1">
+                      Propoziție modificată
+                    </p>
+                    <p className="text-sm leading-relaxed">
+                      {previewData.modifiedSentence} <mark className="bg-amber-200 dark:bg-amber-800 px-1 rounded">+ {previewFor?.anchor_text}</mark>
+                    </p>
+                  </div>
+                )}
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
+                  Paragraf complet (cu link inserat)
+                </div>
+                <div
+                  className="prose prose-sm dark:prose-invert max-w-none p-4 rounded-md border bg-muted/30 leading-relaxed [&_a]:text-cyan-600 [&_a]:underline [&_mark]:bg-amber-200 [&_mark]:dark:bg-amber-800 [&_mark]:px-1 [&_mark]:rounded"
+                  dangerouslySetInnerHTML={{ __html: previewData.html || "—" }}
+                />
+              </>
             )}
             {previewFor && previewFor.status === "proposed" && (
               <div className="flex gap-2 justify-end pt-2">
