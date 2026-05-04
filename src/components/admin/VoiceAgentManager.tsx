@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import VoiceAgentScriptsEditor from "./VoiceAgentScriptsEditor";
 import VoiceAgentMonitoring from "./VoiceAgentMonitoring";
 import VoiceCallerProfilesManager from "./VoiceCallerProfilesManager";
+import VoiceAgentKnowledgeBase from "./VoiceAgentKnowledgeBase";
 
 interface VoiceCall {
   id: string;
