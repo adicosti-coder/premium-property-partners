@@ -307,11 +307,11 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
 
   const toggleAutoApply = (v: boolean) => {
     setAutoApply(v);
-    localStorage.setItem("seo-il-auto-apply", v ? "1" : "0");
+    persistSettings({ auto_apply: v });
   };
   const updateAutoThreshold = (v: number) => {
     setAutoThreshold(v);
-    localStorage.setItem("seo-il-auto-threshold", String(v));
+    persistSettings({ threshold: v });
   };
   return (
     <Card className="border-cyan-200 dark:border-cyan-900">
