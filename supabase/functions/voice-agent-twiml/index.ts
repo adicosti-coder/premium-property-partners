@@ -597,6 +597,12 @@ serve(async (req) => {
       if (lookupMs > 200) {
         console.warn(`[voice-twiml][memory-lookup][SLOW] session=${sessionId} ms=${lookupMs}`);
       }
+      // Persist metric (fire-and-forget, doesn't block response)
+      EdgeRuntime.waitUntil(
+        supabase.from("voice_memory_lookup_metrics").insert({
+          session_id: sessionId, phone_normalized: phone, turn, lookup_ms: lookupMs, hit: !!prof,
+        }).then(() => {}, () => {})
+      );
       if (prof && prof.call_count > 0) {
         const parts: string[] = [];
         if (prof.display_name) parts.push(`nume: ${prof.display_name}`);
