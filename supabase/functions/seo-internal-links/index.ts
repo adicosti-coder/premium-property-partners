@@ -122,16 +122,24 @@ Output JSON: {"suggestions":[{"target_url_path":"/...", "anchor_text":"...", "re
     try { parsed = JSON.parse(data.choices[0].message.content); } catch {/* ignore */}
     const suggestions: any[] = (parsed.suggestions || []).slice(0, 7);
 
+    const autoApplyThreshold = Number(body.auto_apply_threshold ?? 0);
     if (suggestions.length) {
+      const now = new Date().toISOString();
       await sb.from("seo_internal_link_suggestions").insert(
-        suggestions.map((s) => ({
-          source_url_path: sourcePath,
-          target_url_path: s.target_url_path,
-          anchor_text: s.anchor_text,
-          reason: s.reason || null,
-          relevance_score: s.relevance_score || null,
-          status: "proposed",
-        })),
+        suggestions.map((s) => {
+          const score = Number(s.relevance_score || 0);
+          const auto = autoApplyThreshold > 0 && score >= autoApplyThreshold;
+          return {
+            source_url_path: sourcePath,
+            target_url_path: s.target_url_path,
+            anchor_text: s.anchor_text,
+            reason: s.reason || null,
+            relevance_score: s.relevance_score || null,
+            status: auto ? "applied" : "proposed",
+            applied_at: auto ? now : null,
+            applied_by: auto ? u.user.id : null,
+          };
+        }),
       );
     }
 
