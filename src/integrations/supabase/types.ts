@@ -4073,6 +4073,42 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_local_rec_status: {
+        Row: {
+          audit_id: string
+          created_at: string
+          id: string
+          note: string | null
+          rec_hash: string | null
+          rec_index: number
+          status: Database["public"]["Enums"]["seo_local_rec_status_enum"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          audit_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          rec_hash?: string | null
+          rec_index: number
+          status?: Database["public"]["Enums"]["seo_local_rec_status_enum"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          audit_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          rec_hash?: string | null
+          rec_index?: number
+          status?: Database["public"]["Enums"]["seo_local_rec_status_enum"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       seo_override_history: {
         Row: {
           alt_text_suggestions: Json | null
@@ -5536,6 +5572,7 @@ export type Database = {
         | "interested"
         | "rejected"
         | "posted"
+      seo_local_rec_status_enum: "open" | "doing" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5687,6 +5724,7 @@ export const Constants = {
         "rejected",
         "posted",
       ],
+      seo_local_rec_status_enum: ["open", "doing", "done"],
     },
   },
 } as const
