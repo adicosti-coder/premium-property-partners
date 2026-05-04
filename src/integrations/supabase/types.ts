@@ -5007,6 +5007,56 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_clarity_logs: {
+        Row: {
+          clarity_score: number
+          created_at: string
+          details: Json
+          fallback_used: boolean
+          id: string
+          session_id: string | null
+          tts_calls_count: number
+          tts_errors_count: number
+          tts_latency_ms_avg: number | null
+          tts_latency_ms_max: number | null
+          twilio_call_status: string | null
+        }
+        Insert: {
+          clarity_score: number
+          created_at?: string
+          details?: Json
+          fallback_used?: boolean
+          id?: string
+          session_id?: string | null
+          tts_calls_count?: number
+          tts_errors_count?: number
+          tts_latency_ms_avg?: number | null
+          tts_latency_ms_max?: number | null
+          twilio_call_status?: string | null
+        }
+        Update: {
+          clarity_score?: number
+          created_at?: string
+          details?: Json
+          fallback_used?: boolean
+          id?: string
+          session_id?: string | null
+          tts_calls_count?: number
+          tts_errors_count?: number
+          tts_latency_ms_avg?: number | null
+          tts_latency_ms_max?: number | null
+          twilio_call_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_agent_clarity_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_agent_language_violations: {
         Row: {
           created_at: string
@@ -5272,6 +5322,45 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_tts_errors: {
+        Row: {
+          created_at: string
+          error_type: string
+          http_status: number | null
+          id: string
+          latency_ms: number | null
+          message: string | null
+          session_id: string | null
+          source: string
+          text_snippet: string | null
+          voice_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_type: string
+          http_status?: number | null
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          session_id?: string | null
+          source?: string
+          text_snippet?: string | null
+          voice_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_type?: string
+          http_status?: number | null
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          session_id?: string | null
+          source?: string
+          text_snippet?: string | null
+          voice_id?: string | null
+        }
+        Relationships: []
+      }
       voice_call_sessions: {
         Row: {
           ai_outcome: string | null
@@ -5280,6 +5369,7 @@ export type Database = {
           appointment_scheduled_at: string | null
           call_duration_seconds: number | null
           call_objective: string | null
+          clarity_score: number | null
           cost_estimate_usd: number | null
           created_at: string
           debug_log: Json
@@ -5301,6 +5391,8 @@ export type Database = {
           status: string
           to_number: string
           transcript: Json | null
+          tts_errors_count: number
+          tts_latency_ms_avg: number | null
           twilio_call_sid: string | null
           updated_at: string
           voice_agent_prompt: string | null
@@ -5312,6 +5404,7 @@ export type Database = {
           appointment_scheduled_at?: string | null
           call_duration_seconds?: number | null
           call_objective?: string | null
+          clarity_score?: number | null
           cost_estimate_usd?: number | null
           created_at?: string
           debug_log?: Json
@@ -5333,6 +5426,8 @@ export type Database = {
           status?: string
           to_number: string
           transcript?: Json | null
+          tts_errors_count?: number
+          tts_latency_ms_avg?: number | null
           twilio_call_sid?: string | null
           updated_at?: string
           voice_agent_prompt?: string | null
@@ -5344,6 +5439,7 @@ export type Database = {
           appointment_scheduled_at?: string | null
           call_duration_seconds?: number | null
           call_objective?: string | null
+          clarity_score?: number | null
           cost_estimate_usd?: number | null
           created_at?: string
           debug_log?: Json
@@ -5365,6 +5461,8 @@ export type Database = {
           status?: string
           to_number?: string
           transcript?: Json | null
+          tts_errors_count?: number
+          tts_latency_ms_avg?: number | null
           twilio_call_sid?: string | null
           updated_at?: string
           voice_agent_prompt?: string | null
@@ -5439,6 +5537,39 @@ export type Database = {
           total_targets?: number
           updated_at?: string
           zone?: string | null
+        }
+        Relationships: []
+      }
+      voice_pronunciation_lexicon: {
+        Row: {
+          case_sensitive: boolean
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          original: string
+          phonetic: string
+          updated_at: string
+        }
+        Insert: {
+          case_sensitive?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          original: string
+          phonetic: string
+          updated_at?: string
+        }
+        Update: {
+          case_sensitive?: boolean
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          original?: string
+          phonetic?: string
+          updated_at?: string
         }
         Relationships: []
       }
