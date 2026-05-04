@@ -122,9 +122,18 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
     return Array.from(pairs.values()).sort((x, y) => y.shared.length - x.shared.length);
   }, [history]);
 
+  const getSeverity = (sharedLen: number): "critical" | "warning" | "info" =>
+    sharedLen >= 5 ? "critical" : sharedLen >= 4 ? "warning" : "info";
+
   const totalShared = clusters.reduce((acc, c) => acc + c.shared.length, 0);
   const avgShared = clusters.length ? Math.round(totalShared / clusters.length) : 0;
-  const criticalCount = clusters.filter((c) => c.shared.length >= 5).length;
+  const criticalCount = clusters.filter((c) => getSeverity(c.shared.length) === "critical").length;
+  const warningCount = clusters.filter((c) => getSeverity(c.shared.length) === "warning").length;
+  const infoCount = clusters.filter((c) => getSeverity(c.shared.length) === "info").length;
+
+  const filteredClusters = severityFilter === "all"
+    ? clusters
+    : clusters.filter((c) => getSeverity(c.shared.length) === severityFilter);
 
   return (
     <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-background via-background to-orange-50/30 dark:to-orange-950/20">
