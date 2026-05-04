@@ -452,16 +452,20 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
           {/* Issue list */}
           <div className="space-y-2">
             {filtered.map((e) => {
-              const st = statusByIndex.get(e.recIndex)?.status || "open";
-              const StatusIcon = STATUS_META[st].icon;
-              const updatedAt = statusByIndex.get(e.recIndex)?.updated_at;
+              const row = statusByIndex.get(e.recIndex);
+              const st = row?.status || "open";
+              const updatedAt = row?.updated_at;
+              let undoMeta: any = null;
+              try { undoMeta = row?.note ? JSON.parse(row.note) : null; } catch { /* */ }
+              const canUndo = st === "done" && !!undoMeta?.version_id;
+              const isResolved = st === "done";
               return (
                 <div
                   key={e.recIndex}
                   className={cn(
-                    "rounded-lg border p-3 transition-all",
+                    "rounded-lg border transition-all",
                     SEVERITY_STYLE[e.severity] || "border-muted",
-                    st === "done" && "opacity-60"
+                    isResolved ? "p-2 opacity-70" : "p-3"
                   )}
                 >
                   <div className="flex items-start gap-2">
@@ -477,61 +481,84 @@ export function SEOIssuesPanel({ auditId, url, issues, indexOffset = 100000 }: P
                       {e.severity}
                     </Badge>
                     <div className="flex-1 min-w-0 text-sm">
-                      <div className={cn("font-medium", st === "done" && "line-through")}>{e.issue}</div>
-                      {e.fix && <div className="text-muted-foreground text-xs mt-1">→ {e.fix}</div>}
+                      <div className={cn("font-medium", isResolved && "line-through text-muted-foreground")}>
+                        {e.issue}
+                      </div>
+                      {!isResolved && e.fix && (
+                        <div className="text-muted-foreground text-xs mt-1">→ {e.fix}</div>
+                      )}
                       {updatedAt && (
                         <div className="text-[10px] text-muted-foreground mt-1">
-                          Actualizat {relativeTime(updatedAt)}
+                          {isResolved && undoMeta?.version_number ? `Aplicat (v${undoMeta.version_number}) · ` : ""}
+                          {relativeTime(updatedAt)}
                         </div>
                       )}
                     </div>
+                    {isResolved && canUndo && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => undoFix(e.recIndex)}
+                        disabled={autoFixingIdx !== null}
+                      >
+                        {autoFixingIdx === e.recIndex ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Undo2 className="h-3 w-3" />
+                        )}
+                        Undo
+                      </Button>
+                    )}
                   </div>
 
-                  {/* Action row */}
-                  <div className="flex flex-wrap items-center gap-1.5 mt-2 pl-7">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => runAutoFix(e.recIndex, e.fixType)}
-                      disabled={autoFixingIdx !== null}
-                    >
-                      {autoFixingIdx === e.recIndex ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Wand2 className="h-3 w-3" />
-                      )}
-                      Auto-Fix ({e.fixType})
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => copyPrompt(e)}
-                    >
-                      <Copy className="h-3 w-3" /> Prompt AI
-                    </Button>
+                  {/* Action row — hidden when collapsed/resolved */}
+                  {!isResolved && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2 pl-7">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => runAutoFix(e.recIndex, e.fixType)}
+                        disabled={autoFixingIdx !== null}
+                      >
+                        {autoFixingIdx === e.recIndex ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Zap className="h-3 w-3" />
+                        )}
+                        Aplică Fix ({e.fixType})
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => copyPrompt(e)}
+                      >
+                        <Copy className="h-3 w-3" /> Prompt AI
+                      </Button>
 
-                    {/* Status pill cycle */}
-                    <div className="ml-auto flex items-center gap-1">
-                      {(["open", "doing", "done"] as Status[]).map((s) => {
-                        const Active = STATUS_META[s].icon;
-                        const isActive = st === s;
-                        return (
-                          <Button
-                            key={s}
-                            size="sm"
-                            variant={isActive ? "secondary" : "ghost"}
-                            className={cn("h-7 px-2 gap-1 text-[11px]", isActive && STATUS_META[s].cls)}
-                            onClick={() => upsertStatus.mutate({ recIndex: e.recIndex, hash: e.hash, status: s })}
-                          >
-                            <Active className="h-3 w-3" />
-                            {STATUS_META[s].label}
-                          </Button>
-                        );
-                      })}
+                      {/* Status pill cycle */}
+                      <div className="ml-auto flex items-center gap-1">
+                        {(["open", "doing", "done"] as Status[]).map((s) => {
+                          const Active = STATUS_META[s].icon;
+                          const isActive = st === s;
+                          return (
+                            <Button
+                              key={s}
+                              size="sm"
+                              variant={isActive ? "secondary" : "ghost"}
+                              className={cn("h-7 px-2 gap-1 text-[11px]", isActive && STATUS_META[s].cls)}
+                              onClick={() => upsertStatus.mutate({ recIndex: e.recIndex, hash: e.hash, status: s })}
+                            >
+                              <Active className="h-3 w-3" />
+                              {STATUS_META[s].label}
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
