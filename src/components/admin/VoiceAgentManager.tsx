@@ -65,6 +65,43 @@ export default function VoiceAgentManager() {
   const [runningTest, setRunningTest] = useState(false);
   const [testSessionId, setTestSessionId] = useState<string | null>(null);
   const [reportPolling, setReportPolling] = useState(false);
+  const [langTestRunning, setLangTestRunning] = useState(false);
+  const [langTestResult, setLangTestResult] = useState<{
+    summary: { total: number; passed: number; failed: number; pass_rate: number; verdict: string; duration_ms: number; tested_at: string };
+    results: Array<{ scenario_id: string; user_message: string; ai_reply: string; passed: boolean; ai_error: string | null; english_words_detected: string[]; has_diacritics: boolean; duration_ms: number }>;
+  } | null>(null);
+  const [langTestOpen, setLangTestOpen] = useState(false);
+
+  const runLanguageTest = async () => {
+    setLangTestRunning(true);
+    setLangTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-language-test", { body: {} });
+      if (error || (data as any)?.error) {
+        toast({
+          title: "Test limbă eșuat",
+          description: (data as any)?.error || error?.message || "Eroare necunoscută",
+          variant: "destructive",
+        });
+        return;
+      }
+      setLangTestResult(data);
+      setLangTestOpen(true);
+      const verdict = data.summary.verdict;
+      toast({
+        title:
+          verdict === "PASS"
+            ? "✅ Test trecut — 100% română"
+            : verdict === "WARN"
+            ? "⚠️ Test cu avertismente"
+            : "❌ Test eșuat — engleză detectată",
+        description: `${data.summary.passed}/${data.summary.total} scenarii au păstrat exclusiv limba română.`,
+        variant: verdict === "FAIL" ? "destructive" : "default",
+      });
+    } finally {
+      setLangTestRunning(false);
+    }
+  };
 
   const VOICES = [
     { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald, recomandat)" },
