@@ -673,7 +673,8 @@ serve(async (req) => {
       transcript.push({ role: "user", text: userSpeech, at: new Date().toISOString() });
     }
 
-    await pushDebugLog(supabase, sessionId, {
+    // Defer turn-start debug log (was 2 sync DB ops blocking the response)
+    const turnStartLog = {
       stage: "twiml_turn_start",
       turn,
       branch,
@@ -683,7 +684,12 @@ serve(async (req) => {
       userSpeech: userSpeech || null,
       systemPromptPreview: systemPrompt.slice(0, 600),
       hasCustomPrompt: !!customPrompt,
-    });
+    };
+    // @ts-ignore
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(pushDebugLog(supabase, sessionId, turnStartLog));
+    }
 
     let aiReply = "";
     let aiRawReply = "";
