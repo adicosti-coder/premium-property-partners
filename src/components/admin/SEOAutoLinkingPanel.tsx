@@ -98,12 +98,13 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
       const v = (data?.value as any) || {};
       if (typeof v.auto_apply === "boolean") setAutoApply(v.auto_apply);
       if (typeof v.threshold === "number") setAutoThreshold(v.threshold);
+      if (typeof v.max_per_page === "number") setMaxAutoPerPage(v.max_per_page);
       setSettingsLoaded(true);
     })();
   }, []);
 
-  const persistSettings = async (patch: { auto_apply?: boolean; threshold?: number }) => {
-    const next = { auto_apply: autoApply, threshold: autoThreshold, ...patch };
+  const persistSettings = async (patch: { auto_apply?: boolean; threshold?: number; max_per_page?: number }) => {
+    const next = { auto_apply: autoApply, threshold: autoThreshold, max_per_page: maxAutoPerPage, ...patch };
     await supabase
       .from("seo_settings")
       .upsert({ key: "auto_linking", value: next, updated_at: new Date().toISOString() }, { onConflict: "key" });
