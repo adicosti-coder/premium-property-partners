@@ -585,11 +585,18 @@ serve(async (req) => {
     let callerMemoryBlock = "";
     const phone = (session.to_number || "").trim();
     if (phone) {
+      const lookupT0 = Date.now();
       const { data: prof } = await supabase
         .from("voice_caller_profiles")
-        .select("display_name, preferred_branch, budget_min, budget_max, preferred_zones, property_types, rooms_min, rooms_max, timeline, notes, call_count")
+        .select("display_name, preferred_branch, budget_min, budget_max, preferred_zones, property_types, rooms_min, rooms_max, timeline, notes, last_objection, call_count")
         .eq("phone_normalized", phone)
+        .is("archived_at", null)
         .maybeSingle();
+      const lookupMs = Date.now() - lookupT0;
+      console.log(`[voice-twiml][memory-lookup] session=${sessionId} turn=${turn} phone=${phone} ms=${lookupMs} hit=${!!prof}`);
+      if (lookupMs > 200) {
+        console.warn(`[voice-twiml][memory-lookup][SLOW] session=${sessionId} ms=${lookupMs}`);
+      }
       if (prof && prof.call_count > 0) {
         const parts: string[] = [];
         if (prof.display_name) parts.push(`nume: ${prof.display_name}`);
@@ -599,6 +606,7 @@ serve(async (req) => {
         if (prof.property_types?.length) parts.push(`tip: ${prof.property_types.join(", ")}`);
         if (prof.rooms_min || prof.rooms_max) parts.push(`camere: ${prof.rooms_min ?? "?"}–${prof.rooms_max ?? "?"}`);
         if (prof.timeline) parts.push(`timeline: ${prof.timeline}`);
+        if (prof.last_objection) parts.push(`ultima obiecție: ${prof.last_objection}`);
         if (prof.notes) parts.push(`context: ${prof.notes.slice(0, 200)}`);
         if (parts.length) {
           callerMemoryBlock = `\n\n📞 MEMORIE APELANT (${prof.call_count} apel/uri anterioare): ${parts.join("; ")}.\nFolosește subtil aceste informații. Confirmă transparent: „țin minte ce am discutat data trecută, …". NU repeta întrebări la care ai deja răspuns.`;
