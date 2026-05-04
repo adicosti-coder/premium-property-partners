@@ -274,6 +274,14 @@ function composeSystemPrompt(
 
 serve(async (req) => {
   try {
+    // Verify Twilio HMAC signature on POST callbacks (consumes body → reuse params later)
+    let twilioParams: URLSearchParams | null = null;
+    if (req.method === "POST") {
+      const verification = await verifyTwilioRequest(req.clone());
+      if (!verification.ok) return verification.response;
+      twilioParams = verification.params;
+    }
+
     const url = new URL(req.url);
     const sessionId = url.searchParams.get("sessionId");
     const turn = parseInt(url.searchParams.get("turn") || "0", 10);
