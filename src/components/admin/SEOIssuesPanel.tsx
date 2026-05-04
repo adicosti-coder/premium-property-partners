@@ -40,6 +40,7 @@ interface StatusRow {
   rec_index: number;
   rec_hash: string | null;
   status: Status;
+  note: string | null;
   updated_by: string | null;
   updated_at: string;
 }
