@@ -677,9 +677,10 @@ serve(async (req) => {
       console.error("[voice-twiml] failed to load voice_agent_scripts:", e);
     }
 
+    const memoryAddon = `${callerMemoryBlock}${liveBlock}`;
     const baseSystemPrompt = dbSystemPromptOverride
-      ? `${dbSystemPromptOverride}\n\n${leadContext}${sentimentBlock}`
-      : systemPromptForBranch(branch, leadContext, objective, sentimentBlock);
+      ? `${dbSystemPromptOverride}\n\n${leadContext}${sentimentBlock}${memoryAddon}`
+      : `${systemPromptForBranch(branch, leadContext, objective, sentimentBlock)}${memoryAddon}`;
     const systemPrompt = customPrompt
       ? `${ROMANIAN_VOICE_GUARD}\n\n${baseSystemPrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customPrompt}`
       : `${ROMANIAN_VOICE_GUARD}\n\n${baseSystemPrompt}`;
