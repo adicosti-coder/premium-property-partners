@@ -261,6 +261,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     }
     const targets = pool.slice(0, batchSize);
     setProgress({ done: 0, total: targets.length, ok: 0, fail: 0 });
+    const runId = `run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     let ok = 0, fail = 0;
     for (let i = 0; i < targets.length; i++) {
       try {
@@ -272,6 +273,8 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
             source_title: a.title || a.url,
             source_context: a.suggested_meta || "",
             auto_apply_threshold: autoApply ? autoThreshold : 0,
+            max_auto_per_page: maxAutoPerPage,
+            run_id: runId,
           },
         });
         if (error) throw error;
@@ -280,7 +283,43 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
       setProgress({ done: i + 1, total: targets.length, ok, fail });
     }
     setRunning(false);
-    toast.success(`Auto-linking finalizat: ${ok} OK${fail ? `, ${fail} eșuate` : ""}`);
+    toast.success(`Auto-linking finalizat: ${ok} OK${fail ? `, ${fail} eșuate` : ""} (run ${runId.slice(-8)})`);
+    qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-logs"] });
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-runs"] });
+  };
+
+  const exportAutoApplyCsv = () => {
+    const rows = autoLogs;
+    if (!rows.length) return toast.info("Nimic de exportat");
+    const header = ["source_url", "target_url", "anchor_text", "score", "status", "applied_at", "run_id"];
+    const csv = [header.join(",")].concat(
+      rows.map((l: any) => [
+        l.payload?.source_url_path,
+        l.payload?.target_url_path,
+        l.payload?.anchor_text,
+        l.payload?.relevance_score ?? "",
+        l.reverted ? "reverted" : "applied",
+        l.applied_at,
+        l.payload?.run_id || "",
+      ].map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+    ).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `auto-applied-links-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  const revertRun = async (runId: string, count: number) => {
+    if (!confirm(`Anulezi întreaga rulare? ${count} link-uri vor fi marcate ca respinse.`)) return;
+    const { data, error } = await supabase.functions.invoke("seo-internal-links", {
+      body: { action: "revert_run", run_id: runId },
+    });
+    if (error) return toast.error(error.message);
+    toast.success(`${(data as any)?.reverted ?? count} link-uri anulate`);
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-logs"] });
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-runs"] });
     qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
   };
 
