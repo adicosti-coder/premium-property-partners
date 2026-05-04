@@ -352,6 +352,24 @@ export default function VoiceAgentManager() {
 
   return (
     <div className="space-y-6">
+      <Card className="border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-amber-500/5 to-transparent">
+        <CardContent className="pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center">
+              <Bot className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold flex items-center gap-2">
+                Andrei — Concierge Vocal RealTrust
+                <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">High-Performance Management</Badge>
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Mod activ: ton de concierge premium, cifre de piață în timp real, închidere conversațională cu cârlig de vizionare.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       <VoiceAgentMonitoring />
       <VoiceCallerProfilesManager />
       <VoiceAgentKnowledgeBase />
