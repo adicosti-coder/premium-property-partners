@@ -22,7 +22,8 @@ Primești ULTIMELE replici dintr-un apel telefonic. Returnează DOAR un JSON val
   "rooms_max": number|null,
   "timeline": "urgent"|"1-3 luni"|"3-6 luni"|"explorare"|null,
   "branch": "vanzare"|"inchiriere"|"cazare"|null,
-  "summary": string              // 1 frază scurtă, în română, ce vrea apelantul
+  "summary": string,             // 1 frază scurtă, în română, ce vrea apelantul
+  "last_objection": string|null  // ultima obiecție clară a apelantului (ex: "preț prea mare", "vrea zonă centrală"), sau null
 }
 Reguli: dacă o valoare nu este menționată CLAR, pune null sau []. Bugetul mereu în EUR. NU inventa.`;
 
