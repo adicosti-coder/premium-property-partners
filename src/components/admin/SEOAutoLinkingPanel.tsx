@@ -125,6 +125,18 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     },
   });
 
+  // Auto-apply runs (grouped by run_id)
+  const { data: autoRuns = [] } = useQuery({
+    queryKey: ["seo-auto-link-runs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("seo-internal-links", {
+        body: { action: "list_runs" },
+      });
+      if (error) return [];
+      return (data as any)?.runs || [];
+    },
+  });
+
   const counts = useMemo(() => {
     const c = { all: suggestions.length, proposed: 0, applied: 0, rejected: 0 } as Record<string, number>;
     suggestions.forEach((s: any) => { c[s.status as string] = (c[s.status as string] || 0) + 1; });
