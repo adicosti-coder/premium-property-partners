@@ -375,6 +375,10 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     setAutoThreshold(v);
     persistSettings({ threshold: v });
   };
+  const updateMaxPerPage = (v: number) => {
+    setMaxAutoPerPage(v);
+    persistSettings({ max_per_page: v });
+  };
   return (
     <Card className="border-cyan-200 dark:border-cyan-900">
       <CardHeader>
