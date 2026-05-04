@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
         from: "RealTrust AI <info@notify.realtrust.ro>",
         to: [recipientEmail],
         cc: ["info@realtrust.ro"],
-        subject: `📋 Raport HostScan AI - ${report.zona || zone} - Scor ${report.scor}/${report.max_scor}`,
+        subject: `📋 Raport HostScan AI - ${String(report.zona || zone || "").replace(/[\r\n]/g, " ").slice(0, 100)} - Scor ${scoreNum}/${maxScoreNum}`,
         html: htmlContent,
       }),
     });
