@@ -77,8 +77,8 @@ export default function VoiceAgentFollowupQueue() {
     const draftToSave = edits[id];
     const update: any = { followup_status: status };
     if (draftToSave) update.followup_draft = draftToSave;
-    const { error } = await supabase
-      .from("voice_call_sessions" as never)
+    const { error } = await (supabase as any)
+      .from("voice_call_sessions")
       .update(update)
       .eq("id", id);
     setBusyId(null);
