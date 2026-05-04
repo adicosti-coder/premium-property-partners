@@ -430,10 +430,11 @@ function speakXml(text: string, audioUrl: string | null): string {
 
 function gatherXml(actionUrl: string, innerXml = ""): string {
   const safeUrl = escapeXml(actionUrl);
-  // bargeIn=true → user can interrupt the agent (natural conversation)
-  // speechTimeout=1 → end-of-speech detected ~1s after silence (vs ~2s on auto)
-  // actionOnEmptyResult=true → if user says nothing, still go to next turn (no dead air)
-  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="1" timeout="5" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
+  // speechTimeout="auto" → Twilio uses adaptive end-of-speech detection (recommended for natural conversations)
+  // speechModel="phone_call" → tuned for telephony audio (vs default 'default')
+  // bargeIn=true → user can interrupt agent mid-speech
+  // actionOnEmptyResult=true → no dead air on silence
+  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="auto" timeout="5" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
 }
 
 function isCustomPrompt(prompt?: string | null): boolean {
