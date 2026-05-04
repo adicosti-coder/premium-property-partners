@@ -201,6 +201,75 @@ serve(async (req) => {
         }
       }
 
+      // ── Clarity scoring (technical audit per call) ──────────────────────
+      // Heuristic 0-100 based on signals available post-call.
+      let clarityScore = 100;
+      const clarityDetails: Record<string, unknown> = {};
+
+      // 1. TTS errors during the call (-15 each, capped)
+      try {
+        const { count: ttsErrorCount } = await supabase
+          .from("voice_agent_tts_errors")
+          .select("*", { count: "exact", head: true })
+          .eq("session_id", sessionId);
+        const errs = ttsErrorCount || 0;
+        clarityDetails.tts_errors = errs;
+        clarityScore -= Math.min(errs * 15, 45);
+      } catch { /* table may be empty */ }
+
+      // 2. Language drift (-25 if English detected)
+      if (detectedLanguage === "en") {
+        clarityScore -= 25;
+        clarityDetails.language_drift = true;
+      }
+
+      // 3. Twilio status problems
+      if (["failed", "busy", "no-answer", "canceled"].includes(derivedStatus)) {
+        clarityScore -= 30;
+        clarityDetails.twilio_status_issue = derivedStatus;
+      }
+
+      // 4. Very short call → low confidence
+      if ((duration || session.call_duration_seconds || 0) > 0 && (duration || session.call_duration_seconds || 0) < 6) {
+        clarityScore -= 10;
+        clarityDetails.too_short = true;
+      }
+
+      // 5. Polly fallback was used (debug_log signal)
+      const debugLog = Array.isArray(session.debug_log) ? session.debug_log : [];
+      const fallbackUsed = debugLog.some((d: any) => d?.usedFallback === true || d?.fallback === "polly");
+      if (fallbackUsed) {
+        clarityScore -= 20;
+        clarityDetails.polly_fallback = true;
+      }
+
+      clarityScore = Math.max(0, Math.min(100, clarityScore));
+
+      // Average TTS latency from debug log entries (if any).
+      const latencies: number[] = debugLog
+        .map((d: any) => Number(d?.ttsLatencyMs))
+        .filter((n: number) => Number.isFinite(n) && n > 0);
+      const ttsLatencyAvg = latencies.length
+        ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length)
+        : null;
+      const ttsLatencyMax = latencies.length ? Math.max(...latencies) : null;
+
+      try {
+        await supabase.from("voice_agent_clarity_logs").insert({
+          session_id: sessionId,
+          clarity_score: clarityScore,
+          tts_latency_ms_avg: ttsLatencyAvg,
+          tts_latency_ms_max: ttsLatencyMax,
+          tts_calls_count: latencies.length,
+          tts_errors_count: Number(clarityDetails.tts_errors || 0),
+          twilio_call_status: derivedStatus,
+          fallback_used: fallbackUsed,
+          details: clarityDetails as any,
+        });
+      } catch (e) {
+        console.warn("[voice-status] clarity log insert failed", (e as Error).message);
+      }
+
       await supabase.from("voice_call_sessions").update({
         status: derivedStatus,
         detected_language: detectedLanguage,
@@ -209,6 +278,9 @@ serve(async (req) => {
         ai_sentiment: parsed.sentiment || fallbackReport.sentiment,
         next_action: parsed.next_action || fallbackReport.next_action,
         appointment_scheduled_at: parsed.appointment_iso || null,
+        clarity_score: clarityScore,
+        tts_latency_ms_avg: ttsLatencyAvg,
+        tts_errors_count: Number(clarityDetails.tts_errors || 0),
       }).eq("id", sessionId);
 
       // Finalize script test log (if any was created at turn 0)
