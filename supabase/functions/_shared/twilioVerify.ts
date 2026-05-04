@@ -71,12 +71,8 @@ export async function verifyTwilioRequest(
     return { ok: false, response: plain("Semnătura apelului lipsește.", 403) };
   }
 
-  // Twilio signing string: full URL + sorted (key+value) concatenation
+  // Twilio signing string: candidate URL + sorted (key+value) concatenation
   const sortedKeys = [...params.keys()].sort();
-  let signingString = fullUrl;
-  for (const k of sortedKeys) {
-    for (const v of params.getAll(k)) signingString += k + v;
-  }
 
   const candidateUrls = new Set<string>([fullUrl]);
   candidateUrls.add(`https://${host}${url.pathname}${url.search}`);
