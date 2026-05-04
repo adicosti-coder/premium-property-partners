@@ -51,6 +51,11 @@ serve(async (req) => {
     }
 
     if (action === "update_status") {
+      const { data: row } = await sb
+        .from("seo_internal_link_suggestions")
+        .select("*")
+        .eq("id", body.suggestion_id)
+        .maybeSingle();
       const { error } = await sb
         .from("seo_internal_link_suggestions")
         .update({
@@ -60,6 +65,38 @@ serve(async (req) => {
         })
         .eq("id", body.suggestion_id);
       if (error) throw error;
+      if (row && body.status === "applied") {
+        await sb.from("seo_audit_log").insert({
+          action: "internal_link_applied",
+          category: "internal_linking",
+          url_path: row.source_url_path,
+          source: body.auto ? "auto" : "manual",
+          payload: {
+            suggestion_id: row.id,
+            source_url_path: row.source_url_path,
+            target_url_path: row.target_url_path,
+            anchor_text: row.anchor_text,
+            relevance_score: row.relevance_score,
+          },
+          applied_by: u.user.id,
+        });
+      }
+      return json({ ok: true });
+    }
+
+    if (action === "revert_log") {
+      const logId = body.log_id;
+      const { data: log } = await sb.from("seo_audit_log").select("*").eq("id", logId).maybeSingle();
+      if (!log) return json({ error: "Log not found" }, 404);
+      const sid = (log.payload as any)?.suggestion_id;
+      if (sid) {
+        await sb.from("seo_internal_link_suggestions")
+          .update({ status: "rejected", applied_at: null, applied_by: null })
+          .eq("id", sid);
+      }
+      await sb.from("seo_audit_log")
+        .update({ reverted: true, reverted_at: new Date().toISOString() })
+        .eq("id", logId);
       return json({ ok: true });
     }
 
@@ -125,22 +162,43 @@ Output JSON: {"suggestions":[{"target_url_path":"/...", "anchor_text":"...", "re
     const autoApplyThreshold = Number(body.auto_apply_threshold ?? 0);
     if (suggestions.length) {
       const now = new Date().toISOString();
-      await sb.from("seo_internal_link_suggestions").insert(
-        suggestions.map((s) => {
-          const score = Number(s.relevance_score || 0);
-          const auto = autoApplyThreshold > 0 && score >= autoApplyThreshold;
-          return {
-            source_url_path: sourcePath,
-            target_url_path: s.target_url_path,
-            anchor_text: s.anchor_text,
-            reason: s.reason || null,
-            relevance_score: s.relevance_score || null,
-            status: auto ? "applied" : "proposed",
-            applied_at: auto ? now : null,
-            applied_by: auto ? u.user.id : null,
-          };
-        }),
-      );
+      const rows = suggestions.map((s) => {
+        const score = Number(s.relevance_score || 0);
+        const auto = autoApplyThreshold > 0 && score >= autoApplyThreshold;
+        return {
+          source_url_path: sourcePath,
+          target_url_path: s.target_url_path,
+          anchor_text: s.anchor_text,
+          reason: s.reason || null,
+          relevance_score: s.relevance_score || null,
+          status: auto ? "applied" : "proposed",
+          applied_at: auto ? now : null,
+          applied_by: auto ? u.user.id : null,
+        };
+      });
+      const { data: inserted } = await sb
+        .from("seo_internal_link_suggestions")
+        .insert(rows)
+        .select("*");
+      // Log auto-applied insertions
+      const autoLogs = (inserted || [])
+        .filter((r: any) => r.status === "applied")
+        .map((r: any) => ({
+          action: "internal_link_applied",
+          category: "internal_linking",
+          url_path: r.source_url_path,
+          source: "auto",
+          payload: {
+            suggestion_id: r.id,
+            source_url_path: r.source_url_path,
+            target_url_path: r.target_url_path,
+            anchor_text: r.anchor_text,
+            relevance_score: r.relevance_score,
+            threshold: autoApplyThreshold,
+          },
+          applied_by: u.user.id,
+        }));
+      if (autoLogs.length) await sb.from("seo_audit_log").insert(autoLogs);
     }
 
     return json({ ok: true, suggestions });

@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import DOMPurify from "dompurify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,10 +60,12 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const [sortKey, setSortKey] = useState<SortKey>("recent");
   const [minScore, setMinScore] = useState<number>(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [autoApply, setAutoApply] = useState<boolean>(() => localStorage.getItem("seo-il-auto-apply") === "1");
-  const [autoThreshold, setAutoThreshold] = useState<number>(() => Number(localStorage.getItem("seo-il-auto-threshold") || 85));
+  const [autoApply, setAutoApply] = useState<boolean>(false);
+  const [autoThreshold, setAutoThreshold] = useState<number>(85);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [previewFor, setPreviewFor] = useState<any | null>(null);
   const [previewData, setPreviewData] = useState<{ html?: string; loading: boolean; error?: string }>({ loading: false });
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; ok: number; fail: number; label: string } | null>(null);
 
   const sources = useMemo(() => {
     const m = new Map<string, AuditRow>();
@@ -79,6 +82,43 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Load persisted settings from DB
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("seo_settings")
+        .select("value")
+        .eq("key", "auto_linking")
+        .maybeSingle();
+      const v = (data?.value as any) || {};
+      if (typeof v.auto_apply === "boolean") setAutoApply(v.auto_apply);
+      if (typeof v.threshold === "number") setAutoThreshold(v.threshold);
+      setSettingsLoaded(true);
+    })();
+  }, []);
+
+  const persistSettings = async (patch: { auto_apply?: boolean; threshold?: number }) => {
+    const next = { auto_apply: autoApply, threshold: autoThreshold, ...patch };
+    await supabase
+      .from("seo_settings")
+      .upsert({ key: "auto_linking", value: next, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  };
+
+  // Auto-applied links log (with revert)
+  const { data: autoLogs = [] } = useQuery({
+    queryKey: ["seo-auto-link-logs"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("seo_audit_log")
+        .select("*")
+        .eq("action", "internal_link_applied")
+        .eq("source", "auto")
+        .order("applied_at", { ascending: false })
+        .limit(50);
       return data || [];
     },
   });
@@ -134,20 +174,23 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const bulkSetStatus = async (status: "applied" | "rejected" | "proposed") => {
     const ids = Array.from(selected);
     if (!ids.length) return;
-    const t = toast.loading(`Actualizez ${ids.length} sugestii...`);
+    const label = status === "applied" ? "Aplic" : status === "rejected" ? "Resping" : "Resetez";
+    setBulkProgress({ done: 0, total: ids.length, ok: 0, fail: 0, label });
     let ok = 0, fail = 0;
-    for (const id of ids) {
+    for (let i = 0; i < ids.length; i++) {
       try {
         await supabase.functions.invoke("seo-internal-links", {
-          body: { action: "update_status", suggestion_id: id, status },
+          body: { action: "update_status", suggestion_id: ids[i], status, auto: false },
         });
         ok++;
       } catch { fail++; }
+      setBulkProgress({ done: i + 1, total: ids.length, ok, fail, label });
     }
-    toast.dismiss(t);
+    setTimeout(() => setBulkProgress(null), 1500);
     toast.success(`${ok} actualizate${fail ? `, ${fail} eșuate` : ""}`);
     setSelected(new Set());
     qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-logs"] });
   };
 
   const bulkDelete = async () => {
@@ -259,7 +302,13 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
       });
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || "Preview indisponibil");
-      setPreviewData({ loading: false, html: data.preview_html || data.paragraph || "—" });
+      const rawHtml = data.preview_html || data.paragraph || "—";
+      const safe = DOMPurify.sanitize(rawHtml, {
+        ALLOWED_TAGS: ["a", "strong", "em", "b", "i", "br", "span", "mark"],
+        ALLOWED_ATTR: ["href", "title"],
+        ALLOWED_URI_REGEXP: /^(?:\/|https?:\/\/)/i,
+      });
+      setPreviewData({ loading: false, html: safe });
     } catch (e: any) {
       setPreviewData({ loading: false, error: e.message });
     }
@@ -267,11 +316,11 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
 
   const toggleAutoApply = (v: boolean) => {
     setAutoApply(v);
-    localStorage.setItem("seo-il-auto-apply", v ? "1" : "0");
+    persistSettings({ auto_apply: v });
   };
   const updateAutoThreshold = (v: number) => {
     setAutoThreshold(v);
-    localStorage.setItem("seo-il-auto-threshold", String(v));
+    persistSettings({ threshold: v });
   };
   return (
     <Card className="border-cyan-200 dark:border-cyan-900">
@@ -326,7 +375,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
         <div className="flex flex-wrap items-center gap-3 p-2.5 rounded-md border border-amber-300 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20">
           <Zap className="w-4 h-4 text-amber-600" />
           <div className="flex items-center gap-2">
-            <Switch id="auto-apply" checked={autoApply} onCheckedChange={toggleAutoApply} />
+            <Switch id="auto-apply" checked={autoApply} onCheckedChange={toggleAutoApply} disabled={!settingsLoaded} />
             <Label htmlFor="auto-apply" className="text-sm font-medium cursor-pointer">
               Auto-Apply: aplică automat sugestiile cu scor ≥
             </Label>
@@ -393,7 +442,18 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           </div>
         )}
 
-        {/* Header with select-all */}
+        {/* Bulk progress bar */}
+        {bulkProgress && (
+          <div className="space-y-1 p-2 rounded-md border bg-muted/30">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium">{bulkProgress.label} {bulkProgress.done}/{bulkProgress.total}</span>
+              <span className="text-muted-foreground">
+                ✓ {bulkProgress.ok} {bulkProgress.fail > 0 && <span className="text-red-600">· ✗ {bulkProgress.fail}</span>}
+              </span>
+            </div>
+            <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} className="h-1.5" />
+          </div>
+        )}
         <div className="flex items-center gap-2 px-3 py-1.5 border rounded-md bg-muted/30 text-xs">
           <Checkbox checked={allFilteredSelected} onCheckedChange={toggleAllFiltered} />
           <span className="text-muted-foreground">Selectează toate filtrate ({filtered.length})</span>
@@ -447,6 +507,48 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
             )}
           </ul>
         </ScrollArea>
+
+        {/* Auto-applied log with revert */}
+        {autoLogs.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Zap className="w-4 h-4 text-amber-600" />
+              Auto-aplicate recent ({autoLogs.filter((l: any) => !l.reverted).length} active)
+            </div>
+            <ScrollArea className="h-40 rounded-md border">
+              <ul className="divide-y text-xs">
+                {autoLogs.map((l: any) => (
+                  <li key={l.id} className="px-3 py-2 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <Badge variant="outline" className="font-normal">{l.payload?.source_url_path}</Badge>
+                        <ArrowRight className="w-3 h-3" />
+                        <Badge variant="outline" className="font-normal">{l.payload?.target_url_path}</Badge>
+                      </div>
+                      <p className="mt-0.5 truncate">"{l.payload?.anchor_text}" · scor {l.payload?.relevance_score}</p>
+                    </div>
+                    {l.reverted ? (
+                      <Badge variant="secondary">anulat</Badge>
+                    ) : (
+                      <Button size="sm" variant="ghost" className="text-red-600"
+                        onClick={async () => {
+                          const { error } = await supabase.functions.invoke("seo-internal-links", {
+                            body: { action: "revert_log", log_id: l.id },
+                          });
+                          if (error) return toast.error(error.message);
+                          toast.success("Link anulat");
+                          qc.invalidateQueries({ queryKey: ["seo-auto-link-logs"] });
+                          qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+                        }}>
+                        Anulează
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </div>
+        )}
       </CardContent>
 
       <Dialog open={!!previewFor} onOpenChange={(o) => !o && setPreviewFor(null)}>
