@@ -757,7 +757,13 @@ serve(async (req) => {
           messages: [
             { role: "system", content: systemPrompt },
             ...transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
-            { role: "user", content: "Continuă conversația. Răspunde EXCLUSIV în română, cu diacritice. MAXIM 1 propoziție scurtă (sub 15 cuvinte). Nu folosi „...”. Mergi direct la subiect." },
+            { role: "user", content: (() => {
+              const u = userSpeech.toLowerCase();
+              const wantsDetail = /(de ce|cum|explica|spune-?mi mai|detalii|exact|mai multe|cât|ce înseamnă|cum funcționează)/i.test(u);
+              return wantsDetail
+                ? "Continuă conversația în română cu diacritice. Maxim 2 propoziții, sub 30 de cuvinte. Răspunde concret la întrebare, fără preambul."
+                : "Continuă conversația în română cu diacritice. MAXIM 1 propoziție FOARTE scurtă (sub 12 cuvinte). Confirmă scurt și pune următoarea întrebare. Fără „...”, fără preambul.";
+            })() },
           ],
         }),
       });
