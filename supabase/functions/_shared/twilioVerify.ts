@@ -39,8 +39,10 @@ export async function verifyTwilioRequest(
 > {
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
   const signature = req.headers.get("x-twilio-signature") || req.headers.get("X-Twilio-Signature");
+  const plain = (message: string, status: number) => new Response(message, { status });
 
-  // Reconstruct full URL Twilio used. Honor x-forwarded-* if present (Supabase edge).
+  // Reconstruct full URL Twilio used. In edge runtime, req.url may be normalized to
+  // /<function-name> while Twilio signed the public /functions/v1/<function-name> URL.
   const url = new URL(req.url);
   const proto = req.headers.get("x-forwarded-proto") || url.protocol.replace(":", "");
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || url.host;
@@ -62,23 +64,38 @@ export async function verifyTwilioRequest(
     // Fail-closed if not configured — webhook must be authenticated
     return {
       ok: false,
-      response: new Response("Twilio auth not configured", { status: 500 }),
+      response: plain("Semnătura apelului nu poate fi verificată momentan.", 500),
     };
   }
   if (!signature) {
-    return { ok: false, response: new Response("Missing signature", { status: 403 }) };
+    return { ok: false, response: plain("Semnătura apelului lipsește.", 403) };
   }
 
-  // Twilio signing string: full URL + sorted (key+value) concatenation
+  // Twilio signing string: candidate URL + sorted (key+value) concatenation
   const sortedKeys = [...params.keys()].sort();
-  let signingString = fullUrl;
-  for (const k of sortedKeys) {
-    for (const v of params.getAll(k)) signingString += k + v;
+
+  const candidateUrls = new Set<string>([fullUrl]);
+  candidateUrls.add(`https://${host}${url.pathname}${url.search}`);
+  if (!url.pathname.startsWith("/functions/v1/")) {
+    candidateUrls.add(`${proto}://${host}/functions/v1${url.pathname}${url.search}`);
+    candidateUrls.add(`https://${host}/functions/v1${url.pathname}${url.search}`);
   }
 
-  const expected = await hmacSha1Base64(authToken, signingString);
-  if (!timingSafeEqual(expected, signature)) {
-    return { ok: false, response: new Response("Invalid signature", { status: 403 }) };
+  let verified = false;
+  for (const candidateUrl of candidateUrls) {
+    let candidateSigningString = candidateUrl;
+    for (const k of sortedKeys) {
+      for (const v of params.getAll(k)) candidateSigningString += k + v;
+    }
+    const expected = await hmacSha1Base64(authToken, candidateSigningString);
+    if (timingSafeEqual(expected, signature)) {
+      verified = true;
+      break;
+    }
+  }
+
+  if (!verified) {
+    return { ok: false, response: plain("Semnătura apelului este invalidă.", 403) };
   }
 
   return { ok: true, params, rawUrl: fullUrl };

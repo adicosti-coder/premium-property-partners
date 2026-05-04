@@ -9,10 +9,13 @@ import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
    Fallback: Polly.Carmen <Say> if TTS fails.
 ─────────────────────────────────────────────────────────────── */
 
-const xmlResponse = (xml: string) =>
+const xmlResponse = (xml: string, status = 200) =>
   new Response(`<?xml version="1.0" encoding="UTF-8"?>${xml}`, {
+    status,
     headers: { "Content-Type": "text/xml" },
   });
+
+const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="alice">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
 
 function escapeXml(s: string) {
   return s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]!));
@@ -353,7 +356,13 @@ serve(async (req) => {
     let twilioParams: URLSearchParams | null = null;
     if (req.method === "POST") {
       const verification = await verifyTwilioRequest(req.clone());
-      if (!verification.ok) return verification.response;
+      if (!verification.ok) {
+        console.warn("[voice-twiml] Twilio verification failed; returning Romanian TwiML fallback", {
+          status: verification.response.status,
+          url: req.url,
+        });
+        return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
+      }
       twilioParams = verification.params;
     }
 
@@ -368,9 +377,7 @@ serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    if (!sessionId) {
-      return xmlResponse(`<Response><Say language="ro-RO" voice="alice">Eroare configurare. La revedere.</Say><Hangup/></Response>`);
-    }
+    if (!sessionId) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
     const { data: session } = await supabase
       .from("voice_call_sessions")
@@ -378,7 +385,7 @@ serve(async (req) => {
       .eq("id", sessionId)
       .maybeSingle();
 
-    if (!session) return xmlResponse(`<Response><Hangup/></Response>`);
+    if (!session) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
     // Load voice settings (single fetch)
     const { data: vSettings } = await supabase
@@ -704,6 +711,6 @@ serve(async (req) => {
     );
   } catch (e: any) {
     console.error("voice-agent-twiml error:", e);
-    return xmlResponse(`<Response><Say language="ro-RO" voice="alice">A apărut o eroare. La revedere.</Say><Hangup/></Response>`);
+    return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
   }
 });
