@@ -34,20 +34,44 @@ export const SEORedeployPanel = ({ overrides }: Props) => {
     log.push({ label: "Regenerez sitemap.xml", status: "idle" });
     setSteps([...log]);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-sitemap", {
-        method: "GET" as any,
-      });
-      if (error) throw error;
-      const ok = typeof data === "string" ? data.includes("<urlset") : true;
-      log[log.length - 1] = { label: "Sitemap regenerat", status: ok ? "ok" : "err", detail: ok ? "OK" : "format invalid" };
-    } catch (e: any) {
-      // Fallback: try direct fetch with no-cors (opaque response, treat as success if no throw)
-      try {
-        await fetch(SITEMAP_URL, { cache: "no-store", mode: "no-cors" });
-        log[log.length - 1] = { label: "Sitemap regenerat", status: "ok", detail: "warm OK" };
-      } catch (e2: any) {
-        log[log.length - 1] = { label: "Sitemap regenerat", status: "err", detail: e2.message || e.message };
+      const MAX_ATTEMPTS = 3;
+      let lastErr: any = null;
+      let success = false;
+      let detail = "";
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          const { data, error } = await supabase.functions.invoke("generate-sitemap", {
+            method: "GET" as any,
+          });
+          if (error) throw error;
+          const ok = typeof data === "string" ? data.includes("<urlset") : true;
+          if (!ok) throw new Error("format invalid");
+          success = true;
+          detail = attempt === 1 ? "OK" : `OK (retry ${attempt - 1})`;
+          break;
+        } catch (e: any) {
+          lastErr = e;
+          if (attempt < MAX_ATTEMPTS) {
+            log[log.length - 1] = { label: "Sitemap regenerat", status: "idle", detail: `retry ${attempt}/${MAX_ATTEMPTS - 1}…` };
+            setSteps([...log]);
+            // Exponential backoff: 500ms, 1500ms
+            await new Promise((r) => setTimeout(r, 500 * Math.pow(3, attempt - 1)));
+          }
+        }
       }
+      if (success) {
+        log[log.length - 1] = { label: "Sitemap regenerat", status: "ok", detail };
+      } else {
+        // Final fallback: warm via no-cors fetch
+        try {
+          await fetch(SITEMAP_URL, { cache: "no-store", mode: "no-cors" });
+          log[log.length - 1] = { label: "Sitemap regenerat", status: "ok", detail: "warm fallback" };
+        } catch (e2: any) {
+          log[log.length - 1] = { label: "Sitemap regenerat", status: "err", detail: e2.message || lastErr?.message || "failed" };
+        }
+      }
+    } catch (e: any) {
+      log[log.length - 1] = { label: "Sitemap regenerat", status: "err", detail: e.message };
     }
     setSteps([...log]);
 
