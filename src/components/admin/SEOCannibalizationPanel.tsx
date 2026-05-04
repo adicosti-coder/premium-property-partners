@@ -234,23 +234,10 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
             <p className="text-sm font-medium">Nicio potrivire pentru filtrul curent</p>
             <button onClick={() => setSeverityFilter("all")} className="text-xs text-primary hover:underline">Resetează filtrul</button>
           </div>
-      </CardHeader>
-
-      <CardContent className="relative">
-        {clusters.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
-            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/50">
-              <Trophy className="w-7 h-7 text-emerald-600" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-sm">Zero canibalizare</p>
-              <p className="text-xs text-muted-foreground max-w-xs">Toate paginile auditate au focus distinct pe keyword-uri.</p>
-            </div>
-          </div>
         ) : (
           <ScrollArea className="h-[420px] pr-3 -mr-3">
             <ul className="space-y-3">
-              {clusters.slice(0, 50).map((c, i) => {
+              {filteredClusters.slice(0, 50).map((c, i) => {
                 const winnerIdx = (c.scores[0] ?? 0) >= (c.scores[1] ?? 0) ? 0 : 1;
                 const severity = c.shared.length >= 5 ? "critical" : c.shared.length >= 4 ? "warning" : "info";
                 const sevConfig = {
