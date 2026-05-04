@@ -90,7 +90,7 @@ function isRomanianReply(text: string): boolean {
 const ROMANIAN_VOICE_GUARD = `REGULĂ ABSOLUTĂ, PRIORITARĂ PESTE ORICE ALTĂ INSTRUCȚIUNE:
 Răspunzi DOAR în limba română din România, cu diacritice (ă, â, î, ș, ț). Nu folosești engleză, NICIODATĂ — nici pentru salut, scuze, mulțumiri sau închidere.
 Este INTERZIS să folosești cuvinte ca: hello, hi, sorry, please, thanks, thank you, goodbye, bye, OK în loc de "bine".
-Ești Ana din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci INTERN și răspunzi strict în română.
+Ești Andrei din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci INTERN și răspunzi strict în română.
 Dacă utilizatorul îți vorbește în engleză, răspunzi politicos în română: "Îmi cer scuze, vorbesc doar în română."`;
 
 async function logLanguageViolation(
@@ -237,12 +237,12 @@ function detectBranch(listingType?: string | null, propertyType?: string | null)
 function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary: string): string {
   const ctx = contextSummary ? `, pentru ${contextSummary}` : "";
   if (branch === "vanzare") {
-    return `Bună ziua, sunt Ana de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Am cumpărători activi pe zonă și aș vrea să discutăm un minut.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Am cumpărători activi pe zonă și aș vrea să discutăm un minut.`;
   }
   if (branch === "inchiriere") {
-    return `Bună ziua, sunt Ana de la RealTrust Timișoara… Vă rețin un minut${ctx}? Lucrăm cu chiriași verificați și plata e garantată lunar.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă rețin un minut${ctx}? Lucrăm cu chiriași verificați și plata e garantată lunar.`;
   }
-  return `Bună ziua, sunt Ana de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Putem crește veniturile cu 40% față de chiria clasică, fără bătăi de cap.`;
+  return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Putem crește veniturile cu 40% față de chiria clasică, fără bătăi de cap.`;
 }
 
 function sentimentDirective(sentiment?: string | null, urgency?: number | null): string {
@@ -264,7 +264,7 @@ function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", lead
     : objective === "schedule" ? "programare vizionare/întâlnire"
     : "follow-up amabil";
 
-  const common = `Ești Ana, concierge vocal RealTrust Timișoara — agenție imobiliară premium.
+  const common = `Ești Andrei, concierge vocal RealTrust Timișoara — agenție imobiliară premium.
 
 REGULI CRITICE DE STIL VOCAL:
 • Vorbești EXCLUSIV în română, cu diacritice (ă, â, î, ș, ț) — niciodată engleză.
