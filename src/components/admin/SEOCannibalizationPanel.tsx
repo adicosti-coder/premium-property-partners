@@ -185,6 +185,55 @@ export const SEOCannibalizationPanel = ({ history }: Props) => {
             </div>
           </div>
         )}
+
+        {/* Severity filter chips */}
+        {clusters.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-4">
+            {([
+              { key: "all", label: "Toate", count: clusters.length, active: "bg-foreground text-background", dot: "bg-foreground" },
+              { key: "critical", label: "Critic", count: criticalCount, active: "bg-rose-500 text-white", dot: "bg-rose-500" },
+              { key: "warning", label: "Atenție", count: warningCount, active: "bg-orange-500 text-white", dot: "bg-orange-500" },
+              { key: "info", label: "Info", count: infoCount, active: "bg-amber-500 text-white", dot: "bg-amber-500" },
+            ] as const).map((f) => {
+              const isActive = severityFilter === f.key;
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setSeverityFilter(f.key as any)}
+                  className={`group inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
+                    isActive
+                      ? `${f.active} shadow-md`
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-white/80" : f.dot}`} />
+                  {f.label}
+                  <span className={`tabular-nums ${isActive ? "opacity-90" : "opacity-60"}`}>{f.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </CardHeader>
+
+      <CardContent className="relative">
+        {clusters.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
+            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/50">
+              <Trophy className="w-7 h-7 text-emerald-600" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-semibold text-sm">Zero canibalizare</p>
+              <p className="text-xs text-muted-foreground max-w-xs">Toate paginile auditate au focus distinct pe keyword-uri.</p>
+            </div>
+          </div>
+        ) : filteredClusters.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center space-y-2">
+            <Target className="w-8 h-8 text-muted-foreground/50" />
+            <p className="text-sm font-medium">Nicio potrivire pentru filtrul curent</p>
+            <button onClick={() => setSeverityFilter("all")} className="text-xs text-primary hover:underline">Resetează filtrul</button>
+          </div>
       </CardHeader>
 
       <CardContent className="relative">
