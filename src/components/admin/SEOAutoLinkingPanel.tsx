@@ -375,7 +375,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
         <div className="flex flex-wrap items-center gap-3 p-2.5 rounded-md border border-amber-300 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20">
           <Zap className="w-4 h-4 text-amber-600" />
           <div className="flex items-center gap-2">
-            <Switch id="auto-apply" checked={autoApply} onCheckedChange={toggleAutoApply} />
+            <Switch id="auto-apply" checked={autoApply} onCheckedChange={toggleAutoApply} disabled={!settingsLoaded} />
             <Label htmlFor="auto-apply" className="text-sm font-medium cursor-pointer">
               Auto-Apply: aplică automat sugestiile cu scor ≥
             </Label>
