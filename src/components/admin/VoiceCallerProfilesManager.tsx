@@ -9,8 +9,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, RotateCcw, Archive, Search, Brain, Clock, MessageSquareWarning } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Phone, RotateCcw, Archive, Search, Brain, Clock, MessageSquareWarning, Download, Trash2, Activity, ScrollText } from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
 import { ro } from "date-fns/locale";
 
 interface CallerProfile {
