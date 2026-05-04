@@ -361,7 +361,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
         ALLOWED_ATTR: ["href", "title"],
         ALLOWED_URI_REGEXP: /^(?:\/|https?:\/\/)/i,
       });
-      setPreviewData({ loading: false, html: safe });
+      setPreviewData({ loading: false, html: safe, modifiedSentence: data.modified_sentence });
     } catch (e: any) {
       setPreviewData({ loading: false, error: e.message });
     }
