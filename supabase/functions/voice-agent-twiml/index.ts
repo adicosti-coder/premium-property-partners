@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Twilio TwiML webhook — drives the conversational flow.
@@ -273,6 +274,14 @@ function composeSystemPrompt(
 
 serve(async (req) => {
   try {
+    // Verify Twilio HMAC signature on POST callbacks (consumes body → reuse params later)
+    let twilioParams: URLSearchParams | null = null;
+    if (req.method === "POST") {
+      const verification = await verifyTwilioRequest(req.clone());
+      if (!verification.ok) return verification.response;
+      twilioParams = verification.params;
+    }
+
     const url = new URL(req.url);
     const sessionId = url.searchParams.get("sessionId");
     const turn = parseInt(url.searchParams.get("turn") || "0", 10);
@@ -465,9 +474,8 @@ serve(async (req) => {
 
 
     let userSpeech = "";
-    if (req.method === "POST") {
-      const form = await req.formData();
-      userSpeech = (form.get("SpeechResult") as string) || "";
+    if (twilioParams) {
+      userSpeech = twilioParams.get("SpeechResult") || "";
     }
 
     const transcript: any[] = Array.isArray(session.transcript) ? session.transcript : [];

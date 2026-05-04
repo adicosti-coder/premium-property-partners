@@ -82,12 +82,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    const scorePercent = Math.round((report.scor / report.max_scor) * 100);
-    const scoreColor = report.scor >= 100 ? "#10b981" : report.scor >= 70 ? "#f59e0b" : "#ef4444";
+    // HTML-escape all user-supplied report fields to prevent injection in email body
+    const esc = (s: unknown) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 
-    const recomandariHTML = (report.recomandari || [])
-      .map((r: string) => `<li style="margin-bottom:6px;color:#374151;">✅ ${r}</li>`)
+    const scoreNum = Number(report.scor) || 0;
+    const maxScoreNum = Number(report.max_scor) || 100;
+    const scorePercent = Math.round((scoreNum / maxScoreNum) * 100);
+    const scoreColor = scoreNum >= 100 ? "#10b981" : scoreNum >= 70 ? "#f59e0b" : "#ef4444";
+
+    const recomandariHTML = (Array.isArray(report.recomandari) ? report.recomandari : [])
+      .slice(0, 20)
+      .map((r: unknown) => `<li style="margin-bottom:6px;color:#374151;">✅ ${esc(String(r).slice(0, 300))}</li>`)
       .join("");
+
+    const safeZona = esc(String(report.zona || zone || "").slice(0, 100));
+    const safeCategorie = esc(String(report.categorie || "Standard").slice(0, 80));
+    const safeRoi = esc(String(report.roi_estimat || "").slice(0, 40));
+    const safeTarif = esc(String(report.tarif_noapte ?? "").toString().slice(0, 20));
+    const safeNote = esc(String(report.note_consultant || "").slice(0, 1000));
+    const safeScor = esc(String(scoreNum));
+    const safeMax = esc(String(maxScoreNum));
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -104,25 +124,25 @@ Deno.serve(async (req) => {
     <!-- Score -->
     <div style="padding:32px;text-align:center;">
       <div style="display:inline-block;width:120px;height:120px;border-radius:50%;border:8px solid ${scoreColor};line-height:104px;">
-        <span style="font-size:36px;font-weight:bold;color:#1f2937;">${report.scor}</span>
-        <span style="font-size:14px;color:#9ca3af;">/${report.max_scor}</span>
+        <span style="font-size:36px;font-weight:bold;color:#1f2937;">${safeScor}</span>
+        <span style="font-size:14px;color:#9ca3af;">/${safeMax}</span>
       </div>
-      <p style="margin-top:12px;font-size:14px;color:#6b7280;">Categorie: <strong style="color:${scoreColor};">${report.categorie || "Standard"}</strong></p>
+      <p style="margin-top:12px;font-size:14px;color:#6b7280;">Categorie: <strong style="color:${scoreColor};">${safeCategorie}</strong></p>
     </div>
     
     <!-- Details Grid -->
     <div style="padding:0 32px 24px;display:flex;gap:12px;">
       <div style="flex:1;background:#f3f4f6;border-radius:12px;padding:16px;text-align:center;">
         <p style="font-size:11px;color:#9ca3af;margin:0;">Zonă</p>
-        <p style="font-size:16px;font-weight:bold;color:#1f2937;margin:4px 0 0;">${report.zona || zone}</p>
+        <p style="font-size:16px;font-weight:bold;color:#1f2937;margin:4px 0 0;">${safeZona}</p>
       </div>
       <div style="flex:1;background:#f3f4f6;border-radius:12px;padding:16px;text-align:center;">
         <p style="font-size:11px;color:#9ca3af;margin:0;">ROI Estimat</p>
-        <p style="font-size:16px;font-weight:bold;color:#10b981;margin:4px 0 0;">${report.roi_estimat}</p>
+        <p style="font-size:16px;font-weight:bold;color:#10b981;margin:4px 0 0;">${safeRoi}</p>
       </div>
       <div style="flex:1;background:#f3f4f6;border-radius:12px;padding:16px;text-align:center;">
         <p style="font-size:11px;color:#9ca3af;margin:0;">Tarif/Noapte</p>
-        <p style="font-size:16px;font-weight:bold;color:#1f2937;margin:4px 0 0;">${report.tarif_noapte}€</p>
+        <p style="font-size:16px;font-weight:bold;color:#1f2937;margin:4px 0 0;">${safeTarif}€</p>
       </div>
     </div>
     
@@ -130,7 +150,7 @@ Deno.serve(async (req) => {
     <div style="padding:0 32px 24px;">
       <div style="background:#eff6ff;border-left:4px solid #3b82f6;border-radius:0 12px 12px 0;padding:16px;">
         <p style="font-size:12px;color:#3b82f6;font-weight:bold;margin:0 0 4px;">💬 Nota Consultantului</p>
-        <p style="font-size:13px;color:#374151;margin:0;font-style:italic;">"${report.note_consultant}"</p>
+        <p style="font-size:13px;color:#374151;margin:0;font-style:italic;">"${safeNote}"</p>
       </div>
     </div>
     
@@ -143,7 +163,7 @@ Deno.serve(async (req) => {
     
     <!-- CTA -->
     <div style="padding:24px 32px;background:#f9fafb;text-align:center;border-top:1px solid #e5e7eb;">
-      <a href="https://wa.me/40799069256?text=${encodeURIComponent(`Scor HostScan: ${report.scor}/${report.max_scor} | ${report.zona} | ROI: ${report.roi_estimat}`)}" 
+      <a href="https://wa.me/40799069256?text=${encodeURIComponent(`Scor HostScan: ${scoreNum}/${maxScoreNum} | ${String(report.zona || zone || "")} | ROI: ${String(report.roi_estimat || "")}`)}" 
          style="display:inline-block;background:#25d366;color:white;padding:12px 32px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:14px;">
         📞 Discută cu un Consultant
       </a>
@@ -166,7 +186,7 @@ Deno.serve(async (req) => {
         from: "RealTrust AI <info@notify.realtrust.ro>",
         to: [recipientEmail],
         cc: ["info@realtrust.ro"],
-        subject: `📋 Raport HostScan AI - ${report.zona || zone} - Scor ${report.scor}/${report.max_scor}`,
+        subject: `📋 Raport HostScan AI - ${String(report.zona || zone || "").replace(/[\r\n]/g, " ").slice(0, 100)} - Scor ${scoreNum}/${maxScoreNum}`,
         html: htmlContent,
       }),
     });
