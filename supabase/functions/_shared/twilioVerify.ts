@@ -41,7 +41,8 @@ export async function verifyTwilioRequest(
   const signature = req.headers.get("x-twilio-signature") || req.headers.get("X-Twilio-Signature");
   const plain = (message: string, status: number) => new Response(message, { status });
 
-  // Reconstruct full URL Twilio used. Honor x-forwarded-* if present (Supabase edge).
+  // Reconstruct full URL Twilio used. In edge runtime, req.url may be normalized to
+  // /<function-name> while Twilio signed the public /functions/v1/<function-name> URL.
   const url = new URL(req.url);
   const proto = req.headers.get("x-forwarded-proto") || url.protocol.replace(":", "");
   const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || url.host;
@@ -77,8 +78,27 @@ export async function verifyTwilioRequest(
     for (const v of params.getAll(k)) signingString += k + v;
   }
 
-  const expected = await hmacSha1Base64(authToken, signingString);
-  if (!timingSafeEqual(expected, signature)) {
+  const candidateUrls = new Set<string>([fullUrl]);
+  candidateUrls.add(`https://${host}${url.pathname}${url.search}`);
+  if (!url.pathname.startsWith("/functions/v1/")) {
+    candidateUrls.add(`${proto}://${host}/functions/v1${url.pathname}${url.search}`);
+    candidateUrls.add(`https://${host}/functions/v1${url.pathname}${url.search}`);
+  }
+
+  let verified = false;
+  for (const candidateUrl of candidateUrls) {
+    let candidateSigningString = candidateUrl;
+    for (const k of sortedKeys) {
+      for (const v of params.getAll(k)) candidateSigningString += k + v;
+    }
+    const expected = await hmacSha1Base64(authToken, candidateSigningString);
+    if (timingSafeEqual(expected, signature)) {
+      verified = true;
+      break;
+    }
+  }
+
+  if (!verified) {
     return { ok: false, response: plain("Semnătura apelului este invalidă.", 403) };
   }
 
