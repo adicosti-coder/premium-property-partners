@@ -721,13 +721,15 @@ serve(async (req) => {
           if (portfolioLines.length) sections.push(`🏆 PORTOFOLIU REALTRUST APART HOTEL în zona apelantului (folosește-le ca social proof natural):\n${portfolioLines.join("\n")}`);
 
           marketDataBlock = `\n\n${sections.join("\n\n")}\n\n` +
-            `REGULI DE FOLOSIRE A DATELOR (CRITIC):\n` +
-            `1. NICIODATĂ nu spune "conform bazei de date", "am X grupuri", "sistemul arată", "în KB", "fallback" sau orice referință tehnică. Vorbește ca un consultant care cunoaște piața din experiență.\n` +
-            `2. Formulează natural: "Analizând tranzacțiile recente din [Zonă], observ un randament/preț median de [X]…" sau "Din ce văd în piață acum în [Zonă]…".\n` +
-            `3. Pentru portofoliu: "Gestionăm deja câteva apartamente similare în [Zonă] și obținem constant rezultate peste media pieței" — folosește ca social proof, fără cifre tehnice de portofoliu.\n` +
-            `4. Prioritizează cifrele specifice zonei apelantului. Dacă ai doar context general, integrează-l subtil ("piața din Timișoara arată acum…") fără să menționezi vreodată că nu ai date pe zona lui.\n` +
+            `REGULI DE FOLOSIRE A DATELOR (CRITIC — TON CONCIERGE REALTRUST):\n` +
+            `1. NICIODATĂ nu spune "conform bazei de date", "am X grupuri", "sistemul arată", "în KB", "fallback", "delta", "trend de piață" sau orice referință tehnică. Vorbești ca un consilier care cunoaște piața din experiență directă.\n` +
+            `2. Formulează calm, autoritar, empatic — fără entuziasm forțat: "Analizând tranzacțiile recente din [Zonă], observ un randament de [X]…" sau "Din ce văd acum în [Zonă]…".\n` +
+            `3. Pentru portofoliu, social proof discret: "Gestionăm deja câteva apartamente similare în [Zonă] și obținem constant rezultate peste media pieței" — fără cifre tehnice de portofoliu.\n` +
+            `4. Prioritizează cifrele specifice zonei apelantului. Dacă ai doar context general, integrează-l subtil ("piața din Timișoara arată acum…") fără să menționezi că nu ai date pe zona lui.\n` +
             `5. NU inventa cifre. Folosește DOAR numerele din contextul de mai sus. Dacă o cifră nu e aici, nu o spune.\n` +
-            `6. Maxim o cifră concretă pe replică — concierge, nu raport statistic.`;
+            `6. Maxim O cifră concretă pe replică — concierge, nu raport statistic.\n` +
+            `7. CÂRLIG DE CONVERSIE: ori de câte ori folosești o cifră din context, leag-o IMEDIAT de un pas concret. Exemplu: "Văzând aceste tendințe în [Zonă], o evaluare de 15 minute la fața locului ne-ar permite să vă dăm o cifră exactă de profit. Mâine la 17:00, sau joi la 10:00?"\n` +
+            `8. Niciodată nu folosi datele pentru a speria ("piața scade", "riscați să pierdeți"). Întotdeauna în pozitiv: "momentul actual permite o poziționare corectă".`;
         }
       } catch (e) {
         console.error("[voice-twiml][kb-lookup] error:", e);
