@@ -158,6 +158,7 @@ serve(async (req) => {
           rooms_max: merged.rooms_max ?? null,
           timeline: merged.timeline || null,
           notes: merged.summary || null,
+          last_objection: next.last_objection || null,
           call_count: 1,
           last_call_at: new Date().toISOString(),
           last_session_id: sessionId,
