@@ -460,17 +460,11 @@ export default function VoiceAgentManager() {
 
           <div className="p-3 rounded-lg border bg-amber-50/40 dark:bg-amber-950/10">
             <div className="flex justify-between text-xs mb-2">
-              <span className="font-medium">Prag scor pentru ElevenLabs</span>
-              <span className="font-mono text-amber-700">≥ {autoSettings?.elevenlabs_min_score ?? 90}</span>
+              <span className="font-medium">Regim voce apeluri</span>
+              <span className="font-mono text-amber-700">Premium Plus</span>
             </div>
-            <Slider
-              min={50} max={100} step={5}
-              value={[Number(autoSettings?.elevenlabs_min_score ?? 90)]}
-              onValueChange={([v]) => setAutoSettings({ ...autoSettings, elevenlabs_min_score: v })}
-              onValueCommit={([v]) => saveSettings({ elevenlabs_min_score: v })}
-            />
-            <div className="text-[11px] text-muted-foreground mt-2">
-              Toate apelurile folosesc vocea premium Andrei. Fallback-ul vocal intră doar dacă serviciul audio extern nu răspunde.
+            <div className="text-[11px] text-muted-foreground">
+              Toate apelurile folosesc Andrei ElevenLabs, optimizat pentru telefon. Fallback-ul vocal intră doar dacă serviciul audio extern nu răspunde.
             </div>
           </div>
 
