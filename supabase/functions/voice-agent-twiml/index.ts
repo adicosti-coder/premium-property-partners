@@ -296,7 +296,7 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     if (!sessionId) {
-      return xmlResponse(`<Response><Say language="ro-RO">Eroare configurare. La revedere.</Say><Hangup/></Response>`);
+      return xmlResponse(`<Response><Say language="ro-RO" voice="alice">Eroare configurare. La revedere.</Say><Hangup/></Response>`);
     }
 
     const { data: session } = await supabase
@@ -606,6 +606,6 @@ serve(async (req) => {
     );
   } catch (e: any) {
     console.error("voice-agent-twiml error:", e);
-    return xmlResponse(`<Response><Say language="ro-RO">A apărut o eroare. La revedere.</Say><Hangup/></Response>`);
+    return xmlResponse(`<Response><Say language="ro-RO" voice="alice">A apărut o eroare. La revedere.</Say><Hangup/></Response>`);
   }
 });
