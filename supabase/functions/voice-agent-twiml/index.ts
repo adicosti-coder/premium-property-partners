@@ -765,7 +765,7 @@ serve(async (req) => {
     let ttsError: string | null = null;
     if (useElevenLabs) {
       try {
-        audioUrl = await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!);
+        audioUrl = await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!, sessionId);
         if (!audioUrl) ttsError = "ElevenLabs returned no URL (see function logs)";
       } catch (e: any) {
         ttsError = String(e?.message || e);
