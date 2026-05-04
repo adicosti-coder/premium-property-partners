@@ -39,6 +39,7 @@ export async function verifyTwilioRequest(
 > {
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
   const signature = req.headers.get("x-twilio-signature") || req.headers.get("X-Twilio-Signature");
+  const plain = (message: string, status: number) => new Response(message, { status });
 
   // Reconstruct full URL Twilio used. Honor x-forwarded-* if present (Supabase edge).
   const url = new URL(req.url);
@@ -62,11 +63,11 @@ export async function verifyTwilioRequest(
     // Fail-closed if not configured — webhook must be authenticated
     return {
       ok: false,
-      response: new Response("Twilio auth not configured", { status: 500 }),
+      response: plain("Semnătura apelului nu poate fi verificată momentan.", 500),
     };
   }
   if (!signature) {
-    return { ok: false, response: new Response("Missing signature", { status: 403 }) };
+    return { ok: false, response: plain("Semnătura apelului lipsește.", 403) };
   }
 
   // Twilio signing string: full URL + sorted (key+value) concatenation
@@ -78,7 +79,7 @@ export async function verifyTwilioRequest(
 
   const expected = await hmacSha1Base64(authToken, signingString);
   if (!timingSafeEqual(expected, signature)) {
-    return { ok: false, response: new Response("Invalid signature", { status: 403 }) };
+    return { ok: false, response: plain("Semnătura apelului este invalidă.", 403) };
   }
 
   return { ok: true, params, rawUrl: fullUrl };
