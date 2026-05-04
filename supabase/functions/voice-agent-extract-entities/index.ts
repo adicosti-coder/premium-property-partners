@@ -127,6 +127,8 @@ serve(async (req) => {
       const ptypes = [...new Set([...(existing?.property_types || []), ...(merged.property_types || [])])].filter(Boolean);
 
       if (existing) {
+        // Increment call_count only first time this session links to profile
+        const isFirstLink = session.caller_profile_id !== existing.id;
         await sb.from("voice_caller_profiles").update({
           preferred_branch: merged.branch ?? undefined,
           budget_min: merged.budget_min ?? undefined,
@@ -138,6 +140,8 @@ serve(async (req) => {
           timeline: merged.timeline ?? undefined,
           notes: merged.summary || existing.notes,
           last_session_id: sessionId,
+          last_call_at: new Date().toISOString(),
+          call_count: isFirstLink ? (existing.call_count || 0) + 1 : existing.call_count,
         }).eq("id", existing.id);
         profileId = existing.id;
       } else {
