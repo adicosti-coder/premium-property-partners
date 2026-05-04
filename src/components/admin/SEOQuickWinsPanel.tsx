@@ -403,7 +403,25 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
 
     setBulkRunning(null);
     setPreviewCat(null);
-    setLastBatch({ category: cat, paths: appliedPaths, ts: new Date().toISOString() });
+    const batchId = crypto.randomUUID();
+    if (appliedPaths.length) {
+      try {
+        await supabase.from("seo_audit_log" as any).insert(
+          appliedPaths.map((p) => ({
+            batch_id: batchId,
+            action: "preview_apply",
+            category: cat,
+            url_path: p,
+            source: "manual",
+            applied_by: userId,
+            payload: { category: cat },
+          }))
+        );
+      } catch (e) {
+        console.warn("audit_log insert failed", e);
+      }
+    }
+    setLastBatch({ batchId, category: cat, paths: appliedPaths, ts: new Date().toISOString() });
     toast.success(`${success}/${selected.length} pagini actualizate. Re-audit recomandat.`);
     qc.invalidateQueries({ queryKey: ["seo-overrides"] });
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
