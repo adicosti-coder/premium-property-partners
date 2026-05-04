@@ -58,7 +58,7 @@ export default function VoiceAgentManager() {
   const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null);
   const [autoSettings, setAutoSettings] = useState<any>(null);
   const [testingAuto, setTestingAuto] = useState(false);
-  const [previewText, setPreviewText] = useState("Bună ziua, sunt Ana de la RealTrust Timișoara. Am observat anunțul dumneavoastră și aș vrea să discutăm un minut despre o oportunitate.");
+  const [previewText, setPreviewText] = useState("Bună ziua, sunt Andrei de la RealTrust Timișoara. Am observat anunțul dumneavoastră și aș vrea să discutăm un minut despre o oportunitate.");
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewAudio, setPreviewAudio] = useState<string | null>(null);
   const [testNumber, setTestNumber] = useState<string>(() => localStorage.getItem("voice_test_number") || "+40");
@@ -255,7 +255,7 @@ export default function VoiceAgentManager() {
         body: {
           toNumber: testNumber,
           objective: "qualify",
-          customPrompt: "TEST DIAGNOSTIC: Ești Ana de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
+          customPrompt: "TEST DIAGNOSTIC: Ești Andrei de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
         },
       });
       if (error || data?.error) {
@@ -281,7 +281,7 @@ export default function VoiceAgentManager() {
         body: {
           toNumber: call.to_number,
           objective: call.call_objective || "qualify",
-          customPrompt: "TEST DIAGNOSTIC: Ești Ana de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
+          customPrompt: "TEST DIAGNOSTIC: Ești Andrei de la RealTrust Timișoara. Vorbești EXCLUSIV în limba română. Spune: 'Bună ziua! Acesta este un apel de test pentru sistemul vocal RealTrust. Vă aud bine. Testul este finalizat cu succes. La revedere!' Apoi închide politicos după ce primești orice răspuns.",
         },
       });
       if (error || data?.error) {
