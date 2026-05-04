@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import VoiceAgentScriptsEditor from "./VoiceAgentScriptsEditor";
 import VoiceAgentMonitoring from "./VoiceAgentMonitoring";
+import VoiceCallerProfilesManager from "./VoiceCallerProfilesManager";
 
 interface VoiceCall {
   id: string;
