@@ -375,13 +375,6 @@ export default function VoiceCallerProfilesManager() {
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
-  );
-}
-
-          </div>
-        )}
 
         <AuditLogPanel entries={auditLog} />
       </CardContent>
