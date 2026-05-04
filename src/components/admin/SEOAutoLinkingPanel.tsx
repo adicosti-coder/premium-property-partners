@@ -246,6 +246,33 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
   };
 
+  const openPreview = async (s: any) => {
+    setPreviewFor(s);
+    setPreviewData({ loading: true });
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-internal-link-preview", {
+        body: {
+          source_url_path: s.source_url_path,
+          target_url_path: s.target_url_path,
+          anchor_text: s.anchor_text,
+        },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Preview indisponibil");
+      setPreviewData({ loading: false, html: data.preview_html || data.paragraph || "—" });
+    } catch (e: any) {
+      setPreviewData({ loading: false, error: e.message });
+    }
+  };
+
+  const toggleAutoApply = (v: boolean) => {
+    setAutoApply(v);
+    localStorage.setItem("seo-il-auto-apply", v ? "1" : "0");
+  };
+  const updateAutoThreshold = (v: number) => {
+    setAutoThreshold(v);
+    localStorage.setItem("seo-il-auto-threshold", String(v));
+  };
   return (
     <Card className="border-cyan-200 dark:border-cyan-900">
       <CardHeader>
