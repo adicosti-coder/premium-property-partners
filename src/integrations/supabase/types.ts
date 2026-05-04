@@ -5369,6 +5369,7 @@ export type Database = {
           appointment_scheduled_at: string | null
           call_duration_seconds: number | null
           call_objective: string | null
+          caller_profile_id: string | null
           clarity_score: number | null
           cost_estimate_usd: number | null
           created_at: string
@@ -5377,6 +5378,7 @@ export type Database = {
           direction: string
           ended_at: string | null
           error_message: string | null
+          extracted_entities: Json
           from_number: string | null
           id: string
           initiated_by: string | null
@@ -5404,6 +5406,7 @@ export type Database = {
           appointment_scheduled_at?: string | null
           call_duration_seconds?: number | null
           call_objective?: string | null
+          caller_profile_id?: string | null
           clarity_score?: number | null
           cost_estimate_usd?: number | null
           created_at?: string
@@ -5412,6 +5415,7 @@ export type Database = {
           direction?: string
           ended_at?: string | null
           error_message?: string | null
+          extracted_entities?: Json
           from_number?: string | null
           id?: string
           initiated_by?: string | null
@@ -5439,6 +5443,7 @@ export type Database = {
           appointment_scheduled_at?: string | null
           call_duration_seconds?: number | null
           call_objective?: string | null
+          caller_profile_id?: string | null
           clarity_score?: number | null
           cost_estimate_usd?: number | null
           created_at?: string
@@ -5447,6 +5452,7 @@ export type Database = {
           direction?: string
           ended_at?: string | null
           error_message?: string | null
+          extracted_entities?: Json
           from_number?: string | null
           id?: string
           initiated_by?: string | null
@@ -5468,6 +5474,13 @@ export type Database = {
           voice_agent_prompt?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "voice_call_sessions_caller_profile_id_fkey"
+            columns: ["caller_profile_id"]
+            isOneToOne: false
+            referencedRelation: "voice_caller_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "voice_call_sessions_language_retry_of_fkey"
             columns: ["language_retry_of"]
@@ -5497,6 +5510,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voice_caller_profiles: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          call_count: number
+          consent_remember: boolean
+          created_at: string
+          display_name: string | null
+          id: string
+          last_call_at: string | null
+          last_session_id: string | null
+          mentioned_property_ids: string[] | null
+          notes: string | null
+          phone_normalized: string
+          preferred_branch: string | null
+          preferred_zones: string[] | null
+          property_types: string[] | null
+          rooms_max: number | null
+          rooms_min: number | null
+          timeline: string | null
+          updated_at: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          call_count?: number
+          consent_remember?: boolean
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_call_at?: string | null
+          last_session_id?: string | null
+          mentioned_property_ids?: string[] | null
+          notes?: string | null
+          phone_normalized: string
+          preferred_branch?: string | null
+          preferred_zones?: string[] | null
+          property_types?: string[] | null
+          rooms_max?: number | null
+          rooms_min?: number | null
+          timeline?: string | null
+          updated_at?: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          call_count?: number
+          consent_remember?: boolean
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_call_at?: string | null
+          last_session_id?: string | null
+          mentioned_property_ids?: string[] | null
+          notes?: string | null
+          phone_normalized?: string
+          preferred_branch?: string | null
+          preferred_zones?: string[] | null
+          property_types?: string[] | null
+          rooms_max?: number | null
+          rooms_min?: number | null
+          timeline?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       voice_campaign_runs: {
         Row: {
