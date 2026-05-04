@@ -86,17 +86,18 @@ Deno.serve(async (req) => {
     });
   }
 
-  // ── 2. Aggregate properties (RealTrust portfolio) by zone ──
+  // ── 2. Aggregate properties (RealTrust portfolio) by location ──
   const { data: props } = await supabase
     .from("properties")
-    .select("zone, name, base_price, max_guests, bedrooms")
-    .not("zone", "is", null)
+    .select("location, name, base_price_per_night, capacity, bedrooms")
+    .eq("is_active", true)
+    .not("location", "is", null)
     .limit(500);
 
   const propGroups = new Map<string, { zone: string; prices: number[]; names: string[] }>();
   for (const p of props || []) {
-    const zone = (p as any).zone as string;
-    const price = Number((p as any).base_price || 0);
+    const zone = ((p as any).location as string || "").toString().trim().toLowerCase().replace(/\s+/g, "-");
+    const price = Number((p as any).base_price_per_night || 0);
     if (!zone || price <= 0) continue;
     if (!propGroups.has(zone)) propGroups.set(zone, { zone, prices: [], names: [] });
     const g = propGroups.get(zone)!;
