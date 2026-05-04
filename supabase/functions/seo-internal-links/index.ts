@@ -51,6 +51,11 @@ serve(async (req) => {
     }
 
     if (action === "update_status") {
+      const { data: row } = await sb
+        .from("seo_internal_link_suggestions")
+        .select("*")
+        .eq("id", body.suggestion_id)
+        .maybeSingle();
       const { error } = await sb
         .from("seo_internal_link_suggestions")
         .update({
@@ -60,6 +65,38 @@ serve(async (req) => {
         })
         .eq("id", body.suggestion_id);
       if (error) throw error;
+      if (row && body.status === "applied") {
+        await sb.from("seo_audit_log").insert({
+          action: "internal_link_applied",
+          category: "internal_linking",
+          url_path: row.source_url_path,
+          source: body.auto ? "auto" : "manual",
+          payload: {
+            suggestion_id: row.id,
+            source_url_path: row.source_url_path,
+            target_url_path: row.target_url_path,
+            anchor_text: row.anchor_text,
+            relevance_score: row.relevance_score,
+          },
+          applied_by: u.user.id,
+        });
+      }
+      return json({ ok: true });
+    }
+
+    if (action === "revert_log") {
+      const logId = body.log_id;
+      const { data: log } = await sb.from("seo_audit_log").select("*").eq("id", logId).maybeSingle();
+      if (!log) return json({ error: "Log not found" }, 404);
+      const sid = (log.payload as any)?.suggestion_id;
+      if (sid) {
+        await sb.from("seo_internal_link_suggestions")
+          .update({ status: "rejected", applied_at: null, applied_by: null })
+          .eq("id", sid);
+      }
+      await sb.from("seo_audit_log")
+        .update({ reverted: true, reverted_at: new Date().toISOString() })
+        .eq("id", logId);
       return json({ ok: true });
     }
 
