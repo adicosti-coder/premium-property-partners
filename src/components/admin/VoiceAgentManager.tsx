@@ -908,6 +908,98 @@ export default function VoiceAgentManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Language Test Result Dialog */}
+      <Dialog open={langTestOpen} onOpenChange={setLangTestOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Rezultat Test Limbă Română
+              {langTestResult && (
+                <Badge
+                  className={
+                    langTestResult.summary.verdict === "PASS"
+                      ? "bg-green-500/15 text-green-700 border border-green-500/40"
+                      : langTestResult.summary.verdict === "WARN"
+                      ? "bg-amber-500/15 text-amber-700 border border-amber-500/40"
+                      : "bg-red-500/15 text-red-700 border border-red-500/40"
+                  }
+                >
+                  {langTestResult.summary.verdict}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {langTestResult && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="rounded-lg border p-3">
+                  <div className="text-2xl font-bold text-green-600">{langTestResult.summary.passed}</div>
+                  <div className="text-xs text-muted-foreground">Trecute</div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className="text-2xl font-bold text-red-600">{langTestResult.summary.failed}</div>
+                  <div className="text-xs text-muted-foreground">Eșuate</div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className="text-2xl font-bold">{langTestResult.summary.pass_rate}%</div>
+                  <div className="text-xs text-muted-foreground">Rată succes</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {langTestResult.results.map((r) => (
+                  <div
+                    key={r.scenario_id}
+                    className={`rounded-lg border p-3 ${
+                      r.passed ? "border-green-500/30 bg-green-500/5" : "border-red-500/40 bg-red-500/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">{r.scenario_id}</Badge>
+                        <span className={`text-sm font-semibold ${r.passed ? "text-green-700" : "text-red-700"}`}>
+                          {r.passed ? "✅ RO păstrată" : "❌ ENGLEZĂ DETECTATĂ"}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{r.duration_ms} ms</span>
+                    </div>
+                    <div className="text-xs space-y-1.5">
+                      <div>
+                        <span className="font-semibold text-muted-foreground">Întrebare:</span>{" "}
+                        <span className="italic">{r.user_message}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-muted-foreground">Răspuns AI:</span>{" "}
+                        <span>{r.ai_reply || <em className="text-red-600">— niciun răspuns ({r.ai_error})</em>}</span>
+                      </div>
+                      {r.english_words_detected.length > 0 && (
+                        <div className="text-red-700">
+                          <span className="font-semibold">Cuvinte engleză blocate:</span>{" "}
+                          {r.english_words_detected.map((w) => (
+                            <code key={w} className="mx-0.5 px-1 rounded bg-red-500/15">{w}</code>
+                          ))}
+                        </div>
+                      )}
+                      <div className="text-muted-foreground">
+                        Diacritice: {r.has_diacritics ? "✓" : "—"}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground border-t pt-3">
+                Testat la {new Date(langTestResult.summary.tested_at).toLocaleString("ro-RO")} •
+                Durată totală {langTestResult.summary.duration_ms} ms •
+                Violările eșuate sunt înregistrate automat în <code>voice_agent_language_violations</code>.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
