@@ -542,26 +542,76 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
         console.warn("revert failed", p, e);
       }
     }
+    try {
+      await supabase
+        .from("seo_audit_log" as any)
+        .update({ reverted: true, reverted_at: new Date().toISOString() })
+        .eq("batch_id", lastBatch.batchId);
+    } catch (e) {
+      console.warn("audit_log revert update failed", e);
+    }
     setUndoing(false);
     toast.success(`Anulat ${success}/${lastBatch.paths.length}`);
     setLastBatch(null);
     qc.invalidateQueries({ queryKey: ["seo-overrides"] });
   };
 
-  // ---- Export CSV ----
+  // ---- Stale pages (>7 days) ----
+  const stalePages = useMemo(
+    () =>
+      latestPerUrl
+        .map((a) => ({
+          audit: a,
+          path: urlToPath(a.url),
+          days: Math.floor((Date.now() - new Date(a.created_at).getTime()) / 86400000),
+        }))
+        .filter((s) => s.days > 7)
+        .sort((a, b) => b.days - a.days),
+    [latestPerUrl]
+  );
+
+  // ---- Export CSV (URL, Score, Sessions, Conversions, unresolved AI suggestions) ----
   const exportCSV = () => {
-    const rows: string[] = ["category,url,score,title_len,meta_len,suggested_title,suggested_meta"];
+    const ga4Map = new Map<string, { sessions: number; conversions: number }>();
+    (ga4Metrics || []).forEach((m: any) => {
+      const prev = ga4Map.get(m.url_path) || { sessions: 0, conversions: 0 };
+      ga4Map.set(m.url_path, {
+        sessions: prev.sessions + (m.sessions || 0),
+        conversions: prev.conversions + (m.conversions || 0),
+      });
+    });
+
+    const issueIndex = new Map<string, string[]>();
     for (const c of stats) {
       for (const a of c.audits) {
-        const t = (a.title || "").replace(/"/g, '""');
-        const m = (a.meta_description || "").replace(/"/g, '""');
-        const st = (a.suggested_title || "").replace(/"/g, '""');
-        const sm = (a.suggested_meta || "").replace(/"/g, '""');
-        rows.push(
-          `"${c.key}","${a.url}",${a.overall_score ?? ""},${t.length},${m.length},"${st}","${sm}"`
-        );
+        const arr = issueIndex.get(a.id) || [];
+        arr.push(c.label);
+        issueIndex.set(a.id, arr);
       }
     }
+
+    const rows: string[] = [
+      "url,url_path,seo_score,age_days,ga4_sessions,ga4_conversions,unresolved_issues,suggested_title,suggested_meta",
+    ];
+    for (const a of latestPerUrl) {
+      const path = urlToPath(a.url);
+      const ga = ga4Map.get(path) || { sessions: 0, conversions: 0 };
+      const days = Math.floor((Date.now() - new Date(a.created_at).getTime()) / 86400000);
+      const issues = (issueIndex.get(a.id) || []).join(" | ").replace(/"/g, '""');
+      const st = (a.suggested_title || "").replace(/"/g, '""');
+      const sm = (a.suggested_meta || "").replace(/"/g, '""');
+      rows.push(
+        `"${a.url}","${path}",${a.overall_score ?? ""},${days},${ga.sessions},${ga.conversions},"${issues}","${st}","${sm}"`
+      );
+    }
+    const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = u;
+    a.download = `seo-quick-wins-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(u);
+  };
     const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
     const u = URL.createObjectURL(blob);
     const a = document.createElement("a");
