@@ -86,6 +86,43 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     },
   });
 
+  // Load persisted settings from DB
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("seo_settings")
+        .select("value")
+        .eq("key", "auto_linking")
+        .maybeSingle();
+      const v = (data?.value as any) || {};
+      if (typeof v.auto_apply === "boolean") setAutoApply(v.auto_apply);
+      if (typeof v.threshold === "number") setAutoThreshold(v.threshold);
+      setSettingsLoaded(true);
+    })();
+  }, []);
+
+  const persistSettings = async (patch: { auto_apply?: boolean; threshold?: number }) => {
+    const next = { auto_apply: autoApply, threshold: autoThreshold, ...patch };
+    await supabase
+      .from("seo_settings")
+      .upsert({ key: "auto_linking", value: next, updated_at: new Date().toISOString() }, { onConflict: "key" });
+  };
+
+  // Auto-applied links log (with revert)
+  const { data: autoLogs = [] } = useQuery({
+    queryKey: ["seo-auto-link-logs"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("seo_audit_log")
+        .select("*")
+        .eq("action", "internal_link_applied")
+        .eq("source", "auto")
+        .order("applied_at", { ascending: false })
+        .limit(50);
+      return data || [];
+    },
+  });
+
   const counts = useMemo(() => {
     const c = { all: suggestions.length, proposed: 0, applied: 0, rejected: 0 } as Record<string, number>;
     suggestions.forEach((s: any) => { c[s.status as string] = (c[s.status as string] || 0) + 1; });
