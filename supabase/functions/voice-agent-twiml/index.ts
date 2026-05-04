@@ -433,11 +433,13 @@ function speakXml(text: string, audioUrl: string | null): string {
 
 function gatherXml(actionUrl: string, innerXml = ""): string {
   const safeUrl = escapeXml(actionUrl);
-  // speechTimeout="auto" → Twilio uses adaptive end-of-speech detection (recommended for natural conversations)
-  // speechModel="phone_call" → tuned for telephony audio (vs default 'default')
-  // bargeIn=true → user can interrupt agent mid-speech
-  // actionOnEmptyResult=true → no dead air on silence
-  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="auto" timeout="5" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
+  // PREMIUM CONVERSATION TUNING:
+  // • speechTimeout="auto" → Twilio detects end-of-utterance adaptively (cele mai naturale pauze)
+  // • timeout="4" → așteaptă 4s tăcere înainte să continue (era 5s — făcea conversația lentă)
+  // • bargeIn=true → utilizatorul poate întrerupe Andrei oricând (cheie pentru natural feel)
+  // • profanityFilter=false → nu cenzurează numere/euro/etc.
+  // • actionOnEmptyResult=true → nicio "dead air" la tăcere
+  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="auto" timeout="4" profanityFilter="false" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
 }
 
 function isCustomPrompt(prompt?: string | null): boolean {
