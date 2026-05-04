@@ -10,9 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Loader2, Link2, ArrowRight, CheckCircle2, X, Download, Copy, Trash2,
-  RefreshCcw, Filter, Sparkles,
+  RefreshCcw, Filter, Sparkles, Eye, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
