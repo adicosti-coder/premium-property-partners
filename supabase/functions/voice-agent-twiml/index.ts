@@ -581,6 +581,42 @@ serve(async (req) => {
     const useElevenLabs = elevenLabsAvailable;
     console.log(`[voice-twiml] sessionId=${sessionId} leadScore=${leadScore} threshold=${elevenLabsMinScore} manual=${isManualCall} useElevenLabs=${useElevenLabs}`);
 
+    // ── EVOLUȚIE: caller memory + live entities ──
+    let callerMemoryBlock = "";
+    const phone = (session.to_number || "").trim();
+    if (phone) {
+      const { data: prof } = await supabase
+        .from("voice_caller_profiles")
+        .select("display_name, preferred_branch, budget_min, budget_max, preferred_zones, property_types, rooms_min, rooms_max, timeline, notes, call_count")
+        .eq("phone_normalized", phone)
+        .maybeSingle();
+      if (prof && prof.call_count > 0) {
+        const parts: string[] = [];
+        if (prof.display_name) parts.push(`nume: ${prof.display_name}`);
+        if (prof.preferred_branch) parts.push(`interes: ${prof.preferred_branch}`);
+        if (prof.budget_min || prof.budget_max) parts.push(`buget: ${prof.budget_min ?? "?"}–${prof.budget_max ?? "?"} EUR`);
+        if (prof.preferred_zones?.length) parts.push(`zone: ${prof.preferred_zones.join(", ")}`);
+        if (prof.property_types?.length) parts.push(`tip: ${prof.property_types.join(", ")}`);
+        if (prof.rooms_min || prof.rooms_max) parts.push(`camere: ${prof.rooms_min ?? "?"}–${prof.rooms_max ?? "?"}`);
+        if (prof.timeline) parts.push(`timeline: ${prof.timeline}`);
+        if (prof.notes) parts.push(`context: ${prof.notes.slice(0, 200)}`);
+        if (parts.length) {
+          callerMemoryBlock = `\n\n📞 MEMORIE APELANT (${prof.call_count} apel/uri anterioare): ${parts.join("; ")}.\nFolosește subtil aceste informații. Confirmă transparent: „țin minte ce am discutat data trecută, …". NU repeta întrebări la care ai deja răspuns.`;
+        }
+      }
+    }
+    // Live entities deja extrase în acest apel
+    const liveEntities = (session.extracted_entities || {}) as any;
+    let liveBlock = "";
+    if (liveEntities && Object.keys(liveEntities).length > 1) {
+      const lp: string[] = [];
+      if (liveEntities.budget_min || liveEntities.budget_max) lp.push(`buget ${liveEntities.budget_min ?? "?"}–${liveEntities.budget_max ?? "?"} EUR`);
+      if (liveEntities.preferred_zones?.length) lp.push(`zone: ${liveEntities.preferred_zones.join(", ")}`);
+      if (liveEntities.property_types?.length) lp.push(`tip: ${liveEntities.property_types.join(", ")}`);
+      if (liveEntities.timeline) lp.push(`timeline: ${liveEntities.timeline}`);
+      if (lp.length) liveBlock = `\n\n🧠 CE AI AFLAT DEJA ÎN APEL: ${lp.join("; ")}. NU întreba din nou aceste lucruri.`;
+    }
+
     const objective = session.call_objective || "qualify";
     const customPrompt = extractCustomPrompt(session.voice_agent_prompt);
     const sentimentBlock = sentimentDirective(ownerSentiment, urgencyLevel);
