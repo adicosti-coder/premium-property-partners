@@ -62,9 +62,10 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [autoApply, setAutoApply] = useState<boolean>(false);
   const [autoThreshold, setAutoThreshold] = useState<number>(85);
+  const [maxAutoPerPage, setMaxAutoPerPage] = useState<number>(3);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [previewFor, setPreviewFor] = useState<any | null>(null);
-  const [previewData, setPreviewData] = useState<{ html?: string; loading: boolean; error?: string }>({ loading: false });
+  const [previewData, setPreviewData] = useState<{ html?: string; modifiedSentence?: string; loading: boolean; error?: string }>({ loading: false });
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; ok: number; fail: number; label: string } | null>(null);
 
   const sources = useMemo(() => {
