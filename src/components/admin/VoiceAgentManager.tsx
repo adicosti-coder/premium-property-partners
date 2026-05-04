@@ -470,7 +470,7 @@ export default function VoiceAgentManager() {
               onValueCommit={([v]) => saveSettings({ elevenlabs_min_score: v })}
             />
             <div className="text-[11px] text-muted-foreground mt-2">
-              Lead-urile cu scor ≥ acest prag → voce premium ElevenLabs (~$0.34/apel). Sub prag → Polly Carmen (~$0.04/apel).
+              Toate apelurile folosesc vocea premium Andrei. Fallback-ul vocal intră doar dacă serviciul audio extern nu răspunde.
             </div>
           </div>
 
