@@ -212,6 +212,10 @@ async function ttsToCachedUrl(
   return result.url;
 }
 
+// In-memory cache (per edge instance) — signed URLs valid 7 days, so we
+// keep them for 6 days max to avoid serving stale links.
+const memCache = new Map<string, { url: string; exp: number }>();
+
 async function ttsToCachedUrlDetailed(
   text: string,
   v: VoiceSettings,
@@ -228,12 +232,21 @@ async function ttsToCachedUrlDetailed(
     const cacheKey = await sha256(JSON.stringify({ text: phoneticText, ...v }));
     const filePath = `tts-cache/${cacheKey}.ulaw`;
 
+    // (1) Hot path: in-memory cache → instant (<1ms)
+    const mem = memCache.get(cacheKey);
+    if (mem && mem.exp > Date.now()) {
+      return { url: mem.url, latencyMs: Date.now() - t0, cached: true };
+    }
+
+    // (2) Warm path: check storage once, then cache the signed URL in memory.
     const { data: existing } = await supabase.storage
       .from("voice-recordings")
       .list("tts-cache", { search: `${cacheKey}.ulaw`, limit: 1 });
-
     if (existing && existing.length > 0) {
       const url = await getSignedStorageUrl(supabase, filePath);
+      if (url) {
+        memCache.set(cacheKey, { url, exp: Date.now() + 6 * 24 * 60 * 60 * 1000 });
+      }
       return { url, latencyMs: Date.now() - t0, cached: true };
     }
 
@@ -288,6 +301,9 @@ async function ttsToCachedUrlDetailed(
       return { url: null, latencyMs: Date.now() - t0, cached: false, errorType: "storage_upload_failed" };
     }
     const url = await getSignedStorageUrl(supabase, filePath);
+    if (url) {
+      memCache.set(cacheKey, { url, exp: Date.now() + 6 * 24 * 60 * 60 * 1000 });
+    }
     return { url, latencyMs: Date.now() - t0, cached: false };
   } catch (e: any) {
     const latencyMs = Date.now() - t0;
@@ -414,10 +430,11 @@ function speakXml(text: string, audioUrl: string | null): string {
 
 function gatherXml(actionUrl: string, innerXml = ""): string {
   const safeUrl = escapeXml(actionUrl);
-  // bargeIn=true → user can interrupt the agent (natural conversation)
-  // speechTimeout=1 → end-of-speech detected ~1s after silence (vs ~2s on auto)
-  // actionOnEmptyResult=true → if user says nothing, still go to next turn (no dead air)
-  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="1" timeout="5" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
+  // speechTimeout="auto" → Twilio uses adaptive end-of-speech detection (recommended for natural conversations)
+  // speechModel="phone_call" → tuned for telephony audio (vs default 'default')
+  // bargeIn=true → user can interrupt agent mid-speech
+  // actionOnEmptyResult=true → no dead air on silence
+  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="auto" timeout="5" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
 }
 
 function isCustomPrompt(prompt?: string | null): boolean {
@@ -442,6 +459,8 @@ function composeSystemPrompt(
 }
 
 serve(async (req) => {
+  const turnT0 = Date.now();
+  const profile: Record<string, number> = {};
   try {
     // Twilio HMAC verification — SOFT CHECK ONLY.
     // Edge runtime rewrites req.url (drops /functions/v1/, switches scheme),
@@ -740,7 +759,13 @@ serve(async (req) => {
           messages: [
             { role: "system", content: systemPrompt },
             ...transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
-            { role: "user", content: "Continuă conversația. Răspunde EXCLUSIV în română, cu diacritice. MAXIM 1 propoziție scurtă (sub 15 cuvinte). Nu folosi „...”. Mergi direct la subiect." },
+            { role: "user", content: (() => {
+              const u = userSpeech.toLowerCase();
+              const wantsDetail = /(de ce|cum|explica|spune-?mi mai|detalii|exact|mai multe|cât|ce înseamnă|cum funcționează)/i.test(u);
+              return wantsDetail
+                ? "Continuă conversația în română cu diacritice. Maxim 2 propoziții, sub 30 de cuvinte. Răspunde concret la întrebare, fără preambul."
+                : "Continuă conversația în română cu diacritice. MAXIM 1 propoziție FOARTE scurtă (sub 12 cuvinte). Confirmă scurt și pune următoarea întrebare. Fără „...”, fără preambul.";
+            })() },
           ],
         }),
       });
@@ -782,16 +807,28 @@ serve(async (req) => {
       shouldHangup = true;
     }
 
-    // Generate ElevenLabs MP3 (cached) — falls back to Polly if it fails
+    // Generate ElevenLabs audio (cached) — falls back to Polly if it fails
     let audioUrl: string | null = null;
     let ttsError: string | null = null;
+    let ttsCached = false;
+    let ttsLatencyMs = 0;
+    profile.ai_done_ms = Date.now() - turnT0;
     if (useElevenLabs) {
       try {
-        audioUrl = await ttsToCachedUrl(aiReply, voice, supabase, ELEVENLABS_API_KEY!, sessionId);
-        if (!audioUrl) ttsError = "ElevenLabs returned no URL (see function logs)";
+        const ttsResult = await ttsToCachedUrlDetailed(aiReply, voice, supabase, ELEVENLABS_API_KEY!, sessionId);
+        audioUrl = ttsResult.url;
+        ttsCached = ttsResult.cached;
+        ttsLatencyMs = ttsResult.latencyMs;
+        if (!audioUrl) ttsError = ttsResult.errorType || "ElevenLabs returned no URL";
       } catch (e: any) {
         ttsError = String(e?.message || e);
       }
+    }
+    profile.tts_done_ms = Date.now() - turnT0;
+    profile.total_handler_ms = Date.now() - turnT0;
+    const TARGET_MS = 1000;
+    if (profile.total_handler_ms > TARGET_MS) {
+      console.warn(`[voice-twiml][SLOW TURN] session=${sessionId} turn=${turn} total=${profile.total_handler_ms}ms ai=${profile.ai_done_ms}ms tts=${ttsLatencyMs}ms cached=${ttsCached}`);
     }
 
     // Defer non-critical DB writes so we can return TwiML immediately.
@@ -810,6 +847,9 @@ serve(async (req) => {
           aiError,
           audioUrl,
           ttsError,
+          ttsCached,
+          ttsLatencyMs,
+          profile,
           voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
           shouldHangup,
         });
