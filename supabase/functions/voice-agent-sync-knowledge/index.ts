@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
   }
 
   // ── 2.5 General fallback chunks (always present, used when zone-specific KB is empty) ──
-  const allLeadPrices = (leads || []).map((l: any) => Number(l.original_price || 0)).filter((p) => p > 0);
+  const allLeadPrices = (leads || []).map((l: any) => Number(l.price || 0)).filter((p) => p > 0);
   if (allLeadPrices.length >= 5) {
     const med = Math.round(median(allLeadPrices));
     chunks.push({
