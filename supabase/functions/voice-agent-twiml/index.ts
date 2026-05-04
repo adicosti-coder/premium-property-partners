@@ -474,9 +474,8 @@ serve(async (req) => {
 
 
     let userSpeech = "";
-    if (req.method === "POST") {
-      const form = await req.formData();
-      userSpeech = (form.get("SpeechResult") as string) || "";
+    if (twilioParams) {
+      userSpeech = twilioParams.get("SpeechResult") || "";
     }
 
     const transcript: any[] = Array.isArray(session.transcript) ? session.transcript : [];
