@@ -10,9 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Loader2, Link2, ArrowRight, CheckCircle2, X, Download, Copy, Trash2,
-  RefreshCcw, Filter, Sparkles,
+  RefreshCcw, Filter, Sparkles, Eye, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -56,6 +59,10 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const [sortKey, setSortKey] = useState<SortKey>("recent");
   const [minScore, setMinScore] = useState<number>(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [autoApply, setAutoApply] = useState<boolean>(() => localStorage.getItem("seo-il-auto-apply") === "1");
+  const [autoThreshold, setAutoThreshold] = useState<number>(() => Number(localStorage.getItem("seo-il-auto-threshold") || 85));
+  const [previewFor, setPreviewFor] = useState<any | null>(null);
+  const [previewData, setPreviewData] = useState<{ html?: string; loading: boolean; error?: string }>({ loading: false });
 
   const sources = useMemo(() => {
     const m = new Map<string, AuditRow>();
@@ -207,6 +214,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
             source_url_path: urlToPath(a.url),
             source_title: a.title || a.url,
             source_context: a.suggested_meta || "",
+            auto_apply_threshold: autoApply ? autoThreshold : 0,
           },
         });
         if (error) throw error;
@@ -238,6 +246,33 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
   };
 
+  const openPreview = async (s: any) => {
+    setPreviewFor(s);
+    setPreviewData({ loading: true });
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-internal-link-preview", {
+        body: {
+          source_url_path: s.source_url_path,
+          target_url_path: s.target_url_path,
+          anchor_text: s.anchor_text,
+        },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Preview indisponibil");
+      setPreviewData({ loading: false, html: data.preview_html || data.paragraph || "—" });
+    } catch (e: any) {
+      setPreviewData({ loading: false, error: e.message });
+    }
+  };
+
+  const toggleAutoApply = (v: boolean) => {
+    setAutoApply(v);
+    localStorage.setItem("seo-il-auto-apply", v ? "1" : "0");
+  };
+  const updateAutoThreshold = (v: number) => {
+    setAutoThreshold(v);
+    localStorage.setItem("seo-il-auto-threshold", String(v));
+  };
   return (
     <Card className="border-cyan-200 dark:border-cyan-900">
       <CardHeader>
@@ -287,6 +322,25 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           </div>
         )}
 
+        {/* Auto-apply rule bar */}
+        <div className="flex flex-wrap items-center gap-3 p-2.5 rounded-md border border-amber-300 dark:border-amber-900 bg-amber-50/60 dark:bg-amber-950/20">
+          <Zap className="w-4 h-4 text-amber-600" />
+          <div className="flex items-center gap-2">
+            <Switch id="auto-apply" checked={autoApply} onCheckedChange={toggleAutoApply} />
+            <Label htmlFor="auto-apply" className="text-sm font-medium cursor-pointer">
+              Auto-Apply: aplică automat sugestiile cu scor ≥
+            </Label>
+          </div>
+          <Select value={String(autoThreshold)} onValueChange={(v) => updateAutoThreshold(Number(v))}>
+            <SelectTrigger className="w-[80px] h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[75, 80, 85, 90, 95].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <span className="text-xs text-muted-foreground ml-auto">
+            {autoApply ? "Activ — sugestiile peste prag sunt marcate „aplicat”." : "Dezactivat — toate sugestiile rămân „propuse”."}
+          </span>
+        </div>
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px]">
@@ -363,6 +417,10 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
                   {s.reason && <p className="text-xs text-muted-foreground line-clamp-2">{s.reason}</p>}
                 </div>
                 <div className="flex gap-1 shrink-0">
+                  <Button size="sm" variant="ghost" title="Preview paragraf"
+                    onClick={() => openPreview(s)}>
+                    <Eye className="w-3.5 h-3.5" />
+                  </Button>
                   {s.status === "applied" ? (
                     <Badge className="gap-1 bg-emerald-600"><CheckCircle2 className="w-3 h-3" /> aplicat</Badge>
                   ) : s.status === "rejected" ? (
@@ -390,6 +448,46 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           </ul>
         </ScrollArea>
       </CardContent>
+
+      <Dialog open={!!previewFor} onOpenChange={(o) => !o && setPreviewFor(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-4 h-4" /> Preview inserare link
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {previewFor?.source_url_path} → <strong>{previewFor?.target_url_path}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-xs text-muted-foreground">
+              Anchor sugerat: <span className="font-medium text-foreground">"{previewFor?.anchor_text}"</span>
+            </div>
+            {previewData.loading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+                <Loader2 className="w-4 h-4 animate-spin" /> Caut paragraful potrivit...
+              </div>
+            ) : previewData.error ? (
+              <p className="text-sm text-red-600">{previewData.error}</p>
+            ) : (
+              <div
+                className="prose prose-sm dark:prose-invert max-w-none p-4 rounded-md border bg-muted/30 leading-relaxed [&_a]:text-cyan-600 [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: previewData.html || "—" }}
+              />
+            )}
+            {previewFor && previewFor.status === "proposed" && (
+              <div className="flex gap-2 justify-end pt-2">
+                <Button variant="outline" onClick={() => { updateStatus.mutate({ id: previewFor.id, status: "rejected" }); setPreviewFor(null); }}>
+                  <X className="w-4 h-4 mr-1" /> Respinge
+                </Button>
+                <Button onClick={() => { updateStatus.mutate({ id: previewFor.id, status: "applied" }); setPreviewFor(null); }}>
+                  <CheckCircle2 className="w-4 h-4 mr-1" /> Aplică
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
