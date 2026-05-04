@@ -470,9 +470,28 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
       }
       return { success, total: targets.length, paths, cat };
     },
-    onSuccess: ({ success, total, paths, cat }) => {
+    onSuccess: async ({ success, total, paths, cat }) => {
+      const batchId = crypto.randomUUID();
+      const { data: userRes } = await supabase.auth.getUser();
+      if (paths.length) {
+        try {
+          await supabase.from("seo_audit_log" as any).insert(
+            paths.map((p) => ({
+              batch_id: batchId,
+              action: "ai_fix",
+              category: cat,
+              url_path: p,
+              source: "manual",
+              applied_by: userRes.user?.id || null,
+              payload: { category: cat },
+            }))
+          );
+        } catch (e) {
+          console.warn("audit_log insert failed", e);
+        }
+      }
       toast.success(`AI fix: ${success}/${total} aplicate`);
-      setLastBatch({ category: cat, paths, ts: new Date().toISOString() });
+      setLastBatch({ batchId, category: cat, paths, ts: new Date().toISOString() });
       setBulkRunning(null);
       qc.invalidateQueries({ queryKey: ["seo-overrides"] });
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
