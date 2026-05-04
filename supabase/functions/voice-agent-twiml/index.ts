@@ -9,10 +9,13 @@ import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
    Fallback: Polly.Carmen <Say> if TTS fails.
 ─────────────────────────────────────────────────────────────── */
 
-const xmlResponse = (xml: string) =>
+const xmlResponse = (xml: string, status = 200) =>
   new Response(`<?xml version="1.0" encoding="UTF-8"?>${xml}`, {
+    status,
     headers: { "Content-Type": "text/xml" },
   });
+
+const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="alice">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
 
 function escapeXml(s: string) {
   return s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]!));
