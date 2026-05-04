@@ -52,24 +52,97 @@ async function getSignedStorageUrl(supabase: any, filePath: string): Promise<str
   return data?.signedUrl || null;
 }
 
+// Romanian diacritics or characteristic short words
+const RO_DIACRITICS_RE = /[ăâîșşțţĂÂÎȘŞȚŢ]/;
+const RO_WORDS_RE = /\b(bun[aă]|mul[țt]umesc|dumneavoastr[aă]|revedere|v[aă]|[șs]i|este|sunt|ziua|salut|noapte|seara|dimine[ațt]a|nume|telefon|apartament|pre[țt]|cas[aă]|locuin[țt][aă]|proprietate|investi[țt]ie|chirie|vânzare|cump[aă]r|interes|spune[țt]i|pute[țt]i|dori[țt]i|ave[țt]i|sunte[țt]i|domnule|doamn[aă])\b/i;
+
+// Common English stopwords / function words that should NEVER appear in a Romanian reply.
+// We use a broad set so any leak triggers a re-prompt.
+const EN_STRONG_RE = /\b(hello|hi|hey|sorry|please|thanks?|thank you|goodbye|bye|good morning|good afternoon|good evening|application error|an error has occurred|the|and|with|for|that|this|have|are|you|your|yours|i'?m|i am|we are|let me|how can|may i|would you|could you|i can|i will|i would|english|speak english)\b/i;
+
 function hasRomanianSignals(text: string): boolean {
-  const normalized = text.toLowerCase();
-  return /[ăâîșşțţ]/.test(normalized) || /\b(bună|mulțumesc|dumneavoastră|revedere|vă|și|este|sunt|ziua)\b/.test(normalized);
+  return RO_DIACRITICS_RE.test(text) || RO_WORDS_RE.test(text);
 }
 
 function hasEnglishSignals(text: string): boolean {
-  return /\b(hello|sorry|please|thank you|goodbye|good morning|good afternoon|application error|an error has occurred)\b/i.test(text);
+  return EN_STRONG_RE.test(text);
+}
+
+/**
+ * Strict language gate: a reply is accepted ONLY if it has no English signal
+ * AND it has at least one Romanian signal (diacritic or RO word).
+ * Single-token replies (e.g. "Da.", "Ok.") are accepted if no English signal.
+ */
+function isRomanianReply(text: string): boolean {
+  const cleaned = String(text || "").trim();
+  if (!cleaned) return false;
+  if (hasEnglishSignals(cleaned)) return false;
+  // Very short replies pass if no English leaked
+  if (cleaned.split(/\s+/).length <= 3) return true;
+  return hasRomanianSignals(cleaned);
 }
 
 const ROMANIAN_VOICE_GUARD = `REGULĂ ABSOLUTĂ, PRIORITARĂ PESTE ORICE ALTĂ INSTRUCȚIUNE:
-Răspunzi DOAR în limba română din România, cu diacritice. Nu folosești engleză, nici pentru salut, scuze sau închidere.
-Ești Ana din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci și răspunzi strict în română.`;
+Răspunzi DOAR în limba română din România, cu diacritice (ă, â, î, ș, ț). Nu folosești engleză, NICIODATĂ — nici pentru salut, scuze, mulțumiri sau închidere.
+Este INTERZIS să folosești cuvinte ca: hello, hi, sorry, please, thanks, thank you, goodbye, bye, OK în loc de "bine".
+Ești Ana din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci INTERN și răspunzi strict în română.
+Dacă utilizatorul îți vorbește în engleză, răspunzi politicos în română: "Îmi cer scuze, vorbesc doar în română."`;
+
+async function logLanguageViolation(
+  supabase: any,
+  sessionId: string,
+  turn: number,
+  rawReply: string,
+  reason: string,
+) {
+  try {
+    console.warn(`[lang-guard] BLOCKED non-RO reply session=${sessionId} turn=${turn} reason=${reason} text="${rawReply.slice(0, 200)}"`);
+    await supabase.from("voice_agent_language_violations").insert({
+      session_id: sessionId,
+      turn,
+      raw_reply: rawReply.slice(0, 1000),
+      reason,
+    });
+  } catch (e) {
+    // Table may not exist yet — non-fatal, we already logged to console.
+    console.warn("[lang-guard] could not persist violation:", (e as Error).message);
+  }
+}
 
 function normalizeAiReply(text: string, fallback: string): string {
   const cleaned = String(text || "").replace(/^['"`]+|['"`]+$/g, "").trim();
   if (!cleaned) return fallback;
-  if (hasEnglishSignals(cleaned)) return fallback;
+  if (!isRomanianReply(cleaned)) return fallback;
   return cleaned;
+}
+
+/**
+ * Call Gemini with an extra-strict Romanian instruction. Used for retry
+ * after the first reply was rejected by the language gate.
+ */
+async function retryInRomanian(
+  apiKey: string,
+  systemPrompt: string,
+  history: Array<{ role: string; content: string }>,
+): Promise<string> {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...history,
+        {
+          role: "user",
+          content: "ULTIMUL răspuns a conținut engleză și a fost respins. Reformulează ACUM strict în limba română, cu diacritice, maxim 2 propoziții. NU folosi niciun cuvânt în engleză.",
+        },
+      ],
+    }),
+  });
+  if (!res.ok) return "";
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() || "";
 }
 
 interface VoiceSettings {
@@ -526,6 +599,17 @@ serve(async (req) => {
       }
 
       aiReply = normalizeAiReply(aiReply, openingLine(branch, contextSummary));
+      // Retry once if the first attempt failed the language gate
+      if (aiRawReply && !isRomanianReply(aiRawReply) && customPrompt && LOVABLE_API_KEY) {
+        await logLanguageViolation(supabase, sessionId, turn, aiRawReply, "english_in_opening");
+        const retried = await retryInRomanian(LOVABLE_API_KEY, systemPrompt, [
+          { role: "user", content: "Începe apelul acum. Generează doar prima replică, foarte scurtă, exclusiv în română." },
+        ]);
+        if (retried && isRomanianReply(retried)) {
+          aiReply = retried;
+          aiRawReply = retried;
+        }
+      }
     } else if (LOVABLE_API_KEY) {
       const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -542,6 +626,20 @@ serve(async (req) => {
       if (aiRes.ok) {
         const aiData = await aiRes.json();
         aiRawReply = aiData.choices?.[0]?.message?.content?.trim() || "";
+        if (aiRawReply && !isRomanianReply(aiRawReply)) {
+          // Retry once with stricter instruction before falling back
+          await logLanguageViolation(supabase, sessionId, turn, aiRawReply, "english_in_turn");
+          const retried = await retryInRomanian(
+            LOVABLE_API_KEY,
+            systemPrompt,
+            transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
+          );
+          if (retried && isRomanianReply(retried)) {
+            aiRawReply = retried;
+          } else {
+            await logLanguageViolation(supabase, sessionId, turn, retried || "(empty)", "retry_also_english");
+          }
+        }
         aiReply = normalizeAiReply(
           aiRawReply,
           "Mulțumesc pentru timp. O zi frumoasă! La revedere.",

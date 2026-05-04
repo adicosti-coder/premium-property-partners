@@ -5007,6 +5007,33 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_language_violations: {
+        Row: {
+          created_at: string
+          id: string
+          raw_reply: string | null
+          reason: string | null
+          session_id: string | null
+          turn: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          raw_reply?: string | null
+          reason?: string | null
+          session_id?: string | null
+          turn?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          raw_reply?: string | null
+          reason?: string | null
+          session_id?: string | null
+          turn?: number | null
+        }
+        Relationships: []
+      }
       voice_agent_script_test_logs: {
         Row: {
           ab_variant: string | null
