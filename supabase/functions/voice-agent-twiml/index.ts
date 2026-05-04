@@ -776,11 +776,6 @@ serve(async (req) => {
       shouldHangup = true;
     }
 
-    await supabase.from("voice_call_sessions").update({
-      transcript,
-      status: shouldHangup ? "completing" : "in-progress",
-    }).eq("id", sessionId);
-
     // Generate ElevenLabs MP3 (cached) — falls back to Polly if it fails
     let audioUrl: string | null = null;
     let ttsError: string | null = null;
@@ -793,29 +788,44 @@ serve(async (req) => {
       }
     }
 
-    await pushDebugLog(supabase, sessionId, {
-      stage: "twiml_turn_end",
-      turn,
-      aiRawReply: aiRawReply || null,
-      aiReply,
-      aiError,
-      audioUrl,
-      ttsError,
-      voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
-      shouldHangup,
-    });
+    // Defer non-critical DB writes so we can return TwiML immediately.
+    // Twilio is waiting on the wire — every ms here = silence on the call.
+    const deferredWork = (async () => {
+      try {
+        await supabase.from("voice_call_sessions").update({
+          transcript,
+          status: shouldHangup ? "completing" : "in-progress",
+        }).eq("id", sessionId);
+        await pushDebugLog(supabase, sessionId, {
+          stage: "twiml_turn_end",
+          turn,
+          aiRawReply: aiRawReply || null,
+          aiReply,
+          aiError,
+          audioUrl,
+          ttsError,
+          voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
+          shouldHangup,
+        });
+      } catch (e) {
+        console.error("[voice-twiml] deferred write failed:", e);
+      }
+    })();
+    // @ts-ignore — EdgeRuntime is available in Supabase Edge runtime
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(deferredWork);
+    }
 
     if (shouldHangup) {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
     }
 
     const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+    // Put audio INSIDE <Gather> so the user can barge-in (interrupt).
+    // No <Redirect> needed because actionOnEmptyResult=true on the <Gather>.
     return xmlResponse(
-      `<Response>
-        ${speakXml(aiReply, audioUrl)}
-        ${gatherXml(nextUrl)}
-        <Redirect method="POST">${escapeXml(nextUrl)}</Redirect>
-      </Response>`
+      `<Response>${gatherXml(nextUrl, speakXml(aiReply, audioUrl))}<Redirect method="POST">${escapeXml(nextUrl)}</Redirect></Response>`
     );
   } catch (e: any) {
     console.error("voice-agent-twiml error:", e);
