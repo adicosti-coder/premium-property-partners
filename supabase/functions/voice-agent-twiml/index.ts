@@ -631,6 +631,49 @@ serve(async (req) => {
       if (lp.length) liveBlock = `\n\n🧠 CE AI AFLAT DEJA ÎN APEL: ${lp.join("; ")}. NU întreba din nou aceste lucruri.`;
     }
 
+    // ── KNOWLEDGE BASE: market insights for caller's zones ──
+    let marketDataBlock = "";
+    if (turn === 0) {
+      try {
+        const kbT0 = Date.now();
+        // Collect candidate zones from caller profile + live entities + prospect
+        const zoneSet = new Set<string>();
+        const profZones = ((session as any).extracted_entities?.preferred_zones || []) as string[];
+        for (const z of profZones) if (z) zoneSet.add(String(z).toLowerCase());
+        // Try caller profile zones via re-using earlier query result is complex; do quick fetch:
+        if (phone) {
+          const { data: pz } = await supabase
+            .from("voice_caller_profiles")
+            .select("preferred_zones")
+            .eq("phone_normalized", phone)
+            .maybeSingle();
+          for (const z of (pz?.preferred_zones || [])) if (z) zoneSet.add(String(z).toLowerCase());
+        }
+        const zones = [...zoneSet];
+
+        let kbQuery = supabase
+          .from("voice_agent_knowledge_chunks")
+          .select("content, zone, listing_type, confidence")
+          .order("confidence", { ascending: false })
+          .limit(5);
+        if (zones.length > 0) {
+          kbQuery = kbQuery.or(zones.map((z) => `zone.ilike.%${z}%`).join(","));
+        }
+        const { data: kbChunks } = await kbQuery;
+        const kbMs = Date.now() - kbT0;
+        console.log(`[voice-twiml][kb-lookup] session=${sessionId} zones=[${zones.join(",")}] hits=${kbChunks?.length || 0} ms=${kbMs}`);
+        if (kbMs > 200) console.warn(`[voice-twiml][kb-lookup][SLOW] session=${sessionId} ms=${kbMs}`);
+
+        if (kbChunks && kbChunks.length > 0) {
+          const lines = kbChunks.map((c, i) => `${i + 1}. ${c.content}`).join("\n");
+          marketDataBlock = `\n\n📊 DATE REALE PIAȚĂ (CONTEXT ACTUAL):\n${lines}\n\nFolosește datele de piață furnizate pentru a oferi autoritate și cifre concrete în discuție. NU inventa statistici, folosește-le DOAR pe cele din acest context.`;
+        }
+      } catch (e) {
+        console.error("[voice-twiml][kb-lookup] error:", e);
+      }
+    }
+
+
     const objective = session.call_objective || "qualify";
     const customPrompt = extractCustomPrompt(session.voice_agent_prompt);
     const sentimentBlock = sentimentDirective(ownerSentiment, urgencyLevel);
