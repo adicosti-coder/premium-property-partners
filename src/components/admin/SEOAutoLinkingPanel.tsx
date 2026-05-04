@@ -62,9 +62,10 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [autoApply, setAutoApply] = useState<boolean>(false);
   const [autoThreshold, setAutoThreshold] = useState<number>(85);
+  const [maxAutoPerPage, setMaxAutoPerPage] = useState<number>(3);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [previewFor, setPreviewFor] = useState<any | null>(null);
-  const [previewData, setPreviewData] = useState<{ html?: string; loading: boolean; error?: string }>({ loading: false });
+  const [previewData, setPreviewData] = useState<{ html?: string; modifiedSentence?: string; loading: boolean; error?: string }>({ loading: false });
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number; ok: number; fail: number; label: string } | null>(null);
 
   const sources = useMemo(() => {
@@ -97,12 +98,13 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
       const v = (data?.value as any) || {};
       if (typeof v.auto_apply === "boolean") setAutoApply(v.auto_apply);
       if (typeof v.threshold === "number") setAutoThreshold(v.threshold);
+      if (typeof v.max_per_page === "number") setMaxAutoPerPage(v.max_per_page);
       setSettingsLoaded(true);
     })();
   }, []);
 
-  const persistSettings = async (patch: { auto_apply?: boolean; threshold?: number }) => {
-    const next = { auto_apply: autoApply, threshold: autoThreshold, ...patch };
+  const persistSettings = async (patch: { auto_apply?: boolean; threshold?: number; max_per_page?: number }) => {
+    const next = { auto_apply: autoApply, threshold: autoThreshold, max_per_page: maxAutoPerPage, ...patch };
     await supabase
       .from("seo_settings")
       .upsert({ key: "auto_linking", value: next, updated_at: new Date().toISOString() }, { onConflict: "key" });
@@ -120,6 +122,18 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
         .order("applied_at", { ascending: false })
         .limit(50);
       return data || [];
+    },
+  });
+
+  // Auto-apply runs (grouped by run_id)
+  const { data: autoRuns = [] } = useQuery({
+    queryKey: ["seo-auto-link-runs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("seo-internal-links", {
+        body: { action: "list_runs" },
+      });
+      if (error) return [];
+      return (data as any)?.runs || [];
     },
   });
 
@@ -247,6 +261,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
     }
     const targets = pool.slice(0, batchSize);
     setProgress({ done: 0, total: targets.length, ok: 0, fail: 0 });
+    const runId = `run-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     let ok = 0, fail = 0;
     for (let i = 0; i < targets.length; i++) {
       try {
@@ -258,6 +273,8 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
             source_title: a.title || a.url,
             source_context: a.suggested_meta || "",
             auto_apply_threshold: autoApply ? autoThreshold : 0,
+            max_auto_per_page: maxAutoPerPage,
+            run_id: runId,
           },
         });
         if (error) throw error;
@@ -266,7 +283,43 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
       setProgress({ done: i + 1, total: targets.length, ok, fail });
     }
     setRunning(false);
-    toast.success(`Auto-linking finalizat: ${ok} OK${fail ? `, ${fail} eșuate` : ""}`);
+    toast.success(`Auto-linking finalizat: ${ok} OK${fail ? `, ${fail} eșuate` : ""} (run ${runId.slice(-8)})`);
+    qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-logs"] });
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-runs"] });
+  };
+
+  const exportAutoApplyCsv = () => {
+    const rows = autoLogs;
+    if (!rows.length) return toast.info("Nimic de exportat");
+    const header = ["source_url", "target_url", "anchor_text", "score", "status", "applied_at", "run_id"];
+    const csv = [header.join(",")].concat(
+      rows.map((l: any) => [
+        l.payload?.source_url_path,
+        l.payload?.target_url_path,
+        l.payload?.anchor_text,
+        l.payload?.relevance_score ?? "",
+        l.reverted ? "reverted" : "applied",
+        l.applied_at,
+        l.payload?.run_id || "",
+      ].map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+    ).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `auto-applied-links-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  const revertRun = async (runId: string, count: number) => {
+    if (!confirm(`Anulezi întreaga rulare? ${count} link-uri vor fi marcate ca respinse.`)) return;
+    const { data, error } = await supabase.functions.invoke("seo-internal-links", {
+      body: { action: "revert_run", run_id: runId },
+    });
+    if (error) return toast.error(error.message);
+    toast.success(`${(data as any)?.reverted ?? count} link-uri anulate`);
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-logs"] });
+    qc.invalidateQueries({ queryKey: ["seo-auto-link-runs"] });
     qc.invalidateQueries({ queryKey: ["seo-internal-link-suggestions"] });
   };
 
@@ -308,7 +361,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
         ALLOWED_ATTR: ["href", "title"],
         ALLOWED_URI_REGEXP: /^(?:\/|https?:\/\/)/i,
       });
-      setPreviewData({ loading: false, html: safe });
+      setPreviewData({ loading: false, html: safe, modifiedSentence: data.modified_sentence });
     } catch (e: any) {
       setPreviewData({ loading: false, error: e.message });
     }
@@ -321,6 +374,10 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
   const updateAutoThreshold = (v: number) => {
     setAutoThreshold(v);
     persistSettings({ threshold: v });
+  };
+  const updateMaxPerPage = (v: number) => {
+    setMaxAutoPerPage(v);
+    persistSettings({ max_per_page: v });
   };
   return (
     <Card className="border-cyan-200 dark:border-cyan-900">
@@ -377,7 +434,7 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           <div className="flex items-center gap-2">
             <Switch id="auto-apply" checked={autoApply} onCheckedChange={toggleAutoApply} disabled={!settingsLoaded} />
             <Label htmlFor="auto-apply" className="text-sm font-medium cursor-pointer">
-              Auto-Apply: aplică automat sugestiile cu scor ≥
+              Auto-Apply ≥
             </Label>
           </div>
           <Select value={String(autoThreshold)} onValueChange={(v) => updateAutoThreshold(Number(v))}>
@@ -386,10 +443,23 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
               {[75, 80, 85, 90, 95].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
             </SelectContent>
           </Select>
-          <span className="text-xs text-muted-foreground ml-auto">
-            {autoApply ? "Activ — sugestiile peste prag sunt marcate „aplicat”." : "Dezactivat — toate sugestiile rămân „propuse”."}
-          </span>
+          <Label className="text-sm font-medium">Max/pagină:</Label>
+          <Select value={String(maxAutoPerPage)} onValueChange={(v) => updateMaxPerPage(Number(v))}>
+            <SelectTrigger className="w-[70px] h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button onClick={exportAutoApplyCsv} variant="ghost" size="sm" className="gap-1 ml-auto">
+            <Download className="w-3.5 h-3.5" /> Export Auto-Apply
+          </Button>
         </div>
+        <p className="text-xs text-muted-foreground -mt-2">
+          {autoApply
+            ? `Activ — max ${maxAutoPerPage} link-uri auto/pagină pentru a păstra textul natural.`
+            : "Dezactivat — toate sugestiile rămân „propuse”."}
+        </p>
+
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[180px]">
@@ -508,6 +578,47 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
           </ul>
         </ScrollArea>
 
+        {/* Auto-runs (bulk operations) with Revert All */}
+        {autoRuns.filter((r: any) => !r.run_id.startsWith("single:")).length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Zap className="w-4 h-4 text-amber-600" />
+              Rulări auto-linking (Revert All)
+            </div>
+            <ScrollArea className="h-32 rounded-md border">
+              <ul className="divide-y text-xs">
+                {autoRuns.filter((r: any) => !r.run_id.startsWith("single:")).map((r: any) => {
+                  const active = r.count - r.reverted;
+                  return (
+                    <li key={r.run_id} className="px-3 py-2 flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded">{r.run_id.slice(-12)}</code>
+                          <span className="text-muted-foreground">
+                            {new Date(r.last_at).toLocaleString("ro-RO")}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-muted-foreground">
+                          {r.count} link-uri · {r.pages_count} pagini
+                          {r.reverted > 0 && <span className="ml-1">· {r.reverted} anulate</span>}
+                        </p>
+                      </div>
+                      {active > 0 ? (
+                        <Button size="sm" variant="outline" className="text-red-600"
+                          onClick={() => revertRun(r.run_id, active)}>
+                          Revert All ({active})
+                        </Button>
+                      ) : (
+                        <Badge variant="secondary">complet anulat</Badge>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </ScrollArea>
+          </div>
+        )}
+
         {/* Auto-applied log with revert */}
         {autoLogs.length > 0 && (
           <div className="space-y-2">
@@ -572,10 +683,25 @@ export const SEOAutoLinkingPanel = ({ history }: Props) => {
             ) : previewData.error ? (
               <p className="text-sm text-red-600">{previewData.error}</p>
             ) : (
-              <div
-                className="prose prose-sm dark:prose-invert max-w-none p-4 rounded-md border bg-muted/30 leading-relaxed [&_a]:text-cyan-600 [&_a]:underline"
-                dangerouslySetInnerHTML={{ __html: previewData.html || "—" }}
-              />
+              <>
+                {previewData.modifiedSentence && (
+                  <div className="p-3 rounded-md border-2 border-amber-400 bg-amber-50/70 dark:bg-amber-950/30">
+                    <p className="text-[11px] uppercase tracking-wide text-amber-700 dark:text-amber-400 font-semibold mb-1">
+                      Propoziție modificată
+                    </p>
+                    <p className="text-sm leading-relaxed">
+                      {previewData.modifiedSentence} <mark className="bg-amber-200 dark:bg-amber-800 px-1 rounded">+ {previewFor?.anchor_text}</mark>
+                    </p>
+                  </div>
+                )}
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
+                  Paragraf complet (cu link inserat)
+                </div>
+                <div
+                  className="prose prose-sm dark:prose-invert max-w-none p-4 rounded-md border bg-muted/30 leading-relaxed [&_a]:text-cyan-600 [&_a]:underline [&_mark]:bg-amber-200 [&_mark]:dark:bg-amber-800 [&_mark]:px-1 [&_mark]:rounded"
+                  dangerouslySetInnerHTML={{ __html: previewData.html || "—" }}
+                />
+              </>
             )}
             {previewFor && previewFor.status === "proposed" && (
               <div className="flex gap-2 justify-end pt-2">

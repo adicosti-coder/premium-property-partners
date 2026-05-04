@@ -100,10 +100,63 @@ serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (action === "revert_run") {
+      const runId = body.run_id;
+      if (!runId) return json({ error: "run_id required" }, 400);
+      const { data: logs } = await sb
+        .from("seo_audit_log")
+        .select("id, payload, reverted")
+        .eq("action", "internal_link_applied")
+        .eq("source", "auto")
+        .filter("payload->>run_id", "eq", runId);
+      const ids = (logs || []).map((l: any) => l.id);
+      const sids = (logs || [])
+        .filter((l: any) => !l.reverted)
+        .map((l: any) => (l.payload as any)?.suggestion_id)
+        .filter(Boolean);
+      if (sids.length) {
+        await sb.from("seo_internal_link_suggestions")
+          .update({ status: "rejected", applied_at: null, applied_by: null })
+          .in("id", sids);
+      }
+      if (ids.length) {
+        await sb.from("seo_audit_log")
+          .update({ reverted: true, reverted_at: new Date().toISOString() })
+          .in("id", ids);
+      }
+      return json({ ok: true, reverted: ids.length });
+    }
+
+    if (action === "list_runs") {
+      // Group auto-apply logs by run_id
+      const { data: logs } = await sb
+        .from("seo_audit_log")
+        .select("id, applied_at, reverted, payload, url_path")
+        .eq("action", "internal_link_applied")
+        .eq("source", "auto")
+        .order("applied_at", { ascending: false })
+        .limit(500);
+      const runs = new Map<string, any>();
+      for (const l of logs || []) {
+        const rid = (l.payload as any)?.run_id || `single:${l.id}`;
+        const r = runs.get(rid) || { run_id: rid, count: 0, reverted: 0, last_at: l.applied_at, pages: new Set<string>(), items: [] };
+        r.count++;
+        if (l.reverted) r.reverted++;
+        r.pages.add(l.url_path);
+        r.items.push(l);
+        runs.set(rid, r);
+      }
+      const out = Array.from(runs.values()).map(r => ({
+        ...r, pages: Array.from(r.pages), pages_count: r.pages.size,
+      }));
+      return json({ ok: true, runs: out });
+    }
+
     // suggest
     const sourcePath = body.source_url_path as string;
     const sourceTitle = body.source_title || sourcePath;
     const sourceContext = body.source_context || "";
+    const runId = body.run_id || null;
     if (!sourcePath) return json({ error: "source_url_path required" }, 400);
     if (!LOVABLE_API_KEY) return json({ error: "AI not configured" }, 500);
 
@@ -160,11 +213,29 @@ Output JSON: {"suggestions":[{"target_url_path":"/...", "anchor_text":"...", "re
     const suggestions: any[] = (parsed.suggestions || []).slice(0, 7);
 
     const autoApplyThreshold = Number(body.auto_apply_threshold ?? 0);
+    const maxAutoPerPage = Number(body.max_auto_per_page ?? 3);
+
+    // Rate limit: count existing applied auto links for this source page
+    let existingAutoCount = 0;
+    if (autoApplyThreshold > 0) {
+      const { count } = await sb
+        .from("seo_internal_link_suggestions")
+        .select("id", { count: "exact", head: true })
+        .eq("source_url_path", sourcePath)
+        .eq("status", "applied");
+      existingAutoCount = count || 0;
+    }
+    let autoBudget = Math.max(0, maxAutoPerPage - existingAutoCount);
+
     if (suggestions.length) {
       const now = new Date().toISOString();
-      const rows = suggestions.map((s) => {
+      // Sort by score desc so best ones consume the auto budget first
+      const ordered = [...suggestions].sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+      const rows = ordered.map((s) => {
         const score = Number(s.relevance_score || 0);
-        const auto = autoApplyThreshold > 0 && score >= autoApplyThreshold;
+        const wantsAuto = autoApplyThreshold > 0 && score >= autoApplyThreshold;
+        const auto = wantsAuto && autoBudget > 0;
+        if (auto) autoBudget--;
         return {
           source_url_path: sourcePath,
           target_url_path: s.target_url_path,
@@ -195,13 +266,15 @@ Output JSON: {"suggestions":[{"target_url_path":"/...", "anchor_text":"...", "re
             anchor_text: r.anchor_text,
             relevance_score: r.relevance_score,
             threshold: autoApplyThreshold,
+            run_id: runId,
+            max_per_page: maxAutoPerPage,
           },
           applied_by: u.user.id,
         }));
       if (autoLogs.length) await sb.from("seo_audit_log").insert(autoLogs);
     }
 
-    return json({ ok: true, suggestions });
+    return json({ ok: true, suggestions, run_id: runId, auto_budget_remaining: autoBudget });
   } catch (e) {
     console.error("[internal-links]", e);
     return json({ ok: false, error: (e as Error).message }, 500);
