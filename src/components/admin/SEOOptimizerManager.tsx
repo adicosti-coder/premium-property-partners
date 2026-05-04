@@ -1175,19 +1175,11 @@ const SEOOptimizerManager = () => {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="space-y-2">
-                      {selectedAudit.issues.map((iss: any, i: number) => (
-                        <div key={i} className="rounded border p-3">
-                          <div className="flex items-start gap-2">
-                            <Badge variant={severityColor(iss.severity) as any}>{iss.severity}</Badge>
-                            <div className="flex-1 text-sm">
-                              <div className="font-medium">{iss.issue}</div>
-                              <div className="text-muted-foreground mt-1">→ {iss.fix}</div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <SEOIssuesPanel
+                      auditId={selectedAudit.id}
+                      url={selectedAudit.url}
+                      issues={selectedAudit.issues}
+                    />
                   </AccordionContent>
                 </AccordionItem>
               )}
