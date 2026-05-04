@@ -309,6 +309,32 @@ export default function VoiceCallerProfilesManager() {
                       <Archive className="w-4 h-4 mr-1" />
                       {p.archived_at ? "Reactivează" : "Arhivează"}
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                          <Trash2 className="w-4 h-4 mr-1" /> GDPR
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Ștergere completă (GDPR)?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Se va șterge <strong>definitiv</strong> profilul pentru <strong>{p.phone_normalized}</strong>,
+                            inclusiv toate preferințele și istoricul. Această acțiune este folosită pentru
+                            <em> dreptul de a fi uitat</em> și nu poate fi anulată. Acțiunea va fi înregistrată în jurnal.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Anulează</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => gdprDelete(p)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Da, șterge tot
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
 
