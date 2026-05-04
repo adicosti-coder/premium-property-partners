@@ -45,7 +45,8 @@ const xmlResponse = (xml: string, status = 200) =>
   });
 
 const ANDREI_VOICE_ID = "S98OhkhaxeAKHEbhoLi7";
-const ANDREI_MODEL_ID = "eleven_turbo_v2_5";
+// flash_v2_5 = ~50% faster than turbo, identical RO quality for short replies
+const ANDREI_MODEL_ID = "eleven_flash_v2_5";
 const ROMANIAN_SAFE_ERROR_XML = `<Response><Say language="ro-RO" voice="Polly.Carmen">Momentan nu pot continua apelul. Vă mulțumesc pentru înțelegere. La revedere.</Say><Hangup/></Response>`;
 
 function escapeXml(s: string) {
@@ -320,14 +321,14 @@ function detectBranch(listingType?: string | null, propertyType?: string | null)
  * - benefit hook scurt (un singur diferențiator), nu pitch lung
  */
 function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary: string): string {
-  const ctx = contextSummary ? `, pentru ${contextSummary}` : "";
+  const ctx = contextSummary ? `, despre ${contextSummary}` : "";
   if (branch === "vanzare") {
-    return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Am cumpărători activi pe zonă și aș vrea să discutăm un minut.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Am cumpărători activi pe zonă.`;
   }
   if (branch === "inchiriere") {
-    return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă rețin un minut${ctx}? Lucrăm cu chiriași verificați și plata e garantată lunar.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă rețin un minut${ctx}? Avem chiriași verificați și plata garantată.`;
   }
-  return `Bună ziua, sunt Andrei de la RealTrust Timișoara… Vă deranjez puțin${ctx}? Putem crește veniturile cu 40% față de chiria clasică, fără bătăi de cap.`;
+  return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Putem crește veniturile cu 40%, fără bătăi de cap.`;
 }
 
 function sentimentDirective(sentiment?: string | null, urgency?: number | null): string {
@@ -411,9 +412,12 @@ function speakXml(text: string, audioUrl: string | null): string {
   return `<Say language="ro-RO" voice="Polly.Carmen">${escapeXml(text)}</Say>`;
 }
 
-function gatherXml(actionUrl: string): string {
+function gatherXml(actionUrl: string, innerXml = ""): string {
   const safeUrl = escapeXml(actionUrl);
-  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" speechTimeout="auto" timeout="6" action="${safeUrl}" method="POST"/>`;
+  // bargeIn=true → user can interrupt the agent (natural conversation)
+  // speechTimeout=1 → end-of-speech detected ~1s after silence (vs ~2s on auto)
+  // actionOnEmptyResult=true → if user says nothing, still go to next turn (no dead air)
+  return `<Gather input="speech" language="ro-RO" speechModel="phone_call" enhanced="true" bargeIn="true" speechTimeout="1" timeout="5" actionOnEmptyResult="true" action="${safeUrl}" method="POST">${innerXml}</Gather>`;
 }
 
 function isCustomPrompt(prompt?: string | null): boolean {
@@ -669,7 +673,8 @@ serve(async (req) => {
       transcript.push({ role: "user", text: userSpeech, at: new Date().toISOString() });
     }
 
-    await pushDebugLog(supabase, sessionId, {
+    // Defer turn-start debug log (was 2 sync DB ops blocking the response)
+    const turnStartLog = {
       stage: "twiml_turn_start",
       turn,
       branch,
@@ -679,7 +684,12 @@ serve(async (req) => {
       userSpeech: userSpeech || null,
       systemPromptPreview: systemPrompt.slice(0, 600),
       hasCustomPrompt: !!customPrompt,
-    });
+    };
+    // @ts-ignore
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(pushDebugLog(supabase, sessionId, turnStartLog));
+    }
 
     let aiReply = "";
     let aiRawReply = "";
@@ -730,7 +740,7 @@ serve(async (req) => {
           messages: [
             { role: "system", content: systemPrompt },
             ...transcript.slice(-8).map((t: any) => ({ role: t.role === "user" ? "user" : "assistant", content: t.text })),
-            { role: "user", content: "Continuă conversația. Răspunde exclusiv în română, cu diacritice, în maximum 2 propoziții." },
+            { role: "user", content: "Continuă conversația. Răspunde EXCLUSIV în română, cu diacritice. MAXIM 1 propoziție scurtă (sub 15 cuvinte). Nu folosi „...”. Mergi direct la subiect." },
           ],
         }),
       });
@@ -772,11 +782,6 @@ serve(async (req) => {
       shouldHangup = true;
     }
 
-    await supabase.from("voice_call_sessions").update({
-      transcript,
-      status: shouldHangup ? "completing" : "in-progress",
-    }).eq("id", sessionId);
-
     // Generate ElevenLabs MP3 (cached) — falls back to Polly if it fails
     let audioUrl: string | null = null;
     let ttsError: string | null = null;
@@ -789,29 +794,44 @@ serve(async (req) => {
       }
     }
 
-    await pushDebugLog(supabase, sessionId, {
-      stage: "twiml_turn_end",
-      turn,
-      aiRawReply: aiRawReply || null,
-      aiReply,
-      aiError,
-      audioUrl,
-      ttsError,
-      voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
-      shouldHangup,
-    });
+    // Defer non-critical DB writes so we can return TwiML immediately.
+    // Twilio is waiting on the wire — every ms here = silence on the call.
+    const deferredWork = (async () => {
+      try {
+        await supabase.from("voice_call_sessions").update({
+          transcript,
+          status: shouldHangup ? "completing" : "in-progress",
+        }).eq("id", sessionId);
+        await pushDebugLog(supabase, sessionId, {
+          stage: "twiml_turn_end",
+          turn,
+          aiRawReply: aiRawReply || null,
+          aiReply,
+          aiError,
+          audioUrl,
+          ttsError,
+          voiceMode: useElevenLabs ? "elevenlabs" : "twilio_say",
+          shouldHangup,
+        });
+      } catch (e) {
+        console.error("[voice-twiml] deferred write failed:", e);
+      }
+    })();
+    // @ts-ignore — EdgeRuntime is available in Supabase Edge runtime
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(deferredWork);
+    }
 
     if (shouldHangup) {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
     }
 
     const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+    // Put audio INSIDE <Gather> so the user can barge-in (interrupt).
+    // No <Redirect> needed because actionOnEmptyResult=true on the <Gather>.
     return xmlResponse(
-      `<Response>
-        ${speakXml(aiReply, audioUrl)}
-        ${gatherXml(nextUrl)}
-        <Redirect method="POST">${escapeXml(nextUrl)}</Redirect>
-      </Response>`
+      `<Response>${gatherXml(nextUrl, speakXml(aiReply, audioUrl))}<Redirect method="POST">${escapeXml(nextUrl)}</Redirect></Response>`
     );
   } catch (e: any) {
     console.error("voice-agent-twiml error:", e);

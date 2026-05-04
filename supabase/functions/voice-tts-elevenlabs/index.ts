@@ -16,7 +16,8 @@ const corsHeaders = {
 };
 
 const ANDREI_VOICE_ID = "S98OhkhaxeAKHEbhoLi7";
-const ANDREI_MODEL_ID = "eleven_turbo_v2_5";
+// flash_v2_5 → ~50% lower latency vs turbo, identical quality for short RO replies
+const ANDREI_MODEL_ID = "eleven_flash_v2_5";
 
 async function sha256(text: string): Promise<string> {
   const enc = new TextEncoder().encode(text);
