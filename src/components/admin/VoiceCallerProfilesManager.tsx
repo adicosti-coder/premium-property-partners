@@ -380,6 +380,105 @@ export default function VoiceCallerProfilesManager() {
   );
 }
 
+          </div>
+        )}
+
+        <AuditLogPanel entries={auditLog} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function LatencyDashboard({ metrics }: { metrics: LatencyMetric[] }) {
+  if (metrics.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground border rounded p-3 bg-muted/20">
+        <Activity className="w-4 h-4 inline mr-1" />
+        Niciun lookup măsurat încă. Latența va apărea după primul apel real.
+      </div>
+    );
+  }
+  const avg = Math.round(metrics.reduce((s, m) => s + m.lookup_ms, 0) / metrics.length);
+  const max = Math.max(...metrics.map(m => m.lookup_ms));
+  const slowCount = metrics.filter(m => m.is_slow).length;
+  const slowPct = Math.round((slowCount / metrics.length) * 100);
+  const maxBar = Math.max(max, 250);
+
+  return (
+    <div className="border rounded-lg p-3 bg-muted/10 space-y-2">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold flex items-center gap-1">
+          <Activity className="w-4 h-4 text-primary" />
+          Memory-Lookup Latency (ultimele {metrics.length})
+        </h4>
+        <div className="flex gap-2 text-xs">
+          <Badge variant="outline">avg {avg}ms</Badge>
+          <Badge variant="outline">max {max}ms</Badge>
+          <Badge variant={slowCount > 0 ? "destructive" : "secondary"}>
+            slow &gt;200ms: {slowCount} ({slowPct}%)
+          </Badge>
+        </div>
+      </div>
+      <div className="flex items-end gap-px h-16 bg-background rounded p-1 overflow-hidden">
+        {metrics.slice().reverse().map(m => {
+          const h = Math.min(100, (m.lookup_ms / maxBar) * 100);
+          return (
+            <div
+              key={m.id}
+              className={`flex-1 min-w-[2px] ${m.is_slow ? "bg-destructive" : "bg-primary/60"}`}
+              style={{ height: `${h}%` }}
+              title={`${m.lookup_ms}ms · ${m.hit ? "hit" : "miss"} · ${format(new Date(m.created_at), "HH:mm")}`}
+            />
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+        <span>vechi</span>
+        <span className="border-t border-dashed border-destructive/50 flex-1 mx-2" />
+        <span>prag 200ms · recent</span>
+      </div>
+    </div>
+  );
+}
+
+function AuditLogPanel({ entries }: { entries: AuditEntry[] }) {
+  if (entries.length === 0) return null;
+  const actionLabel: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    reset: { label: "Reset", variant: "outline" },
+    archive: { label: "Arhivat", variant: "secondary" },
+    reactivate: { label: "Reactivat", variant: "secondary" },
+    gdpr_delete: { label: "GDPR Delete", variant: "destructive" },
+    auto_archive: { label: "Auto-arhivat", variant: "outline" },
+    manual_edit: { label: "Editat", variant: "outline" },
+  };
+  return (
+    <div className="border rounded-lg p-3 bg-muted/10 space-y-2">
+      <h4 className="text-sm font-semibold flex items-center gap-1">
+        <ScrollText className="w-4 h-4 text-primary" />
+        Jurnal activitate (ultimele {entries.length})
+      </h4>
+      <div className="space-y-1 max-h-64 overflow-y-auto text-xs">
+        {entries.map(e => {
+          const meta = actionLabel[e.action] || { label: e.action, variant: "outline" as const };
+          return (
+            <div key={e.id} className="flex items-start gap-2 py-1 border-b border-border/40 last:border-0">
+              <Badge variant={meta.variant} className="text-[10px] shrink-0">{meta.label}</Badge>
+              <div className="flex-1 min-w-0">
+                <div className="font-mono truncate">{e.phone_normalized || "—"}</div>
+                <div className="text-muted-foreground text-[10px]">
+                  {format(new Date(e.created_at), "dd MMM HH:mm", { locale: ro })}
+                  {" · "}
+                  {e.actor_label || "system"}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
