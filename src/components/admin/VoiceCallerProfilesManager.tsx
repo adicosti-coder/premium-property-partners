@@ -1,0 +1,271 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Phone, RotateCcw, Archive, Search, Brain, Clock, MessageSquareWarning } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ro } from "date-fns/locale";
+
+interface CallerProfile {
+  id: string;
+  phone_normalized: string;
+  display_name: string | null;
+  preferred_branch: string | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  preferred_zones: string[] | null;
+  property_types: string[] | null;
+  rooms_min: number | null;
+  rooms_max: number | null;
+  timeline: string | null;
+  notes: string | null;
+  last_objection: string | null;
+  call_count: number;
+  last_call_at: string | null;
+  archived_at: string | null;
+  created_at: string;
+}
+
+export default function VoiceCallerProfilesManager() {
+  const [profiles, setProfiles] = useState<CallerProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
+  const { toast } = useToast();
+
+  const load = async () => {
+    setLoading(true);
+    let q = supabase
+      .from("voice_caller_profiles")
+      .select("*")
+      .order("last_call_at", { ascending: false, nullsFirst: false })
+      .limit(200);
+    if (!showArchived) q = q.is("archived_at", null);
+    const { data, error } = await q;
+    if (error) {
+      toast({ title: "Eroare la încărcare", description: error.message, variant: "destructive" });
+    } else {
+      setProfiles((data || []) as CallerProfile[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [showArchived]);
+
+  const filtered = profiles.filter(p => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      p.phone_normalized?.toLowerCase().includes(s) ||
+      p.display_name?.toLowerCase().includes(s) ||
+      p.notes?.toLowerCase().includes(s) ||
+      p.preferred_zones?.some(z => z.toLowerCase().includes(s))
+    );
+  });
+
+  const resetProfile = async (p: CallerProfile) => {
+    const { error } = await supabase
+      .from("voice_caller_profiles")
+      .update({
+        preferred_branch: null,
+        budget_min: null,
+        budget_max: null,
+        preferred_zones: [],
+        property_types: [],
+        rooms_min: null,
+        rooms_max: null,
+        timeline: null,
+        notes: null,
+        last_objection: null,
+        mentioned_property_ids: [],
+        call_count: 0,
+        last_call_at: null,
+        last_session_id: null,
+      })
+      .eq("id", p.id);
+    if (error) {
+      toast({ title: "Reset eșuat", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Memorie ștearsă", description: `Andrei nu mai ține minte ${p.phone_normalized}.` });
+      load();
+    }
+  };
+
+  const archiveProfile = async (p: CallerProfile) => {
+    const { error } = await supabase
+      .from("voice_caller_profiles")
+      .update({ archived_at: p.archived_at ? null : new Date().toISOString() })
+      .eq("id", p.id);
+    if (error) {
+      toast({ title: "Eroare", description: error.message, variant: "destructive" });
+    } else {
+      load();
+    }
+  };
+
+  const stats = {
+    total: profiles.length,
+    active: profiles.filter(p => !p.archived_at).length,
+    multiCall: profiles.filter(p => p.call_count > 1).length,
+  };
+
+  return (
+    <Card className="border-2 border-primary/20">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Brain className="w-5 h-5 text-primary" />
+          Memoria lui Andrei — Profiluri Apelanți
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Ce „știe" agentul vocal despre fiecare număr de telefon. Datele se actualizează automat după fiecare apel.
+          Profilurile fără apel în ultimele 6 luni sunt arhivate automat zilnic la 03:17.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap gap-3 text-xs">
+          <Badge variant="outline">Total: {stats.total}</Badge>
+          <Badge variant="outline">Active: {stats.active}</Badge>
+          <Badge variant="outline">Cu &gt;1 apel: {stats.multiCall}</Badge>
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Caută telefon, zonă, notă…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowArchived(s => !s)}
+          >
+            <Archive className="w-4 h-4 mr-2" />
+            {showArchived ? "Ascunde arhivate" : "Arată arhivate"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            Reîncarcă
+          </Button>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">Se încarcă…</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            Niciun profil încă. Andrei va începe să țină minte după primul apel real.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((p) => (
+              <div
+                key={p.id}
+                className={`border rounded-lg p-4 space-y-2 ${p.archived_at ? "bg-muted/40 opacity-70" : "bg-card"}`}
+              >
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Phone className="w-4 h-4 text-primary" />
+                      <span className="font-mono">{p.phone_normalized}</span>
+                      {p.display_name && <span className="text-muted-foreground text-sm">— {p.display_name}</span>}
+                      {p.archived_at && <Badge variant="secondary" className="text-xs">arhivat</Badge>}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span><Clock className="w-3 h-3 inline mr-1" />
+                        {p.last_call_at
+                          ? `acum ${formatDistanceToNow(new Date(p.last_call_at), { locale: ro })}`
+                          : "fără apeluri"}
+                      </span>
+                      <span>{p.call_count} apel/uri</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
+                          <RotateCcw className="w-4 h-4 mr-1" /> Reset Context
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Șterge memoria lui Andrei?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Toate preferințele extrase pentru <strong>{p.phone_normalized}</strong> vor fi șterse.
+                            La următorul apel, Andrei va trata acest număr ca pe un apelant nou.
+                            Acțiunea nu poate fi anulată.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Anulează</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => resetProfile(p)}>
+                            Da, șterge memoria
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button size="sm" variant="ghost" onClick={() => archiveProfile(p)}>
+                      <Archive className="w-4 h-4 mr-1" />
+                      {p.archived_at ? "Reactivează" : "Arhivează"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Preferințe */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                  <Field label="Interes" value={p.preferred_branch} />
+                  <Field
+                    label="Buget"
+                    value={p.budget_min || p.budget_max ? `${p.budget_min ?? "?"}–${p.budget_max ?? "?"} €` : null}
+                  />
+                  <Field
+                    label="Camere"
+                    value={p.rooms_min || p.rooms_max ? `${p.rooms_min ?? "?"}–${p.rooms_max ?? "?"}` : null}
+                  />
+                  <Field label="Timeline" value={p.timeline} />
+                </div>
+
+                {(p.preferred_zones?.length || p.property_types?.length) && (
+                  <div className="flex flex-wrap gap-1 text-xs">
+                    {p.preferred_zones?.map(z => <Badge key={z} variant="secondary">{z}</Badge>)}
+                    {p.property_types?.map(t => <Badge key={t} variant="outline">{t}</Badge>)}
+                  </div>
+                )}
+
+                {p.notes && (
+                  <div className="text-xs bg-muted/50 rounded p-2 border-l-2 border-primary">
+                    <span className="font-medium text-primary">Rezumat:</span> {p.notes}
+                  </div>
+                )}
+
+                {p.last_objection && (
+                  <div className="text-xs bg-destructive/5 rounded p-2 border-l-2 border-destructive flex gap-2 items-start">
+                    <MessageSquareWarning className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                    <div><span className="font-medium text-destructive">Ultima obiecție:</span> {p.last_objection}</div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div>
+      <div className="text-muted-foreground uppercase tracking-wide text-[10px]">{label}</div>
+      <div className="font-medium">{value || <span className="text-muted-foreground/60">—</span>}</div>
+    </div>
+  );
+}
