@@ -121,6 +121,8 @@ project_id = "mvzssjyzbwccioqvhjpo"
     verify_jwt = false
   [functions.voice-agent-auto-dial]
     verify_jwt = false
+  [functions.voice-agent-sync-knowledge]
+    verify_jwt = false
   [functions.prospect-ai-scorer]
     verify_jwt = false
   [functions.seo-track-impression]
