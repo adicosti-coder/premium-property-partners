@@ -65,6 +65,43 @@ export default function VoiceAgentManager() {
   const [runningTest, setRunningTest] = useState(false);
   const [testSessionId, setTestSessionId] = useState<string | null>(null);
   const [reportPolling, setReportPolling] = useState(false);
+  const [langTestRunning, setLangTestRunning] = useState(false);
+  const [langTestResult, setLangTestResult] = useState<{
+    summary: { total: number; passed: number; failed: number; pass_rate: number; verdict: string; duration_ms: number; tested_at: string };
+    results: Array<{ scenario_id: string; user_message: string; ai_reply: string; passed: boolean; ai_error: string | null; english_words_detected: string[]; has_diacritics: boolean; duration_ms: number }>;
+  } | null>(null);
+  const [langTestOpen, setLangTestOpen] = useState(false);
+
+  const runLanguageTest = async () => {
+    setLangTestRunning(true);
+    setLangTestResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-language-test", { body: {} });
+      if (error || (data as any)?.error) {
+        toast({
+          title: "Test limbă eșuat",
+          description: (data as any)?.error || error?.message || "Eroare necunoscută",
+          variant: "destructive",
+        });
+        return;
+      }
+      setLangTestResult(data);
+      setLangTestOpen(true);
+      const verdict = data.summary.verdict;
+      toast({
+        title:
+          verdict === "PASS"
+            ? "✅ Test trecut — 100% română"
+            : verdict === "WARN"
+            ? "⚠️ Test cu avertismente"
+            : "❌ Test eșuat — engleză detectată",
+        description: `${data.summary.passed}/${data.summary.total} scenarii au păstrat exclusiv limba română.`,
+        variant: verdict === "FAIL" ? "destructive" : "default",
+      });
+    } finally {
+      setLangTestRunning(false);
+    }
+  };
 
   const VOICES = [
     { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (feminin, cald, recomandat)" },
@@ -539,6 +576,58 @@ export default function VoiceAgentManager() {
         </CardContent>
       </Card>
 
+      {/* LANGUAGE TEST — fără telefon */}
+      <Card className="border-2 border-amber-500/40 bg-gradient-to-br from-amber-50/40 to-transparent dark:from-amber-950/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-amber-600" />
+            🇷🇴 Test limbă română (fără apel telefonic)
+            {langTestResult && (
+              <Badge
+                className={
+                  langTestResult.summary.verdict === "PASS"
+                    ? "bg-green-500/15 text-green-700 border border-green-500/40"
+                    : langTestResult.summary.verdict === "WARN"
+                    ? "bg-amber-500/15 text-amber-700 border border-amber-500/40"
+                    : "bg-red-500/15 text-red-700 border border-red-500/40"
+                }
+              >
+                {langTestResult.summary.verdict} — {langTestResult.summary.passed}/{langTestResult.summary.total}
+              </Badge>
+            )}
+          </CardTitle>
+          <CardDescription>
+            Forțează agentul să răspundă la 6 scenarii (inclusiv provocări în engleză tip "Hello, please switch to English")
+            și verifică automat că răspunsul rămâne EXCLUSIV în română. Orice cuvânt englezesc detectat = test eșuat.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Button
+            onClick={runLanguageTest}
+            disabled={langTestRunning}
+            size="lg"
+            variant="outline"
+            className="w-full border-amber-500/40 hover:bg-amber-500/10"
+          >
+            {langTestRunning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Bot className="h-4 w-4 mr-2" />}
+            {langTestRunning ? "Rulez 6 scenarii..." : "🧪 Verifică limba română (fără să sune)"}
+          </Button>
+          {langTestResult && (
+            <Button
+              onClick={() => setLangTestOpen(true)}
+              variant="ghost"
+              size="sm"
+              className="w-full"
+            >
+              Vezi detalii ({langTestResult.summary.pass_rate}% trecut, {langTestResult.summary.duration_ms} ms)
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground">
+            ✓ 6 scenarii (RO + capcane EN) &nbsp; ✓ Detector strict de engleză &nbsp; ✓ Violările se salvează în log
+          </p>
+        </CardContent>
+      </Card>
+
       {/* FULL DIAGNOSTIC TEST */}
       <Card className="border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-50/40 to-transparent dark:from-emerald-950/10">
         <CardHeader>
@@ -819,6 +908,98 @@ export default function VoiceAgentManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Language Test Result Dialog */}
+      <Dialog open={langTestOpen} onOpenChange={setLangTestOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Rezultat Test Limbă Română
+              {langTestResult && (
+                <Badge
+                  className={
+                    langTestResult.summary.verdict === "PASS"
+                      ? "bg-green-500/15 text-green-700 border border-green-500/40"
+                      : langTestResult.summary.verdict === "WARN"
+                      ? "bg-amber-500/15 text-amber-700 border border-amber-500/40"
+                      : "bg-red-500/15 text-red-700 border border-red-500/40"
+                  }
+                >
+                  {langTestResult.summary.verdict}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {langTestResult && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="rounded-lg border p-3">
+                  <div className="text-2xl font-bold text-green-600">{langTestResult.summary.passed}</div>
+                  <div className="text-xs text-muted-foreground">Trecute</div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className="text-2xl font-bold text-red-600">{langTestResult.summary.failed}</div>
+                  <div className="text-xs text-muted-foreground">Eșuate</div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className="text-2xl font-bold">{langTestResult.summary.pass_rate}%</div>
+                  <div className="text-xs text-muted-foreground">Rată succes</div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {langTestResult.results.map((r) => (
+                  <div
+                    key={r.scenario_id}
+                    className={`rounded-lg border p-3 ${
+                      r.passed ? "border-green-500/30 bg-green-500/5" : "border-red-500/40 bg-red-500/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">{r.scenario_id}</Badge>
+                        <span className={`text-sm font-semibold ${r.passed ? "text-green-700" : "text-red-700"}`}>
+                          {r.passed ? "✅ RO păstrată" : "❌ ENGLEZĂ DETECTATĂ"}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{r.duration_ms} ms</span>
+                    </div>
+                    <div className="text-xs space-y-1.5">
+                      <div>
+                        <span className="font-semibold text-muted-foreground">Întrebare:</span>{" "}
+                        <span className="italic">{r.user_message}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-muted-foreground">Răspuns AI:</span>{" "}
+                        <span>{r.ai_reply || <em className="text-red-600">— niciun răspuns ({r.ai_error})</em>}</span>
+                      </div>
+                      {r.english_words_detected.length > 0 && (
+                        <div className="text-red-700">
+                          <span className="font-semibold">Cuvinte engleză blocate:</span>{" "}
+                          {r.english_words_detected.map((w) => (
+                            <code key={w} className="mx-0.5 px-1 rounded bg-red-500/15">{w}</code>
+                          ))}
+                        </div>
+                      )}
+                      <div className="text-muted-foreground">
+                        Diacritice: {r.has_diacritics ? "✓" : "—"}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground border-t pt-3">
+                Testat la {new Date(langTestResult.summary.tested_at).toLocaleString("ro-RO")} •
+                Durată totală {langTestResult.summary.duration_ms} ms •
+                Violările eșuate sunt înregistrate automat în <code>voice_agent_language_violations</code>.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
