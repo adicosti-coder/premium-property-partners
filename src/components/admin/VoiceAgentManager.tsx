@@ -371,6 +371,7 @@ export default function VoiceAgentManager() {
           </div>
         </CardContent>
       </Card>
+      <VoiceAgentSimSuccessRate />
       <VoiceAgentMonitoring />
       <VoiceCallerProfilesManager />
       <VoiceAgentKnowledgeBase />
