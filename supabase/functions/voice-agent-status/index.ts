@@ -298,6 +298,17 @@ serve(async (req) => {
         console.error("[voice-status] postcall-intel exception", e);
       }
 
+      // SELF-CORRECTION + STOP-LOSS: lessons-learned + batch success-rate guard
+      try {
+        fetch(`${SUPABASE_URL}/functions/v1/voice-agent-self-correct`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
+          body: JSON.stringify({ session_id: sessionId }),
+        }).catch((e) => console.error("[voice-status] self-correct trigger failed", e));
+      } catch (e) {
+        console.error("[voice-status] self-correct exception", e);
+      }
+
       // Finalize script test log (if any was created at turn 0)
       try {
         const finalLogStatus = reportStatusReached

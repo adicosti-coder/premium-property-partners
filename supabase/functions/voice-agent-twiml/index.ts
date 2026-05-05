@@ -813,7 +813,27 @@ serve(async (req) => {
       console.error("[voice-twiml] failed to load voice_agent_scripts:", e);
     }
 
-    const memoryAddon = `${callerMemoryBlock}${liveBlock}${marketDataBlock}`;
+    // ── EMPATHY MIRRORING + LECȚII ÎNVĂȚATE (auto-injectate din apeluri respinse) ──
+    const EMPATHY_BLOCK = `\n\nMODULUL EMPATHY MIRRORING (CRITIC):\n` +
+      `Dacă proprietarul respinge cifrele/statisticile ("nu mă interesează cifrele tale", "lasă-mă cu statisticile", "bla-bla"), faci IMEDIAT un PIVOT EMPATIC — NU repeți cifre, NU insiști pe statistici. Spune fix:\n` +
+      `"Vă înțeleg perfect reticența. Scopul meu nu este să vă prezint cifre seci, ci să mă asigur că, într-o piață atât de schimbătoare, proprietatea dumneavoastră este protejată și valorificată la adevăratul ei potențial. O scurtă evaluare ne-ar ajuta să personalizăm totul pentru nevoile dumneavoastră specifice."\n` +
+      `După pivot, propui un singur slot concret de evaluare 15 min. NU revii la cifre în aceeași replică.`;
+
+    let lessonsBlock = "";
+    try {
+      const { data: lessons } = await supabase
+        .from("voice_agent_playbook_addendum")
+        .select("lesson")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (lessons && lessons.length > 0) {
+        lessonsBlock = `\n\nLECȚII ÎNVĂȚATE DIN APELURI ANTERIOARE (aplică-le ACUM, nu repeta aceste greșeli):\n` +
+          lessons.map((l: any, i: number) => `${i + 1}. ${l.lesson}`).join("\n");
+      }
+    } catch (_e) { /* best-effort */ }
+
+    const memoryAddon = `${callerMemoryBlock}${liveBlock}${marketDataBlock}${EMPATHY_BLOCK}${lessonsBlock}`;
     const baseSystemPrompt = dbSystemPromptOverride
       ? `${dbSystemPromptOverride}\n\n${leadContext}${sentimentBlock}${memoryAddon}`
       : `${systemPromptForBranch(branch, leadContext, objective, sentimentBlock)}${memoryAddon}`;
