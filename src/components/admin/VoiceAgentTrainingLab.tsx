@@ -69,6 +69,44 @@ export default function VoiceAgentTrainingLab() {
   const [computingKpi, setComputingKpi] = useState(false);
   const [detail, setDetail] = useState<DrillRun | null>(null);
   const [autoMode, setAutoMode] = useState(true);
+  const [gatingMode, setGatingMode] = useState<GatingMode>(() => {
+    if (typeof window === "undefined") return "low_medium";
+    return ((localStorage.getItem(GATING_KEY) as GatingMode) || "low_medium");
+  });
+  const [replayingId, setReplayingId] = useState<string | null>(null);
+  const [kpiAlert, setKpiAlert] = useState<{ kind: string; current: number; avg: number; drop: number } | null>(null);
+  const persistGating = (m: GatingMode) => {
+    setGatingMode(m);
+    try { localStorage.setItem(GATING_KEY, m); } catch {}
+    toast({ title: "Prag auto-aplicare actualizat", description: GATING_LABEL[m] });
+  };
+
+  // KPI alert: detect >15% drop vs 7-day average for success rate or drill pass-rate
+  useEffect(() => {
+    if (!kpis.length && !daily.length) return;
+    const checkDrop = (current: number | null, history: number[], kind: string) => {
+      if (current == null || history.length < 2) return null;
+      const avg = history.reduce((a, b) => a + b, 0) / history.length;
+      const drop = avg - current;
+      if (drop > 15) return { kind, current, avg: Math.round(avg * 10) / 10, drop: Math.round(drop * 10) / 10 };
+      return null;
+    };
+    const successHist = kpis.slice(1, 8).map((k) => k.success_rate).filter((n) => n != null) as number[];
+    const passHist = daily.slice(1, 8).map((d) => d.pass_rate).filter((n) => n != null) as number[];
+    const a = checkDrop(kpis[0]?.success_rate ?? null, successHist, "Success Rate apeluri");
+    const b = checkDrop(daily[0]?.pass_rate ?? null, passHist, "Pass Rate drill-uri");
+    const alert = a || b;
+    if (alert) {
+      setKpiAlert(alert);
+      toast({
+        variant: "destructive",
+        title: `⚠️ ${alert.kind} în scădere`,
+        description: `${alert.current}% acum vs media 7 zile ${alert.avg}% (−${alert.drop}%)`,
+      });
+    } else {
+      setKpiAlert(null);
+    }
+  }, [kpis, daily]);
 
   const loadAll = async () => {
     setLoading(true);
