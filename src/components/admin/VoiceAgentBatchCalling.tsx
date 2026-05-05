@@ -704,10 +704,39 @@ export default function VoiceAgentBatchCalling() {
                 )}
               </div>
               <div>
-                <div className="text-xs font-semibold mb-1 text-muted-foreground">DRAFT-URI FOLLOW-UP WHATSAPP</div>
-                <div className="text-xs text-muted-foreground">
-                  {reportData.calls.filter((c) => c.followup_draft).length} draft-uri generate de Gemini, gata pentru review.
+                <div className="text-xs font-semibold mb-2 text-muted-foreground">
+                  DRAFT-URI FOLLOW-UP WHATSAPP — editabile
                 </div>
+                {reportData.calls.filter((c) => c.followup_draft || editedDrafts[c.id]).length === 0 ? (
+                  <div className="text-xs text-muted-foreground">Niciun draft generat de Gemini.</div>
+                ) : (
+                  <div className="space-y-3 max-h-72 overflow-auto pr-1">
+                    {reportData.calls
+                      .filter((c) => c.followup_draft || editedDrafts[c.id])
+                      .map((c) => {
+                        const original = draftToText(c.followup_draft);
+                        const current = editedDrafts[c.id] ?? original;
+                        const edited = current !== original;
+                        return (
+                          <div key={c.id} className="border rounded p-2 space-y-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="font-medium">📞 {c.to_number}</span>
+                              <span className="flex items-center gap-1">
+                                {c.ai_outcome && <Badge variant="outline" className="text-[9px]">{c.ai_outcome}</Badge>}
+                                {edited && <Badge className="text-[9px] bg-amber-500">editat</Badge>}
+                              </span>
+                            </div>
+                            <Textarea
+                              value={current}
+                              onChange={(e) => setEditedDrafts((d) => ({ ...d, [c.id]: e.target.value }))}
+                              rows={3}
+                              className="text-xs font-mono"
+                            />
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
               </div>
             </div>
           )}
