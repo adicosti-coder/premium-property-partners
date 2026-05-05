@@ -92,6 +92,21 @@ interface TestLog {
 const TOP3_PHONES = ["+40729785285", "+40723321076", "+40743010969"];
 const FINAL_STATUSES = ["completed", "failed", "busy", "no-answer", "canceled"];
 const TECH_FAIL_STATUSES = ["failed", "busy", "no-answer", "canceled"];
+const ACTIVE_STATUSES = ["queued", "initiating", "initiated", "ringing", "in-progress", "in_progress", "completing"];
+const STALE_SESSION_MS = 5 * 60 * 1000;
+
+function getCallReferenceTime(call: Pick<LiveCall, "updated_at" | "ended_at" | "started_at">): number {
+  const ref = call.updated_at || call.ended_at || call.started_at;
+  return ref ? new Date(ref).getTime() : 0;
+}
+
+function isStaleCall(call: Pick<LiveCall, "status" | "updated_at" | "ended_at" | "started_at">): boolean {
+  return ACTIVE_STATUSES.includes(call.status) && Date.now() - getCallReferenceTime(call) > STALE_SESSION_MS;
+}
+
+function isCallEffectivelyDone(call: Pick<LiveCall, "status" | "updated_at" | "ended_at" | "started_at">): boolean {
+  return FINAL_STATUSES.includes(call.status) || isStaleCall(call);
+}
 
 const STATUS_LABEL: Record<string, { label: string; tone: "default" | "secondary" | "destructive" | "outline" }> = {
   queued: { label: "În coadă", tone: "outline" },
@@ -142,6 +157,23 @@ export default function VoiceAgentBatchCalling() {
 
   const loadAll = async () => {
     setLoading(true);
+    await supabase.from("voice_call_sessions")
+      .update({
+        status: "failed",
+        ended_at: new Date().toISOString(),
+        error_message: "Auto-reset: status intermediar blocat peste 5 minute",
+      })
+      .in("status", ACTIVE_STATUSES)
+      .lt("updated_at", new Date(Date.now() - STALE_SESSION_MS).toISOString());
+    await supabase.from("prospect_listings")
+      .update({
+        lifecycle_status: "new",
+        auto_call_triggered_at: null,
+        voice_call_session_id: null,
+        last_failure_reason: "auto_reset_stale_voice_session",
+      })
+      .eq("lifecycle_status", "calling")
+      .lt("auto_call_triggered_at", new Date(Date.now() - STALE_SESSION_MS).toISOString());
     const [pRes, lRes, sRes, cRes] = await Promise.all([
       supabase.from("prospect_listings")
         .select("id, title, zone, phone_normalized, contact_phone, lead_score, lifecycle_status, category")
@@ -342,8 +374,14 @@ export default function VoiceAgentBatchCalling() {
     (async () => {
       const { data } = await supabase.from("prospect_listings")
         .select("id, title, zone, phone_normalized, contact_phone, lead_score, lifecycle_status, category")
-        .eq("is_active", true).in("phone_normalized", TOP3_PHONES);
-      setTop3Available((data as Prospect[]) || []);
+        .eq("is_active", true).in("phone_normalized", TOP3_PHONES)
+        .order("lead_score", { ascending: false, nullsFirst: false });
+      const byPhone = new Map<string, Prospect>();
+      ((data as Prospect[]) || []).forEach((p) => {
+        const phone = p.phone_normalized || p.contact_phone || p.id;
+        if (!byPhone.has(phone)) byPhone.set(phone, p);
+      });
+      setTop3Available(TOP3_PHONES.map((phone) => byPhone.get(phone)).filter(Boolean) as Prospect[]);
     })();
   }, []);
 
@@ -365,7 +403,8 @@ export default function VoiceAgentBatchCalling() {
       loadAll();
       return;
     }
-    const sessionIds: string[] = (data as any)?.session_ids || (data as any)?.sessions?.map((s: any) => s.id) || [];
+    const payload = data as { session_ids?: string[]; sessions?: Array<{ id: string }>; results?: Array<{ session_id?: string }> } | null;
+    const sessionIds: string[] = payload?.session_ids || payload?.sessions?.map((s) => s.id) || payload?.results?.map((r) => r.session_id).filter(Boolean) as string[] || [];
     if (sessionIds.length > 0) setBatchSessionIds(sessionIds);
     toast({ title: "📞 Batch pornit", description: `${ids.length} apeluri în coadă.` });
     setSelected(new Set());
@@ -385,6 +424,30 @@ export default function VoiceAgentBatchCalling() {
     await supabase.from("voice_agent_safety_state")
       .update({ calls_paused: false, paused_reason: null }).eq("id", true);
     toast({ title: "✅ Apeluri reluate" });
+    loadAll();
+  };
+
+  const resetStaleBatch = async () => {
+    const staleIds = liveCalls.filter(isStaleCall).map((c) => c.id);
+    const staleProspectIds = liveCalls.filter(isStaleCall).map((c) => c.prospect_listing_id).filter(Boolean) as string[];
+    if (staleIds.length > 0) {
+      await supabase.from("voice_call_sessions").update({
+        status: "failed",
+        ended_at: new Date().toISOString(),
+        error_message: "Reset manual: sesiune blocată în status intermediar",
+      }).in("id", staleIds);
+    }
+    if (staleProspectIds.length > 0) {
+      await supabase.from("prospect_listings").update({
+        lifecycle_status: "new",
+        auto_call_triggered_at: null,
+        voice_call_session_id: null,
+        last_failure_reason: "manual_reset_stale_voice_session",
+      }).in("id", staleProspectIds);
+    }
+    setBatchSessionIds([]);
+    reportShownRef.current = false;
+    toast({ title: "🧹 Batch deblocat", description: `${staleIds.length} sesiuni blocate resetate. Poți porni din nou.` });
     loadAll();
   };
 
@@ -521,14 +584,7 @@ export default function VoiceAgentBatchCalling() {
             </div>
             {(() => {
               const tracked = batchSessionIds.length > 0 ? liveCalls.filter((c) => batchSessionIds.includes(c.id)) : [];
-              const STALE_MS = 5 * 60 * 1000; // 5 min fără update => considerat blocat
-              const now = Date.now();
-              const isDone = (c: LiveCall) => {
-                if (FINAL_STATUSES.includes(c.status)) return true;
-                const ref = (c as any).updated_at || (c as any).ended_at || (c as any).started_at;
-                return ref && (now - new Date(ref).getTime() > STALE_MS);
-              };
-              const finished = tracked.filter(isDone).length;
+              const finished = tracked.filter(isCallEffectivelyDone).length;
               const total = batchSessionIds.length;
               const inFlight = total > 0 && finished < total;
               const pct = total > 0 ? Math.round((finished / total) * 100) : 0;
@@ -543,11 +599,7 @@ export default function VoiceAgentBatchCalling() {
                         </div>
                         <Progress value={pct} className="h-2" />
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        setBatchSessionIds([]);
-                        reportShownRef.current = false;
-                        toast({ title: "🧹 Batch resetat", description: "Sesiunile blocate au fost ignorate. Poți porni din nou." });
-                      }}>
+                      <Button size="sm" variant="ghost" onClick={resetStaleBatch}>
                         Resetează
                       </Button>
                     </>
@@ -643,7 +695,8 @@ export default function VoiceAgentBatchCalling() {
                 const meta = STATUS_LABEL[c.status] || { label: c.status, tone: "outline" as const };
                 const isScheduled = c.ai_outcome === "scheduled" || !!c.appointment_scheduled_at;
                 const isFinal = FINAL_STATUSES.includes(c.status);
-                const techFail = TECH_FAIL_STATUSES.includes(c.status);
+                const isStale = isStaleCall(c);
+                const techFail = TECH_FAIL_STATUSES.includes(c.status) || isStale;
                 const sentimentScore = extractSentimentScore(c);
                 const mainObjection = extractMainObjection(c);
                 const showVerdict = isFinal && (sentimentScore !== null || mainObjection);
@@ -695,8 +748,8 @@ export default function VoiceAgentBatchCalling() {
                         {c.call_duration_seconds ? ` · ${c.call_duration_seconds}s` : ""}
                       </div>
                     </div>
-                    <Badge variant={meta.tone}>{meta.label}</Badge>
-                    {isFinal && (
+                    <Badge variant={isStale ? "destructive" : meta.tone}>{isStale ? "Blocat" : meta.label}</Badge>
+                    {(isFinal || isStale) && (
                       <Button size="sm" variant="outline" className="h-7 text-[10px]"
                         onClick={() => openTechDetails(c.id)}>
                         <FileText className="h-3 w-3 mr-1" /> Detalii
