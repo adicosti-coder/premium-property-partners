@@ -447,27 +447,71 @@ export default function VoiceAgentTrainingLab() {
               )}
             </div>
 
-            {/* Trend 14 zile */}
+            {/* Drift Map — dual sparkline + tabel colapsabil */}
             <div>
-              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Trend 14 zile (drill vs apeluri reale)</h4>
-              <div className="border rounded text-xs">
-                <div className="grid grid-cols-4 gap-2 px-2 py-1 bg-muted font-semibold">
-                  <span>Zi</span><span>Drill %</span><span>Apel succes %</span><span>Drift</span>
-                </div>
-                {Array.from({ length: 14 }).map((_, i) => {
-                  const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Drift Map 14 zile (drill vs apeluri reale)</h4>
+              {(() => {
+                const days = Array.from({ length: 14 }).map((_, i) => {
+                  const day = new Date(Date.now() - (13 - i) * 86400000).toISOString().slice(0, 10);
                   const dr = daily.find((d) => d.day === day);
                   const kp = kpis.find((k) => k.day === day);
-                  return (
-                    <div key={day} className="grid grid-cols-4 gap-2 px-2 py-1 border-t">
-                      <span className="font-mono">{day.slice(5)}</span>
-                      <span>{dr ? `${dr.pass_rate}%` : "—"}</span>
-                      <span>{kp ? `${kp.success_rate}%` : "—"}</span>
-                      <span className="flex items-center gap-1">{driftIcon(kp?.drift_vs_prev ?? null)}{kp?.drift_vs_prev ?? "—"}</span>
+                  return { day, drill: dr?.pass_rate ?? null, call: kp?.success_rate ?? null };
+                });
+                const W = 280, H = 60;
+                const toPath = (key: "drill" | "call") => {
+                  const pts = days.map((d, i) => ({ x: (i / 13) * W, y: d[key] == null ? null : H - ((d[key] as number) / 100) * H }));
+                  let path = ""; let started = false;
+                  pts.forEach((p) => {
+                    if (p.y == null) { started = false; return; }
+                    path += (started ? " L " : "M ") + p.x.toFixed(1) + " " + p.y.toFixed(1); started = true;
+                  });
+                  return path;
+                };
+                // Pearson correlation
+                const pairs = days.filter((d) => d.drill != null && d.call != null);
+                let corr: number | null = null;
+                if (pairs.length >= 3) {
+                  const mx = pairs.reduce((s, p) => s + (p.drill as number), 0) / pairs.length;
+                  const my = pairs.reduce((s, p) => s + (p.call as number), 0) / pairs.length;
+                  let num = 0, dx2 = 0, dy2 = 0;
+                  pairs.forEach((p) => { const dx = (p.drill as number) - mx; const dy = (p.call as number) - my; num += dx * dy; dx2 += dx * dx; dy2 += dy * dy; });
+                  corr = dx2 && dy2 ? Math.round((num / Math.sqrt(dx2 * dy2)) * 100) / 100 : null;
+                }
+                return (
+                  <div className="border rounded-lg p-3 space-y-2">
+                    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-16">
+                      <path d={toPath("drill")} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                      <path d={toPath("call")} fill="none" stroke="hsl(var(--destructive))" strokeWidth="1.5" strokeDasharray="3 2" />
+                    </svg>
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground flex-wrap gap-2">
+                      <span className="flex items-center gap-1"><span className="inline-block w-3 h-0.5 bg-primary"></span>Drill pass-rate</span>
+                      <span className="flex items-center gap-1"><span className="inline-block w-3 h-0.5 bg-destructive border-dashed"></span>Apeluri success-rate</span>
+                      <span>Corelație: <b className={corr == null ? "" : corr > 0.5 ? "text-emerald-600" : corr < -0.2 ? "text-destructive" : ""}>{corr ?? "—"}</b></span>
                     </div>
-                  );
-                })}
-              </div>
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-[11px] text-muted-foreground hover:text-foreground">Tabel detaliat audit</summary>
+                      <div className="border rounded text-xs mt-2">
+                        <div className="grid grid-cols-4 gap-2 px-2 py-1 bg-muted font-semibold">
+                          <span>Zi</span><span>Drill %</span><span>Apel succes %</span><span>Drift</span>
+                        </div>
+                        {Array.from({ length: 14 }).map((_, i) => {
+                          const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+                          const dr = daily.find((d) => d.day === day);
+                          const kp = kpis.find((k) => k.day === day);
+                          return (
+                            <div key={day} className="grid grid-cols-4 gap-2 px-2 py-1 border-t">
+                              <span className="font-mono">{day.slice(5)}</span>
+                              <span>{dr ? `${dr.pass_rate}%` : "—"}</span>
+                              <span>{kp ? `${kp.success_rate}%` : "—"}</span>
+                              <span className="flex items-center gap-1">{driftIcon(kp?.drift_vs_prev ?? null)}{kp?.drift_vs_prev ?? "—"}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </details>
+                  </div>
+                );
+              })()}
             </div>
           </TabsContent>
 
