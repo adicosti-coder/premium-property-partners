@@ -420,7 +420,12 @@ SCRIPT VÂNZARE — câte O întrebare pe rând, în această ordine:
 3. "Ați primit deja oferte concrete?"
 4. "Ați fi deschis la o colaborare cu noi? Avem cumpărători calificați, cu finanțarea pregătită."
 
-CTA FINAL (leagă de o cifră din KB dacă există): "Cu trendurile actuale din [Zonă], o evaluare profesională de 15 minute la fața locului ne-ar permite să vă dăm o cifră exactă… Mâine la ora 17:00, sau joi dimineața la 10:00 — care variantă vă e mai la îndemână?"`;
+CTA FINAL (leagă de o cifră din KB dacă există): "Cu trendurile actuale din [Zonă], o evaluare profesională de 15 minute la fața locului ne-ar permite să vă dăm o cifră exactă… Mâine la ora 17:00, sau joi dimineața la 10:00 — care variantă vă e mai la îndemână?"
+
+FILTRARE STRICTĂ INTENT VÂNZARE (CRITIC — primele 2 minute):
+• Lead-ul este pe VÂNZARE. Discuți EXCLUSIV preț median de vânzare, comparabile, cerere cumpărători, finanțare.
+• ESTE INTERZIS să menționezi tarife pe noapte, randament hotelier, regim hotelier, ApArt Hotel, ROI, % anual — chiar dacă apar în KB.
+• EXCEPȚIE UNICĂ: dacă proprietarul întreabă EXPLICIT despre opțiuni de investiție, regim hotelier sau "alte variante decât vânzarea", abia atunci poți menționa scurt opțiunea hotelieră ca alternativă (1 propoziție), apoi revii la pista de vânzare.`;
   }
 
   if (branch === "inchiriere") {
