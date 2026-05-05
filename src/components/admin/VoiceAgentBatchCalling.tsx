@@ -413,10 +413,14 @@ export default function VoiceAgentBatchCalling() {
       loadAll();
       return;
     }
-    const payload = data as { session_ids?: string[]; sessions?: Array<{ id: string }>; results?: Array<{ session_id?: string }> } | null;
-    const sessionIds: string[] = payload?.session_ids || payload?.sessions?.map((s) => s.id) || payload?.results?.map((r) => r.session_id).filter(Boolean) as string[] || [];
+    const payload = data as { session_ids?: string[]; sessions?: Array<{ id?: string; session_id?: string }>; results?: Array<{ id?: string; session_id?: string }> } | null;
+    const sessionIds: string[] = [
+      ...(payload?.session_ids || []),
+      ...((payload?.sessions || []).map((s) => s.id || s.session_id).filter(Boolean) as string[]),
+      ...((payload?.results || []).map((r) => r.session_id || r.id).filter(Boolean) as string[]),
+    ];
     if (sessionIds.length > 0) setBatchSessionIds(sessionIds);
-    toast({ title: "📞 Batch pornit", description: `${ids.length} apeluri în coadă.` });
+    toast({ title: "📞 Batch pornit", description: `${sessionIds.length || ids.length} apeluri în coadă.` });
     setSelected(new Set());
     loadAll();
   };
