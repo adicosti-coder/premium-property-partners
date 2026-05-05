@@ -88,6 +88,15 @@ interface TestLog {
   script_name: string | null; script_version: number | null; ab_variant: string | null;
   to_number: string | null; created_at: string; updated_at: string;
 }
+interface DetailSession extends LiveCall {
+  created_at: string;
+  twilio_call_sid: string | null;
+  next_action: string | null;
+  recording_url: string | null;
+  detected_language: string | null;
+  clarity_score: number | null;
+  debug_log: any;
+}
 
 const TOP3_PHONES = ["+40729785285", "+40723321076", "+40743010969"];
 const FINAL_STATUSES = ["completed", "failed", "busy", "no-answer", "canceled"];
@@ -106,6 +115,10 @@ function isStaleCall(call: Pick<LiveCall, "status" | "updated_at" | "ended_at" |
 
 function isCallEffectivelyDone(call: Pick<LiveCall, "status" | "updated_at" | "ended_at" | "started_at">): boolean {
   return FINAL_STATUSES.includes(call.status) || isStaleCall(call);
+}
+
+function isAutoResetFailure(call: Pick<LiveCall, "status" | "error_message">): boolean {
+  return /auto-reset|reset manual|status intermediar blocat/i.test(call.error_message || "");
 }
 
 const STATUS_LABEL: Record<string, { label: string; tone: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -130,6 +143,7 @@ export default function VoiceAgentBatchCalling() {
   const [launching, setLaunching] = useState(false);
   const [liveCalls, setLiveCalls] = useState<LiveCall[]>([]);
   const [detailLog, setDetailLog] = useState<TestLog | null>(null);
+  const [detailSession, setDetailSession] = useState<DetailSession | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [scheduledNotified, setScheduledNotified] = useState<Set<string>>(new Set());
   const [retrying, setRetrying] = useState<string | null>(null);
@@ -159,7 +173,7 @@ export default function VoiceAgentBatchCalling() {
     setLoading(true);
     await supabase.from("voice_call_sessions")
       .update({
-        status: "failed",
+        status: "canceled",
         ended_at: new Date().toISOString(),
         error_message: "Auto-reset: status intermediar blocat peste 5 minute",
       })
@@ -403,10 +417,15 @@ export default function VoiceAgentBatchCalling() {
       loadAll();
       return;
     }
-    const payload = data as { session_ids?: string[]; sessions?: Array<{ id: string }>; results?: Array<{ session_id?: string }> } | null;
-    const sessionIds: string[] = payload?.session_ids || payload?.sessions?.map((s) => s.id) || payload?.results?.map((r) => r.session_id).filter(Boolean) as string[] || [];
+    const payload = data as { session_ids?: string[]; sessions?: Array<{ id?: string; session_id?: string }>; results?: Array<{ id?: string; session_id?: string }> } | null;
+    const sessionIds: string[] = [
+      ...(payload?.session_ids || []),
+      ...((payload?.sessions || []).map((s) => s.id || s.session_id).filter(Boolean) as string[]),
+      ...((payload?.results || []).map((r) => r.session_id || r.id).filter(Boolean) as string[]),
+    ];
+    const skipped = (payload?.results || []).filter((r: any) => !r.session_id && !r.id).length;
     if (sessionIds.length > 0) setBatchSessionIds(sessionIds);
-    toast({ title: "📞 Batch pornit", description: `${ids.length} apeluri în coadă.` });
+    toast({ title: "📞 Batch pornit", description: `${sessionIds.length || ids.length} apeluri în coadă${skipped ? ` · ${skipped} sărite` : ""}.` });
     setSelected(new Set());
     loadAll();
   };
@@ -432,7 +451,7 @@ export default function VoiceAgentBatchCalling() {
     const staleProspectIds = liveCalls.filter(isStaleCall).map((c) => c.prospect_listing_id).filter(Boolean) as string[];
     if (staleIds.length > 0) {
       await supabase.from("voice_call_sessions").update({
-        status: "failed",
+        status: "canceled",
         ended_at: new Date().toISOString(),
         error_message: "Reset manual: sesiune blocată în status intermediar",
       }).in("id", staleIds);
@@ -460,10 +479,17 @@ export default function VoiceAgentBatchCalling() {
   const openTechDetails = async (sessionId: string) => {
     setDetailLoading(true);
     setDetailLog(null);
-    const { data } = await supabase.from("voice_agent_script_test_logs")
+    setDetailSession(null);
+    const [logRes, sessionRes] = await Promise.all([
+      supabase.from("voice_agent_script_test_logs")
       .select("id, status, outcome, fallback_reason, call_duration_seconds, transcript_turns, script_name, script_version, ab_variant, to_number, created_at, updated_at")
-      .eq("session_id", sessionId).maybeSingle();
-    setDetailLog((data as TestLog) || null);
+      .eq("session_id", sessionId).maybeSingle(),
+      supabase.from("voice_call_sessions")
+        .select("id, to_number, status, ai_outcome, ai_sentiment, ai_summary, next_action, appointment_scheduled_at, started_at, ended_at, call_duration_seconds, prospect_listing_id, error_message, followup_draft, followup_status, transcript, updated_at, created_at, twilio_call_sid, recording_url, detected_language, clarity_score, debug_log")
+        .eq("id", sessionId).maybeSingle(),
+    ]);
+    setDetailLog((logRes.data as TestLog) || null);
+    setDetailSession((sessionRes.data as DetailSession) || null);
     setDetailLoading(false);
   };
 
@@ -696,7 +722,8 @@ export default function VoiceAgentBatchCalling() {
                 const isScheduled = c.ai_outcome === "scheduled" || !!c.appointment_scheduled_at;
                 const isFinal = FINAL_STATUSES.includes(c.status);
                 const isStale = isStaleCall(c);
-                const techFail = TECH_FAIL_STATUSES.includes(c.status) || isStale;
+                const resetFailure = isAutoResetFailure(c);
+                const techFail = !resetFailure && (TECH_FAIL_STATUSES.includes(c.status) || isStale);
                 const sentimentScore = extractSentimentScore(c);
                 const mainObjection = extractMainObjection(c);
                 const showVerdict = isFinal && (sentimentScore !== null || mainObjection);
@@ -748,7 +775,7 @@ export default function VoiceAgentBatchCalling() {
                         {c.call_duration_seconds ? ` · ${c.call_duration_seconds}s` : ""}
                       </div>
                     </div>
-                    <Badge variant={isStale ? "destructive" : meta.tone}>{isStale ? "Blocat" : meta.label}</Badge>
+                    <Badge variant={resetFailure ? "outline" : isStale ? "destructive" : meta.tone}>{resetFailure ? "Resetat" : isStale ? "Blocat" : meta.label}</Badge>
                     {(isFinal || isStale) && (
                       <Button size="sm" variant="outline" className="h-7 text-[10px]"
                         onClick={() => openTechDetails(c.id)}>
@@ -841,29 +868,33 @@ export default function VoiceAgentBatchCalling() {
       </CardContent>
 
       {/* TECH DETAILS DIALOG */}
-      <Dialog open={detailLoading || !!detailLog}
-        onOpenChange={(o) => { if (!o) { setDetailLog(null); setDetailLoading(false); } }}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={detailLoading || !!detailLog || !!detailSession}
+        onOpenChange={(o) => { if (!o) { setDetailLog(null); setDetailSession(null); setDetailLoading(false); } }}>
+      <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-4 w-4" /> Verdict AI Judge
             </DialogTitle>
-            <DialogDescription>Log tehnic din <code>voice_agent_script_test_logs</code></DialogDescription>
+            <DialogDescription>Audit tehnic din sesiunea de apel și logul AI Judge, când există.</DialogDescription>
           </DialogHeader>
           {detailLoading ? (
             <div className="text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Încărcare…
             </div>
-          ) : detailLog ? (
+          ) : detailSession ? (
             <div className="space-y-2 text-sm">
-              <Row k="Telefon" v={detailLog.to_number} />
-              <Row k="Status" v={detailLog.status} />
-              <Row k="Outcome" v={detailLog.outcome || "—"} highlight={detailLog.outcome === "scheduled"} />
-              <Row k="Fallback" v={detailLog.fallback_reason || "—"} />
-              <Row k="Script" v={`${detailLog.script_name || "—"} v${detailLog.script_version ?? "?"}${detailLog.ab_variant ? ` (${detailLog.ab_variant})` : ""}`} />
-              <Row k="Durată" v={detailLog.call_duration_seconds ? `${detailLog.call_duration_seconds}s` : "—"} />
-              <Row k="Turnuri" v={detailLog.transcript_turns ?? "—"} />
-              <Row k="Creat" v={new Date(detailLog.created_at).toLocaleString("ro-RO")} />
+              <Row k="Telefon" v={detailSession.to_number} />
+              <Row k="Status apel" v={detailSession.status} highlight={detailSession.status === "completed"} />
+              <Row k="Eroare" v={detailSession.error_message || "—"} />
+              <Row k="Outcome" v={detailSession.ai_outcome || detailLog?.outcome || "—"} highlight={(detailSession.ai_outcome || detailLog?.outcome) === "scheduled"} />
+              <Row k="Sinteză" v={detailSession.ai_summary || "—"} />
+              <Row k="Următorul pas" v={detailSession.next_action || "—"} />
+              <Row k="Script" v={detailLog ? `${detailLog.script_name || "—"} v${detailLog.script_version ?? "?"}${detailLog.ab_variant ? ` (${detailLog.ab_variant})` : ""}` : "—"} />
+              <Row k="Durată" v={detailSession.call_duration_seconds ? `${detailSession.call_duration_seconds}s` : "—"} />
+              <Row k="Transcript" v={Array.isArray(detailSession.transcript) ? `${detailSession.transcript.length} turnuri` : "—"} />
+              <Row k="Debug" v={Array.isArray(detailSession.debug_log) ? `${detailSession.debug_log.length} intrări` : "—"} />
+              <Row k="SID Twilio" v={detailSession.twilio_call_sid || "—"} />
+              <Row k="Creat" v={new Date(detailSession.created_at).toLocaleString("ro-RO")} />
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">Nu există log tehnic încă.</div>
@@ -1156,9 +1187,9 @@ export default function VoiceAgentBatchCalling() {
 
 function Row({ k, v, highlight }: { k: string; v: any; highlight?: boolean }) {
   return (
-    <div className="flex justify-between gap-3 border-b pb-1">
-      <span className="text-muted-foreground">{k}</span>
-      <span className={`font-medium text-right ${highlight ? "text-emerald-600" : ""}`}>{String(v)}</span>
+    <div className="grid grid-cols-[120px_1fr] gap-3 border-b pb-1">
+      <span className="text-muted-foreground shrink-0">{k}</span>
+      <span className={`font-medium text-right break-words whitespace-pre-wrap min-w-0 ${highlight ? "text-emerald-600" : ""}`}>{String(v)}</span>
     </div>
   );
 }
