@@ -5841,11 +5841,14 @@ export type Database = {
           budget_max: number | null
           budget_min: number | null
           call_count: number
+          consecutive_no_answer: number
           consent_remember: boolean
           created_at: string
           display_name: string | null
           id: string
+          is_ghosting: boolean
           last_call_at: string | null
+          last_no_answer_at: string | null
           last_objection: string | null
           last_session_id: string | null
           mentioned_property_ids: string[] | null
@@ -5864,11 +5867,14 @@ export type Database = {
           budget_max?: number | null
           budget_min?: number | null
           call_count?: number
+          consecutive_no_answer?: number
           consent_remember?: boolean
           created_at?: string
           display_name?: string | null
           id?: string
+          is_ghosting?: boolean
           last_call_at?: string | null
+          last_no_answer_at?: string | null
           last_objection?: string | null
           last_session_id?: string | null
           mentioned_property_ids?: string[] | null
@@ -5887,11 +5893,14 @@ export type Database = {
           budget_max?: number | null
           budget_min?: number | null
           call_count?: number
+          consecutive_no_answer?: number
           consent_remember?: boolean
           created_at?: string
           display_name?: string | null
           id?: string
+          is_ghosting?: boolean
           last_call_at?: string | null
+          last_no_answer_at?: string | null
           last_objection?: string | null
           last_session_id?: string | null
           mentioned_property_ids?: string[] | null
@@ -5946,6 +5955,144 @@ export type Database = {
           total_targets?: number
           updated_at?: string
           zone?: string | null
+        }
+        Relationships: []
+      }
+      voice_ghosting_queue: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          caller_profile_id: string | null
+          context_summary: string | null
+          created_at: string
+          draft_message: string
+          id: string
+          no_answer_count: number
+          phone_normalized: string | null
+          prospect_id: string | null
+          rejected_reason: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          caller_profile_id?: string | null
+          context_summary?: string | null
+          created_at?: string
+          draft_message: string
+          id?: string
+          no_answer_count?: number
+          phone_normalized?: string | null
+          prospect_id?: string | null
+          rejected_reason?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          caller_profile_id?: string | null
+          context_summary?: string | null
+          created_at?: string
+          draft_message?: string
+          id?: string
+          no_answer_count?: number
+          phone_normalized?: string | null
+          prospect_id?: string | null
+          rejected_reason?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_ghosting_queue_caller_profile_id_fkey"
+            columns: ["caller_profile_id"]
+            isOneToOne: false
+            referencedRelation: "voice_caller_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_ghosting_queue_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_lead_cluster_assignments: {
+        Row: {
+          cluster_id: string
+          created_at: string
+          prospect_id: string
+          rationale: string | null
+        }
+        Insert: {
+          cluster_id: string
+          created_at?: string
+          prospect_id: string
+          rationale?: string | null
+        }
+        Update: {
+          cluster_id?: string
+          created_at?: string
+          prospect_id?: string
+          rationale?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_lead_cluster_assignments_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "voice_lead_clusters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_lead_cluster_assignments_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_lead_clusters: {
+        Row: {
+          approach_tone: string | null
+          brief: string
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          id: string
+          is_active: boolean
+          label: string
+          lead_count: number
+          updated_at: string
+        }
+        Insert: {
+          approach_tone?: string | null
+          brief: string
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          is_active?: boolean
+          label: string
+          lead_count?: number
+          updated_at?: string
+        }
+        Update: {
+          approach_tone?: string | null
+          brief?: string
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          is_active?: boolean
+          label?: string
+          lead_count?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -6014,6 +6161,66 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      voice_script_ab_tests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          ended_at: string | null
+          hypothesis: string | null
+          id: string
+          metrics: Json | null
+          name: string
+          started_at: string
+          status: string
+          variant_a_script_id: string | null
+          variant_b_script_id: string | null
+          winner: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          ended_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          metrics?: Json | null
+          name: string
+          started_at?: string
+          status?: string
+          variant_a_script_id?: string | null
+          variant_b_script_id?: string | null
+          winner?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          ended_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          metrics?: Json | null
+          name?: string
+          started_at?: string
+          status?: string
+          variant_a_script_id?: string | null
+          variant_b_script_id?: string | null
+          winner?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_script_ab_tests_variant_a_script_id_fkey"
+            columns: ["variant_a_script_id"]
+            isOneToOne: false
+            referencedRelation: "voice_agent_scripts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_script_ab_tests_variant_b_script_id_fkey"
+            columns: ["variant_b_script_id"]
+            isOneToOne: false
+            referencedRelation: "voice_agent_scripts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
