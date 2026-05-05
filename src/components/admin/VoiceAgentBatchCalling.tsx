@@ -15,8 +15,9 @@ import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, PhoneCall, Lightbulb, Loader2, ShieldCheck, Play, RefreshCw,
   Radio, Zap, FileText, CheckCircle2, RotateCcw, Download, Send, BarChart3, Info,
-  History, FileDown,
+  History, FileDown, Megaphone,
 } from "lucide-react";
+import VoiceAgentSmartClusters from "./VoiceAgentSmartClusters";
 
 interface DraftEdit { at: string; before: string; after: string; }
 
