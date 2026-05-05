@@ -1,0 +1,483 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "@/hooks/use-toast";
+import {
+  GraduationCap, Play, Loader2, RefreshCw, TrendingUp, TrendingDown, Minus,
+  ShieldCheck, AlertTriangle, CheckCircle2, XCircle, BookOpen, Brain, Target,
+  Activity, FileText, Sparkles, History,
+} from "lucide-react";
+
+type Category = "obiectii_clasice" | "knowledge_timisoara" | "compliance_ton";
+
+interface Scenario {
+  id: string; category: Category; title: string; user_message: string;
+  expected_keywords: string[]; forbidden_keywords: string[];
+  difficulty: number; is_active: boolean;
+}
+interface DrillRun {
+  id: string; scenario_id: string; ai_reply: string | null;
+  passed: boolean; score: number | null; judge_notes: string | null;
+  duration_ms: number | null; expected_hits: string[] | null;
+  forbidden_hits: string[] | null; triggered_by: string | null; created_at: string;
+}
+interface DailyRow { day: string; total: number; passed: number; pass_rate: number; by_category: any; }
+interface KPI { day: string; total_calls: number; scheduled: number; success_rate: number; sentiment_avg: number | null; top_objections: any[]; drift_vs_prev: number | null; }
+interface Lesson {
+  id: string; lesson: string; severity: string; is_active: boolean;
+  auto_applied: boolean; awaiting_approval: boolean; applied_at: string | null;
+  created_at: string;
+}
+
+const CATEGORY_LABEL: Record<Category, string> = {
+  obiectii_clasice: "Obiecții clasice",
+  knowledge_timisoara: "Knowledge Timișoara",
+  compliance_ton: "Compliance & Ton",
+};
+const CATEGORY_ICON: Record<Category, any> = {
+  obiectii_clasice: Target, knowledge_timisoara: BookOpen, compliance_ton: ShieldCheck,
+};
+
+export default function VoiceAgentTrainingLab() {
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [runs, setRuns] = useState<DrillRun[]>([]);
+  const [daily, setDaily] = useState<DailyRow[]>([]);
+  const [kpis, setKpis] = useState<KPI[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState<string | null>(null);
+  const [runningCat, setRunningCat] = useState<Category | null>(null);
+  const [runningAll, setRunningAll] = useState(false);
+  const [computingKpi, setComputingKpi] = useState(false);
+  const [detail, setDetail] = useState<DrillRun | null>(null);
+  const [autoMode, setAutoMode] = useState(true);
+
+  const loadAll = async () => {
+    setLoading(true);
+    const [s, r, d, k, l] = await Promise.all([
+      supabase.from("voice_agent_drill_scenarios").select("*").order("category").order("difficulty"),
+      supabase.from("voice_agent_drill_runs").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("voice_agent_drill_daily").select("*").order("day", { ascending: false }).limit(14),
+      supabase.from("voice_agent_kpi_snapshots").select("*").order("day", { ascending: false }).limit(14),
+      supabase.from("voice_agent_playbook_addendum").select("id, lesson, severity, is_active, auto_applied, awaiting_approval, applied_at, created_at").order("created_at", { ascending: false }).limit(30),
+    ]);
+    setScenarios((s.data as any) || []);
+    setRuns((r.data as any) || []);
+    setDaily((d.data as any) || []);
+    setKpis((k.data as any) || []);
+    setLessons((l.data as any) || []);
+    setLoading(false);
+  };
+  useEffect(() => { loadAll(); }, []);
+
+  const runDrill = async (params: { scenario_ids?: string[]; category?: Category; all?: boolean }) => {
+    const { data, error } = await supabase.functions.invoke("voice-agent-drill-runner", {
+      body: { ...params, triggered_by: "manual" },
+    });
+    if (error || (data as any)?.error) {
+      toast({ variant: "destructive", title: "Drill eșuat", description: (data as any)?.error || error?.message });
+      return null;
+    }
+    return data;
+  };
+
+  const runOne = async (s: Scenario) => {
+    setRunning(s.id);
+    const data = await runDrill({ scenario_ids: [s.id] });
+    setRunning(null);
+    if (data) {
+      const res = data.results?.[0];
+      toast({
+        title: res?.passed ? "✅ Trecut" : "❌ Eșuat",
+        description: `${s.title} — scor ${res?.score ?? "?"}/100`,
+        className: res?.passed ? "bg-emerald-600 text-white" : "",
+      });
+      loadAll();
+    }
+  };
+
+  const runCategory = async (c: Category) => {
+    setRunningCat(c);
+    const data = await runDrill({ category: c });
+    setRunningCat(null);
+    if (data) {
+      const passed = (data.results || []).filter((r: any) => r.passed).length;
+      toast({ title: `Drill ${CATEGORY_LABEL[c]}`, description: `${passed}/${data.ran} trecute` });
+      loadAll();
+    }
+  };
+
+  const runAll = async () => {
+    setRunningAll(true);
+    const data = await runDrill({ all: true });
+    setRunningAll(false);
+    if (data) {
+      const passed = (data.results || []).filter((r: any) => r.passed).length;
+      toast({ title: "🎓 Drill complet", description: `${passed}/${data.ran} trecute` });
+      loadAll();
+    }
+  };
+
+  const computeKPI = async () => {
+    setComputingKpi(true);
+    const { data, error } = await supabase.functions.invoke("voice-agent-kpi-snapshot", { body: {} });
+    setComputingKpi(false);
+    if (error || (data as any)?.error) {
+      toast({ variant: "destructive", title: "KPI eșuat", description: (data as any)?.error || error?.message });
+      return;
+    }
+    toast({ title: "📊 KPI actualizat", description: `${(data as any).total_calls} apeluri, ${(data as any).success_rate}% succes` });
+    loadAll();
+  };
+
+  const applyLesson = async (l: Lesson, approve: boolean) => {
+    const { error } = await supabase.from("voice_agent_playbook_addendum").update({
+      is_active: approve,
+      auto_applied: false,
+      awaiting_approval: false,
+      applied_at: approve ? new Date().toISOString() : null,
+    }).eq("id", l.id);
+    if (error) { toast({ variant: "destructive", title: "Eroare", description: error.message }); return; }
+    toast({ title: approve ? "✅ Lecție aplicată" : "❌ Lecție respinsă" });
+    loadAll();
+  };
+
+  const today = useMemo(() => daily[0], [daily]);
+  const todayKpi = useMemo(() => kpis[0], [kpis]);
+  const pendingLessons = useMemo(() => lessons.filter((l) => l.awaiting_approval), [lessons]);
+  const activeLessons = useMemo(() => lessons.filter((l) => l.is_active), [lessons]);
+
+  const driftIcon = (n: number | null) => {
+    if (n === null) return <Minus className="h-3 w-3" />;
+    if (n > 0) return <TrendingUp className="h-3 w-3 text-emerald-600" />;
+    if (n < 0) return <TrendingDown className="h-3 w-3 text-destructive" />;
+    return <Minus className="h-3 w-3" />;
+  };
+
+  return (
+    <Card className="border-2 border-primary/30">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              Training Lab — Andrei
+              <Badge variant="secondary" className="ml-2">Perfecționare continuă</Badge>
+            </CardTitle>
+            <CardDescription>
+              Auto-corecție post-apel + drill-uri zilnice + scoreboard KPI. Lecțiile cu severitate ≤ medium se aplică automat sub control; cele critice așteaptă aprobare.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="scoreboard">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="scoreboard"><Activity className="h-3.5 w-3.5 mr-1" /> Scoreboard</TabsTrigger>
+            <TabsTrigger value="drills"><Target className="h-3.5 w-3.5 mr-1" /> Drill-uri</TabsTrigger>
+            <TabsTrigger value="lessons">
+              <Brain className="h-3.5 w-3.5 mr-1" /> Lecții
+              {pendingLessons.length > 0 && <Badge variant="destructive" className="ml-1 h-4 px-1 text-[9px]">{pendingLessons.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="history"><History className="h-3.5 w-3.5 mr-1" /> Istoric</TabsTrigger>
+          </TabsList>
+
+          {/* SCOREBOARD */}
+          <TabsContent value="scoreboard" className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <KpiBox label="Drill pass-rate azi" value={today ? `${today.pass_rate}%` : "—"} hint={today ? `${today.passed}/${today.total}` : "Niciun drill"} accent />
+              <KpiBox label="Apeluri reale azi" value={todayKpi?.total_calls ?? "—"} hint={todayKpi ? `${todayKpi.scheduled} programate` : "—"} />
+              <KpiBox
+                label="Rată succes apeluri"
+                value={todayKpi ? `${todayKpi.success_rate}%` : "—"}
+                hint={todayKpi?.drift_vs_prev != null ? `${todayKpi.drift_vs_prev > 0 ? "+" : ""}${todayKpi.drift_vs_prev}% vs ieri` : "—"}
+                accent
+                trail={driftIcon(todayKpi?.drift_vs_prev ?? null)}
+              />
+              <KpiBox label="Sentiment mediu" value={todayKpi?.sentiment_avg ? `${todayKpi.sentiment_avg}/10` : "—"} hint="din transcripts" />
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" onClick={computeKPI} disabled={computingKpi}>
+                {computingKpi ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                Recalculează KPI azi
+              </Button>
+              <Button size="sm" variant="outline" onClick={runAll} disabled={runningAll}>
+                {runningAll ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Play className="h-3 w-3 mr-1" />}
+                Rulează toate drill-urile
+              </Button>
+            </div>
+
+            {/* Top obiecții */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Top obiecții (apeluri reale azi)</h4>
+              {todayKpi?.top_objections?.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {todayKpi.top_objections.map((o: any, i: number) => (
+                    <Badge key={i} variant="outline">{o.key} <span className="ml-1 text-muted-foreground">×{o.count}</span></Badge>
+                  ))}
+                </div>
+              ) : <div className="text-xs text-muted-foreground">Nicio obiecție majoră (sau KPI nerecalculat).</div>}
+            </div>
+
+            {/* Pass-rate per categorie azi */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Pass-rate drill per categorie</h4>
+              <div className="space-y-2">
+                {(Object.keys(CATEGORY_LABEL) as Category[]).map((c) => {
+                  const stat = today?.by_category?.[c];
+                  const pct = stat?.total ? Math.round((stat.passed / stat.total) * 100) : 0;
+                  const Icon = CATEGORY_ICON[c];
+                  return (
+                    <div key={c} className="flex items-center gap-3">
+                      <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between text-xs">
+                          <span>{CATEGORY_LABEL[c]}</span>
+                          <span className="font-mono">{stat ? `${stat.passed}/${stat.total}` : "—"}</span>
+                        </div>
+                        <Progress value={pct} className="h-1.5 mt-1" />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Trend 14 zile */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Trend 14 zile (drill vs apeluri reale)</h4>
+              <div className="border rounded text-xs">
+                <div className="grid grid-cols-4 gap-2 px-2 py-1 bg-muted font-semibold">
+                  <span>Zi</span><span>Drill %</span><span>Apel succes %</span><span>Drift</span>
+                </div>
+                {Array.from({ length: 14 }).map((_, i) => {
+                  const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+                  const dr = daily.find((d) => d.day === day);
+                  const kp = kpis.find((k) => k.day === day);
+                  return (
+                    <div key={day} className="grid grid-cols-4 gap-2 px-2 py-1 border-t">
+                      <span className="font-mono">{day.slice(5)}</span>
+                      <span>{dr ? `${dr.pass_rate}%` : "—"}</span>
+                      <span>{kp ? `${kp.success_rate}%` : "—"}</span>
+                      <span className="flex items-center gap-1">{driftIcon(kp?.drift_vs_prev ?? null)}{kp?.drift_vs_prev ?? "—"}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* DRILLS */}
+          <TabsContent value="drills" className="space-y-4">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="text-xs text-muted-foreground">
+                {scenarios.length} scenarii active · acoperire: obiecții clasice + knowledge Timișoara + compliance/ton
+              </div>
+              <Button size="sm" onClick={runAll} disabled={runningAll}>
+                {runningAll ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Play className="h-3 w-3 mr-1" />}
+                Rulează tot
+              </Button>
+            </div>
+
+            {(Object.keys(CATEGORY_LABEL) as Category[]).map((c) => {
+              const list = scenarios.filter((s) => s.category === c);
+              const Icon = CATEGORY_ICON[c];
+              return (
+                <div key={c} className="border rounded-lg overflow-hidden">
+                  <div className="flex items-center justify-between gap-2 px-3 py-2 bg-muted/40">
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <Icon className="h-4 w-4 text-primary" /> {CATEGORY_LABEL[c]}
+                      <Badge variant="secondary" className="ml-1">{list.length}</Badge>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => runCategory(c)} disabled={runningCat === c}>
+                      {runningCat === c ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Play className="h-3 w-3 mr-1" />}
+                      Rulează categoria
+                    </Button>
+                  </div>
+                  <ul className="divide-y">
+                    {list.map((s) => {
+                      const lastRun = runs.find((r) => r.scenario_id === s.id);
+                      return (
+                        <li key={s.id} className="px-3 py-2 flex items-start gap-2 text-xs">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate flex items-center gap-2">
+                              {s.title}
+                              <Badge variant="outline" className="text-[9px]">D{s.difficulty}</Badge>
+                              {lastRun && (lastRun.passed
+                                ? <Badge className="text-[9px] bg-emerald-600">✓ {lastRun.score}</Badge>
+                                : <Badge className="text-[9px]" variant="destructive">✗ {lastRun.score ?? "—"}</Badge>)}
+                            </div>
+                            <div className="text-muted-foreground italic truncate">"{s.user_message}"</div>
+                          </div>
+                          {lastRun && (
+                            <Button size="sm" variant="ghost" onClick={() => setDetail(lastRun)}>
+                              <FileText className="h-3 w-3" />
+                            </Button>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => runOne(s)} disabled={running === s.id}>
+                            {running === s.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </TabsContent>
+
+          {/* LESSONS */}
+          <TabsContent value="lessons" className="space-y-4">
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+              <div>
+                <div className="text-sm font-semibold">Auto-aplicare sub control</div>
+                <div className="text-xs text-muted-foreground">
+                  Lecțiile severity ≤ medium se aplică automat. Cele critice așteaptă aprobare admin.
+                </div>
+              </div>
+              <Switch checked={autoMode} onCheckedChange={setAutoMode} />
+            </div>
+
+            {pendingLessons.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold uppercase text-amber-600 mb-2 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" /> Așteaptă aprobare ({pendingLessons.length})
+                </h4>
+                <ul className="space-y-2">
+                  {pendingLessons.map((l) => (
+                    <li key={l.id} className="border rounded p-2 text-xs space-y-2 bg-amber-500/5 border-amber-500/40">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="destructive" className="text-[9px]">{l.severity}</Badge>
+                        <span className="text-muted-foreground">{new Date(l.created_at).toLocaleString("ro-RO")}</span>
+                      </div>
+                      <div>{l.lesson}</div>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => applyLesson(l, true)}><CheckCircle2 className="h-3 w-3 mr-1" /> Aprobă</Button>
+                        <Button size="sm" variant="outline" onClick={() => applyLesson(l, false)}><XCircle className="h-3 w-3 mr-1" /> Respinge</Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                Lecții active în playbook ({activeLessons.length})
+              </h4>
+              <ScrollArea className="max-h-72">
+                <ul className="space-y-1">
+                  {activeLessons.map((l) => (
+                    <li key={l.id} className="border rounded p-2 text-xs flex items-start gap-2">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" />
+                      <div className="flex-1">
+                        <div>{l.lesson}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          {l.severity} · {l.auto_applied ? "auto" : "manual"} · {new Date(l.created_at).toLocaleDateString("ro-RO")}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                  {activeLessons.length === 0 && <li className="text-xs text-muted-foreground italic">Nicio lecție activă încă.</li>}
+                </ul>
+              </ScrollArea>
+            </div>
+          </TabsContent>
+
+          {/* HISTORY */}
+          <TabsContent value="history" className="space-y-2">
+            <div className="text-xs text-muted-foreground">Ultimele 50 de execuții drill</div>
+            <ScrollArea className="max-h-[500px]">
+              <ul className="space-y-1">
+                {runs.map((r) => {
+                  const s = scenarios.find((x) => x.id === r.scenario_id);
+                  return (
+                    <li key={r.id} className="border rounded p-2 text-xs flex items-start gap-2">
+                      {r.passed ? <CheckCircle2 className="h-3 w-3 text-emerald-600 mt-0.5" /> : <XCircle className="h-3 w-3 text-destructive mt-0.5" />}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{s?.title || r.scenario_id.slice(0, 8)}</div>
+                        <div className="text-muted-foreground truncate">{r.judge_notes || "—"}</div>
+                      </div>
+                      <Badge variant="outline" className="text-[9px]">{r.score ?? "?"}/100</Badge>
+                      <Button size="sm" variant="ghost" onClick={() => setDetail(r)}>
+                        <FileText className="h-3 w-3" />
+                      </Button>
+                    </li>
+                  );
+                })}
+                {runs.length === 0 && <li className="text-xs text-muted-foreground italic">Niciun drill rulat încă.</li>}
+              </ul>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+
+      {/* RUN DETAIL */}
+      <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-4 w-4" /> Detaliu execuție drill
+            </DialogTitle>
+            <DialogDescription>
+              {detail && new Date(detail.created_at).toLocaleString("ro-RO")} · scor {detail?.score ?? "—"}/100
+            </DialogDescription>
+          </DialogHeader>
+          {detail && (
+            <div className="space-y-3 text-sm">
+              <div>
+                <div className="text-xs font-semibold uppercase text-muted-foreground mb-1">Scenariu</div>
+                <div className="text-xs">{scenarios.find((s) => s.id === detail.scenario_id)?.title || detail.scenario_id}</div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase text-muted-foreground mb-1">Răspuns Andrei</div>
+                <Textarea readOnly value={detail.ai_reply || ""} rows={6} className="text-xs font-mono" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase text-muted-foreground mb-1">Verdict judecător AI</div>
+                <div className="border rounded p-2 text-xs bg-muted/30">{detail.judge_notes || "—"}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <div className="font-semibold text-emerald-600 mb-0.5">✓ Așteptate găsite</div>
+                  {(detail.expected_hits || []).length === 0 ? <span className="text-muted-foreground">—</span> :
+                    <ul>{(detail.expected_hits || []).map((k, i) => <li key={i}>· {k}</li>)}</ul>}
+                </div>
+                <div>
+                  <div className="font-semibold text-destructive mb-0.5">⚠ Interzise găsite</div>
+                  {(detail.forbidden_hits || []).length === 0 ? <span className="text-muted-foreground">—</span> :
+                    <ul>{(detail.forbidden_hits || []).map((k, i) => <li key={i}>· {k}</li>)}</ul>}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetail(null)}>Închide</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
+function KpiBox({ label, value, hint, accent, trail }: { label: string; value: any; hint?: string; accent?: boolean; trail?: any }) {
+  return (
+    <div className={`rounded-lg border p-3 ${accent ? "bg-primary/5 border-primary/30" : ""}`}>
+      <div className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</div>
+      <div className={`text-2xl font-bold flex items-center gap-1 ${accent ? "text-primary" : ""}`}>{value}{trail}</div>
+      {hint && <div className="text-[10px] text-muted-foreground mt-0.5">{hint}</div>}
+    </div>
+  );
+}
