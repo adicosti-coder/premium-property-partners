@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { AlertTriangle, PhoneCall, Lightbulb, Loader2, ShieldCheck, Play, RefreshCw } from "lucide-react";
+import {
+  AlertTriangle, PhoneCall, Lightbulb, Loader2, ShieldCheck, Play, RefreshCw,
+  Radio, Zap, FileText, CheckCircle2,
+} from "lucide-react";
 
 interface Prospect {
   id: string;
@@ -36,6 +40,52 @@ interface SafetyState {
   last_check_at: string | null;
 }
 
+interface LiveCall {
+  id: string;
+  to_number: string;
+  status: string;
+  ai_outcome: string | null;
+  ai_sentiment: string | null;
+  ai_summary: string | null;
+  appointment_scheduled_at: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  call_duration_seconds: number | null;
+  prospect_listing_id: string | null;
+  updated_at: string;
+}
+
+interface TestLog {
+  id: string;
+  status: string;
+  outcome: string | null;
+  fallback_reason: string | null;
+  call_duration_seconds: number | null;
+  transcript_turns: number | null;
+  script_name: string | null;
+  script_version: number | null;
+  ab_variant: string | null;
+  to_number: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Top 3 validated Timișoara leads (filtru geo-hard ✅)
+const TOP3_PHONES = ["+40729785285", "+40723321076", "+40743010969"];
+
+const STATUS_LABEL: Record<string, { label: string; tone: "default" | "secondary" | "destructive" | "outline" }> = {
+  queued: { label: "În coadă", tone: "outline" },
+  initiated: { label: "Sună…", tone: "secondary" },
+  ringing: { label: "Sună…", tone: "secondary" },
+  "in-progress": { label: "În conversație…", tone: "default" },
+  in_progress: { label: "În conversație…", tone: "default" },
+  completed: { label: "Analiză post-apel…", tone: "secondary" },
+  failed: { label: "Eșuat", tone: "destructive" },
+  busy: { label: "Ocupat", tone: "destructive" },
+  "no-answer": { label: "Fără răspuns", tone: "destructive" },
+  canceled: { label: "Anulat", tone: "outline" },
+};
+
 export default function VoiceAgentBatchCalling() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -43,10 +93,14 @@ export default function VoiceAgentBatchCalling() {
   const [safety, setSafety] = useState<SafetyState | null>(null);
   const [loading, setLoading] = useState(false);
   const [launching, setLaunching] = useState(false);
+  const [liveCalls, setLiveCalls] = useState<LiveCall[]>([]);
+  const [detailLog, setDetailLog] = useState<TestLog | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [scheduledNotified, setScheduledNotified] = useState<Set<string>>(new Set());
 
   const loadAll = async () => {
     setLoading(true);
-    const [pRes, lRes, sRes] = await Promise.all([
+    const [pRes, lRes, sRes, cRes] = await Promise.all([
       supabase
         .from("prospect_listings")
         .select("id, title, zone, phone_normalized, contact_phone, lead_score, lifecycle_status, category")
@@ -66,14 +120,54 @@ export default function VoiceAgentBatchCalling() {
         .select("calls_paused, paused_reason, success_rate_pct, sample_size, last_check_at")
         .eq("id", true)
         .maybeSingle(),
+      supabase
+        .from("voice_call_sessions")
+        .select("id, to_number, status, ai_outcome, ai_sentiment, ai_summary, appointment_scheduled_at, started_at, ended_at, call_duration_seconds, prospect_listing_id, updated_at")
+        .order("created_at", { ascending: false })
+        .limit(15),
     ]);
     setProspects((pRes.data as Prospect[]) || []);
     setLessons((lRes.data as Lesson[]) || []);
     setSafety((sRes.data as SafetyState) || null);
+    setLiveCalls((cRes.data as LiveCall[]) || []);
     setLoading(false);
   };
 
   useEffect(() => { loadAll(); }, []);
+
+  // Realtime subscription pe voice_call_sessions
+  useEffect(() => {
+    const channel = supabase
+      .channel("batch-live-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "voice_call_sessions" },
+        (payload) => {
+          const row = payload.new as LiveCall;
+          if (!row?.id) return;
+          setLiveCalls((prev) => {
+            const idx = prev.findIndex((c) => c.id === row.id);
+            const next = [...prev];
+            if (idx >= 0) next[idx] = { ...next[idx], ...row };
+            else next.unshift(row);
+            return next.slice(0, 20);
+          });
+          // Toast verde la "scheduled"
+          const isScheduled =
+            row.ai_outcome === "scheduled" || !!row.appointment_scheduled_at;
+          if (isScheduled && !scheduledNotified.has(row.id)) {
+            setScheduledNotified((s) => new Set(s).add(row.id));
+            toast({
+              title: "✅ Întâlnire programată!",
+              description: `${row.to_number} — Gemini a marcat apelul ca SCHEDULED.`,
+              className: "bg-emerald-600 text-white border-emerald-700",
+            });
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [scheduledNotified]);
 
   const toggleOne = (id: string) => {
     const n = new Set(selected);
@@ -85,14 +179,19 @@ export default function VoiceAgentBatchCalling() {
     setSelected(new Set(prospects.slice(0, 10).map((p) => p.id)));
   };
 
-  const startBatch = async () => {
-    if (selected.size === 0) {
-      toast({ variant: "destructive", title: "Selectează lead-uri", description: "Alege până la 10 prospecte." });
+  const top3Available = useMemo(
+    () => prospects.filter((p) => TOP3_PHONES.includes(p.phone_normalized || "")),
+    [prospects],
+  );
+
+  const startBatchWithIds = async (ids: string[]) => {
+    if (ids.length === 0) {
+      toast({ variant: "destructive", title: "Lead-uri lipsă", description: "Niciun prospect valid." });
       return;
     }
     setLaunching(true);
     const { data, error } = await supabase.functions.invoke("voice-agent-bulk-campaign", {
-      body: { prospect_ids: Array.from(selected) },
+      body: { prospect_ids: ids },
     });
     setLaunching(false);
     if (error || (data as any)?.error) {
@@ -101,9 +200,23 @@ export default function VoiceAgentBatchCalling() {
       loadAll();
       return;
     }
-    toast({ title: "📞 Batch pornit", description: `${selected.size} apeluri în coadă.` });
+    toast({ title: "📞 Batch pornit", description: `${ids.length} apeluri în coadă.` });
     setSelected(new Set());
     loadAll();
+  };
+
+  const startBatch = () => startBatchWithIds(Array.from(selected));
+
+  const startTop3 = () => {
+    if (top3Available.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Top 3 indisponibil",
+        description: "Lead-urile validate nu apar în lista activă (probabil deja contactate).",
+      });
+      return;
+    }
+    startBatchWithIds(top3Available.map((p) => p.id));
   };
 
   const resumeCalls = async () => {
@@ -123,6 +236,18 @@ export default function VoiceAgentBatchCalling() {
     loadAll();
   };
 
+  const openTechDetails = async (sessionId: string) => {
+    setDetailLoading(true);
+    setDetailLog(null);
+    const { data } = await supabase
+      .from("voice_agent_script_test_logs")
+      .select("id, status, outcome, fallback_reason, call_duration_seconds, transcript_turns, script_name, script_version, ab_variant, to_number, created_at, updated_at")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+    setDetailLog((data as TestLog) || null);
+    setDetailLoading(false);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -136,6 +261,25 @@ export default function VoiceAgentBatchCalling() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* QUICK ACTION: TOP 3 */}
+        <Alert className="border-primary/40 bg-primary/5">
+          <Zap className="h-4 w-4 text-primary" />
+          <AlertTitle>Pornire rapidă — Top 3 Timișoara (validate geo)</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <div className="text-xs text-muted-foreground">
+              {TOP3_PHONES.join(" · ")} — {top3Available.length}/3 disponibili acum
+            </div>
+            <Button
+              size="sm"
+              onClick={startTop3}
+              disabled={launching || safety?.calls_paused || top3Available.length === 0}
+            >
+              {launching ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Play className="h-3 w-3 mr-1" />}
+              Start Batch — Top 3 ({top3Available.length})
+            </Button>
+          </AlertDescription>
+        </Alert>
+
         {/* SAFETY BANNER */}
         {safety?.calls_paused ? (
           <Alert variant="destructive">
@@ -163,6 +307,62 @@ export default function VoiceAgentBatchCalling() {
           </Alert>
         )}
 
+        {/* LIVE CALL FEED */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold text-sm flex items-center gap-1">
+              <Radio className="h-4 w-4 text-rose-500 animate-pulse" />
+              Live Call Feed
+              <Badge variant="secondary" className="ml-1">{liveCalls.length}</Badge>
+            </h4>
+            <Button size="sm" variant="ghost" onClick={loadAll}>
+              <RefreshCw className="h-3 w-3" />
+            </Button>
+          </div>
+          <div className="border rounded max-h-72 overflow-auto divide-y">
+            {liveCalls.length === 0 ? (
+              <div className="p-3 text-xs text-muted-foreground">
+                Niciun apel încă. Lansează un batch pentru a vedea feed-ul live.
+              </div>
+            ) : (
+              liveCalls.map((c) => {
+                const meta = STATUS_LABEL[c.status] || { label: c.status, tone: "outline" as const };
+                const isScheduled = c.ai_outcome === "scheduled" || !!c.appointment_scheduled_at;
+                const isFinal = ["completed", "failed", "busy", "no-answer", "canceled"].includes(c.status);
+                return (
+                  <div key={c.id} className="p-2 flex items-center gap-2 text-xs">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium flex items-center gap-2">
+                        📞 {c.to_number}
+                        {isScheduled && (
+                          <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">
+                            <CheckCircle2 className="h-3 w-3" /> Scheduled
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-muted-foreground truncate">
+                        {c.ai_summary || c.ai_sentiment || (c.started_at ? `Început: ${new Date(c.started_at).toLocaleTimeString("ro-RO")}` : "—")}
+                        {c.call_duration_seconds ? ` · ${c.call_duration_seconds}s` : ""}
+                      </div>
+                    </div>
+                    <Badge variant={meta.tone}>{meta.label}</Badge>
+                    {isFinal && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[10px]"
+                        onClick={() => openTechDetails(c.id)}
+                      >
+                        <FileText className="h-3 w-3 mr-1" /> Detalii tehnice
+                      </Button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
         {/* LESSONS LEARNED */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -171,7 +371,6 @@ export default function VoiceAgentBatchCalling() {
               Lecții Învățate (auto-injectate în prompt)
               <Badge variant="secondary" className="ml-1">{lessons.filter((l) => l.is_active).length} active</Badge>
             </h4>
-            <Button size="sm" variant="ghost" onClick={loadAll}><RefreshCw className="h-3 w-3" /></Button>
           </div>
           <div className="border rounded max-h-48 overflow-auto divide-y">
             {lessons.length === 0 ? (
@@ -254,6 +453,47 @@ export default function VoiceAgentBatchCalling() {
           </div>
         </div>
       </CardContent>
+
+      {/* TECH DETAILS DIALOG */}
+      <Dialog open={detailLoading || !!detailLog} onOpenChange={(o) => { if (!o) { setDetailLog(null); setDetailLoading(false); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-4 w-4" /> Verdict AI Judge
+            </DialogTitle>
+            <DialogDescription>
+              Log tehnic din <code>voice_agent_script_test_logs</code>
+            </DialogDescription>
+          </DialogHeader>
+          {detailLoading ? (
+            <div className="text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Încărcare…
+            </div>
+          ) : detailLog ? (
+            <div className="space-y-2 text-sm">
+              <Row k="Telefon" v={detailLog.to_number} />
+              <Row k="Status" v={detailLog.status} />
+              <Row k="Outcome (verdict)" v={detailLog.outcome || "—"} highlight={detailLog.outcome === "scheduled"} />
+              <Row k="Fallback reason" v={detailLog.fallback_reason || "—"} />
+              <Row k="Script" v={`${detailLog.script_name || "—"} v${detailLog.script_version ?? "?"}${detailLog.ab_variant ? ` (${detailLog.ab_variant})` : ""}`} />
+              <Row k="Durată" v={detailLog.call_duration_seconds ? `${detailLog.call_duration_seconds}s` : "—"} />
+              <Row k="Turnuri transcript" v={detailLog.transcript_turns ?? "—"} />
+              <Row k="Creat" v={new Date(detailLog.created_at).toLocaleString("ro-RO")} />
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">Nu există log tehnic pentru acest apel încă.</div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
+  );
+}
+
+function Row({ k, v, highlight }: { k: string; v: any; highlight?: boolean }) {
+  return (
+    <div className="flex justify-between gap-3 border-b pb-1">
+      <span className="text-muted-foreground">{k}</span>
+      <span className={`font-medium text-right ${highlight ? "text-emerald-600" : ""}`}>{String(v)}</span>
+    </div>
   );
 }
