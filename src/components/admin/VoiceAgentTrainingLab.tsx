@@ -40,7 +40,7 @@ interface DrillRun {
   forbidden_hits: string[] | null; triggered_by: string | null; created_at: string;
 }
 interface DailyRow { day: string; total: number; passed: number; pass_rate: number; by_category: any; }
-interface KPI { day: string; total_calls: number; scheduled: number; success_rate: number; sentiment_avg: number | null; top_objections: any[]; drift_vs_prev: number | null; }
+interface KPI { day: string; total_calls: number; scheduled: number; success_rate: number; sentiment_avg: number | null; top_objections: any[]; drift_vs_prev: number | null; computed_at?: string | null; }
 interface Lesson {
   id: string; lesson: string; severity: string; is_active: boolean;
   auto_applied: boolean; awaiting_approval: boolean; applied_at: string | null;
@@ -176,14 +176,66 @@ export default function VoiceAgentTrainingLab() {
 
   const computeKPI = async () => {
     setComputingKpi(true);
-    const { data, error } = await supabase.functions.invoke("voice-agent-kpi-snapshot", { body: {} });
-    setComputingKpi(false);
-    if (error || (data as any)?.error) {
-      toast({ variant: "destructive", title: "KPI eșuat", description: (data as any)?.error || error?.message });
-      return;
+    try {
+      // Preflight: verify there are calls today before invoking the edge function
+      const today = new Date().toISOString().slice(0, 10);
+      const start = `${today}T00:00:00Z`;
+      const end = new Date(new Date(start).getTime() + 24 * 3600 * 1000).toISOString();
+      const { count, error: cntErr } = await supabase
+        .from("voice_call_sessions")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", start).lt("created_at", end);
+      if (cntErr) {
+        toast({ variant: "destructive", title: "Eroare de conexiune la bază", description: cntErr.message });
+        return;
+      }
+      if (!count || count === 0) {
+        toast({
+          variant: "destructive",
+          title: "Lipsă date pentru ziua curentă",
+          description: "Niciun apel real procesat azi. Recalcularea KPI a fost evitată.",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("voice-agent-kpi-snapshot", { body: {} });
+
+      if (error) {
+        const msg = String(error.message || error).toLowerCase();
+        let title = "KPI eșuat";
+        let description = error.message || "Eroare necunoscută";
+        if (msg.includes("failed to send") || msg.includes("fetch")) {
+          title = "Funcție în curs de deploy sau indisponibilă";
+          description = "Edge function-ul nu răspunde. Așteaptă ~30s și reîncearcă.";
+        } else if (msg.includes("not found") || msg.includes("404")) {
+          title = "Funcție inexistentă";
+          description = "voice-agent-kpi-snapshot nu este deployat încă.";
+        } else if (msg.includes("network") || msg.includes("connection")) {
+          title = "Eroare de conexiune la bază";
+        } else if (msg.includes("429")) {
+          title = "Rate limit atins"; description = "Prea multe cereri. Așteaptă 1 minut.";
+        } else if (msg.includes("402")) {
+          title = "Credit AI epuizat"; description = "Adaugă fonduri în workspace pentru AI Gateway.";
+        }
+        toast({ variant: "destructive", title, description });
+        return;
+      }
+      if ((data as any)?.error) {
+        toast({ variant: "destructive", title: "KPI eșuat în execuție", description: (data as any).error });
+        return;
+      }
+
+      const d = data as any;
+      toast({
+        title: "📊 KPI actualizat",
+        description: `${d.total_calls} apeluri · ${d.success_rate}% succes · salvat în istoric`,
+      });
+      await loadAll();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Eroare neașteptată", description: e?.message || String(e) });
+    } finally {
+      setComputingKpi(false);
     }
-    toast({ title: "📊 KPI actualizat", description: `${(data as any).total_calls} apeluri, ${(data as any).success_rate}% succes` });
-    loadAll();
   };
 
   const applyLesson = async (l: Lesson, approve: boolean) => {
@@ -363,6 +415,36 @@ export default function VoiceAgentTrainingLab() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Istoric KPI auto-salvat */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                <History className="h-3 w-3" /> Istoric recalculări KPI ({kpis.length})
+              </h4>
+              {kpis.length === 0 ? (
+                <div className="text-xs text-muted-foreground italic">Nicio recalculare salvată încă.</div>
+              ) : (
+                <ScrollArea className="max-h-48 border rounded">
+                  <ul className="divide-y text-xs">
+                    {kpis.map((k) => (
+                      <li key={k.day} className="px-2 py-1.5 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono text-[11px]">{k.day}</span>
+                          <Badge variant="outline" className="text-[9px]">{k.total_calls} apel</Badge>
+                          <Badge variant="secondary" className="text-[9px]">{k.success_rate}% succes</Badge>
+                          {k.sentiment_avg != null && <Badge variant="outline" className="text-[9px]">😊 {k.sentiment_avg}/10</Badge>}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground shrink-0 flex items-center gap-1">
+                          {driftIcon(k.drift_vs_prev ?? null)}
+                          {k.drift_vs_prev != null ? `${k.drift_vs_prev > 0 ? "+" : ""}${k.drift_vs_prev}%` : "—"}
+                          {k.computed_at && <span className="ml-1">· {new Date(k.computed_at).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" })}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              )}
             </div>
 
             {/* Trend 14 zile */}
