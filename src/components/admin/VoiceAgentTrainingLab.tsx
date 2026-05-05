@@ -280,6 +280,18 @@ export default function VoiceAgentTrainingLab() {
         </div>
       </CardHeader>
       <CardContent>
+        {kpiAlert && (
+          <div className="mb-3 p-3 rounded-lg border-2 border-destructive/60 bg-destructive/10 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+            <div className="flex-1 text-xs">
+              <div className="font-semibold text-destructive">{kpiAlert.kind} în scădere — alertă automată</div>
+              <div className="text-muted-foreground">
+                Valoare azi: <b>{kpiAlert.current}%</b> · media ultimelor 7 zile: <b>{kpiAlert.avg}%</b> · scădere <b>−{kpiAlert.drop}%</b> (prag 15%).
+              </div>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setKpiAlert(null)}>×</Button>
+          </div>
+        )}
         <Tabs defaultValue="scoreboard">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="scoreboard"><Activity className="h-3.5 w-3.5 mr-1" /> Scoreboard</TabsTrigger>
