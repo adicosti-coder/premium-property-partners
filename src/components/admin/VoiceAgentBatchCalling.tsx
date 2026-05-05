@@ -131,6 +131,11 @@ export default function VoiceAgentBatchCalling() {
   const [approvedDrafts, setApprovedDrafts] = useState<Set<string>>(new Set());
   const [draftHistory, setDraftHistory] = useState<Record<string, DraftEdit[]>>({});
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [persistHistory, setPersistHistory] = useState(true);
+  const [confirmChecks, setConfirmChecks] = useState<{ preview: boolean; tone: boolean; history: boolean }>({
+    preview: false, tone: false, history: false,
+  });
   const editTimers = useRef<Record<string, any>>({});
   const reportShownRef = useRef(false);
 
@@ -242,6 +247,7 @@ export default function VoiceAgentBatchCalling() {
   const handleDraftEdit = (id: string, value: string) => {
     const before = editedDrafts[id] ?? "";
     setEditedDrafts((d) => ({ ...d, [id]: value }));
+    if (!persistHistory) return;
     if (editTimers.current[id]) clearTimeout(editTimers.current[id]);
     editTimers.current[id] = setTimeout(() => {
       if (before === value) return;
@@ -250,6 +256,50 @@ export default function VoiceAgentBatchCalling() {
         [id]: [...(h[id] || []), { at: new Date().toISOString(), before, after: value }],
       }));
     }, 800);
+  };
+
+  // Force-flush any pending edit history before final send
+  const flushPendingHistory = () => {
+    Object.keys(editTimers.current).forEach((id) => {
+      if (editTimers.current[id]) {
+        clearTimeout(editTimers.current[id]);
+        editTimers.current[id] = null;
+      }
+    });
+  };
+
+  // Tone analysis — Concierge Imobiliar (analytic & polite)
+  function analyzeTone(text: string): { score: number; issues: string[]; positives: string[] } {
+    const issues: string[] = [];
+    const positives: string[] = [];
+    const t = (text || "").trim();
+    if (!t) return { score: 0, issues: ["Mesaj gol"], positives: [] };
+    const lower = t.toLowerCase();
+    // Politeness
+    if (/\b(bună ziua|bună seara|salutare|stimate|stimată|mulțumesc|vă mulțumesc|cu respect)\b/i.test(t)) positives.push("Formulă politicoasă");
+    else issues.push("Lipsă formulă de salut/politețe");
+    // Analytical signals
+    if (/\d/.test(t)) positives.push("Conține cifre / date concrete");
+    else issues.push("Fără cifre sau date concrete");
+    if (/\b(roi|randament|venit|ocupare|management|regim hotelier|estimare|proiecție)\b/i.test(t)) positives.push("Vocabular analitic");
+    // Forbidden / pushy tone
+    if (/(!{2,}|🔥|💸|🤑|gratis acum|ofertă limitată|grăbește-te)/i.test(t)) issues.push("Ton agresiv / clickbait");
+    if (/\bCUMPĂRĂ\b|\bSUNĂ ACUM\b/.test(t)) issues.push("Capslock imperativ — evită");
+    // Brand
+    if (/\brealtrust\b/i.test(lower)) positives.push("Menționează RealTrust");
+    // Length
+    if (t.length < 60) issues.push("Prea scurt (<60 caractere)");
+    if (t.length > 900) issues.push("Prea lung (>900 caractere)");
+    // First-person plural ("noi") suggests concierge tone
+    if (/\b(noi|echipa|vă putem|vă propunem|vă invităm)\b/i.test(t)) positives.push("Ton 'concierge' (noi/echipa)");
+    const score = Math.max(0, Math.min(10, 6 + positives.length - issues.length * 1.5));
+    return { score: Math.round(score * 10) / 10, issues, positives };
+  }
+
+  const openConfirm = () => {
+    flushPendingHistory();
+    setConfirmChecks({ preview: false, tone: false, history: persistHistory });
+    setConfirmOpen(true);
   };
 
   const exportApprovedDrafts = () => {
@@ -788,6 +838,10 @@ export default function VoiceAgentBatchCalling() {
                       onClick={() => setHistoryOpen(true)}>
                       <History className="h-3 w-3 mr-1" /> Istoric edits
                     </Button>
+                    <label className="flex items-center gap-1 text-[10px] text-muted-foreground pl-1 border-l ml-1">
+                      <Switch checked={persistHistory} onCheckedChange={setPersistHistory} />
+                      Persistă istoricul
+                    </label>
                   </div>
                 </div>
                 {reportData.calls.filter((c) => c.followup_draft || editedDrafts[c.id]).length === 0 ? (
@@ -835,9 +889,129 @@ export default function VoiceAgentBatchCalling() {
             <Button variant="outline" onClick={exportApprovedDrafts} disabled={approvedDrafts.size === 0}>
               <FileDown className="h-3 w-3 mr-1" /> Export aprobate ({approvedDrafts.size})
             </Button>
-            <Button onClick={approveFollowups} disabled={approvingFollowup || approvedDrafts.size === 0}>
+            <Button onClick={openConfirm} disabled={approvingFollowup || approvedDrafts.size === 0}>
+              <ShieldCheck className="h-3 w-3 mr-1" />
+              Confirmă înainte de trimitere ({approvedDrafts.size})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* FINAL CONFIRMATION DIALOG */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" /> Confirmă înainte de trimitere
+            </DialogTitle>
+            <DialogDescription>
+              Verifică previzualizarea WhatsApp, tonul „Concierge Imobiliar" și istoricul editărilor înainte ca draft-urile să intre în coadă.
+            </DialogDescription>
+          </DialogHeader>
+
+          {reportData && (() => {
+            const approvedCalls = reportData.calls.filter((c) => approvedDrafts.has(c.id));
+            return (
+              <div className="space-y-4">
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                  <div className="text-xs font-semibold uppercase text-muted-foreground">Checklist final</div>
+                  {[
+                    { k: "preview" as const, label: "Am verificat previzualizarea WhatsApp pentru fiecare destinatar" },
+                    { k: "tone" as const, label: "Tonul respectă identitatea „Concierge Imobiliar” (analitic & politicos)" },
+                    { k: "history" as const, label: `Istoricul modificărilor este ${persistHistory ? "activ" : "INACTIV — activează-l mai jos"}` },
+                  ].map((item) => (
+                    <label key={item.k} className="flex items-start gap-2 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={confirmChecks[item.k]}
+                        onCheckedChange={(v) => setConfirmChecks((c) => ({ ...c, [item.k]: !!v }))}
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
+                  {!persistHistory && (
+                    <div className="flex items-center gap-2 text-xs text-amber-600 pl-6">
+                      <Switch checked={persistHistory} onCheckedChange={(v) => { setPersistHistory(v); setConfirmChecks((c) => ({ ...c, history: v })); }} />
+                      Activează „Persistă istoricul modificărilor"
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3 max-h-[400px] overflow-auto pr-1">
+                  {approvedCalls.length === 0 && (
+                    <div className="text-sm text-muted-foreground">Niciun draft bifat.</div>
+                  )}
+                  {approvedCalls.map((c) => {
+                    const text = editedDrafts[c.id] ?? draftToText(c.followup_draft);
+                    const tone = analyzeTone(text);
+                    const editsCount = draftHistory[c.id]?.length ?? 0;
+                    const toneTone = tone.score >= 7 ? "emerald" : tone.score >= 5 ? "amber" : "destructive";
+                    return (
+                      <div key={c.id} className="border rounded-lg overflow-hidden">
+                        <div className="px-3 py-2 bg-muted/40 flex items-center justify-between text-xs">
+                          <span className="font-medium">📞 {c.to_number}</span>
+                          <span className="flex items-center gap-1">
+                            <Badge
+                              variant="outline"
+                              className={
+                                toneTone === "emerald" ? "border-emerald-500/50 text-emerald-700" :
+                                toneTone === "amber" ? "border-amber-500/50 text-amber-700" :
+                                "border-destructive/50 text-destructive"
+                              }
+                            >
+                              Ton {tone.score}/10
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px]">{editsCount} edits</Badge>
+                          </span>
+                        </div>
+                        <div className="bg-[#e5ddd5] dark:bg-muted/20 p-3">
+                          <div className="ml-auto max-w-[85%] bg-[#dcf8c6] dark:bg-emerald-900/40 text-foreground rounded-lg rounded-tr-none px-3 py-2 shadow-sm whitespace-pre-wrap text-sm font-sans">
+                            {text}
+                            <div className="text-[9px] text-muted-foreground text-right mt-1">
+                              {new Date().toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" })} ✓✓
+                            </div>
+                          </div>
+                        </div>
+                        {(tone.issues.length > 0 || tone.positives.length > 0) && (
+                          <div className="px-3 py-2 text-[11px] border-t grid grid-cols-2 gap-2">
+                            <div>
+                              <div className="font-semibold text-emerald-600 mb-0.5">✓ Concierge</div>
+                              {tone.positives.length === 0 ? <span className="text-muted-foreground">—</span> :
+                                <ul className="space-y-0.5">{tone.positives.map((p, i) => <li key={i}>· {p}</li>)}</ul>}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-amber-600 mb-0.5">⚠ De ajustat</div>
+                              {tone.issues.length === 0 ? <span className="text-muted-foreground">—</span> :
+                                <ul className="space-y-0.5">{tone.issues.map((p, i) => <li key={i}>· {p}</li>)}</ul>}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          <DialogFooter className="flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Anulează</Button>
+            <Button
+              onClick={async () => {
+                flushPendingHistory();
+                await approveFollowups();
+                setConfirmOpen(false);
+              }}
+              disabled={
+                approvingFollowup ||
+                approvedDrafts.size === 0 ||
+                !confirmChecks.preview ||
+                !confirmChecks.tone ||
+                !confirmChecks.history ||
+                !persistHistory
+              }
+            >
               {approvingFollowup ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-              Trimite în coadă ({approvedDrafts.size})
+              Trimite final în coadă ({approvedDrafts.size})
             </Button>
           </DialogFooter>
         </DialogContent>
