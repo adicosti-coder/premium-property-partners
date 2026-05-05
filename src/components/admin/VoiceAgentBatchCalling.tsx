@@ -167,12 +167,12 @@ export default function VoiceAgentBatchCalling() {
       .lt("updated_at", new Date(Date.now() - STALE_SESSION_MS).toISOString());
     await supabase.from("prospect_listings")
       .update({
-        lifecycle_status: "new" as any,
+        lifecycle_status: "new",
         auto_call_triggered_at: null,
         voice_call_session_id: null,
         last_failure_reason: "auto_reset_stale_voice_session",
       })
-      .eq("lifecycle_status", "calling" as any)
+      .eq("lifecycle_status", "calling")
       .lt("auto_call_triggered_at", new Date(Date.now() - STALE_SESSION_MS).toISOString());
     const [pRes, lRes, sRes, cRes] = await Promise.all([
       supabase.from("prospect_listings")
@@ -432,7 +432,7 @@ export default function VoiceAgentBatchCalling() {
     }
     if (staleProspectIds.length > 0) {
       await supabase.from("prospect_listings").update({
-        lifecycle_status: "new" as any,
+        lifecycle_status: "new",
         auto_call_triggered_at: null,
         voice_call_session_id: null,
         last_failure_reason: "manual_reset_stale_voice_session",
