@@ -7,11 +7,46 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, PhoneCall, Lightbulb, Loader2, ShieldCheck, Play, RefreshCw,
-  Radio, Zap, FileText, CheckCircle2, RotateCcw, Download, Send, BarChart3,
+  Radio, Zap, FileText, CheckCircle2, RotateCcw, Download, Send, BarChart3, Info,
 } from "lucide-react";
+
+type FeedFilter = "all" | "scheduled" | "failed";
+
+const KNOWN_OBJECTIONS = [
+  "preț prea mare", "comision", "deja contractat cu altcineva", "vrea să vândă",
+  "nu vrea regim hotelier", "nu răspunde clar", "nu are timp", "nu este proprietar",
+  "vrea doar long-term", "neîncredere", "vrea bani cash", "deja listat",
+];
+
+function extractSentimentScore(c: { ai_sentiment: string | null; ai_summary: string | null }): number | null {
+  const blob = `${c.ai_sentiment || ""} ${c.ai_summary || ""}`;
+  const m = blob.match(/(\d{1,2})\s*\/\s*10/);
+  if (m) { const n = parseInt(m[1], 10); if (n >= 0 && n <= 10) return n; }
+  const lower = blob.toLowerCase();
+  if (/very\s+positive|foarte\s+pozitiv|entuziast/.test(lower)) return 9;
+  if (/positive|pozitiv|interesat/.test(lower)) return 7;
+  if (/neutral/.test(lower)) return 5;
+  if (/negative|negativ|refuz|sceptic/.test(lower)) return 3;
+  if (/very\s+negative|foarte\s+negativ|ostil/.test(lower)) return 1;
+  return null;
+}
+function extractMainObjection(c: { ai_summary: string | null; ai_sentiment: string | null; transcript: any }): string | null {
+  const blob = `${c.ai_summary || ""} ${c.ai_sentiment || ""} ${typeof c.transcript === "string" ? c.transcript : JSON.stringify(c.transcript || "")}`.toLowerCase();
+  for (const k of KNOWN_OBJECTIONS) if (blob.includes(k)) return k;
+  return null;
+}
+function draftToText(d: any): string {
+  if (!d) return "";
+  if (typeof d === "string") return d;
+  return d.message || d.text || d.body || JSON.stringify(d, null, 2);
+}
 
 interface Prospect {
   id: string;
@@ -88,6 +123,8 @@ export default function VoiceAgentBatchCalling() {
     total: number; scheduled: number; conversion: number; objections: string[]; calls: LiveCall[];
   } | null>(null);
   const [approvingFollowup, setApprovingFollowup] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<FeedFilter>("all");
+  const [editedDrafts, setEditedDrafts] = useState<Record<string, string>>({});
   const reportShownRef = useRef(false);
 
   const loadAll = async () => {
@@ -172,6 +209,10 @@ export default function VoiceAgentBatchCalling() {
       KNOWN.forEach((k) => { if (blob.includes(k)) counter.set(k, (counter.get(k) || 0) + 1); });
     });
     const objections = Array.from(counter.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (×${v})`);
+    // Pre-fill editable drafts
+    const drafts: Record<string, string> = {};
+    tracked.forEach((c) => { if (c.followup_draft) drafts[c.id] = draftToText(c.followup_draft); });
+    setEditedDrafts(drafts);
     setReportData({ total, scheduled, conversion, objections, calls: tracked });
     setReportOpen(true);
   };
@@ -304,12 +345,14 @@ export default function VoiceAgentBatchCalling() {
     if (!reportData) return;
     setApprovingFollowup(true);
     const drafts = reportData.calls
-      .filter((c) => c.followup_draft)
+      .filter((c) => c.followup_draft || editedDrafts[c.id])
       .map((c) => ({
         session_id: c.id,
         to_number: c.to_number,
         outcome: c.ai_outcome,
-        draft: c.followup_draft,
+        draft: editedDrafts[c.id] ?? draftToText(c.followup_draft),
+        original_draft: c.followup_draft,
+        edited: (editedDrafts[c.id] ?? "") !== draftToText(c.followup_draft),
       }));
     const { error } = await supabase.functions.invoke("notify-new-lead-whatsapp", {
       body: { type: "batch_followup_review", drafts, batch_session_ids: batchSessionIds },
@@ -347,16 +390,35 @@ export default function VoiceAgentBatchCalling() {
             <div className="text-xs text-muted-foreground">
               {TOP3_PHONES.join(" · ")} — {top3Available.length}/3 disponibili acum
             </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button size="sm" onClick={startTop3} disabled={launching || safety?.calls_paused || top3Available.length === 0}>
-                {launching ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Play className="h-3 w-3 mr-1" />}
-                Start Batch — Top 3 ({top3Available.length})
-              </Button>
-              <Button size="sm" variant="outline" onClick={exportCSV} disabled={exporting}>
-                {exporting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
-                Export CSV audit
-              </Button>
-            </div>
+            {(() => {
+              const tracked = batchSessionIds.length > 0 ? liveCalls.filter((c) => batchSessionIds.includes(c.id)) : [];
+              const finished = tracked.filter((c) => FINAL_STATUSES.includes(c.status)).length;
+              const total = batchSessionIds.length;
+              const inFlight = total > 0 && finished < total;
+              const pct = total > 0 ? Math.round((finished / total) * 100) : 0;
+              return (
+                <div className="flex gap-2 flex-wrap items-center">
+                  {inFlight ? (
+                    <div className="flex-1 min-w-[220px] space-y-1">
+                      <div className="flex justify-between text-[11px] font-medium">
+                        <span className="text-primary">Batch în desfășurare…</span>
+                        <span>{finished}/{total} Finalizate</span>
+                      </div>
+                      <Progress value={pct} className="h-2" />
+                    </div>
+                  ) : (
+                    <Button size="sm" onClick={startTop3} disabled={launching || safety?.calls_paused || top3Available.length === 0}>
+                      {launching ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Play className="h-3 w-3 mr-1" />}
+                      Start Batch — Top 3 ({top3Available.length})
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" onClick={exportCSV} disabled={exporting}>
+                    {exporting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
+                    Export CSV audit
+                  </Button>
+                </div>
+              );
+            })()}
           </AlertDescription>
         </Alert>
 
@@ -396,7 +458,18 @@ export default function VoiceAgentBatchCalling() {
                 <Badge variant="outline" className="ml-1">Batch activ: {batchSessionIds.length}</Badge>
               )}
             </h4>
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
+              <ToggleGroup
+                type="single"
+                size="sm"
+                value={feedFilter}
+                onValueChange={(v) => v && setFeedFilter(v as FeedFilter)}
+                className="h-7"
+              >
+                <ToggleGroupItem value="all" className="h-7 px-2 text-[10px]">Toate</ToggleGroupItem>
+                <ToggleGroupItem value="scheduled" className="h-7 px-2 text-[10px]">Scheduled</ToggleGroupItem>
+                <ToggleGroupItem value="failed" className="h-7 px-2 text-[10px]">Eșuate</ToggleGroupItem>
+              </ToggleGroup>
               {batchSessionIds.length > 0 && reportData && (
                 <Button size="sm" variant="ghost" onClick={() => setReportOpen(true)}>
                   <BarChart3 className="h-3 w-3 mr-1" /> Raport
@@ -408,16 +481,27 @@ export default function VoiceAgentBatchCalling() {
             </div>
           </div>
           <div className="border rounded max-h-72 overflow-auto divide-y">
-            {liveCalls.length === 0 ? (
-              <div className="p-3 text-xs text-muted-foreground">
-                Niciun apel încă. Lansează un batch.
-              </div>
-            ) : (
-              liveCalls.map((c) => {
+            {(() => {
+              const filtered = liveCalls.filter((c) => {
+                if (feedFilter === "scheduled") return c.ai_outcome === "scheduled" || !!c.appointment_scheduled_at;
+                if (feedFilter === "failed") return TECH_FAIL_STATUSES.includes(c.status);
+                return true;
+              });
+              if (filtered.length === 0) {
+                return (
+                  <div className="p-3 text-xs text-muted-foreground">
+                    {liveCalls.length === 0 ? "Niciun apel încă. Lansează un batch." : "Niciun apel pentru filtrul curent."}
+                  </div>
+                );
+              }
+              return filtered.map((c) => {
                 const meta = STATUS_LABEL[c.status] || { label: c.status, tone: "outline" as const };
                 const isScheduled = c.ai_outcome === "scheduled" || !!c.appointment_scheduled_at;
                 const isFinal = FINAL_STATUSES.includes(c.status);
                 const techFail = TECH_FAIL_STATUSES.includes(c.status);
+                const sentimentScore = extractSentimentScore(c);
+                const mainObjection = extractMainObjection(c);
+                const showVerdict = isFinal && (sentimentScore !== null || mainObjection);
                 return (
                   <div key={c.id} className="p-2 flex items-center gap-2 text-xs">
                     <div className="flex-1 min-w-0">
@@ -427,6 +511,38 @@ export default function VoiceAgentBatchCalling() {
                           <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">
                             <CheckCircle2 className="h-3 w-3" /> Scheduled
                           </span>
+                        )}
+                        {showVerdict && (
+                          <HoverCard openDelay={120}>
+                            <HoverCardTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex items-center text-muted-foreground hover:text-primary"
+                                aria-label="Mini-verdict AI"
+                              >
+                                <Info className="h-3 w-3" />
+                              </button>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="top" className="w-64 text-xs space-y-2">
+                              <div className="font-semibold text-sm flex items-center gap-2">
+                                Mini-Verdict AI
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Sentiment</span>
+                                <span className={`font-bold ${
+                                  sentimentScore === null ? "" :
+                                  sentimentScore >= 7 ? "text-emerald-600" :
+                                  sentimentScore >= 4 ? "text-amber-600" : "text-destructive"
+                                }`}>
+                                  {sentimentScore !== null ? `${sentimentScore}/10` : "—"}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="text-muted-foreground mb-0.5">Obiecție principală</div>
+                                <div className="font-medium">{mainObjection || "—"}</div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
                         )}
                       </div>
                       <div className="text-muted-foreground truncate">
@@ -450,8 +566,8 @@ export default function VoiceAgentBatchCalling() {
                     )}
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </div>
 
@@ -559,7 +675,7 @@ export default function VoiceAgentBatchCalling() {
 
       {/* BATCH REPORT DIALOG */}
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" /> Raport Final Batch
@@ -588,10 +704,39 @@ export default function VoiceAgentBatchCalling() {
                 )}
               </div>
               <div>
-                <div className="text-xs font-semibold mb-1 text-muted-foreground">DRAFT-URI FOLLOW-UP WHATSAPP</div>
-                <div className="text-xs text-muted-foreground">
-                  {reportData.calls.filter((c) => c.followup_draft).length} draft-uri generate de Gemini, gata pentru review.
+                <div className="text-xs font-semibold mb-2 text-muted-foreground">
+                  DRAFT-URI FOLLOW-UP WHATSAPP — editabile
                 </div>
+                {reportData.calls.filter((c) => c.followup_draft || editedDrafts[c.id]).length === 0 ? (
+                  <div className="text-xs text-muted-foreground">Niciun draft generat de Gemini.</div>
+                ) : (
+                  <div className="space-y-3 max-h-72 overflow-auto pr-1">
+                    {reportData.calls
+                      .filter((c) => c.followup_draft || editedDrafts[c.id])
+                      .map((c) => {
+                        const original = draftToText(c.followup_draft);
+                        const current = editedDrafts[c.id] ?? original;
+                        const edited = current !== original;
+                        return (
+                          <div key={c.id} className="border rounded p-2 space-y-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="font-medium">📞 {c.to_number}</span>
+                              <span className="flex items-center gap-1">
+                                {c.ai_outcome && <Badge variant="outline" className="text-[9px]">{c.ai_outcome}</Badge>}
+                                {edited && <Badge className="text-[9px] bg-amber-500">editat</Badge>}
+                              </span>
+                            </div>
+                            <Textarea
+                              value={current}
+                              onChange={(e) => setEditedDrafts((d) => ({ ...d, [c.id]: e.target.value }))}
+                              rows={3}
+                              className="text-xs font-mono"
+                            />
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
               </div>
             </div>
           )}
