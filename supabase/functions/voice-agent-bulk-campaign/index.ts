@@ -41,6 +41,18 @@ serve(async (req) => {
     if (!ids.length) return jsonResp({ error: "prospect_ids required" }, 400);
     if (ids.length > 50) return jsonResp({ error: "max 50 per campaign" }, 400);
 
+    // STOP-LOSS guard (override cu force=true)
+    const force = !!body.force;
+    if (!force) {
+      const { data: safety } = await supabase
+        .from("voice_agent_safety_state")
+        .select("calls_paused, paused_reason")
+        .eq("id", true).maybeSingle();
+      if (safety?.calls_paused) {
+        return jsonResp({ error: "calls_paused", reason: safety.paused_reason || "Apelurile automate sunt oprite (Review Required)." }, 423);
+      }
+    }
+
     const createdBy: string | null = adminCheck.userId ?? null;
     let actorEmail: string | null = null;
     try {
