@@ -522,7 +522,12 @@ export default function VoiceAgentTrainingLab() {
 
           {/* HISTORY */}
           <TabsContent value="history" className="space-y-2">
-            <div className="text-xs text-muted-foreground">Ultimele 50 de execuții drill</div>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="text-xs text-muted-foreground">Ultimele 50 de execuții drill (export include max 5000)</div>
+              <Button size="sm" variant="outline" onClick={exportHistoryCSV}>
+                <Download className="h-3 w-3 mr-1" /> Exportă istoricul drill-urilor (CSV)
+              </Button>
+            </div>
             <ScrollArea className="max-h-[500px]">
               <ul className="space-y-1">
                 {runs.map((r) => {
