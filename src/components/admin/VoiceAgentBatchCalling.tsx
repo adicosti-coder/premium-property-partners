@@ -458,7 +458,18 @@ export default function VoiceAgentBatchCalling() {
                 <Badge variant="outline" className="ml-1">Batch activ: {batchSessionIds.length}</Badge>
               )}
             </h4>
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
+              <ToggleGroup
+                type="single"
+                size="sm"
+                value={feedFilter}
+                onValueChange={(v) => v && setFeedFilter(v as FeedFilter)}
+                className="h-7"
+              >
+                <ToggleGroupItem value="all" className="h-7 px-2 text-[10px]">Toate</ToggleGroupItem>
+                <ToggleGroupItem value="scheduled" className="h-7 px-2 text-[10px]">Scheduled</ToggleGroupItem>
+                <ToggleGroupItem value="failed" className="h-7 px-2 text-[10px]">Eșuate</ToggleGroupItem>
+              </ToggleGroup>
               {batchSessionIds.length > 0 && reportData && (
                 <Button size="sm" variant="ghost" onClick={() => setReportOpen(true)}>
                   <BarChart3 className="h-3 w-3 mr-1" /> Raport
@@ -470,16 +481,27 @@ export default function VoiceAgentBatchCalling() {
             </div>
           </div>
           <div className="border rounded max-h-72 overflow-auto divide-y">
-            {liveCalls.length === 0 ? (
-              <div className="p-3 text-xs text-muted-foreground">
-                Niciun apel încă. Lansează un batch.
-              </div>
-            ) : (
-              liveCalls.map((c) => {
+            {(() => {
+              const filtered = liveCalls.filter((c) => {
+                if (feedFilter === "scheduled") return c.ai_outcome === "scheduled" || !!c.appointment_scheduled_at;
+                if (feedFilter === "failed") return TECH_FAIL_STATUSES.includes(c.status);
+                return true;
+              });
+              if (filtered.length === 0) {
+                return (
+                  <div className="p-3 text-xs text-muted-foreground">
+                    {liveCalls.length === 0 ? "Niciun apel încă. Lansează un batch." : "Niciun apel pentru filtrul curent."}
+                  </div>
+                );
+              }
+              return filtered.map((c) => {
                 const meta = STATUS_LABEL[c.status] || { label: c.status, tone: "outline" as const };
                 const isScheduled = c.ai_outcome === "scheduled" || !!c.appointment_scheduled_at;
                 const isFinal = FINAL_STATUSES.includes(c.status);
                 const techFail = TECH_FAIL_STATUSES.includes(c.status);
+                const sentimentScore = extractSentimentScore(c);
+                const mainObjection = extractMainObjection(c);
+                const showVerdict = isFinal && (sentimentScore !== null || mainObjection);
                 return (
                   <div key={c.id} className="p-2 flex items-center gap-2 text-xs">
                     <div className="flex-1 min-w-0">
@@ -489,6 +511,38 @@ export default function VoiceAgentBatchCalling() {
                           <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">
                             <CheckCircle2 className="h-3 w-3" /> Scheduled
                           </span>
+                        )}
+                        {showVerdict && (
+                          <HoverCard openDelay={120}>
+                            <HoverCardTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex items-center text-muted-foreground hover:text-primary"
+                                aria-label="Mini-verdict AI"
+                              >
+                                <Info className="h-3 w-3" />
+                              </button>
+                            </HoverCardTrigger>
+                            <HoverCardContent side="top" className="w-64 text-xs space-y-2">
+                              <div className="font-semibold text-sm flex items-center gap-2">
+                                Mini-Verdict AI
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Sentiment</span>
+                                <span className={`font-bold ${
+                                  sentimentScore === null ? "" :
+                                  sentimentScore >= 7 ? "text-emerald-600" :
+                                  sentimentScore >= 4 ? "text-amber-600" : "text-destructive"
+                                }`}>
+                                  {sentimentScore !== null ? `${sentimentScore}/10` : "—"}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="text-muted-foreground mb-0.5">Obiecție principală</div>
+                                <div className="font-medium">{mainObjection || "—"}</div>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
                         )}
                       </div>
                       <div className="text-muted-foreground truncate">
@@ -512,8 +566,8 @@ export default function VoiceAgentBatchCalling() {
                     )}
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </div>
 
