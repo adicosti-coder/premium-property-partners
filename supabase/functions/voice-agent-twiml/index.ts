@@ -559,13 +559,13 @@ serve(async (req) => {
     const elevenLabsMinScore = Number(vSettings?.elevenlabs_min_score ?? 90);
     const elevenLabsAvailable = !!ELEVENLABS_API_KEY;
     const voice: VoiceSettings = {
-      voice_id: ANDREI_VOICE_ID,
-      model_id: ANDREI_MODEL_ID,
-      stability: 0.62,
-      similarity_boost: 0.88,
-      style: 0.22,
-      speed: 0.92,
-      use_speaker_boost: true,
+      voice_id: (vSettings?.elevenlabs_voice_id as string) || ANDREI_VOICE_ID,
+      model_id: (vSettings?.elevenlabs_model_id as string) || ANDREI_MODEL_ID,
+      stability: Number(vSettings?.voice_stability ?? 0.48),
+      similarity_boost: Number(vSettings?.voice_similarity_boost ?? 0.88),
+      style: Number(vSettings?.voice_style ?? 0.35),
+      speed: Number(vSettings?.voice_speed ?? 1.05),
+      use_speaker_boost: vSettings?.voice_use_speaker_boost !== false,
     };
 
     // Determine branch + context

@@ -107,10 +107,10 @@ serve(async (req) => {
       voiceSettings = {
         voice_id: voice.voice_id,
         model_id: voice.model_id || "eleven_multilingual_v2",
-        stability: typeof voice.stability === "number" ? voice.stability : 0.55,
-        similarity_boost: typeof voice.similarity_boost === "number" ? voice.similarity_boost : 0.80,
-        style: typeof voice.style === "number" ? voice.style : 0.40,
-        speed: typeof voice.speed === "number" ? voice.speed : 1.0,
+        stability: typeof voice.stability === "number" ? voice.stability : 0.48,
+        similarity_boost: typeof voice.similarity_boost === "number" ? voice.similarity_boost : 0.88,
+        style: typeof voice.style === "number" ? voice.style : 0.35,
+        speed: typeof voice.speed === "number" ? voice.speed : 1.05,
         use_speaker_boost: voice.use_speaker_boost !== false,
       };
     } else {
@@ -122,10 +122,10 @@ serve(async (req) => {
       voiceSettings = {
         voice_id: settings?.elevenlabs_voice_id || ANDREI_VOICE_ID,
         model_id: settings?.elevenlabs_model_id || ANDREI_MODEL_ID,
-        stability: Number(settings?.voice_stability) || 0.62,
-        similarity_boost: Number(settings?.voice_similarity_boost) || 0.88,
-        style: Number(settings?.voice_style) || 0.22,
-        speed: Number(settings?.voice_speed) || 0.92,
+        stability: settings?.voice_stability != null ? Number(settings.voice_stability) : 0.48,
+        similarity_boost: settings?.voice_similarity_boost != null ? Number(settings.voice_similarity_boost) : 0.88,
+        style: settings?.voice_style != null ? Number(settings.voice_style) : 0.35,
+        speed: settings?.voice_speed != null ? Number(settings.voice_speed) : 1.05,
         use_speaker_boost: settings?.voice_use_speaker_boost !== false,
       };
     }
