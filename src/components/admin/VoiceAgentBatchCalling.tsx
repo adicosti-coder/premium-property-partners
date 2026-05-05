@@ -88,6 +88,15 @@ interface TestLog {
   script_name: string | null; script_version: number | null; ab_variant: string | null;
   to_number: string | null; created_at: string; updated_at: string;
 }
+interface DetailSession extends LiveCall {
+  created_at: string;
+  twilio_call_sid: string | null;
+  next_action: string | null;
+  recording_url: string | null;
+  detected_language: string | null;
+  clarity_score: number | null;
+  debug_log: any;
+}
 
 const TOP3_PHONES = ["+40729785285", "+40723321076", "+40743010969"];
 const FINAL_STATUSES = ["completed", "failed", "busy", "no-answer", "canceled"];
@@ -130,6 +139,7 @@ export default function VoiceAgentBatchCalling() {
   const [launching, setLaunching] = useState(false);
   const [liveCalls, setLiveCalls] = useState<LiveCall[]>([]);
   const [detailLog, setDetailLog] = useState<TestLog | null>(null);
+  const [detailSession, setDetailSession] = useState<DetailSession | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [scheduledNotified, setScheduledNotified] = useState<Set<string>>(new Set());
   const [retrying, setRetrying] = useState<string | null>(null);
