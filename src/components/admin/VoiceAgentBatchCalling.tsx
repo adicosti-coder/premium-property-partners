@@ -374,8 +374,14 @@ export default function VoiceAgentBatchCalling() {
     (async () => {
       const { data } = await supabase.from("prospect_listings")
         .select("id, title, zone, phone_normalized, contact_phone, lead_score, lifecycle_status, category")
-        .eq("is_active", true).in("phone_normalized", TOP3_PHONES);
-      setTop3Available((data as Prospect[]) || []);
+        .eq("is_active", true).in("phone_normalized", TOP3_PHONES)
+        .order("lead_score", { ascending: false, nullsFirst: false });
+      const byPhone = new Map<string, Prospect>();
+      ((data as Prospect[]) || []).forEach((p) => {
+        const phone = p.phone_normalized || p.contact_phone || p.id;
+        if (!byPhone.has(phone)) byPhone.set(phone, p);
+      });
+      setTop3Available(TOP3_PHONES.map((phone) => byPhone.get(phone)).filter(Boolean) as Prospect[]);
     })();
   }, []);
 
@@ -397,7 +403,8 @@ export default function VoiceAgentBatchCalling() {
       loadAll();
       return;
     }
-    const sessionIds: string[] = (data as any)?.session_ids || (data as any)?.sessions?.map((s: any) => s.id) || [];
+    const payload = data as { session_ids?: string[]; sessions?: Array<{ id: string }>; results?: Array<{ session_id?: string }> } | null;
+    const sessionIds: string[] = payload?.session_ids || payload?.sessions?.map((s) => s.id) || payload?.results?.map((r) => r.session_id).filter(Boolean) as string[] || [];
     if (sessionIds.length > 0) setBatchSessionIds(sessionIds);
     toast({ title: "📞 Batch pornit", description: `${ids.length} apeluri în coadă.` });
     setSelected(new Set());
