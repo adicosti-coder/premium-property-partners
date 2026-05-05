@@ -218,10 +218,65 @@ export default function VoiceAgentBatchCalling() {
     const objections = Array.from(counter.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (×${v})`);
     // Pre-fill editable drafts
     const drafts: Record<string, string> = {};
-    tracked.forEach((c) => { if (c.followup_draft) drafts[c.id] = draftToText(c.followup_draft); });
+    const auto: string[] = [];
+    tracked.forEach((c) => {
+      if (c.followup_draft) {
+        drafts[c.id] = draftToText(c.followup_draft);
+        auto.push(c.id);
+      }
+    });
     setEditedDrafts(drafts);
+    setApprovedDrafts(new Set(auto));
     setReportData({ total, scheduled, conversion, objections, calls: tracked });
     setReportOpen(true);
+  };
+
+  const toggleApproved = (id: string) => {
+    setApprovedDrafts((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+
+  const handleDraftEdit = (id: string, value: string) => {
+    const before = editedDrafts[id] ?? "";
+    setEditedDrafts((d) => ({ ...d, [id]: value }));
+    if (editTimers.current[id]) clearTimeout(editTimers.current[id]);
+    editTimers.current[id] = setTimeout(() => {
+      if (before === value) return;
+      setDraftHistory((h) => ({
+        ...h,
+        [id]: [...(h[id] || []), { at: new Date().toISOString(), before, after: value }],
+      }));
+    }, 800);
+  };
+
+  const exportApprovedDrafts = () => {
+    if (!reportData) return;
+    const items = reportData.calls
+      .filter((c) => approvedDrafts.has(c.id))
+      .map((c) => ({
+        session_id: c.id,
+        to_number: c.to_number,
+        outcome: c.ai_outcome,
+        sentiment: c.ai_sentiment,
+        message: editedDrafts[c.id] ?? draftToText(c.followup_draft),
+        edited: (editedDrafts[c.id] ?? "") !== draftToText(c.followup_draft),
+        wa_link: `https://wa.me/${(c.to_number || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(editedDrafts[c.id] ?? draftToText(c.followup_draft))}`,
+      }));
+    if (items.length === 0) {
+      toast({ variant: "destructive", title: "Niciun draft bifat" });
+      return;
+    }
+    const json = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(json);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `whatsapp-drafts-approved-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "📤 Exportat", description: `${items.length} draft-uri aprobate.` });
   };
 
   const toggleOne = (id: string) => {
