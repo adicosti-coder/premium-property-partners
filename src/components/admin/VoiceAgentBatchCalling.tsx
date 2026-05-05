@@ -407,7 +407,7 @@ export default function VoiceAgentBatchCalling() {
     if (!reportData) return;
     setApprovingFollowup(true);
     const drafts = reportData.calls
-      .filter((c) => c.followup_draft || editedDrafts[c.id])
+      .filter((c) => approvedDrafts.has(c.id))
       .map((c) => ({
         session_id: c.id,
         to_number: c.to_number,
@@ -416,6 +416,11 @@ export default function VoiceAgentBatchCalling() {
         original_draft: c.followup_draft,
         edited: (editedDrafts[c.id] ?? "") !== draftToText(c.followup_draft),
       }));
+    if (drafts.length === 0) {
+      setApprovingFollowup(false);
+      toast({ variant: "destructive", title: "Bifează cel puțin un draft" });
+      return;
+    }
     const { error } = await supabase.functions.invoke("notify-new-lead-whatsapp", {
       body: { type: "batch_followup_review", drafts, batch_session_ids: batchSessionIds },
     });
