@@ -145,6 +145,8 @@ export default function VoiceAgentBatchCalling() {
   const [detailLog, setDetailLog] = useState<TestLog | null>(null);
   const [detailSession, setDetailSession] = useState<DetailSession | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [scheduledNotified, setScheduledNotified] = useState<Set<string>>(new Set());
   const [retrying, setRetrying] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
