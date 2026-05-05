@@ -592,7 +592,19 @@ export default function VoiceAgentTrainingLab() {
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
+            {detail && (
+              <Button
+                variant="default"
+                onClick={() => replayDrill(detail)}
+                disabled={replayingId === detail.id}
+              >
+                {replayingId === detail.id
+                  ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  : <Repeat className="h-3 w-3 mr-1" />}
+                Replay drill cu feedback
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setDetail(null)}>Închide</Button>
           </DialogFooter>
         </DialogContent>
