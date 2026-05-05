@@ -117,6 +117,10 @@ function isCallEffectivelyDone(call: Pick<LiveCall, "status" | "updated_at" | "e
   return FINAL_STATUSES.includes(call.status) || isStaleCall(call);
 }
 
+function isAutoResetFailure(call: Pick<LiveCall, "status" | "error_message">): boolean {
+  return call.status === "failed" && /auto-reset|reset manual|status intermediar blocat/i.test(call.error_message || "");
+}
+
 const STATUS_LABEL: Record<string, { label: string; tone: "default" | "secondary" | "destructive" | "outline" }> = {
   queued: { label: "În coadă", tone: "outline" },
   initiated: { label: "Sună…", tone: "secondary" },
@@ -717,7 +721,8 @@ export default function VoiceAgentBatchCalling() {
                 const isScheduled = c.ai_outcome === "scheduled" || !!c.appointment_scheduled_at;
                 const isFinal = FINAL_STATUSES.includes(c.status);
                 const isStale = isStaleCall(c);
-                const techFail = TECH_FAIL_STATUSES.includes(c.status) || isStale;
+                const resetFailure = isAutoResetFailure(c);
+                const techFail = !resetFailure && (TECH_FAIL_STATUSES.includes(c.status) || isStale);
                 const sentimentScore = extractSentimentScore(c);
                 const mainObjection = extractMainObjection(c);
                 const showVerdict = isFinal && (sentimentScore !== null || mainObjection);
@@ -769,7 +774,7 @@ export default function VoiceAgentBatchCalling() {
                         {c.call_duration_seconds ? ` · ${c.call_duration_seconds}s` : ""}
                       </div>
                     </div>
-                    <Badge variant={isStale ? "destructive" : meta.tone}>{isStale ? "Blocat" : meta.label}</Badge>
+                    <Badge variant={resetFailure ? "outline" : isStale ? "destructive" : meta.tone}>{resetFailure ? "Resetat" : isStale ? "Blocat" : meta.label}</Badge>
                     {(isFinal || isStale) && (
                       <Button size="sm" variant="outline" className="h-7 text-[10px]"
                         onClick={() => openTechDetails(c.id)}>
