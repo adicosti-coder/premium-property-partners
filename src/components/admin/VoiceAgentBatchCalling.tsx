@@ -247,6 +247,7 @@ export default function VoiceAgentBatchCalling() {
   const handleDraftEdit = (id: string, value: string) => {
     const before = editedDrafts[id] ?? "";
     setEditedDrafts((d) => ({ ...d, [id]: value }));
+    if (!persistHistory) return;
     if (editTimers.current[id]) clearTimeout(editTimers.current[id]);
     editTimers.current[id] = setTimeout(() => {
       if (before === value) return;
@@ -255,6 +256,50 @@ export default function VoiceAgentBatchCalling() {
         [id]: [...(h[id] || []), { at: new Date().toISOString(), before, after: value }],
       }));
     }, 800);
+  };
+
+  // Force-flush any pending edit history before final send
+  const flushPendingHistory = () => {
+    Object.keys(editTimers.current).forEach((id) => {
+      if (editTimers.current[id]) {
+        clearTimeout(editTimers.current[id]);
+        editTimers.current[id] = null;
+      }
+    });
+  };
+
+  // Tone analysis — Concierge Imobiliar (analytic & polite)
+  function analyzeTone(text: string): { score: number; issues: string[]; positives: string[] } {
+    const issues: string[] = [];
+    const positives: string[] = [];
+    const t = (text || "").trim();
+    if (!t) return { score: 0, issues: ["Mesaj gol"], positives: [] };
+    const lower = t.toLowerCase();
+    // Politeness
+    if (/\b(bună ziua|bună seara|salutare|stimate|stimată|mulțumesc|vă mulțumesc|cu respect)\b/i.test(t)) positives.push("Formulă politicoasă");
+    else issues.push("Lipsă formulă de salut/politețe");
+    // Analytical signals
+    if (/\d/.test(t)) positives.push("Conține cifre / date concrete");
+    else issues.push("Fără cifre sau date concrete");
+    if (/\b(roi|randament|venit|ocupare|management|regim hotelier|estimare|proiecție)\b/i.test(t)) positives.push("Vocabular analitic");
+    // Forbidden / pushy tone
+    if (/(!{2,}|🔥|💸|🤑|gratis acum|ofertă limitată|grăbește-te)/i.test(t)) issues.push("Ton agresiv / clickbait");
+    if (/\bCUMPĂRĂ\b|\bSUNĂ ACUM\b/.test(t)) issues.push("Capslock imperativ — evită");
+    // Brand
+    if (/\brealtrust\b/i.test(lower)) positives.push("Menționează RealTrust");
+    // Length
+    if (t.length < 60) issues.push("Prea scurt (<60 caractere)");
+    if (t.length > 900) issues.push("Prea lung (>900 caractere)");
+    // First-person plural ("noi") suggests concierge tone
+    if (/\b(noi|echipa|vă putem|vă propunem|vă invităm)\b/i.test(t)) positives.push("Ton 'concierge' (noi/echipa)");
+    const score = Math.max(0, Math.min(10, 6 + positives.length - issues.length * 1.5));
+    return { score: Math.round(score * 10) / 10, issues, positives };
+  }
+
+  const openConfirm = () => {
+    flushPendingHistory();
+    setConfirmChecks({ preview: false, tone: false, history: persistHistory });
+    setConfirmOpen(true);
   };
 
   const exportApprovedDrafts = () => {
