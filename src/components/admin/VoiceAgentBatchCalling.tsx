@@ -337,10 +337,15 @@ export default function VoiceAgentBatchCalling() {
   };
   const selectTop10 = () => setSelected(new Set(prospects.slice(0, 10).map((p) => p.id)));
 
-  const top3Available = useMemo(
-    () => prospects.filter((p) => TOP3_PHONES.includes(p.phone_normalized || "")),
-    [prospects],
-  );
+  const [top3Available, setTop3Available] = useState<Prospect[]>([]);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("prospect_listings")
+        .select("id, title, zone, phone_normalized, contact_phone, lead_score, lifecycle_status, category")
+        .eq("is_active", true).in("phone_normalized", TOP3_PHONES);
+      setTop3Available((data as Prospect[]) || []);
+    })();
+  }, []);
 
   const startBatchWithIds = async (ids: string[]) => {
     if (ids.length === 0) {
