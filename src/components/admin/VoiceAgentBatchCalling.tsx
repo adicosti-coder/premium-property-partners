@@ -390,16 +390,35 @@ export default function VoiceAgentBatchCalling() {
             <div className="text-xs text-muted-foreground">
               {TOP3_PHONES.join(" · ")} — {top3Available.length}/3 disponibili acum
             </div>
-            <div className="flex gap-2 flex-wrap">
-              <Button size="sm" onClick={startTop3} disabled={launching || safety?.calls_paused || top3Available.length === 0}>
-                {launching ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Play className="h-3 w-3 mr-1" />}
-                Start Batch — Top 3 ({top3Available.length})
-              </Button>
-              <Button size="sm" variant="outline" onClick={exportCSV} disabled={exporting}>
-                {exporting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
-                Export CSV audit
-              </Button>
-            </div>
+            {(() => {
+              const tracked = batchSessionIds.length > 0 ? liveCalls.filter((c) => batchSessionIds.includes(c.id)) : [];
+              const finished = tracked.filter((c) => FINAL_STATUSES.includes(c.status)).length;
+              const total = batchSessionIds.length;
+              const inFlight = total > 0 && finished < total;
+              const pct = total > 0 ? Math.round((finished / total) * 100) : 0;
+              return (
+                <div className="flex gap-2 flex-wrap items-center">
+                  {inFlight ? (
+                    <div className="flex-1 min-w-[220px] space-y-1">
+                      <div className="flex justify-between text-[11px] font-medium">
+                        <span className="text-primary">Batch în desfășurare…</span>
+                        <span>{finished}/{total} Finalizate</span>
+                      </div>
+                      <Progress value={pct} className="h-2" />
+                    </div>
+                  ) : (
+                    <Button size="sm" onClick={startTop3} disabled={launching || safety?.calls_paused || top3Available.length === 0}>
+                      {launching ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Play className="h-3 w-3 mr-1" />}
+                      Start Batch — Top 3 ({top3Available.length})
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" onClick={exportCSV} disabled={exporting}>
+                    {exporting ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
+                    Export CSV audit
+                  </Button>
+                </div>
+              );
+            })()}
           </AlertDescription>
         </Alert>
 
