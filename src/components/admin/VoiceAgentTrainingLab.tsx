@@ -10,11 +10,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   GraduationCap, Play, Loader2, RefreshCw, TrendingUp, TrendingDown, Minus,
   ShieldCheck, AlertTriangle, CheckCircle2, XCircle, BookOpen, Brain, Target,
-  Activity, FileText, Sparkles, History,
+  Activity, FileText, Sparkles, History, Download, Repeat, Settings2,
 } from "lucide-react";
+
+type GatingMode = "all_auto" | "low_only" | "low_medium" | "all_manual";
+const GATING_KEY = "voice_agent_gating_mode";
+const GATING_LABEL: Record<GatingMode, string> = {
+  all_auto: "Toate automat",
+  low_only: "Doar Low automat",
+  low_medium: "Low + Medium automat (default)",
+  all_manual: "Tot manual (necesită aprobare)",
+};
 
 type Category = "obiectii_clasice" | "knowledge_timisoara" | "compliance_ton";
 
