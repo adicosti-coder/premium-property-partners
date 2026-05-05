@@ -345,12 +345,14 @@ export default function VoiceAgentBatchCalling() {
     if (!reportData) return;
     setApprovingFollowup(true);
     const drafts = reportData.calls
-      .filter((c) => c.followup_draft)
+      .filter((c) => c.followup_draft || editedDrafts[c.id])
       .map((c) => ({
         session_id: c.id,
         to_number: c.to_number,
         outcome: c.ai_outcome,
-        draft: c.followup_draft,
+        draft: editedDrafts[c.id] ?? draftToText(c.followup_draft),
+        original_draft: c.followup_draft,
+        edited: (editedDrafts[c.id] ?? "") !== draftToText(c.followup_draft),
       }));
     const { error } = await supabase.functions.invoke("notify-new-lead-whatsapp", {
       body: { type: "batch_followup_review", drafts, batch_session_ids: batchSessionIds },
