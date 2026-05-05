@@ -10,11 +10,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   GraduationCap, Play, Loader2, RefreshCw, TrendingUp, TrendingDown, Minus,
   ShieldCheck, AlertTriangle, CheckCircle2, XCircle, BookOpen, Brain, Target,
-  Activity, FileText, Sparkles, History,
+  Activity, FileText, Sparkles, History, Download, Repeat, Settings2,
 } from "lucide-react";
+
+type GatingMode = "all_auto" | "low_only" | "low_medium" | "all_manual";
+const GATING_KEY = "voice_agent_gating_mode";
+const GATING_LABEL: Record<GatingMode, string> = {
+  all_auto: "Toate automat",
+  low_only: "Doar Low automat",
+  low_medium: "Low + Medium automat (default)",
+  all_manual: "Tot manual (necesită aprobare)",
+};
 
 type Category = "obiectii_clasice" | "knowledge_timisoara" | "compliance_ton";
 
@@ -59,6 +69,44 @@ export default function VoiceAgentTrainingLab() {
   const [computingKpi, setComputingKpi] = useState(false);
   const [detail, setDetail] = useState<DrillRun | null>(null);
   const [autoMode, setAutoMode] = useState(true);
+  const [gatingMode, setGatingMode] = useState<GatingMode>(() => {
+    if (typeof window === "undefined") return "low_medium";
+    return ((localStorage.getItem(GATING_KEY) as GatingMode) || "low_medium");
+  });
+  const [replayingId, setReplayingId] = useState<string | null>(null);
+  const [kpiAlert, setKpiAlert] = useState<{ kind: string; current: number; avg: number; drop: number } | null>(null);
+  const persistGating = (m: GatingMode) => {
+    setGatingMode(m);
+    try { localStorage.setItem(GATING_KEY, m); } catch {}
+    toast({ title: "Prag auto-aplicare actualizat", description: GATING_LABEL[m] });
+  };
+
+  // KPI alert: detect >15% drop vs 7-day average for success rate or drill pass-rate
+  useEffect(() => {
+    if (!kpis.length && !daily.length) return;
+    const checkDrop = (current: number | null, history: number[], kind: string) => {
+      if (current == null || history.length < 2) return null;
+      const avg = history.reduce((a, b) => a + b, 0) / history.length;
+      const drop = avg - current;
+      if (drop > 15) return { kind, current, avg: Math.round(avg * 10) / 10, drop: Math.round(drop * 10) / 10 };
+      return null;
+    };
+    const successHist = kpis.slice(1, 8).map((k) => k.success_rate).filter((n) => n != null) as number[];
+    const passHist = daily.slice(1, 8).map((d) => d.pass_rate).filter((n) => n != null) as number[];
+    const a = checkDrop(kpis[0]?.success_rate ?? null, successHist, "Success Rate apeluri");
+    const b = checkDrop(daily[0]?.pass_rate ?? null, passHist, "Pass Rate drill-uri");
+    const alert = a || b;
+    if (alert) {
+      setKpiAlert(alert);
+      toast({
+        variant: "destructive",
+        title: `⚠️ ${alert.kind} în scădere`,
+        description: `${alert.current}% acum vs media 7 zile ${alert.avg}% (−${alert.drop}%)`,
+      });
+    } else {
+      setKpiAlert(null);
+    }
+  }, [kpis, daily]);
 
   const loadAll = async () => {
     setLoading(true);
@@ -150,6 +198,56 @@ export default function VoiceAgentTrainingLab() {
     loadAll();
   };
 
+  const replayDrill = async (r: DrillRun) => {
+    setReplayingId(r.id);
+    const data = await runDrill({ scenario_ids: [r.scenario_id] });
+    setReplayingId(null);
+    if (data) {
+      const res = data.results?.[0];
+      toast({
+        title: res?.passed ? "✅ Replay trecut" : "❌ Replay eșuat",
+        description: `Scor anterior: ${r.score ?? "?"} → acum: ${res?.score ?? "?"}/100`,
+      });
+      await loadAll();
+      // open detail of the new run if available
+      if (res?.run_id) {
+        const { data: nr } = await supabase.from("voice_agent_drill_runs").select("*").eq("id", res.run_id).maybeSingle();
+        if (nr) setDetail(nr as any);
+      }
+    }
+  };
+
+  const exportHistoryCSV = async () => {
+    const { data, error } = await supabase
+      .from("voice_agent_drill_runs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5000);
+    if (error || !data) {
+      toast({ variant: "destructive", title: "Export eșuat", description: error?.message });
+      return;
+    }
+    const scenMap = new Map(scenarios.map((s) => [s.id, s]));
+    const escape = (v: any) => {
+      const s = v == null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v);
+      return `"${s.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    };
+    const headers = ["created_at", "scenario_id", "scenario_title", "category", "passed", "score", "judge_notes", "ai_reply", "expected_hits", "forbidden_hits", "duration_ms", "triggered_by"];
+    const rows = (data as any[]).map((r) => {
+      const s: any = scenMap.get(r.scenario_id);
+      return [r.created_at, r.scenario_id, s?.title || "", s?.category || "", r.passed, r.score, r.judge_notes, r.ai_reply, (r.expected_hits || []).join("|"), (r.forbidden_hits || []).join("|"), r.duration_ms, r.triggered_by].map(escape).join(",");
+    });
+    const csv = headers.join(",") + "\n" + rows.join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `andrei-drill-history-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast({ title: "📥 Export complet", description: `${rows.length} execuții drill exportate` });
+  };
+
   const today = useMemo(() => daily[0], [daily]);
   const todayKpi = useMemo(() => kpis[0], [kpis]);
   const pendingLessons = useMemo(() => lessons.filter((l) => l.awaiting_approval), [lessons]);
@@ -182,6 +280,18 @@ export default function VoiceAgentTrainingLab() {
         </div>
       </CardHeader>
       <CardContent>
+        {kpiAlert && (
+          <div className="mb-3 p-3 rounded-lg border-2 border-destructive/60 bg-destructive/10 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+            <div className="flex-1 text-xs">
+              <div className="font-semibold text-destructive">{kpiAlert.kind} în scădere — alertă automată</div>
+              <div className="text-muted-foreground">
+                Valoare azi: <b>{kpiAlert.current}%</b> · media ultimelor 7 zile: <b>{kpiAlert.avg}%</b> · scădere <b>−{kpiAlert.drop}%</b> (prag 15%).
+              </div>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setKpiAlert(null)}>×</Button>
+          </div>
+        )}
         <Tabs defaultValue="scoreboard">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="scoreboard"><Activity className="h-3.5 w-3.5 mr-1" /> Scoreboard</TabsTrigger>
@@ -340,14 +450,28 @@ export default function VoiceAgentTrainingLab() {
 
           {/* LESSONS */}
           <TabsContent value="lessons" className="space-y-4">
-            <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
-              <div>
-                <div className="text-sm font-semibold">Auto-aplicare sub control</div>
-                <div className="text-xs text-muted-foreground">
-                  Lecțiile severity ≤ medium se aplică automat. Cele critice așteaptă aprobare admin.
+            <div className="p-3 border rounded-lg bg-muted/30 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold flex items-center gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Auto-aplicare sub control</div>
+                  <div className="text-xs text-muted-foreground">Activează bucla de auto-aplicare a lecțiilor.</div>
                 </div>
+                <Switch checked={autoMode} onCheckedChange={setAutoMode} />
               </div>
-              <Switch checked={autoMode} onCheckedChange={setAutoMode} />
+              <div className="flex items-center justify-between gap-3 pt-2 border-t">
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold">Prag de gating (severitate auto-aplicată)</div>
+                  <div className="text-[11px] text-muted-foreground">Restul lecțiilor așteaptă aprobare manuală.</div>
+                </div>
+                <Select value={gatingMode} onValueChange={(v) => persistGating(v as GatingMode)} disabled={!autoMode}>
+                  <SelectTrigger className="w-[230px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(GATING_LABEL) as GatingMode[]).map((k) => (
+                      <SelectItem key={k} value={k} className="text-xs">{GATING_LABEL[k]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {pendingLessons.length > 0 && (
@@ -398,7 +522,12 @@ export default function VoiceAgentTrainingLab() {
 
           {/* HISTORY */}
           <TabsContent value="history" className="space-y-2">
-            <div className="text-xs text-muted-foreground">Ultimele 50 de execuții drill</div>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="text-xs text-muted-foreground">Ultimele 50 de execuții drill (export include max 5000)</div>
+              <Button size="sm" variant="outline" onClick={exportHistoryCSV}>
+                <Download className="h-3 w-3 mr-1" /> Exportă istoricul drill-urilor (CSV)
+              </Button>
+            </div>
             <ScrollArea className="max-h-[500px]">
               <ul className="space-y-1">
                 {runs.map((r) => {
@@ -463,7 +592,19 @@ export default function VoiceAgentTrainingLab() {
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
+            {detail && (
+              <Button
+                variant="default"
+                onClick={() => replayDrill(detail)}
+                disabled={replayingId === detail.id}
+              >
+                {replayingId === detail.id
+                  ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  : <Repeat className="h-3 w-3 mr-1" />}
+                Replay drill cu feedback
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setDetail(null)}>Închide</Button>
           </DialogFooter>
         </DialogContent>
