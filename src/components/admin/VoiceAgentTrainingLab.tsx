@@ -417,6 +417,36 @@ export default function VoiceAgentTrainingLab() {
               </div>
             </div>
 
+            {/* Istoric KPI auto-salvat */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                <History className="h-3 w-3" /> Istoric recalculări KPI ({kpis.length})
+              </h4>
+              {kpis.length === 0 ? (
+                <div className="text-xs text-muted-foreground italic">Nicio recalculare salvată încă.</div>
+              ) : (
+                <ScrollArea className="max-h-48 border rounded">
+                  <ul className="divide-y text-xs">
+                    {kpis.map((k) => (
+                      <li key={k.day} className="px-2 py-1.5 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono text-[11px]">{k.day}</span>
+                          <Badge variant="outline" className="text-[9px]">{k.total_calls} apel</Badge>
+                          <Badge variant="secondary" className="text-[9px]">{k.success_rate}% succes</Badge>
+                          {k.sentiment_avg != null && <Badge variant="outline" className="text-[9px]">😊 {k.sentiment_avg}/10</Badge>}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground shrink-0 flex items-center gap-1">
+                          {driftIcon(k.drift_vs_prev ?? null)}
+                          {k.drift_vs_prev != null ? `${k.drift_vs_prev > 0 ? "+" : ""}${k.drift_vs_prev}%` : "—"}
+                          {k.computed_at && <span className="ml-1">· {new Date(k.computed_at).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" })}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              )}
+            </div>
+
             {/* Trend 14 zile */}
             <div>
               <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Trend 14 zile (drill vs apeluri reale)</h4>
