@@ -479,20 +479,45 @@ export default function VoiceAgentBatchCalling() {
   };
 
   const openTechDetails = async (sessionId: string) => {
+    setDetailOpen(true);
     setDetailLoading(true);
     setDetailLog(null);
     setDetailSession(null);
-    const [logRes, sessionRes] = await Promise.all([
-      supabase.from("voice_agent_script_test_logs")
-      .select("id, status, outcome, fallback_reason, call_duration_seconds, transcript_turns, script_name, script_version, ab_variant, to_number, created_at, updated_at")
-      .eq("session_id", sessionId).maybeSingle(),
-      supabase.from("voice_call_sessions")
-        .select("id, to_number, status, ai_outcome, ai_sentiment, ai_summary, next_action, appointment_scheduled_at, started_at, ended_at, call_duration_seconds, prospect_listing_id, error_message, followup_draft, followup_status, transcript, updated_at, created_at, twilio_call_sid, recording_url, detected_language, clarity_score, debug_log")
-        .eq("id", sessionId).maybeSingle(),
-    ]);
-    setDetailLog((logRes.data as TestLog) || null);
-    setDetailSession((sessionRes.data as DetailSession) || null);
-    setDetailLoading(false);
+    setDetailError(null);
+    // Fallback imediat din feed-ul deja încărcat (ca să nu rămână gol nici dacă query-ul eșuează)
+    const fromFeed = liveCalls.find((c) => c.id === sessionId);
+    if (fromFeed) {
+      setDetailSession({
+        ...(fromFeed as any),
+        created_at: (fromFeed as any).created_at || fromFeed.started_at || new Date().toISOString(),
+        twilio_call_sid: (fromFeed as any).twilio_call_sid ?? null,
+        next_action: (fromFeed as any).next_action ?? null,
+        recording_url: (fromFeed as any).recording_url ?? null,
+        detected_language: (fromFeed as any).detected_language ?? null,
+        clarity_score: (fromFeed as any).clarity_score ?? null,
+        debug_log: (fromFeed as any).debug_log ?? null,
+      } as DetailSession);
+    }
+    try {
+      const [logRes, sessionRes] = await Promise.all([
+        supabase.from("voice_agent_script_test_logs")
+          .select("id, status, outcome, fallback_reason, call_duration_seconds, transcript_turns, script_name, script_version, ab_variant, to_number, created_at, updated_at")
+          .eq("session_id", sessionId).maybeSingle(),
+        supabase.from("voice_call_sessions")
+          .select("id, to_number, status, ai_outcome, ai_sentiment, ai_summary, next_action, appointment_scheduled_at, started_at, ended_at, call_duration_seconds, prospect_listing_id, error_message, followup_draft, followup_status, transcript, updated_at, created_at, twilio_call_sid, recording_url, detected_language, clarity_score, debug_log")
+          .eq("id", sessionId).maybeSingle(),
+      ]);
+      if (logRes.data) setDetailLog(logRes.data as TestLog);
+      if (sessionRes.data) setDetailSession(sessionRes.data as DetailSession);
+      const errMsg = sessionRes.error?.message || logRes.error?.message;
+      if (errMsg && !sessionRes.data && !logRes.data && !fromFeed) {
+        setDetailError(errMsg);
+      }
+    } catch (e: any) {
+      if (!fromFeed) setDetailError(e?.message || "Eroare necunoscută");
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const retryTechFail = async (call: LiveCall) => {
