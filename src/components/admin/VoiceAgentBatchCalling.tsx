@@ -7,11 +7,46 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, PhoneCall, Lightbulb, Loader2, ShieldCheck, Play, RefreshCw,
-  Radio, Zap, FileText, CheckCircle2, RotateCcw, Download, Send, BarChart3,
+  Radio, Zap, FileText, CheckCircle2, RotateCcw, Download, Send, BarChart3, Info,
 } from "lucide-react";
+
+type FeedFilter = "all" | "scheduled" | "failed";
+
+const KNOWN_OBJECTIONS = [
+  "preț prea mare", "comision", "deja contractat cu altcineva", "vrea să vândă",
+  "nu vrea regim hotelier", "nu răspunde clar", "nu are timp", "nu este proprietar",
+  "vrea doar long-term", "neîncredere", "vrea bani cash", "deja listat",
+];
+
+function extractSentimentScore(c: { ai_sentiment: string | null; ai_summary: string | null }): number | null {
+  const blob = `${c.ai_sentiment || ""} ${c.ai_summary || ""}`;
+  const m = blob.match(/(\d{1,2})\s*\/\s*10/);
+  if (m) { const n = parseInt(m[1], 10); if (n >= 0 && n <= 10) return n; }
+  const lower = blob.toLowerCase();
+  if (/very\s+positive|foarte\s+pozitiv|entuziast/.test(lower)) return 9;
+  if (/positive|pozitiv|interesat/.test(lower)) return 7;
+  if (/neutral/.test(lower)) return 5;
+  if (/negative|negativ|refuz|sceptic/.test(lower)) return 3;
+  if (/very\s+negative|foarte\s+negativ|ostil/.test(lower)) return 1;
+  return null;
+}
+function extractMainObjection(c: { ai_summary: string | null; ai_sentiment: string | null; transcript: any }): string | null {
+  const blob = `${c.ai_summary || ""} ${c.ai_sentiment || ""} ${typeof c.transcript === "string" ? c.transcript : JSON.stringify(c.transcript || "")}`.toLowerCase();
+  for (const k of KNOWN_OBJECTIONS) if (blob.includes(k)) return k;
+  return null;
+}
+function draftToText(d: any): string {
+  if (!d) return "";
+  if (typeof d === "string") return d;
+  return d.message || d.text || d.body || JSON.stringify(d, null, 2);
+}
 
 interface Prospect {
   id: string;
