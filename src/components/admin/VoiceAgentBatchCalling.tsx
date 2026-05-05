@@ -420,6 +420,30 @@ export default function VoiceAgentBatchCalling() {
     loadAll();
   };
 
+  const resetStaleBatch = async () => {
+    const staleIds = liveCalls.filter(isStaleCall).map((c) => c.id);
+    const staleProspectIds = liveCalls.filter(isStaleCall).map((c) => c.prospect_listing_id).filter(Boolean) as string[];
+    if (staleIds.length > 0) {
+      await supabase.from("voice_call_sessions").update({
+        status: "failed",
+        ended_at: new Date().toISOString(),
+        error_message: "Reset manual: sesiune blocată în status intermediar",
+      }).in("id", staleIds);
+    }
+    if (staleProspectIds.length > 0) {
+      await supabase.from("prospect_listings").update({
+        lifecycle_status: "new" as any,
+        auto_call_triggered_at: null,
+        voice_call_session_id: null,
+        last_failure_reason: "manual_reset_stale_voice_session",
+      }).in("id", staleProspectIds);
+    }
+    setBatchSessionIds([]);
+    reportShownRef.current = false;
+    toast({ title: "🧹 Batch deblocat", description: `${staleIds.length} sesiuni blocate resetate. Poți porni din nou.` });
+    loadAll();
+  };
+
   const toggleLesson = async (l: Lesson) => {
     await supabase.from("voice_agent_playbook_addendum")
       .update({ is_active: !l.is_active }).eq("id", l.id);
