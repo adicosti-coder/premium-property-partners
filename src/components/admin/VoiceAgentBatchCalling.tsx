@@ -118,7 +118,7 @@ function isCallEffectivelyDone(call: Pick<LiveCall, "status" | "updated_at" | "e
 }
 
 function isAutoResetFailure(call: Pick<LiveCall, "status" | "error_message">): boolean {
-  return call.status === "failed" && /auto-reset|reset manual|status intermediar blocat/i.test(call.error_message || "");
+  return /auto-reset|reset manual|status intermediar blocat/i.test(call.error_message || "");
 }
 
 const STATUS_LABEL: Record<string, { label: string; tone: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -173,7 +173,7 @@ export default function VoiceAgentBatchCalling() {
     setLoading(true);
     await supabase.from("voice_call_sessions")
       .update({
-        status: "failed",
+        status: "canceled",
         ended_at: new Date().toISOString(),
         error_message: "Auto-reset: status intermediar blocat peste 5 minute",
       })
@@ -451,7 +451,7 @@ export default function VoiceAgentBatchCalling() {
     const staleProspectIds = liveCalls.filter(isStaleCall).map((c) => c.prospect_listing_id).filter(Boolean) as string[];
     if (staleIds.length > 0) {
       await supabase.from("voice_call_sessions").update({
-        status: "failed",
+        status: "canceled",
         ended_at: new Date().toISOString(),
         error_message: "Reset manual: sesiune blocată în status intermediar",
       }).in("id", staleIds);
