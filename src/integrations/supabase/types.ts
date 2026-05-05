@@ -5057,6 +5057,128 @@ export type Database = {
           },
         ]
       }
+      voice_agent_drill_daily: {
+        Row: {
+          by_category: Json
+          day: string
+          pass_rate: number
+          passed: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          by_category?: Json
+          day: string
+          pass_rate?: number
+          passed?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          by_category?: Json
+          day?: string
+          pass_rate?: number
+          passed?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      voice_agent_drill_runs: {
+        Row: {
+          ai_reply: string | null
+          created_at: string
+          duration_ms: number | null
+          expected_hits: string[] | null
+          forbidden_hits: string[] | null
+          id: string
+          judge_notes: string | null
+          model: string | null
+          passed: boolean
+          scenario_id: string
+          score: number | null
+          triggered_by: string | null
+        }
+        Insert: {
+          ai_reply?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          expected_hits?: string[] | null
+          forbidden_hits?: string[] | null
+          id?: string
+          judge_notes?: string | null
+          model?: string | null
+          passed?: boolean
+          scenario_id: string
+          score?: number | null
+          triggered_by?: string | null
+        }
+        Update: {
+          ai_reply?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          expected_hits?: string[] | null
+          forbidden_hits?: string[] | null
+          id?: string
+          judge_notes?: string | null
+          model?: string | null
+          passed?: boolean
+          scenario_id?: string
+          score?: number | null
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_agent_drill_runs_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "voice_agent_drill_scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_agent_drill_scenarios: {
+        Row: {
+          category: string
+          created_at: string
+          difficulty: number
+          expected_keywords: string[]
+          forbidden_keywords: string[]
+          id: string
+          is_active: boolean
+          notes: string | null
+          title: string
+          updated_at: string
+          user_message: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          difficulty?: number
+          expected_keywords?: string[]
+          forbidden_keywords?: string[]
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          title: string
+          updated_at?: string
+          user_message: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          difficulty?: number
+          expected_keywords?: string[]
+          forbidden_keywords?: string[]
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          user_message?: string
+        }
+        Relationships: []
+      }
       voice_agent_knowledge_chunks: {
         Row: {
           confidence: number | null
@@ -5096,6 +5218,39 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_kpi_snapshots: {
+        Row: {
+          computed_at: string
+          day: string
+          drift_vs_prev: number | null
+          scheduled: number
+          sentiment_avg: number | null
+          success_rate: number
+          top_objections: Json
+          total_calls: number
+        }
+        Insert: {
+          computed_at?: string
+          day: string
+          drift_vs_prev?: number | null
+          scheduled?: number
+          sentiment_avg?: number | null
+          success_rate?: number
+          top_objections?: Json
+          total_calls?: number
+        }
+        Update: {
+          computed_at?: string
+          day?: string
+          drift_vs_prev?: number | null
+          scheduled?: number
+          sentiment_avg?: number | null
+          success_rate?: number
+          top_objections?: Json
+          total_calls?: number
+        }
+        Relationships: []
+      }
       voice_agent_language_violations: {
         Row: {
           created_at: string
@@ -5125,6 +5280,10 @@ export type Database = {
       }
       voice_agent_playbook_addendum: {
         Row: {
+          applied_at: string | null
+          applied_by: string | null
+          auto_applied: boolean
+          awaiting_approval: boolean
           created_at: string
           id: string
           is_active: boolean
@@ -5135,6 +5294,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          auto_applied?: boolean
+          awaiting_approval?: boolean
           created_at?: string
           id?: string
           is_active?: boolean
@@ -5145,6 +5308,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          auto_applied?: boolean
+          awaiting_approval?: boolean
           created_at?: string
           id?: string
           is_active?: boolean
