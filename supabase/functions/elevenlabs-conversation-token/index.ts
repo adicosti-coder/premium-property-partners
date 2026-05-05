@@ -18,22 +18,21 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Require an authenticated user (any signed-in user). Prevents anonymous quota abuse.
+  // Optional auth: if a valid user token is provided, accept it; otherwise allow anonymous
+  // (the public voice widget is callable without sign-in). Quota abuse is mitigated upstream.
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  if (!token) {
-    return new Response(JSON.stringify({ error: "Auth required" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-  });
-  const { data: userData, error: userErr } = await sb.auth.getUser(token);
-  if (userErr || !userData?.user) {
-    return new Response(JSON.stringify({ error: "Invalid token" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  if (token && token !== Deno.env.get("SUPABASE_ANON_KEY")) {
+    try {
+      const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+      const { data: userData } = await sb.auth.getUser(token);
+      // Don't fail if invalid — just proceed as anonymous.
+      if (!userData?.user) {
+        console.log("[elevenlabs-conversation-token] Anonymous request (token not user JWT)");
+      }
+    } catch (e) {
+      console.log("[elevenlabs-conversation-token] getUser failed, proceeding anonymous:", (e as Error).message);
+    }
   }
 
   try {
