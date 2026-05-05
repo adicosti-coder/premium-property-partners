@@ -107,10 +107,10 @@ serve(async (req) => {
       voiceSettings = {
         voice_id: voice.voice_id,
         model_id: voice.model_id || "eleven_multilingual_v2",
-        stability: typeof voice.stability === "number" ? voice.stability : 0.55,
-        similarity_boost: typeof voice.similarity_boost === "number" ? voice.similarity_boost : 0.80,
-        style: typeof voice.style === "number" ? voice.style : 0.40,
-        speed: typeof voice.speed === "number" ? voice.speed : 1.0,
+        stability: typeof voice.stability === "number" ? voice.stability : 0.48,
+        similarity_boost: typeof voice.similarity_boost === "number" ? voice.similarity_boost : 0.88,
+        style: typeof voice.style === "number" ? voice.style : 0.35,
+        speed: typeof voice.speed === "number" ? voice.speed : 1.05,
         use_speaker_boost: voice.use_speaker_boost !== false,
       };
     } else {
