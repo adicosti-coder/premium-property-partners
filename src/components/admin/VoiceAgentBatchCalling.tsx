@@ -123,6 +123,8 @@ export default function VoiceAgentBatchCalling() {
     total: number; scheduled: number; conversion: number; objections: string[]; calls: LiveCall[];
   } | null>(null);
   const [approvingFollowup, setApprovingFollowup] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<FeedFilter>("all");
+  const [editedDrafts, setEditedDrafts] = useState<Record<string, string>>({});
   const reportShownRef = useRef(false);
 
   const loadAll = async () => {
