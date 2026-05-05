@@ -131,6 +131,11 @@ export default function VoiceAgentBatchCalling() {
   const [approvedDrafts, setApprovedDrafts] = useState<Set<string>>(new Set());
   const [draftHistory, setDraftHistory] = useState<Record<string, DraftEdit[]>>({});
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [persistHistory, setPersistHistory] = useState(true);
+  const [confirmChecks, setConfirmChecks] = useState<{ preview: boolean; tone: boolean; history: boolean }>({
+    preview: false, tone: false, history: false,
+  });
   const editTimers = useRef<Record<string, any>>({});
   const reportShownRef = useRef(false);
 
