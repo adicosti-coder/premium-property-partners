@@ -145,6 +145,8 @@ export default function VoiceAgentBatchCalling() {
   const [detailLog, setDetailLog] = useState<TestLog | null>(null);
   const [detailSession, setDetailSession] = useState<DetailSession | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [scheduledNotified, setScheduledNotified] = useState<Set<string>>(new Set());
   const [retrying, setRetrying] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -477,20 +479,45 @@ export default function VoiceAgentBatchCalling() {
   };
 
   const openTechDetails = async (sessionId: string) => {
+    setDetailOpen(true);
     setDetailLoading(true);
     setDetailLog(null);
     setDetailSession(null);
-    const [logRes, sessionRes] = await Promise.all([
-      supabase.from("voice_agent_script_test_logs")
-      .select("id, status, outcome, fallback_reason, call_duration_seconds, transcript_turns, script_name, script_version, ab_variant, to_number, created_at, updated_at")
-      .eq("session_id", sessionId).maybeSingle(),
-      supabase.from("voice_call_sessions")
-        .select("id, to_number, status, ai_outcome, ai_sentiment, ai_summary, next_action, appointment_scheduled_at, started_at, ended_at, call_duration_seconds, prospect_listing_id, error_message, followup_draft, followup_status, transcript, updated_at, created_at, twilio_call_sid, recording_url, detected_language, clarity_score, debug_log")
-        .eq("id", sessionId).maybeSingle(),
-    ]);
-    setDetailLog((logRes.data as TestLog) || null);
-    setDetailSession((sessionRes.data as DetailSession) || null);
-    setDetailLoading(false);
+    setDetailError(null);
+    // Fallback imediat din feed-ul deja încărcat (ca să nu rămână gol nici dacă query-ul eșuează)
+    const fromFeed = liveCalls.find((c) => c.id === sessionId);
+    if (fromFeed) {
+      setDetailSession({
+        ...(fromFeed as any),
+        created_at: (fromFeed as any).created_at || fromFeed.started_at || new Date().toISOString(),
+        twilio_call_sid: (fromFeed as any).twilio_call_sid ?? null,
+        next_action: (fromFeed as any).next_action ?? null,
+        recording_url: (fromFeed as any).recording_url ?? null,
+        detected_language: (fromFeed as any).detected_language ?? null,
+        clarity_score: (fromFeed as any).clarity_score ?? null,
+        debug_log: (fromFeed as any).debug_log ?? null,
+      } as DetailSession);
+    }
+    try {
+      const [logRes, sessionRes] = await Promise.all([
+        supabase.from("voice_agent_script_test_logs")
+          .select("id, status, outcome, fallback_reason, call_duration_seconds, transcript_turns, script_name, script_version, ab_variant, to_number, created_at, updated_at")
+          .eq("session_id", sessionId).maybeSingle(),
+        supabase.from("voice_call_sessions")
+          .select("id, to_number, status, ai_outcome, ai_sentiment, ai_summary, next_action, appointment_scheduled_at, started_at, ended_at, call_duration_seconds, prospect_listing_id, error_message, followup_draft, followup_status, transcript, updated_at, created_at, twilio_call_sid, recording_url, detected_language, clarity_score, debug_log")
+          .eq("id", sessionId).maybeSingle(),
+      ]);
+      if (logRes.data) setDetailLog(logRes.data as TestLog);
+      if (sessionRes.data) setDetailSession(sessionRes.data as DetailSession);
+      const errMsg = sessionRes.error?.message || logRes.error?.message;
+      if (errMsg && !sessionRes.data && !logRes.data && !fromFeed) {
+        setDetailError(errMsg);
+      }
+    } catch (e: any) {
+      if (!fromFeed) setDetailError(e?.message || "Eroare necunoscută");
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const retryTechFail = async (call: LiveCall) => {
@@ -868,8 +895,8 @@ export default function VoiceAgentBatchCalling() {
       </CardContent>
 
       {/* TECH DETAILS DIALOG */}
-      <Dialog open={detailLoading || !!detailLog || !!detailSession}
-        onOpenChange={(o) => { if (!o) { setDetailLog(null); setDetailSession(null); setDetailLoading(false); } }}>
+      <Dialog open={detailOpen}
+        onOpenChange={(o) => { if (!o) { setDetailOpen(false); setDetailLog(null); setDetailSession(null); setDetailLoading(false); setDetailError(null); } }}>
       <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -877,12 +904,17 @@ export default function VoiceAgentBatchCalling() {
             </DialogTitle>
             <DialogDescription>Audit tehnic din sesiunea de apel și logul AI Judge, când există.</DialogDescription>
           </DialogHeader>
-          {detailLoading ? (
+          {detailLoading && !detailSession ? (
             <div className="text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Încărcare…
             </div>
           ) : detailSession ? (
             <div className="space-y-2 text-sm">
+              {detailLoading && (
+                <div className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Reîmprospătare detalii din DB…
+                </div>
+              )}
               <Row k="Telefon" v={detailSession.to_number} />
               <Row k="Status apel" v={detailSession.status} highlight={detailSession.status === "completed"} />
               <Row k="Eroare" v={detailSession.error_message || "—"} />
@@ -894,11 +926,20 @@ export default function VoiceAgentBatchCalling() {
               <Row k="Transcript" v={Array.isArray(detailSession.transcript) ? `${detailSession.transcript.length} turnuri` : "—"} />
               <Row k="Debug" v={Array.isArray(detailSession.debug_log) ? `${detailSession.debug_log.length} intrări` : "—"} />
               <Row k="SID Twilio" v={detailSession.twilio_call_sid || "—"} />
-              <Row k="Creat" v={new Date(detailSession.created_at).toLocaleString("ro-RO")} />
+              <Row k="Creat" v={detailSession.created_at ? new Date(detailSession.created_at).toLocaleString("ro-RO") : "—"} />
             </div>
+          ) : detailError ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Nu am putut încărca detaliile</AlertTitle>
+              <AlertDescription className="text-xs break-words">{detailError}</AlertDescription>
+            </Alert>
           ) : (
-            <div className="text-sm text-muted-foreground">Nu există log tehnic încă.</div>
+            <div className="text-sm text-muted-foreground">Nu există date pentru această sesiune.</div>
           )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => { setDetailOpen(false); setDetailLog(null); setDetailSession(null); setDetailError(null); }}>Închide</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
