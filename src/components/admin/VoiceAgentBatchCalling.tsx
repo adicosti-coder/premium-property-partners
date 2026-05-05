@@ -423,8 +423,9 @@ export default function VoiceAgentBatchCalling() {
       ...((payload?.sessions || []).map((s) => s.id || s.session_id).filter(Boolean) as string[]),
       ...((payload?.results || []).map((r) => r.session_id || r.id).filter(Boolean) as string[]),
     ];
+    const skipped = (payload?.results || []).filter((r: any) => !r.session_id && !r.id).length;
     if (sessionIds.length > 0) setBatchSessionIds(sessionIds);
-    toast({ title: "📞 Batch pornit", description: `${sessionIds.length || ids.length} apeluri în coadă.` });
+    toast({ title: "📞 Batch pornit", description: `${sessionIds.length || ids.length} apeluri în coadă${skipped ? ` · ${skipped} sărite` : ""}.` });
     setSelected(new Set());
     loadAll();
   };
