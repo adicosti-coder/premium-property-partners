@@ -198,6 +198,56 @@ export default function VoiceAgentTrainingLab() {
     loadAll();
   };
 
+  const replayDrill = async (r: DrillRun) => {
+    setReplayingId(r.id);
+    const data = await runDrill({ scenario_ids: [r.scenario_id] });
+    setReplayingId(null);
+    if (data) {
+      const res = data.results?.[0];
+      toast({
+        title: res?.passed ? "✅ Replay trecut" : "❌ Replay eșuat",
+        description: `Scor anterior: ${r.score ?? "?"} → acum: ${res?.score ?? "?"}/100`,
+      });
+      await loadAll();
+      // open detail of the new run if available
+      if (res?.run_id) {
+        const { data: nr } = await supabase.from("voice_agent_drill_runs").select("*").eq("id", res.run_id).maybeSingle();
+        if (nr) setDetail(nr as any);
+      }
+    }
+  };
+
+  const exportHistoryCSV = async () => {
+    const { data, error } = await supabase
+      .from("voice_agent_drill_runs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5000);
+    if (error || !data) {
+      toast({ variant: "destructive", title: "Export eșuat", description: error?.message });
+      return;
+    }
+    const scenMap = new Map(scenarios.map((s) => [s.id, s]));
+    const escape = (v: any) => {
+      const s = v == null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v);
+      return `"${s.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    };
+    const headers = ["created_at", "scenario_id", "scenario_title", "category", "passed", "score", "judge_notes", "ai_reply", "expected_hits", "forbidden_hits", "duration_ms", "triggered_by"];
+    const rows = (data as any[]).map((r) => {
+      const s: any = scenMap.get(r.scenario_id);
+      return [r.created_at, r.scenario_id, s?.title || "", s?.category || "", r.passed, r.score, r.judge_notes, r.ai_reply, (r.expected_hits || []).join("|"), (r.forbidden_hits || []).join("|"), r.duration_ms, r.triggered_by].map(escape).join(",");
+    });
+    const csv = headers.join(",") + "\n" + rows.join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `andrei-drill-history-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast({ title: "📥 Export complet", description: `${rows.length} execuții drill exportate` });
+  };
+
   const today = useMemo(() => daily[0], [daily]);
   const todayKpi = useMemo(() => kpis[0], [kpis]);
   const pendingLessons = useMemo(() => lessons.filter((l) => l.awaiting_approval), [lessons]);
