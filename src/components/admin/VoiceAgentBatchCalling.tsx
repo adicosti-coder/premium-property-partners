@@ -838,6 +838,10 @@ export default function VoiceAgentBatchCalling() {
                       onClick={() => setHistoryOpen(true)}>
                       <History className="h-3 w-3 mr-1" /> Istoric edits
                     </Button>
+                    <label className="flex items-center gap-1 text-[10px] text-muted-foreground pl-1 border-l ml-1">
+                      <Switch checked={persistHistory} onCheckedChange={setPersistHistory} />
+                      Persistă istoricul
+                    </label>
                   </div>
                 </div>
                 {reportData.calls.filter((c) => c.followup_draft || editedDrafts[c.id]).length === 0 ? (
