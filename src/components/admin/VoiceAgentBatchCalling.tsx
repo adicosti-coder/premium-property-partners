@@ -862,8 +862,8 @@ export default function VoiceAgentBatchCalling() {
       </CardContent>
 
       {/* TECH DETAILS DIALOG */}
-      <Dialog open={detailLoading || !!detailLog}
-        onOpenChange={(o) => { if (!o) { setDetailLog(null); setDetailLoading(false); } }}>
+      <Dialog open={detailLoading || !!detailLog || !!detailSession}
+        onOpenChange={(o) => { if (!o) { setDetailLog(null); setDetailSession(null); setDetailLoading(false); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -875,16 +875,20 @@ export default function VoiceAgentBatchCalling() {
             <div className="text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Încărcare…
             </div>
-          ) : detailLog ? (
+          ) : detailSession ? (
             <div className="space-y-2 text-sm">
-              <Row k="Telefon" v={detailLog.to_number} />
-              <Row k="Status" v={detailLog.status} />
-              <Row k="Outcome" v={detailLog.outcome || "—"} highlight={detailLog.outcome === "scheduled"} />
-              <Row k="Fallback" v={detailLog.fallback_reason || "—"} />
-              <Row k="Script" v={`${detailLog.script_name || "—"} v${detailLog.script_version ?? "?"}${detailLog.ab_variant ? ` (${detailLog.ab_variant})` : ""}`} />
-              <Row k="Durată" v={detailLog.call_duration_seconds ? `${detailLog.call_duration_seconds}s` : "—"} />
-              <Row k="Turnuri" v={detailLog.transcript_turns ?? "—"} />
-              <Row k="Creat" v={new Date(detailLog.created_at).toLocaleString("ro-RO")} />
+              <Row k="Telefon" v={detailSession.to_number} />
+              <Row k="Status apel" v={detailSession.status} highlight={detailSession.status === "completed"} />
+              <Row k="Eroare" v={detailSession.error_message || "—"} />
+              <Row k="Outcome" v={detailSession.ai_outcome || detailLog?.outcome || "—"} highlight={(detailSession.ai_outcome || detailLog?.outcome) === "scheduled"} />
+              <Row k="Sinteză" v={detailSession.ai_summary || "—"} />
+              <Row k="Următorul pas" v={detailSession.next_action || "—"} />
+              <Row k="Script" v={detailLog ? `${detailLog.script_name || "—"} v${detailLog.script_version ?? "?"}${detailLog.ab_variant ? ` (${detailLog.ab_variant})` : ""}` : "—"} />
+              <Row k="Durată" v={detailSession.call_duration_seconds ? `${detailSession.call_duration_seconds}s` : "—"} />
+              <Row k="Transcript" v={Array.isArray(detailSession.transcript) ? `${detailSession.transcript.length} turnuri` : "—"} />
+              <Row k="Debug" v={Array.isArray(detailSession.debug_log) ? `${detailSession.debug_log.length} intrări` : "—"} />
+              <Row k="SID Twilio" v={detailSession.twilio_call_sid || "—"} />
+              <Row k="Creat" v={new Date(detailSession.created_at).toLocaleString("ro-RO")} />
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">Nu există log tehnic încă.</div>
