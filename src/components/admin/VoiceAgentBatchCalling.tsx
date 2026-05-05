@@ -885,9 +885,9 @@ export default function VoiceAgentBatchCalling() {
             <Button variant="outline" onClick={exportApprovedDrafts} disabled={approvedDrafts.size === 0}>
               <FileDown className="h-3 w-3 mr-1" /> Export aprobate ({approvedDrafts.size})
             </Button>
-            <Button onClick={approveFollowups} disabled={approvingFollowup || approvedDrafts.size === 0}>
-              {approvingFollowup ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-              Trimite în coadă ({approvedDrafts.size})
+            <Button onClick={openConfirm} disabled={approvingFollowup || approvedDrafts.size === 0}>
+              <ShieldCheck className="h-3 w-3 mr-1" />
+              Confirmă înainte de trimitere ({approvedDrafts.size})
             </Button>
           </DialogFooter>
         </DialogContent>
