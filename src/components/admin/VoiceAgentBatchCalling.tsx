@@ -864,12 +864,12 @@ export default function VoiceAgentBatchCalling() {
       {/* TECH DETAILS DIALOG */}
       <Dialog open={detailLoading || !!detailLog || !!detailSession}
         onOpenChange={(o) => { if (!o) { setDetailLog(null); setDetailSession(null); setDetailLoading(false); } }}>
-        <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-4 w-4" /> Verdict AI Judge
             </DialogTitle>
-            <DialogDescription>Log tehnic din <code>voice_agent_script_test_logs</code></DialogDescription>
+            <DialogDescription>Audit tehnic din sesiunea de apel și logul AI Judge, când există.</DialogDescription>
           </DialogHeader>
           {detailLoading ? (
             <div className="text-sm text-muted-foreground">
