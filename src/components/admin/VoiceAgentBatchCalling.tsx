@@ -128,6 +128,10 @@ export default function VoiceAgentBatchCalling() {
   const [approvingFollowup, setApprovingFollowup] = useState(false);
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("all");
   const [editedDrafts, setEditedDrafts] = useState<Record<string, string>>({});
+  const [approvedDrafts, setApprovedDrafts] = useState<Set<string>>(new Set());
+  const [draftHistory, setDraftHistory] = useState<Record<string, DraftEdit[]>>({});
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const editTimers = useRef<Record<string, any>>({});
   const reportShownRef = useRef(false);
 
   const loadAll = async () => {
