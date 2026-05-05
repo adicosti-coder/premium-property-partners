@@ -1,0 +1,1 @@
+UPDATE public.voice_agent_settings SET voice_stability = 0.48, voice_similarity_boost = 0.88, voice_style = 0.35, voice_speed = 1.05, voice_use_speaker_boost = true, updated_at = now() WHERE id = 1;
