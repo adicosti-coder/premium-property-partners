@@ -1181,9 +1181,9 @@ export default function VoiceAgentBatchCalling() {
 
 function Row({ k, v, highlight }: { k: string; v: any; highlight?: boolean }) {
   return (
-    <div className="flex justify-between gap-3 border-b pb-1">
-      <span className="text-muted-foreground">{k}</span>
-      <span className={`font-medium text-right ${highlight ? "text-emerald-600" : ""}`}>{String(v)}</span>
+    <div className="grid grid-cols-[120px_1fr] gap-3 border-b pb-1">
+      <span className="text-muted-foreground shrink-0">{k}</span>
+      <span className={`font-medium text-right break-words whitespace-pre-wrap min-w-0 ${highlight ? "text-emerald-600" : ""}`}>{String(v)}</span>
     </div>
   );
 }
