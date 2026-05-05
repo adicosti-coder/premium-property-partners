@@ -895,8 +895,8 @@ export default function VoiceAgentBatchCalling() {
       </CardContent>
 
       {/* TECH DETAILS DIALOG */}
-      <Dialog open={detailLoading || !!detailLog || !!detailSession}
-        onOpenChange={(o) => { if (!o) { setDetailLog(null); setDetailSession(null); setDetailLoading(false); } }}>
+      <Dialog open={detailOpen}
+        onOpenChange={(o) => { if (!o) { setDetailOpen(false); setDetailLog(null); setDetailSession(null); setDetailLoading(false); setDetailError(null); } }}>
       <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -904,12 +904,17 @@ export default function VoiceAgentBatchCalling() {
             </DialogTitle>
             <DialogDescription>Audit tehnic din sesiunea de apel și logul AI Judge, când există.</DialogDescription>
           </DialogHeader>
-          {detailLoading ? (
+          {detailLoading && !detailSession ? (
             <div className="text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Încărcare…
             </div>
           ) : detailSession ? (
             <div className="space-y-2 text-sm">
+              {detailLoading && (
+                <div className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Reîmprospătare detalii din DB…
+                </div>
+              )}
               <Row k="Telefon" v={detailSession.to_number} />
               <Row k="Status apel" v={detailSession.status} highlight={detailSession.status === "completed"} />
               <Row k="Eroare" v={detailSession.error_message || "—"} />
@@ -921,11 +926,20 @@ export default function VoiceAgentBatchCalling() {
               <Row k="Transcript" v={Array.isArray(detailSession.transcript) ? `${detailSession.transcript.length} turnuri` : "—"} />
               <Row k="Debug" v={Array.isArray(detailSession.debug_log) ? `${detailSession.debug_log.length} intrări` : "—"} />
               <Row k="SID Twilio" v={detailSession.twilio_call_sid || "—"} />
-              <Row k="Creat" v={new Date(detailSession.created_at).toLocaleString("ro-RO")} />
+              <Row k="Creat" v={detailSession.created_at ? new Date(detailSession.created_at).toLocaleString("ro-RO") : "—"} />
             </div>
+          ) : detailError ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Nu am putut încărca detaliile</AlertTitle>
+              <AlertDescription className="text-xs break-words">{detailError}</AlertDescription>
+            </Alert>
           ) : (
-            <div className="text-sm text-muted-foreground">Nu există log tehnic încă.</div>
+            <div className="text-sm text-muted-foreground">Nu există date pentru această sesiune.</div>
           )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => { setDetailOpen(false); setDetailLog(null); setDetailSession(null); setDetailError(null); }}>Închide</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
