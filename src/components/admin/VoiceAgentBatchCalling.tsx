@@ -500,6 +500,12 @@ export default function VoiceAgentBatchCalling() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <VoiceAgentSmartClusters onPickCluster={(ids, c) => {
+          const next = new Set<string>();
+          ids.slice(0, 10).forEach((id) => { if (prospects.find((p) => p.id === id)) next.add(id); });
+          setSelected(next);
+          toast({ title: `📌 Brief: ${c.label}`, description: c.brief, duration: 9000 });
+        }} />
         {/* TOP 3 QUICK START */}
         <Alert className="border-primary/40 bg-primary/5">
           <Zap className="h-4 w-4 text-primary" />
