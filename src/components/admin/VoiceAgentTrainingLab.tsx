@@ -438,14 +438,28 @@ export default function VoiceAgentTrainingLab() {
 
           {/* LESSONS */}
           <TabsContent value="lessons" className="space-y-4">
-            <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
-              <div>
-                <div className="text-sm font-semibold">Auto-aplicare sub control</div>
-                <div className="text-xs text-muted-foreground">
-                  Lecțiile severity ≤ medium se aplică automat. Cele critice așteaptă aprobare admin.
+            <div className="p-3 border rounded-lg bg-muted/30 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold flex items-center gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Auto-aplicare sub control</div>
+                  <div className="text-xs text-muted-foreground">Activează bucla de auto-aplicare a lecțiilor.</div>
                 </div>
+                <Switch checked={autoMode} onCheckedChange={setAutoMode} />
               </div>
-              <Switch checked={autoMode} onCheckedChange={setAutoMode} />
+              <div className="flex items-center justify-between gap-3 pt-2 border-t">
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold">Prag de gating (severitate auto-aplicată)</div>
+                  <div className="text-[11px] text-muted-foreground">Restul lecțiilor așteaptă aprobare manuală.</div>
+                </div>
+                <Select value={gatingMode} onValueChange={(v) => persistGating(v as GatingMode)} disabled={!autoMode}>
+                  <SelectTrigger className="w-[230px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(GATING_LABEL) as GatingMode[]).map((k) => (
+                      <SelectItem key={k} value={k} className="text-xs">{GATING_LABEL[k]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {pendingLessons.length > 0 && (
