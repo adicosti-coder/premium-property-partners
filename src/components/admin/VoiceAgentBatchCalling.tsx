@@ -675,7 +675,7 @@ export default function VoiceAgentBatchCalling() {
 
       {/* BATCH REPORT DIALOG */}
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" /> Raport Final Batch
