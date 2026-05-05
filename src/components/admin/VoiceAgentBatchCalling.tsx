@@ -92,6 +92,21 @@ interface TestLog {
 const TOP3_PHONES = ["+40729785285", "+40723321076", "+40743010969"];
 const FINAL_STATUSES = ["completed", "failed", "busy", "no-answer", "canceled"];
 const TECH_FAIL_STATUSES = ["failed", "busy", "no-answer", "canceled"];
+const ACTIVE_STATUSES = ["queued", "initiating", "initiated", "ringing", "in-progress", "in_progress", "completing"];
+const STALE_SESSION_MS = 5 * 60 * 1000;
+
+function getCallReferenceTime(call: Pick<LiveCall, "updated_at" | "ended_at" | "started_at">): number {
+  const ref = call.updated_at || call.ended_at || call.started_at;
+  return ref ? new Date(ref).getTime() : 0;
+}
+
+function isStaleCall(call: Pick<LiveCall, "status" | "updated_at" | "ended_at" | "started_at">): boolean {
+  return ACTIVE_STATUSES.includes(call.status) && Date.now() - getCallReferenceTime(call) > STALE_SESSION_MS;
+}
+
+function isCallEffectivelyDone(call: Pick<LiveCall, "status" | "updated_at" | "ended_at" | "started_at">): boolean {
+  return FINAL_STATUSES.includes(call.status) || isStaleCall(call);
+}
 
 const STATUS_LABEL: Record<string, { label: string; tone: "default" | "secondary" | "destructive" | "outline" }> = {
   queued: { label: "În coadă", tone: "outline" },
