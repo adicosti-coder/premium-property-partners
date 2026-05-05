@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
       .select("id, title, zone, lead_score, category, description, prospect_type, lifecycle_status, contact_phone")
       .gte("lead_score", minScore)
       .eq("is_active", true)
-      .in("lifecycle_status", ["new", "contacted", "warm"])
+      .in("lifecycle_status", ["new", "scoring", "calling", "interested", "callback"])
       .not("contact_phone", "is", null)
       .order("lead_score", { ascending: false })
       .limit(limit);
