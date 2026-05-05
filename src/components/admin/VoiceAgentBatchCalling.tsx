@@ -917,7 +917,7 @@ export default function VoiceAgentBatchCalling() {
                   <div className="text-xs font-semibold uppercase text-muted-foreground">Checklist final</div>
                   {[
                     { k: "preview" as const, label: "Am verificat previzualizarea WhatsApp pentru fiecare destinatar" },
-                    { k: "tone" as const, label: "Tonul respectă identitatea „Concierge Imobiliar" (analitic & politicos)" },
+                    { k: "tone" as const, label: "Tonul respectă identitatea „Concierge Imobiliar” (analitic & politicos)" },
                     { k: "history" as const, label: `Istoricul modificărilor este ${persistHistory ? "activ" : "INACTIV — activează-l mai jos"}` },
                   ].map((item) => (
                     <label key={item.k} className="flex items-start gap-2 text-sm cursor-pointer">
