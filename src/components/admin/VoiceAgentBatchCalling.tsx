@@ -209,6 +209,10 @@ export default function VoiceAgentBatchCalling() {
       KNOWN.forEach((k) => { if (blob.includes(k)) counter.set(k, (counter.get(k) || 0) + 1); });
     });
     const objections = Array.from(counter.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (×${v})`);
+    // Pre-fill editable drafts
+    const drafts: Record<string, string> = {};
+    tracked.forEach((c) => { if (c.followup_draft) drafts[c.id] = draftToText(c.followup_draft); });
+    setEditedDrafts(drafts);
     setReportData({ total, scheduled, conversion, objections, calls: tracked });
     setReportOpen(true);
   };
