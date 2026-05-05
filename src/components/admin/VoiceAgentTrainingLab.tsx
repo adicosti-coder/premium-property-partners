@@ -40,7 +40,7 @@ interface DrillRun {
   forbidden_hits: string[] | null; triggered_by: string | null; created_at: string;
 }
 interface DailyRow { day: string; total: number; passed: number; pass_rate: number; by_category: any; }
-interface KPI { day: string; total_calls: number; scheduled: number; success_rate: number; sentiment_avg: number | null; top_objections: any[]; drift_vs_prev: number | null; }
+interface KPI { day: string; total_calls: number; scheduled: number; success_rate: number; sentiment_avg: number | null; top_objections: any[]; drift_vs_prev: number | null; computed_at?: string | null; }
 interface Lesson {
   id: string; lesson: string; severity: string; is_active: boolean;
   auto_applied: boolean; awaiting_approval: boolean; applied_at: string | null;
