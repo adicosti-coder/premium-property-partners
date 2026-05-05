@@ -18,6 +18,7 @@ import VoiceCallerProfilesManager from "./VoiceCallerProfilesManager";
 import VoiceAgentKnowledgeBase from "./VoiceAgentKnowledgeBase";
 import VoiceAgentFollowupQueue from "./VoiceAgentFollowupQueue";
 import VoiceAgentSimSuccessRate from "./VoiceAgentSimSuccessRate";
+import VoiceAgentBatchCalling from "./VoiceAgentBatchCalling";
 
 interface VoiceCall {
   id: string;
