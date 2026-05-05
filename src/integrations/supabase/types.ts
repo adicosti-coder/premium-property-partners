@@ -5532,6 +5532,13 @@ export type Database = {
           allowed_hours_end: number
           allowed_hours_start: number
           auto_dial_enabled: boolean
+          autopilot_enabled: boolean
+          autopilot_followup_auto_approve: boolean
+          autopilot_followup_min_sentiment: string
+          autopilot_last_tick_at: string | null
+          autopilot_max_per_tick: number
+          autopilot_mode: string
+          autopilot_retention_enabled: boolean
           default_objective: string
           elevenlabs_min_score: number
           elevenlabs_model_id: string
@@ -5555,6 +5562,13 @@ export type Database = {
           allowed_hours_end?: number
           allowed_hours_start?: number
           auto_dial_enabled?: boolean
+          autopilot_enabled?: boolean
+          autopilot_followup_auto_approve?: boolean
+          autopilot_followup_min_sentiment?: string
+          autopilot_last_tick_at?: string | null
+          autopilot_max_per_tick?: number
+          autopilot_mode?: string
+          autopilot_retention_enabled?: boolean
           default_objective?: string
           elevenlabs_min_score?: number
           elevenlabs_model_id?: string
@@ -5578,6 +5592,13 @@ export type Database = {
           allowed_hours_end?: number
           allowed_hours_start?: number
           auto_dial_enabled?: boolean
+          autopilot_enabled?: boolean
+          autopilot_followup_auto_approve?: boolean
+          autopilot_followup_min_sentiment?: string
+          autopilot_last_tick_at?: string | null
+          autopilot_max_per_tick?: number
+          autopilot_mode?: string
+          autopilot_retention_enabled?: boolean
           default_objective?: string
           elevenlabs_min_score?: number
           elevenlabs_model_id?: string
@@ -5635,6 +5656,57 @@ export type Database = {
           source?: string
           text_snippet?: string | null
           voice_id?: string | null
+        }
+        Relationships: []
+      }
+      voice_autonomy_runs: {
+        Row: {
+          ab_tests_evaluated: number
+          calls_initiated: number
+          details: Json
+          drills_executed: number
+          ended_at: string | null
+          error: string | null
+          followups_auto_approved: number
+          followups_pending_review: number
+          id: string
+          prospects_ingested: number
+          retention_ingested: number
+          source: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          ab_tests_evaluated?: number
+          calls_initiated?: number
+          details?: Json
+          drills_executed?: number
+          ended_at?: string | null
+          error?: string | null
+          followups_auto_approved?: number
+          followups_pending_review?: number
+          id?: string
+          prospects_ingested?: number
+          retention_ingested?: number
+          source?: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          ab_tests_evaluated?: number
+          calls_initiated?: number
+          details?: Json
+          drills_executed?: number
+          ended_at?: string | null
+          error?: string | null
+          followups_auto_approved?: number
+          followups_pending_review?: number
+          id?: string
+          prospects_ingested?: number
+          retention_ingested?: number
+          source?: string
+          started_at?: string
+          status?: string
         }
         Relationships: []
       }
