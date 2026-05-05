@@ -577,14 +577,7 @@ export default function VoiceAgentBatchCalling() {
             </div>
             {(() => {
               const tracked = batchSessionIds.length > 0 ? liveCalls.filter((c) => batchSessionIds.includes(c.id)) : [];
-              const STALE_MS = 5 * 60 * 1000; // 5 min fără update => considerat blocat
-              const now = Date.now();
-              const isDone = (c: LiveCall) => {
-                if (FINAL_STATUSES.includes(c.status)) return true;
-                const ref = (c as any).updated_at || (c as any).ended_at || (c as any).started_at;
-                return ref && (now - new Date(ref).getTime() > STALE_MS);
-              };
-              const finished = tracked.filter(isDone).length;
+              const finished = tracked.filter(isCallEffectivelyDone).length;
               const total = batchSessionIds.length;
               const inFlight = total > 0 && finished < total;
               const pct = total > 0 ? Math.round((finished / total) * 100) : 0;
@@ -599,11 +592,7 @@ export default function VoiceAgentBatchCalling() {
                         </div>
                         <Progress value={pct} className="h-2" />
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        setBatchSessionIds([]);
-                        reportShownRef.current = false;
-                        toast({ title: "🧹 Batch resetat", description: "Sesiunile blocate au fost ignorate. Poți porni din nou." });
-                      }}>
+                      <Button size="sm" variant="ghost" onClick={resetStaleBatch}>
                         Resetează
                       </Button>
                     </>
