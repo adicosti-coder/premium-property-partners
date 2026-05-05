@@ -27,6 +27,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import VoiceAgentABTests from "./VoiceAgentABTests";
 
 interface VoiceScript {
   id: string;
@@ -710,6 +711,7 @@ export default function VoiceAgentScriptsEditor() {
 
           {/* ───────── A/B TESTING ───────── */}
           <TabsContent value="ab" className="pt-4 space-y-4">
+            <VoiceAgentABTests scripts={scripts.map((s) => ({ id: s.id, name: s.name }))} />
             {!activeScript ? (
               <div className="text-sm text-muted-foreground p-6 text-center border border-dashed rounded-md">
                 Activează un script (în tab-ul Editor) pentru a configura A/B testing.
