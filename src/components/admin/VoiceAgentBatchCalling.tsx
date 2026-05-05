@@ -157,6 +157,23 @@ export default function VoiceAgentBatchCalling() {
 
   const loadAll = async () => {
     setLoading(true);
+    await supabase.from("voice_call_sessions")
+      .update({
+        status: "failed",
+        ended_at: new Date().toISOString(),
+        error_message: "Auto-reset: status intermediar blocat peste 5 minute",
+      })
+      .in("status", ACTIVE_STATUSES)
+      .lt("updated_at", new Date(Date.now() - STALE_SESSION_MS).toISOString());
+    await supabase.from("prospect_listings")
+      .update({
+        lifecycle_status: "new" as any,
+        auto_call_triggered_at: null,
+        voice_call_session_id: null,
+        last_failure_reason: "auto_reset_stale_voice_session",
+      })
+      .eq("lifecycle_status", "calling" as any)
+      .lt("auto_call_triggered_at", new Date(Date.now() - STALE_SESSION_MS).toISOString());
     const [pRes, lRes, sRes, cRes] = await Promise.all([
       supabase.from("prospect_listings")
         .select("id, title, zone, phone_normalized, contact_phone, lead_score, lifecycle_status, category")
