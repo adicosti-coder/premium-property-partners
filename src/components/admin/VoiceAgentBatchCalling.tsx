@@ -15,7 +15,10 @@ import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, PhoneCall, Lightbulb, Loader2, ShieldCheck, Play, RefreshCw,
   Radio, Zap, FileText, CheckCircle2, RotateCcw, Download, Send, BarChart3, Info,
+  History, FileDown,
 } from "lucide-react";
+
+interface DraftEdit { at: string; before: string; after: string; }
 
 type FeedFilter = "all" | "scheduled" | "failed";
 
@@ -125,6 +128,10 @@ export default function VoiceAgentBatchCalling() {
   const [approvingFollowup, setApprovingFollowup] = useState(false);
   const [feedFilter, setFeedFilter] = useState<FeedFilter>("all");
   const [editedDrafts, setEditedDrafts] = useState<Record<string, string>>({});
+  const [approvedDrafts, setApprovedDrafts] = useState<Set<string>>(new Set());
+  const [draftHistory, setDraftHistory] = useState<Record<string, DraftEdit[]>>({});
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const editTimers = useRef<Record<string, any>>({});
   const reportShownRef = useRef(false);
 
   const loadAll = async () => {
@@ -211,10 +218,65 @@ export default function VoiceAgentBatchCalling() {
     const objections = Array.from(counter.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, v]) => `${k} (×${v})`);
     // Pre-fill editable drafts
     const drafts: Record<string, string> = {};
-    tracked.forEach((c) => { if (c.followup_draft) drafts[c.id] = draftToText(c.followup_draft); });
+    const auto: string[] = [];
+    tracked.forEach((c) => {
+      if (c.followup_draft) {
+        drafts[c.id] = draftToText(c.followup_draft);
+        auto.push(c.id);
+      }
+    });
     setEditedDrafts(drafts);
+    setApprovedDrafts(new Set(auto));
     setReportData({ total, scheduled, conversion, objections, calls: tracked });
     setReportOpen(true);
+  };
+
+  const toggleApproved = (id: string) => {
+    setApprovedDrafts((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+
+  const handleDraftEdit = (id: string, value: string) => {
+    const before = editedDrafts[id] ?? "";
+    setEditedDrafts((d) => ({ ...d, [id]: value }));
+    if (editTimers.current[id]) clearTimeout(editTimers.current[id]);
+    editTimers.current[id] = setTimeout(() => {
+      if (before === value) return;
+      setDraftHistory((h) => ({
+        ...h,
+        [id]: [...(h[id] || []), { at: new Date().toISOString(), before, after: value }],
+      }));
+    }, 800);
+  };
+
+  const exportApprovedDrafts = () => {
+    if (!reportData) return;
+    const items = reportData.calls
+      .filter((c) => approvedDrafts.has(c.id))
+      .map((c) => ({
+        session_id: c.id,
+        to_number: c.to_number,
+        outcome: c.ai_outcome,
+        sentiment: c.ai_sentiment,
+        message: editedDrafts[c.id] ?? draftToText(c.followup_draft),
+        edited: (editedDrafts[c.id] ?? "") !== draftToText(c.followup_draft),
+        wa_link: `https://wa.me/${(c.to_number || "").replace(/[^0-9]/g, "")}?text=${encodeURIComponent(editedDrafts[c.id] ?? draftToText(c.followup_draft))}`,
+      }));
+    if (items.length === 0) {
+      toast({ variant: "destructive", title: "Niciun draft bifat" });
+      return;
+    }
+    const json = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(json);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `whatsapp-drafts-approved-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "📤 Exportat", description: `${items.length} draft-uri aprobate.` });
   };
 
   const toggleOne = (id: string) => {
@@ -345,7 +407,7 @@ export default function VoiceAgentBatchCalling() {
     if (!reportData) return;
     setApprovingFollowup(true);
     const drafts = reportData.calls
-      .filter((c) => c.followup_draft || editedDrafts[c.id])
+      .filter((c) => approvedDrafts.has(c.id))
       .map((c) => ({
         session_id: c.id,
         to_number: c.to_number,
@@ -354,6 +416,11 @@ export default function VoiceAgentBatchCalling() {
         original_draft: c.followup_draft,
         edited: (editedDrafts[c.id] ?? "") !== draftToText(c.followup_draft),
       }));
+    if (drafts.length === 0) {
+      setApprovingFollowup(false);
+      toast({ variant: "destructive", title: "Bifează cel puțin un draft" });
+      return;
+    }
     const { error } = await supabase.functions.invoke("notify-new-lead-whatsapp", {
       body: { type: "batch_followup_review", drafts, batch_session_ids: batchSessionIds },
     });
@@ -704,8 +771,24 @@ export default function VoiceAgentBatchCalling() {
                 )}
               </div>
               <div>
-                <div className="text-xs font-semibold mb-2 text-muted-foreground">
-                  DRAFT-URI FOLLOW-UP WHATSAPP — editabile
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-semibold text-muted-foreground">
+                    DRAFT-URI FOLLOW-UP WHATSAPP — bifează & editează
+                  </div>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 text-[10px]"
+                      onClick={() => setApprovedDrafts(new Set(reportData.calls.filter((c) => c.followup_draft).map((c) => c.id)))}>
+                      Bifează tot
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-[10px]"
+                      onClick={() => setApprovedDrafts(new Set())}>
+                      Debifează
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 text-[10px]"
+                      onClick={() => setHistoryOpen(true)}>
+                      <History className="h-3 w-3 mr-1" /> Istoric edits
+                    </Button>
+                  </div>
                 </div>
                 {reportData.calls.filter((c) => c.followup_draft || editedDrafts[c.id]).length === 0 ? (
                   <div className="text-xs text-muted-foreground">Niciun draft generat de Gemini.</div>
@@ -717,18 +800,25 @@ export default function VoiceAgentBatchCalling() {
                         const original = draftToText(c.followup_draft);
                         const current = editedDrafts[c.id] ?? original;
                         const edited = current !== original;
+                        const isApproved = approvedDrafts.has(c.id);
                         return (
-                          <div key={c.id} className="border rounded p-2 space-y-1">
+                          <div key={c.id} className={`border rounded p-2 space-y-1 ${isApproved ? "border-emerald-500/50 bg-emerald-500/5" : ""}`}>
                             <div className="flex items-center justify-between text-[11px]">
-                              <span className="font-medium">📞 {c.to_number}</span>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <Checkbox checked={isApproved} onCheckedChange={() => toggleApproved(c.id)} />
+                                <span className="font-medium">📞 {c.to_number}</span>
+                              </label>
                               <span className="flex items-center gap-1">
                                 {c.ai_outcome && <Badge variant="outline" className="text-[9px]">{c.ai_outcome}</Badge>}
                                 {edited && <Badge className="text-[9px] bg-amber-500">editat</Badge>}
+                                {(draftHistory[c.id]?.length ?? 0) > 0 && (
+                                  <Badge variant="outline" className="text-[9px]">{draftHistory[c.id].length} edits</Badge>
+                                )}
                               </span>
                             </div>
                             <Textarea
                               value={current}
-                              onChange={(e) => setEditedDrafts((d) => ({ ...d, [c.id]: e.target.value }))}
+                              onChange={(e) => handleDraftEdit(c.id, e.target.value)}
                               rows={3}
                               className="text-xs font-mono"
                             />
@@ -740,12 +830,68 @@ export default function VoiceAgentBatchCalling() {
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="flex-wrap gap-2">
             <Button variant="outline" onClick={() => setReportOpen(false)}>Închide</Button>
-            <Button onClick={approveFollowups} disabled={approvingFollowup || !reportData?.calls.some((c) => c.followup_draft)}>
-              {approvingFollowup ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-              Aprobă Follow-up (trimite draft-uri)
+            <Button variant="outline" onClick={exportApprovedDrafts} disabled={approvedDrafts.size === 0}>
+              <FileDown className="h-3 w-3 mr-1" /> Export aprobate ({approvedDrafts.size})
             </Button>
+            <Button onClick={approveFollowups} disabled={approvingFollowup || approvedDrafts.size === 0}>
+              {approvingFollowup ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+              Trimite în coadă ({approvedDrafts.size})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DRAFT EDIT HISTORY DIALOG */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-4 w-4" /> Istoric modificări draft-uri
+            </DialogTitle>
+            <DialogDescription>
+              Edit-urile manuale făcute pe draft-urile WhatsApp — pentru consistența tonului RealTrust.
+            </DialogDescription>
+          </DialogHeader>
+          {Object.keys(draftHistory).length === 0 ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">Nicio modificare încă.</div>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(draftHistory).map(([id, edits]) => {
+                const call = reportData?.calls.find((c) => c.id === id);
+                return (
+                  <div key={id} className="border rounded p-3 space-y-2">
+                    <div className="text-xs font-semibold flex items-center gap-2">
+                      📞 {call?.to_number || id.slice(0, 8)}
+                      <Badge variant="outline" className="text-[9px]">{edits.length} modificări</Badge>
+                    </div>
+                    <ol className="space-y-2 text-xs">
+                      {edits.map((e, i) => (
+                        <li key={i} className="border-l-2 border-primary/40 pl-2">
+                          <div className="text-[10px] text-muted-foreground">
+                            {new Date(e.at).toLocaleString("ro-RO")}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 mt-1">
+                            <div>
+                              <div className="text-[10px] text-muted-foreground uppercase">Înainte</div>
+                              <div className="font-mono whitespace-pre-wrap bg-destructive/5 p-1 rounded">{e.before || "—"}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-muted-foreground uppercase">După</div>
+                              <div className="font-mono whitespace-pre-wrap bg-emerald-500/5 p-1 rounded">{e.after}</div>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHistoryOpen(false)}>Închide</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
