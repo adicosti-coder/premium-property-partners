@@ -470,10 +470,17 @@ export default function VoiceAgentBatchCalling() {
   const openTechDetails = async (sessionId: string) => {
     setDetailLoading(true);
     setDetailLog(null);
-    const { data } = await supabase.from("voice_agent_script_test_logs")
+    setDetailSession(null);
+    const [logRes, sessionRes] = await Promise.all([
+      supabase.from("voice_agent_script_test_logs")
       .select("id, status, outcome, fallback_reason, call_duration_seconds, transcript_turns, script_name, script_version, ab_variant, to_number, created_at, updated_at")
-      .eq("session_id", sessionId).maybeSingle();
-    setDetailLog((data as TestLog) || null);
+      .eq("session_id", sessionId).maybeSingle(),
+      supabase.from("voice_call_sessions")
+        .select("id, to_number, status, ai_outcome, ai_sentiment, ai_summary, next_action, appointment_scheduled_at, started_at, ended_at, call_duration_seconds, prospect_listing_id, error_message, followup_draft, followup_status, transcript, updated_at, created_at, twilio_call_sid, recording_url, detected_language, clarity_score, debug_log")
+        .eq("id", sessionId).maybeSingle(),
+    ]);
+    setDetailLog((logRes.data as TestLog) || null);
+    setDetailSession((sessionRes.data as DetailSession) || null);
     setDetailLoading(false);
   };
 
