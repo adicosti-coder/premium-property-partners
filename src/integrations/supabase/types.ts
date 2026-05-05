@@ -5123,6 +5123,77 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_agent_playbook_addendum: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          lesson: string
+          profile_summary: string | null
+          severity: string
+          source_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lesson: string
+          profile_summary?: string | null
+          severity?: string
+          source_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lesson?: string
+          profile_summary?: string | null
+          severity?: string
+          source_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_agent_playbook_addendum_source_session_id_fkey"
+            columns: ["source_session_id"]
+            isOneToOne: false
+            referencedRelation: "voice_call_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_agent_safety_state: {
+        Row: {
+          calls_paused: boolean
+          id: boolean
+          last_check_at: string | null
+          paused_reason: string | null
+          sample_size: number | null
+          success_rate_pct: number | null
+          updated_at: string
+        }
+        Insert: {
+          calls_paused?: boolean
+          id?: boolean
+          last_check_at?: string | null
+          paused_reason?: string | null
+          sample_size?: number | null
+          success_rate_pct?: number | null
+          updated_at?: string
+        }
+        Update: {
+          calls_paused?: boolean
+          id?: boolean
+          last_check_at?: string | null
+          paused_reason?: string | null
+          sample_size?: number | null
+          success_rate_pct?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       voice_agent_script_test_logs: {
         Row: {
           ab_variant: string | null
