@@ -176,14 +176,66 @@ export default function VoiceAgentTrainingLab() {
 
   const computeKPI = async () => {
     setComputingKpi(true);
-    const { data, error } = await supabase.functions.invoke("voice-agent-kpi-snapshot", { body: {} });
-    setComputingKpi(false);
-    if (error || (data as any)?.error) {
-      toast({ variant: "destructive", title: "KPI eșuat", description: (data as any)?.error || error?.message });
-      return;
+    try {
+      // Preflight: verify there are calls today before invoking the edge function
+      const today = new Date().toISOString().slice(0, 10);
+      const start = `${today}T00:00:00Z`;
+      const end = new Date(new Date(start).getTime() + 24 * 3600 * 1000).toISOString();
+      const { count, error: cntErr } = await supabase
+        .from("voice_call_sessions")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", start).lt("created_at", end);
+      if (cntErr) {
+        toast({ variant: "destructive", title: "Eroare de conexiune la bază", description: cntErr.message });
+        return;
+      }
+      if (!count || count === 0) {
+        toast({
+          variant: "destructive",
+          title: "Lipsă date pentru ziua curentă",
+          description: "Niciun apel real procesat azi. Recalcularea KPI a fost evitată.",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("voice-agent-kpi-snapshot", { body: {} });
+
+      if (error) {
+        const msg = String(error.message || error).toLowerCase();
+        let title = "KPI eșuat";
+        let description = error.message || "Eroare necunoscută";
+        if (msg.includes("failed to send") || msg.includes("fetch")) {
+          title = "Funcție în curs de deploy sau indisponibilă";
+          description = "Edge function-ul nu răspunde. Așteaptă ~30s și reîncearcă.";
+        } else if (msg.includes("not found") || msg.includes("404")) {
+          title = "Funcție inexistentă";
+          description = "voice-agent-kpi-snapshot nu este deployat încă.";
+        } else if (msg.includes("network") || msg.includes("connection")) {
+          title = "Eroare de conexiune la bază";
+        } else if (msg.includes("429")) {
+          title = "Rate limit atins"; description = "Prea multe cereri. Așteaptă 1 minut.";
+        } else if (msg.includes("402")) {
+          title = "Credit AI epuizat"; description = "Adaugă fonduri în workspace pentru AI Gateway.";
+        }
+        toast({ variant: "destructive", title, description });
+        return;
+      }
+      if ((data as any)?.error) {
+        toast({ variant: "destructive", title: "KPI eșuat în execuție", description: (data as any).error });
+        return;
+      }
+
+      const d = data as any;
+      toast({
+        title: "📊 KPI actualizat",
+        description: `${d.total_calls} apeluri · ${d.success_rate}% succes · salvat în istoric`,
+      });
+      await loadAll();
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Eroare neașteptată", description: e?.message || String(e) });
+    } finally {
+      setComputingKpi(false);
     }
-    toast({ title: "📊 KPI actualizat", description: `${(data as any).total_calls} apeluri, ${(data as any).success_rate}% succes` });
-    loadAll();
   };
 
   const applyLesson = async (l: Lesson, approve: boolean) => {
