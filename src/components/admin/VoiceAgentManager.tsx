@@ -373,6 +373,7 @@ export default function VoiceAgentManager() {
         </CardContent>
       </Card>
       <VoiceAgentSimSuccessRate />
+      <VoiceAgentBatchCalling />
       <VoiceAgentMonitoring />
       <VoiceCallerProfilesManager />
       <VoiceAgentKnowledgeBase />
