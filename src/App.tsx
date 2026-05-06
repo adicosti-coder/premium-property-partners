@@ -198,6 +198,7 @@ const App = () => (
                     <Route path="/pentru-oaspeti" element={<PentruOaspeti />} />
                     <Route path="/imobiliare" element={<Imobiliare />} />
                     <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/categorie/:slug" element={<BlogCategory />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/proprietate/:slug" element={<PropertyDetail />} />
                     <Route path="/ring-apart-hotel-spacious-deluxe" element={<PropertyDetail />} />
