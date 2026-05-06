@@ -602,6 +602,65 @@ const Blog = () => {
             </div>
           )}
 
+          {!isLoading && totalPages > 1 && (
+            <Pagination className="mt-10">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    aria-disabled={page === 1}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const n = i + 1;
+                  const show = n === 1 || n === totalPages || Math.abs(n - page) <= 1;
+                  if (!show) {
+                    if (n === 2 || n === totalPages - 1) {
+                      return <PaginationItem key={n}><PaginationEllipsis /></PaginationItem>;
+                    }
+                    return null;
+                  }
+                  return (
+                    <PaginationItem key={n}>
+                      <PaginationLink
+                        href="#"
+                        isActive={n === page}
+                        onClick={(e) => { e.preventDefault(); setPage(n); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      >{n}</PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    aria-disabled={page === totalPages}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+
+          {/* Category hubs */}
+          <section className="mt-16">
+            <h2 className="text-2xl font-serif font-semibold text-foreground mb-4 text-center">
+              Explorează pe categorie
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {BLOG_CATEGORIES.map((c) => (
+                <Link
+                  key={c.slug}
+                  to={`/blog/categorie/${c.slug}`}
+                  className="rounded-xl border border-border bg-card p-5 hover:border-primary/40 hover:shadow-md transition-all"
+                >
+                  <div className="font-serif font-semibold text-foreground mb-1">{c.name}</div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{c.intro}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+
           {/* Investor Guide CTA for Investment Articles */}
           <div className="mt-12 text-center">
             <InvestorGuideButton size="lg" />
