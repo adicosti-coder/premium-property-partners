@@ -59,6 +59,8 @@ const Blog = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [accessFilter, setAccessFilter] = useState<AccessFilter>("all");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 9;
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
