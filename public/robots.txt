@@ -1,3 +1,6 @@
 User-agent: *
 Allow: /
-Sitemap: https://realtrust.ro/sitemap.xml
+
+Sitemap: https://www.realtrust.ro/sitemap.xml
+Sitemap: https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap
+Sitemap: https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-blog-sitemap

@@ -863,6 +863,69 @@ function buildStaticRoutes(): PrerenderRoute[] {
     },
   });
 
+  // Blog category hubs — prerender meta + JSON-LD so Google has them
+  // immediately when discovering them via the new blog sitemap.
+  const blogCategories: Array<{ slug: string; name: string; title: string; description: string; intro: string }> = [
+    {
+      slug: 'ghid-turistic-timisoara',
+      name: 'Ghid Turistic Timișoara',
+      title: 'Ghid Turistic Timișoara — Restaurante, Evenimente, Atracții 2026 | RealTrust',
+      description: 'Ghidul complet pentru oaspeții Timișoarei: top restaurante, evenimente 2026, cartiere, transport public, cafenele specialty și excursii de o zi.',
+      intro: 'Tot ce trebuie să știi pentru o vizită memorabilă în Timișoara — selectat de echipa ApArt Hotel pentru oaspeții noștri.',
+    },
+    {
+      slug: 'investitii-imobiliare',
+      name: 'Investiții Imobiliare',
+      title: 'Investiții Imobiliare Timișoara — Randament, ROI, Studii de Caz | RealTrust',
+      description: 'Analize de piață, ROI 9.4% net, studii de caz reale și ghiduri pentru investitori imobiliari în Timișoara — inclusiv regim hotelier.',
+      intro: 'Strategii verificate de investiții imobiliare în Timișoara: de la calcul randament până la exit strategy.',
+    },
+    {
+      slug: 'sfaturi-proprietari',
+      name: 'Sfaturi Proprietari',
+      title: 'Sfaturi pentru Proprietari — Administrare Regim Hotelier Timișoara | RealTrust',
+      description: 'Ghiduri practice pentru proprietari de apartamente: revenue management, distribuție OTA, mentenanță, branding și amenajare pentru regim hotelier.',
+      intro: 'Cum transformi un apartament din Timișoara într-un activ profitabil administrat profesionist.',
+    },
+    {
+      slug: 'taxe-legislatie',
+      name: 'Taxe & Legislație',
+      title: 'Taxe & Legislație Imobiliară 2026 — Ghid Fiscal pentru Proprietari | RealTrust',
+      description: 'Ghiduri actualizate despre fiscalitate, ANAF, e-Factura, e-TVA și obligațiile legale pentru proprietarii de apartamente în regim hotelier.',
+      intro: 'Tot ce trebuie să știi despre obligațiile fiscale pentru veniturile din chirii și regim hotelier.',
+    },
+  ];
+
+  for (const c of blogCategories) {
+    routes.push({
+      path: `/blog/categorie/${c.slug}`,
+      title: c.title,
+      description: c.description,
+      h1: c.name,
+      canonical: `${BASE_URL}/blog/categorie/${c.slug}`,
+      seoBody: `<h2>${c.name}</h2><p>${c.intro}</p>`,
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: c.title,
+          description: c.description,
+          url: `${BASE_URL}/blog/categorie/${c.slug}`,
+          isPartOf: { '@type': 'Blog', name: 'Blog RealTrust', url: `${BASE_URL}/blog` },
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Acasă', item: `${BASE_URL}/` },
+            { '@type': 'ListItem', position: 2, name: 'Blog', item: `${BASE_URL}/blog` },
+            { '@type': 'ListItem', position: 3, name: c.name, item: `${BASE_URL}/blog/categorie/${c.slug}` },
+          ],
+        },
+      ],
+    });
+  }
+
   return routes;
 }
 
