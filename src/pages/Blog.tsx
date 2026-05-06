@@ -508,7 +508,7 @@ const Blog = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredArticles.map((article) => {
+              {pagedArticles.map((article) => {
                 const coverImage = getBlogCoverImage(article.slug, article.cover_image);
                 const displayTitle = language === 'en' && article.title_en ? article.title_en : article.title;
                 const displayExcerpt = language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt;
