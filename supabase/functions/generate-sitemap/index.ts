@@ -151,9 +151,11 @@ serve(async (req: Request) => {
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 `;
 
-    // Helper to generate hreflang alternates
+    // Helper to generate hreflang alternates — RO and EN share the same canonical URL
+    // (language is a client-side state, not a URL segment). This prevents GSC from reporting
+    // duplicate "alternative page with canonical tag" pages for ?lang=en variants.
     const hreflang = (path: string) => `    <xhtml:link rel="alternate" hreflang="ro" href="${BASE_URL}${path}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path}${path.includes('?') ? '&' : '?'}lang=en" />
+    <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path}" />
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${path}" />`;
 
     // Add static pages
