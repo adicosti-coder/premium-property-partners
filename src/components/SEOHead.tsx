@@ -202,11 +202,10 @@ const SEOHead = ({
   const finalUrl = override?.canonical_url || buildCanonical();
 
   // Hreflang alternates — language is a client-side state (LanguageContext), not a URL segment.
-  // Both RO and EN share the same canonical pathname; we signal language equivalence to Google.
-  const getAlternateUrl = (lang: string) => {
-    if (lang === "ro") return finalUrl;
-    return `${finalUrl}?lang=${lang}`;
-  };
+  // Both RO and EN share the SAME canonical URL (no ?lang= param) to prevent GSC "alternative
+  // page with canonical tag" duplicates. Google treats hreflang variants pointing to the same
+  // URL as a single canonical page in multiple languages.
+  const getAlternateUrl = (_lang: string) => finalUrl;
   
   // Default JSON-LD for LocalBusiness (AggregateRating injected dynamically on homepage)
   const defaultJsonLd = {
