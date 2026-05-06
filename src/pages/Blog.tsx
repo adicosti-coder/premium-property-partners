@@ -13,6 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import BlogCardSkeleton from "@/components/BlogCardSkeleton";
 import { Calendar, Clock, Search, Tag, ArrowRight, ArrowUpDown, Sparkles, Lock, Crown, Eye, TrendingUp, PenLine, Trophy } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
+import { BLOG_CATEGORIES } from "@/lib/blogCategories";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
@@ -57,6 +59,8 @@ const Blog = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [accessFilter, setAccessFilter] = useState<AccessFilter>("all");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 9;
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -145,6 +149,14 @@ const Blog = () => {
       }
     });
   }, [articles, searchQuery, selectedCategory, accessFilter, sortBy, language]);
+
+  useEffect(() => { setPage(1); }, [searchQuery, selectedCategory, accessFilter, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredArticles.length / PAGE_SIZE));
+  const pagedArticles = useMemo(
+    () => filteredArticles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredArticles, page]
+  );
 
   const translations = {
     ro: {
@@ -496,7 +508,7 @@ const Blog = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredArticles.map((article) => {
+              {pagedArticles.map((article) => {
                 const coverImage = getBlogCoverImage(article.slug, article.cover_image);
                 const displayTitle = language === 'en' && article.title_en ? article.title_en : article.title;
                 const displayExcerpt = language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt;
@@ -589,6 +601,65 @@ const Blog = () => {
               );})}
             </div>
           )}
+
+          {!isLoading && totalPages > 1 && (
+            <Pagination className="mt-10">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    aria-disabled={page === 1}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const n = i + 1;
+                  const show = n === 1 || n === totalPages || Math.abs(n - page) <= 1;
+                  if (!show) {
+                    if (n === 2 || n === totalPages - 1) {
+                      return <PaginationItem key={n}><PaginationEllipsis /></PaginationItem>;
+                    }
+                    return null;
+                  }
+                  return (
+                    <PaginationItem key={n}>
+                      <PaginationLink
+                        href="#"
+                        isActive={n === page}
+                        onClick={(e) => { e.preventDefault(); setPage(n); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      >{n}</PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    aria-disabled={page === totalPages}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+
+          {/* Category hubs */}
+          <section className="mt-16">
+            <h2 className="text-2xl font-serif font-semibold text-foreground mb-4 text-center">
+              Explorează pe categorie
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {BLOG_CATEGORIES.map((c) => (
+                <Link
+                  key={c.slug}
+                  to={`/blog/categorie/${c.slug}`}
+                  className="rounded-xl border border-border bg-card p-5 hover:border-primary/40 hover:shadow-md transition-all"
+                >
+                  <div className="font-serif font-semibold text-foreground mb-1">{c.name}</div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{c.intro}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
 
           {/* Investor Guide CTA for Investment Articles */}
           <div className="mt-12 text-center">

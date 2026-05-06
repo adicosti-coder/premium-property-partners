@@ -1,0 +1,94 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Content-Type": "application/xml; charset=utf-8",
+};
+
+const BASE_URL = "https://www.realtrust.ro";
+
+const escapeXml = (str: string) =>
+  str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+
+const CATEGORY_SLUGS = [
+  "ghid-turistic-timisoara",
+  "investitii-imobiliare",
+  "sfaturi-proprietari",
+  "taxe-legislatie",
+];
+
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { data: articles } = await supabase
+      .from("blog_articles")
+      .select("slug, title, published_at, updated_at, created_at, cover_image")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false });
+
+    const STORAGE_BASE = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/blog-images`;
+    const today = new Date().toISOString().split("T")[0];
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+`;
+
+    // Blog hub
+    xml += `  <url>
+    <loc>${BASE_URL}/blog</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+`;
+
+    // Category hubs
+    for (const slug of CATEGORY_SLUGS) {
+      xml += `  <url>
+    <loc>${BASE_URL}/blog/categorie/${slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+    }
+
+    // Articles
+    for (const a of articles ?? []) {
+      const lastmod = (a.updated_at || a.published_at || a.created_at || new Date().toISOString()).split("T")[0];
+      let imageTag = "";
+      if (a.cover_image) {
+        const imgUrl = a.cover_image.startsWith("http") ? a.cover_image : `${STORAGE_BASE}/${a.cover_image}`;
+        imageTag = `
+    <image:image>
+      <image:loc>${escapeXml(imgUrl)}</image:loc>
+      <image:title>${escapeXml(a.title)}</image:title>
+    </image:image>`;
+      }
+      xml += `  <url>
+    <loc>${BASE_URL}/blog/${a.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>${imageTag}
+  </url>
+`;
+    }
+
+    xml += `</urlset>`;
+    return new Response(xml, { status: 200, headers: corsHeaders });
+  } catch (e) {
+    return new Response(`<?xml version="1.0"?><error>${(e as Error).message}</error>`, {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
+});
