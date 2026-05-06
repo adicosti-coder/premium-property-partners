@@ -150,6 +150,14 @@ const Blog = () => {
     });
   }, [articles, searchQuery, selectedCategory, accessFilter, sortBy, language]);
 
+  useEffect(() => { setPage(1); }, [searchQuery, selectedCategory, accessFilter, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredArticles.length / PAGE_SIZE));
+  const pagedArticles = useMemo(
+    () => filteredArticles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredArticles, page]
+  );
+
   const translations = {
     ro: {
       title: "Blog & Ghiduri",
