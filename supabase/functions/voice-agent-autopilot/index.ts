@@ -148,6 +148,7 @@ serve(async (req) => {
     }
 
     const limit = Math.max(1, Math.min(50, s.autopilot_max_per_tick));
+    const dialDelayMs = runSource === "manual" ? 500 : 800;
 
     // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
     const { data: prospects } = await supabase
@@ -234,7 +235,7 @@ serve(async (req) => {
             metadata: j ?? {},
           });
 
-          await new Promise((res) => setTimeout(res, 1500));
+          await new Promise((res) => setTimeout(res, dialDelayMs));
         } catch (e) {
           summary.notes.push(`dial fail ${pid}: ${(e as Error).message}`);
         }
