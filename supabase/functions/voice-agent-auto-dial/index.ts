@@ -97,6 +97,15 @@ const DETAIL_URL_PATTERNS = ["/d/oferta/", "/anunt/", "/oferta/", "/proprietate/
 const GENERIC_SEARCH_TITLE_PATTERNS = ["anunturi gratuite", "anunțuri gratuite", "olx.ro", "rezultate cautare", "rezultate căutare", "apartamente de vanzare", "apartamente de vânzare", "apartamente de inchiriat", "apartamente de închiriat", "imobiliare timisoara", "imobiliare timișoara", "cautare", "căutare"];
 const OWNER_SIGNALS = ["proprietar", "direct-de-la-proprietar", "direct proprietar", "de la proprietar", "fara comision", "fără comision", "fara intermediar", "privat", "privati", "privați", "persoana fizica", "persoană fizică", "persoane fizice"];
 
+function getRomaniaHour(): number {
+  const hour = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Bucharest",
+    hour: "2-digit",
+    hour12: false,
+  }).format(new Date());
+  return Number(hour);
+}
+
 function hasOwnerFilterSignal(prospect: any): boolean {
   if (prospect?.prospect_type === "proprietar") return true;
   const keywords = Array.isArray(prospect?.search_keywords) ? prospect.search_keywords.join(" ") : "";
@@ -140,6 +149,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const triggeredId: string | undefined = body.triggered_prospect_id || body.prospect_id;
     const manual = body.manual === true;
+    const bypassSchedule = manual || body.bypass_schedule === true;
     const resumePending = body.resume_pending === true;
 
     // Settings
@@ -153,10 +163,9 @@ serve(async (req) => {
       return jsonResp({ skipped: "auto_dial disabled" });
     }
 
-    // Time window check (Romania UTC+2)
-    if (!manual && !resumePending && settings) {
-      const nowUtc = new Date();
-      const hourRo = (nowUtc.getUTCHours() + 2) % 24;
+    // Time window check (Europe/Bucharest, DST-safe)
+    if (!bypassSchedule && !resumePending && settings) {
+      const hourRo = getRomaniaHour();
       if (hourRo < settings.allowed_hours_start || hourRo >= settings.allowed_hours_end) {
         return jsonResp({ skipped: `outside hours (RO hour ${hourRo})` });
       }
