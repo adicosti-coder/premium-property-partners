@@ -371,7 +371,7 @@ function systemPromptForBranch(branch: "vanzare" | "inchiriere" | "cazare", lead
 REGULI CRITICE DE STIL VOCAL (PREMIUM, NATURAL):
 • Vorbești EXCLUSIV în română, cu diacritice (ă, â, î, ș, ț) — niciodată engleză.
 • MAXIM 2 propoziții per replică. Sub 25 de cuvinte total per replică.
-• Prima replică din răspuns este aproape mereu o confirmare scurtă, umană: "mhm", "înțeleg", "da, sigur", "vă mulțumesc", "perfect" — apoi continui cu întrebarea sau răspunsul.
+• INTERZIS sunete de umplere ("mhm", "îhî", "aha", "ăăă", "hmm"). Începi DIRECT cu cuvinte clare: "Înțeleg.", "Sigur.", "Da.", "Perfect." — sau direct cu răspunsul.
 • Folosește pauze naturale: virgule des, "…" înainte de o întrebare cheie pentru respirație. Nu lega 3 idei într-o frază.
 • Dacă apelantul te întrerupe sau pare că vorbește peste tine, te oprești IMEDIAT, asculți, apoi reformulezi DOAR ce a întrebat el — fără să reiei pitch-ul.
 • Ton de concierge la hotel 5*: cald, calm, niciodată insistent. Niciodată nu repeți același argument de 2 ori.
@@ -541,20 +541,91 @@ serve(async (req) => {
 
     if (!sessionId) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
-    const { data: session } = await supabase
-      .from("voice_call_sessions")
-      .select("*")
-      .eq("id", sessionId)
-      .maybeSingle();
+    // ⚡ FAST-PATH TURN 0: returnăm IMEDIAT greeting-ul cached, fără să mai
+    // așteptăm DB lookups grele (script, KB, profil, sentiment, etc.).
+    // Contextul greu se încarcă în background pentru turn>=1.
+    if (turn === 0 && req.method === "POST") {
+      try {
+        const fastT0 = Date.now();
+        // Minimal session fetch DOAR pentru branch+context personal (1 query).
+        const { data: sessFast } = await supabase
+          .from("voice_call_sessions")
+          .select("id, prospect_listing_id, lead_id")
+          .eq("id", sessionId)
+          .maybeSingle();
+        if (!sessFast) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
+
+        // Default greeting branch (vanzare); context personalization happens turn>=1
+        const fastBranch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
+        const fastGreeting = openingLine(fastBranch, "");
+
+        // Try in-memory TTS cache (sub-ms). If cold, generate on the fly.
+        const fastVoice: VoiceSettings = {
+          voice_id: ANDREI_VOICE_ID,
+          model_id: ANDREI_MODEL_ID,
+          stability: 0.48,
+          similarity_boost: 0.88,
+          style: 0.35,
+          speed: 1.05,
+          use_speaker_boost: true,
+        };
+        let fastUrl: string | null = null;
+        if (ELEVENLABS_API_KEY) {
+          const ttsRes = await ttsToCachedUrlDetailed(
+            fastGreeting, fastVoice, supabase, ELEVENLABS_API_KEY, sessionId,
+          );
+          fastUrl = ttsRes.url;
+        }
+        const totalMs = Date.now() - turnT0;
+        const fastMs = Date.now() - fastT0;
+        const TARGET_MS = 800;
+        if (totalMs > TARGET_MS) {
+          console.warn(`[voice-twiml][SLOW TURN 0] session=${sessionId} total=${totalMs}ms fast=${fastMs}ms`);
+        } else {
+          console.log(`[voice-twiml][FAST TURN 0] session=${sessionId} total=${totalMs}ms`);
+        }
+
+        // Background: log + warm context for turn 1
+        // @ts-ignore
+        if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+          // @ts-ignore
+          EdgeRuntime.waitUntil((async () => {
+            try {
+              const transcript0 = [{ role: "assistant", text: fastGreeting, at: new Date().toISOString() }];
+              await supabase.from("voice_call_sessions").update({
+                transcript: transcript0, status: "in-progress",
+              }).eq("id", sessionId);
+              await pushDebugLog(supabase, sessionId, {
+                stage: "twiml_turn0_fast",
+                turn: 0,
+                aiReply: fastGreeting,
+                audioUrl: fastUrl,
+                profile: { total_handler_ms: totalMs, fast_path_ms: fastMs, target_ms: TARGET_MS, breached: totalMs > TARGET_MS },
+              });
+            } catch (e) { console.error("[voice-twiml] turn0 bg log:", e); }
+          })());
+        }
+
+        const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+        return xmlResponse(
+          `<Response>${gatherXml(nextUrl, speakXml(fastGreeting, fastUrl))}<Redirect method="POST">${escapeXml(nextUrl)}</Redirect></Response>`
+        );
+      } catch (e) {
+        console.error("[voice-twiml] fast-path turn0 failed, falling through:", e);
+      }
+    }
+
+    // Parallel: session + voice settings (independent fetches)
+    const [sessRes, vSettingsRes] = await Promise.all([
+      supabase.from("voice_call_sessions").select("*").eq("id", sessionId).maybeSingle(),
+      supabase.from("voice_agent_settings")
+        .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost, elevenlabs_min_score")
+        .eq("id", 1).maybeSingle(),
+    ]);
+    const session = sessRes.data;
+    const vSettings = vSettingsRes.data;
 
     if (!session) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
-
-    // Load voice settings (single fetch)
-    const { data: vSettings } = await supabase
-      .from("voice_agent_settings")
-      .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost, elevenlabs_min_score")
-      .eq("id", 1)
-      .maybeSingle();
 
     const elevenLabsMinScore = Number(vSettings?.elevenlabs_min_score ?? 90);
     const elevenLabsAvailable = !!ELEVENLABS_API_KEY;
@@ -936,7 +1007,7 @@ serve(async (req) => {
               }
               return wantsDetail
                 ? "Răspunde concret la întrebare în română cu diacritice. Începe cu o confirmare scurtă (\"sigur, vă explic.\" / \"da, desigur.\"). MAXIM 2 propoziții, sub 30 de cuvinte."
-                : "Începe cu o confirmare ULTRA-scurtă (\"mhm.\" / \"perfect.\" / \"am înțeles.\"), apoi UN singur lucru: confirmare scurtă a ce ai auzit SAU următoarea întrebare. MAXIM 1 propoziție, sub 14 cuvinte. Fără preambul, fără „...”.";
+                : "Răspunde DIRECT, fără umpluturi (fără „mhm", „aha", „ăăă"). Începi cu cuvânt-cheie clar (\"Perfect.\" / \"Sigur.\" / \"Da.\") SAU direct cu întrebarea/confirmarea. MAXIM 1 propoziție, sub 14 cuvinte.";
             })() },
           ],
         }),
@@ -998,9 +1069,11 @@ serve(async (req) => {
     }
     profile.tts_done_ms = Date.now() - turnT0;
     profile.total_handler_ms = Date.now() - turnT0;
-    const TARGET_MS = 1000;
+    const TARGET_MS = 800;
+    profile.target_ms = TARGET_MS;
+    profile.breached = profile.total_handler_ms > TARGET_MS ? 1 : 0;
     if (profile.total_handler_ms > TARGET_MS) {
-      console.warn(`[voice-twiml][SLOW TURN] session=${sessionId} turn=${turn} total=${profile.total_handler_ms}ms ai=${profile.ai_done_ms}ms tts=${ttsLatencyMs}ms cached=${ttsCached}`);
+      console.warn(`[voice-twiml][SLOW TURN >${TARGET_MS}ms] session=${sessionId} turn=${turn} total=${profile.total_handler_ms}ms ai=${profile.ai_done_ms}ms tts=${ttsLatencyMs}ms cached=${ttsCached}`);
     }
 
     // Defer non-critical DB writes so we can return TwiML immediately.
