@@ -667,23 +667,17 @@ serve(async (req) => {
     }
 
     // ── KNOWLEDGE BASE: market insights for caller's zones ──
+    // OPTIMIZARE LATENȚĂ: KB lookup SARI la turn=0 (proprietarul aude tăcere altfel).
+    // Greeting-ul nu folosește cifre din KB — se încarcă la turn>=1 când avem context real.
     let marketDataBlock = "";
-    if (turn === 0) {
+    if (turn > 0) {
       try {
         const kbT0 = Date.now();
         // Collect candidate zones from caller profile + live entities + prospect
         const zoneSet = new Set<string>();
         const profZones = ((session as any).extracted_entities?.preferred_zones || []) as string[];
         for (const z of profZones) if (z) zoneSet.add(String(z).toLowerCase());
-        // Try caller profile zones via re-using earlier query result is complex; do quick fetch:
-        if (phone) {
-          const { data: pz } = await supabase
-            .from("voice_caller_profiles")
-            .select("preferred_zones")
-            .eq("phone_normalized", phone)
-            .maybeSingle();
-          for (const z of (pz?.preferred_zones || [])) if (z) zoneSet.add(String(z).toLowerCase());
-        }
+        // Reuse zones from caller-memory query above (already done) — no second fetch.
         const zones = [...zoneSet];
 
         let kbQuery = supabase
