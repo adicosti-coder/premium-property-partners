@@ -331,6 +331,80 @@ async function ttsToCachedUrlDetailed(
 
 export { ttsToCachedUrlDetailed };
 
+/**
+ * PERMANENT cached TTS for deterministic phrases (greeting, quick replies).
+ * Uses 1-year signed URLs and a separate in-memory map. Avoids the 7-day
+ * regeneration cycle of the regular cache.
+ */
+async function ttsToPermanentCached(
+  text: string,
+  v: VoiceSettings,
+  supabase: any,
+  apiKey: string,
+  sessionId?: string | null,
+): Promise<{ url: string | null; cached: boolean; latencyMs: number }> {
+  const t0 = Date.now();
+  try {
+    const phoneticText = await applyLexiconToText(supabase, text);
+    const cacheKey = await sha256(JSON.stringify({ perm: true, text: phoneticText, ...v }));
+    const filePath = `tts-cache/perm/${cacheKey}.ulaw`;
+
+    const mem = greetingMemCache.get(cacheKey);
+    if (mem && mem.exp > Date.now()) {
+      return { url: mem.url, cached: true, latencyMs: Date.now() - t0 };
+    }
+
+    const { data: existing } = await supabase.storage
+      .from("voice-recordings")
+      .list("tts-cache/perm", { search: `${cacheKey}.ulaw`, limit: 1 });
+    if (existing && existing.length > 0) {
+      const url = await getSignedStorageUrl(supabase, filePath, GREETING_TTL_SEC);
+      if (url) greetingMemCache.set(cacheKey, { url, exp: Date.now() + GREETING_TTL_SEC * 1000 });
+      return { url, cached: true, latencyMs: Date.now() - t0 };
+    }
+
+    const res = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=ulaw_8000`,
+      {
+        method: "POST",
+        headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: phoneticText,
+          model_id: v.model_id,
+          voice_settings: {
+            stability: v.stability,
+            similarity_boost: v.similarity_boost,
+            style: v.style,
+            use_speaker_boost: v.use_speaker_boost,
+            speed: v.speed,
+          },
+        }),
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text();
+      console.error("[perm-tts] ElevenLabs failed:", res.status, body);
+      return { url: null, cached: false, latencyMs: Date.now() - t0 };
+    }
+    const audioBuffer = await res.arrayBuffer();
+    const { error: upErr } = await supabase.storage
+      .from("voice-recordings")
+      .upload(filePath, new Uint8Array(audioBuffer), { contentType: "audio/ulaw", upsert: true });
+    if (upErr) {
+      console.error("[perm-tts] upload failed:", upErr.message);
+      return { url: null, cached: false, latencyMs: Date.now() - t0 };
+    }
+    const url = await getSignedStorageUrl(supabase, filePath, GREETING_TTL_SEC);
+    if (url) greetingMemCache.set(cacheKey, { url, exp: Date.now() + GREETING_TTL_SEC * 1000 });
+    return { url, cached: false, latencyMs: Date.now() - t0 };
+  } catch (e) {
+    console.error("[perm-tts] exception:", e);
+    return { url: null, cached: false, latencyMs: Date.now() - t0 };
+  }
+}
+
+export { ttsToPermanentCached };
+
 function detectBranch(listingType?: string | null, propertyType?: string | null): "vanzare" | "inchiriere" | "cazare" {
   const t = (listingType || propertyType || "").toLowerCase();
   if (/cazare|hotel|regim|noapte|airbnb|booking/.test(t)) return "cazare";
