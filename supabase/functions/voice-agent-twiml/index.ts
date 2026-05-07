@@ -74,10 +74,14 @@ async function pushDebugLog(supabase: any, sessionId: string, entry: Record<stri
   }
 }
 
-async function getSignedStorageUrl(supabase: any, filePath: string): Promise<string | null> {
+async function getSignedStorageUrl(
+  supabase: any,
+  filePath: string,
+  expiresInSec: number = 60 * 60 * 24 * 7,
+): Promise<string | null> {
   const { data, error } = await supabase.storage
     .from("voice-recordings")
-    .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+    .createSignedUrl(filePath, expiresInSec);
 
   if (error) {
     console.error("Storage signed URL failed:", error.message);
@@ -86,6 +90,11 @@ async function getSignedStorageUrl(supabase: any, filePath: string): Promise<str
 
   return data?.signedUrl || null;
 }
+
+// PERMANENT-ish TTL for greeting + quick-reply audio (1 year signed URL).
+// Greeting variants are deterministic (3 branches) → never expire in practice.
+const GREETING_TTL_SEC = 60 * 60 * 24 * 365;
+const greetingMemCache = new Map<string, { url: string; exp: number }>();
 
 // Romanian diacritics or characteristic short words
 const RO_DIACRITICS_RE = /[ăâîșşțţĂÂÎȘŞȚŢ]/;
