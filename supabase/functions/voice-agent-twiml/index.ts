@@ -615,20 +615,17 @@ serve(async (req) => {
       }
     }
 
-    const { data: session } = await supabase
-      .from("voice_call_sessions")
-      .select("*")
-      .eq("id", sessionId)
-      .maybeSingle();
+    // Parallel: session + voice settings (independent fetches)
+    const [sessRes, vSettingsRes] = await Promise.all([
+      supabase.from("voice_call_sessions").select("*").eq("id", sessionId).maybeSingle(),
+      supabase.from("voice_agent_settings")
+        .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost, elevenlabs_min_score")
+        .eq("id", 1).maybeSingle(),
+    ]);
+    const session = sessRes.data;
+    const vSettings = vSettingsRes.data;
 
     if (!session) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
-
-    // Load voice settings (single fetch)
-    const { data: vSettings } = await supabase
-      .from("voice_agent_settings")
-      .select("tts_provider, elevenlabs_voice_id, elevenlabs_model_id, voice_stability, voice_similarity_boost, voice_style, voice_speed, voice_use_speaker_boost, elevenlabs_min_score")
-      .eq("id", 1)
-      .maybeSingle();
 
     const elevenLabsMinScore = Number(vSettings?.elevenlabs_min_score ?? 90);
     const elevenLabsAvailable = !!ELEVENLABS_API_KEY;
