@@ -1308,7 +1308,7 @@ serve(async (req) => {
     }
     profile.tts_done_ms = Date.now() - turnT0;
     profile.total_handler_ms = Date.now() - turnT0;
-    const TARGET_MS = 800;
+    // TARGET_MS already declared in outer scope (line ~706)
     profile.target_ms = TARGET_MS;
     profile.breached = profile.total_handler_ms > TARGET_MS ? 1 : 0;
     if (profile.total_handler_ms > TARGET_MS) {
