@@ -775,6 +775,63 @@ export type Database = {
           },
         ]
       }
+      communication_logs: {
+        Row: {
+          autopilot_run_id: string | null
+          channel: string
+          created_at: string
+          direction: string
+          duration_seconds: number | null
+          from_number: string | null
+          id: string
+          lead_id: string | null
+          metadata: Json | null
+          outcome: string | null
+          prospect_listing_id: string | null
+          scraper_lead_id: string | null
+          source: string
+          status: string | null
+          to_number: string | null
+          voice_session_id: string | null
+        }
+        Insert: {
+          autopilot_run_id?: string | null
+          channel?: string
+          created_at?: string
+          direction?: string
+          duration_seconds?: number | null
+          from_number?: string | null
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          outcome?: string | null
+          prospect_listing_id?: string | null
+          scraper_lead_id?: string | null
+          source?: string
+          status?: string | null
+          to_number?: string | null
+          voice_session_id?: string | null
+        }
+        Update: {
+          autopilot_run_id?: string | null
+          channel?: string
+          created_at?: string
+          direction?: string
+          duration_seconds?: number | null
+          from_number?: string | null
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          outcome?: string | null
+          prospect_listing_id?: string | null
+          scraper_lead_id?: string | null
+          source?: string
+          status?: string | null
+          to_number?: string | null
+          voice_session_id?: string | null
+        }
+        Relationships: []
+      }
       community_article_comments: {
         Row: {
           content: string

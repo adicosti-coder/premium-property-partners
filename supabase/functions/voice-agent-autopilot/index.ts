@@ -168,7 +168,23 @@ serve(async (req) => {
             },
             body: JSON.stringify({ triggered_prospect_id: pid, autopilot: true }),
           });
+          const j = await r.json().catch(() => ({}));
           if (r.ok) summary.calls_initiated++;
+
+          // Log în communication_logs cu sursa "autopilot"
+          await supabase.from("communication_logs").insert({
+            channel: "voice_call",
+            direction: "outbound",
+            source: "autopilot",
+            to_number: j?.to ?? null,
+            voice_session_id: j?.session_id ?? null,
+            prospect_listing_id: pid,
+            autopilot_run_id: runId ?? null,
+            status: r.ok ? (j?.success ? "initiated" : (j?.skipped || "skipped")) : "failed",
+            outcome: j?.skipped || (j?.error ? `error:${String(j.error).slice(0,80)}` : null),
+            metadata: j ?? {},
+          });
+
           await new Promise((res) => setTimeout(res, 1500));
         } catch (e) {
           summary.notes.push(`dial fail ${pid}: ${(e as Error).message}`);
