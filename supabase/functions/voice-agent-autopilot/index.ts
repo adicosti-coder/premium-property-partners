@@ -32,6 +32,11 @@ const RISK_KEYWORDS = [
   "nu mai sun", "nu sunați", "nu sunati", "nu insist",
 ];
 
+const NOISE_URL_PATTERNS = ["/imobiliare/q-", "/imobiliare/timisoara/q-", "/ro/rezultate/", "/ro/companii/", "/oferte/q-"];
+const DETAIL_URL_PATTERNS = ["/d/oferta/", "/anunt/", "/oferta/", "/proprietate/", "/property/"];
+const GENERIC_SEARCH_TITLE_PATTERNS = ["anunturi gratuite", "anunțuri gratuite", "olx.ro", "rezultate cautare", "rezultate căutare", "apartamente de vanzare", "apartamente de vânzare", "imobiliare timisoara", "imobiliare timișoara"];
+const OWNER_SIGNALS = ["proprietar", "direct proprietar", "de la proprietar", "fara comision", "fără comision", "persoana fizica", "persoană fizică"];
+
 type AutonomySettings = {
   autopilot_enabled: boolean;
   autopilot_mode: "full" | "safety_net" | "ingest_only";
@@ -43,6 +48,8 @@ type AutonomySettings = {
   allowed_hours_start: number;
   allowed_hours_end: number;
 };
+
+type RunSource = "cron" | "manual";
 
 function isWithinHours(s: AutonomySettings) {
   const h = new Date().toLocaleString("en-US", {
@@ -67,16 +74,33 @@ function hasRisk(text: string | null): boolean {
   return RISK_KEYWORDS.some((k) => lc.includes(k.toLowerCase()));
 }
 
+function isCallablePhone(phone: string | null | undefined): phone is string {
+  return !!phone && /^\+[1-9]\d{6,14}$/.test(phone);
+}
+
+function isGenericUncallableProspect(prospect: any): boolean {
+  const blob = `${prospect?.source_url || ""} ${prospect?.title || ""} ${prospect?.description || ""} ${prospect?.contact_name || ""} ${(prospect?.search_keywords || []).join?.(" ") || ""}`.toLowerCase();
+  const hasOwnerSignal = prospect?.prospect_type === "proprietar" || OWNER_SIGNALS.some((signal) => blob.includes(signal));
+  const url = String(prospect?.source_url || "").toLowerCase();
+  const title = String(prospect?.title || "").toLowerCase();
+  const looksLikeDetail = DETAIL_URL_PATTERNS.some((pattern) => url.includes(pattern));
+  const looksLikeSearch = NOISE_URL_PATTERNS.some((pattern) => url.includes(pattern)) || GENERIC_SEARCH_TITLE_PATTERNS.some((pattern) => title.includes(pattern));
+  return looksLikeSearch && !looksLikeDetail && !hasOwnerSignal;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
   const startedAt = new Date().toISOString();
+  const body = await req.json().catch(() => ({}));
+  const runSource: RunSource = body?.source === "manual" || body?.manual === true ? "manual" : "cron";
+  const bypassSchedule = runSource === "manual" || body?.bypass_schedule === true;
 
   // Create run record
   const { data: run } = await supabase
     .from("voice_autonomy_runs")
-    .insert({ source: "cron", status: "running" })
+    .insert({ source: runSource, status: "running" })
     .select()
     .single();
   const runId = run?.id;
@@ -106,7 +130,7 @@ serve(async (req) => {
       await finalize(supabase, runId, "skipped", summary);
       return jsonResp({ ok: true, skipped: "disabled", summary });
     }
-    if (!isWithinHours(s)) {
+    if (!bypassSchedule && !isWithinHours(s)) {
       summary.notes.push(`outside hours ${s.allowed_hours_start}-${s.allowed_hours_end}`);
       await finalize(supabase, runId, "skipped", summary);
       return jsonResp({ ok: true, skipped: "out_of_hours", summary });
@@ -123,20 +147,46 @@ serve(async (req) => {
       return jsonResp({ ok: true, skipped: "safety_pause", summary });
     }
 
-    const limit = Math.max(1, Math.min(10, s.autopilot_max_per_tick));
+    const limit = Math.max(1, Math.min(50, s.autopilot_max_per_tick));
+    const dialDelayMs = runSource === "manual" ? 0 : 500;
 
     // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
     const { data: prospects } = await supabase
       .from("prospect_listings")
-      .select("id, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at")
+      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords")
       .gte("lead_score", s.min_lead_score ?? 50)
       .in("lifecycle_status", ["new", "callback"])
       .not("phone_normalized", "is", null)
       .is("auto_call_triggered_at", null)
       .order("lead_score", { ascending: false })
-      .limit(limit);
+      .limit(Math.min(100, limit * 4));
 
-    const prospectIds = (prospects || []).map((p: any) => p.id);
+    const seenPhones = new Set<string>();
+    const prospectIds: string[] = [];
+    for (const p of prospects || []) {
+      const phone = p.phone_normalized || p.contact_phone;
+      if (!isCallablePhone(phone)) {
+        await supabase.from("prospect_listings").update({
+          lifecycle_status: "failed",
+          last_failure_reason: `invalid_phone_autopilot: ${p.contact_phone || p.phone_normalized || "missing"}`,
+          last_retry_at: new Date().toISOString(),
+        }).eq("id", p.id);
+        continue;
+      }
+      if (isGenericUncallableProspect(p)) {
+        await supabase.from("prospect_listings").update({
+          prospect_type: "agentie",
+          lifecycle_status: "failed",
+          last_failure_reason: "generic_search_page_not_callable",
+          admin_notes: "Auto-dial blocat: intrare de tip căutare generică, nu anunț apelabil.",
+        }).eq("id", p.id);
+        continue;
+      }
+      if (seenPhones.has(phone)) continue;
+      seenPhones.add(phone);
+      prospectIds.push(p.id);
+      if (prospectIds.length >= limit) break;
+    }
     summary.prospects_ingested = prospectIds.length;
 
     // 3. RETENTION (portofoliu RealTrust) — proprietăți active cu telefon proprietar
@@ -166,10 +216,10 @@ serve(async (req) => {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${SERVICE_KEY}`,
             },
-            body: JSON.stringify({ triggered_prospect_id: pid, autopilot: true }),
+            body: JSON.stringify({ triggered_prospect_id: pid, autopilot: true, bypass_schedule: bypassSchedule }),
           });
           const j = await r.json().catch(() => ({}));
-          if (r.ok) summary.calls_initiated++;
+          if (r.ok && j?.success === true) summary.calls_initiated++;
 
           // Log în communication_logs cu sursa "autopilot"
           await supabase.from("communication_logs").insert({
@@ -185,7 +235,7 @@ serve(async (req) => {
             metadata: j ?? {},
           });
 
-          await new Promise((res) => setTimeout(res, 1500));
+          await new Promise((res) => setTimeout(res, dialDelayMs));
         } catch (e) {
           summary.notes.push(`dial fail ${pid}: ${(e as Error).message}`);
         }
