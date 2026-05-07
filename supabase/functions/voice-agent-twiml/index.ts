@@ -679,13 +679,23 @@ serve(async (req) => {
 
     if (!sessionId) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
-    // ⚡ FAST-PATH TURN 0: returnăm IMEDIAT greeting-ul cached, fără să mai
-    // așteptăm DB lookups grele (script, KB, profil, sentiment, etc.).
-    // Contextul greu se încarcă în background pentru turn>=1.
+    // ⚡ FAST-PATH TURN 0/1/2: returnăm IMEDIAT audio cached, fără AI/KB.
+    // Greeting (turn 0) e deterministic; turn 1-2 folosesc quick replies regex.
+    // Target: total_handler_ms < 800ms (TTL cache permanent → instant pe hit).
+    const fastVoice: VoiceSettings = {
+      voice_id: ANDREI_VOICE_ID,
+      model_id: ANDREI_MODEL_ID,
+      stability: 0.48,
+      similarity_boost: 0.88,
+      style: 0.35,
+      speed: 1.05,
+      use_speaker_boost: true,
+    };
+    const TARGET_MS = 800;
+
     if (turn === 0 && req.method === "POST") {
       try {
         const fastT0 = Date.now();
-        // Minimal session fetch DOAR pentru branch+context personal (1 query).
         const { data: sessFast } = await supabase
           .from("voice_call_sessions")
           .select("id, prospect_listing_id, lead_id")
@@ -693,37 +703,23 @@ serve(async (req) => {
           .maybeSingle();
         if (!sessFast) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
-        // Default greeting branch (vanzare); context personalization happens turn>=1
         const fastBranch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
         const fastGreeting = openingLine(fastBranch, "");
-
-        // Try in-memory TTS cache (sub-ms). If cold, generate on the fly.
-        const fastVoice: VoiceSettings = {
-          voice_id: ANDREI_VOICE_ID,
-          model_id: ANDREI_MODEL_ID,
-          stability: 0.48,
-          similarity_boost: 0.88,
-          style: 0.35,
-          speed: 1.05,
-          use_speaker_boost: true,
-        };
         let fastUrl: string | null = null;
         if (ELEVENLABS_API_KEY) {
-          const ttsRes = await ttsToCachedUrlDetailed(
+          const ttsRes = await ttsToPermanentCached(
             fastGreeting, fastVoice, supabase, ELEVENLABS_API_KEY, sessionId,
           );
           fastUrl = ttsRes.url;
         }
         const totalMs = Date.now() - turnT0;
         const fastMs = Date.now() - fastT0;
-        const TARGET_MS = 800;
         if (totalMs > TARGET_MS) {
           console.warn(`[voice-twiml][SLOW TURN 0] session=${sessionId} total=${totalMs}ms fast=${fastMs}ms`);
         } else {
           console.log(`[voice-twiml][FAST TURN 0] session=${sessionId} total=${totalMs}ms`);
         }
 
-        // Background: log + warm context for turn 1
         // @ts-ignore
         if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
           // @ts-ignore
@@ -752,6 +748,99 @@ serve(async (req) => {
         console.error("[voice-twiml] fast-path turn0 failed, falling through:", e);
       }
     }
+
+    // ⚡ FAST-PATH TURN 1 & 2: dacă userSpeech matchează un quick reply
+    // pre-calculat (regex), răspundem instant fără Gemini.
+    if ((turn === 1 || turn === 2) && req.method === "POST" && ELEVENLABS_API_KEY) {
+      try {
+        let quickSpeech = "";
+        if (req.method === "POST") {
+          const verification = await verifyTwilioRequest(req.clone());
+          if (verification.ok) {
+            quickSpeech = verification.params.get("SpeechResult") || "";
+          } else {
+            try {
+              const ct = req.headers.get("content-type") || "";
+              if (ct.includes("application/x-www-form-urlencoded") || ct.includes("multipart/form-data")) {
+                const form = await req.clone().formData();
+                quickSpeech = String(form.get("SpeechResult") || "");
+              }
+            } catch { /* ignore */ }
+          }
+        }
+
+        if (quickSpeech) {
+          // Minimal session fetch to know branch (1 query)
+          const { data: sessQ } = await supabase
+            .from("voice_call_sessions")
+            .select("id, prospect_listing_id, transcript")
+            .eq("id", sessionId)
+            .maybeSingle();
+          if (sessQ) {
+            let qBranch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
+            if (sessQ.prospect_listing_id) {
+              const { data: p } = await supabase
+                .from("prospect_listings")
+                .select("category, prospect_type")
+                .eq("id", sessQ.prospect_listing_id)
+                .maybeSingle();
+              if (p?.category === "hotelier") qBranch = "cazare";
+              else if (p?.category === "inchiriere") qBranch = "inchiriere";
+              else if (p?.category === "vanzare") qBranch = "vanzare";
+              else qBranch = detectBranch(p?.prospect_type);
+            }
+            const quickReply = quickReplyForTurn(turn, qBranch, quickSpeech);
+            if (quickReply) {
+              const ttsR = await ttsToPermanentCached(quickReply, fastVoice, supabase, ELEVENLABS_API_KEY, sessionId);
+              const totalMs = Date.now() - turnT0;
+              if (totalMs > TARGET_MS) {
+                console.warn(`[voice-twiml][SLOW TURN ${turn} QR] session=${sessionId} total=${totalMs}ms`);
+              } else {
+                console.log(`[voice-twiml][FAST TURN ${turn} QR] session=${sessionId} total=${totalMs}ms`);
+              }
+              const shouldHangup = /la revedere|închid|o zi frumoas[ăa]/i.test(quickReply);
+              const nextTurn = turn + 1;
+              const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+
+              // Background: persist transcript + log
+              // @ts-ignore
+              if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+                // @ts-ignore
+                EdgeRuntime.waitUntil((async () => {
+                  try {
+                    const tr: any[] = Array.isArray(sessQ.transcript) ? sessQ.transcript : [];
+                    tr.push({ role: "user", text: quickSpeech, at: new Date().toISOString() });
+                    tr.push({ role: "assistant", text: quickReply, at: new Date().toISOString() });
+                    await supabase.from("voice_call_sessions").update({
+                      transcript: tr,
+                      status: shouldHangup ? "completing" : "in-progress",
+                    }).eq("id", sessionId);
+                    await pushDebugLog(supabase, sessionId, {
+                      stage: `twiml_turn${turn}_quickreply`,
+                      turn,
+                      userSpeech: quickSpeech,
+                      aiReply: quickReply,
+                      audioUrl: ttsR.url,
+                      profile: { total_handler_ms: totalMs, target_ms: TARGET_MS, breached: totalMs > TARGET_MS, quick_reply: true },
+                    });
+                  } catch (e) { console.error(`[voice-twiml] turn${turn} QR bg log:`, e); }
+                })());
+              }
+
+              const speak = speakXml(quickReply, ttsR.url);
+              return xmlResponse(
+                shouldHangup
+                  ? `<Response>${speak}<Hangup/></Response>`
+                  : `<Response>${gatherXml(nextUrl, speak)}<Redirect method="POST">${escapeXml(nextUrl)}</Redirect></Response>`
+              );
+            }
+          }
+        }
+      } catch (e) {
+        console.error(`[voice-twiml] fast-path turn${turn} failed, falling through:`, e);
+      }
+    }
+
 
     // Parallel: session + voice settings (independent fetches)
     const [sessRes, vSettingsRes] = await Promise.all([
