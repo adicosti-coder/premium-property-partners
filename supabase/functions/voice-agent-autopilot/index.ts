@@ -148,7 +148,8 @@ serve(async (req) => {
     }
 
     const limit = Math.max(1, Math.min(50, s.autopilot_max_per_tick));
-    const dialDelayMs = runSource === "manual" ? 0 : 500;
+    // Spațiere apeluri: 2s între ele (Twilio queue + status callback need breathing room).
+    const dialDelayMs = runSource === "manual" ? 1500 : 2500;
 
     // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
     const { data: prospects } = await supabase
