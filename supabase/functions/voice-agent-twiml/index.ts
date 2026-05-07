@@ -502,6 +502,61 @@ function composeSystemPrompt(
   return `${basePrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customInstructions}`;
 }
 
+/**
+ * ⚡ ZERO-LATENCY QUICK REPLIES (turn 1 & 2)
+ * Pre-computed deterministic responses based on intent classification of user's
+ * speech. Skips Gemini entirely → response in <800ms even cold-start.
+ * Returns null if no high-confidence match → falls through to AI path.
+ */
+function quickReplyForTurn(
+  turn: number,
+  branch: "vanzare" | "inchiriere" | "cazare",
+  userSpeech: string,
+): string | null {
+  const u = (userSpeech || "").toLowerCase().trim();
+  if (!u || u.length < 2) return null;
+
+  // Universal: explicit refusal / busy → polite close (any turn)
+  if (/(nu mă interesează|nu ma intereseaza|nu mai|sunt ocupat|sun[ăa]ți alt[ăa] dat[ăa]|nu acum|las[ăa]-?m[ăa])/i.test(u)) {
+    return "Înțeleg perfect. Vă mulțumesc pentru timp, o zi frumoasă! La revedere.";
+  }
+
+  // Universal: "cine ești / de unde sunați" → identity confirm
+  if (/(cine e[șs]ti|cine sunte[țt]i|de unde suna[țt]i|ce firm[ăa]|ce agen[țt]ie)/i.test(u)) {
+    return "Sunt Andrei, de la RealTrust Timișoara. Vă sun pentru un anunț al dumneavoastră.";
+  }
+
+  if (turn === 1) {
+    // Affirmative → ask the first qualification question per branch
+    if (/^(da|sigur|spune[țt]i|v[ăa] ascult|desigur|ok|bine|de acord|hai)\b/i.test(u)) {
+      if (branch === "vanzare") return "Mulțumesc. Mai este disponibilă proprietatea pentru vânzare?";
+      if (branch === "inchiriere") return "Mulțumesc. Mai este liberă pentru închiriere?";
+      return "Mulțumesc. Proprietatea este deja în regim hotelier, sau o închiriați clasic?";
+    }
+    // "cum / despre ce" → branch-specific frame
+    if (/(despre ce|ce dori[țt]i|ce vre[țt]i|ce anume|cum adic[ăa])/i.test(u)) {
+      if (branch === "vanzare") return "Despre anunțul dumneavoastră de vânzare. Mai este disponibilă proprietatea?";
+      if (branch === "inchiriere") return "Despre anunțul dumneavoastră de închiriere. Mai este liberă?";
+      return "Despre proprietatea dumneavoastră. Este în regim hotelier sau închiriere clasică?";
+    }
+  }
+
+  if (turn === 2) {
+    // After "da, e disponibilă" → price question
+    if (/^(da|este|e disponibil|mai este|înc[ăa])\b/i.test(u)) {
+      if (branch === "vanzare") return "Care este prețul la care vă așteptați?";
+      if (branch === "inchiriere") return "Ce chirie lunară aveți în minte?";
+      return "Cam ce venit lunar obțineți acum din ea?";
+    }
+    // "nu mai e" → polite close
+    if (/^(nu|nu mai|s-a vândut|am închiriat|gata)\b/i.test(u)) {
+      return "Am înțeles, vă mulțumesc pentru clarificare. O zi frumoasă! La revedere.";
+    }
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   const turnT0 = Date.now();
   const profile: Record<string, number> = {};
