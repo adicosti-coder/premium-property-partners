@@ -44,6 +44,8 @@ type AutonomySettings = {
   allowed_hours_end: number;
 };
 
+type RunSource = "cron" | "manual";
+
 function isWithinHours(s: AutonomySettings) {
   const h = new Date().toLocaleString("en-US", {
     timeZone: "Europe/Bucharest", hour: "numeric", hour12: false,
@@ -72,11 +74,14 @@ serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
   const startedAt = new Date().toISOString();
+  const body = await req.json().catch(() => ({}));
+  const runSource: RunSource = body?.source === "manual" || body?.manual === true ? "manual" : "cron";
+  const bypassSchedule = runSource === "manual" || body?.bypass_schedule === true;
 
   // Create run record
   const { data: run } = await supabase
     .from("voice_autonomy_runs")
-    .insert({ source: "cron", status: "running" })
+    .insert({ source: runSource, status: "running" })
     .select()
     .single();
   const runId = run?.id;
@@ -106,7 +111,7 @@ serve(async (req) => {
       await finalize(supabase, runId, "skipped", summary);
       return jsonResp({ ok: true, skipped: "disabled", summary });
     }
-    if (!isWithinHours(s)) {
+    if (!bypassSchedule && !isWithinHours(s)) {
       summary.notes.push(`outside hours ${s.allowed_hours_start}-${s.allowed_hours_end}`);
       await finalize(supabase, runId, "skipped", summary);
       return jsonResp({ ok: true, skipped: "out_of_hours", summary });
@@ -123,7 +128,7 @@ serve(async (req) => {
       return jsonResp({ ok: true, skipped: "safety_pause", summary });
     }
 
-    const limit = Math.max(1, Math.min(10, s.autopilot_max_per_tick));
+    const limit = Math.max(1, Math.min(50, s.autopilot_max_per_tick));
 
     // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
     const { data: prospects } = await supabase
@@ -166,10 +171,10 @@ serve(async (req) => {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${SERVICE_KEY}`,
             },
-            body: JSON.stringify({ triggered_prospect_id: pid, autopilot: true }),
+            body: JSON.stringify({ triggered_prospect_id: pid, autopilot: true, bypass_schedule: bypassSchedule }),
           });
           const j = await r.json().catch(() => ({}));
-          if (r.ok) summary.calls_initiated++;
+          if (r.ok && j?.success === true) summary.calls_initiated++;
 
           // Log în communication_logs cu sursa "autopilot"
           await supabase.from("communication_logs").insert({
