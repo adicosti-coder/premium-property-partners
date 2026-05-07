@@ -162,6 +162,15 @@ serve(async (req) => {
       .order("lead_score", { ascending: false })
       .limit(Math.min(100, limit * 4));
 
+    // Dedupe: telefoane apelate în ultimele 7 zile (nu re-bombardăm același număr).
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
+    const { data: recentCalls } = await supabase
+      .from("voice_call_sessions")
+      .select("to_number")
+      .gte("created_at", sevenDaysAgo)
+      .eq("direction", "outbound");
+    const recentPhoneSet = new Set<string>((recentCalls || []).map((r: any) => r.to_number).filter(Boolean));
+
     const seenPhones = new Set<string>();
     const prospectIds: string[] = [];
     for (const p of prospects || []) {
@@ -184,6 +193,7 @@ serve(async (req) => {
         continue;
       }
       if (seenPhones.has(phone)) continue;
+      if (recentPhoneSet.has(phone)) continue; // skip — apelat în ultimele 7z
       seenPhones.add(phone);
       prospectIds.push(p.id);
       if (prospectIds.length >= limit) break;
