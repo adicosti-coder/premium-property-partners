@@ -1072,9 +1072,11 @@ serve(async (req) => {
     }
     profile.tts_done_ms = Date.now() - turnT0;
     profile.total_handler_ms = Date.now() - turnT0;
-    const TARGET_MS = 1000;
+    const TARGET_MS = 800;
+    profile.target_ms = TARGET_MS;
+    profile.breached = profile.total_handler_ms > TARGET_MS ? 1 : 0;
     if (profile.total_handler_ms > TARGET_MS) {
-      console.warn(`[voice-twiml][SLOW TURN] session=${sessionId} turn=${turn} total=${profile.total_handler_ms}ms ai=${profile.ai_done_ms}ms tts=${ttsLatencyMs}ms cached=${ttsCached}`);
+      console.warn(`[voice-twiml][SLOW TURN >${TARGET_MS}ms] session=${sessionId} turn=${turn} total=${profile.total_handler_ms}ms ai=${profile.ai_done_ms}ms tts=${ttsLatencyMs}ms cached=${ttsCached}`);
     }
 
     // Defer non-critical DB writes so we can return TwiML immediately.
