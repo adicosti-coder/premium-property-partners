@@ -32,6 +32,11 @@ const RISK_KEYWORDS = [
   "nu mai sun", "nu sunați", "nu sunati", "nu insist",
 ];
 
+const NOISE_URL_PATTERNS = ["/imobiliare/q-", "/imobiliare/timisoara/q-", "/ro/rezultate/", "/ro/companii/", "/oferte/q-"];
+const DETAIL_URL_PATTERNS = ["/d/oferta/", "/anunt/", "/oferta/", "/proprietate/", "/property/"];
+const GENERIC_SEARCH_TITLE_PATTERNS = ["anunturi gratuite", "anunțuri gratuite", "olx.ro", "rezultate cautare", "rezultate căutare", "apartamente de vanzare", "apartamente de vânzare", "imobiliare timisoara", "imobiliare timișoara"];
+const OWNER_SIGNALS = ["proprietar", "direct proprietar", "de la proprietar", "fara comision", "fără comision", "persoana fizica", "persoană fizică"];
+
 type AutonomySettings = {
   autopilot_enabled: boolean;
   autopilot_mode: "full" | "safety_net" | "ingest_only";
@@ -71,6 +76,16 @@ function hasRisk(text: string | null): boolean {
 
 function isCallablePhone(phone: string | null | undefined): phone is string {
   return !!phone && /^\+[1-9]\d{6,14}$/.test(phone);
+}
+
+function isGenericUncallableProspect(prospect: any): boolean {
+  const blob = `${prospect?.source_url || ""} ${prospect?.title || ""} ${prospect?.description || ""} ${prospect?.contact_name || ""} ${(prospect?.search_keywords || []).join?.(" ") || ""}`.toLowerCase();
+  const hasOwnerSignal = prospect?.prospect_type === "proprietar" || OWNER_SIGNALS.some((signal) => blob.includes(signal));
+  const url = String(prospect?.source_url || "").toLowerCase();
+  const title = String(prospect?.title || "").toLowerCase();
+  const looksLikeDetail = DETAIL_URL_PATTERNS.some((pattern) => url.includes(pattern));
+  const looksLikeSearch = NOISE_URL_PATTERNS.some((pattern) => url.includes(pattern)) || GENERIC_SEARCH_TITLE_PATTERNS.some((pattern) => title.includes(pattern));
+  return looksLikeSearch && !looksLikeDetail && !hasOwnerSignal;
 }
 
 serve(async (req) => {
@@ -137,7 +152,7 @@ serve(async (req) => {
     // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
     const { data: prospects } = await supabase
       .from("prospect_listings")
-      .select("id, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at")
+      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords")
       .gte("lead_score", s.min_lead_score ?? 50)
       .in("lifecycle_status", ["new", "callback"])
       .not("phone_normalized", "is", null)
