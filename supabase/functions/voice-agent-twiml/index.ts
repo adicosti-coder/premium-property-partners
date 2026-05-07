@@ -765,21 +765,8 @@ serve(async (req) => {
     // pre-calculat (regex), răspundem instant fără Gemini.
     if ((turn === 1 || turn === 2) && req.method === "POST" && ELEVENLABS_API_KEY) {
       try {
-        let quickSpeech = "";
-        if (req.method === "POST") {
-          const verification = await verifyTwilioRequest(req.clone());
-          if (verification.ok) {
-            quickSpeech = verification.params.get("SpeechResult") || "";
-          } else {
-            try {
-              const ct = req.headers.get("content-type") || "";
-              if (ct.includes("application/x-www-form-urlencoded") || ct.includes("multipart/form-data")) {
-                const form = await req.clone().formData();
-                quickSpeech = String(form.get("SpeechResult") || "");
-              }
-            } catch { /* ignore */ }
-          }
-        }
+        // twilioParams is already parsed by outer verifier — reuse it (no body re-read)
+        const quickSpeech = twilioParams ? (twilioParams.get("SpeechResult") || "") : "";
 
         if (quickSpeech) {
           // Minimal session fetch to know branch (1 query)
