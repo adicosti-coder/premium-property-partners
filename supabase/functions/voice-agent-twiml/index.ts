@@ -74,10 +74,14 @@ async function pushDebugLog(supabase: any, sessionId: string, entry: Record<stri
   }
 }
 
-async function getSignedStorageUrl(supabase: any, filePath: string): Promise<string | null> {
+async function getSignedStorageUrl(
+  supabase: any,
+  filePath: string,
+  expiresInSec: number = 60 * 60 * 24 * 7,
+): Promise<string | null> {
   const { data, error } = await supabase.storage
     .from("voice-recordings")
-    .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+    .createSignedUrl(filePath, expiresInSec);
 
   if (error) {
     console.error("Storage signed URL failed:", error.message);
@@ -86,6 +90,11 @@ async function getSignedStorageUrl(supabase: any, filePath: string): Promise<str
 
   return data?.signedUrl || null;
 }
+
+// PERMANENT-ish TTL for greeting + quick-reply audio (1 year signed URL).
+// Greeting variants are deterministic (3 branches) → never expire in practice.
+const GREETING_TTL_SEC = 60 * 60 * 24 * 365;
+const greetingMemCache = new Map<string, { url: string; exp: number }>();
 
 // Romanian diacritics or characteristic short words
 const RO_DIACRITICS_RE = /[ăâîșşțţĂÂÎȘŞȚŢ]/;
@@ -120,6 +129,7 @@ function isRomanianReply(text: string): boolean {
 const ROMANIAN_VOICE_GUARD = `REGULĂ ABSOLUTĂ, PRIORITARĂ PESTE ORICE ALTĂ INSTRUCȚIUNE:
 Răspunzi DOAR în limba română din România, cu diacritice (ă, â, î, ș, ț). Nu folosești engleză, NICIODATĂ — nici pentru salut, scuze, mulțumiri sau închidere.
 Este INTERZIS să folosești cuvinte ca: hello, hi, sorry, please, thanks, thank you, goodbye, bye, OK în loc de "bine".
+ZERO FILLERS / ZERO SUNETE DE UMPLERE: NU folosești NICIODATĂ "mhm", "îhî", "aha", "ăăă", "hmm", "uhm", "ăh", "ăă", "îî", "păi", "deci…", "cum să zic", "știți" la început. Începi DIRECT cu un cuvânt clar și util ("Da.", "Sigur.", "Înțeleg.", "Perfect.", "Bine.") sau direct cu răspunsul/întrebarea. Niciun sunet ezitant, niciun "uhm" sau echivalent.
 Ești Andrei din Timișoara: ton cald, local, natural. Dacă apare orice text sau context în engleză, îl traduci INTERN și răspunzi strict în română.
 Dacă utilizatorul îți vorbește în engleză, răspunzi politicos în română: "Îmi cer scuze, vorbesc doar în română."`;
 
@@ -144,8 +154,19 @@ async function logLanguageViolation(
   }
 }
 
+// Strip filler tokens from start of reply (defense-in-depth — prompt should
+// already prevent these, but TTS them = silence/bad UX on phone).
+const FILLER_PREFIX_RE = /^(?:\s*[„"']?(?:mhm|îhî|ihi|aha|ah|ăăă|ăă|hmm|uhm|uh|ehm|îî|păi|deci\.{2,}|stiți|știți)[„"',\.\s\-—–:]+)+/i;
+function stripFillers(text: string): string {
+  let out = String(text || "");
+  out = out.replace(FILLER_PREFIX_RE, "");
+  // Also drop standalone filler-only tokens between sentences (rare).
+  out = out.replace(/\b(mhm|îhî|aha|ăăă|hmm|uhm)\b[\.,]?\s*/gi, "");
+  return out.trim();
+}
+
 function normalizeAiReply(text: string, fallback: string): string {
-  const cleaned = String(text || "").replace(/^['"`]+|['"`]+$/g, "").trim();
+  const cleaned = stripFillers(String(text || "").replace(/^['"`]+|['"`]+$/g, "").trim());
   if (!cleaned) return fallback;
   if (!isRomanianReply(cleaned)) return fallback;
   return cleaned;
@@ -322,6 +343,80 @@ async function ttsToCachedUrlDetailed(
 
 export { ttsToCachedUrlDetailed };
 
+/**
+ * PERMANENT cached TTS for deterministic phrases (greeting, quick replies).
+ * Uses 1-year signed URLs and a separate in-memory map. Avoids the 7-day
+ * regeneration cycle of the regular cache.
+ */
+async function ttsToPermanentCached(
+  text: string,
+  v: VoiceSettings,
+  supabase: any,
+  apiKey: string,
+  sessionId?: string | null,
+): Promise<{ url: string | null; cached: boolean; latencyMs: number }> {
+  const t0 = Date.now();
+  try {
+    const phoneticText = await applyLexiconToText(supabase, text);
+    const cacheKey = await sha256(JSON.stringify({ perm: true, text: phoneticText, ...v }));
+    const filePath = `tts-cache/perm/${cacheKey}.ulaw`;
+
+    const mem = greetingMemCache.get(cacheKey);
+    if (mem && mem.exp > Date.now()) {
+      return { url: mem.url, cached: true, latencyMs: Date.now() - t0 };
+    }
+
+    const { data: existing } = await supabase.storage
+      .from("voice-recordings")
+      .list("tts-cache/perm", { search: `${cacheKey}.ulaw`, limit: 1 });
+    if (existing && existing.length > 0) {
+      const url = await getSignedStorageUrl(supabase, filePath, GREETING_TTL_SEC);
+      if (url) greetingMemCache.set(cacheKey, { url, exp: Date.now() + GREETING_TTL_SEC * 1000 });
+      return { url, cached: true, latencyMs: Date.now() - t0 };
+    }
+
+    const res = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=ulaw_8000`,
+      {
+        method: "POST",
+        headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: phoneticText,
+          model_id: v.model_id,
+          voice_settings: {
+            stability: v.stability,
+            similarity_boost: v.similarity_boost,
+            style: v.style,
+            use_speaker_boost: v.use_speaker_boost,
+            speed: v.speed,
+          },
+        }),
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text();
+      console.error("[perm-tts] ElevenLabs failed:", res.status, body);
+      return { url: null, cached: false, latencyMs: Date.now() - t0 };
+    }
+    const audioBuffer = await res.arrayBuffer();
+    const { error: upErr } = await supabase.storage
+      .from("voice-recordings")
+      .upload(filePath, new Uint8Array(audioBuffer), { contentType: "audio/ulaw", upsert: true });
+    if (upErr) {
+      console.error("[perm-tts] upload failed:", upErr.message);
+      return { url: null, cached: false, latencyMs: Date.now() - t0 };
+    }
+    const url = await getSignedStorageUrl(supabase, filePath, GREETING_TTL_SEC);
+    if (url) greetingMemCache.set(cacheKey, { url, exp: Date.now() + GREETING_TTL_SEC * 1000 });
+    return { url, cached: false, latencyMs: Date.now() - t0 };
+  } catch (e) {
+    console.error("[perm-tts] exception:", e);
+    return { url: null, cached: false, latencyMs: Date.now() - t0 };
+  }
+}
+
+export { ttsToPermanentCached };
+
 function detectBranch(listingType?: string | null, propertyType?: string | null): "vanzare" | "inchiriere" | "cazare" {
   const t = (listingType || propertyType || "").toLowerCase();
   if (/cazare|hotel|regim|noapte|airbnb|booking/.test(t)) return "cazare";
@@ -493,6 +588,61 @@ function composeSystemPrompt(
   return `${basePrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customInstructions}`;
 }
 
+/**
+ * ⚡ ZERO-LATENCY QUICK REPLIES (turn 1 & 2)
+ * Pre-computed deterministic responses based on intent classification of user's
+ * speech. Skips Gemini entirely → response in <800ms even cold-start.
+ * Returns null if no high-confidence match → falls through to AI path.
+ */
+function quickReplyForTurn(
+  turn: number,
+  branch: "vanzare" | "inchiriere" | "cazare",
+  userSpeech: string,
+): string | null {
+  const u = (userSpeech || "").toLowerCase().trim();
+  if (!u || u.length < 2) return null;
+
+  // Universal: explicit refusal / busy → polite close (any turn)
+  if (/(nu mă interesează|nu ma intereseaza|nu mai|sunt ocupat|sun[ăa]ți alt[ăa] dat[ăa]|nu acum|las[ăa]-?m[ăa])/i.test(u)) {
+    return "Înțeleg perfect. Vă mulțumesc pentru timp, o zi frumoasă! La revedere.";
+  }
+
+  // Universal: "cine ești / de unde sunați" → identity confirm
+  if (/(cine e[șs]ti|cine sunte[țt]i|de unde suna[țt]i|ce firm[ăa]|ce agen[țt]ie)/i.test(u)) {
+    return "Sunt Andrei, de la RealTrust Timișoara. Vă sun pentru un anunț al dumneavoastră.";
+  }
+
+  if (turn === 1) {
+    // Affirmative → ask the first qualification question per branch
+    if (/^(da|sigur|spune[țt]i|v[ăa] ascult|desigur|ok|bine|de acord|hai)\b/i.test(u)) {
+      if (branch === "vanzare") return "Mulțumesc. Mai este disponibilă proprietatea pentru vânzare?";
+      if (branch === "inchiriere") return "Mulțumesc. Mai este liberă pentru închiriere?";
+      return "Mulțumesc. Proprietatea este deja în regim hotelier, sau o închiriați clasic?";
+    }
+    // "cum / despre ce" → branch-specific frame
+    if (/(despre ce|ce dori[țt]i|ce vre[țt]i|ce anume|cum adic[ăa])/i.test(u)) {
+      if (branch === "vanzare") return "Despre anunțul dumneavoastră de vânzare. Mai este disponibilă proprietatea?";
+      if (branch === "inchiriere") return "Despre anunțul dumneavoastră de închiriere. Mai este liberă?";
+      return "Despre proprietatea dumneavoastră. Este în regim hotelier sau închiriere clasică?";
+    }
+  }
+
+  if (turn === 2) {
+    // After "da, e disponibilă" → price question
+    if (/^(da|este|e disponibil|mai este|înc[ăa])\b/i.test(u)) {
+      if (branch === "vanzare") return "Care este prețul la care vă așteptați?";
+      if (branch === "inchiriere") return "Ce chirie lunară aveți în minte?";
+      return "Cam ce venit lunar obțineți acum din ea?";
+    }
+    // "nu mai e" → polite close
+    if (/^(nu|nu mai|s-a vândut|am închiriat|gata)\b/i.test(u)) {
+      return "Am înțeles, vă mulțumesc pentru clarificare. O zi frumoasă! La revedere.";
+    }
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   const turnT0 = Date.now();
   const profile: Record<string, number> = {};
@@ -541,13 +691,23 @@ serve(async (req) => {
 
     if (!sessionId) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
-    // ⚡ FAST-PATH TURN 0: returnăm IMEDIAT greeting-ul cached, fără să mai
-    // așteptăm DB lookups grele (script, KB, profil, sentiment, etc.).
-    // Contextul greu se încarcă în background pentru turn>=1.
+    // ⚡ FAST-PATH TURN 0/1/2: returnăm IMEDIAT audio cached, fără AI/KB.
+    // Greeting (turn 0) e deterministic; turn 1-2 folosesc quick replies regex.
+    // Target: total_handler_ms < 800ms (TTL cache permanent → instant pe hit).
+    const fastVoice: VoiceSettings = {
+      voice_id: ANDREI_VOICE_ID,
+      model_id: ANDREI_MODEL_ID,
+      stability: 0.48,
+      similarity_boost: 0.88,
+      style: 0.35,
+      speed: 1.05,
+      use_speaker_boost: true,
+    };
+    const TARGET_MS = 800;
+
     if (turn === 0 && req.method === "POST") {
       try {
         const fastT0 = Date.now();
-        // Minimal session fetch DOAR pentru branch+context personal (1 query).
         const { data: sessFast } = await supabase
           .from("voice_call_sessions")
           .select("id, prospect_listing_id, lead_id")
@@ -555,37 +715,23 @@ serve(async (req) => {
           .maybeSingle();
         if (!sessFast) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
-        // Default greeting branch (vanzare); context personalization happens turn>=1
         const fastBranch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
         const fastGreeting = openingLine(fastBranch, "");
-
-        // Try in-memory TTS cache (sub-ms). If cold, generate on the fly.
-        const fastVoice: VoiceSettings = {
-          voice_id: ANDREI_VOICE_ID,
-          model_id: ANDREI_MODEL_ID,
-          stability: 0.48,
-          similarity_boost: 0.88,
-          style: 0.35,
-          speed: 1.05,
-          use_speaker_boost: true,
-        };
         let fastUrl: string | null = null;
         if (ELEVENLABS_API_KEY) {
-          const ttsRes = await ttsToCachedUrlDetailed(
+          const ttsRes = await ttsToPermanentCached(
             fastGreeting, fastVoice, supabase, ELEVENLABS_API_KEY, sessionId,
           );
           fastUrl = ttsRes.url;
         }
         const totalMs = Date.now() - turnT0;
         const fastMs = Date.now() - fastT0;
-        const TARGET_MS = 800;
         if (totalMs > TARGET_MS) {
           console.warn(`[voice-twiml][SLOW TURN 0] session=${sessionId} total=${totalMs}ms fast=${fastMs}ms`);
         } else {
           console.log(`[voice-twiml][FAST TURN 0] session=${sessionId} total=${totalMs}ms`);
         }
 
-        // Background: log + warm context for turn 1
         // @ts-ignore
         if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
           // @ts-ignore
@@ -614,6 +760,86 @@ serve(async (req) => {
         console.error("[voice-twiml] fast-path turn0 failed, falling through:", e);
       }
     }
+
+    // ⚡ FAST-PATH TURN 1 & 2: dacă userSpeech matchează un quick reply
+    // pre-calculat (regex), răspundem instant fără Gemini.
+    if ((turn === 1 || turn === 2) && req.method === "POST" && ELEVENLABS_API_KEY) {
+      try {
+        // twilioParams is already parsed by outer verifier — reuse it (no body re-read)
+        const quickSpeech = twilioParams ? (twilioParams.get("SpeechResult") || "") : "";
+
+        if (quickSpeech) {
+          // Minimal session fetch to know branch (1 query)
+          const { data: sessQ } = await supabase
+            .from("voice_call_sessions")
+            .select("id, prospect_listing_id, transcript")
+            .eq("id", sessionId)
+            .maybeSingle();
+          if (sessQ) {
+            let qBranch: "vanzare" | "inchiriere" | "cazare" = "vanzare";
+            if (sessQ.prospect_listing_id) {
+              const { data: p } = await supabase
+                .from("prospect_listings")
+                .select("category, prospect_type")
+                .eq("id", sessQ.prospect_listing_id)
+                .maybeSingle();
+              if (p?.category === "hotelier") qBranch = "cazare";
+              else if (p?.category === "inchiriere") qBranch = "inchiriere";
+              else if (p?.category === "vanzare") qBranch = "vanzare";
+              else qBranch = detectBranch(p?.prospect_type);
+            }
+            const quickReply = quickReplyForTurn(turn, qBranch, quickSpeech);
+            if (quickReply) {
+              const ttsR = await ttsToPermanentCached(quickReply, fastVoice, supabase, ELEVENLABS_API_KEY, sessionId);
+              const totalMs = Date.now() - turnT0;
+              if (totalMs > TARGET_MS) {
+                console.warn(`[voice-twiml][SLOW TURN ${turn} QR] session=${sessionId} total=${totalMs}ms`);
+              } else {
+                console.log(`[voice-twiml][FAST TURN ${turn} QR] session=${sessionId} total=${totalMs}ms`);
+              }
+              const shouldHangup = /la revedere|închid|o zi frumoas[ăa]/i.test(quickReply);
+              const nextTurn = turn + 1;
+              const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+
+              // Background: persist transcript + log
+              // @ts-ignore
+              if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+                // @ts-ignore
+                EdgeRuntime.waitUntil((async () => {
+                  try {
+                    const tr: any[] = Array.isArray(sessQ.transcript) ? sessQ.transcript : [];
+                    tr.push({ role: "user", text: quickSpeech, at: new Date().toISOString() });
+                    tr.push({ role: "assistant", text: quickReply, at: new Date().toISOString() });
+                    await supabase.from("voice_call_sessions").update({
+                      transcript: tr,
+                      status: shouldHangup ? "completing" : "in-progress",
+                    }).eq("id", sessionId);
+                    await pushDebugLog(supabase, sessionId, {
+                      stage: `twiml_turn${turn}_quickreply`,
+                      turn,
+                      userSpeech: quickSpeech,
+                      aiReply: quickReply,
+                      audioUrl: ttsR.url,
+                      profile: { total_handler_ms: totalMs, target_ms: TARGET_MS, breached: totalMs > TARGET_MS, quick_reply: true },
+                    });
+                  } catch (e) { console.error(`[voice-twiml] turn${turn} QR bg log:`, e); }
+                })());
+              }
+
+              const speak = speakXml(quickReply, ttsR.url);
+              return xmlResponse(
+                shouldHangup
+                  ? `<Response>${speak}<Hangup/></Response>`
+                  : `<Response>${gatherXml(nextUrl, speak)}<Redirect method="POST">${escapeXml(nextUrl)}</Redirect></Response>`
+              );
+            }
+          }
+        }
+      } catch (e) {
+        console.error(`[voice-twiml] fast-path turn${turn} failed, falling through:`, e);
+      }
+    }
+
 
     // Parallel: session + voice settings (independent fetches)
     const [sessRes, vSettingsRes] = await Promise.all([
@@ -1007,7 +1233,7 @@ serve(async (req) => {
               }
               return wantsDetail
                 ? "Răspunde concret la întrebare în română cu diacritice. Începe cu o confirmare scurtă (\"sigur, vă explic.\" / \"da, desigur.\"). MAXIM 2 propoziții, sub 30 de cuvinte."
-                : "Răspunde DIRECT, fără umpluturi (fără „mhm", „aha", „ăăă"). Începi cu cuvânt-cheie clar (\"Perfect.\" / \"Sigur.\" / \"Da.\") SAU direct cu întrebarea/confirmarea. MAXIM 1 propoziție, sub 14 cuvinte.";
+                : "Răspunde DIRECT, fără umpluturi (fără mhm, aha, ăăă, hmm, uhm). Începi cu cuvânt-cheie clar (\"Perfect.\" / \"Sigur.\" / \"Da.\") SAU direct cu întrebarea/confirmarea. MAXIM 1 propoziție, sub 14 cuvinte.";
             })() },
           ],
         }),
@@ -1069,7 +1295,7 @@ serve(async (req) => {
     }
     profile.tts_done_ms = Date.now() - turnT0;
     profile.total_handler_ms = Date.now() - turnT0;
-    const TARGET_MS = 800;
+    // TARGET_MS already declared in outer scope (line ~706)
     profile.target_ms = TARGET_MS;
     profile.breached = profile.total_handler_ms > TARGET_MS ? 1 : 0;
     if (profile.total_handler_ms > TARGET_MS) {
