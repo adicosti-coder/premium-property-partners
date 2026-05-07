@@ -69,6 +69,10 @@ function hasRisk(text: string | null): boolean {
   return RISK_KEYWORDS.some((k) => lc.includes(k.toLowerCase()));
 }
 
+function isCallablePhone(phone: string | null | undefined): phone is string {
+  return !!phone && /^\+[1-9]\d{6,14}$/.test(phone);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -139,9 +143,25 @@ serve(async (req) => {
       .not("phone_normalized", "is", null)
       .is("auto_call_triggered_at", null)
       .order("lead_score", { ascending: false })
-      .limit(limit);
+      .limit(Math.min(100, limit * 4));
 
-    const prospectIds = (prospects || []).map((p: any) => p.id);
+    const seenPhones = new Set<string>();
+    const prospectIds: string[] = [];
+    for (const p of prospects || []) {
+      const phone = p.phone_normalized || p.contact_phone;
+      if (!isCallablePhone(phone)) {
+        await supabase.from("prospect_listings").update({
+          lifecycle_status: "failed",
+          last_failure_reason: `invalid_phone_autopilot: ${p.contact_phone || p.phone_normalized || "missing"}`,
+          last_retry_at: new Date().toISOString(),
+        }).eq("id", p.id);
+        continue;
+      }
+      if (seenPhones.has(phone)) continue;
+      seenPhones.add(phone);
+      prospectIds.push(p.id);
+      if (prospectIds.length >= limit) break;
+    }
     summary.prospects_ingested = prospectIds.length;
 
     // 3. RETENTION (portofoliu RealTrust) — proprietăți active cu telefon proprietar
