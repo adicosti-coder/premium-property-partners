@@ -244,7 +244,7 @@ serve(async (req) => {
     }
 
     // 5. AUTO-APPROVE FOLLOW-UP DRAFTS
-    if (s.autopilot_followup_auto_approve && s.autopilot_mode === "safety_net" || s.autopilot_mode === "full") {
+    if (s.autopilot_followup_auto_approve && (s.autopilot_mode === "safety_net" || s.autopilot_mode === "full")) {
       const { data: drafts } = await supabase
         .from("voice_call_sessions")
         .select("id, ai_sentiment, transcript, ai_summary, followup_draft, to_number, scraper_lead_id")
