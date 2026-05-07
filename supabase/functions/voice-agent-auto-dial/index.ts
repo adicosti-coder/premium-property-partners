@@ -302,6 +302,21 @@ serve(async (req) => {
       return jsonResp({ skipped: `invalid phone: ${prospect.contact_phone}` });
     }
 
+    const recentDuplicateWindow = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: recentDuplicate } = await supabase
+      .from("voice_call_sessions")
+      .select("id, status, created_at")
+      .eq("direction", "outbound")
+      .eq("to_number", toNumber)
+      .gte("created_at", recentDuplicateWindow)
+      .in("status", ["initiating", "queued", "ringing", "in-progress"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (recentDuplicate && !manual) {
+      return jsonResp({ skipped: "recent_active_call_same_number", to: toNumber, session_id: recentDuplicate.id });
+    }
+
     // Mark as calling (idempotent)
     await supabase.from("prospect_listings").update({
       lifecycle_status: "calling",
