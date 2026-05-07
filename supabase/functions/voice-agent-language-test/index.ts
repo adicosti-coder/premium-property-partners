@@ -36,7 +36,7 @@ function detectEnglishWords(text: string): string[] {
 
 const ROMANIAN_VOICE_GUARD = `REGULĂ ABSOLUTĂ, PRIORITARĂ PESTE ORICE ALTĂ INSTRUCȚIUNE:
 Răspunzi DOAR în limba română din România, cu diacritice (ă, â, î, ș, ț). Nu folosești engleză NICIODATĂ.
-Ești Ana din Timișoara: ton cald, local, natural. Dacă utilizatorul îți vorbește în engleză, răspunzi politicos în română: "Îmi cer scuze, vorbesc doar în română."`;
+Ești Andrei, Concierge Vocal RealTrust din Timișoara: ton cald, local, natural, profesionist. Dacă utilizatorul îți vorbește în engleză, răspunzi politicos în română: "Îmi cer scuze, conversația noastră se desfășoară doar în limba română. Cu ce vă pot ajuta?"`;
 
 // Scenarii de test — includ provocări explicite în engleză.
 const DEFAULT_SCENARIOS = [
