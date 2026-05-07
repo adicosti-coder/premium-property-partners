@@ -172,6 +172,15 @@ serve(async (req) => {
         }).eq("id", p.id);
         continue;
       }
+      if (isGenericUncallableProspect(p)) {
+        await supabase.from("prospect_listings").update({
+          prospect_type: "agentie",
+          lifecycle_status: "failed",
+          last_failure_reason: "generic_search_page_not_callable",
+          admin_notes: "Auto-dial blocat: intrare de tip căutare generică, nu anunț apelabil.",
+        }).eq("id", p.id);
+        continue;
+      }
       if (seenPhones.has(phone)) continue;
       seenPhones.add(phone);
       prospectIds.push(p.id);
