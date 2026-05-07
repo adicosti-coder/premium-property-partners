@@ -148,7 +148,8 @@ serve(async (req) => {
     }
 
     const limit = Math.max(1, Math.min(50, s.autopilot_max_per_tick));
-    const dialDelayMs = runSource === "manual" ? 0 : 500;
+    // Spațiere apeluri: 2s între ele (Twilio queue + status callback need breathing room).
+    const dialDelayMs = runSource === "manual" ? 1500 : 2500;
 
     // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
     const { data: prospects } = await supabase
@@ -160,6 +161,15 @@ serve(async (req) => {
       .is("auto_call_triggered_at", null)
       .order("lead_score", { ascending: false })
       .limit(Math.min(100, limit * 4));
+
+    // Dedupe: telefoane apelate în ultimele 7 zile (nu re-bombardăm același număr).
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
+    const { data: recentCalls } = await supabase
+      .from("voice_call_sessions")
+      .select("to_number")
+      .gte("created_at", sevenDaysAgo)
+      .eq("direction", "outbound");
+    const recentPhoneSet = new Set<string>((recentCalls || []).map((r: any) => r.to_number).filter(Boolean));
 
     const seenPhones = new Set<string>();
     const prospectIds: string[] = [];
@@ -183,6 +193,7 @@ serve(async (req) => {
         continue;
       }
       if (seenPhones.has(phone)) continue;
+      if (recentPhoneSet.has(phone)) continue; // skip — apelat în ultimele 7z
       seenPhones.add(phone);
       prospectIds.push(p.id);
       if (prospectIds.length >= limit) break;
@@ -243,7 +254,7 @@ serve(async (req) => {
     }
 
     // 5. AUTO-APPROVE FOLLOW-UP DRAFTS
-    if (s.autopilot_followup_auto_approve && s.autopilot_mode === "safety_net" || s.autopilot_mode === "full") {
+    if (s.autopilot_followup_auto_approve && (s.autopilot_mode === "safety_net" || s.autopilot_mode === "full")) {
       const { data: drafts } = await supabase
         .from("voice_call_sessions")
         .select("id, ai_sentiment, transcript, ai_summary, followup_draft, to_number, scraper_lead_id")

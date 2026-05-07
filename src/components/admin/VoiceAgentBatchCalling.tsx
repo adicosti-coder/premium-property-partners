@@ -173,14 +173,18 @@ export default function VoiceAgentBatchCalling() {
 
   const loadAll = async () => {
     setLoading(true);
+    // Auto-reset DOAR sesiuni vechi de >30 min, fără twilio_call_sid (lansare eșuată).
+    // Sesiunile cu SID intră în handler-ul Twilio status callback — NU le atingem.
+    const STALE_HARD_MS = 30 * 60 * 1000;
     await supabase.from("voice_call_sessions")
       .update({
         status: "canceled",
         ended_at: new Date().toISOString(),
-        error_message: "Auto-reset: status intermediar blocat peste 5 minute",
+        error_message: "Auto-reset: lansare eșuată fără SID Twilio (>30min)",
       })
       .in("status", ACTIVE_STATUSES)
-      .lt("updated_at", new Date(Date.now() - STALE_SESSION_MS).toISOString());
+      .is("twilio_call_sid", null)
+      .lt("updated_at", new Date(Date.now() - STALE_HARD_MS).toISOString());
     await supabase.from("prospect_listings")
       .update({
         lifecycle_status: "new",
@@ -189,7 +193,7 @@ export default function VoiceAgentBatchCalling() {
         last_failure_reason: "auto_reset_stale_voice_session",
       })
       .eq("lifecycle_status", "calling")
-      .lt("auto_call_triggered_at", new Date(Date.now() - STALE_SESSION_MS).toISOString());
+      .lt("auto_call_triggered_at", new Date(Date.now() - STALE_HARD_MS).toISOString());
     const [pRes, lRes, sRes, cRes] = await Promise.all([
       supabase.from("prospect_listings")
         .select("id, title, zone, phone_normalized, contact_phone, lead_score, lifecycle_status, category")
