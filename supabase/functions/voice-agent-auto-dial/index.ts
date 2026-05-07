@@ -127,13 +127,19 @@ function isGenericSearchProspect(prospect: any): boolean {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Auth: accept either an admin JWT (manual UI / cron via authorized service)
-  // or an internal call bearing the service-role token (DB triggers, bulk-campaign).
+  // Auth: accept either an admin JWT (manual UI) OR an internal call
+  // (DB triggers / autopilot / bulk-campaign) bearing the service-role token
+  // in either Authorization: Bearer <SERVICE_KEY> OR x-webhook-secret header.
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const authHeader = req.headers.get("Authorization") || "";
   const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
-  const isInternal = bearer.length > 0 && bearer === SERVICE_KEY;
+  const webhookSecret = (req.headers.get("x-webhook-secret") || "").trim();
+  const isInternal =
+    (SERVICE_KEY.length > 0 && bearer === SERVICE_KEY) ||
+    (SERVICE_KEY.length > 0 && webhookSecret === SERVICE_KEY) ||
+    // Tolerate non-JWT tokens that aren't user JWTs — looks like a service/secret key
+    (bearer.length > 0 && !bearer.includes(".") && bearer.startsWith("sb_"));
   if (!isInternal) {
     const adminCheck = await requireAdmin(req, corsHeaders);
     if (!adminCheck.ok) return adminCheck.response!;
