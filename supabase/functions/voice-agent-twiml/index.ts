@@ -667,23 +667,17 @@ serve(async (req) => {
     }
 
     // ── KNOWLEDGE BASE: market insights for caller's zones ──
+    // OPTIMIZARE LATENȚĂ: KB lookup SARI la turn=0 (proprietarul aude tăcere altfel).
+    // Greeting-ul nu folosește cifre din KB — se încarcă la turn>=1 când avem context real.
     let marketDataBlock = "";
-    if (turn === 0) {
+    if (turn > 0) {
       try {
         const kbT0 = Date.now();
         // Collect candidate zones from caller profile + live entities + prospect
         const zoneSet = new Set<string>();
         const profZones = ((session as any).extracted_entities?.preferred_zones || []) as string[];
         for (const z of profZones) if (z) zoneSet.add(String(z).toLowerCase());
-        // Try caller profile zones via re-using earlier query result is complex; do quick fetch:
-        if (phone) {
-          const { data: pz } = await supabase
-            .from("voice_caller_profiles")
-            .select("preferred_zones")
-            .eq("phone_normalized", phone)
-            .maybeSingle();
-          for (const z of (pz?.preferred_zones || [])) if (z) zoneSet.add(String(z).toLowerCase());
-        }
+        // Reuse zones from caller-memory query above (already done) — no second fetch.
         const zones = [...zoneSet];
 
         let kbQuery = supabase
@@ -841,36 +835,43 @@ serve(async (req) => {
       ? `${ROMANIAN_VOICE_GUARD}\n\n${baseSystemPrompt}\n\nINSTRUCȚIUNI SUPLIMENTARE CU PRIORITATE MAXIMĂ:\n${customPrompt}`
       : `${ROMANIAN_VOICE_GUARD}\n\n${baseSystemPrompt}`;
 
-    // Upsert test log row at turn 0 — finalized later by voice-agent-status
+    // OPTIMIZARE LATENȚĂ TURN 0: test log în background (era await blocant)
     if (turn === 0) {
-      try {
-        // Look up latest version_number for the script (informational)
-        let scriptVersion: number | null = null;
-        if (usedScriptId) {
-          const { data: latestV } = await supabase
-            .from("voice_agent_script_versions")
-            .select("version_number")
-            .eq("script_id", usedScriptId)
-            .order("version_number", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          scriptVersion = latestV?.version_number ?? null;
-        }
-        await supabase
-          .from("voice_agent_script_test_logs")
-          .upsert({
-            session_id: sessionId,
-            script_id: usedScriptId,
-            script_name: usedScriptName,
-            script_version: scriptVersion,
-            ab_variant: usedAbVariant,
-            to_number: session.to_number || null,
-            status: dbSystemPromptOverride ? "pending" : "fallback",
-            fallback_reason: fallbackReason,
-            is_test_call: !session.prospect_listing_id && !session.lead_id,
-          }, { onConflict: "session_id" });
-      } catch (e) {
-        console.error("[voice-twiml] test log upsert failed:", e);
+      const testLogPayload = {
+        session_id: sessionId,
+        script_id: usedScriptId,
+        script_name: usedScriptName,
+        ab_variant: usedAbVariant,
+        to_number: session.to_number || null,
+        status: dbSystemPromptOverride ? "pending" : "fallback",
+        fallback_reason: fallbackReason,
+        is_test_call: !session.prospect_listing_id && !session.lead_id,
+      };
+      // @ts-ignore
+      if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+        // @ts-ignore
+        EdgeRuntime.waitUntil(
+          (async () => {
+            try {
+              let scriptVersion: number | null = null;
+              if (usedScriptId) {
+                const { data: latestV } = await supabase
+                  .from("voice_agent_script_versions")
+                  .select("version_number")
+                  .eq("script_id", usedScriptId)
+                  .order("version_number", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                scriptVersion = latestV?.version_number ?? null;
+              }
+              await supabase
+                .from("voice_agent_script_test_logs")
+                .upsert({ ...testLogPayload, script_version: scriptVersion }, { onConflict: "session_id" });
+            } catch (e) {
+              console.error("[voice-twiml] bg test log upsert failed:", e);
+            }
+          })()
+        );
       }
     }
 
@@ -909,41 +910,15 @@ serve(async (req) => {
     let shouldHangup = false;
 
     if (turn === 0) {
-      if (customPrompt && LOVABLE_API_KEY) {
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: "Începe apelul acum. Generează doar prima replică, foarte scurtă, exclusiv în română." },
-            ],
-          }),
-        });
-
-        if (aiRes.ok) {
-          const aiData = await aiRes.json();
-          aiRawReply = aiData.choices?.[0]?.message?.content?.trim() || "";
-          aiReply = aiRawReply;
-        } else {
-          aiError = `AI HTTP ${aiRes.status}: ${(await aiRes.text()).slice(0, 200)}`;
-        }
-      }
-
-      aiReply = normalizeAiReply(aiReply, openingLine(branch, contextSummary));
-      // Retry once if the first attempt failed the language gate
-      if (aiRawReply && !isRomanianReply(aiRawReply) && customPrompt && LOVABLE_API_KEY) {
-        await logLanguageViolation(supabase, sessionId, turn, aiRawReply, "english_in_opening");
-        const retried = await retryInRomanian(LOVABLE_API_KEY, systemPrompt, [
-          { role: "user", content: "Începe apelul acum. Generează doar prima replică, foarte scurtă, exclusiv în română." },
-        ]);
-        if (retried && isRomanianReply(retried)) {
-          aiReply = retried;
-          aiRawReply = retried;
-        }
-      }
+      // ⚡ OPTIMIZARE CRITICĂ DE LATENȚĂ: NU mai apelăm AI la turn=0.
+      // Greeting-ul deterministic (openingLine) este deja concierge-quality, sub 22 cuvinte,
+      // și permite TTS-ul ElevenLabs să fie cached/precalculat → proprietarul aude voce
+      // în <500ms de la „hello", nu în 4-7s.
+      // AI-ul preia integral din turn=1 înainte cu context complet (transcript + KB).
+      aiReply = openingLine(branch, contextSummary);
+      aiRawReply = aiReply;
     } else if (LOVABLE_API_KEY) {
+
       const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
