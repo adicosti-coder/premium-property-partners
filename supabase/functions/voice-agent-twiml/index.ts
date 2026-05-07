@@ -1246,7 +1246,7 @@ serve(async (req) => {
               }
               return wantsDetail
                 ? "Răspunde concret la întrebare în română cu diacritice. Începe cu o confirmare scurtă (\"sigur, vă explic.\" / \"da, desigur.\"). MAXIM 2 propoziții, sub 30 de cuvinte."
-                : "Răspunde DIRECT, fără umpluturi (fără „mhm", „aha", „ăăă"). Începi cu cuvânt-cheie clar (\"Perfect.\" / \"Sigur.\" / \"Da.\") SAU direct cu întrebarea/confirmarea. MAXIM 1 propoziție, sub 14 cuvinte.";
+                : "Răspunde DIRECT, fără umpluturi (fără mhm, aha, ăăă, hmm, uhm). Începi cu cuvânt-cheie clar (\"Perfect.\" / \"Sigur.\" / \"Da.\") SAU direct cu întrebarea/confirmarea. MAXIM 1 propoziție, sub 14 cuvinte.";
             })() },
           ],
         }),
