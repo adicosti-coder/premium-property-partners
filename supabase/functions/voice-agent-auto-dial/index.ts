@@ -185,11 +185,11 @@ serve(async (req) => {
         .limit(1);
       prospect = leads?.[0];
     } else {
-      const minScore = (settings?.min_lead_score ?? 81);
+      const minScore = (settings?.min_lead_score ?? 50);
       const { data: leads } = await supabase
         .from("prospect_listings")
         .select(PROSPECT_COLS)
-        .gt("lead_score", Math.max(80, minScore - 1))
+        .gte("lead_score", minScore)
         .eq("lifecycle_status", "new")
         .not("phone_normalized", "is", null)
         .is("auto_call_triggered_at", null)

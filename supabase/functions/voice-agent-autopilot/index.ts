@@ -125,15 +125,14 @@ serve(async (req) => {
 
     const limit = Math.max(1, Math.min(10, s.autopilot_max_per_tick));
 
-    // 2. INGESTIE prospect_listings
-    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+    // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
     const { data: prospects } = await supabase
       .from("prospect_listings")
-      .select("id, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status")
-      .gte("lead_score", s.min_lead_score ?? 80)
-      .gte("scraped_at", sevenDaysAgo)
+      .select("id, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at")
+      .gte("lead_score", s.min_lead_score ?? 50)
       .in("lifecycle_status", ["new", "callback"])
-      .or("phone_normalized.not.is.null,contact_phone.not.is.null")
+      .not("phone_normalized", "is", null)
+      .is("auto_call_triggered_at", null)
       .order("lead_score", { ascending: false })
       .limit(limit);
 
