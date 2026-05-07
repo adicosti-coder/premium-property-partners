@@ -126,13 +126,21 @@ serve(async (req) => {
       else if (enWords >= 2 && roWords === 0) detectedLanguage = "en";
     }
 
+    // Transcript gol + apel scurt → "nicio_legatura" (nu "callback") ca să NU re-apelăm robotul.
+    const noUserTurn = !transcript.some((t: any) => t.role === "user" && String(t.text || "").trim().length > 0);
+    const veryShort = (duration || 0) > 0 && (duration || 0) < 8;
+    const fallbackOutcome = derivedStatus === "busy" || derivedStatus === "no-answer"
+      ? "nicio_legatura"
+      : (noUserTurn || veryShort ? "robot" : (derivedStatus === "completed" ? "callback" : "nicio_legatura"));
     const fallbackReport = {
-      summary: derivedStatus === "completed"
-        ? "Apel foarte scurt. S-a redat mesajul inițial, dar conversația nu a continuat suficient pentru calificare completă."
-        : `Apel încheiat cu status ${derivedStatus}.`,
-      outcome: derivedStatus === "busy" ? "callback" : derivedStatus === "completed" ? "callback" : "nicio_legatura",
+      summary: noUserTurn
+        ? "Apel fără răspuns uman (robot/secretariat sau lipsă voce client). Nu se re-apelează automat."
+        : (veryShort
+            ? `Apel foarte scurt (${duration}s). Probabil închis imediat de client.`
+            : `Apel încheiat cu status ${derivedStatus}.`),
+      outcome: fallbackOutcome,
       sentiment: "neutru",
-      next_action: "Rulează din nou testul complet și verifică limba, durata și înregistrarea.",
+      next_action: fallbackOutcome === "robot" ? "Marchează lead pentru follow-up manual SMS." : "Verifică limba, durata și înregistrarea.",
       appointment_iso: null,
     };
 
