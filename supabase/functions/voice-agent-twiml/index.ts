@@ -154,8 +154,19 @@ async function logLanguageViolation(
   }
 }
 
+// Strip filler tokens from start of reply (defense-in-depth — prompt should
+// already prevent these, but TTS them = silence/bad UX on phone).
+const FILLER_PREFIX_RE = /^(?:\s*[„"']?(?:mhm|îhî|ihi|aha|ah|ăăă|ăă|hmm|uhm|uh|ehm|îî|păi|deci\.{2,}|stiți|știți)[„"',\.\s\-—–:]+)+/i;
+function stripFillers(text: string): string {
+  let out = String(text || "");
+  out = out.replace(FILLER_PREFIX_RE, "");
+  // Also drop standalone filler-only tokens between sentences (rare).
+  out = out.replace(/\b(mhm|îhî|aha|ăăă|hmm|uhm)\b[\.,]?\s*/gi, "");
+  return out.trim();
+}
+
 function normalizeAiReply(text: string, fallback: string): string {
-  const cleaned = String(text || "").replace(/^['"`]+|['"`]+$/g, "").trim();
+  const cleaned = stripFillers(String(text || "").replace(/^['"`]+|['"`]+$/g, "").trim());
   if (!cleaned) return fallback;
   if (!isRomanianReply(cleaned)) return fallback;
   return cleaned;
