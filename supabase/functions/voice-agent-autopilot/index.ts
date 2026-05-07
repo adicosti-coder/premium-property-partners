@@ -226,6 +226,7 @@ serve(async (req) => {
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${SERVICE_KEY}`,
+              "x-webhook-secret": SERVICE_KEY,
             },
             body: JSON.stringify({ triggered_prospect_id: pid, autopilot: true, bypass_schedule: bypassSchedule }),
           });
