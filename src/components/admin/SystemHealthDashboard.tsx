@@ -15,7 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { buildE2ECsv, analyzeIncidents, filterE2E, type E2ERun } from "./systemHealthHelpers";
+import { buildE2ECsv, analyzeIncidents, filterE2E, buildRecoveryTrend, type E2ERun } from "./systemHealthHelpers";
 
 type Threshold = {
   voice_latency_ms_threshold: number;
@@ -26,6 +26,7 @@ type Threshold = {
   daily_report_enabled: boolean;
   daily_report_email: string;
   e2e_seo_url: string;
+  slack_webhook_url: string | null;
 };
 
 const STATUS_COLORS: Record<string, string> = {
