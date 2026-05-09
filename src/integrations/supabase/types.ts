@@ -3076,6 +3076,7 @@ export type Database = {
           call_summary: string | null
           campaign_run_id: string | null
           category: Database["public"]["Enums"]["offer_category"] | null
+          consecutive_failures: number
           contact_name: string | null
           contact_phone: string | null
           created_at: string | null
@@ -3086,6 +3087,7 @@ export type Database = {
           followup_sent_at: string | null
           id: string
           images: string[] | null
+          invalid_reason: string | null
           is_active: boolean | null
           last_failure_reason: string | null
           last_retry_at: string | null
@@ -3093,6 +3095,7 @@ export type Database = {
           lead_score: number | null
           lifecycle_status: Database["public"]["Enums"]["lead_lifecycle_status"]
           location: string | null
+          marked_invalid_at: string | null
           migrated_from_scraper_id: string | null
           owner_sentiment: string | null
           phone_normalized: string | null
@@ -3131,6 +3134,7 @@ export type Database = {
           call_summary?: string | null
           campaign_run_id?: string | null
           category?: Database["public"]["Enums"]["offer_category"] | null
+          consecutive_failures?: number
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
@@ -3141,6 +3145,7 @@ export type Database = {
           followup_sent_at?: string | null
           id?: string
           images?: string[] | null
+          invalid_reason?: string | null
           is_active?: boolean | null
           last_failure_reason?: string | null
           last_retry_at?: string | null
@@ -3148,6 +3153,7 @@ export type Database = {
           lead_score?: number | null
           lifecycle_status?: Database["public"]["Enums"]["lead_lifecycle_status"]
           location?: string | null
+          marked_invalid_at?: string | null
           migrated_from_scraper_id?: string | null
           owner_sentiment?: string | null
           phone_normalized?: string | null
@@ -3186,6 +3192,7 @@ export type Database = {
           call_summary?: string | null
           campaign_run_id?: string | null
           category?: Database["public"]["Enums"]["offer_category"] | null
+          consecutive_failures?: number
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
@@ -3196,6 +3203,7 @@ export type Database = {
           followup_sent_at?: string | null
           id?: string
           images?: string[] | null
+          invalid_reason?: string | null
           is_active?: boolean | null
           last_failure_reason?: string | null
           last_retry_at?: string | null
@@ -3203,6 +3211,7 @@ export type Database = {
           lead_score?: number | null
           lifecycle_status?: Database["public"]["Enums"]["lead_lifecycle_status"]
           location?: string | null
+          marked_invalid_at?: string | null
           migrated_from_scraper_id?: string | null
           owner_sentiment?: string | null
           phone_normalized?: string | null
@@ -5957,6 +5966,7 @@ export type Database = {
           ai_outcome: string | null
           ai_sentiment: string | null
           ai_summary: string | null
+          answered_by: string | null
           appointment_scheduled_at: string | null
           call_duration_seconds: number | null
           call_objective: string | null
@@ -5975,6 +5985,7 @@ export type Database = {
           from_number: string | null
           id: string
           initiated_by: string | null
+          is_voicemail: boolean
           language_retry_count: number
           language_retry_of: string | null
           lead_id: string | null
@@ -5989,6 +6000,7 @@ export type Database = {
           tts_errors_count: number
           tts_latency_ms_avg: number | null
           twilio_call_sid: string | null
+          twilio_failure_reason: string | null
           updated_at: string
           voice_agent_prompt: string | null
         }
@@ -5996,6 +6008,7 @@ export type Database = {
           ai_outcome?: string | null
           ai_sentiment?: string | null
           ai_summary?: string | null
+          answered_by?: string | null
           appointment_scheduled_at?: string | null
           call_duration_seconds?: number | null
           call_objective?: string | null
@@ -6014,6 +6027,7 @@ export type Database = {
           from_number?: string | null
           id?: string
           initiated_by?: string | null
+          is_voicemail?: boolean
           language_retry_count?: number
           language_retry_of?: string | null
           lead_id?: string | null
@@ -6028,6 +6042,7 @@ export type Database = {
           tts_errors_count?: number
           tts_latency_ms_avg?: number | null
           twilio_call_sid?: string | null
+          twilio_failure_reason?: string | null
           updated_at?: string
           voice_agent_prompt?: string | null
         }
@@ -6035,6 +6050,7 @@ export type Database = {
           ai_outcome?: string | null
           ai_sentiment?: string | null
           ai_summary?: string | null
+          answered_by?: string | null
           appointment_scheduled_at?: string | null
           call_duration_seconds?: number | null
           call_objective?: string | null
@@ -6053,6 +6069,7 @@ export type Database = {
           from_number?: string | null
           id?: string
           initiated_by?: string | null
+          is_voicemail?: boolean
           language_retry_count?: number
           language_retry_of?: string | null
           lead_id?: string | null
@@ -6067,6 +6084,7 @@ export type Database = {
           tts_errors_count?: number
           tts_latency_ms_avg?: number | null
           twilio_call_sid?: string | null
+          twilio_failure_reason?: string | null
           updated_at?: string
           voice_agent_prompt?: string | null
         }
@@ -6789,6 +6807,10 @@ export type Database = {
         }
         Returns: number
       }
+      mark_prospect_invalid_number: {
+        Args: { p_prospect_id: string; p_reason: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -6799,6 +6821,15 @@ export type Database = {
         Returns: number
       }
       normalize_ro_phone: { Args: { p: string }; Returns: string }
+      process_voice_call_result: {
+        Args: {
+          p_is_voicemail: boolean
+          p_prospect_id: string
+          p_status: string
+          p_twilio_reason: string
+        }
+        Returns: undefined
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

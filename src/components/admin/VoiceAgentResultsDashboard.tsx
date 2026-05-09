@@ -10,17 +10,26 @@ type Period = "today" | "week" | "month";
 interface Metrics {
   initiated: number;
   connected: number;        // call_duration_seconds > 5
-  realConversations: number; // > 30s
+  realConversations: number; // > 30s AND not voicemail
   withSummary: number;
   followupSent: number;
   positiveSentiment: number;
   appointments: number;
   avgDurationSec: number;
+  voicemails: number;
+  invalidNumbers: number;
+}
+
+interface RoiAlert {
+  triggered: boolean;
+  realRatePct: number;       // last-20 real conv rate
+  sampleSize: number;
 }
 
 const EMPTY: Metrics = {
   initiated: 0, connected: 0, realConversations: 0, withSummary: 0,
   followupSent: 0, positiveSentiment: 0, appointments: 0, avgDurationSec: 0,
+  voicemails: 0, invalidNumbers: 0,
 };
 
 const PERIOD_LABEL: Record<Period, string> = {
@@ -45,7 +54,7 @@ async function loadMetrics(p: Period): Promise<Metrics> {
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled")
+    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail")
     .gte("created_at", since);
 
   if (error || !data) return EMPTY;
@@ -58,18 +67,42 @@ async function loadMetrics(p: Period): Promise<Metrics> {
     m.initiated++;
     const dur = Number(r.call_duration_seconds || 0);
     if (dur > 5) m.connected++;
-    if (dur > 30) m.realConversations++;
+    if (dur > 30 && !r.is_voicemail) m.realConversations++;
+    if (r.is_voicemail) m.voicemails++;
     if (r.ai_summary) m.withSummary++;
     if (["positive", "very_positive"].includes(r.ai_sentiment)) m.positiveSentiment++;
     if (["auto_approved", "sent"].includes(r.followup_status)) m.followupSent++;
-    if (r.appointment_scheduled === true) m.appointments++;
+    if (r.appointment_scheduled_at) m.appointments++;
     if (dur > 0) {
       totalDur += dur;
       durCount++;
     }
   }
   m.avgDurationSec = durCount > 0 ? Math.round(totalDur / durCount) : 0;
+
+  // Count invalid numbers detected in this window
+  const { count: invalidCount } = await supabase
+    .from("prospect_listings")
+    .select("*", { count: "exact", head: true })
+    .gte("marked_invalid_at", since);
+  m.invalidNumbers = invalidCount || 0;
+
   return m;
+}
+
+async function loadRoiAlert(): Promise<RoiAlert> {
+  // Last 20 outbound calls — compute real-conversation rate
+  const { data } = await supabase
+    .from("voice_call_sessions")
+    .select("call_duration_seconds, is_voicemail")
+    .eq("direction", "outbound")
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const rows = (data || []) as any[];
+  if (rows.length < 20) return { triggered: false, realRatePct: 0, sampleSize: rows.length };
+  const real = rows.filter((r) => Number(r.call_duration_seconds || 0) > 30 && !r.is_voicemail).length;
+  const ratePct = Math.round((real / rows.length) * 100);
+  return { triggered: ratePct < 10, realRatePct: ratePct, sampleSize: rows.length };
 }
 
 function pct(n: number, d: number): string {
@@ -108,6 +141,7 @@ const VoiceAgentResultsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [autopilotOn, setAutopilotOn] = useState<boolean | null>(null);
   const [pausedReason, setPausedReason] = useState<string | null>(null);
+  const [roiAlert, setRoiAlert] = useState<RoiAlert>({ triggered: false, realRatePct: 0, sampleSize: 0 });
 
   useEffect(() => {
     let mounted = true;
@@ -116,13 +150,15 @@ const VoiceAgentResultsDashboard = () => {
       loadMetrics(period),
       supabase.from("voice_agent_settings").select("autopilot_enabled").eq("id", 1).maybeSingle(),
       supabase.from("voice_agent_safety_state").select("calls_paused, paused_reason").eq("id", true).maybeSingle(),
-    ]).then(([m, settings, safety]) => {
+      loadRoiAlert(),
+    ]).then(([m, settings, safety, alert]) => {
       if (!mounted) return;
       setMetrics(m);
       setAutopilotOn(settings.data?.autopilot_enabled ?? null);
       setPausedReason(
         safety.data?.calls_paused ? (safety.data?.paused_reason || "Pauză activă") : null
       );
+      setRoiAlert(alert);
       setLoading(false);
     });
     return () => { mounted = false; };
@@ -165,6 +201,24 @@ const VoiceAgentResultsDashboard = () => {
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* CRITICAL ROI ALERT — last 20 calls below 10% real-conversation rate */}
+        {roiAlert.triggered && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border-2 border-red-500/60 bg-red-500/10 p-3 text-sm animate-pulse"
+          >
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-bold text-red-700 dark:text-red-400">
+                🚨 ROI critic — doar {roiAlert.realRatePct}% conversații reale în ultimele {roiAlert.sampleSize} apeluri
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Pragul de siguranță este 10%. Verifică numărul Twilio (poate apare ca SPAM), calitatea numerelor scrapate sau pune autopilot-ul pe pauză până când rezolvi cauza.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Status banner */}
         {pausedReason && (
           <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
@@ -230,7 +284,7 @@ const VoiceAgentResultsDashboard = () => {
             {/* Output: ce a produs concret */}
             <div>
               <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Output produs
+                Output produs & curățare
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <MetricCard
@@ -255,6 +309,20 @@ const VoiceAgentResultsDashboard = () => {
                   label="Durată medie"
                   value={`${metrics.avgDurationSec}s`}
                   tone={metrics.avgDurationSec < 15 && metrics.initiated > 0 ? "warning" : "default"}
+                />
+                <MetricCard
+                  icon={<PhoneCall className="w-3.5 h-3.5" />}
+                  label="Robot / mesagerie"
+                  value={metrics.voicemails}
+                  subtitle="Excluse din conv. reale"
+                  tone={metrics.voicemails > 0 ? "warning" : "default"}
+                />
+                <MetricCard
+                  icon={<AlertCircle className="w-3.5 h-3.5" />}
+                  label="Numere invalide marcate"
+                  value={metrics.invalidNumbers}
+                  subtitle="Curățare automată"
+                  tone={metrics.invalidNumbers > 0 ? "warning" : "default"}
                 />
               </div>
             </div>

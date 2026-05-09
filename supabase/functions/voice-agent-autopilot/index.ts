@@ -151,16 +151,20 @@ serve(async (req) => {
     // Spațiere apeluri: 2s între ele (Twilio queue + status callback need breathing room).
     const dialDelayMs = runSource === "manual" ? 1500 : 2500;
 
-    // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
+    // 2. INGESTIE prospect_listings — proprietari întâi, scor ≥ prag, telefon valid.
+    //    Sortare: proprietar > agentie, apoi lead_score DESC.
+    const minScore = Math.max(70, s.min_lead_score ?? 70);
     const { data: prospects } = await supabase
       .from("prospect_listings")
-      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords")
-      .gte("lead_score", s.min_lead_score ?? 50)
+      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords, marked_invalid_at")
+      .gte("lead_score", minScore)
       .in("lifecycle_status", ["new", "callback"])
       .not("phone_normalized", "is", null)
       .is("auto_call_triggered_at", null)
+      .is("marked_invalid_at", null)
+      .order("prospect_type", { ascending: true }) // 'agentie' < 'proprietar' alphabetically — invert below
       .order("lead_score", { ascending: false })
-      .limit(Math.min(100, limit * 4));
+      .limit(Math.min(200, limit * 6));
 
     // Dedupe: telefoane apelate în ultimele 7 zile (nu re-bombardăm același număr).
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
@@ -171,9 +175,17 @@ serve(async (req) => {
       .eq("direction", "outbound");
     const recentPhoneSet = new Set<string>((recentCalls || []).map((r: any) => r.to_number).filter(Boolean));
 
+    // Prioritate absolută: prospect_type = 'proprietar' înaintea oricărui altceva.
+    const ordered = [...(prospects || [])].sort((a: any, b: any) => {
+      const ap = a.prospect_type === "proprietar" ? 0 : 1;
+      const bp = b.prospect_type === "proprietar" ? 0 : 1;
+      if (ap !== bp) return ap - bp;
+      return (b.lead_score || 0) - (a.lead_score || 0);
+    });
+
     const seenPhones = new Set<string>();
     const prospectIds: string[] = [];
-    for (const p of prospects || []) {
+    for (const p of ordered) {
       const phone = p.phone_normalized || p.contact_phone;
       if (!isCallablePhone(phone)) {
         await supabase.from("prospect_listings").update({

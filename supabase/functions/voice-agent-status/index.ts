@@ -67,7 +67,19 @@ serve(async (req) => {
     const recordingUrl = String(form.get("RecordingUrl") || "");
     const hasRecording = !!recordingUrl;
     const recordingStatus = String(form.get("RecordingStatus") || "");
-    const callbackType = hasRecording || recordingStatus ? "recording" : "call";
+    // Twilio failure diagnostics
+    const errorCode = String(form.get("ErrorCode") || "");
+    const errorMessage = String(form.get("ErrorMessage") || "");
+    const sipResponseCode = String(form.get("SipResponseCode") || "");
+    // AMD (Answering Machine Detection) — async callback may arrive separately
+    const answeredByRaw = String(form.get("AnsweredBy") || "");
+    const answeredBy = answeredByRaw || null;
+    const isAmdCallback = !!answeredByRaw;
+    const isVoicemail = answeredByRaw.startsWith("machine_") || answeredByRaw === "fax";
+
+    const callbackType = hasRecording || recordingStatus
+      ? "recording"
+      : (isAmdCallback ? "amd" : "call");
 
     const { data: session } = await supabase
       .from("voice_call_sessions")
@@ -89,6 +101,16 @@ serve(async (req) => {
         : "completed";
     }
 
+    // Record Twilio failure reason (preferred over generic status)
+    const failureReason = errorCode
+      ? `${errorCode}${errorMessage ? `: ${errorMessage.slice(0, 120)}` : ""}`
+      : (sipResponseCode && sipResponseCode !== "200" ? `sip_${sipResponseCode}` : (callStatus && ["failed","busy","no-answer","canceled"].includes(callStatus) ? callStatus : null));
+    if (failureReason && !session.twilio_failure_reason) {
+      updates.twilio_failure_reason = failureReason;
+    }
+    if (answeredBy) updates.answered_by = answeredBy;
+    if (isVoicemail) updates.is_voicemail = true;
+
     if (duration > 0) updates.call_duration_seconds = duration;
     if (recordingReady) updates.recording_url = `${recordingUrl}.mp3`;
 
@@ -108,6 +130,20 @@ serve(async (req) => {
 
     if (Object.keys(updates).length > 0) {
       await supabase.from("voice_call_sessions").update(updates).eq("id", sessionId);
+    }
+
+    // ── Cleanup prospects: count consecutive failures, auto-mark invalid ──
+    if (session.prospect_listing_id && (finalStatuses.includes(derivedStatus) || isAmdCallback)) {
+      try {
+        await supabase.rpc("process_voice_call_result", {
+          p_prospect_id: session.prospect_listing_id,
+          p_status: derivedStatus,
+          p_twilio_reason: failureReason,
+          p_is_voicemail: isVoicemail,
+        });
+      } catch (e) {
+        console.warn("[voice-status] process_voice_call_result failed:", (e as Error).message);
+      }
     }
 
     const transcript = Array.isArray(session.transcript) ? session.transcript : [];
