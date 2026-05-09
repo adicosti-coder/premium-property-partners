@@ -10,8 +10,8 @@ type Period = "today" | "week" | "month";
 
 interface Metrics {
   initiated: number;
-  connected: number;        // call_duration_seconds > 5
-  realConversations: number; // > 30s AND not voicemail
+  connected: number;
+  realConversations: number;
   withSummary: number;
   followupSent: number;
   positiveSentiment: number;
@@ -19,18 +19,20 @@ interface Metrics {
   avgDurationSec: number;
   voicemails: number;
   invalidNumbers: number;
+  busy: number;
+  noAnswer: number;
 }
 
 interface RoiAlert {
   triggered: boolean;
-  realRatePct: number;       // last-20 real conv rate
+  realRatePct: number;
   sampleSize: number;
 }
 
 const EMPTY: Metrics = {
   initiated: 0, connected: 0, realConversations: 0, withSummary: 0,
   followupSent: 0, positiveSentiment: 0, appointments: 0, avgDurationSec: 0,
-  voicemails: 0, invalidNumbers: 0,
+  voicemails: 0, invalidNumbers: 0, busy: 0, noAnswer: 0,
 };
 
 const PERIOD_LABEL: Record<Period, string> = {
