@@ -69,7 +69,7 @@ export default function SystemHealthDashboard() {
       supabase.from("cron_run_log").select("job_name,status").gte("started_at", since).limit(2000),
       supabase.from("external_keys_health").select("provider,is_valid,checked_at,message").gte("checked_at", since).order("checked_at", { ascending: false }),
       supabase.from("voice_call_sessions").select("started_at,tts_latency_ms_avg").not("tts_latency_ms_avg", "is", null).gte("started_at", since24).order("started_at", { ascending: true }).limit(200),
-      supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(20),
+      supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(500),
       supabase.from("voice_latency_alerts").select("*").is("acknowledged_at", null).order("triggered_at", { ascending: false }).limit(5),
     ]);
 
