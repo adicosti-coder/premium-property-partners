@@ -4,10 +4,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Phone, PhoneCall, MessageSquare, Calendar, TrendingUp, AlertCircle, Loader2, PieChart as PieChartIcon, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Button } from "@/components/ui/button";
 
 type Period = "today" | "week" | "month";
+type HourWindow = "Dimineață" | "Prânz" | "Seară" | "Off-hours";
+
+function hourWindow(d: Date): HourWindow {
+  const h = d.getHours();
+  if (h >= 8 && h < 12) return "Dimineață";
+  if (h >= 12 && h < 17) return "Prânz";
+  if (h >= 17 && h < 21) return "Seară";
+  return "Off-hours";
+}
+
+interface HourBucket {
+  window: HourWindow;
+  initiated: number;
+  real: number;
+  voicemails: number;
+  busy: number;
+  noAnswer: number;
+}
 
 interface Metrics {
   initiated: number;
@@ -54,18 +72,24 @@ function periodSinceISO(p: Period): string {
   return d.toISOString();
 }
 
-async function loadMetrics(p: Period): Promise<Metrics> {
+async function loadMetrics(p: Period): Promise<{ metrics: Metrics; buckets: HourBucket[]; rawRows: any[] }> {
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason")
+    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason, created_at")
     .gte("created_at", since);
 
-  if (error || !data) return EMPTY;
+  if (error || !data) return { metrics: EMPTY, buckets: [], rawRows: [] };
 
   const m: Metrics = { ...EMPTY };
   let totalDur = 0;
   let durCount = 0;
+  const bucketMap = new Map<HourWindow, HourBucket>();
+  const ensure = (w: HourWindow) => {
+    let b = bucketMap.get(w);
+    if (!b) { b = { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0 }; bucketMap.set(w, b); }
+    return b;
+  };
 
   for (const r of data as any[]) {
     m.initiated++;
@@ -79,10 +103,15 @@ async function loadMetrics(p: Period): Promise<Metrics> {
     if (["positive", "very_positive"].includes(r.ai_sentiment)) m.positiveSentiment++;
     if (["auto_approved", "sent"].includes(r.followup_status)) m.followupSent++;
     if (r.appointment_scheduled_at) m.appointments++;
-    if (dur > 0) {
-      totalDur += dur;
-      durCount++;
-    }
+    if (dur > 0) { totalDur += dur; durCount++; }
+
+    const w = hourWindow(new Date(r.created_at));
+    const b = ensure(w);
+    b.initiated++;
+    if (dur > 30 && !r.is_voicemail) b.real++;
+    if (r.is_voicemail) b.voicemails++;
+    if (r.status === "busy") b.busy++;
+    if (r.status === "no-answer") b.noAnswer++;
   }
   m.avgDurationSec = durCount > 0 ? Math.round(totalDur / durCount) : 0;
 
@@ -92,7 +121,9 @@ async function loadMetrics(p: Period): Promise<Metrics> {
     .gte("marked_invalid_at", since);
   m.invalidNumbers = invalidCount || 0;
 
-  return m;
+  const order: HourWindow[] = ["Dimineață", "Prânz", "Seară", "Off-hours"];
+  const buckets = order.map((w) => bucketMap.get(w) || { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0 });
+  return { metrics: m, buckets, rawRows: data as any[] };
 }
 
 async function loadRoiAlert(): Promise<RoiAlert> {
@@ -143,6 +174,8 @@ const MetricCard = ({ icon, label, value, subtitle, tone = "default" }: MetricCa
 const VoiceAgentResultsDashboard = () => {
   const [period, setPeriod] = useState<Period>("week");
   const [metrics, setMetrics] = useState<Metrics>(EMPTY);
+  const [buckets, setBuckets] = useState<HourBucket[]>([]);
+  const [rawRows, setRawRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [autopilotOn, setAutopilotOn] = useState<boolean | null>(null);
   const [pausedReason, setPausedReason] = useState<string | null>(null);
@@ -156,9 +189,11 @@ const VoiceAgentResultsDashboard = () => {
       supabase.from("voice_agent_settings").select("autopilot_enabled").eq("id", 1).maybeSingle(),
       supabase.from("voice_agent_safety_state").select("calls_paused, paused_reason").eq("id", true).maybeSingle(),
       loadRoiAlert(),
-    ]).then(([m, settings, safety, alert]) => {
+    ]).then(([res, settings, safety, alert]) => {
       if (!mounted) return;
-      setMetrics(m);
+      setMetrics(res.metrics);
+      setBuckets(res.buckets);
+      setRawRows(res.rawRows);
       setAutopilotOn(settings.data?.autopilot_enabled ?? null);
       setPausedReason(
         safety.data?.calls_paused ? (safety.data?.paused_reason || "Pauză activă") : null
@@ -332,6 +367,53 @@ const VoiceAgentResultsDashboard = () => {
               </div>
             </div>
 
+            {/* Heatmap Ferestre Orare — Rata de răspuns pe interval orar */}
+            {(() => {
+              const data = buckets.map((b) => ({
+                window: b.window,
+                rate: b.initiated > 0 ? Math.round((b.real / b.initiated) * 100) : 0,
+                real: b.real,
+                initiated: b.initiated,
+              }));
+              const hasData = buckets.some((b) => b.initiated > 0);
+              if (!hasData) return null;
+              return (
+                <div>
+                  <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    Heatmap răspuns pe ferestre orare (Timișoara)
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                    {buckets.map((b) => {
+                      const rate = b.initiated > 0 ? Math.round((b.real / b.initiated) * 100) : 0;
+                      const intensity = Math.min(rate / 50, 1); // 50% = full
+                      return (
+                        <div
+                          key={b.window}
+                          className="rounded-md border p-2.5 transition-colors"
+                          style={{ backgroundColor: b.initiated > 0 ? `hsl(142 71% 45% / ${0.08 + intensity * 0.35})` : undefined }}
+                        >
+                          <div className="text-[11px] text-muted-foreground">{b.window}</div>
+                          <div className="text-xl font-bold">{rate}%</div>
+                          <div className="text-[10px] text-muted-foreground">{b.real}/{b.initiated} reale</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="h-[180px] rounded-md border bg-card p-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="window" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} />
+                        <Tooltip formatter={(v: any, n: any, p: any) => [`${v}% (${p.payload.real}/${p.payload.initiated})`, "Rată răspuns"]} />
+                        <Bar dataKey="rate" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
             {/* Pie Chart — Distribuția pierderilor */}
             {(() => {
               const lossData = [
@@ -354,16 +436,33 @@ const VoiceAgentResultsDashboard = () => {
                       variant="outline"
                       className="h-7 text-xs"
                       onClick={() => {
-                        const rows = [
-                          ["Categorie", "Apeluri", "Procent", "Perioada"],
-                          ...lossData.map((d) => [
-                            d.name,
-                            String(d.value),
-                            `${Math.round((d.value / totalLoss) * 100)}%`,
-                            PERIOD_LABEL[period],
-                          ]),
-                          ["TOTAL", String(totalLoss), "100%", PERIOD_LABEL[period]],
+                        // Per-window × per-category breakdown
+                        const windows: HourWindow[] = ["Dimineață", "Prânz", "Seară", "Off-hours"];
+                        const cats: { key: keyof HourBucket; label: string }[] = [
+                          { key: "voicemails", label: "Mesagerie vocală" },
+                          { key: "busy", label: "Ocupat" },
+                          { key: "noAnswer", label: "Nu răspunde" },
                         ];
+                        const rows: string[][] = [
+                          ["Categorie", "Fereastra Orară", "Apeluri", "Procent din pierderi", "Perioada"],
+                        ];
+                        for (const cat of cats) {
+                          for (const w of windows) {
+                            const b = buckets.find((x) => x.window === w);
+                            const v = (b?.[cat.key] as number) || 0;
+                            if (v > 0) rows.push([
+                              cat.label, w, String(v),
+                              `${Math.round((v / totalLoss) * 100)}%`,
+                              PERIOD_LABEL[period],
+                            ]);
+                          }
+                        }
+                        // Plus "Număr invalid" (nu are timestamp pe sesiune — doar total)
+                        if (metrics.invalidNumbers > 0) {
+                          rows.push(["Număr invalid", "Total perioadă", String(metrics.invalidNumbers),
+                            `${Math.round((metrics.invalidNumbers / totalLoss) * 100)}%`, PERIOD_LABEL[period]]);
+                        }
+                        rows.push(["TOTAL", "—", String(totalLoss), "100%", PERIOD_LABEL[period]]);
                         const csv = rows
                           .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
                           .join("\n");

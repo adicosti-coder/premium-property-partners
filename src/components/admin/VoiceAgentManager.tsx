@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap, Volume2, Play as PlayIcon, Mail, MessageCircle, Voicemail, Hourglass, BadgeAlert } from "lucide-react";
+import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap, Volume2, Play as PlayIcon, Mail, MessageCircle, Voicemail, Hourglass, BadgeAlert, Star } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -49,6 +49,8 @@ interface VoiceCall {
   twilio_failure_reason?: string | null;
   prospect_listing_id?: string | null;
   next_callback_at?: string | null;
+  appointment_scheduled_at?: string | null;
+  is_recovered?: boolean;
 }
 
 const statusColor = (s: string) => {
@@ -184,24 +186,31 @@ export default function VoiceAgentManager() {
       .limit(50);
     const sessions = (data as any[]) || [];
 
-    // Hydrate next_callback_at from prospect_listings (for ⏰ icon)
+    // Hydrate next_callback_at + recovery flag from prospect_listings
     const prospectIds = Array.from(new Set(sessions.map((s) => s.prospect_listing_id).filter(Boolean)));
     let callbackMap: Record<string, string | null> = {};
+    let attemptsMap: Record<string, number> = {};
     if (prospectIds.length) {
       const { data: pls } = await supabase
         .from("prospect_listings")
-        .select("id, next_callback_at")
+        .select("id, next_callback_at, callback_attempts")
         .in("id", prospectIds as string[]);
       for (const p of (pls as any[]) || []) {
         if (p.next_callback_at && new Date(p.next_callback_at) > new Date()) {
           callbackMap[p.id] = p.next_callback_at;
         }
+        attemptsMap[p.id] = Number(p.callback_attempts || 0);
       }
     }
-    setCalls(sessions.map((s) => ({
-      ...s,
-      next_callback_at: s.prospect_listing_id ? callbackMap[s.prospect_listing_id] || null : null,
-    })));
+    setCalls(sessions.map((s) => {
+      const pid = s.prospect_listing_id;
+      const isRecovered = !!s.appointment_scheduled_at && pid != null && (attemptsMap[pid] || 0) > 0;
+      return {
+        ...s,
+        next_callback_at: pid ? callbackMap[pid] || null : null,
+        is_recovered: isRecovered,
+      };
+    }));
     setLoading(false);
   };
 
@@ -793,6 +802,11 @@ export default function VoiceAgentManager() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{c.to_number}</span>
                         <Badge className={statusColor(c.status)}>{c.status}</Badge>
+                        {c.is_recovered && (
+                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs" title="Lead recuperat: prospectul fusese ocupat/nu răspundea, dar acest call back a generat o programare.">
+                            <Star className="h-3 w-3 mr-1 fill-current" /> RECUPERAT
+                          </Badge>
+                        )}
                         {c.is_voicemail && (
                           <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 dark:text-amber-300" title="Apel preluat de mesageria vocală">
                             <Voicemail className="h-3 w-3 mr-1" /> Robot
