@@ -858,7 +858,7 @@ export default function VoiceAgentManager() {
             ) : (
             <ScrollArea className="h-[500px]">
               <div className="space-y-2">
-                {calls.map((c) => (
+                {filteredCalls.map((c) => (
                   <div
                     key={c.id}
                     className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition"
@@ -870,9 +870,20 @@ export default function VoiceAgentManager() {
                         <span className="font-medium">{c.to_number}</span>
                         <Badge className={statusColor(c.status)}>{c.status}</Badge>
                         {c.is_recovered && (
-                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs" title="Lead recuperat: prospectul fusese ocupat/nu răspundea, dar acest call back a generat o programare.">
-                            <Star className="h-3 w-3 mr-1 fill-current" /> RECUPERAT
-                          </Badge>
+                          <span className="inline-flex items-center gap-1">
+                            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs" title="Lead recuperat: prospectul fusese ocupat/nu răspundea, dar acest call back a generat o programare.">
+                              <Star className="h-3 w-3 mr-1 fill-current" /> RECUPERAT
+                            </Badge>
+                            {recoveryRatePct !== null && (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] border-emerald-300 text-emerald-700 dark:text-emerald-300"
+                                title="Rata de succes a call back-urilor în ultima săptămână (programări obținute / total apeluri de re-contact)"
+                              >
+                                📈 {recoveryRatePct}% succes/săpt
+                              </Badge>
+                            )}
+                          </span>
                         )}
                         {c.is_voicemail && (
                           <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 dark:text-amber-300" title="Apel preluat de mesageria vocală">
@@ -906,6 +917,8 @@ export default function VoiceAgentManager() {
                         </span>
                         <span aria-hidden>•</span>
                         <span>{c.call_duration_seconds || 0}s</span>
+                        <span aria-hidden>•</span>
+                        <span className="text-muted-foreground/70">{hourWindow(new Date(c.created_at))}</span>
                       </div>
                       <div className="text-xs text-muted-foreground truncate mt-0.5">
                         {c.ai_summary || c.error_message || "Nicio sinteză încă"}
@@ -924,7 +937,8 @@ export default function VoiceAgentManager() {
                 ))}
               </div>
             </ScrollArea>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 
