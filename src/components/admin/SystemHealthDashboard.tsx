@@ -114,6 +114,25 @@ export default function SystemHealthDashboard() {
     }
   };
 
+  const exportE2E = async (format: "json" | "csv") => {
+    const { data } = await supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(1000);
+    const rows = data || [];
+    let blob: Blob;
+    if (format === "json") {
+      blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
+    } else {
+      const cols = ["id", "test_type", "status", "duration_ms", "run_at", "error_message"];
+      const csv = [cols.join(",")].concat(
+        rows.map((r: any) => cols.map((c) => JSON.stringify(r[c] ?? "")).join(","))
+      ).join("\n");
+      blob = new Blob([csv], { type: "text/csv" });
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `e2e-tests-${new Date().toISOString().slice(0,10)}.${format}`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
   if (loading || !thresholds) {
     return <div className="flex items-center gap-2 p-8"><Loader2 className="h-5 w-5 animate-spin" /> Se încarcă...</div>;
   }
