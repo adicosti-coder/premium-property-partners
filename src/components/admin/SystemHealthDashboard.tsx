@@ -344,9 +344,11 @@ export default function SystemHealthDashboard() {
               onCheckedChange={(v) => setThresholds({ ...thresholds, daily_report_enabled: v })} />
           </div>
           <div>
-            <Label>Email destinatar raport</Label>
-            <Input type="email" value={thresholds.daily_report_email}
+            <Label>Email destinatari raport</Label>
+            <Input type="text" value={thresholds.daily_report_email}
+              placeholder="email1@domain.com, email2@domain.com"
               onChange={(e) => setThresholds({ ...thresholds, daily_report_email: e.target.value })} />
+            <p className="text-xs text-muted-foreground mt-1">Mai multe adrese separate prin virgulă.</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={saveThresholds}>Salvează</Button>
