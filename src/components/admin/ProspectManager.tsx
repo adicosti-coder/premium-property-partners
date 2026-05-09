@@ -53,6 +53,7 @@ interface ProspectListing {
   callback_attempts?: number | null;
   next_callback_at?: string | null;
   lifecycle_status?: string | null;
+  last_failure_reason?: string | null;
 }
 
 const PROSPECT_TYPES = [
