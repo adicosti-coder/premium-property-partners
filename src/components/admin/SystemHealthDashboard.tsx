@@ -379,6 +379,7 @@ export default function SystemHealthDashboard() {
               <SelectContent>
                 <SelectItem value="all">Toate statusurile</SelectItem>
                 <SelectItem value="passed">Passed</SelectItem>
+                <SelectItem value="recovered">Recovered (auto-heal)</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
                 <SelectItem value="critical">Critical</SelectItem>
               </SelectContent>
