@@ -95,7 +95,7 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
     m.initiated++;
     const dur = Number(r.call_duration_seconds || 0);
     if (dur > 5) m.connected++;
-    if (dur > 30 && !r.is_voicemail) m.realConversations++;
+    if (dur > realThreshold && !r.is_voicemail) m.realConversations++;
     if (r.is_voicemail) m.voicemails++;
     if (r.status === "busy") m.busy++;
     if (r.status === "no-answer") m.noAnswer++;
