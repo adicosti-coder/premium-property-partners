@@ -10,17 +10,26 @@ type Period = "today" | "week" | "month";
 interface Metrics {
   initiated: number;
   connected: number;        // call_duration_seconds > 5
-  realConversations: number; // > 30s
+  realConversations: number; // > 30s AND not voicemail
   withSummary: number;
   followupSent: number;
   positiveSentiment: number;
   appointments: number;
   avgDurationSec: number;
+  voicemails: number;
+  invalidNumbers: number;
+}
+
+interface RoiAlert {
+  triggered: boolean;
+  realRatePct: number;       // last-20 real conv rate
+  sampleSize: number;
 }
 
 const EMPTY: Metrics = {
   initiated: 0, connected: 0, realConversations: 0, withSummary: 0,
   followupSent: 0, positiveSentiment: 0, appointments: 0, avgDurationSec: 0,
+  voicemails: 0, invalidNumbers: 0,
 };
 
 const PERIOD_LABEL: Record<Period, string> = {
@@ -45,7 +54,7 @@ async function loadMetrics(p: Period): Promise<Metrics> {
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled")
+    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail")
     .gte("created_at", since);
 
   if (error || !data) return EMPTY;
@@ -58,18 +67,42 @@ async function loadMetrics(p: Period): Promise<Metrics> {
     m.initiated++;
     const dur = Number(r.call_duration_seconds || 0);
     if (dur > 5) m.connected++;
-    if (dur > 30) m.realConversations++;
+    if (dur > 30 && !r.is_voicemail) m.realConversations++;
+    if (r.is_voicemail) m.voicemails++;
     if (r.ai_summary) m.withSummary++;
     if (["positive", "very_positive"].includes(r.ai_sentiment)) m.positiveSentiment++;
     if (["auto_approved", "sent"].includes(r.followup_status)) m.followupSent++;
-    if (r.appointment_scheduled === true) m.appointments++;
+    if (r.appointment_scheduled_at) m.appointments++;
     if (dur > 0) {
       totalDur += dur;
       durCount++;
     }
   }
   m.avgDurationSec = durCount > 0 ? Math.round(totalDur / durCount) : 0;
+
+  // Count invalid numbers detected in this window
+  const { count: invalidCount } = await supabase
+    .from("prospect_listings")
+    .select("*", { count: "exact", head: true })
+    .gte("marked_invalid_at", since);
+  m.invalidNumbers = invalidCount || 0;
+
   return m;
+}
+
+async function loadRoiAlert(): Promise<RoiAlert> {
+  // Last 20 outbound calls — compute real-conversation rate
+  const { data } = await supabase
+    .from("voice_call_sessions")
+    .select("call_duration_seconds, is_voicemail")
+    .eq("direction", "outbound")
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const rows = (data || []) as any[];
+  if (rows.length < 20) return { triggered: false, realRatePct: 0, sampleSize: rows.length };
+  const real = rows.filter((r) => Number(r.call_duration_seconds || 0) > 30 && !r.is_voicemail).length;
+  const ratePct = Math.round((real / rows.length) * 100);
+  return { triggered: ratePct < 10, realRatePct: ratePct, sampleSize: rows.length };
 }
 
 function pct(n: number, d: number): string {
