@@ -29,6 +29,7 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
   const runStart = Date.now();
+  await sb.from("cron_run_log").insert({ job_name: "seo-audit-cron", status: "started" }).then(()=>{}, ()=>{});
   const runDate = new Date();
   const dateLabel = `${String(runDate.getDate()).padStart(2, "0")}-${String(runDate.getMonth() + 1).padStart(2, "0")}-${runDate.getFullYear()}`;
   const results: any[] = [];
