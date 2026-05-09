@@ -151,16 +151,20 @@ serve(async (req) => {
     // Spațiere apeluri: 2s între ele (Twilio queue + status callback need breathing room).
     const dialDelayMs = runSource === "manual" ? 1500 : 2500;
 
-    // 2. INGESTIE prospect_listings — fără limită temporală, acceptă orice telefon valid
+    // 2. INGESTIE prospect_listings — proprietari întâi, scor ≥ prag, telefon valid.
+    //    Sortare: proprietar > agentie, apoi lead_score DESC.
+    const minScore = Math.max(70, s.min_lead_score ?? 70);
     const { data: prospects } = await supabase
       .from("prospect_listings")
-      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords")
-      .gte("lead_score", s.min_lead_score ?? 50)
+      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords, marked_invalid_at")
+      .gte("lead_score", minScore)
       .in("lifecycle_status", ["new", "callback"])
       .not("phone_normalized", "is", null)
       .is("auto_call_triggered_at", null)
+      .is("marked_invalid_at", null)
+      .order("prospect_type", { ascending: true }) // 'agentie' < 'proprietar' alphabetically — invert below
       .order("lead_score", { ascending: false })
-      .limit(Math.min(100, limit * 4));
+      .limit(Math.min(200, limit * 6));
 
     // Dedupe: telefoane apelate în ultimele 7 zile (nu re-bombardăm același număr).
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
