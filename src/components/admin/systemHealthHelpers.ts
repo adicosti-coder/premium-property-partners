@@ -43,6 +43,22 @@ export type IncidentInsight = {
   hints: string[];
 };
 
+// Compute average recovery time (ms) by linking each recovered run to its parent failure.
+export function computeAvgRecoveryMs(rows: E2ERun[]): number | null {
+  const byId = new Map<string, E2ERun>();
+  for (const r of rows) byId.set(String(r.id), r);
+  const deltas: number[] = [];
+  for (const r of rows) {
+    if (!isRecovered(r) || r.parent_run_id == null) continue;
+    const parent = byId.get(String(r.parent_run_id));
+    if (!parent) continue;
+    const d = new Date(r.run_at).getTime() - new Date(parent.run_at).getTime();
+    if (Number.isFinite(d) && d > 0) deltas.push(d);
+  }
+  if (!deltas.length) return null;
+  return Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length);
+}
+
 export function analyzeIncidents(input: {
   invalidKeys: { provider: string }[];
   recentE2E: E2ERun[];
@@ -66,12 +82,20 @@ export function analyzeIncidents(input: {
   if (input.latencyAlertsCount > 0 && failedTypes.has("voice")) {
     hints.push("Latența voce ridicată corelată cu eșecuri E2E voce — verifică ElevenLabs status.");
   }
+
+  // Recovery insight: average self-heal time across recovered tests.
+  const avgRecoveryMs = computeAvgRecoveryMs(input.recentE2E);
+  if (avgRecoveryMs != null) {
+    const minutes = Math.max(1, Math.round(avgRecoveryMs / 60000));
+    hints.push(`Sistemul se recuperează în medie în ~${minutes} minute în cazul erorilor temporare API.`);
+  }
+
   if (invalidProviders.size === 0 && failedE2E.length === 0 && input.latencyAlertsCount === 0) {
     return {
       severity: "ok",
       headline: "Toate sistemele funcționează normal",
       impact: "Fără impact pentru clienți. Cron-uri, chei API și Voice Agent operaționale.",
-      hints: [],
+      hints,
     };
   }
   const isCritical =
@@ -91,6 +115,28 @@ export function analyzeIncidents(input: {
     : "Fără impact direct identificat — monitorizare recomandată.";
 
   return { severity: isCritical ? "critical" : "warning", headline, impact, hints };
+}
+
+// Build daily recovery trend for the last `days` days.
+// Each bucket = day, with `first_pass` (passed at first try) vs `recovered` (passed after retry).
+export function buildRecoveryTrend(rows: E2ERun[], days = 30): { day: string; first_pass: number; recovered: number; failed: number }[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const buckets = new Map<string, { day: string; first_pass: number; recovered: number; failed: number }>();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 86400000);
+    const key = d.toISOString().slice(0, 10);
+    buckets.set(key, { day: key.slice(5), first_pass: 0, recovered: 0, failed: 0 });
+  }
+  for (const r of rows) {
+    const key = new Date(r.run_at).toISOString().slice(0, 10);
+    const b = buckets.get(key);
+    if (!b) continue;
+    if (isRecovered(r)) b.recovered++;
+    else if (r.status === "passed") b.first_pass++;
+    else b.failed++;
+  }
+  return Array.from(buckets.values());
 }
 
 export type E2EFilter = { status: string; test_type: string; query: string };
