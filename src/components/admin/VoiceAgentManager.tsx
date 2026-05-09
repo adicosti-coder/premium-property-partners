@@ -802,6 +802,11 @@ export default function VoiceAgentManager() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{c.to_number}</span>
                         <Badge className={statusColor(c.status)}>{c.status}</Badge>
+                        {c.is_recovered && (
+                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs" title="Lead recuperat: prospectul fusese ocupat/nu răspundea, dar acest call back a generat o programare.">
+                            <Star className="h-3 w-3 mr-1 fill-current" /> RECUPERAT
+                          </Badge>
+                        )}
                         {c.is_voicemail && (
                           <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 dark:text-amber-300" title="Apel preluat de mesageria vocală">
                             <Voicemail className="h-3 w-3 mr-1" /> Robot
