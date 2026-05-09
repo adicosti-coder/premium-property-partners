@@ -1,0 +1,1 @@
+DELETE FROM public.e2e_test_runs WHERE error_message = 'Invalid token' AND run_at < '2026-05-09 06:00:00+00';
