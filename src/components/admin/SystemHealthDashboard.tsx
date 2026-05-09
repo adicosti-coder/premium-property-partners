@@ -102,6 +102,12 @@ export default function SystemHealthDashboard() {
 
   const saveThresholds = async () => {
     if (!thresholds) return;
+    const emailErr = validateEmails(thresholds.daily_report_email || "");
+    setEmailError(emailErr);
+    if (emailErr) {
+      toast.error(emailErr);
+      return;
+    }
     const { error } = await supabase.from("system_health_thresholds").update(thresholds).eq("id", true);
     if (error) toast.error("Eroare la salvare: " + error.message);
     else toast.success("Praguri salvate");
