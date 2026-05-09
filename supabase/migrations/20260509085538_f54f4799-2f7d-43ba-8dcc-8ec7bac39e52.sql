@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.cleanup_old_e2e_runs() FROM public, anon, authenticated;

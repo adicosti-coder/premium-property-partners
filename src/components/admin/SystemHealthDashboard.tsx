@@ -7,13 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, AlertTriangle, CheckCircle2, XCircle, Activity, Mail, KeyRound, ShieldAlert, RefreshCw, Download, ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2, XCircle, Activity, Mail, KeyRound, ShieldAlert, RefreshCw, Download, ChevronDown, ChevronRight, RotateCcw, Search, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
+import { buildE2ECsv, analyzeIncidents, filterE2E, type E2ERun } from "./systemHealthHelpers";
 
 type Threshold = {
   voice_latency_ms_threshold: number;
@@ -44,6 +46,9 @@ export default function SystemHealthDashboard() {
   const [recentLatencyAlerts, setRecentLatencyAlerts] = useState<any[]>([]);
   const [detailRow, setDetailRow] = useState<any | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterQuery, setFilterQuery] = useState<string>("");
 
   const validateEmails = (raw: string): string | null => {
     const list = raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
@@ -64,7 +69,7 @@ export default function SystemHealthDashboard() {
       supabase.from("cron_run_log").select("job_name,status").gte("started_at", since).limit(2000),
       supabase.from("external_keys_health").select("provider,is_valid,checked_at,message").gte("checked_at", since).order("checked_at", { ascending: false }),
       supabase.from("voice_call_sessions").select("started_at,tts_latency_ms_avg").not("tts_latency_ms_avg", "is", null).gte("started_at", since24).order("started_at", { ascending: true }).limit(200),
-      supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(20),
+      supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(500),
       supabase.from("voice_latency_alerts").select("*").is("acknowledged_at", null).order("triggered_at", { ascending: false }).limit(5),
     ]);
 
@@ -136,20 +141,13 @@ export default function SystemHealthDashboard() {
     // RLS-protected: only admins receive rows
     const { data, error } = await supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(1000);
     if (error) { toast.error("Acces refuzat sau eroare: " + error.message); return; }
-    const rows = data || [];
+    const rows = (data || []) as E2ERun[];
     if (rows.length === 0) { toast.warning("Nicio rulare de exportat."); return; }
     let blob: Blob;
     if (format === "json") {
       blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
     } else {
-      const cols = ["id", "test_type", "status", "duration_ms", "run_at", "retry_count", "parent_run_id", "error_message", "details"];
-      const escape = (v: any) => {
-        const s = typeof v === "object" && v !== null ? JSON.stringify(v) : String(v ?? "");
-        return `"${s.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
-      };
-      const csv = [cols.join(",")].concat(
-        rows.map((r: any) => cols.map((c) => escape(r[c])).join(","))
-      ).join("\n");
+      const csv = buildE2ECsv(rows);
       blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     }
     const url = URL.createObjectURL(blob);
@@ -165,6 +163,16 @@ export default function SystemHealthDashboard() {
   const invalidKeys = keyHealth.filter((k) => !k.is_valid);
   const failedRecent = recentE2E.find((r) => r.status !== "passed");
   const allOk = invalidKeys.length === 0 && !failedRecent && recentLatencyAlerts.length === 0;
+
+  const incident = analyzeIncidents({
+    invalidKeys: invalidKeys.map((k) => ({ provider: k.provider })),
+    recentE2E: recentE2E as E2ERun[],
+    latencyAlertsCount: recentLatencyAlerts.length,
+  });
+
+  const filteredE2E = filterE2E(recentE2E as E2ERun[], {
+    status: filterStatus, test_type: filterType, query: filterQuery,
+  });
 
   // Pie data: total cron success vs failed last 7d
   const totalSuccess = cronAgg.reduce((s, x) => s + x.success, 0);
@@ -202,7 +210,28 @@ export default function SystemHealthDashboard() {
         </CardContent>
       </Card>
 
-      {/* Charts row */}
+      {/* Incident summary (real-time correlation) */}
+      <Card className={
+        incident.severity === "critical" ? "border-red-500/40 bg-red-50/50 dark:bg-red-950/20"
+        : incident.severity === "warning" ? "border-amber-500/40 bg-amber-50/50 dark:bg-amber-950/20"
+        : "border-emerald-500/30"
+      }>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Sparkles className="h-4 w-4" /> Rezumat incident (analiză automată)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <div className="font-semibold">{incident.headline}</div>
+          <p className="text-muted-foreground">{incident.impact}</p>
+          {incident.hints.length > 0 && (
+            <ul className="list-disc pl-5 space-y-1">
+              {incident.hints.map((h, i) => <li key={i}>{h}</li>)}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader><CardTitle className="text-base">Status Cron-uri (7 zile)</CardTitle></CardHeader>
@@ -305,9 +334,42 @@ export default function SystemHealthDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 max-h-72 overflow-y-auto">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                placeholder="Caută în mesaj eroare / details…"
+                className="pl-7 h-8 text-xs"
+              />
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate statusurile</SelectItem>
+                <SelectItem value="passed">Passed</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Tip" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate tipurile</SelectItem>
+                <SelectItem value="voice">Voice</SelectItem>
+                <SelectItem value="seo">SEO</SelectItem>
+                <SelectItem value="keys">Keys</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">{filteredE2E.length} / {recentE2E.length}</span>
+          </div>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
             {recentE2E.length === 0 && <div className="text-sm text-muted-foreground">Nicio rulare încă.</div>}
-            {recentE2E.map((r) => {
+            {recentE2E.length > 0 && filteredE2E.length === 0 && (
+              <div className="text-sm text-muted-foreground">Niciun rezultat pentru filtrele curente.</div>
+            )}
+            {filteredE2E.map((r: any) => {
               const failed = r.status !== "passed";
               return (
                 <button
@@ -320,6 +382,7 @@ export default function SystemHealthDashboard() {
                     <span className="font-medium uppercase">{r.test_type}</span>
                     <span className="text-muted-foreground ml-2">{new Date(r.run_at).toLocaleString("ro-RO")}</span>
                     {r.retry_count > 0 && <Badge variant="outline" className="ml-2 text-[10px]">retry #{r.retry_count}</Badge>}
+                    {r.recovery_notified_at && <Badge className="ml-2 text-[10px] bg-emerald-500/15 text-emerald-700 border-emerald-500/30">recovered</Badge>}
                     {r.error_message && <div className="text-xs text-red-600 mt-1 truncate">{r.error_message.slice(0, 120)}</div>}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
