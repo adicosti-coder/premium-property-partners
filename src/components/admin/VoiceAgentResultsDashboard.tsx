@@ -141,6 +141,7 @@ const VoiceAgentResultsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [autopilotOn, setAutopilotOn] = useState<boolean | null>(null);
   const [pausedReason, setPausedReason] = useState<string | null>(null);
+  const [roiAlert, setRoiAlert] = useState<RoiAlert>({ triggered: false, realRatePct: 0, sampleSize: 0 });
 
   useEffect(() => {
     let mounted = true;
@@ -149,13 +150,15 @@ const VoiceAgentResultsDashboard = () => {
       loadMetrics(period),
       supabase.from("voice_agent_settings").select("autopilot_enabled").eq("id", 1).maybeSingle(),
       supabase.from("voice_agent_safety_state").select("calls_paused, paused_reason").eq("id", true).maybeSingle(),
-    ]).then(([m, settings, safety]) => {
+      loadRoiAlert(),
+    ]).then(([m, settings, safety, alert]) => {
       if (!mounted) return;
       setMetrics(m);
       setAutopilotOn(settings.data?.autopilot_enabled ?? null);
       setPausedReason(
         safety.data?.calls_paused ? (safety.data?.paused_reason || "Pauză activă") : null
       );
+      setRoiAlert(alert);
       setLoading(false);
     });
     return () => { mounted = false; };
