@@ -367,6 +367,53 @@ const VoiceAgentResultsDashboard = () => {
               </div>
             </div>
 
+            {/* Heatmap Ferestre Orare — Rata de răspuns pe interval orar */}
+            {(() => {
+              const data = buckets.map((b) => ({
+                window: b.window,
+                rate: b.initiated > 0 ? Math.round((b.real / b.initiated) * 100) : 0,
+                real: b.real,
+                initiated: b.initiated,
+              }));
+              const hasData = buckets.some((b) => b.initiated > 0);
+              if (!hasData) return null;
+              return (
+                <div>
+                  <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    Heatmap răspuns pe ferestre orare (Timișoara)
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                    {buckets.map((b) => {
+                      const rate = b.initiated > 0 ? Math.round((b.real / b.initiated) * 100) : 0;
+                      const intensity = Math.min(rate / 50, 1); // 50% = full
+                      return (
+                        <div
+                          key={b.window}
+                          className="rounded-md border p-2.5 transition-colors"
+                          style={{ backgroundColor: b.initiated > 0 ? `hsl(142 71% 45% / ${0.08 + intensity * 0.35})` : undefined }}
+                        >
+                          <div className="text-[11px] text-muted-foreground">{b.window}</div>
+                          <div className="text-xl font-bold">{rate}%</div>
+                          <div className="text-[10px] text-muted-foreground">{b.real}/{b.initiated} reale</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="h-[180px] rounded-md border bg-card p-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="window" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} />
+                        <Tooltip formatter={(v: any, n: any, p: any) => [`${v}% (${p.payload.real}/${p.payload.initiated})`, "Rată răspuns"]} />
+                        <Bar dataKey="rate" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
             {/* Pie Chart — Distribuția pierderilor */}
             {(() => {
               const lossData = [
