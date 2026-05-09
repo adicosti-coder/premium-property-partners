@@ -204,7 +204,7 @@ const VoiceAgentResultsDashboard = () => {
       );
       setRoiAlert(alert);
       setLoading(false);
-    });
+    })();
     return () => { mounted = false; };
   }, [period]);
 
