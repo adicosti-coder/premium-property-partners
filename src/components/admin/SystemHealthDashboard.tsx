@@ -183,7 +183,7 @@ export default function SystemHealthDashboard() {
     { name: "Failed", value: totalFailed, color: STATUS_COLORS.failed },
   ];
 
-  return (
+  const recoveryTrend = buildRecoveryTrend(recentE2E as E2ERun[], 30);
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
