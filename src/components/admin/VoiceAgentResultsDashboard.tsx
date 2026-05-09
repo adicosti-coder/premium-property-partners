@@ -4,10 +4,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Phone, PhoneCall, MessageSquare, Calendar, TrendingUp, AlertCircle, Loader2, PieChart as PieChartIcon, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Button } from "@/components/ui/button";
 
 type Period = "today" | "week" | "month";
+type HourWindow = "Dimineață" | "Prânz" | "Seară" | "Off-hours";
+
+function hourWindow(d: Date): HourWindow {
+  const h = d.getHours();
+  if (h >= 8 && h < 12) return "Dimineață";
+  if (h >= 12 && h < 17) return "Prânz";
+  if (h >= 17 && h < 21) return "Seară";
+  return "Off-hours";
+}
+
+interface HourBucket {
+  window: HourWindow;
+  initiated: number;
+  real: number;
+  voicemails: number;
+  busy: number;
+  noAnswer: number;
+}
 
 interface Metrics {
   initiated: number;
