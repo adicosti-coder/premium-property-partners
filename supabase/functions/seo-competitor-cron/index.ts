@@ -76,9 +76,17 @@ serve(async (req) => {
       }
     }
 
+    await supa.from("cron_run_log").insert({
+      job_name: "seo-competitor-cron", status: "success",
+      duration_ms: Date.now() - t0, details: { processed: results.length },
+    }).then(()=>{}, ()=>{});
     return json({ processed: results.length, results });
   } catch (e: any) {
     console.error("[seo-competitor-cron]", e);
+    await supa.from("cron_run_log").insert({
+      job_name: "seo-competitor-cron", status: "failed",
+      duration_ms: Date.now() - t0, error_message: e?.message ?? String(e),
+    }).then(()=>{}, ()=>{});
     return json({ error: e.message }, 500);
   }
 });
