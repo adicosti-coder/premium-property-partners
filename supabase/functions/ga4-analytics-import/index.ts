@@ -78,6 +78,10 @@ const normalizePath = (raw: string): string => {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const _t0 = Date.now();
+  const _logSb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  await _logSb.from("cron_run_log").insert({ job_name: "ga4-analytics-import", status: "started" }).then(()=>{}, ()=>{});
+
   try {
     const SA_RAW = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
     const PROPERTY_ID = Deno.env.get("GA4_PROPERTY_ID");
