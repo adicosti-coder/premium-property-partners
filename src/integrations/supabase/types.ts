@@ -995,6 +995,66 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_job_registry: {
+        Row: {
+          description: string | null
+          expected_interval_minutes: number
+          grace_minutes: number
+          is_active: boolean
+          job_name: string
+          last_alert_at: string | null
+        }
+        Insert: {
+          description?: string | null
+          expected_interval_minutes: number
+          grace_minutes?: number
+          is_active?: boolean
+          job_name: string
+          last_alert_at?: string | null
+        }
+        Update: {
+          description?: string | null
+          expected_interval_minutes?: number
+          grace_minutes?: number
+          is_active?: boolean
+          job_name?: string
+          last_alert_at?: string | null
+        }
+        Relationships: []
+      }
+      cron_run_log: {
+        Row: {
+          details: Json | null
+          duration_ms: number | null
+          error_message: string | null
+          finished_at: string | null
+          id: number
+          job_name: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          details?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: number
+          job_name: string
+          started_at?: string
+          status: string
+        }
+        Update: {
+          details?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: number
+          job_name?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       cta_analytics: {
         Row: {
           created_at: string
@@ -1502,6 +1562,36 @@ export type Database = {
           session_id?: string | null
           source?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      external_keys_health: {
+        Row: {
+          checked_at: string
+          details: Json | null
+          id: number
+          is_valid: boolean
+          message: string | null
+          provider: string
+          status_code: number | null
+        }
+        Insert: {
+          checked_at?: string
+          details?: Json | null
+          id?: number
+          is_valid: boolean
+          message?: string | null
+          provider: string
+          status_code?: number | null
+        }
+        Update: {
+          checked_at?: string
+          details?: Json | null
+          id?: number
+          is_valid?: boolean
+          message?: string | null
+          provider?: string
+          status_code?: number | null
         }
         Relationships: []
       }
@@ -6150,6 +6240,39 @@ export type Database = {
           },
         ]
       }
+      voice_latency_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          avg_latency_ms: number
+          call_session_ids: string[] | null
+          consecutive_calls: number
+          details: Json | null
+          id: number
+          triggered_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          avg_latency_ms: number
+          call_session_ids?: string[] | null
+          consecutive_calls: number
+          details?: Json | null
+          id?: number
+          triggered_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          avg_latency_ms?: number
+          call_session_ids?: string[] | null
+          consecutive_calls?: number
+          details?: Json | null
+          id?: number
+          triggered_at?: string
+        }
+        Relationships: []
+      }
       voice_lead_cluster_assignments: {
         Row: {
           cluster_id: string
@@ -6559,6 +6682,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_cron_run: {
+        Args: {
+          p_details?: Json
+          p_duration_ms?: number
+          p_error?: string
+          p_job: string
+          p_status: string
+        }
+        Returns: number
       }
       move_to_dlq: {
         Args: {

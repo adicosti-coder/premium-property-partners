@@ -29,6 +29,7 @@ serve(async (req) => {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
 
   const runStart = Date.now();
+  await sb.from("cron_run_log").insert({ job_name: "seo-audit-cron", status: "started" }).then(()=>{}, ()=>{});
   const runDate = new Date();
   const dateLabel = `${String(runDate.getDate()).padStart(2, "0")}-${String(runDate.getMonth() + 1).padStart(2, "0")}-${runDate.getFullYear()}`;
   const results: any[] = [];
@@ -139,6 +140,10 @@ serve(async (req) => {
 
   const duration = Date.now() - runStart;
   console.log(`[seo-cron] Completed in ${duration}ms — ${results.length} URLs, ${alerts.length} alerts`);
+  await sb.from("cron_run_log").insert({
+    job_name: "seo-audit-cron", status: "success", duration_ms: duration,
+    details: { urls: results.length, alerts: alerts.length },
+  }).then(()=>{}, ()=>{});
 
   return new Response(
     JSON.stringify({ success: true, duration_ms: duration, results, alerts_count: alerts.length, date: dateLabel }),
