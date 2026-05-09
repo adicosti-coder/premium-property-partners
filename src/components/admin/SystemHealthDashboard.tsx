@@ -384,11 +384,19 @@ export default function SystemHealthDashboard() {
             <Label>Email destinatari raport</Label>
             <Input type="text" value={thresholds.daily_report_email}
               placeholder="email1@domain.com, email2@domain.com"
-              onChange={(e) => setThresholds({ ...thresholds, daily_report_email: e.target.value })} />
-            <p className="text-xs text-muted-foreground mt-1">Mai multe adrese separate prin virgulă.</p>
+              aria-invalid={!!emailError}
+              className={emailError ? "border-red-500 focus-visible:ring-red-500" : ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setThresholds({ ...thresholds, daily_report_email: v });
+                setEmailError(validateEmails(v));
+              }} />
+            <p className={`text-xs mt-1 ${emailError ? "text-red-600" : "text-muted-foreground"}`}>
+              {emailError || "Mai multe adrese separate prin virgulă."}
+            </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={saveThresholds}>Salvează</Button>
+            <Button onClick={saveThresholds} disabled={!!emailError}>Salvează</Button>
             <Button variant="outline" onClick={() => runFn("system-health-report", "Raport email")} disabled={running === "system-health-report"}>
               {running === "system-health-report" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Mail className="h-3 w-3 mr-1" />}
               Trimite raport acum
@@ -396,6 +404,39 @@ export default function SystemHealthDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!detailRow} onOpenChange={(o) => !o && setDetailRow(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-red-600" />
+              Detalii eșec test E2E — {detailRow?.test_type?.toUpperCase()}
+            </DialogTitle>
+          </DialogHeader>
+          {detailRow && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="text-muted-foreground">Status:</span> <Badge variant={detailRow.status === "critical" ? "destructive" : "outline"}>{detailRow.status}</Badge></div>
+                <div><span className="text-muted-foreground">Durată:</span> {detailRow.duration_ms}ms</div>
+                <div><span className="text-muted-foreground">Rulat la:</span> {new Date(detailRow.run_at).toLocaleString("ro-RO")}</div>
+                <div><span className="text-muted-foreground">Retry:</span> #{detailRow.retry_count ?? 0}</div>
+              </div>
+              <div>
+                <Label className="text-xs">Error stack / message</Label>
+                <pre className="mt-1 p-3 rounded-md bg-muted text-xs whitespace-pre-wrap break-words max-h-48 overflow-y-auto">
+                  {detailRow.error_message || "(fără mesaj)"}
+                </pre>
+              </div>
+              <div>
+                <Label className="text-xs">Răspuns brut (details)</Label>
+                <pre className="mt-1 p-3 rounded-md bg-muted text-xs whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
+                  {JSON.stringify(detailRow.details ?? {}, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
