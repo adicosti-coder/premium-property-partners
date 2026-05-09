@@ -294,7 +294,34 @@ export default function SystemHealthDashboard() {
         </CardContent>
       </Card>
 
-      {/* Keys health */}
+      {/* Recovery trend (auto-heal vs first-pass over last 30 days) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <RotateCcw className="h-4 w-4" /> Tendință recuperare E2E (30 zile)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={recoveryTrend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="first_pass" name="Trecut din prima" stackId="t" fill={STATUS_COLORS.success} />
+                <Bar dataKey="recovered" name="Auto-Recovered" stackId="t" fill="hsl(160 70% 45%)" />
+                <Bar dataKey="failed" name="Eșuat" stackId="t" fill={STATUS_COLORS.failed} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Erorile temporare sunt remediate automat la retry-ul de 10 minute. Verificați dacă proporția "Auto-Recovered" crește pentru a identifica probleme intermitente.
+          </p>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><KeyRound className="h-4 w-4" /> Sănătate chei API</CardTitle></CardHeader>
         <CardContent className="space-y-2">
