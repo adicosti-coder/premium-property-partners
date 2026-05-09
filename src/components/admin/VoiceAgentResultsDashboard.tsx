@@ -386,21 +386,33 @@ const VoiceAgentResultsDashboard = () => {
                   <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
                     <TrendingUp className="w-3.5 h-3.5" />
                     Heatmap răspuns pe ferestre orare (Timișoara)
+                    <span className="text-[10px] text-muted-foreground/70 normal-case font-normal">— click pe card pentru a filtra apelurile</span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                     {buckets.map((b) => {
                       const rate = b.initiated > 0 ? Math.round((b.real / b.initiated) * 100) : 0;
                       const intensity = Math.min(rate / 50, 1); // 50% = full
+                      const disabled = b.initiated === 0;
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={b.window}
-                          className="rounded-md border p-2.5 transition-colors"
+                          disabled={disabled}
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent("voice-agent:filter-window", { detail: { window: b.window } }));
+                          }}
+                          className={cn(
+                            "rounded-md border p-2.5 transition-all text-left",
+                            !disabled && "hover:ring-2 hover:ring-primary/40 hover:shadow-sm cursor-pointer",
+                            disabled && "opacity-50 cursor-not-allowed"
+                          )}
                           style={{ backgroundColor: b.initiated > 0 ? `hsl(142 71% 45% / ${0.08 + intensity * 0.35})` : undefined }}
+                          title={disabled ? "Nu există apeluri în această fereastră" : `Filtrează apelurile pentru ${b.window}`}
                         >
                           <div className="text-[11px] text-muted-foreground">{b.window}</div>
                           <div className="text-xl font-bold">{rate}%</div>
                           <div className="text-[10px] text-muted-foreground">{b.real}/{b.initiated} reale</div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
