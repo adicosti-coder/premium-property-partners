@@ -57,7 +57,7 @@ async function loadMetrics(p: Period): Promise<Metrics> {
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail")
+    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason")
     .gte("created_at", since);
 
   if (error || !data) return EMPTY;
@@ -72,6 +72,8 @@ async function loadMetrics(p: Period): Promise<Metrics> {
     if (dur > 5) m.connected++;
     if (dur > 30 && !r.is_voicemail) m.realConversations++;
     if (r.is_voicemail) m.voicemails++;
+    if (r.status === "busy") m.busy++;
+    if (r.status === "no-answer") m.noAnswer++;
     if (r.ai_summary) m.withSummary++;
     if (["positive", "very_positive"].includes(r.ai_sentiment)) m.positiveSentiment++;
     if (["auto_approved", "sent"].includes(r.followup_status)) m.followupSent++;
@@ -83,7 +85,6 @@ async function loadMetrics(p: Period): Promise<Metrics> {
   }
   m.avgDurationSec = durCount > 0 ? Math.round(totalDur / durCount) : 0;
 
-  // Count invalid numbers detected in this window
   const { count: invalidCount } = await supabase
     .from("prospect_listings")
     .select("*", { count: "exact", head: true })
