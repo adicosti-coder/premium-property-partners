@@ -1024,10 +1024,47 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
     return { text: a.status || "—", tone: "bg-muted text-foreground", icon: <Phone className="w-3 h-3" /> };
   };
 
+  const exportTimelineCsv = () => {
+    const rows: string[][] = [
+      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Motiv eșec Twilio"],
+    ];
+    attempts.forEach((a, i) => {
+      const d = new Date(a.created_at);
+      rows.push([
+        String(i + 1),
+        format(d, "dd.MM.yyyy", { locale: ro }),
+        format(d, "HH:mm", { locale: ro }),
+        a.status || "",
+        String(a.call_duration_seconds || 0),
+        a.is_voicemail ? "Da" : "Nu",
+        a.appointment_scheduled_at ? format(new Date(a.appointment_scheduled_at), "dd.MM.yyyy HH:mm", { locale: ro }) : "—",
+        a.ai_outcome || "—",
+        a.twilio_failure_reason || "—",
+      ]);
+    });
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `istoric-apeluri-${prospectId.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="rounded-md border bg-muted/20 p-3 mb-2">
-      <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
-        <Clock className="w-3.5 h-3.5" /> Istoric apeluri ({attempts.length})
+      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+        <div className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5" /> Istoric apeluri ({attempts.length})
+        </div>
+        <Button
+          size="sm" variant="outline" className="h-7 text-xs"
+          onClick={exportTimelineCsv}
+          title="Descarcă istoricul complet — util pentru a arăta proprietarului efortul depus"
+        >
+          <Download className="w-3 h-3 mr-1.5" /> Export CSV
+        </Button>
       </div>
       <ol className="relative border-l-2 border-muted-foreground/20 ml-2 space-y-3">
         {attempts.map((a, i) => {
