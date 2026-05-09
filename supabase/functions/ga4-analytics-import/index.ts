@@ -209,6 +209,11 @@ Deno.serve(async (req) => {
 
     if (error) return json(500, { error: `DB upsert: ${error.message}` });
 
+    await _logSb.from("cron_run_log").insert({
+      job_name: "ga4-analytics-import", status: "success",
+      duration_ms: Date.now() - _t0, details: { imported: rows.length, period_start: periodStr },
+    }).then(()=>{}, ()=>{});
+
     return json(200, {
       ok: true,
       imported: rows.length,
@@ -218,6 +223,10 @@ Deno.serve(async (req) => {
     });
   } catch (e: any) {
     console.error("ga4-analytics-import error:", e);
+    await _logSb.from("cron_run_log").insert({
+      job_name: "ga4-analytics-import", status: "failed",
+      duration_ms: Date.now() - _t0, error_message: e?.message || String(e),
+    }).then(()=>{}, ()=>{});
     return json(500, { error: e?.message || String(e) });
   }
 });
