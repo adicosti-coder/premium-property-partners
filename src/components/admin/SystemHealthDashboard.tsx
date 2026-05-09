@@ -263,12 +263,20 @@ export default function SystemHealthDashboard() {
       {/* Recent E2E */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between">
+          <CardTitle className="text-base flex items-center justify-between flex-wrap gap-2">
             <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Ultimele teste E2E</span>
-            <Button size="sm" variant="outline" onClick={() => runFn("system-e2e-tests", "Teste E2E")} disabled={running === "system-e2e-tests"}>
-              {running === "system-e2e-tests" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
-              Rulează acum
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={() => exportE2E("json")}>
+                <Download className="h-3 w-3 mr-1" /> JSON
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => exportE2E("csv")}>
+                <Download className="h-3 w-3 mr-1" /> CSV
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => runFn("system-e2e-tests", "Teste E2E")} disabled={running === "system-e2e-tests"}>
+                {running === "system-e2e-tests" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
+                Rulează acum
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
