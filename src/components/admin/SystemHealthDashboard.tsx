@@ -141,20 +141,13 @@ export default function SystemHealthDashboard() {
     // RLS-protected: only admins receive rows
     const { data, error } = await supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(1000);
     if (error) { toast.error("Acces refuzat sau eroare: " + error.message); return; }
-    const rows = data || [];
+    const rows = (data || []) as E2ERun[];
     if (rows.length === 0) { toast.warning("Nicio rulare de exportat."); return; }
     let blob: Blob;
     if (format === "json") {
       blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
     } else {
-      const cols = ["id", "test_type", "status", "duration_ms", "run_at", "retry_count", "parent_run_id", "error_message", "details"];
-      const escape = (v: any) => {
-        const s = typeof v === "object" && v !== null ? JSON.stringify(v) : String(v ?? "");
-        return `"${s.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
-      };
-      const csv = [cols.join(",")].concat(
-        rows.map((r: any) => cols.map((c) => escape(r[c])).join(","))
-      ).join("\n");
+      const csv = buildE2ECsv(rows);
       blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     }
     const url = URL.createObjectURL(blob);
