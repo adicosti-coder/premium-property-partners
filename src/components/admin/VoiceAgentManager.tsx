@@ -822,16 +822,40 @@ export default function VoiceAgentManager() {
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Cost total</div><div className="text-2xl font-bold">${stats.totalCost.toFixed(2)}</div></CardContent></Card>
       </div>
 
-      <Card>
+      <Card id="voice-agent-calls-history">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Istoric apeluri</CardTitle>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Istoric apeluri</CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Fereastră orară:</span>
+              <Select value={windowFilter} onValueChange={(v) => setWindowFilter(v as any)}>
+                <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate orele</SelectItem>
+                  <SelectItem value="Dimineață">Dimineață (8–12)</SelectItem>
+                  <SelectItem value="Prânz">Prânz (12–17)</SelectItem>
+                  <SelectItem value="Seară">⭐ Seară (17–21)</SelectItem>
+                  <SelectItem value="Off-hours">Off-hours</SelectItem>
+                </SelectContent>
+              </Select>
+              {windowFilter !== "all" && (
+                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setWindowFilter("all")}>Resetează</Button>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
-          ) : calls.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Niciun apel încă. Inițiază primul de mai sus.</p>
-          ) : (
+          {(() => {
+            const filteredCalls = windowFilter === "all"
+              ? calls
+              : calls.filter((c) => hourWindow(new Date(c.created_at)) === windowFilter);
+            return loading ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+            ) : filteredCalls.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                {windowFilter === "all" ? "Niciun apel încă. Inițiază primul de mai sus." : `Niciun apel în fereastra ${windowFilter}.`}
+              </p>
+            ) : (
             <ScrollArea className="h-[500px]">
               <div className="space-y-2">
                 {calls.map((c) => (
