@@ -174,6 +174,8 @@ const MetricCard = ({ icon, label, value, subtitle, tone = "default" }: MetricCa
 const VoiceAgentResultsDashboard = () => {
   const [period, setPeriod] = useState<Period>("week");
   const [metrics, setMetrics] = useState<Metrics>(EMPTY);
+  const [buckets, setBuckets] = useState<HourBucket[]>([]);
+  const [rawRows, setRawRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [autopilotOn, setAutopilotOn] = useState<boolean | null>(null);
   const [pausedReason, setPausedReason] = useState<string | null>(null);
@@ -187,9 +189,11 @@ const VoiceAgentResultsDashboard = () => {
       supabase.from("voice_agent_settings").select("autopilot_enabled").eq("id", 1).maybeSingle(),
       supabase.from("voice_agent_safety_state").select("calls_paused, paused_reason").eq("id", true).maybeSingle(),
       loadRoiAlert(),
-    ]).then(([m, settings, safety, alert]) => {
+    ]).then(([res, settings, safety, alert]) => {
       if (!mounted) return;
-      setMetrics(m);
+      setMetrics(res.metrics);
+      setBuckets(res.buckets);
+      setRawRows(res.rawRows);
       setAutopilotOn(settings.data?.autopilot_enabled ?? null);
       setPausedReason(
         safety.data?.calls_paused ? (safety.data?.paused_reason || "Pauză activă") : null
