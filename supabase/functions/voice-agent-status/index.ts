@@ -132,6 +132,20 @@ serve(async (req) => {
       await supabase.from("voice_call_sessions").update(updates).eq("id", sessionId);
     }
 
+    // ── Cleanup prospects: count consecutive failures, auto-mark invalid ──
+    if (session.prospect_listing_id && (finalStatuses.includes(derivedStatus) || isAmdCallback)) {
+      try {
+        await supabase.rpc("process_voice_call_result", {
+          p_prospect_id: session.prospect_listing_id,
+          p_status: derivedStatus,
+          p_twilio_reason: failureReason,
+          p_is_voicemail: isVoicemail,
+        });
+      } catch (e) {
+        console.warn("[voice-status] process_voice_call_result failed:", (e as Error).message);
+      }
+    }
+
     const transcript = Array.isArray(session.transcript) ? session.transcript : [];
     const assistantText = transcript
       .filter((t: any) => t.role === "assistant")
