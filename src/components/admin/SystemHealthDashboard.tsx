@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, AlertTriangle, CheckCircle2, XCircle, Activity, Mail, KeyRound, ShieldAlert, RefreshCw, Download } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2, XCircle, Activity, Mail, KeyRound, ShieldAlert, RefreshCw, Download, ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
@@ -41,6 +42,17 @@ export default function SystemHealthDashboard() {
   const [latencyTrend, setLatencyTrend] = useState<any[]>([]);
   const [recentE2E, setRecentE2E] = useState<any[]>([]);
   const [recentLatencyAlerts, setRecentLatencyAlerts] = useState<any[]>([]);
+  const [detailRow, setDetailRow] = useState<any | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  const validateEmails = (raw: string): string | null => {
+    const list = raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+    if (list.length === 0) return "Adaugă cel puțin un email.";
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const bad = list.filter((e) => !re.test(e));
+    if (bad.length) return `Format invalid: ${bad.join(", ")}`;
+    return null;
+  };
 
   const load = async () => {
     setLoading(true);
@@ -90,6 +102,12 @@ export default function SystemHealthDashboard() {
 
   const saveThresholds = async () => {
     if (!thresholds) return;
+    const emailErr = validateEmails(thresholds.daily_report_email || "");
+    setEmailError(emailErr);
+    if (emailErr) {
+      toast.error(emailErr);
+      return;
+    }
     const { error } = await supabase.from("system_health_thresholds").update(thresholds).eq("id", true);
     if (error) toast.error("Eroare la salvare: " + error.message);
     else toast.success("Praguri salvate");
@@ -115,17 +133,24 @@ export default function SystemHealthDashboard() {
   };
 
   const exportE2E = async (format: "json" | "csv") => {
-    const { data } = await supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(1000);
+    // RLS-protected: only admins receive rows
+    const { data, error } = await supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(1000);
+    if (error) { toast.error("Acces refuzat sau eroare: " + error.message); return; }
     const rows = data || [];
+    if (rows.length === 0) { toast.warning("Nicio rulare de exportat."); return; }
     let blob: Blob;
     if (format === "json") {
       blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
     } else {
-      const cols = ["id", "test_type", "status", "duration_ms", "run_at", "error_message"];
+      const cols = ["id", "test_type", "status", "duration_ms", "run_at", "retry_count", "parent_run_id", "error_message", "details"];
+      const escape = (v: any) => {
+        const s = typeof v === "object" && v !== null ? JSON.stringify(v) : String(v ?? "");
+        return `"${s.replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+      };
       const csv = [cols.join(",")].concat(
-        rows.map((r: any) => cols.map((c) => JSON.stringify(r[c] ?? "")).join(","))
+        rows.map((r: any) => cols.map((c) => escape(r[c])).join(","))
       ).join("\n");
-      blob = new Blob([csv], { type: "text/csv" });
+      blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -282,18 +307,30 @@ export default function SystemHealthDashboard() {
         <CardContent>
           <div className="space-y-2 max-h-72 overflow-y-auto">
             {recentE2E.length === 0 && <div className="text-sm text-muted-foreground">Nicio rulare încă.</div>}
-            {recentE2E.map((r) => (
-              <div key={r.id} className="flex items-center justify-between border rounded-md p-2 text-sm">
-                <div>
-                  <span className="font-medium uppercase">{r.test_type}</span>
-                  <span className="text-muted-foreground ml-2">{new Date(r.run_at).toLocaleString("ro-RO")}</span>
-                  {r.error_message && <div className="text-xs text-red-600 mt-1">{r.error_message.slice(0, 120)}</div>}
-                </div>
-                <Badge variant={r.status === "passed" ? "secondary" : r.status === "critical" ? "destructive" : "outline"}>
-                  {r.status === "passed" ? "✓ passed" : r.status === "critical" ? "✗ CRITICAL" : "⚠ failed"}
-                </Badge>
-              </div>
-            ))}
+            {recentE2E.map((r) => {
+              const failed = r.status !== "passed";
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => failed && setDetailRow(r)}
+                  className={`w-full text-left flex items-center justify-between border rounded-md p-2 text-sm transition ${failed ? "hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer" : "cursor-default"}`}
+                  disabled={!failed}
+                >
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium uppercase">{r.test_type}</span>
+                    <span className="text-muted-foreground ml-2">{new Date(r.run_at).toLocaleString("ro-RO")}</span>
+                    {r.retry_count > 0 && <Badge variant="outline" className="ml-2 text-[10px]">retry #{r.retry_count}</Badge>}
+                    {r.error_message && <div className="text-xs text-red-600 mt-1 truncate">{r.error_message.slice(0, 120)}</div>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {failed && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                    <Badge variant={r.status === "passed" ? "secondary" : r.status === "critical" ? "destructive" : "outline"}>
+                      {r.status === "passed" ? "✓ passed" : r.status === "critical" ? "✗ CRITICAL" : "⚠ failed"}
+                    </Badge>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -347,11 +384,19 @@ export default function SystemHealthDashboard() {
             <Label>Email destinatari raport</Label>
             <Input type="text" value={thresholds.daily_report_email}
               placeholder="email1@domain.com, email2@domain.com"
-              onChange={(e) => setThresholds({ ...thresholds, daily_report_email: e.target.value })} />
-            <p className="text-xs text-muted-foreground mt-1">Mai multe adrese separate prin virgulă.</p>
+              aria-invalid={!!emailError}
+              className={emailError ? "border-red-500 focus-visible:ring-red-500" : ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setThresholds({ ...thresholds, daily_report_email: v });
+                setEmailError(validateEmails(v));
+              }} />
+            <p className={`text-xs mt-1 ${emailError ? "text-red-600" : "text-muted-foreground"}`}>
+              {emailError || "Mai multe adrese separate prin virgulă."}
+            </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={saveThresholds}>Salvează</Button>
+            <Button onClick={saveThresholds} disabled={!!emailError}>Salvează</Button>
             <Button variant="outline" onClick={() => runFn("system-health-report", "Raport email")} disabled={running === "system-health-report"}>
               {running === "system-health-report" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Mail className="h-3 w-3 mr-1" />}
               Trimite raport acum
@@ -359,6 +404,39 @@ export default function SystemHealthDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!detailRow} onOpenChange={(o) => !o && setDetailRow(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-red-600" />
+              Detalii eșec test E2E — {detailRow?.test_type?.toUpperCase()}
+            </DialogTitle>
+          </DialogHeader>
+          {detailRow && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="text-muted-foreground">Status:</span> <Badge variant={detailRow.status === "critical" ? "destructive" : "outline"}>{detailRow.status}</Badge></div>
+                <div><span className="text-muted-foreground">Durată:</span> {detailRow.duration_ms}ms</div>
+                <div><span className="text-muted-foreground">Rulat la:</span> {new Date(detailRow.run_at).toLocaleString("ro-RO")}</div>
+                <div><span className="text-muted-foreground">Retry:</span> #{detailRow.retry_count ?? 0}</div>
+              </div>
+              <div>
+                <Label className="text-xs">Error stack / message</Label>
+                <pre className="mt-1 p-3 rounded-md bg-muted text-xs whitespace-pre-wrap break-words max-h-48 overflow-y-auto">
+                  {detailRow.error_message || "(fără mesaj)"}
+                </pre>
+              </div>
+              <div>
+                <Label className="text-xs">Răspuns brut (details)</Label>
+                <pre className="mt-1 p-3 rounded-md bg-muted text-xs whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
+                  {JSON.stringify(detailRow.details ?? {}, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

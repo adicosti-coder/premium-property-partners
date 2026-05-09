@@ -1195,6 +1195,9 @@ export type Database = {
           duration_ms: number | null
           error_message: string | null
           id: number
+          parent_run_id: number | null
+          retry_count: number
+          retry_scheduled_at: string | null
           run_at: string
           status: string
           test_type: string
@@ -1204,6 +1207,9 @@ export type Database = {
           duration_ms?: number | null
           error_message?: string | null
           id?: number
+          parent_run_id?: number | null
+          retry_count?: number
+          retry_scheduled_at?: string | null
           run_at?: string
           status: string
           test_type: string
@@ -1213,11 +1219,22 @@ export type Database = {
           duration_ms?: number | null
           error_message?: string | null
           id?: number
+          parent_run_id?: number | null
+          retry_count?: number
+          retry_scheduled_at?: string | null
           run_at?: string
           status?: string
           test_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "e2e_test_runs_parent_run_id_fkey"
+            columns: ["parent_run_id"]
+            isOneToOne: false
+            referencedRelation: "e2e_test_runs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_ab_assignments: {
         Row: {
