@@ -61,6 +61,7 @@ import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
 import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
 import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
+import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -352,6 +353,7 @@ const Admin = () => {
                   <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
                   <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
                   <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
+                  <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
                 </Tabs>
               </main>
 

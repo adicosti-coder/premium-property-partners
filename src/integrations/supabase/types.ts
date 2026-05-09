@@ -1189,6 +1189,36 @@ export type Database = {
         }
         Relationships: []
       }
+      e2e_test_runs: {
+        Row: {
+          details: Json | null
+          duration_ms: number | null
+          error_message: string | null
+          id: number
+          run_at: string
+          status: string
+          test_type: string
+        }
+        Insert: {
+          details?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: number
+          run_at?: string
+          status: string
+          test_type: string
+        }
+        Update: {
+          details?: Json | null
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: number
+          run_at?: string
+          status?: string
+          test_type?: string
+        }
+        Relationships: []
+      }
       email_ab_assignments: {
         Row: {
           created_at: string
@@ -4784,6 +4814,48 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      system_health_thresholds: {
+        Row: {
+          cron_grace_minutes: number
+          daily_report_email: string
+          daily_report_enabled: boolean
+          e2e_seo_url: string
+          id: boolean
+          key_expiry_warn_days: number
+          seo_reaudit_interval_days: number
+          updated_at: string
+          updated_by: string | null
+          voice_latency_ms_threshold: number
+          voice_streak_required: number
+        }
+        Insert: {
+          cron_grace_minutes?: number
+          daily_report_email?: string
+          daily_report_enabled?: boolean
+          e2e_seo_url?: string
+          id?: boolean
+          key_expiry_warn_days?: number
+          seo_reaudit_interval_days?: number
+          updated_at?: string
+          updated_by?: string | null
+          voice_latency_ms_threshold?: number
+          voice_streak_required?: number
+        }
+        Update: {
+          cron_grace_minutes?: number
+          daily_report_email?: string
+          daily_report_enabled?: boolean
+          e2e_seo_url?: string
+          id?: boolean
+          key_expiry_warn_days?: number
+          seo_reaudit_interval_days?: number
+          updated_at?: string
+          updated_by?: string | null
+          voice_latency_ms_threshold?: number
+          voice_streak_required?: number
         }
         Relationships: []
       }

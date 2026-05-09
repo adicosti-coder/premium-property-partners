@@ -6,8 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-const THRESHOLD_MS = 1500;
-const STREAK_REQUIRED = 3;
+const DEFAULT_THRESHOLD_MS = 1500;
+const DEFAULT_STREAK = 3;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -15,6 +15,10 @@ Deno.serve(async (req) => {
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const t0 = Date.now();
   await sb.from("cron_run_log").insert({ job_name: "voice-latency-monitor", status: "started" });
+
+  const { data: cfg } = await sb.from("system_health_thresholds").select("voice_latency_ms_threshold,voice_streak_required").maybeSingle();
+  const THRESHOLD_MS = cfg?.voice_latency_ms_threshold ?? DEFAULT_THRESHOLD_MS;
+  const STREAK_REQUIRED = cfg?.voice_streak_required ?? DEFAULT_STREAK;
 
   // Last 5 completed calls with measurable latency
   const { data: calls } = await sb
