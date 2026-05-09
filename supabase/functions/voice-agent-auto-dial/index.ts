@@ -365,6 +365,14 @@ serve(async (req) => {
         StatusCallbackEvent: "initiated ringing answered completed",
         Record: "true",
         RecordingStatusCallback: statusUrl,
+        // ── Machine / voicemail detection ───────────────────────────────
+        // Twilio invokes statusUrl with AnsweredBy=human|machine_start|fax|...
+        // We use Detect (not DetectMessageEnd) to fail-fast on robot pick-ups.
+        MachineDetection: "Enable",
+        AsyncAmd: "true",
+        AsyncAmdStatusCallback: statusUrl,
+        AsyncAmdStatusCallbackMethod: "POST",
+        MachineDetectionTimeout: "10",
       }),
     });
     const twData = await twRes.json();
