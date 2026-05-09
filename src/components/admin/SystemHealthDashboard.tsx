@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, AlertTriangle, CheckCircle2, XCircle, Activity, Mail, KeyRound, ShieldAlert, RefreshCw } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2, XCircle, Activity, Mail, KeyRound, ShieldAlert, RefreshCw, Download } from "lucide-react";
 import { toast } from "sonner";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -112,6 +112,25 @@ export default function SystemHealthDashboard() {
     } finally {
       setRunning(null);
     }
+  };
+
+  const exportE2E = async (format: "json" | "csv") => {
+    const { data } = await supabase.from("e2e_test_runs").select("*").order("run_at", { ascending: false }).limit(1000);
+    const rows = data || [];
+    let blob: Blob;
+    if (format === "json") {
+      blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
+    } else {
+      const cols = ["id", "test_type", "status", "duration_ms", "run_at", "error_message"];
+      const csv = [cols.join(",")].concat(
+        rows.map((r: any) => cols.map((c) => JSON.stringify(r[c] ?? "")).join(","))
+      ).join("\n");
+      blob = new Blob([csv], { type: "text/csv" });
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `e2e-tests-${new Date().toISOString().slice(0,10)}.${format}`;
+    a.click(); URL.revokeObjectURL(url);
   };
 
   if (loading || !thresholds) {
@@ -244,12 +263,20 @@ export default function SystemHealthDashboard() {
       {/* Recent E2E */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between">
+          <CardTitle className="text-base flex items-center justify-between flex-wrap gap-2">
             <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Ultimele teste E2E</span>
-            <Button size="sm" variant="outline" onClick={() => runFn("system-e2e-tests", "Teste E2E")} disabled={running === "system-e2e-tests"}>
-              {running === "system-e2e-tests" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
-              Rulează acum
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={() => exportE2E("json")}>
+                <Download className="h-3 w-3 mr-1" /> JSON
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => exportE2E("csv")}>
+                <Download className="h-3 w-3 mr-1" /> CSV
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => runFn("system-e2e-tests", "Teste E2E")} disabled={running === "system-e2e-tests"}>
+                {running === "system-e2e-tests" ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
+                Rulează acum
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -317,9 +344,11 @@ export default function SystemHealthDashboard() {
               onCheckedChange={(v) => setThresholds({ ...thresholds, daily_report_enabled: v })} />
           </div>
           <div>
-            <Label>Email destinatar raport</Label>
-            <Input type="email" value={thresholds.daily_report_email}
+            <Label>Email destinatari raport</Label>
+            <Input type="text" value={thresholds.daily_report_email}
+              placeholder="email1@domain.com, email2@domain.com"
               onChange={(e) => setThresholds({ ...thresholds, daily_report_email: e.target.value })} />
+            <p className="text-xs text-muted-foreground mt-1">Mai multe adrese separate prin virgulă.</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={saveThresholds}>Salvează</Button>

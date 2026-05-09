@@ -14,8 +14,20 @@ export async function requireAdmin(
   req: Request,
   corsHeaders: Record<string, string>,
 ): Promise<AdminAuthResult> {
+  // ── Internal webhook bypass: cron jobs / triggers send x-webhook-secret = SERVICE_ROLE_KEY ──
+  const serviceKeyEnv = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const webhookSecret = req.headers.get("x-webhook-secret") || "";
+  if (serviceKeyEnv && webhookSecret && timingSafeEqual(webhookSecret, serviceKeyEnv)) {
+    return { ok: true, userId: "00000000-0000-0000-0000-000000000000" };
+  }
+
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+
+  // Also accept Bearer SERVICE_ROLE_KEY (or sb_secret_* equivalent) as internal call.
+  if (token && serviceKeyEnv && timingSafeEqual(token, serviceKeyEnv)) {
+    return { ok: true, userId: "00000000-0000-0000-0000-000000000000" };
+  }
 
   if (!token) {
     return {
@@ -29,7 +41,7 @@ export async function requireAdmin(
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const serviceKey = serviceKeyEnv;
 
   const userClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } },
