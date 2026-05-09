@@ -186,24 +186,31 @@ export default function VoiceAgentManager() {
       .limit(50);
     const sessions = (data as any[]) || [];
 
-    // Hydrate next_callback_at from prospect_listings (for ⏰ icon)
+    // Hydrate next_callback_at + recovery flag from prospect_listings
     const prospectIds = Array.from(new Set(sessions.map((s) => s.prospect_listing_id).filter(Boolean)));
     let callbackMap: Record<string, string | null> = {};
+    let attemptsMap: Record<string, number> = {};
     if (prospectIds.length) {
       const { data: pls } = await supabase
         .from("prospect_listings")
-        .select("id, next_callback_at")
+        .select("id, next_callback_at, callback_attempts")
         .in("id", prospectIds as string[]);
       for (const p of (pls as any[]) || []) {
         if (p.next_callback_at && new Date(p.next_callback_at) > new Date()) {
           callbackMap[p.id] = p.next_callback_at;
         }
+        attemptsMap[p.id] = Number(p.callback_attempts || 0);
       }
     }
-    setCalls(sessions.map((s) => ({
-      ...s,
-      next_callback_at: s.prospect_listing_id ? callbackMap[s.prospect_listing_id] || null : null,
-    })));
+    setCalls(sessions.map((s) => {
+      const pid = s.prospect_listing_id;
+      const isRecovered = !!s.appointment_scheduled_at && pid != null && (attemptsMap[pid] || 0) > 0;
+      return {
+        ...s,
+        next_callback_at: pid ? callbackMap[pid] || null : null,
+        is_recovered: isRecovered,
+      };
+    }));
     setLoading(false);
   };
 
