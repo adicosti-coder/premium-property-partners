@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { applyLexiconToText } from "../_shared/voiceLexicon.ts";
+import { humanizeForTTS } from "../_shared/voiceProsody.ts";
 
 /* ──────────────────────────────────────────────────────────────
    ElevenLabs TTS for Voice Agent
@@ -130,8 +131,10 @@ serve(async (req) => {
       };
     }
 
-    // Apply phonetic lexicon BEFORE TTS (Iosefin → Yosefin, ApArt → Ap-Art etc.)
-    const phoneticText = await applyLexiconToText(supabase, text);
+    // Humanize prosody (expand abbreviations, add natural pauses) THEN apply
+    // phonetic lexicon — order matters so "RealTrust" still maps cleanly.
+    const humanized = humanizeForTTS(text);
+    const phoneticText = await applyLexiconToText(supabase, humanized);
 
     // Best-effort: log TTS failures so the admin Debug Live panel sees them.
     const tryLogTtsError = async (err: any, status?: number) => {
