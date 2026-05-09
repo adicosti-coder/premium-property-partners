@@ -201,6 +201,24 @@ const VoiceAgentResultsDashboard = () => {
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* CRITICAL ROI ALERT — last 20 calls below 10% real-conversation rate */}
+        {roiAlert.triggered && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border-2 border-red-500/60 bg-red-500/10 p-3 text-sm animate-pulse"
+          >
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-bold text-red-700 dark:text-red-400">
+                🚨 ROI critic — doar {roiAlert.realRatePct}% conversații reale în ultimele {roiAlert.sampleSize} apeluri
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Pragul de siguranță este 10%. Verifică numărul Twilio (poate apare ca SPAM), calitatea numerelor scrapate sau pune autopilot-ul pe pauză până când rezolvi cauza.
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Status banner */}
         {pausedReason && (
           <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
