@@ -175,9 +175,17 @@ serve(async (req) => {
       .eq("direction", "outbound");
     const recentPhoneSet = new Set<string>((recentCalls || []).map((r: any) => r.to_number).filter(Boolean));
 
+    // Prioritate absolută: prospect_type = 'proprietar' înaintea oricărui altceva.
+    const ordered = [...(prospects || [])].sort((a: any, b: any) => {
+      const ap = a.prospect_type === "proprietar" ? 0 : 1;
+      const bp = b.prospect_type === "proprietar" ? 0 : 1;
+      if (ap !== bp) return ap - bp;
+      return (b.lead_score || 0) - (a.lead_score || 0);
+    });
+
     const seenPhones = new Set<string>();
     const prospectIds: string[] = [];
-    for (const p of prospects || []) {
+    for (const p of ordered) {
       const phone = p.phone_normalized || p.contact_phone;
       if (!isCallablePhone(phone)) {
         await supabase.from("prospect_listings").update({
