@@ -334,9 +334,42 @@ export default function SystemHealthDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 max-h-72 overflow-y-auto">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                placeholder="Caută în mesaj eroare / details…"
+                className="pl-7 h-8 text-xs"
+              />
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate statusurile</SelectItem>
+                <SelectItem value="passed">Passed</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Tip" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate tipurile</SelectItem>
+                <SelectItem value="voice">Voice</SelectItem>
+                <SelectItem value="seo">SEO</SelectItem>
+                <SelectItem value="keys">Keys</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-xs text-muted-foreground">{filteredE2E.length} / {recentE2E.length}</span>
+          </div>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
             {recentE2E.length === 0 && <div className="text-sm text-muted-foreground">Nicio rulare încă.</div>}
-            {recentE2E.map((r) => {
+            {recentE2E.length > 0 && filteredE2E.length === 0 && (
+              <div className="text-sm text-muted-foreground">Niciun rezultat pentru filtrele curente.</div>
+            )}
+            {filteredE2E.map((r: any) => {
               const failed = r.status !== "passed";
               return (
                 <button
@@ -349,6 +382,7 @@ export default function SystemHealthDashboard() {
                     <span className="font-medium uppercase">{r.test_type}</span>
                     <span className="text-muted-foreground ml-2">{new Date(r.run_at).toLocaleString("ro-RO")}</span>
                     {r.retry_count > 0 && <Badge variant="outline" className="ml-2 text-[10px]">retry #{r.retry_count}</Badge>}
+                    {r.recovery_notified_at && <Badge className="ml-2 text-[10px] bg-emerald-500/15 text-emerald-700 border-emerald-500/30">recovered</Badge>}
                     {r.error_message && <div className="text-xs text-red-600 mt-1 truncate">{r.error_message.slice(0, 120)}</div>}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
