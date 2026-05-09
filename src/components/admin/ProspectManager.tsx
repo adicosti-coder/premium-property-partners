@@ -728,6 +728,10 @@ const ProspectManager = () => {
                   {selectedListing.callback_attempts ? ` · încercarea ${selectedListing.callback_attempts}/3` : ""}
                 </div>
               )}
+
+              {/* Timeline call back attempts */}
+              <ProspectCallTimeline prospectId={selectedListing.id} />
+
               <div className="space-y-4">
                 {/* Prospect type selector */}
                 <div>
