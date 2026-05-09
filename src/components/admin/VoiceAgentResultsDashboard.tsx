@@ -108,7 +108,7 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
     const w = hourWindow(new Date(r.created_at));
     const b = ensure(w);
     b.initiated++;
-    if (dur > 30 && !r.is_voicemail) b.real++;
+    if (dur > realThreshold && !r.is_voicemail) b.real++;
     if (r.is_voicemail) b.voicemails++;
     if (r.status === "busy") b.busy++;
     if (r.status === "no-answer") b.noAnswer++;
