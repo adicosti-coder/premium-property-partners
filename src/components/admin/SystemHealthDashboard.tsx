@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, AlertTriangle, CheckCircle2, XCircle, Activity, Mail, KeyRound, ShieldAlert, RefreshCw, Download } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2, XCircle, Activity, Mail, KeyRound, ShieldAlert, RefreshCw, Download, ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
