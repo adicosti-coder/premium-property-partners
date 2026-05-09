@@ -793,6 +793,21 @@ export default function VoiceAgentManager() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{c.to_number}</span>
                         <Badge className={statusColor(c.status)}>{c.status}</Badge>
+                        {c.is_voicemail && (
+                          <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 dark:text-amber-300" title="Apel preluat de mesageria vocală">
+                            <Voicemail className="h-3 w-3 mr-1" /> Robot
+                          </Badge>
+                        )}
+                        {(c.twilio_failure_reason && /invalid/i.test(c.twilio_failure_reason)) && (
+                          <Badge variant="outline" className="text-xs border-red-400 text-red-700 dark:text-red-300" title={`Twilio: ${c.twilio_failure_reason}`}>
+                            <BadgeAlert className="h-3 w-3 mr-1" /> Număr invalid
+                          </Badge>
+                        )}
+                        {c.next_callback_at && (
+                          <Badge variant="outline" className="text-xs border-blue-300 text-blue-700 dark:text-blue-300" title={`Re-apelare programată: ${new Date(c.next_callback_at).toLocaleString("ro-RO")}`}>
+                            <Hourglass className="h-3 w-3 mr-1" /> Re-apelare {new Date(c.next_callback_at).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          </Badge>
+                        )}
                         {c.ai_outcome && <Badge variant="outline">{c.ai_outcome}</Badge>}
                         {c.ai_sentiment && <span>{sentimentEmoji[c.ai_sentiment] || "•"}</span>}
                         {c.detected_language === "en" && <Badge className="bg-red-100 text-red-800 border border-red-300">⚠️ EN detectat</Badge>}
