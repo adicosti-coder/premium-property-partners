@@ -6,8 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-const THRESHOLD_MS = 1500;
-const STREAK_REQUIRED = 3;
+const DEFAULT_THRESHOLD_MS = 1500;
+const DEFAULT_STREAK = 3;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
