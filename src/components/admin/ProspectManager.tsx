@@ -47,6 +47,12 @@ interface ProspectListing {
   scraped_at: string;
   last_seen_at: string;
   is_active: boolean;
+  marked_invalid_at?: string | null;
+  invalid_reason?: string | null;
+  consecutive_failures?: number | null;
+  callback_attempts?: number | null;
+  next_callback_at?: string | null;
+  lifecycle_status?: string | null;
 }
 
 const PROSPECT_TYPES = [
