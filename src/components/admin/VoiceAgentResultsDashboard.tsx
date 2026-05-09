@@ -72,18 +72,24 @@ function periodSinceISO(p: Period): string {
   return d.toISOString();
 }
 
-async function loadMetrics(p: Period): Promise<Metrics> {
+async function loadMetrics(p: Period): Promise<{ metrics: Metrics; buckets: HourBucket[]; rawRows: any[] }> {
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason")
+    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason, created_at")
     .gte("created_at", since);
 
-  if (error || !data) return EMPTY;
+  if (error || !data) return { metrics: EMPTY, buckets: [], rawRows: [] };
 
   const m: Metrics = { ...EMPTY };
   let totalDur = 0;
   let durCount = 0;
+  const bucketMap = new Map<HourWindow, HourBucket>();
+  const ensure = (w: HourWindow) => {
+    let b = bucketMap.get(w);
+    if (!b) { b = { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0 }; bucketMap.set(w, b); }
+    return b;
+  };
 
   for (const r of data as any[]) {
     m.initiated++;
@@ -97,10 +103,15 @@ async function loadMetrics(p: Period): Promise<Metrics> {
     if (["positive", "very_positive"].includes(r.ai_sentiment)) m.positiveSentiment++;
     if (["auto_approved", "sent"].includes(r.followup_status)) m.followupSent++;
     if (r.appointment_scheduled_at) m.appointments++;
-    if (dur > 0) {
-      totalDur += dur;
-      durCount++;
-    }
+    if (dur > 0) { totalDur += dur; durCount++; }
+
+    const w = hourWindow(new Date(r.created_at));
+    const b = ensure(w);
+    b.initiated++;
+    if (dur > 30 && !r.is_voicemail) b.real++;
+    if (r.is_voicemail) b.voicemails++;
+    if (r.status === "busy") b.busy++;
+    if (r.status === "no-answer") b.noAnswer++;
   }
   m.avgDurationSec = durCount > 0 ? Math.round(totalDur / durCount) : 0;
 
@@ -110,7 +121,9 @@ async function loadMetrics(p: Period): Promise<Metrics> {
     .gte("marked_invalid_at", since);
   m.invalidNumbers = invalidCount || 0;
 
-  return m;
+  const order: HourWindow[] = ["Dimineață", "Prânz", "Seară", "Off-hours"];
+  const buckets = order.map((w) => bucketMap.get(w) || { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0 });
+  return { metrics: m, buckets, rawRows: data as any[] };
 }
 
 async function loadRoiAlert(): Promise<RoiAlert> {
