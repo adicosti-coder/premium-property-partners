@@ -182,7 +182,26 @@ export default function VoiceAgentManager() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
-    setCalls((data as any) || []);
+    const sessions = (data as any[]) || [];
+
+    // Hydrate next_callback_at from prospect_listings (for ⏰ icon)
+    const prospectIds = Array.from(new Set(sessions.map((s) => s.prospect_listing_id).filter(Boolean)));
+    let callbackMap: Record<string, string | null> = {};
+    if (prospectIds.length) {
+      const { data: pls } = await supabase
+        .from("prospect_listings")
+        .select("id, next_callback_at")
+        .in("id", prospectIds as string[]);
+      for (const p of (pls as any[]) || []) {
+        if (p.next_callback_at && new Date(p.next_callback_at) > new Date()) {
+          callbackMap[p.id] = p.next_callback_at;
+        }
+      }
+    }
+    setCalls(sessions.map((s) => ({
+      ...s,
+      next_callback_at: s.prospect_listing_id ? callbackMap[s.prospect_listing_id] || null : null,
+    })));
     setLoading(false);
   };
 
