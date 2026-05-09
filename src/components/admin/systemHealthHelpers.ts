@@ -144,7 +144,9 @@ export type E2EFilter = { status: string; test_type: string; query: string };
 export function filterE2E(rows: E2ERun[], f: E2EFilter): E2ERun[] {
   const q = f.query.trim().toLowerCase();
   return rows.filter((r) => {
-    if (f.status !== "all" && r.status !== f.status) return false;
+    if (f.status === "recovered") {
+      if (!isRecovered(r)) return false;
+    } else if (f.status !== "all" && r.status !== f.status) return false;
     if (f.test_type !== "all" && r.test_type !== f.test_type) return false;
     if (!q) return true;
     const blob = `${r.test_type} ${r.status} ${r.error_message ?? ""} ${JSON.stringify(r.details ?? "")}`.toLowerCase();
