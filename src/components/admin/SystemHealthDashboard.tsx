@@ -489,6 +489,15 @@ export default function SystemHealthDashboard() {
               {emailError || "Mai multe adrese separate prin virgulă."}
             </p>
           </div>
+          <div>
+            <Label>Slack / Discord webhook URL (opțional)</Label>
+            <Input type="url" value={thresholds.slack_webhook_url ?? ""}
+              placeholder="https://hooks.slack.com/services/T000/B000/XXXX"
+              onChange={(e) => setThresholds({ ...thresholds, slack_webhook_url: e.target.value || null })} />
+            <p className="text-xs mt-1 text-muted-foreground">
+              Dacă e setat, raportul zilnic și incidentele vor fi trimise și pe acest webhook (Slack incoming webhook sau Discord-compatible).
+            </p>
+          </div>
           <div className="flex gap-2">
             <Button onClick={saveThresholds} disabled={!!emailError}>Salvează</Button>
             <Button variant="outline" onClick={() => runFn("system-health-report", "Raport email")} disabled={running === "system-health-report"}>
