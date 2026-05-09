@@ -133,6 +133,51 @@ Deno.serve(async (req) => {
         `${testType.toUpperCase()} a eșuat și după retry: ${res.err || "fail"}`,
         "error",
       );
+    } else {
+      // RECOVERY: notify admins + send recovery email to configured recipients
+      const { data: parent } = await sb.from("e2e_test_runs")
+        .select("error_message, recovery_notified_at").eq("id", parentId).maybeSingle();
+      if (parent && !parent.recovery_notified_at) {
+        await sb.from("e2e_test_runs").update({ recovery_notified_at: new Date().toISOString() }).eq("id", parentId);
+
+        await sb.from("admin_audit_log").insert({
+          action: "e2e_test_recovery", actor_label: "system-e2e-tests",
+          entity_type: "e2e_test_runs", severity: "info",
+          details: { test_type: testType, parent_id: parentId },
+        });
+        const { data: admins } = await sb.from("user_roles").select("user_id").eq("role", "admin");
+        if (admins?.length) {
+          await sb.from("user_notifications").insert(admins.map((a: any) => ({
+            user_id: a.user_id,
+            title: "✅ Recovery test E2E",
+            message: `${testType.toUpperCase()} a trecut la retry după un eșec inițial.`,
+            type: "success",
+            action_url: "/admin/system-health", action_label: "Vezi dashboard",
+          })));
+        }
+
+        const { data: cfg2 } = await sb.from("system_health_thresholds").select("daily_report_email").maybeSingle();
+        const recipients: string[] = String(cfg2?.daily_report_email || "")
+          .split(/[,;]/).map((s) => s.trim()).filter((s) => s.includes("@"));
+        for (const to of recipients) {
+          await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}`, "x-webhook-secret": SERVICE_KEY },
+            body: JSON.stringify({
+              template_name: "e2e-recovery",
+              to,
+              idempotency_key: `e2e-recovery-${parentId}-${to}`,
+              purpose: "transactional",
+              data: {
+                test_type: testType,
+                initial_error: parent.error_message || "(fără mesaj)",
+                recovered_at: new Date().toLocaleString("ro-RO"),
+                duration_ms: res.duration,
+              },
+            }),
+          }).catch(() => {});
+        }
+      }
     }
     if (testType === "voice") { voicePassed = res.passed; voiceErr = res.err; voiceDuration = res.duration; }
     else { seoPassed = res.passed; seoErr = res.err; seoDuration = res.duration; }
