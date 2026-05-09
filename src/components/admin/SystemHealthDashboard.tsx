@@ -15,7 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { buildE2ECsv, analyzeIncidents, filterE2E, type E2ERun } from "./systemHealthHelpers";
+import { buildE2ECsv, analyzeIncidents, filterE2E, buildRecoveryTrend, type E2ERun } from "./systemHealthHelpers";
 
 type Threshold = {
   voice_latency_ms_threshold: number;
@@ -26,6 +26,7 @@ type Threshold = {
   daily_report_enabled: boolean;
   daily_report_email: string;
   e2e_seo_url: string;
+  slack_webhook_url: string | null;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -182,6 +183,8 @@ export default function SystemHealthDashboard() {
     { name: "Failed", value: totalFailed, color: STATUS_COLORS.failed },
   ];
 
+  const recoveryTrend = buildRecoveryTrend(recentE2E as E2ERun[], 30);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -291,7 +294,34 @@ export default function SystemHealthDashboard() {
         </CardContent>
       </Card>
 
-      {/* Keys health */}
+      {/* Recovery trend (auto-heal vs first-pass over last 30 days) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <RotateCcw className="h-4 w-4" /> Tendință recuperare E2E (30 zile)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={recoveryTrend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="first_pass" name="Trecut din prima" stackId="t" fill={STATUS_COLORS.success} />
+                <Bar dataKey="recovered" name="Auto-Recovered" stackId="t" fill="hsl(160 70% 45%)" />
+                <Bar dataKey="failed" name="Eșuat" stackId="t" fill={STATUS_COLORS.failed} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Erorile temporare sunt remediate automat la retry-ul de 10 minute. Verificați dacă proporția "Auto-Recovered" crește pentru a identifica probleme intermitente.
+          </p>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><KeyRound className="h-4 w-4" /> Sănătate chei API</CardTitle></CardHeader>
         <CardContent className="space-y-2">
@@ -349,6 +379,7 @@ export default function SystemHealthDashboard() {
               <SelectContent>
                 <SelectItem value="all">Toate statusurile</SelectItem>
                 <SelectItem value="passed">Passed</SelectItem>
+                <SelectItem value="recovered">Recovered (auto-heal)</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
                 <SelectItem value="critical">Critical</SelectItem>
               </SelectContent>
@@ -456,6 +487,15 @@ export default function SystemHealthDashboard() {
               }} />
             <p className={`text-xs mt-1 ${emailError ? "text-red-600" : "text-muted-foreground"}`}>
               {emailError || "Mai multe adrese separate prin virgulă."}
+            </p>
+          </div>
+          <div>
+            <Label>Slack / Discord webhook URL (opțional)</Label>
+            <Input type="url" value={thresholds.slack_webhook_url ?? ""}
+              placeholder="https://hooks.slack.com/services/T000/B000/XXXX"
+              onChange={(e) => setThresholds({ ...thresholds, slack_webhook_url: e.target.value || null })} />
+            <p className="text-xs mt-1 text-muted-foreground">
+              Dacă e setat, raportul zilnic și incidentele vor fi trimise și pe acest webhook (Slack incoming webhook sau Discord-compatible).
             </p>
           </div>
           <div className="flex gap-2">
