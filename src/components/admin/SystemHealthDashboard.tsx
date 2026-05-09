@@ -42,6 +42,17 @@ export default function SystemHealthDashboard() {
   const [latencyTrend, setLatencyTrend] = useState<any[]>([]);
   const [recentE2E, setRecentE2E] = useState<any[]>([]);
   const [recentLatencyAlerts, setRecentLatencyAlerts] = useState<any[]>([]);
+  const [detailRow, setDetailRow] = useState<any | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  const validateEmails = (raw: string): string | null => {
+    const list = raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+    if (list.length === 0) return "Adaugă cel puțin un email.";
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const bad = list.filter((e) => !re.test(e));
+    if (bad.length) return `Format invalid: ${bad.join(", ")}`;
+    return null;
+  };
 
   const load = async () => {
     setLoading(true);
