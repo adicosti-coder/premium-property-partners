@@ -83,13 +83,41 @@ Deno.serve(async (req) => {
   const sendData = { recipients: sendResults };
   const sendRes = { ok: sendResults.every((r) => r.ok) };
 
+  // Optional: Slack/Discord webhook delivery (incident summary).
+  let slackResult: any = null;
+  const slackUrl = String(cfg.slack_webhook_url || "").trim();
+  if (slackUrl.startsWith("https://")) {
+    const lines = [
+      `*RealTrust System Health* — ${new Date().toLocaleDateString("ro-RO")}`,
+      allOk ? "✅ All systems operational" : "🚨 Atenție necesară",
+      `Cron 24h: ${cronRuns?.length ?? 0} (${failed.length} eșuate)`,
+      `E2E eșuate: ${e2eFailed.length}`,
+      `Chei invalide: ${invalidKeys.length ? invalidKeys.join(", ") : "—"}`,
+      `Latență voce medie: ${avgLatency != null ? avgLatency + "ms" : "—"} (${latency?.length ?? 0} apeluri)`,
+    ];
+    if (errors.length) lines.push("• " + errors.join("\n• "));
+    const text = lines.join("\n");
+    // Slack & Discord both accept { content } / { text }; send a permissive payload.
+    const payload = { text, content: text, username: "RealTrust Health" };
+    try {
+      const r = await fetch(slackUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      slackResult = { ok: r.ok, status: r.status };
+    } catch (e: any) {
+      slackResult = { ok: false, error: String(e?.message || e) };
+    }
+  }
+
   await sb.from("cron_run_log").insert({
     job_name: "system-health-report", status: "success",
     duration_ms: Date.now() - t0,
-    details: { all_ok: allOk, errors_count: errors.length, email: sendData },
+    details: { all_ok: allOk, errors_count: errors.length, email: sendData, slack: slackResult },
   });
 
-  return new Response(JSON.stringify({ ok: true, all_ok: allOk, errors, sent: sendRes.ok }), {
+  return new Response(JSON.stringify({ ok: true, all_ok: allOk, errors, sent: sendRes.ok, slack: slackResult }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
