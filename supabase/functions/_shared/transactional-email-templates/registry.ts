@@ -26,4 +26,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'listing-submitted': listingSubmitted,
   'admin-otp': adminOtp,
   'system-health-report': systemHealthReport,
+  'e2e-recovery': e2eRecovery,
 }
