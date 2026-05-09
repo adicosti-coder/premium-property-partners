@@ -22,7 +22,7 @@ import VoiceAgentBatchCalling from "./VoiceAgentBatchCalling";
 import VoiceAgentTrainingLab from "./VoiceAgentTrainingLab";
 import VoiceAgentGhostingQueue from "./VoiceAgentGhostingQueue";
 import VoiceAgentAutopilot from "./VoiceAgentAutopilot";
-import VoiceAgentResultsDashboard from "./VoiceAgentResultsDashboard";
+import VoiceAgentResultsDashboard, { hourWindow, type HourWindow } from "./VoiceAgentResultsDashboard";
 
 interface VoiceCall {
   id: string;
@@ -87,6 +87,49 @@ export default function VoiceAgentManager() {
     results: Array<{ scenario_id: string; user_message: string; ai_reply: string; passed: boolean; ai_error: string | null; english_words_detected: string[]; has_diacritics: boolean; duration_ms: number }>;
   } | null>(null);
   const [langTestOpen, setLangTestOpen] = useState(false);
+  const [windowFilter, setWindowFilter] = useState<HourWindow | "all">("all");
+  const [recoveryRatePct, setRecoveryRatePct] = useState<number | null>(null);
+
+  // Listen for filter requests from heatmap drill-down
+  useEffect(() => {
+    const handler = (e: any) => {
+      const w = e?.detail?.window as HourWindow | undefined;
+      if (!w) return;
+      setWindowFilter(w);
+      // Scroll to the calls history section
+      setTimeout(() => {
+        document.getElementById("voice-agent-calls-history")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+      toast({ title: `Filtru aplicat: ${w}`, description: "Apelurile de mai jos sunt filtrate pentru această fereastră orară." });
+    };
+    window.addEventListener("voice-agent:filter-window", handler as any);
+    return () => window.removeEventListener("voice-agent:filter-window", handler as any);
+  }, []);
+
+  // Compute weekly callback success rate (recovered appointments / total callback attempts)
+  useEffect(() => {
+    (async () => {
+      const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("voice_call_sessions")
+        .select("id, appointment_scheduled_at, prospect_listing_id, created_at")
+        .gte("created_at", sinceIso)
+        .not("prospect_listing_id", "is", null);
+      const sessions = (data as any[]) || [];
+      const pids = Array.from(new Set(sessions.map((s) => s.prospect_listing_id)));
+      if (!pids.length) { setRecoveryRatePct(null); return; }
+      const { data: pls } = await supabase
+        .from("prospect_listings")
+        .select("id, callback_attempts")
+        .in("id", pids);
+      const map: Record<string, number> = {};
+      for (const p of (pls as any[]) || []) map[p.id] = Number(p.callback_attempts || 0);
+      const callbackSessions = sessions.filter((s) => (map[s.prospect_listing_id] || 0) > 0);
+      if (callbackSessions.length === 0) { setRecoveryRatePct(null); return; }
+      const recovered = callbackSessions.filter((s) => !!s.appointment_scheduled_at).length;
+      setRecoveryRatePct(Math.round((recovered / callbackSessions.length) * 100));
+    })();
+  }, [calls.length]);
 
   const runLanguageTest = async () => {
     setLangTestRunning(true);
@@ -497,6 +540,35 @@ export default function VoiceAgentManager() {
             </div>
           </div>
 
+          <div className="p-3 rounded-lg border bg-amber-50/40 dark:bg-amber-950/10 space-y-1">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium">Pragul „Conversație Reală" (secunde)</div>
+                <div className="text-[11px] text-muted-foreground">Sub acest prag, apelul nu este numărat ca discuție reușită. Urcă la 45–60s dacă mesageriile vocale complexe pot „conversa" peste 30s.</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number" min={10} max={180} className="w-20 text-center"
+                  value={autoSettings?.real_conversation_threshold_seconds ?? 30}
+                  onChange={(e) => setAutoSettings({ ...autoSettings, real_conversation_threshold_seconds: parseInt(e.target.value) || 30 })}
+                  onBlur={(e) => saveSettings({ real_conversation_threshold_seconds: parseInt(e.target.value) || 30 })}
+                />
+                <span className="text-xs text-muted-foreground">s</span>
+              </div>
+            </div>
+            <div className="flex gap-1.5 pt-1">
+              {[30, 45, 60].map((v) => (
+                <Button
+                  key={v} size="sm" variant={autoSettings?.real_conversation_threshold_seconds === v ? "default" : "outline"}
+                  className="h-6 text-[11px] px-2"
+                  onClick={() => saveSettings({ real_conversation_threshold_seconds: v })}
+                >
+                  {v}s
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <Button onClick={triggerAutoDialNow} disabled={testingAuto} variant="outline" className="w-full">
             {testingAuto ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
             Rulează Auto-Dial Acum (test)
@@ -779,19 +851,43 @@ export default function VoiceAgentManager() {
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">Cost total</div><div className="text-2xl font-bold">${stats.totalCost.toFixed(2)}</div></CardContent></Card>
       </div>
 
-      <Card>
+      <Card id="voice-agent-calls-history">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Istoric apeluri</CardTitle>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Istoric apeluri</CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Fereastră orară:</span>
+              <Select value={windowFilter} onValueChange={(v) => setWindowFilter(v as any)}>
+                <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate orele</SelectItem>
+                  <SelectItem value="Dimineață">Dimineață (8–12)</SelectItem>
+                  <SelectItem value="Prânz">Prânz (12–17)</SelectItem>
+                  <SelectItem value="Seară">⭐ Seară (17–21)</SelectItem>
+                  <SelectItem value="Off-hours">Off-hours</SelectItem>
+                </SelectContent>
+              </Select>
+              {windowFilter !== "all" && (
+                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setWindowFilter("all")}>Resetează</Button>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
-          ) : calls.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Niciun apel încă. Inițiază primul de mai sus.</p>
-          ) : (
+          {(() => {
+            const filteredCalls = windowFilter === "all"
+              ? calls
+              : calls.filter((c) => hourWindow(new Date(c.created_at)) === windowFilter);
+            return loading ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+            ) : filteredCalls.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                {windowFilter === "all" ? "Niciun apel încă. Inițiază primul de mai sus." : `Niciun apel în fereastra ${windowFilter}.`}
+              </p>
+            ) : (
             <ScrollArea className="h-[500px]">
               <div className="space-y-2">
-                {calls.map((c) => (
+                {filteredCalls.map((c) => (
                   <div
                     key={c.id}
                     className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition"
@@ -803,9 +899,20 @@ export default function VoiceAgentManager() {
                         <span className="font-medium">{c.to_number}</span>
                         <Badge className={statusColor(c.status)}>{c.status}</Badge>
                         {c.is_recovered && (
-                          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs" title="Lead recuperat: prospectul fusese ocupat/nu răspundea, dar acest call back a generat o programare.">
-                            <Star className="h-3 w-3 mr-1 fill-current" /> RECUPERAT
-                          </Badge>
+                          <span className="inline-flex items-center gap-1">
+                            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs" title="Lead recuperat: prospectul fusese ocupat/nu răspundea, dar acest call back a generat o programare.">
+                              <Star className="h-3 w-3 mr-1 fill-current" /> RECUPERAT
+                            </Badge>
+                            {recoveryRatePct !== null && (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] border-emerald-300 text-emerald-700 dark:text-emerald-300"
+                                title="Rata de succes a call back-urilor în ultima săptămână (programări obținute / total apeluri de re-contact)"
+                              >
+                                📈 {recoveryRatePct}% succes/săpt
+                              </Badge>
+                            )}
+                          </span>
                         )}
                         {c.is_voicemail && (
                           <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 dark:text-amber-300" title="Apel preluat de mesageria vocală">
@@ -839,6 +946,8 @@ export default function VoiceAgentManager() {
                         </span>
                         <span aria-hidden>•</span>
                         <span>{c.call_duration_seconds || 0}s</span>
+                        <span aria-hidden>•</span>
+                        <span className="text-muted-foreground/70">{hourWindow(new Date(c.created_at))}</span>
                       </div>
                       <div className="text-xs text-muted-foreground truncate mt-0.5">
                         {c.ai_summary || c.error_message || "Nicio sinteză încă"}
@@ -857,7 +966,8 @@ export default function VoiceAgentManager() {
                 ))}
               </div>
             </ScrollArea>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 

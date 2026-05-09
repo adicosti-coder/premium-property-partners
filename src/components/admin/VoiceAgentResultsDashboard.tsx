@@ -8,9 +8,9 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, BarChart, Ba
 import { Button } from "@/components/ui/button";
 
 type Period = "today" | "week" | "month";
-type HourWindow = "Dimineață" | "Prânz" | "Seară" | "Off-hours";
+export type HourWindow = "Dimineață" | "Prânz" | "Seară" | "Off-hours";
 
-function hourWindow(d: Date): HourWindow {
+export function hourWindow(d: Date): HourWindow {
   const h = d.getHours();
   if (h >= 8 && h < 12) return "Dimineață";
   if (h >= 12 && h < 17) return "Prânz";
@@ -72,7 +72,7 @@ function periodSinceISO(p: Period): string {
   return d.toISOString();
 }
 
-async function loadMetrics(p: Period): Promise<{ metrics: Metrics; buckets: HourBucket[]; rawRows: any[] }> {
+async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics: Metrics; buckets: HourBucket[]; rawRows: any[] }> {
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
@@ -95,7 +95,7 @@ async function loadMetrics(p: Period): Promise<{ metrics: Metrics; buckets: Hour
     m.initiated++;
     const dur = Number(r.call_duration_seconds || 0);
     if (dur > 5) m.connected++;
-    if (dur > 30 && !r.is_voicemail) m.realConversations++;
+    if (dur > realThreshold && !r.is_voicemail) m.realConversations++;
     if (r.is_voicemail) m.voicemails++;
     if (r.status === "busy") m.busy++;
     if (r.status === "no-answer") m.noAnswer++;
@@ -108,7 +108,7 @@ async function loadMetrics(p: Period): Promise<{ metrics: Metrics; buckets: Hour
     const w = hourWindow(new Date(r.created_at));
     const b = ensure(w);
     b.initiated++;
-    if (dur > 30 && !r.is_voicemail) b.real++;
+    if (dur > realThreshold && !r.is_voicemail) b.real++;
     if (r.is_voicemail) b.voicemails++;
     if (r.status === "busy") b.busy++;
     if (r.status === "no-answer") b.noAnswer++;
@@ -180,27 +180,31 @@ const VoiceAgentResultsDashboard = () => {
   const [autopilotOn, setAutopilotOn] = useState<boolean | null>(null);
   const [pausedReason, setPausedReason] = useState<string | null>(null);
   const [roiAlert, setRoiAlert] = useState<RoiAlert>({ triggered: false, realRatePct: 0, sampleSize: 0 });
+  const [realThreshold, setRealThreshold] = useState<number>(30);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    Promise.all([
-      loadMetrics(period),
-      supabase.from("voice_agent_settings").select("autopilot_enabled").eq("id", 1).maybeSingle(),
-      supabase.from("voice_agent_safety_state").select("calls_paused, paused_reason").eq("id", true).maybeSingle(),
-      loadRoiAlert(),
-    ]).then(([res, settings, safety, alert]) => {
+    (async () => {
+      const { data: s } = await supabase.from("voice_agent_settings").select("autopilot_enabled, real_conversation_threshold_seconds" as any).eq("id", 1).maybeSingle();
+      const threshold = Number((s as any)?.real_conversation_threshold_seconds) || 30;
+      setRealThreshold(threshold);
+      const [res, safety, alert] = await Promise.all([
+        loadMetrics(period, threshold),
+        supabase.from("voice_agent_safety_state").select("calls_paused, paused_reason").eq("id", true).maybeSingle(),
+        loadRoiAlert(),
+      ]);
       if (!mounted) return;
       setMetrics(res.metrics);
       setBuckets(res.buckets);
       setRawRows(res.rawRows);
-      setAutopilotOn(settings.data?.autopilot_enabled ?? null);
+      setAutopilotOn((s as any)?.autopilot_enabled ?? null);
       setPausedReason(
         safety.data?.calls_paused ? (safety.data?.paused_reason || "Pauză activă") : null
       );
       setRoiAlert(alert);
       setLoading(false);
-    });
+    })();
     return () => { mounted = false; };
   }, [period]);
 
@@ -382,21 +386,33 @@ const VoiceAgentResultsDashboard = () => {
                   <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
                     <TrendingUp className="w-3.5 h-3.5" />
                     Heatmap răspuns pe ferestre orare (Timișoara)
+                    <span className="text-[10px] text-muted-foreground/70 normal-case font-normal">— click pe card pentru a filtra apelurile</span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                     {buckets.map((b) => {
                       const rate = b.initiated > 0 ? Math.round((b.real / b.initiated) * 100) : 0;
                       const intensity = Math.min(rate / 50, 1); // 50% = full
+                      const disabled = b.initiated === 0;
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={b.window}
-                          className="rounded-md border p-2.5 transition-colors"
+                          disabled={disabled}
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent("voice-agent:filter-window", { detail: { window: b.window } }));
+                          }}
+                          className={cn(
+                            "rounded-md border p-2.5 transition-all text-left",
+                            !disabled && "hover:ring-2 hover:ring-primary/40 hover:shadow-sm cursor-pointer",
+                            disabled && "opacity-50 cursor-not-allowed"
+                          )}
                           style={{ backgroundColor: b.initiated > 0 ? `hsl(142 71% 45% / ${0.08 + intensity * 0.35})` : undefined }}
+                          title={disabled ? "Nu există apeluri în această fereastră" : `Filtrează apelurile pentru ${b.window}`}
                         >
                           <div className="text-[11px] text-muted-foreground">{b.window}</div>
                           <div className="text-xl font-bold">{rate}%</div>
                           <div className="text-[10px] text-muted-foreground">{b.real}/{b.initiated} reale</div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
