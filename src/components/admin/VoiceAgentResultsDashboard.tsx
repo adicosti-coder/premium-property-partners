@@ -284,7 +284,7 @@ const VoiceAgentResultsDashboard = () => {
             {/* Output: ce a produs concret */}
             <div>
               <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                Output produs
+                Output produs & curățare
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <MetricCard
@@ -309,6 +309,20 @@ const VoiceAgentResultsDashboard = () => {
                   label="Durată medie"
                   value={`${metrics.avgDurationSec}s`}
                   tone={metrics.avgDurationSec < 15 && metrics.initiated > 0 ? "warning" : "default"}
+                />
+                <MetricCard
+                  icon={<PhoneCall className="w-3.5 h-3.5" />}
+                  label="Robot / mesagerie"
+                  value={metrics.voicemails}
+                  subtitle="Excluse din conv. reale"
+                  tone={metrics.voicemails > 0 ? "warning" : "default"}
+                />
+                <MetricCard
+                  icon={<AlertCircle className="w-3.5 h-3.5" />}
+                  label="Numere invalide marcate"
+                  value={metrics.invalidNumbers}
+                  subtitle="Curățare automată"
+                  tone={metrics.invalidNumbers > 0 ? "warning" : "default"}
                 />
               </div>
             </div>
