@@ -540,6 +540,35 @@ export default function VoiceAgentManager() {
             </div>
           </div>
 
+          <div className="p-3 rounded-lg border bg-amber-50/40 dark:bg-amber-950/10 space-y-1">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium">Pragul „Conversație Reală" (secunde)</div>
+                <div className="text-[11px] text-muted-foreground">Sub acest prag, apelul nu este numărat ca discuție reușită. Urcă la 45–60s dacă mesageriile vocale complexe pot „conversa" peste 30s.</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number" min={10} max={180} className="w-20 text-center"
+                  value={autoSettings?.real_conversation_threshold_seconds ?? 30}
+                  onChange={(e) => setAutoSettings({ ...autoSettings, real_conversation_threshold_seconds: parseInt(e.target.value) || 30 })}
+                  onBlur={(e) => saveSettings({ real_conversation_threshold_seconds: parseInt(e.target.value) || 30 })}
+                />
+                <span className="text-xs text-muted-foreground">s</span>
+              </div>
+            </div>
+            <div className="flex gap-1.5 pt-1">
+              {[30, 45, 60].map((v) => (
+                <Button
+                  key={v} size="sm" variant={autoSettings?.real_conversation_threshold_seconds === v ? "default" : "outline"}
+                  className="h-6 text-[11px] px-2"
+                  onClick={() => saveSettings({ real_conversation_threshold_seconds: v })}
+                >
+                  {v}s
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <Button onClick={triggerAutoDialNow} disabled={testingAuto} variant="outline" className="w-full">
             {testingAuto ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
             Rulează Auto-Dial Acum (test)
