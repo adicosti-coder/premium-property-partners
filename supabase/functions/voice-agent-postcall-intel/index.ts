@@ -188,6 +188,10 @@ Generează acum pachetul de follow-up.`;
 
     draft.generated_at = new Date().toISOString();
     draft.model = "google/gemini-2.5-flash";
+    draft.is_callback_recovery = isSuccessfulCallback;
+    if (isSuccessfulCallback && previousAttempt) {
+      draft.previous_attempt = previousAttempt;
+    }
 
     await supabase
       .from("voice_call_sessions")
