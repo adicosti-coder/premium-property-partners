@@ -665,6 +665,57 @@ const ProspectManager = () => {
                 <DialogTitle className="text-xl pr-8">{selectedListing.title}</DialogTitle>
               </DialogHeader>
 
+              {/* Invalid number reset banner */}
+              {selectedListing.marked_invalid_at && (
+                <div className="rounded-md border border-red-300 bg-red-50 dark:bg-red-900/20 p-3 mb-2">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                        Număr marcat invalid
+                      </p>
+                      <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5">
+                        {selectedListing.invalid_reason || "Eșecuri consecutive la apelare"}
+                        {selectedListing.consecutive_failures ? ` · ${selectedListing.consecutive_failures} eșecuri` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-red-400 text-red-700 hover:bg-red-100 dark:hover:bg-red-900/40"
+                      onClick={async () => {
+                        if (!confirm("Confirmi că numărul este bun și vrei să resetezi statusul + să-l re-apelezi?")) return;
+                        const { error } = await supabase.rpc("reset_prospect_invalid_status", { p_prospect_id: selectedListing.id });
+                        if (error) {
+                          toast({ title: "Eroare reset", description: error.message, variant: "destructive" });
+                          return;
+                        }
+                        setAllListings(prev => prev.map(l => l.id === selectedListing.id ? {
+                          ...l, marked_invalid_at: null, invalid_reason: null, consecutive_failures: 0,
+                          callback_attempts: 0, next_callback_at: null, lifecycle_status: 'new',
+                        } : l));
+                        setSelectedListing(prev => prev ? {
+                          ...prev, marked_invalid_at: null, invalid_reason: null, consecutive_failures: 0,
+                          callback_attempts: 0, next_callback_at: null, lifecycle_status: 'new',
+                        } : null);
+                        toast({ title: "✅ Resetat", description: "Prospect repus în coadă pentru apelare." });
+                      }}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                      Resetează și re-apelează
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Callback scheduled banner */}
+              {selectedListing.next_callback_at && new Date(selectedListing.next_callback_at) > new Date() && (
+                <div className="rounded-md border border-blue-300 bg-blue-50 dark:bg-blue-900/20 p-2 text-xs text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5" />
+                  Re-apelare programată: <strong>{format(new Date(selectedListing.next_callback_at), "dd MMM yyyy HH:mm", { locale: ro })}</strong>
+                  {selectedListing.callback_attempts ? ` · încercarea ${selectedListing.callback_attempts}/3` : ""}
+                </div>
+              )}
               <div className="space-y-4">
                 {/* Prospect type selector */}
                 <div>
