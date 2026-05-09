@@ -307,18 +307,30 @@ export default function SystemHealthDashboard() {
         <CardContent>
           <div className="space-y-2 max-h-72 overflow-y-auto">
             {recentE2E.length === 0 && <div className="text-sm text-muted-foreground">Nicio rulare încă.</div>}
-            {recentE2E.map((r) => (
-              <div key={r.id} className="flex items-center justify-between border rounded-md p-2 text-sm">
-                <div>
-                  <span className="font-medium uppercase">{r.test_type}</span>
-                  <span className="text-muted-foreground ml-2">{new Date(r.run_at).toLocaleString("ro-RO")}</span>
-                  {r.error_message && <div className="text-xs text-red-600 mt-1">{r.error_message.slice(0, 120)}</div>}
-                </div>
-                <Badge variant={r.status === "passed" ? "secondary" : r.status === "critical" ? "destructive" : "outline"}>
-                  {r.status === "passed" ? "✓ passed" : r.status === "critical" ? "✗ CRITICAL" : "⚠ failed"}
-                </Badge>
-              </div>
-            ))}
+            {recentE2E.map((r) => {
+              const failed = r.status !== "passed";
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => failed && setDetailRow(r)}
+                  className={`w-full text-left flex items-center justify-between border rounded-md p-2 text-sm transition ${failed ? "hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer" : "cursor-default"}`}
+                  disabled={!failed}
+                >
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium uppercase">{r.test_type}</span>
+                    <span className="text-muted-foreground ml-2">{new Date(r.run_at).toLocaleString("ro-RO")}</span>
+                    {r.retry_count > 0 && <Badge variant="outline" className="ml-2 text-[10px]">retry #{r.retry_count}</Badge>}
+                    {r.error_message && <div className="text-xs text-red-600 mt-1 truncate">{r.error_message.slice(0, 120)}</div>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {failed && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                    <Badge variant={r.status === "passed" ? "secondary" : r.status === "critical" ? "destructive" : "outline"}>
+                      {r.status === "passed" ? "✓ passed" : r.status === "critical" ? "✗ CRITICAL" : "⚠ failed"}
+                    </Badge>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
