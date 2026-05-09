@@ -184,6 +184,8 @@ export default function SystemHealthDashboard() {
   ];
 
   const recoveryTrend = buildRecoveryTrend(recentE2E as E2ERun[], 30);
+
+  return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
