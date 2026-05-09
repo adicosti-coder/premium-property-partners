@@ -180,21 +180,25 @@ const VoiceAgentResultsDashboard = () => {
   const [autopilotOn, setAutopilotOn] = useState<boolean | null>(null);
   const [pausedReason, setPausedReason] = useState<string | null>(null);
   const [roiAlert, setRoiAlert] = useState<RoiAlert>({ triggered: false, realRatePct: 0, sampleSize: 0 });
+  const [realThreshold, setRealThreshold] = useState<number>(30);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    Promise.all([
-      loadMetrics(period),
-      supabase.from("voice_agent_settings").select("autopilot_enabled").eq("id", 1).maybeSingle(),
-      supabase.from("voice_agent_safety_state").select("calls_paused, paused_reason").eq("id", true).maybeSingle(),
-      loadRoiAlert(),
-    ]).then(([res, settings, safety, alert]) => {
+    (async () => {
+      const { data: s } = await supabase.from("voice_agent_settings").select("autopilot_enabled, real_conversation_threshold_seconds" as any).eq("id", 1).maybeSingle();
+      const threshold = Number((s as any)?.real_conversation_threshold_seconds) || 30;
+      setRealThreshold(threshold);
+      const [res, safety, alert] = await Promise.all([
+        loadMetrics(period, threshold),
+        supabase.from("voice_agent_safety_state").select("calls_paused, paused_reason").eq("id", true).maybeSingle(),
+        loadRoiAlert(),
+      ]);
       if (!mounted) return;
       setMetrics(res.metrics);
       setBuckets(res.buckets);
       setRawRows(res.rawRows);
-      setAutopilotOn(settings.data?.autopilot_enabled ?? null);
+      setAutopilotOn((s as any)?.autopilot_enabled ?? null);
       setPausedReason(
         safety.data?.calls_paused ? (safety.data?.paused_reason || "Pauză activă") : null
       );
