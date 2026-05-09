@@ -974,4 +974,84 @@ const ProspectManager = () => {
   );
 };
 
+interface CallAttempt {
+  id: string;
+  created_at: string;
+  status: string;
+  call_duration_seconds: number | null;
+  is_voicemail: boolean | null;
+  appointment_scheduled_at: string | null;
+  ai_outcome: string | null;
+  twilio_failure_reason: string | null;
+}
+
+const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
+  const [attempts, setAttempts] = useState<CallAttempt[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    supabase
+      .from("voice_call_sessions")
+      .select("id, created_at, status, call_duration_seconds, is_voicemail, appointment_scheduled_at, ai_outcome, twilio_failure_reason")
+      .eq("prospect_listing_id", prospectId)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (!mounted) return;
+        setAttempts((data as any) || []);
+        setLoading(false);
+      });
+    return () => { mounted = false; };
+  }, [prospectId]);
+
+  if (loading) {
+    return (
+      <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground flex items-center gap-2">
+        <Loader2 className="w-3 h-3 animate-spin" /> Încarc istoricul apelurilor...
+      </div>
+    );
+  }
+  if (attempts.length === 0) return null;
+
+  const labelFor = (a: CallAttempt): { text: string; tone: string; icon: React.ReactNode } => {
+    if (a.appointment_scheduled_at) return { text: "Succes & Programare", tone: "bg-emerald-500 text-white", icon: <CalendarCheck className="w-3 h-3" /> };
+    if (a.is_voicemail) return { text: "Mesagerie vocală", tone: "bg-amber-500 text-white", icon: <MessageSquare className="w-3 h-3" /> };
+    if (a.status === "busy") return { text: "Ocupat", tone: "bg-orange-500 text-white", icon: <Phone className="w-3 h-3" /> };
+    if (a.status === "no-answer") return { text: "Nu a răspuns", tone: "bg-blue-500 text-white", icon: <Phone className="w-3 h-3" /> };
+    if (a.status === "failed") return { text: a.twilio_failure_reason || "Eșuat", tone: "bg-red-500 text-white", icon: <XCircle className="w-3 h-3" /> };
+    if ((a.call_duration_seconds || 0) > 30) return { text: a.ai_outcome || "Conversație", tone: "bg-green-600 text-white", icon: <CheckCircle className="w-3 h-3" /> };
+    return { text: a.status || "—", tone: "bg-muted text-foreground", icon: <Phone className="w-3 h-3" /> };
+  };
+
+  return (
+    <div className="rounded-md border bg-muted/20 p-3 mb-2">
+      <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+        <Clock className="w-3.5 h-3.5" /> Istoric apeluri ({attempts.length})
+      </div>
+      <ol className="relative border-l-2 border-muted-foreground/20 ml-2 space-y-3">
+        {attempts.map((a, i) => {
+          const lbl = labelFor(a);
+          const t = format(new Date(a.created_at), "dd MMM HH:mm", { locale: ro });
+          return (
+            <li key={a.id} className="ml-3">
+              <div className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-background border-2 border-primary" />
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                <span className="font-semibold">Încercarea {i + 1}</span>
+                <Badge className={`${lbl.tone} text-[10px] gap-1`}>
+                  {lbl.icon} {lbl.text}
+                </Badge>
+                <span className="text-muted-foreground">· {t}</span>
+                {a.call_duration_seconds ? (
+                  <span className="text-muted-foreground">· {a.call_duration_seconds}s</span>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+};
+
 export default ProspectManager;
