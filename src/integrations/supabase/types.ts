@@ -5809,6 +5809,7 @@ export type Database = {
           notify_email: string | null
           notify_email_enabled: boolean
           notify_whatsapp_enabled: boolean
+          real_conversation_threshold_seconds: number
           tts_provider: string
           updated_at: string
           updated_by: string | null
@@ -5839,6 +5840,7 @@ export type Database = {
           notify_email?: string | null
           notify_email_enabled?: boolean
           notify_whatsapp_enabled?: boolean
+          real_conversation_threshold_seconds?: number
           tts_provider?: string
           updated_at?: string
           updated_by?: string | null
@@ -5869,6 +5871,7 @@ export type Database = {
           notify_email?: string | null
           notify_email_enabled?: boolean
           notify_whatsapp_enabled?: boolean
+          real_conversation_threshold_seconds?: number
           tts_provider?: string
           updated_at?: string
           updated_by?: string | null
