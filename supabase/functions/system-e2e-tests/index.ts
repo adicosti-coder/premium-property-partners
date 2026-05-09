@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
   try {
     const r = await fetch(`${SUPABASE_URL}/functions/v1/voice-agent-e2e-test`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}`, "x-webhook-secret": SERVICE_KEY },
       body: JSON.stringify({ mode: "simulate" }),
     });
     voiceDetails = await r.json().catch(() => ({}));
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
   try {
     const r = await fetch(`${SUPABASE_URL}/functions/v1/seo-ai-optimizer`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}`, "x-webhook-secret": SERVICE_KEY },
       body: JSON.stringify({ url: seoUrl, language: "ro" }),
     });
     seoDetails = await r.json().catch(() => ({}));

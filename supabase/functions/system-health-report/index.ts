@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
   const idempotencyKey = `system-health-${new Date().toISOString().slice(0,10)}`;
   const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}`, "x-webhook-secret": SERVICE_KEY },
     body: JSON.stringify({
       template_name: "system-health-report",
       to: cfg.daily_report_email,
