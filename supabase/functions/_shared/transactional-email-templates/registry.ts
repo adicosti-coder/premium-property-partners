@@ -16,6 +16,7 @@ import { template as leadConverted } from './lead-converted.tsx'
 import { template as listingSubmitted } from './listing-submitted.tsx'
 import { template as adminOtp } from './admin-otp.tsx'
 import { template as systemHealthReport } from './system-health-report.tsx'
+import { template as e2eRecovery } from './e2e-recovery.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcomeEmail,
