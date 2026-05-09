@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Phone, PhoneCall, MessageSquare, Calendar, TrendingUp, AlertCircle, Loader2 } from "lucide-react";
+import { Phone, PhoneCall, MessageSquare, Calendar, TrendingUp, AlertCircle, Loader2, PieChart as PieChartIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 type Period = "today" | "week" | "month";
 
 interface Metrics {
   initiated: number;
-  connected: number;        // call_duration_seconds > 5
-  realConversations: number; // > 30s AND not voicemail
+  connected: number;
+  realConversations: number;
   withSummary: number;
   followupSent: number;
   positiveSentiment: number;
@@ -18,18 +19,20 @@ interface Metrics {
   avgDurationSec: number;
   voicemails: number;
   invalidNumbers: number;
+  busy: number;
+  noAnswer: number;
 }
 
 interface RoiAlert {
   triggered: boolean;
-  realRatePct: number;       // last-20 real conv rate
+  realRatePct: number;
   sampleSize: number;
 }
 
 const EMPTY: Metrics = {
   initiated: 0, connected: 0, realConversations: 0, withSummary: 0,
   followupSent: 0, positiveSentiment: 0, appointments: 0, avgDurationSec: 0,
-  voicemails: 0, invalidNumbers: 0,
+  voicemails: 0, invalidNumbers: 0, busy: 0, noAnswer: 0,
 };
 
 const PERIOD_LABEL: Record<Period, string> = {
@@ -54,7 +57,7 @@ async function loadMetrics(p: Period): Promise<Metrics> {
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail")
+    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason")
     .gte("created_at", since);
 
   if (error || !data) return EMPTY;
@@ -69,6 +72,8 @@ async function loadMetrics(p: Period): Promise<Metrics> {
     if (dur > 5) m.connected++;
     if (dur > 30 && !r.is_voicemail) m.realConversations++;
     if (r.is_voicemail) m.voicemails++;
+    if (r.status === "busy") m.busy++;
+    if (r.status === "no-answer") m.noAnswer++;
     if (r.ai_summary) m.withSummary++;
     if (["positive", "very_positive"].includes(r.ai_sentiment)) m.positiveSentiment++;
     if (["auto_approved", "sent"].includes(r.followup_status)) m.followupSent++;
@@ -80,7 +85,6 @@ async function loadMetrics(p: Period): Promise<Metrics> {
   }
   m.avgDurationSec = durCount > 0 ? Math.round(totalDur / durCount) : 0;
 
-  // Count invalid numbers detected in this window
   const { count: invalidCount } = await supabase
     .from("prospect_listings")
     .select("*", { count: "exact", head: true })
@@ -326,6 +330,38 @@ const VoiceAgentResultsDashboard = () => {
                 />
               </div>
             </div>
+
+            {/* Pie Chart — Distribuția pierderilor */}
+            {(() => {
+              const lossData = [
+                { name: "Mesagerie vocală", value: metrics.voicemails, color: "hsl(var(--primary))" },
+                { name: "Număr invalid", value: metrics.invalidNumbers, color: "hsl(0 84% 60%)" },
+                { name: "Ocupat", value: metrics.busy, color: "hsl(38 92% 50%)" },
+                { name: "Nu răspunde", value: metrics.noAnswer, color: "hsl(217 91% 60%)" },
+              ].filter((d) => d.value > 0);
+              const totalLoss = lossData.reduce((s, d) => s + d.value, 0);
+              if (totalLoss === 0) return null;
+              return (
+                <div>
+                  <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                    <PieChartIcon className="w-3.5 h-3.5" />
+                    Raport pierderi ({totalLoss} apeluri pierdute)
+                  </div>
+                  <div className="h-[240px] rounded-md border bg-card p-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={lossData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}
+                          label={(e: any) => `${e.name}: ${e.value}`}>
+                          {lossData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                        </Pie>
+                        <Tooltip formatter={(v: any, n: any) => [`${v} apeluri (${Math.round((Number(v)/totalLoss)*100)}%)`, n]} />
+                        <Legend wrapperStyle={{ fontSize: "11px" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Verdict automat */}
             <div className="rounded-md border bg-muted/30 p-3 text-sm">

@@ -3074,6 +3074,7 @@ export type Database = {
           auto_blacklisted_at: string | null
           auto_call_triggered_at: string | null
           call_summary: string | null
+          callback_attempts: number
           campaign_run_id: string | null
           category: Database["public"]["Enums"]["offer_category"] | null
           consecutive_failures: number
@@ -3089,6 +3090,7 @@ export type Database = {
           images: string[] | null
           invalid_reason: string | null
           is_active: boolean | null
+          last_callback_window: string | null
           last_failure_reason: string | null
           last_retry_at: string | null
           last_seen_at: string | null
@@ -3097,6 +3099,7 @@ export type Database = {
           location: string | null
           marked_invalid_at: string | null
           migrated_from_scraper_id: string | null
+          next_callback_at: string | null
           owner_sentiment: string | null
           phone_normalized: string | null
           pre_campaign_status: string | null
@@ -3132,6 +3135,7 @@ export type Database = {
           auto_blacklisted_at?: string | null
           auto_call_triggered_at?: string | null
           call_summary?: string | null
+          callback_attempts?: number
           campaign_run_id?: string | null
           category?: Database["public"]["Enums"]["offer_category"] | null
           consecutive_failures?: number
@@ -3147,6 +3151,7 @@ export type Database = {
           images?: string[] | null
           invalid_reason?: string | null
           is_active?: boolean | null
+          last_callback_window?: string | null
           last_failure_reason?: string | null
           last_retry_at?: string | null
           last_seen_at?: string | null
@@ -3155,6 +3160,7 @@ export type Database = {
           location?: string | null
           marked_invalid_at?: string | null
           migrated_from_scraper_id?: string | null
+          next_callback_at?: string | null
           owner_sentiment?: string | null
           phone_normalized?: string | null
           pre_campaign_status?: string | null
@@ -3190,6 +3196,7 @@ export type Database = {
           auto_blacklisted_at?: string | null
           auto_call_triggered_at?: string | null
           call_summary?: string | null
+          callback_attempts?: number
           campaign_run_id?: string | null
           category?: Database["public"]["Enums"]["offer_category"] | null
           consecutive_failures?: number
@@ -3205,6 +3212,7 @@ export type Database = {
           images?: string[] | null
           invalid_reason?: string | null
           is_active?: boolean | null
+          last_callback_window?: string | null
           last_failure_reason?: string | null
           last_retry_at?: string | null
           last_seen_at?: string | null
@@ -3213,6 +3221,7 @@ export type Database = {
           location?: string | null
           marked_invalid_at?: string | null
           migrated_from_scraper_id?: string | null
+          next_callback_at?: string | null
           owner_sentiment?: string | null
           phone_normalized?: string | null
           pre_campaign_status?: string | null
@@ -6839,6 +6848,10 @@ export type Database = {
         }[]
       }
       redeem_owner_code: { Args: { p_code: string }; Returns: Json }
+      reset_prospect_invalid_status: {
+        Args: { p_prospect_id: string }
+        Returns: Json
+      }
       validate_chat_session: {
         Args: { p_session_id: string }
         Returns: boolean

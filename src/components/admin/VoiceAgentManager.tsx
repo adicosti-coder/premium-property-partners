@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap, Volume2, Play as PlayIcon, Mail, MessageCircle } from "lucide-react";
+import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap, Volume2, Play as PlayIcon, Mail, MessageCircle, Voicemail, Hourglass, BadgeAlert } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -45,6 +45,10 @@ interface VoiceCall {
   language_retry_count?: number | null;
   language_retry_of?: string | null;
   debug_log?: any[] | null;
+  is_voicemail?: boolean | null;
+  twilio_failure_reason?: string | null;
+  prospect_listing_id?: string | null;
+  next_callback_at?: string | null;
 }
 
 const statusColor = (s: string) => {
@@ -178,7 +182,26 @@ export default function VoiceAgentManager() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
-    setCalls((data as any) || []);
+    const sessions = (data as any[]) || [];
+
+    // Hydrate next_callback_at from prospect_listings (for ⏰ icon)
+    const prospectIds = Array.from(new Set(sessions.map((s) => s.prospect_listing_id).filter(Boolean)));
+    let callbackMap: Record<string, string | null> = {};
+    if (prospectIds.length) {
+      const { data: pls } = await supabase
+        .from("prospect_listings")
+        .select("id, next_callback_at")
+        .in("id", prospectIds as string[]);
+      for (const p of (pls as any[]) || []) {
+        if (p.next_callback_at && new Date(p.next_callback_at) > new Date()) {
+          callbackMap[p.id] = p.next_callback_at;
+        }
+      }
+    }
+    setCalls(sessions.map((s) => ({
+      ...s,
+      next_callback_at: s.prospect_listing_id ? callbackMap[s.prospect_listing_id] || null : null,
+    })));
     setLoading(false);
   };
 
@@ -770,6 +793,21 @@ export default function VoiceAgentManager() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{c.to_number}</span>
                         <Badge className={statusColor(c.status)}>{c.status}</Badge>
+                        {c.is_voicemail && (
+                          <Badge variant="outline" className="text-xs border-amber-300 text-amber-700 dark:text-amber-300" title="Apel preluat de mesageria vocală">
+                            <Voicemail className="h-3 w-3 mr-1" /> Robot
+                          </Badge>
+                        )}
+                        {(c.twilio_failure_reason && /invalid/i.test(c.twilio_failure_reason)) && (
+                          <Badge variant="outline" className="text-xs border-red-400 text-red-700 dark:text-red-300" title={`Twilio: ${c.twilio_failure_reason}`}>
+                            <BadgeAlert className="h-3 w-3 mr-1" /> Număr invalid
+                          </Badge>
+                        )}
+                        {c.next_callback_at && (
+                          <Badge variant="outline" className="text-xs border-blue-300 text-blue-700 dark:text-blue-300" title={`Re-apelare programată: ${new Date(c.next_callback_at).toLocaleString("ro-RO")}`}>
+                            <Hourglass className="h-3 w-3 mr-1" /> Re-apelare {new Date(c.next_callback_at).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          </Badge>
+                        )}
                         {c.ai_outcome && <Badge variant="outline">{c.ai_outcome}</Badge>}
                         {c.ai_sentiment && <span>{sentimentEmoji[c.ai_sentiment] || "•"}</span>}
                         {c.detected_language === "en" && <Badge className="bg-red-100 text-red-800 border border-red-300">⚠️ EN detectat</Badge>}
