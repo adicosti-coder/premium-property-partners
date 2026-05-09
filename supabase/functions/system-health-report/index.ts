@@ -49,32 +49,39 @@ Deno.serve(async (req) => {
   if (e2eFailed.length) errors.push(`${e2eFailed.length} test(e) E2E eșuate: ${e2eFailed.map((f:any)=>`${f.test_type}(${f.status})`).join(", ")}`);
   if (invalidKeys.length) errors.push(`Chei invalide: ${invalidKeys.join(", ")}`);
 
-  // Send email via send-transactional-email
-  const idempotencyKey = `system-health-${new Date().toISOString().slice(0,10)}`;
-  const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}`, "x-webhook-secret": SERVICE_KEY },
-    body: JSON.stringify({
-      template_name: "system-health-report",
-      to: cfg.daily_report_email,
-      idempotency_key: idempotencyKey,
-      purpose: "transactional",
-      data: {
-        date: new Date().toLocaleDateString("ro-RO"),
-        all_ok: allOk,
-        errors,
-        summary: {
-          cron_runs_24h: cronRuns?.length ?? 0,
-          cron_failures: failed.length,
-          e2e_failures: e2eFailed.length,
-          invalid_keys: invalidKeys,
-          avg_voice_latency_ms: avgLatency,
-          voice_calls_24h: latency?.length ?? 0,
+  // Support comma-separated list of recipients
+  const recipients: string[] = String(cfg.daily_report_email || "")
+    .split(/[,;]/).map((s) => s.trim()).filter((s) => s.includes("@"));
+  const sendResults: any[] = [];
+  for (const to of recipients) {
+    const idempotencyKey = `system-health-${new Date().toISOString().slice(0,10)}-${to}`;
+    const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}`, "x-webhook-secret": SERVICE_KEY },
+      body: JSON.stringify({
+        template_name: "system-health-report",
+        to,
+        idempotency_key: idempotencyKey,
+        purpose: "transactional",
+        data: {
+          date: new Date().toLocaleDateString("ro-RO"),
+          all_ok: allOk,
+          errors,
+          summary: {
+            cron_runs_24h: cronRuns?.length ?? 0,
+            cron_failures: failed.length,
+            e2e_failures: e2eFailed.length,
+            invalid_keys: invalidKeys,
+            avg_voice_latency_ms: avgLatency,
+            voice_calls_24h: latency?.length ?? 0,
+          },
         },
-      },
-    }),
-  });
-  const sendData = await sendRes.json().catch(() => ({}));
+      }),
+    });
+    sendResults.push({ to, ok: sendRes.ok, status: sendRes.status });
+  }
+  const sendData = { recipients: sendResults };
+  const sendRes = { ok: sendResults.every((r) => r.ok) };
 
   await sb.from("cron_run_log").insert({
     job_name: "system-health-report", status: "success",
