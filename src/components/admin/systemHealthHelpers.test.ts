@@ -19,7 +19,7 @@ describe("buildE2ECsv", () => {
     const row: E2ERun = { ...baseRow, details: { msg: 'has "quotes" and, comma' } };
     const csv = buildE2ECsv([row]);
     const lines = csv.split("\n");
-    expect(lines[1]).toContain('""quotes""');
+    expect(lines[1]).toContain('\\""quotes\\""');
     // cell starts/ends with double-quote (proper escaping)
     expect(lines[1]).toMatch(/,"\{.*\}"$/);
   });
