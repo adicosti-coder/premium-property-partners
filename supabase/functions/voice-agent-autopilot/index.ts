@@ -178,8 +178,15 @@ serve(async (req) => {
       .eq("direction", "outbound");
     const recentPhoneSet = new Set<string>((recentCalls || []).map((r: any) => r.to_number).filter(Boolean));
 
-    // Prioritate absolută: prospect_type = 'proprietar' înaintea oricărui altceva.
+    // Prioritizare:
+    //   1. Call back-uri scadente (next_callback_at <= now) — fereastra optimă identificată
+    //   2. prospect_type = 'proprietar' (vs agentie)
+    //   3. lead_score DESC
+    const nowMs = Date.now();
     const ordered = [...(prospects || [])].sort((a: any, b: any) => {
+      const aDue = a.next_callback_at && new Date(a.next_callback_at).getTime() <= nowMs ? 0 : 1;
+      const bDue = b.next_callback_at && new Date(b.next_callback_at).getTime() <= nowMs ? 0 : 1;
+      if (aDue !== bDue) return aDue - bDue;
       const ap = a.prospect_type === "proprietar" ? 0 : 1;
       const bp = b.prospect_type === "proprietar" ? 0 : 1;
       if (ap !== bp) return ap - bp;
