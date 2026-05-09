@@ -8,9 +8,13 @@ export type E2ERun = {
   run_at: string;
   retry_count?: number | null;
   parent_run_id?: number | string | null;
+  recovery_notified_at?: string | null;
   error_message?: string | null;
   details?: unknown;
 };
+
+export const isRecovered = (r: E2ERun): boolean =>
+  r.status === "passed" && (!!r.recovery_notified_at || (r.parent_run_id != null));
 
 export const E2E_CSV_COLUMNS = [
   "id", "test_type", "status", "duration_ms",
