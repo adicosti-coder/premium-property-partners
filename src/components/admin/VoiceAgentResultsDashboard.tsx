@@ -436,16 +436,33 @@ const VoiceAgentResultsDashboard = () => {
                       variant="outline"
                       className="h-7 text-xs"
                       onClick={() => {
-                        const rows = [
-                          ["Categorie", "Apeluri", "Procent", "Perioada"],
-                          ...lossData.map((d) => [
-                            d.name,
-                            String(d.value),
-                            `${Math.round((d.value / totalLoss) * 100)}%`,
-                            PERIOD_LABEL[period],
-                          ]),
-                          ["TOTAL", String(totalLoss), "100%", PERIOD_LABEL[period]],
+                        // Per-window × per-category breakdown
+                        const windows: HourWindow[] = ["Dimineață", "Prânz", "Seară", "Off-hours"];
+                        const cats: { key: keyof HourBucket; label: string }[] = [
+                          { key: "voicemails", label: "Mesagerie vocală" },
+                          { key: "busy", label: "Ocupat" },
+                          { key: "noAnswer", label: "Nu răspunde" },
                         ];
+                        const rows: string[][] = [
+                          ["Categorie", "Fereastra Orară", "Apeluri", "Procent din pierderi", "Perioada"],
+                        ];
+                        for (const cat of cats) {
+                          for (const w of windows) {
+                            const b = buckets.find((x) => x.window === w);
+                            const v = (b?.[cat.key] as number) || 0;
+                            if (v > 0) rows.push([
+                              cat.label, w, String(v),
+                              `${Math.round((v / totalLoss) * 100)}%`,
+                              PERIOD_LABEL[period],
+                            ]);
+                          }
+                        }
+                        // Plus "Număr invalid" (nu are timestamp pe sesiune — doar total)
+                        if (metrics.invalidNumbers > 0) {
+                          rows.push(["Număr invalid", "Total perioadă", String(metrics.invalidNumbers),
+                            `${Math.round((metrics.invalidNumbers / totalLoss) * 100)}%`, PERIOD_LABEL[period]]);
+                        }
+                        rows.push(["TOTAL", "—", String(totalLoss), "100%", PERIOD_LABEL[period]]);
                         const csv = rows
                           .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
                           .join("\n");
