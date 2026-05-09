@@ -49,6 +49,8 @@ interface VoiceCall {
   twilio_failure_reason?: string | null;
   prospect_listing_id?: string | null;
   next_callback_at?: string | null;
+  appointment_scheduled_at?: string | null;
+  is_recovered?: boolean;
 }
 
 const statusColor = (s: string) => {
