@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Phone, PhoneCall, MessageSquare, Calendar, TrendingUp, AlertCircle, Loader2, PieChart as PieChartIcon } from "lucide-react";
+import { Phone, PhoneCall, MessageSquare, Calendar, TrendingUp, AlertCircle, Loader2, PieChart as PieChartIcon, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Button } from "@/components/ui/button";
 
 type Period = "today" | "week" | "month";
 
