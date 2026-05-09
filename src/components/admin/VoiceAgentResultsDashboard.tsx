@@ -344,9 +344,41 @@ const VoiceAgentResultsDashboard = () => {
               if (totalLoss === 0) return null;
               return (
                 <div>
-                  <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
-                    <PieChartIcon className="w-3.5 h-3.5" />
-                    Raport pierderi ({totalLoss} apeluri pierdute)
+                  <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                      <PieChartIcon className="w-3.5 h-3.5" />
+                      Raport pierderi ({totalLoss} apeluri pierdute)
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        const rows = [
+                          ["Categorie", "Apeluri", "Procent", "Perioada"],
+                          ...lossData.map((d) => [
+                            d.name,
+                            String(d.value),
+                            `${Math.round((d.value / totalLoss) * 100)}%`,
+                            PERIOD_LABEL[period],
+                          ]),
+                          ["TOTAL", String(totalLoss), "100%", PERIOD_LABEL[period]],
+                        ];
+                        const csv = rows
+                          .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+                          .join("\n");
+                        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `pierderi-andrei-${period}-${new Date().toISOString().slice(0, 10)}.csv`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      <Download className="w-3 h-3 mr-1.5" />
+                      Export CSV
+                    </Button>
                   </div>
                   <div className="h-[240px] rounded-md border bg-card p-2">
                     <ResponsiveContainer width="100%" height="100%">
