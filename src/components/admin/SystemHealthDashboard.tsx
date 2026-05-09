@@ -164,6 +164,16 @@ export default function SystemHealthDashboard() {
   const failedRecent = recentE2E.find((r) => r.status !== "passed");
   const allOk = invalidKeys.length === 0 && !failedRecent && recentLatencyAlerts.length === 0;
 
+  const incident = analyzeIncidents({
+    invalidKeys: invalidKeys.map((k) => ({ provider: k.provider })),
+    recentE2E: recentE2E as E2ERun[],
+    latencyAlertsCount: recentLatencyAlerts.length,
+  });
+
+  const filteredE2E = filterE2E(recentE2E as E2ERun[], {
+    status: filterStatus, test_type: filterType, query: filterQuery,
+  });
+
   // Pie data: total cron success vs failed last 7d
   const totalSuccess = cronAgg.reduce((s, x) => s + x.success, 0);
   const totalFailed = cronAgg.reduce((s, x) => s + x.failed, 0);
