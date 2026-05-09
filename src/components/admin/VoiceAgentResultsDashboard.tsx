@@ -331,6 +331,38 @@ const VoiceAgentResultsDashboard = () => {
               </div>
             </div>
 
+            {/* Pie Chart — Distribuția pierderilor */}
+            {(() => {
+              const lossData = [
+                { name: "Mesagerie vocală", value: metrics.voicemails, color: "hsl(var(--primary))" },
+                { name: "Număr invalid", value: metrics.invalidNumbers, color: "hsl(0 84% 60%)" },
+                { name: "Ocupat", value: metrics.busy, color: "hsl(38 92% 50%)" },
+                { name: "Nu răspunde", value: metrics.noAnswer, color: "hsl(217 91% 60%)" },
+              ].filter((d) => d.value > 0);
+              const totalLoss = lossData.reduce((s, d) => s + d.value, 0);
+              if (totalLoss === 0) return null;
+              return (
+                <div>
+                  <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                    <PieChartIcon className="w-3.5 h-3.5" />
+                    Raport pierderi ({totalLoss} apeluri pierdute)
+                  </div>
+                  <div className="h-[240px] rounded-md border bg-card p-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={lossData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}
+                          label={(e: any) => `${e.name}: ${e.value}`}>
+                          {lossData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                        </Pie>
+                        <Tooltip formatter={(v: any, n: any) => [`${v} apeluri (${Math.round((Number(v)/totalLoss)*100)}%)`, n]} />
+                        <Legend wrapperStyle={{ fontSize: "11px" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Verdict automat */}
             <div className="rounded-md border bg-muted/30 p-3 text-sm">
               <div className="font-semibold mb-1">Verdict — {PERIOD_LABEL[period]}</div>
