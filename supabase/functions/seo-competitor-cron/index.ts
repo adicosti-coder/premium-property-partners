@@ -22,8 +22,10 @@ function nextRun(freq: string, from: Date): Date {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const supa = createClient(SUPABASE_URL, SERVICE_KEY);
+  const t0 = Date.now();
+  await supa.from("cron_run_log").insert({ job_name: "seo-competitor-cron", status: "started" }).then(()=>{}, ()=>{});
   try {
-    const supa = createClient(SUPABASE_URL, SERVICE_KEY);
     const now = new Date();
 
     const { data: due, error } = await supa
