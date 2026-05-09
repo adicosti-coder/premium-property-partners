@@ -69,15 +69,23 @@ export default function VoiceAgentSimSuccessRate() {
             ultimele 14 zile
           </div>
         </div>
-        <div className="flex items-end gap-1 h-16">
-          {data?.series.map((p) => (
-            <div
-              key={p.day}
-              className="flex-1 bg-primary/20 hover:bg-primary/40 transition rounded-t"
-              style={{ height: `${(p.rate / max) * 100}%` }}
-              title={`${p.day}: ${p.rate}% (${p.total} apeluri)`}
-            />
-          ))}
+        <div className="flex items-end gap-1 h-16 border-b border-border/40">
+          {data?.series.map((p) => {
+            const hasData = p.total > 0;
+            const heightPct = hasData ? Math.max(8, (p.rate / max) * 100) : 4;
+            return (
+              <div
+                key={p.day}
+                className={`flex-1 rounded-t transition ${
+                  hasData
+                    ? "bg-primary/40 hover:bg-primary/60"
+                    : "bg-muted hover:bg-muted-foreground/20"
+                }`}
+                style={{ height: `${heightPct}%` }}
+                title={`${p.day}: ${hasData ? `${p.rate}% (${p.total} apeluri)` : "fără apeluri"}`}
+              />
+            );
+          })}
         </div>
         {(data?.total ?? 0) === 0 && (
           <p className="text-xs text-muted-foreground mt-3">
