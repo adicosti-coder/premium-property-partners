@@ -45,6 +45,10 @@ interface VoiceCall {
   language_retry_count?: number | null;
   language_retry_of?: string | null;
   debug_log?: any[] | null;
+  is_voicemail?: boolean | null;
+  twilio_failure_reason?: string | null;
+  prospect_listing_id?: string | null;
+  next_callback_at?: string | null;
 }
 
 const statusColor = (s: string) => {
