@@ -775,15 +775,20 @@ export default function VoiceAgentManager() {
                         {(c.language_retry_count || 0) > 0 && <Badge variant="outline" className="text-xs">↻ retry RO trimis</Badge>}
                         {c.language_retry_of && <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-xs">🔁 retry pentru apel anterior</Badge>}
                       </div>
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(c.created_at).toLocaleString("ro-RO", {
+                            day: "2-digit", month: "2-digit", year: "numeric",
+                            hour: "2-digit", minute: "2-digit",
+                          })}
+                        </span>
+                        <span aria-hidden>•</span>
+                        <span>{c.call_duration_seconds || 0}s</span>
+                      </div>
                       <div className="text-xs text-muted-foreground truncate mt-0.5">
                         {c.ai_summary || c.error_message || "Nicio sinteză încă"}
                       </div>
-                    </div>
-                    <div className="text-xs text-right shrink-0">
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Clock className="h-3 w-3" />{c.call_duration_seconds || 0}s
-                      </div>
-                      <div className="text-muted-foreground">{new Date(c.created_at).toLocaleString("ro-RO", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</div>
                     </div>
                     <Button
                       size="sm"
