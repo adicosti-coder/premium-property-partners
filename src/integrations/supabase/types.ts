@@ -1196,6 +1196,7 @@ export type Database = {
           error_message: string | null
           id: number
           parent_run_id: number | null
+          recovery_notified_at: string | null
           retry_count: number
           retry_scheduled_at: string | null
           run_at: string
@@ -1208,6 +1209,7 @@ export type Database = {
           error_message?: string | null
           id?: number
           parent_run_id?: number | null
+          recovery_notified_at?: string | null
           retry_count?: number
           retry_scheduled_at?: string | null
           run_at?: string
@@ -1220,6 +1222,7 @@ export type Database = {
           error_message?: string | null
           id?: number
           parent_run_id?: number | null
+          recovery_notified_at?: string | null
           retry_count?: number
           retry_scheduled_at?: string | null
           run_at?: string
@@ -6684,6 +6687,7 @@ export type Database = {
         Returns: boolean
       }
       check_cta_rate_limit: { Args: { p_session_id: string }; Returns: boolean }
+      cleanup_old_e2e_runs: { Args: never; Returns: number }
       cleanup_old_tracking_data: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
