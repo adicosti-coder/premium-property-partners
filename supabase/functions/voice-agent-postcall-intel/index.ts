@@ -48,11 +48,51 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Detect "successful call-back": prospect had a previous busy/no-answer
+    // and this call actually connected (>15s OR has summary/outcome).
+    let isSuccessfulCallback = false;
+    let previousAttempt: { status: string; created_at: string } | null = null;
+    if (session.prospect_listing_id) {
+      const { data: prosp } = await supabase
+        .from("prospect_listings")
+        .select("callback_attempts, last_failure_reason")
+        .eq("id", session.prospect_listing_id)
+        .maybeSingle();
+      const hadCallbacks = (prosp as any)?.callback_attempts > 0
+        || /busy|no-answer/i.test(String((prosp as any)?.last_failure_reason || ""));
+      if (hadCallbacks) {
+        const { data: prev } = await supabase
+          .from("voice_call_sessions")
+          .select("status, created_at, call_duration_seconds")
+          .eq("prospect_listing_id", session.prospect_listing_id)
+          .neq("id", sessionId)
+          .in("status", ["busy", "no-answer"])
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (prev && prev.length > 0) {
+          previousAttempt = { status: (prev[0] as any).status, created_at: (prev[0] as any).created_at };
+        }
+      }
+    }
+    const dur = (session as any).call_duration_seconds ?? 0;
+    if (previousAttempt && (dur > 15 || session.ai_summary || session.ai_outcome === "interesat" || session.ai_outcome === "programare")) {
+      isSuccessfulCallback = true;
+    }
+
     const transcript = Array.isArray(session.transcript) ? session.transcript : [];
     const transcriptText = transcript
       .map((t: any) => `${t.role === "user" ? "Client" : "Andrei"}: ${t.text}`)
       .join("\n")
       .slice(0, 7000);
+
+    const callbackInstructions = isSuccessfulCallback
+      ? `\n\n🔁 IMPORTANT — APEL DE TIP "CALL BACK REUȘIT":
+• Acesta este un re-apel reușit, după ce am încercat anterior și nu s-a putut prinde clientul.
+• Mesajul WhatsApp ȘI body-ul email TREBUIE să înceapă obligatoriu cu propoziția:
+  "Mă bucur că am reușit să luăm legătura..."
+• Continuă apoi cu un rezumat scurt, concret, al detaliilor discutate (proprietate, preț, interes, întrebări specifice).
+• Tonul: cald, recunoscător, profesionist.`
+      : "";
 
     const systemPrompt = `Ești un asistent de top pentru o agenție imobiliară premium din Timișoara (RealTrust).
 După apelul telefonic al lui Andrei (concierge vocal AI), generezi un PACHET DE FOLLOW-UP în română, cu diacritice, NICIODATĂ engleză.
@@ -63,7 +103,7 @@ REGULI:
 • Email: subiect clar (max 60 caractere) + body profesional dar prietenos (max 800 caractere), salutare "Bună ziua,", semnătură "Echipa RealTrust Timișoara".
 • Next-best-actions: 3 acțiuni CONCRETE, fiecare pe sub 12 cuvinte, în ordinea priorității.
 • Priority: "high" dacă outcome=interesat/programare, "medium" dacă callback, "low" altfel.
-• Dacă transcript-ul e gol sau apelul a eșuat, generezi totuși un follow-up scurt de re-contactare.`;
+• Dacă transcript-ul e gol sau apelul a eșuat, generezi totuși un follow-up scurt de re-contactare.${callbackInstructions}`;
 
     const userMsg = `Apel:
 - Outcome: ${session.ai_outcome || "necunoscut"}
@@ -71,6 +111,7 @@ REGULI:
 - Sumar: ${session.ai_summary || "(fără sumar)"}
 - Următoarea acțiune sugerată: ${session.next_action || "(nespecificată)"}
 - Programare propusă: ${session.appointment_scheduled_at || "(niciuna)"}
+${isSuccessfulCallback ? `- TIP APEL: CALL BACK REUȘIT (încercare anterioară: ${previousAttempt?.status} la ${previousAttempt?.created_at})` : ""}
 
 Transcript (ultimele 7000 caractere):
 ${transcriptText || "(transcript indisponibil)"}
