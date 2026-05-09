@@ -72,7 +72,7 @@ function periodSinceISO(p: Period): string {
   return d.toISOString();
 }
 
-async function loadMetrics(p: Period): Promise<{ metrics: Metrics; buckets: HourBucket[]; rawRows: any[] }> {
+async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics: Metrics; buckets: HourBucket[]; rawRows: any[] }> {
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
