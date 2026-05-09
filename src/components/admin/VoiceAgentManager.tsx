@@ -22,6 +22,7 @@ import VoiceAgentBatchCalling from "./VoiceAgentBatchCalling";
 import VoiceAgentTrainingLab from "./VoiceAgentTrainingLab";
 import VoiceAgentGhostingQueue from "./VoiceAgentGhostingQueue";
 import VoiceAgentAutopilot from "./VoiceAgentAutopilot";
+import VoiceAgentResultsDashboard from "./VoiceAgentResultsDashboard";
 
 interface VoiceCall {
   id: string;
@@ -375,6 +376,7 @@ export default function VoiceAgentManager() {
           </div>
         </CardContent>
       </Card>
+      <VoiceAgentResultsDashboard />
       <VoiceAgentAutopilot />
       <VoiceAgentSimSuccessRate />
       <VoiceAgentBatchCalling />
