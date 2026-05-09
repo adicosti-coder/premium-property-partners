@@ -87,6 +87,49 @@ export default function VoiceAgentManager() {
     results: Array<{ scenario_id: string; user_message: string; ai_reply: string; passed: boolean; ai_error: string | null; english_words_detected: string[]; has_diacritics: boolean; duration_ms: number }>;
   } | null>(null);
   const [langTestOpen, setLangTestOpen] = useState(false);
+  const [windowFilter, setWindowFilter] = useState<HourWindow | "all">("all");
+  const [recoveryRatePct, setRecoveryRatePct] = useState<number | null>(null);
+
+  // Listen for filter requests from heatmap drill-down
+  useEffect(() => {
+    const handler = (e: any) => {
+      const w = e?.detail?.window as HourWindow | undefined;
+      if (!w) return;
+      setWindowFilter(w);
+      // Scroll to the calls history section
+      setTimeout(() => {
+        document.getElementById("voice-agent-calls-history")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+      toast({ title: `Filtru aplicat: ${w}`, description: "Apelurile de mai jos sunt filtrate pentru această fereastră orară." });
+    };
+    window.addEventListener("voice-agent:filter-window", handler as any);
+    return () => window.removeEventListener("voice-agent:filter-window", handler as any);
+  }, []);
+
+  // Compute weekly callback success rate (recovered appointments / total callback attempts)
+  useEffect(() => {
+    (async () => {
+      const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("voice_call_sessions")
+        .select("id, appointment_scheduled_at, prospect_listing_id, created_at")
+        .gte("created_at", sinceIso)
+        .not("prospect_listing_id", "is", null);
+      const sessions = (data as any[]) || [];
+      const pids = Array.from(new Set(sessions.map((s) => s.prospect_listing_id)));
+      if (!pids.length) { setRecoveryRatePct(null); return; }
+      const { data: pls } = await supabase
+        .from("prospect_listings")
+        .select("id, callback_attempts")
+        .in("id", pids);
+      const map: Record<string, number> = {};
+      for (const p of (pls as any[]) || []) map[p.id] = Number(p.callback_attempts || 0);
+      const callbackSessions = sessions.filter((s) => (map[s.prospect_listing_id] || 0) > 0);
+      if (callbackSessions.length === 0) { setRecoveryRatePct(null); return; }
+      const recovered = callbackSessions.filter((s) => !!s.appointment_scheduled_at).length;
+      setRecoveryRatePct(Math.round((recovered / callbackSessions.length) * 100));
+    })();
+  }, [calls.length]);
 
   const runLanguageTest = async () => {
     setLangTestRunning(true);
