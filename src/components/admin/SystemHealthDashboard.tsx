@@ -210,7 +210,28 @@ export default function SystemHealthDashboard() {
         </CardContent>
       </Card>
 
-      {/* Charts row */}
+      {/* Incident summary (real-time correlation) */}
+      <Card className={
+        incident.severity === "critical" ? "border-red-500/40 bg-red-50/50 dark:bg-red-950/20"
+        : incident.severity === "warning" ? "border-amber-500/40 bg-amber-50/50 dark:bg-amber-950/20"
+        : "border-emerald-500/30"
+      }>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Sparkles className="h-4 w-4" /> Rezumat incident (analiză automată)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <div className="font-semibold">{incident.headline}</div>
+          <p className="text-muted-foreground">{incident.impact}</p>
+          {incident.hints.length > 0 && (
+            <ul className="list-disc pl-5 space-y-1">
+              {incident.hints.map((h, i) => <li key={i}>{h}</li>)}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader><CardTitle className="text-base">Status Cron-uri (7 zile)</CardTitle></CardHeader>
