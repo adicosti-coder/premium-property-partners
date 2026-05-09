@@ -8,9 +8,9 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, BarChart, Ba
 import { Button } from "@/components/ui/button";
 
 type Period = "today" | "week" | "month";
-type HourWindow = "Dimineață" | "Prânz" | "Seară" | "Off-hours";
+export type HourWindow = "Dimineață" | "Prânz" | "Seară" | "Off-hours";
 
-function hourWindow(d: Date): HourWindow {
+export function hourWindow(d: Date): HourWindow {
   const h = d.getHours();
   if (h >= 8 && h < 12) return "Dimineață";
   if (h >= 12 && h < 17) return "Prânz";
