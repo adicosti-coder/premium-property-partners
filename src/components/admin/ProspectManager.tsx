@@ -1084,14 +1084,24 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
         {attempts.map((a, i) => {
           const lbl = labelFor(a);
           const t = format(new Date(a.created_at), "dd MMM HH:mm", { locale: ro });
+          const si = sentimentInfo(a.ai_sentiment);
           return (
             <li key={a.id} className="ml-3">
-              <div className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-background border-2 border-primary" />
+              <div
+                className={`absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-background border-2 ${si ? si.color.replace("bg-", "border-") : "border-primary"}`}
+                title={si ? `Sentiment: ${si.label}` : "Fără sentiment AI"}
+              />
               <div className="flex items-center gap-2 flex-wrap text-xs">
                 <span className="font-semibold">Încercarea {i + 1}</span>
                 <Badge className={`${lbl.tone} text-[10px] gap-1`}>
                   {lbl.icon} {lbl.text}
                 </Badge>
+                {si && (
+                  <span className="inline-flex items-center gap-1 text-[11px]" title={`Sentiment AI: ${si.label}`}>
+                    <span aria-hidden>{si.emoji}</span>
+                    <span className="text-muted-foreground">{si.label}</span>
+                  </span>
+                )}
                 <span className="text-muted-foreground">· {t}</span>
                 {a.call_duration_seconds ? (
                   <span className="text-muted-foreground">· {a.call_duration_seconds}s</span>
