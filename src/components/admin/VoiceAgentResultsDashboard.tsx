@@ -25,7 +25,34 @@ interface HourBucket {
   voicemails: number;
   busy: number;
   noAnswer: number;
+  positive: number;
+  neutral: number;
+  irritated: number;
 }
+
+// Normalize free-form sentiment values into 3 canonical buckets used in UI/charts.
+// Handles both EN (positive/very_positive/negative/very_negative/neutral) and RO
+// (pozitiv/neutru/negativ/iritat/suparat) variants stored across older sessions.
+export type SentimentBucket = "pozitiv" | "neutru" | "iritat";
+export function normalizeSentiment(s: string | null | undefined): SentimentBucket | null {
+  if (!s) return null;
+  const v = String(s).toLowerCase().trim();
+  if (!v) return null;
+  if (/(very_?positive|positive|pozitiv|fericit|incantat|încântat|happy)/.test(v)) return "pozitiv";
+  if (/(very_?negative|negative|negativ|iritat|suparat|supărat|nervos|angry|frustr)/.test(v)) return "iritat";
+  if (/(neutral|neutru|calm|ok)/.test(v)) return "neutru";
+  return "neutru";
+}
+export const sentimentEmojiMap: Record<SentimentBucket, string> = {
+  pozitiv: "😊",
+  neutru: "😐",
+  iritat: "😠",
+};
+export const sentimentColorMap: Record<SentimentBucket, string> = {
+  pozitiv: "hsl(142 71% 45%)",
+  neutru: "hsl(217 10% 60%)",
+  iritat: "hsl(0 84% 60%)",
+};
 
 interface Metrics {
   initiated: number;
