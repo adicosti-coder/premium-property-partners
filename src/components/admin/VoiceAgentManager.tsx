@@ -89,6 +89,7 @@ export default function VoiceAgentManager() {
   } | null>(null);
   const [langTestOpen, setLangTestOpen] = useState(false);
   const [windowFilter, setWindowFilter] = useState<HourWindow | "all">("all");
+  const [sentimentFilter, setSentimentFilter] = useState<SentimentBucket | "all">("all");
   const [recoveryRatePct, setRecoveryRatePct] = useState<number | null>(null);
 
   // Listen for filter requests from heatmap drill-down
