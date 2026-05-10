@@ -22,7 +22,7 @@ import VoiceAgentBatchCalling from "./VoiceAgentBatchCalling";
 import VoiceAgentTrainingLab from "./VoiceAgentTrainingLab";
 import VoiceAgentGhostingQueue from "./VoiceAgentGhostingQueue";
 import VoiceAgentAutopilot from "./VoiceAgentAutopilot";
-import VoiceAgentResultsDashboard, { hourWindow, type HourWindow } from "./VoiceAgentResultsDashboard";
+import VoiceAgentResultsDashboard, { hourWindow, normalizeSentiment, sentimentEmojiMap, type HourWindow, type SentimentBucket } from "./VoiceAgentResultsDashboard";
 
 interface VoiceCall {
   id: string;
