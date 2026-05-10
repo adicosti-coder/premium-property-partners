@@ -157,12 +157,13 @@ serve(async (req) => {
     const nowIso = new Date().toISOString();
     const { data: prospects } = await supabase
       .from("prospect_listings")
-      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords, marked_invalid_at, next_callback_at, callback_attempts")
+      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords, marked_invalid_at, next_callback_at, callback_attempts, do_not_call")
       .gte("lead_score", minScore)
       .in("lifecycle_status", ["new", "callback"])
       .not("phone_normalized", "is", null)
       .is("auto_call_triggered_at", null)
       .is("marked_invalid_at", null)
+      .eq("do_not_call", false)
       // Either fresh (no callback scheduled) OR callback time has arrived
       .or(`next_callback_at.is.null,next_callback_at.lte.${nowIso}`)
       .order("prospect_type", { ascending: true })

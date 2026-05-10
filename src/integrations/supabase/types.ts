@@ -3083,6 +3083,9 @@ export type Database = {
           created_at: string | null
           currency: string | null
           description: string | null
+          do_not_call: boolean
+          do_not_call_at: string | null
+          do_not_call_reason: string | null
           features: string[] | null
           floor: string | null
           followup_sent_at: string | null
@@ -3144,6 +3147,9 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          do_not_call?: boolean
+          do_not_call_at?: string | null
+          do_not_call_reason?: string | null
           features?: string[] | null
           floor?: string | null
           followup_sent_at?: string | null
@@ -3205,6 +3211,9 @@ export type Database = {
           created_at?: string | null
           currency?: string | null
           description?: string | null
+          do_not_call?: boolean
+          do_not_call_at?: string | null
+          do_not_call_reason?: string | null
           features?: string[] | null
           floor?: string | null
           followup_sent_at?: string | null

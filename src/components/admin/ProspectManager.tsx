@@ -982,6 +982,8 @@ interface CallAttempt {
   is_voicemail: boolean | null;
   appointment_scheduled_at: string | null;
   ai_outcome: string | null;
+  ai_sentiment: string | null;
+  ai_summary: string | null;
   twilio_failure_reason: string | null;
 }
 
@@ -994,7 +996,7 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
     setLoading(true);
     supabase
       .from("voice_call_sessions")
-      .select("id, created_at, status, call_duration_seconds, is_voicemail, appointment_scheduled_at, ai_outcome, twilio_failure_reason")
+      .select("id, created_at, status, call_duration_seconds, is_voicemail, appointment_scheduled_at, ai_outcome, ai_sentiment, ai_summary, twilio_failure_reason")
       .eq("prospect_listing_id", prospectId)
       .order("created_at", { ascending: true })
       .then(({ data }) => {
@@ -1024,12 +1026,22 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
     return { text: a.status || "—", tone: "bg-muted text-foreground", icon: <Phone className="w-3 h-3" /> };
   };
 
+  const sentimentInfo = (s: string | null | undefined): { label: string; emoji: string; color: string } | null => {
+    if (!s) return null;
+    const v = s.toLowerCase();
+    if (/(very_?positive|positive|pozitiv|fericit|happy)/.test(v)) return { label: "Pozitiv", emoji: "😊", color: "bg-emerald-500" };
+    if (/(very_?negative|negative|negativ|iritat|suparat|supărat|nervos|angry|frustr)/.test(v)) return { label: "Iritat", emoji: "😠", color: "bg-red-500" };
+    if (/(neutral|neutru|calm|ok)/.test(v)) return { label: "Neutru", emoji: "😐", color: "bg-slate-400" };
+    return { label: s, emoji: "•", color: "bg-muted-foreground" };
+  };
+
   const exportTimelineCsv = () => {
     const rows: string[][] = [
-      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Motiv eșec Twilio"],
+      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Sentiment AI", "Sumar AI", "Motiv eșec Twilio"],
     ];
     attempts.forEach((a, i) => {
       const d = new Date(a.created_at);
+      const si = sentimentInfo(a.ai_sentiment);
       rows.push([
         String(i + 1),
         format(d, "dd.MM.yyyy", { locale: ro }),
@@ -1039,6 +1051,8 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
         a.is_voicemail ? "Da" : "Nu",
         a.appointment_scheduled_at ? format(new Date(a.appointment_scheduled_at), "dd.MM.yyyy HH:mm", { locale: ro }) : "—",
         a.ai_outcome || "—",
+        si ? `${si.emoji} ${si.label}` : "—",
+        (a.ai_summary || "—").replace(/\s+/g, " ").trim(),
         a.twilio_failure_reason || "—",
       ]);
     });
@@ -1070,14 +1084,24 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
         {attempts.map((a, i) => {
           const lbl = labelFor(a);
           const t = format(new Date(a.created_at), "dd MMM HH:mm", { locale: ro });
+          const si = sentimentInfo(a.ai_sentiment);
           return (
             <li key={a.id} className="ml-3">
-              <div className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-background border-2 border-primary" />
+              <div
+                className={`absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-background border-2 ${si ? si.color.replace("bg-", "border-") : "border-primary"}`}
+                title={si ? `Sentiment: ${si.label}` : "Fără sentiment AI"}
+              />
               <div className="flex items-center gap-2 flex-wrap text-xs">
                 <span className="font-semibold">Încercarea {i + 1}</span>
                 <Badge className={`${lbl.tone} text-[10px] gap-1`}>
                   {lbl.icon} {lbl.text}
                 </Badge>
+                {si && (
+                  <span className="inline-flex items-center gap-1 text-[11px]" title={`Sentiment AI: ${si.label}`}>
+                    <span aria-hidden>{si.emoji}</span>
+                    <span className="text-muted-foreground">{si.label}</span>
+                  </span>
+                )}
                 <span className="text-muted-foreground">· {t}</span>
                 {a.call_duration_seconds ? (
                   <span className="text-muted-foreground">· {a.call_duration_seconds}s</span>

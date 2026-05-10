@@ -25,7 +25,34 @@ interface HourBucket {
   voicemails: number;
   busy: number;
   noAnswer: number;
+  positive: number;
+  neutral: number;
+  irritated: number;
 }
+
+// Normalize free-form sentiment values into 3 canonical buckets used in UI/charts.
+// Handles both EN (positive/very_positive/negative/very_negative/neutral) and RO
+// (pozitiv/neutru/negativ/iritat/suparat) variants stored across older sessions.
+export type SentimentBucket = "pozitiv" | "neutru" | "iritat";
+export function normalizeSentiment(s: string | null | undefined): SentimentBucket | null {
+  if (!s) return null;
+  const v = String(s).toLowerCase().trim();
+  if (!v) return null;
+  if (/(very_?positive|positive|pozitiv|fericit|incantat|încântat|happy)/.test(v)) return "pozitiv";
+  if (/(very_?negative|negative|negativ|iritat|suparat|supărat|nervos|angry|frustr)/.test(v)) return "iritat";
+  if (/(neutral|neutru|calm|ok)/.test(v)) return "neutru";
+  return "neutru";
+}
+export const sentimentEmojiMap: Record<SentimentBucket, string> = {
+  pozitiv: "😊",
+  neutru: "😐",
+  iritat: "😠",
+};
+export const sentimentColorMap: Record<SentimentBucket, string> = {
+  pozitiv: "hsl(142 71% 45%)",
+  neutru: "hsl(217 10% 60%)",
+  iritat: "hsl(0 84% 60%)",
+};
 
 interface Metrics {
   initiated: number;
@@ -87,7 +114,7 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
   const bucketMap = new Map<HourWindow, HourBucket>();
   const ensure = (w: HourWindow) => {
     let b = bucketMap.get(w);
-    if (!b) { b = { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0 }; bucketMap.set(w, b); }
+    if (!b) { b = { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0, positive: 0, neutral: 0, irritated: 0 }; bucketMap.set(w, b); }
     return b;
   };
 
@@ -112,6 +139,10 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
     if (r.is_voicemail) b.voicemails++;
     if (r.status === "busy") b.busy++;
     if (r.status === "no-answer") b.noAnswer++;
+    const sb = normalizeSentiment(r.ai_sentiment);
+    if (sb === "pozitiv") b.positive++;
+    else if (sb === "iritat") b.irritated++;
+    else if (sb === "neutru") b.neutral++;
   }
   m.avgDurationSec = durCount > 0 ? Math.round(totalDur / durCount) : 0;
 
@@ -122,7 +153,7 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
   m.invalidNumbers = invalidCount || 0;
 
   const order: HourWindow[] = ["Dimineață", "Prânz", "Seară", "Off-hours"];
-  const buckets = order.map((w) => bucketMap.get(w) || { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0 });
+  const buckets = order.map((w) => bucketMap.get(w) || { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0, positive: 0, neutral: 0, irritated: 0 });
   return { metrics: m, buckets, rawRows: data as any[] };
 }
 
@@ -430,6 +461,43 @@ const VoiceAgentResultsDashboard = () => {
                 </div>
               );
             })()}
+
+            {/* Stacked Bar — Sentiment vs Fereastra orară */}
+            {(() => {
+              const data = buckets
+                .filter((b) => (b.positive + b.neutral + b.irritated) > 0)
+                .map((b) => ({
+                  window: b.window,
+                  Pozitiv: b.positive,
+                  Neutru: b.neutral,
+                  Iritat: b.irritated,
+                }));
+              if (data.length === 0) return null;
+              return (
+                <div>
+                  <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Sentiment AI pe fereastră orară
+                    <span className="text-[10px] text-muted-foreground/70 normal-case font-normal">— vezi dacă „Seara" produce conversații mai bune sau doar oameni iritați</span>
+                  </div>
+                  <div className="h-[220px] rounded-md border bg-card p-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="window" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip />
+                        <Legend wrapperStyle={{ fontSize: "11px" }} />
+                        <Bar dataKey="Pozitiv" stackId="s" fill={sentimentColorMap.pozitiv} radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="Neutru" stackId="s" fill={sentimentColorMap.neutru} />
+                        <Bar dataKey="Iritat" stackId="s" fill={sentimentColorMap.iritat} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Pie Chart — Distribuția pierderilor */}
             {(() => {
               const lossData = [

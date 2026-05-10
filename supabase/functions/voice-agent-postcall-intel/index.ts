@@ -37,6 +37,81 @@ Deno.serve(async (req) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ────────────────────────────────────────────────────────────
+    // DNC (Do Not Call) detection — runs BEFORE follow-up generation.
+    // If the caller asked us to stop / explicitly irritated, mark the
+    // prospect as DNC so autopilot skips them forever, and skip the
+    // follow-up draft (we don't pester DNC people with WhatsApp/email).
+    // ────────────────────────────────────────────────────────────
+    const transcriptForDnc = Array.isArray(session.transcript)
+      ? (session.transcript as any[]).map((t) => String(t?.text || "")).join(" ").toLowerCase()
+      : "";
+    const summaryLc = String(session.ai_summary || "").toLowerCase();
+    const sentimentLc = String(session.ai_sentiment || "").toLowerCase();
+    const DNC_PATTERNS = [
+      /nu\s+mai\s+sun/i,
+      /nu\s+m[ăa]\s+(mai\s+)?sun/i,
+      /nu\s+sun(a|aț|ati)i/i,
+      /[șs]terge(ț|t)?i?\s+num[ăa]rul/i,
+      /scoate(ț|t)?i?\s+num[ăa]rul/i,
+      /scoate(ț|t)?i?\s+m[ăa]\s+din/i,
+      /opri(ț|t)?i\s+apel/i,
+      /nu\s+mai\s+contacta/i,
+      /nu\s+m[ăa]\s+(mai\s+)?contacta/i,
+      /gdpr/i,
+      /anpc/i,
+    ];
+    const blob = `${transcriptForDnc} ${summaryLc}`;
+    const hitDncKeyword = DNC_PATTERNS.some((re) => re.test(blob));
+    const isIrritated = /(very_?negative|negativ|iritat|suparat|supărat|nervos|angry)/.test(sentimentLc);
+    const shouldDnc = hitDncKeyword || isIrritated;
+
+    if (shouldDnc && session.prospect_listing_id) {
+      const reason = hitDncKeyword
+        ? 'Cuvinte cheie de dezabonare detectate în apel (ex: „nu mai sunați", „ștergeți numărul").'
+        : "Sentiment iritat / negativ detectat de AI în timpul apelului.";
+      try {
+        await supabase
+          .from("prospect_listings")
+          .update({
+            do_not_call: true,
+            do_not_call_at: new Date().toISOString(),
+            do_not_call_reason: reason,
+            lifecycle_status: "failed",
+            auto_call_triggered_at: null,
+            admin_notes: `DNC auto-marcat după apel ${sessionId}: ${reason}`,
+          })
+          .eq("id", session.prospect_listing_id);
+
+        // Best-effort admin notification (table may or may not exist)
+        try {
+          const { data: admins } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+          for (const a of (admins as any[]) || []) {
+            await supabase.from("user_notifications").insert({
+              user_id: a.user_id,
+              title: "🚫 Prospect marcat DNC (Do Not Call)",
+              message: `Apel ${sessionId.slice(0, 8)} către ${session.to_number}: ${reason} Prospectul a fost scos din autopilot.`,
+              type: "warning",
+              action_url: "/admin",
+              action_label: "Vezi prospect",
+            });
+          }
+        } catch (_) { /* non-fatal */ }
+      } catch (e) {
+        console.error("[postcall-intel] DNC update failed", e);
+      }
+
+      // Don't generate a follow-up draft for DNC contacts.
+      await supabase
+        .from("voice_call_sessions")
+        .update({ followup_status: "skipped_dnc" })
+        .eq("id", sessionId);
+      return new Response(JSON.stringify({ ok: true, dnc: true, reason }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (session.followup_draft && !force) {
       return new Response(JSON.stringify({ ok: true, skipped: "already_exists" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

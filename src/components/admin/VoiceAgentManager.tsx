@@ -22,7 +22,7 @@ import VoiceAgentBatchCalling from "./VoiceAgentBatchCalling";
 import VoiceAgentTrainingLab from "./VoiceAgentTrainingLab";
 import VoiceAgentGhostingQueue from "./VoiceAgentGhostingQueue";
 import VoiceAgentAutopilot from "./VoiceAgentAutopilot";
-import VoiceAgentResultsDashboard, { hourWindow, type HourWindow } from "./VoiceAgentResultsDashboard";
+import VoiceAgentResultsDashboard, { hourWindow, normalizeSentiment, sentimentEmojiMap, type HourWindow, type SentimentBucket } from "./VoiceAgentResultsDashboard";
 
 interface VoiceCall {
   id: string;
@@ -60,6 +60,7 @@ const statusColor = (s: string) => {
   return "bg-muted text-muted-foreground";
 };
 
+// Legacy emoji map (kept as fallback for raw RO labels). Prefer normalizeSentiment + sentimentEmojiMap for robust display.
 const sentimentEmoji: Record<string, string> = {
   pozitiv: "😊", neutru: "😐", negativ: "😞",
 };
@@ -88,6 +89,7 @@ export default function VoiceAgentManager() {
   } | null>(null);
   const [langTestOpen, setLangTestOpen] = useState(false);
   const [windowFilter, setWindowFilter] = useState<HourWindow | "all">("all");
+  const [sentimentFilter, setSentimentFilter] = useState<SentimentBucket | "all">("all");
   const [recoveryRatePct, setRecoveryRatePct] = useState<number | null>(null);
 
   // Listen for filter requests from heatmap drill-down
@@ -855,7 +857,7 @@ export default function VoiceAgentManager() {
         <CardHeader>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Istoric apeluri</CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground">Fereastră orară:</span>
               <Select value={windowFilter} onValueChange={(v) => setWindowFilter(v as any)}>
                 <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
@@ -867,22 +869,35 @@ export default function VoiceAgentManager() {
                   <SelectItem value="Off-hours">Off-hours</SelectItem>
                 </SelectContent>
               </Select>
-              {windowFilter !== "all" && (
-                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setWindowFilter("all")}>Resetează</Button>
+              <span className="text-xs text-muted-foreground">Sentiment AI:</span>
+              <Select value={sentimentFilter} onValueChange={(v) => setSentimentFilter(v as any)}>
+                <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="pozitiv">😊 Pozitiv</SelectItem>
+                  <SelectItem value="neutru">😐 Neutru</SelectItem>
+                  <SelectItem value="iritat">😠 Iritat</SelectItem>
+                </SelectContent>
+              </Select>
+              {(windowFilter !== "all" || sentimentFilter !== "all") && (
+                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setWindowFilter("all"); setSentimentFilter("all"); }}>Resetează</Button>
               )}
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {(() => {
-            const filteredCalls = windowFilter === "all"
-              ? calls
-              : calls.filter((c) => hourWindow(new Date(c.created_at)) === windowFilter);
+            const filteredCalls = calls.filter((c) => {
+              if (windowFilter !== "all" && hourWindow(new Date(c.created_at)) !== windowFilter) return false;
+              if (sentimentFilter !== "all" && normalizeSentiment(c.ai_sentiment) !== sentimentFilter) return false;
+              return true;
+            });
+            const filterActive = windowFilter !== "all" || sentimentFilter !== "all";
             return loading ? (
               <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
             ) : filteredCalls.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                {windowFilter === "all" ? "Niciun apel încă. Inițiază primul de mai sus." : `Niciun apel în fereastra ${windowFilter}.`}
+                {!filterActive ? "Niciun apel încă. Inițiază primul de mai sus." : "Niciun apel pentru filtrele selectate."}
               </p>
             ) : (
             <ScrollArea className="h-[500px]">
@@ -930,7 +945,7 @@ export default function VoiceAgentManager() {
                           </Badge>
                         )}
                         {c.ai_outcome && <Badge variant="outline">{c.ai_outcome}</Badge>}
-                        {c.ai_sentiment && <span>{sentimentEmoji[c.ai_sentiment] || "•"}</span>}
+                        {(() => { const sb = normalizeSentiment(c.ai_sentiment); return sb ? <span title={`Sentiment: ${sb}`}>{sentimentEmojiMap[sb]}</span> : (c.ai_sentiment ? <span>{sentimentEmoji[c.ai_sentiment] || "•"}</span> : null); })()}
                         {c.detected_language === "en" && <Badge className="bg-red-100 text-red-800 border border-red-300">⚠️ EN detectat</Badge>}
                         {c.detected_language === "ro" && <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">🇷🇴 RO ✓</Badge>}
                         {(c.language_retry_count || 0) > 0 && <Badge variant="outline" className="text-xs">↻ retry RO trimis</Badge>}
