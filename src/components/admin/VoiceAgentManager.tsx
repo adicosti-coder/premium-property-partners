@@ -857,7 +857,7 @@ export default function VoiceAgentManager() {
         <CardHeader>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Istoric apeluri</CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-muted-foreground">Fereastră orară:</span>
               <Select value={windowFilter} onValueChange={(v) => setWindowFilter(v as any)}>
                 <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
@@ -869,8 +869,18 @@ export default function VoiceAgentManager() {
                   <SelectItem value="Off-hours">Off-hours</SelectItem>
                 </SelectContent>
               </Select>
-              {windowFilter !== "all" && (
-                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setWindowFilter("all")}>Resetează</Button>
+              <span className="text-xs text-muted-foreground">Sentiment AI:</span>
+              <Select value={sentimentFilter} onValueChange={(v) => setSentimentFilter(v as any)}>
+                <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="pozitiv">😊 Pozitiv</SelectItem>
+                  <SelectItem value="neutru">😐 Neutru</SelectItem>
+                  <SelectItem value="iritat">😠 Iritat</SelectItem>
+                </SelectContent>
+              </Select>
+              {(windowFilter !== "all" || sentimentFilter !== "all") && (
+                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setWindowFilter("all"); setSentimentFilter("all"); }}>Resetează</Button>
               )}
             </div>
           </div>
