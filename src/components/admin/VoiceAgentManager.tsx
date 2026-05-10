@@ -60,6 +60,7 @@ const statusColor = (s: string) => {
   return "bg-muted text-muted-foreground";
 };
 
+// Legacy emoji map (kept as fallback for raw RO labels). Prefer normalizeSentiment + sentimentEmojiMap for robust display.
 const sentimentEmoji: Record<string, string> = {
   pozitiv: "😊", neutru: "😐", negativ: "😞",
 };
