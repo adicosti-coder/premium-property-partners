@@ -1026,12 +1026,22 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
     return { text: a.status || "—", tone: "bg-muted text-foreground", icon: <Phone className="w-3 h-3" /> };
   };
 
+  const sentimentInfo = (s: string | null | undefined): { label: string; emoji: string; color: string } | null => {
+    if (!s) return null;
+    const v = s.toLowerCase();
+    if (/(very_?positive|positive|pozitiv|fericit|happy)/.test(v)) return { label: "Pozitiv", emoji: "😊", color: "bg-emerald-500" };
+    if (/(very_?negative|negative|negativ|iritat|suparat|supărat|nervos|angry|frustr)/.test(v)) return { label: "Iritat", emoji: "😠", color: "bg-red-500" };
+    if (/(neutral|neutru|calm|ok)/.test(v)) return { label: "Neutru", emoji: "😐", color: "bg-slate-400" };
+    return { label: s, emoji: "•", color: "bg-muted-foreground" };
+  };
+
   const exportTimelineCsv = () => {
     const rows: string[][] = [
-      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Motiv eșec Twilio"],
+      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Sentiment AI", "Sumar AI", "Motiv eșec Twilio"],
     ];
     attempts.forEach((a, i) => {
       const d = new Date(a.created_at);
+      const si = sentimentInfo(a.ai_sentiment);
       rows.push([
         String(i + 1),
         format(d, "dd.MM.yyyy", { locale: ro }),
@@ -1041,6 +1051,8 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
         a.is_voicemail ? "Da" : "Nu",
         a.appointment_scheduled_at ? format(new Date(a.appointment_scheduled_at), "dd.MM.yyyy HH:mm", { locale: ro }) : "—",
         a.ai_outcome || "—",
+        si ? `${si.emoji} ${si.label}` : "—",
+        (a.ai_summary || "—").replace(/\s+/g, " ").trim(),
         a.twilio_failure_reason || "—",
       ]);
     });
