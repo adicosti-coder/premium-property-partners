@@ -996,7 +996,7 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
     setLoading(true);
     supabase
       .from("voice_call_sessions")
-      .select("id, created_at, status, call_duration_seconds, is_voicemail, appointment_scheduled_at, ai_outcome, twilio_failure_reason")
+      .select("id, created_at, status, call_duration_seconds, is_voicemail, appointment_scheduled_at, ai_outcome, ai_sentiment, ai_summary, twilio_failure_reason")
       .eq("prospect_listing_id", prospectId)
       .order("created_at", { ascending: true })
       .then(({ data }) => {
