@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
 
     if (shouldDnc && session.prospect_listing_id) {
       const reason = hitDncKeyword
-        ? "Cuvinte cheie de dezabonare detectate în apel (ex: „nu mai sunați", „ștergeți numărul")."
+        ? 'Cuvinte cheie de dezabonare detectate în apel (ex: „nu mai sunați", „ștergeți numărul").'
         : "Sentiment iritat / negativ detectat de AI în timpul apelului.";
       try {
         await supabase
