@@ -114,7 +114,7 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
   const bucketMap = new Map<HourWindow, HourBucket>();
   const ensure = (w: HourWindow) => {
     let b = bucketMap.get(w);
-    if (!b) { b = { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0 }; bucketMap.set(w, b); }
+    if (!b) { b = { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0, positive: 0, neutral: 0, irritated: 0 }; bucketMap.set(w, b); }
     return b;
   };
 
@@ -139,6 +139,10 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
     if (r.is_voicemail) b.voicemails++;
     if (r.status === "busy") b.busy++;
     if (r.status === "no-answer") b.noAnswer++;
+    const sb = normalizeSentiment(r.ai_sentiment);
+    if (sb === "pozitiv") b.positive++;
+    else if (sb === "iritat") b.irritated++;
+    else if (sb === "neutru") b.neutral++;
   }
   m.avgDurationSec = durCount > 0 ? Math.round(totalDur / durCount) : 0;
 
@@ -149,7 +153,7 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
   m.invalidNumbers = invalidCount || 0;
 
   const order: HourWindow[] = ["Dimineață", "Prânz", "Seară", "Off-hours"];
-  const buckets = order.map((w) => bucketMap.get(w) || { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0 });
+  const buckets = order.map((w) => bucketMap.get(w) || { window: w, initiated: 0, real: 0, voicemails: 0, busy: 0, noAnswer: 0, positive: 0, neutral: 0, irritated: 0 });
   return { metrics: m, buckets, rawRows: data as any[] };
 }
 
