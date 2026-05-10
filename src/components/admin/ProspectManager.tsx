@@ -982,6 +982,8 @@ interface CallAttempt {
   is_voicemail: boolean | null;
   appointment_scheduled_at: string | null;
   ai_outcome: string | null;
+  ai_sentiment: string | null;
+  ai_summary: string | null;
   twilio_failure_reason: string | null;
 }
 
