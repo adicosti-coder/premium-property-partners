@@ -461,6 +461,43 @@ const VoiceAgentResultsDashboard = () => {
                 </div>
               );
             })()}
+
+            {/* Stacked Bar — Sentiment vs Fereastra orară */}
+            {(() => {
+              const data = buckets
+                .filter((b) => (b.positive + b.neutral + b.irritated) > 0)
+                .map((b) => ({
+                  window: b.window,
+                  Pozitiv: b.positive,
+                  Neutru: b.neutral,
+                  Iritat: b.irritated,
+                }));
+              if (data.length === 0) return null;
+              return (
+                <div>
+                  <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Sentiment AI pe fereastră orară
+                    <span className="text-[10px] text-muted-foreground/70 normal-case font-normal">— vezi dacă „Seara" produce conversații mai bune sau doar oameni iritați</span>
+                  </div>
+                  <div className="h-[220px] rounded-md border bg-card p-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={data}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="window" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip />
+                        <Legend wrapperStyle={{ fontSize: "11px" }} />
+                        <Bar dataKey="Pozitiv" stackId="s" fill={sentimentColorMap.pozitiv} radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="Neutru" stackId="s" fill={sentimentColorMap.neutru} />
+                        <Bar dataKey="Iritat" stackId="s" fill={sentimentColorMap.iritat} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Pie Chart — Distribuția pierderilor */}
             {(() => {
               const lossData = [
