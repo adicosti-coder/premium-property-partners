@@ -945,7 +945,7 @@ export default function VoiceAgentManager() {
                           </Badge>
                         )}
                         {c.ai_outcome && <Badge variant="outline">{c.ai_outcome}</Badge>}
-                        {c.ai_sentiment && <span>{sentimentEmoji[c.ai_sentiment] || "•"}</span>}
+                        {(() => { const sb = normalizeSentiment(c.ai_sentiment); return sb ? <span title={`Sentiment: ${sb}`}>{sentimentEmojiMap[sb]}</span> : (c.ai_sentiment ? <span>{sentimentEmoji[c.ai_sentiment] || "•"}</span> : null); })()}
                         {c.detected_language === "en" && <Badge className="bg-red-100 text-red-800 border border-red-300">⚠️ EN detectat</Badge>}
                         {c.detected_language === "ro" && <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">🇷🇴 RO ✓</Badge>}
                         {(c.language_retry_count || 0) > 0 && <Badge variant="outline" className="text-xs">↻ retry RO trimis</Badge>}
