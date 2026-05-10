@@ -887,14 +887,17 @@ export default function VoiceAgentManager() {
         </CardHeader>
         <CardContent>
           {(() => {
-            const filteredCalls = windowFilter === "all"
-              ? calls
-              : calls.filter((c) => hourWindow(new Date(c.created_at)) === windowFilter);
+            const filteredCalls = calls.filter((c) => {
+              if (windowFilter !== "all" && hourWindow(new Date(c.created_at)) !== windowFilter) return false;
+              if (sentimentFilter !== "all" && normalizeSentiment(c.ai_sentiment) !== sentimentFilter) return false;
+              return true;
+            });
+            const filterActive = windowFilter !== "all" || sentimentFilter !== "all";
             return loading ? (
               <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
             ) : filteredCalls.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                {windowFilter === "all" ? "Niciun apel încă. Inițiază primul de mai sus." : `Niciun apel în fereastra ${windowFilter}.`}
+                {!filterActive ? "Niciun apel încă. Inițiază primul de mai sus." : "Niciun apel pentru filtrele selectate."}
               </p>
             ) : (
             <ScrollArea className="h-[500px]">
