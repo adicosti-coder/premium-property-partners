@@ -6,6 +6,8 @@ import { Phone, PhoneCall, MessageSquare, Calendar, TrendingUp, AlertCircle, Loa
 import { cn } from "@/lib/utils";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Button } from "@/components/ui/button";
+import { detectObjection, OBJECTION_LABEL, type ObjectionKey } from "@/lib/voiceObjections";
+import { Lightbulb, MessageCircleWarning } from "lucide-react";
 
 type Period = "today" | "week" | "month";
 export type HourWindow = "Dimineață" | "Prânz" | "Seară" | "Off-hours";
@@ -103,7 +105,7 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason, created_at")
+    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason, created_at, transcript, prospect_listing_id")
     .gte("created_at", since);
 
   if (error || !data) return { metrics: EMPTY, buckets: [], rawRows: [] };
@@ -212,6 +214,7 @@ const VoiceAgentResultsDashboard = () => {
   const [pausedReason, setPausedReason] = useState<string | null>(null);
   const [roiAlert, setRoiAlert] = useState<RoiAlert>({ triggered: false, realRatePct: 0, sampleSize: 0 });
   const [realThreshold, setRealThreshold] = useState<number>(30);
+  const [sourceMap, setSourceMap] = useState<Record<string, string>>({}); // prospect_id -> source_platform
 
   useEffect(() => {
     let mounted = true;
@@ -238,6 +241,85 @@ const VoiceAgentResultsDashboard = () => {
     })();
     return () => { mounted = false; };
   }, [period]);
+
+  // Load source_platform for prospects referenced by current sessions (used by ROI-by-source widget).
+  useEffect(() => {
+    const ids = Array.from(new Set(rawRows.map((r) => r.prospect_listing_id).filter(Boolean)));
+    if (ids.length === 0) { setSourceMap({}); return; }
+    let mounted = true;
+    (async () => {
+      const { data } = await supabase
+        .from("prospect_listings")
+        .select("id, source_platform")
+        .in("id", ids as string[]);
+      if (!mounted) return;
+      const map: Record<string, string> = {};
+      for (const p of (data || []) as any[]) map[p.id] = p.source_platform || "necunoscut";
+      setSourceMap(map);
+    })();
+    return () => { mounted = false; };
+  }, [rawRows]);
+
+  // Compute top-3 objections across iritat/neutru sessions
+  const objectionStats = (() => {
+    const counts = new Map<ObjectionKey, number>();
+    let scanned = 0;
+    for (const r of rawRows) {
+      const sb = normalizeSentiment(r.ai_sentiment);
+      if (sb !== "iritat" && sb !== "neutru") continue;
+      scanned++;
+      const k = detectObjection(r.ai_summary, r.transcript, r.ai_sentiment);
+      if (k) counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    const top = Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([key, count]) => ({ key, count, label: OBJECTION_LABEL[key] }));
+    return { top, scanned };
+  })();
+
+  // ROI per source: sentiment distribution + DNC count per source_platform
+  const sourceStats = (() => {
+    const m = new Map<string, { total: number; pozitiv: number; neutru: number; iritat: number; dnc: number; appts: number }>();
+    for (const r of rawRows) {
+      const src = sourceMap[r.prospect_listing_id] || (r.prospect_listing_id ? "necunoscut" : null);
+      if (!src) continue;
+      const e = m.get(src) || { total: 0, pozitiv: 0, neutru: 0, iritat: 0, dnc: 0, appts: 0 };
+      e.total++;
+      const sb = normalizeSentiment(r.ai_sentiment);
+      if (sb === "pozitiv") e.pozitiv++;
+      else if (sb === "neutru") e.neutru++;
+      else if (sb === "iritat") { e.iritat++; e.dnc++; }
+      if (r.appointment_scheduled_at) e.appts++;
+      m.set(src, e);
+    }
+    return Array.from(m.entries()).map(([source, v]) => ({ source, ...v })).sort((a, b) => b.total - a.total);
+  })();
+
+  // Insight: objection that exceeds 20% in a single window
+  const objectionInsight = (() => {
+    const perWindow = new Map<HourWindow, Map<ObjectionKey, number>>();
+    const perWindowTotal = new Map<HourWindow, number>();
+    for (const r of rawRows) {
+      const w = hourWindow(new Date(r.created_at));
+      perWindowTotal.set(w, (perWindowTotal.get(w) || 0) + 1);
+      const k = detectObjection(r.ai_summary, r.transcript, r.ai_sentiment);
+      if (!k) continue;
+      let inner = perWindow.get(w);
+      if (!inner) { inner = new Map(); perWindow.set(w, inner); }
+      inner.set(k, (inner.get(k) || 0) + 1);
+    }
+    const insights: { window: HourWindow; key: ObjectionKey; pct: number; count: number; total: number }[] = [];
+    for (const [w, inner] of perWindow.entries()) {
+      const total = perWindowTotal.get(w) || 0;
+      if (total < 5) continue; // need a min sample to avoid noise
+      for (const [k, c] of inner.entries()) {
+        const pctVal = Math.round((c / total) * 100);
+        if (pctVal >= 20) insights.push({ window: w, key: k, pct: pctVal, count: c, total });
+      }
+    }
+    return insights.sort((a, b) => b.pct - a.pct).slice(0, 3);
+  })();
 
   const conversionRate = pct(metrics.appointments, metrics.initiated);
   const connectRate = pct(metrics.connected, metrics.initiated);
@@ -290,6 +372,23 @@ const VoiceAgentResultsDashboard = () => {
               <div className="text-xs text-muted-foreground mt-0.5">
                 Pragul de siguranță este 10%. Verifică numărul Twilio (poate apare ca SPAM), calitatea numerelor scrapate sau pune autopilot-ul pe pauză până când rezolvi cauza.
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* INSIGHT — objection >20% in a window */}
+        {objectionInsight.length > 0 && (
+          <div role="status" className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+            <Lightbulb className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <div className="font-semibold text-amber-700 dark:text-amber-400">
+                Insight obiecții — script de optimizat
+              </div>
+              {objectionInsight.map((i, idx) => (
+                <div key={idx} className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">{i.window}</strong>: {i.pct}% dintre apeluri ({i.count}/{i.total}) au obiecția <strong>„{OBJECTION_LABEL[i.key]}"</strong>. Ajustează deschiderea scriptului pentru această fereastră.
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -578,6 +677,95 @@ const VoiceAgentResultsDashboard = () => {
                 </div>
               );
             })()}
+
+            {/* Top 3 obiecții recurente (sentiment iritat / neutru) */}
+            {objectionStats.top.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                  <MessageCircleWarning className="w-3.5 h-3.5" />
+                  Top obiecții recurente
+                  <span className="text-[10px] text-muted-foreground/70 normal-case font-normal">— din {objectionStats.scanned} apeluri cu sentiment iritat / neutru</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  {objectionStats.top.map((o, i) => (
+                    <div key={o.key} className="rounded-md border bg-card p-3">
+                      <div className="text-[11px] text-muted-foreground">#{i + 1} obiecție</div>
+                      <div className="text-sm font-semibold mt-0.5">{o.label}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {o.count} apeluri · {Math.round((o.count / Math.max(objectionStats.scanned, 1)) * 100)}%
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Raport ROI pe sursă — sentiment + DNC per platformă */}
+            {sourceStats.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    Raport ROI pe sursă prospect
+                  </div>
+                  <Button
+                    size="sm" variant="outline" className="h-7 text-xs"
+                    onClick={() => {
+                      const rows: string[][] = [["Sursă", "Total apeluri", "Pozitiv", "Neutru", "Iritat", "DNC", "Programări", "% pozitiv", "Perioada"]];
+                      for (const s of sourceStats) {
+                        rows.push([
+                          s.source, String(s.total), String(s.pozitiv), String(s.neutru),
+                          String(s.iritat), String(s.dnc), String(s.appts),
+                          `${Math.round((s.pozitiv / Math.max(s.total, 1)) * 100)}%`,
+                          PERIOD_LABEL[period],
+                        ]);
+                      }
+                      const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+                      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `roi-pe-sursa-${period}-${new Date().toISOString().slice(0, 10)}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download className="w-3 h-3 mr-1.5" /> Export CSV
+                  </Button>
+                </div>
+                <div className="rounded-md border overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/40">
+                      <tr>
+                        <th className="text-left px-2 py-1.5 font-semibold">Sursă</th>
+                        <th className="text-right px-2 py-1.5 font-semibold">Total</th>
+                        <th className="text-right px-2 py-1.5 font-semibold text-emerald-600">Pozitiv</th>
+                        <th className="text-right px-2 py-1.5 font-semibold">Neutru</th>
+                        <th className="text-right px-2 py-1.5 font-semibold text-red-600">Iritat</th>
+                        <th className="text-right px-2 py-1.5 font-semibold text-red-700">DNC</th>
+                        <th className="text-right px-2 py-1.5 font-semibold">Programări</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sourceStats.map((s) => {
+                        const posPct = Math.round((s.pozitiv / Math.max(s.total, 1)) * 100);
+                        return (
+                          <tr key={s.source} className="border-t">
+                            <td className="px-2 py-1.5 font-medium capitalize">{s.source}</td>
+                            <td className="px-2 py-1.5 text-right">{s.total}</td>
+                            <td className="px-2 py-1.5 text-right text-emerald-600 font-semibold">{s.pozitiv} ({posPct}%)</td>
+                            <td className="px-2 py-1.5 text-right">{s.neutru}</td>
+                            <td className="px-2 py-1.5 text-right text-red-600">{s.iritat}</td>
+                            <td className="px-2 py-1.5 text-right text-red-700 font-semibold">{s.dnc}</td>
+                            <td className="px-2 py-1.5 text-right">{s.appts}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Verdict automat */}
             <div className="rounded-md border bg-muted/30 p-3 text-sm">

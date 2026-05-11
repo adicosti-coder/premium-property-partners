@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
+import { detectObjection, OBJECTION_LABEL } from "@/lib/voiceObjections";
 
 interface ProspectListing {
   id: string;
@@ -996,7 +997,7 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
     setLoading(true);
     supabase
       .from("voice_call_sessions")
-      .select("id, created_at, status, call_duration_seconds, is_voicemail, appointment_scheduled_at, ai_outcome, ai_sentiment, ai_summary, twilio_failure_reason")
+      .select("id, created_at, status, call_duration_seconds, is_voicemail, appointment_scheduled_at, ai_outcome, ai_sentiment, ai_summary, twilio_failure_reason, transcript")
       .eq("prospect_listing_id", prospectId)
       .order("created_at", { ascending: true })
       .then(({ data }) => {
@@ -1037,11 +1038,12 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
 
   const exportTimelineCsv = () => {
     const rows: string[][] = [
-      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Sentiment AI", "Sumar AI", "Motiv eșec Twilio"],
+      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Sentiment AI", "Obiecție Principală", "Sumar AI", "Motiv eșec Twilio"],
     ];
     attempts.forEach((a, i) => {
       const d = new Date(a.created_at);
       const si = sentimentInfo(a.ai_sentiment);
+      const objKey = detectObjection(a.ai_summary, (a as any).transcript, a.ai_sentiment);
       rows.push([
         String(i + 1),
         format(d, "dd.MM.yyyy", { locale: ro }),
@@ -1052,6 +1054,7 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
         a.appointment_scheduled_at ? format(new Date(a.appointment_scheduled_at), "dd.MM.yyyy HH:mm", { locale: ro }) : "—",
         a.ai_outcome || "—",
         si ? `${si.emoji} ${si.label}` : "—",
+        objKey ? OBJECTION_LABEL[objKey] : "—",
         (a.ai_summary || "—").replace(/\s+/g, " ").trim(),
         a.twilio_failure_reason || "—",
       ]);
@@ -1085,6 +1088,7 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
           const lbl = labelFor(a);
           const t = format(new Date(a.created_at), "dd MMM HH:mm", { locale: ro });
           const si = sentimentInfo(a.ai_sentiment);
+          const objKey = detectObjection(a.ai_summary, (a as any).transcript, a.ai_sentiment);
           return (
             <li key={a.id} className="ml-3">
               <div
@@ -1106,6 +1110,15 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
                 {a.call_duration_seconds ? (
                   <span className="text-muted-foreground">· {a.call_duration_seconds}s</span>
                 ) : null}
+                {objKey && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] border-amber-500/60 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                    title="Obiecție principală detectată de AI — pregătește intervenția manuală"
+                  >
+                    ⚠ {OBJECTION_LABEL[objKey]}
+                  </Badge>
+                )}
               </div>
             </li>
           );
