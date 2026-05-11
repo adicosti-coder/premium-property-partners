@@ -1110,6 +1110,15 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
                 {a.call_duration_seconds ? (
                   <span className="text-muted-foreground">· {a.call_duration_seconds}s</span>
                 ) : null}
+                {objKey && (
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] border-amber-500/60 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                    title="Obiecție principală detectată de AI — pregătește intervenția manuală"
+                  >
+                    ⚠ {OBJECTION_LABEL[objKey]}
+                  </Badge>
+                )}
               </div>
             </li>
           );
