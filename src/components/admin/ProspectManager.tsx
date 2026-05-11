@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
+import { detectObjection, OBJECTION_LABEL } from "@/lib/voiceObjections";
 
 interface ProspectListing {
   id: string;
