@@ -1038,11 +1038,12 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
 
   const exportTimelineCsv = () => {
     const rows: string[][] = [
-      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Sentiment AI", "Sumar AI", "Motiv eșec Twilio"],
+      ["#", "Data", "Ora", "Status", "Durată (s)", "Mesagerie vocală", "Programare obținută", "Outcome AI", "Sentiment AI", "Obiecție Principală", "Sumar AI", "Motiv eșec Twilio"],
     ];
     attempts.forEach((a, i) => {
       const d = new Date(a.created_at);
       const si = sentimentInfo(a.ai_sentiment);
+      const objKey = detectObjection(a.ai_summary, (a as any).transcript, a.ai_sentiment);
       rows.push([
         String(i + 1),
         format(d, "dd.MM.yyyy", { locale: ro }),
@@ -1053,6 +1054,7 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
         a.appointment_scheduled_at ? format(new Date(a.appointment_scheduled_at), "dd.MM.yyyy HH:mm", { locale: ro }) : "—",
         a.ai_outcome || "—",
         si ? `${si.emoji} ${si.label}` : "—",
+        objKey ? OBJECTION_LABEL[objKey] : "—",
         (a.ai_summary || "—").replace(/\s+/g, " ").trim(),
         a.twilio_failure_reason || "—",
       ]);
