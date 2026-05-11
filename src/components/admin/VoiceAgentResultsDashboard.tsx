@@ -678,6 +678,95 @@ const VoiceAgentResultsDashboard = () => {
               );
             })()}
 
+            {/* Top 3 obiecții recurente (sentiment iritat / neutru) */}
+            {objectionStats.top.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 flex items-center gap-1.5">
+                  <MessageCircleWarning className="w-3.5 h-3.5" />
+                  Top obiecții recurente
+                  <span className="text-[10px] text-muted-foreground/70 normal-case font-normal">— din {objectionStats.scanned} apeluri cu sentiment iritat / neutru</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  {objectionStats.top.map((o, i) => (
+                    <div key={o.key} className="rounded-md border bg-card p-3">
+                      <div className="text-[11px] text-muted-foreground">#{i + 1} obiecție</div>
+                      <div className="text-sm font-semibold mt-0.5">{o.label}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {o.count} apeluri · {Math.round((o.count / Math.max(objectionStats.scanned, 1)) * 100)}%
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Raport ROI pe sursă — sentiment + DNC per platformă */}
+            {sourceStats.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    Raport ROI pe sursă prospect
+                  </div>
+                  <Button
+                    size="sm" variant="outline" className="h-7 text-xs"
+                    onClick={() => {
+                      const rows: string[][] = [["Sursă", "Total apeluri", "Pozitiv", "Neutru", "Iritat", "DNC", "Programări", "% pozitiv", "Perioada"]];
+                      for (const s of sourceStats) {
+                        rows.push([
+                          s.source, String(s.total), String(s.pozitiv), String(s.neutru),
+                          String(s.iritat), String(s.dnc), String(s.appts),
+                          `${Math.round((s.pozitiv / Math.max(s.total, 1)) * 100)}%`,
+                          PERIOD_LABEL[period],
+                        ]);
+                      }
+                      const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+                      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `roi-pe-sursa-${period}-${new Date().toISOString().slice(0, 10)}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download className="w-3 h-3 mr-1.5" /> Export CSV
+                  </Button>
+                </div>
+                <div className="rounded-md border overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/40">
+                      <tr>
+                        <th className="text-left px-2 py-1.5 font-semibold">Sursă</th>
+                        <th className="text-right px-2 py-1.5 font-semibold">Total</th>
+                        <th className="text-right px-2 py-1.5 font-semibold text-emerald-600">Pozitiv</th>
+                        <th className="text-right px-2 py-1.5 font-semibold">Neutru</th>
+                        <th className="text-right px-2 py-1.5 font-semibold text-red-600">Iritat</th>
+                        <th className="text-right px-2 py-1.5 font-semibold text-red-700">DNC</th>
+                        <th className="text-right px-2 py-1.5 font-semibold">Programări</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sourceStats.map((s) => {
+                        const posPct = Math.round((s.pozitiv / Math.max(s.total, 1)) * 100);
+                        return (
+                          <tr key={s.source} className="border-t">
+                            <td className="px-2 py-1.5 font-medium capitalize">{s.source}</td>
+                            <td className="px-2 py-1.5 text-right">{s.total}</td>
+                            <td className="px-2 py-1.5 text-right text-emerald-600 font-semibold">{s.pozitiv} ({posPct}%)</td>
+                            <td className="px-2 py-1.5 text-right">{s.neutru}</td>
+                            <td className="px-2 py-1.5 text-right text-red-600">{s.iritat}</td>
+                            <td className="px-2 py-1.5 text-right text-red-700 font-semibold">{s.dnc}</td>
+                            <td className="px-2 py-1.5 text-right">{s.appts}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Verdict automat */}
             <div className="rounded-md border bg-muted/30 p-3 text-sm">
               <div className="font-semibold mb-1">Verdict — {PERIOD_LABEL[period]}</div>
