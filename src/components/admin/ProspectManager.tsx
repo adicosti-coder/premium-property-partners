@@ -1088,6 +1088,7 @@ const ProspectCallTimeline = ({ prospectId }: { prospectId: string }) => {
           const lbl = labelFor(a);
           const t = format(new Date(a.created_at), "dd MMM HH:mm", { locale: ro });
           const si = sentimentInfo(a.ai_sentiment);
+          const objKey = detectObjection(a.ai_summary, (a as any).transcript, a.ai_sentiment);
           return (
             <li key={a.id} className="ml-3">
               <div
