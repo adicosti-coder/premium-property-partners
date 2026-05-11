@@ -6,6 +6,8 @@ import { Phone, PhoneCall, MessageSquare, Calendar, TrendingUp, AlertCircle, Loa
 import { cn } from "@/lib/utils";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Button } from "@/components/ui/button";
+import { detectObjection, OBJECTION_LABEL, type ObjectionKey } from "@/lib/voiceObjections";
+import { Lightbulb, MessageCircleWarning } from "lucide-react";
 
 type Period = "today" | "week" | "month";
 export type HourWindow = "Dimineață" | "Prânz" | "Seară" | "Off-hours";
