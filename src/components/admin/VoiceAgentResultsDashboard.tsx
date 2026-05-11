@@ -376,6 +376,23 @@ const VoiceAgentResultsDashboard = () => {
           </div>
         )}
 
+        {/* INSIGHT — objection >20% in a window */}
+        {objectionInsight.length > 0 && (
+          <div role="status" className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+            <Lightbulb className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <div className="font-semibold text-amber-700 dark:text-amber-400">
+                Insight obiecții — script de optimizat
+              </div>
+              {objectionInsight.map((i, idx) => (
+                <div key={idx} className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">{i.window}</strong>: {i.pct}% dintre apeluri ({i.count}/{i.total}) au obiecția <strong>„{OBJECTION_LABEL[i.key]}"</strong>. Ajustează deschiderea scriptului pentru această fereastră.
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Status banner */}
         {pausedReason && (
           <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
