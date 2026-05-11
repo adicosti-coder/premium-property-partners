@@ -105,7 +105,7 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
   const since = periodSinceISO(p);
   const { data, error } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason, created_at")
+    .select("call_duration_seconds, ai_summary, ai_sentiment, followup_status, appointment_scheduled_at, is_voicemail, status, twilio_failure_reason, created_at, transcript, prospect_listing_id")
     .gte("created_at", since);
 
   if (error || !data) return { metrics: EMPTY, buckets: [], rawRows: [] };
