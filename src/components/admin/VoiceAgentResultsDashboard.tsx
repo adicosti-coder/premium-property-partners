@@ -242,6 +242,85 @@ const VoiceAgentResultsDashboard = () => {
     return () => { mounted = false; };
   }, [period]);
 
+  // Load source_platform for prospects referenced by current sessions (used by ROI-by-source widget).
+  useEffect(() => {
+    const ids = Array.from(new Set(rawRows.map((r) => r.prospect_listing_id).filter(Boolean)));
+    if (ids.length === 0) { setSourceMap({}); return; }
+    let mounted = true;
+    (async () => {
+      const { data } = await supabase
+        .from("prospect_listings")
+        .select("id, source_platform")
+        .in("id", ids as string[]);
+      if (!mounted) return;
+      const map: Record<string, string> = {};
+      for (const p of (data || []) as any[]) map[p.id] = p.source_platform || "necunoscut";
+      setSourceMap(map);
+    })();
+    return () => { mounted = false; };
+  }, [rawRows]);
+
+  // Compute top-3 objections across iritat/neutru sessions
+  const objectionStats = (() => {
+    const counts = new Map<ObjectionKey, number>();
+    let scanned = 0;
+    for (const r of rawRows) {
+      const sb = normalizeSentiment(r.ai_sentiment);
+      if (sb !== "iritat" && sb !== "neutru") continue;
+      scanned++;
+      const k = detectObjection(r.ai_summary, r.transcript, r.ai_sentiment);
+      if (k) counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    const top = Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([key, count]) => ({ key, count, label: OBJECTION_LABEL[key] }));
+    return { top, scanned };
+  })();
+
+  // ROI per source: sentiment distribution + DNC count per source_platform
+  const sourceStats = (() => {
+    const m = new Map<string, { total: number; pozitiv: number; neutru: number; iritat: number; dnc: number; appts: number }>();
+    for (const r of rawRows) {
+      const src = sourceMap[r.prospect_listing_id] || (r.prospect_listing_id ? "necunoscut" : null);
+      if (!src) continue;
+      const e = m.get(src) || { total: 0, pozitiv: 0, neutru: 0, iritat: 0, dnc: 0, appts: 0 };
+      e.total++;
+      const sb = normalizeSentiment(r.ai_sentiment);
+      if (sb === "pozitiv") e.pozitiv++;
+      else if (sb === "neutru") e.neutru++;
+      else if (sb === "iritat") { e.iritat++; e.dnc++; }
+      if (r.appointment_scheduled_at) e.appts++;
+      m.set(src, e);
+    }
+    return Array.from(m.entries()).map(([source, v]) => ({ source, ...v })).sort((a, b) => b.total - a.total);
+  })();
+
+  // Insight: objection that exceeds 20% in a single window
+  const objectionInsight = (() => {
+    const perWindow = new Map<HourWindow, Map<ObjectionKey, number>>();
+    const perWindowTotal = new Map<HourWindow, number>();
+    for (const r of rawRows) {
+      const w = hourWindow(new Date(r.created_at));
+      perWindowTotal.set(w, (perWindowTotal.get(w) || 0) + 1);
+      const k = detectObjection(r.ai_summary, r.transcript, r.ai_sentiment);
+      if (!k) continue;
+      let inner = perWindow.get(w);
+      if (!inner) { inner = new Map(); perWindow.set(w, inner); }
+      inner.set(k, (inner.get(k) || 0) + 1);
+    }
+    const insights: { window: HourWindow; key: ObjectionKey; pct: number; count: number; total: number }[] = [];
+    for (const [w, inner] of perWindow.entries()) {
+      const total = perWindowTotal.get(w) || 0;
+      if (total < 5) continue; // need a min sample to avoid noise
+      for (const [k, c] of inner.entries()) {
+        const pctVal = Math.round((c / total) * 100);
+        if (pctVal >= 20) insights.push({ window: w, key: k, pct: pctVal, count: c, total });
+      }
+    }
+    return insights.sort((a, b) => b.pct - a.pct).slice(0, 3);
+  })();
+
   const conversionRate = pct(metrics.appointments, metrics.initiated);
   const connectRate = pct(metrics.connected, metrics.initiated);
   const realRate = pct(metrics.realConversations, metrics.initiated);
