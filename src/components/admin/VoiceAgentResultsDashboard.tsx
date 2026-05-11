@@ -214,6 +214,7 @@ const VoiceAgentResultsDashboard = () => {
   const [pausedReason, setPausedReason] = useState<string | null>(null);
   const [roiAlert, setRoiAlert] = useState<RoiAlert>({ triggered: false, realRatePct: 0, sampleSize: 0 });
   const [realThreshold, setRealThreshold] = useState<number>(30);
+  const [sourceMap, setSourceMap] = useState<Record<string, string>>({}); // prospect_id -> source_platform
 
   useEffect(() => {
     let mounted = true;
