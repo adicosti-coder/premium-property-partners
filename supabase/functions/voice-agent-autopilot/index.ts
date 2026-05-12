@@ -157,7 +157,7 @@ serve(async (req) => {
     const nowIso = new Date().toISOString();
     const { data: prospects } = await supabase
       .from("prospect_listings")
-      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords, marked_invalid_at, next_callback_at, callback_attempts, do_not_call")
+      .select("id, title, description, prospect_type, contact_name, phone_normalized, contact_phone, lead_score, scraped_at, lifecycle_status, auto_call_triggered_at, source_url, search_keywords, marked_invalid_at, next_callback_at, callback_attempts, do_not_call, conversion_probability, undervaluation_percent")
       .gte("lead_score", minScore)
       .in("lifecycle_status", ["new", "callback"])
       .not("phone_normalized", "is", null)
@@ -179,10 +179,32 @@ serve(async (req) => {
       .eq("direction", "outbound");
     const recentPhoneSet = new Set<string>((recentCalls || []).map((r: any) => r.to_number).filter(Boolean));
 
+    // ── Phone Intelligence guard: skip voip/landline/unreachable din coadă ──
+    const candidatePhones = (prospects || []).map((p: any) => p.phone_normalized).filter(Boolean);
+    let phoneIntelMap: Record<string, { line_type: string | null; is_unreachable: boolean }> = {};
+    if (candidatePhones.length > 0) {
+      const { data: piRows } = await supabase
+        .from("phone_intelligence")
+        .select("phone_number, line_type, is_unreachable")
+        .in("phone_number", candidatePhones);
+      for (const r of piRows || []) {
+        phoneIntelMap[r.phone_number] = { line_type: r.line_type, is_unreachable: !!r.is_unreachable };
+      }
+    }
+
     // Prioritizare:
-    //   1. Call back-uri scadente (next_callback_at <= now) — fereastra optimă identificată
+    //   1. Call back-uri scadente (next_callback_at <= now)
     //   2. prospect_type = 'proprietar' (vs agentie)
-    //   3. lead_score DESC
+    //   3. predictive_score = lead_score * (1 + conversion_probability) * (1 + undervaluation/100)
+    //      → Andrei sună ÎNTÂI lead-urile cu cea mai mare șansă de conversie reală.
+    const usePredictive = s.predictive_sort_enabled !== false;
+    const computeScore = (p: any): number => {
+      const base = Number(p.lead_score || 0);
+      if (!usePredictive) return base;
+      const conv = Math.max(0, Math.min(1, Number(p.conversion_probability || 0)));
+      const under = Math.max(-50, Math.min(100, Number(p.undervaluation_percent || 0)));
+      return base * (1 + conv) * (1 + under / 100);
+    };
     const nowMs = Date.now();
     const ordered = [...(prospects || [])].sort((a: any, b: any) => {
       const aDue = a.next_callback_at && new Date(a.next_callback_at).getTime() <= nowMs ? 0 : 1;
@@ -191,7 +213,7 @@ serve(async (req) => {
       const ap = a.prospect_type === "proprietar" ? 0 : 1;
       const bp = b.prospect_type === "proprietar" ? 0 : 1;
       if (ap !== bp) return ap - bp;
-      return (b.lead_score || 0) - (a.lead_score || 0);
+      return computeScore(b) - computeScore(a);
     });
 
     const seenPhones = new Set<string>();
