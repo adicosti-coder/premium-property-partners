@@ -2216,21 +2216,39 @@ export type Database = {
       }
       phone_intelligence: {
         Row: {
+          carrier_name: string | null
           category: string | null
+          country_code: string | null
           is_blacklisted: boolean | null
+          is_unreachable: boolean | null
           last_seen: string | null
+          line_type: string | null
+          lookup_at: string | null
+          lookup_error: string | null
           phone_number: string
         }
         Insert: {
+          carrier_name?: string | null
           category?: string | null
+          country_code?: string | null
           is_blacklisted?: boolean | null
+          is_unreachable?: boolean | null
           last_seen?: string | null
+          line_type?: string | null
+          lookup_at?: string | null
+          lookup_error?: string | null
           phone_number: string
         }
         Update: {
+          carrier_name?: string | null
           category?: string | null
+          country_code?: string | null
           is_blacklisted?: boolean | null
+          is_unreachable?: boolean | null
           last_seen?: string | null
+          line_type?: string | null
+          lookup_at?: string | null
+          lookup_error?: string | null
           phone_number?: string
         }
         Relationships: []
@@ -5800,6 +5818,8 @@ export type Database = {
         Row: {
           allowed_hours_end: number
           allowed_hours_start: number
+          amd_enabled: boolean
+          amd_timeout_seconds: number
           auto_dial_enabled: boolean
           autopilot_enabled: boolean
           autopilot_followup_auto_approve: boolean
@@ -5818,7 +5838,11 @@ export type Database = {
           notify_email: string | null
           notify_email_enabled: boolean
           notify_whatsapp_enabled: boolean
+          phone_lookup_enabled: boolean
+          predictive_sort_enabled: boolean
           real_conversation_threshold_seconds: number
+          skip_landline: boolean
+          skip_voip: boolean
           tts_provider: string
           updated_at: string
           updated_by: string | null
@@ -5831,6 +5855,8 @@ export type Database = {
         Insert: {
           allowed_hours_end?: number
           allowed_hours_start?: number
+          amd_enabled?: boolean
+          amd_timeout_seconds?: number
           auto_dial_enabled?: boolean
           autopilot_enabled?: boolean
           autopilot_followup_auto_approve?: boolean
@@ -5849,7 +5875,11 @@ export type Database = {
           notify_email?: string | null
           notify_email_enabled?: boolean
           notify_whatsapp_enabled?: boolean
+          phone_lookup_enabled?: boolean
+          predictive_sort_enabled?: boolean
           real_conversation_threshold_seconds?: number
+          skip_landline?: boolean
+          skip_voip?: boolean
           tts_provider?: string
           updated_at?: string
           updated_by?: string | null
@@ -5862,6 +5892,8 @@ export type Database = {
         Update: {
           allowed_hours_end?: number
           allowed_hours_start?: number
+          amd_enabled?: boolean
+          amd_timeout_seconds?: number
           auto_dial_enabled?: boolean
           autopilot_enabled?: boolean
           autopilot_followup_auto_approve?: boolean
@@ -5880,7 +5912,11 @@ export type Database = {
           notify_email?: string | null
           notify_email_enabled?: boolean
           notify_whatsapp_enabled?: boolean
+          phone_lookup_enabled?: boolean
+          predictive_sort_enabled?: boolean
           real_conversation_threshold_seconds?: number
+          skip_landline?: boolean
+          skip_voip?: boolean
           tts_provider?: string
           updated_at?: string
           updated_by?: string | null
@@ -5987,6 +6023,7 @@ export type Database = {
           ai_outcome: string | null
           ai_sentiment: string | null
           ai_summary: string | null
+          amd_hangup: boolean | null
           answered_by: string | null
           appointment_scheduled_at: string | null
           call_duration_seconds: number | null
@@ -6029,6 +6066,7 @@ export type Database = {
           ai_outcome?: string | null
           ai_sentiment?: string | null
           ai_summary?: string | null
+          amd_hangup?: boolean | null
           answered_by?: string | null
           appointment_scheduled_at?: string | null
           call_duration_seconds?: number | null
@@ -6071,6 +6109,7 @@ export type Database = {
           ai_outcome?: string | null
           ai_sentiment?: string | null
           ai_summary?: string | null
+          amd_hangup?: boolean | null
           answered_by?: string | null
           appointment_scheduled_at?: string | null
           call_duration_seconds?: number | null
