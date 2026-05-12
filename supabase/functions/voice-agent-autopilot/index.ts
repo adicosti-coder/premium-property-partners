@@ -239,6 +239,10 @@ serve(async (req) => {
       }
       if (seenPhones.has(phone)) continue;
       if (recentPhoneSet.has(phone)) continue; // skip — apelat în ultimele 7z
+      const intel = phoneIntelMap[phone];
+      if (intel?.is_unreachable) continue;
+      if (intel?.line_type === "voip" && s.skip_voip !== false) continue;
+      if (intel?.line_type === "landline" && s.skip_landline === true) continue;
       seenPhones.add(phone);
       prospectIds.push(p.id);
       if (prospectIds.length >= limit) break;
