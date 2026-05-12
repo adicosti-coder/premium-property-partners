@@ -437,9 +437,9 @@ function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary
     return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Am clienți activi, interesați de zona dumneavoastră.`;
   }
   if (branch === "inchiriere") {
-    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă rețin un minut${ctx}? Avem chiriași verificați și plata garantată.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă rețin un minut${ctx}? Am clienți activi, interesați de zona dumneavoastră — chiriași verificați, cu plata garantată.`;
   }
-  return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Putem crește veniturile cu 40%, fără bătăi de cap.`;
+  return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Lucrăm cu proprietari din Timișoara pe regim hotelier și vă pot arăta ce randament poate avea apartamentul dumneavoastră.`;
 }
 
 function sentimentDirective(sentiment?: string | null, urgency?: number | null): string {
