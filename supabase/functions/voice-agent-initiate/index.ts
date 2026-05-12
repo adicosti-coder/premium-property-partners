@@ -76,6 +76,35 @@ serve(async (req) => {
       });
     }
 
+    // ── Pre-flight: phone intelligence guard (skip voip/landline/unreachable) ──
+    // Internal language-retry calls bypass this guard — same number, intentional re-dial.
+    const { data: agentSettings } = await supabase
+      .from("voice_agent_settings")
+      .select("amd_enabled, amd_timeout_seconds, skip_voip, skip_landline, phone_lookup_enabled")
+      .eq("id", 1)
+      .maybeSingle();
+
+    if (!isInternalRetry && agentSettings?.phone_lookup_enabled !== false) {
+      const { data: pi } = await supabase
+        .from("phone_intelligence")
+        .select("line_type, is_unreachable, is_blacklisted")
+        .eq("phone_number", toNumber)
+        .maybeSingle();
+
+      const skipReason =
+        pi?.is_blacklisted ? "phone_blacklisted" :
+        pi?.is_unreachable ? "phone_unreachable" :
+        (pi?.line_type === "voip" && agentSettings?.skip_voip !== false) ? "phone_voip_skipped" :
+        (pi?.line_type === "landline" && agentSettings?.skip_landline === true) ? "phone_landline_skipped" :
+        null;
+
+      if (skipReason) {
+        return new Response(JSON.stringify({ skipped: skipReason, line_type: pi?.line_type, message: `Apel blocat de pre-flight intelligence: ${skipReason}` }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Fetch lead context for personalised prompt
     let leadContext = "";
     if (scraperLeadId) {
