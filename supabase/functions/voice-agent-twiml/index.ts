@@ -434,7 +434,7 @@ function detectBranch(listingType?: string | null, propertyType?: string | null)
 function openingLine(branch: "vanzare" | "inchiriere" | "cazare", contextSummary: string): string {
   const ctx = contextSummary ? `, despre ${contextSummary}` : "";
   if (branch === "vanzare") {
-    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Am cumpărători activi pe zonă.`;
+    return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă deranjez un minut${ctx}? Am clienți activi, interesați de zona dumneavoastră.`;
   }
   if (branch === "inchiriere") {
     return `Bună ziua, sunt Andrei de la RealTrust Timișoara. Vă rețin un minut${ctx}? Avem chiriași verificați și plata garantată.`;
