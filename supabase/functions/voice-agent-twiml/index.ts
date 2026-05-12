@@ -706,6 +706,23 @@ serve(async (req) => {
     const TARGET_MS = 800;
 
     if (turn === 0 && req.method === "POST") {
+      // ── AMD short-circuit: dacă Twilio a detectat robot/voicemail, închidem imediat ──
+      const answeredBy = String(twilioParams?.get("AnsweredBy") || "").toLowerCase();
+      if (answeredBy.startsWith("machine_") || answeredBy === "fax") {
+        try {
+          await supabase.from("voice_call_sessions").update({
+            answered_by: answeredBy,
+            is_voicemail: true,
+            amd_hangup: true,
+            status: "completed",
+            ai_outcome: "robot",
+            ai_summary: `AMD: robot detectat (${answeredBy}). Apel închis automat fără cost ElevenLabs/AI.`,
+            ended_at: new Date().toISOString(),
+          }).eq("id", sessionId);
+        } catch (_) { /* non-fatal */ }
+        return xmlResponse(`<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>`);
+      }
+
       try {
         const fastT0 = Date.now();
         const { data: sessFast } = await supabase
