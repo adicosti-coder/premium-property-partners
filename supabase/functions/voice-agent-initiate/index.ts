@@ -166,6 +166,17 @@ serve(async (req) => {
       RecordingStatusCallback: statusUrl,
     });
 
+    // ── AMD (Answering Machine Detection) ──
+    // Sync mode: Twilio waits up to N seconds, then passes AnsweredBy to twiml URL.
+    // twiml decides to <Hangup/> if machine_* — saves ElevenLabs/AI cost on robocalls.
+    if (agentSettings?.amd_enabled !== false) {
+      const amdTimeout = Math.max(3, Math.min(10, agentSettings?.amd_timeout_seconds ?? 4));
+      formBody.append("MachineDetection", "Enable");
+      formBody.append("MachineDetectionTimeout", String(amdTimeout));
+      formBody.append("MachineDetectionSpeechThreshold", "2400");
+      formBody.append("MachineDetectionSilenceTimeout", "2000");
+    }
+
     const twRes = await fetch(`${GATEWAY_URL}/Calls.json`, {
       method: "POST",
       headers: {
