@@ -6877,6 +6877,15 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_prospect_injection_daily_summary: {
+        Args: { p_days?: number }
+        Returns: {
+          day_label: string
+          top_reason: string
+          total_rejected: number
+          unique_platforms: number
+        }[]
+      }
       get_prospect_injection_rejection_by_platform: {
         Args: { p_days?: number }
         Returns: {
@@ -6913,6 +6922,14 @@ export type Database = {
         Returns: {
           count_24h: number
           count_period: number
+          rejection_reason: string
+        }[]
+      }
+      get_prospect_injection_rejection_trend: {
+        Args: { p_days?: number }
+        Returns: {
+          count: number
+          day_label: string
           rejection_reason: string
         }[]
       }
