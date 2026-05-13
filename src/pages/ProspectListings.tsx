@@ -634,6 +634,24 @@ const ProspectListings = () => {
     return m;
   }, [prospects]);
 
+  // Most-recent call timestamp per phone (within last 48h) — used for re-call warnings.
+  const recentCallsByPhone = useMemo(() => {
+    const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+    const m = new Map<string, { at: string; prospectId: string }>();
+    prospects.forEach((p) => {
+      if (!p.auto_call_triggered_at) return;
+      const t = new Date(p.auto_call_triggered_at).getTime();
+      if (Number.isNaN(t) || t < cutoff) return;
+      const key = getProspectPhone(p);
+      if (!key) return;
+      const prev = m.get(key);
+      if (!prev || new Date(prev.at).getTime() < t) {
+        m.set(key, { at: p.auto_call_triggered_at, prospectId: p.id });
+      }
+    });
+    return m;
+  }, [prospects]);
+
   // Compute geo match + agency suspicion per prospect.
   const enriched = useMemo(
     () => prospects.map((p) => {
