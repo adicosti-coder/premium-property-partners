@@ -6877,6 +6877,32 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_prospect_injection_rejection_by_platform: {
+        Args: { p_days?: number }
+        Returns: {
+          count_period: number
+          rejection_reason: string
+          source_platform: string
+        }[]
+      }
+      get_prospect_injection_rejection_details: {
+        Args: { p_days?: number; p_limit?: number; p_reason: string }
+        Returns: {
+          contact_phone: string
+          dedup_key: string
+          id: string
+          phone_normalized: string
+          price: number
+          rejection_reason: string
+          rooms: number
+          scraped_at: string
+          size: number
+          source_platform: string
+          source_url: string
+          title: string
+          zone: string
+        }[]
+      }
       get_prospect_injection_rejection_summary: {
         Args: { p_days?: number }
         Returns: {
