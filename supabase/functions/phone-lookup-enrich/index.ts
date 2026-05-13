@@ -26,6 +26,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function normalizePhone(phone: string): string {
+  const raw = phone.replace(/[^\d+]/g, "");
+  if (raw.startsWith("+")) return raw;
+  if (raw.startsWith("004")) return "+" + raw.slice(2);
+  if (raw.startsWith("0") && raw.length === 10) return "+4" + raw;
+  if (raw.startsWith("40") && raw.length === 11) return "+" + raw;
+  if (raw.startsWith("7") && raw.length === 9) return "+40" + raw;
+  return phone; // fallback: trimis ca este
+}
+
 async function lookupPhone(phone: string, sid: string, token: string) {
   const url = `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence`;
   const auth = btoa(`${sid}:${token}`);
@@ -55,10 +65,13 @@ serve(async (req) => {
     const mode = body?.mode || "batch";
     const limit = Math.min(Math.max(1, Number(body?.limit) || 50), 200);
 
-    // Auth: admin OR service-role internal call
+    // Auth: admin OR service-role internal call OR x-lovable-api-key
     const authHeader = req.headers.get("Authorization") || "";
+    const lovableApiKey = req.headers.get("x-lovable-api-key") || "";
+    const expectedLovableKey = Deno.env.get("LOVABLE_API_KEY");
     const isService = authHeader === `Bearer ${SERVICE_KEY}`;
-    if (!isService) {
+    const isLovableKey = expectedLovableKey && lovableApiKey === expectedLovableKey;
+    if (!isService && !isLovableKey) {
       const token = authHeader.replace("Bearer ", "");
       const { data: { user } } = await supabase.auth.getUser(token);
       if (!user) {
