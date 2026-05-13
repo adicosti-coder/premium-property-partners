@@ -117,7 +117,8 @@ serve(async (req) => {
 
     for (const phone of phones) {
       try {
-        const { ok, status, data } = await lookupPhone(phone, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+        const normalized = normalizePhone(phone);
+        const { ok, status, data } = await lookupPhone(normalized, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
         if (!ok) {
           const code = data?.code || data?.error_code;
