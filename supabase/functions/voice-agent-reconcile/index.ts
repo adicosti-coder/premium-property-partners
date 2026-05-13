@@ -30,6 +30,11 @@ const appendDebug = (existing: unknown, entry: Record<string, unknown>) => {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const startedAt = Date.now();
+  let logSb: any = null;
+  let logId: number | null = null;
+  let isCronCall = false;
+
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
