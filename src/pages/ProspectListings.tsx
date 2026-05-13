@@ -1467,16 +1467,30 @@ const ProspectListings = () => {
                           {p.ai_score_breakdown?.recommended_pitch && !p.persona_snapshot && (
                             <div className="text-xs italic text-primary/70 mt-1 line-clamp-1">💡 {p.ai_score_breakdown.recommended_pitch}</div>
                           )}
-                          <ProspectPersonaSnapshot
-                            prospectId={p.id}
-                            persona={p.persona_snapshot}
-                            generatedAt={p.persona_generated_at}
-                            onChange={(next, gen) => {
-                              qc.setQueriesData<any[]>({ queryKey: ["prospect-listings"] }, (old) =>
-                                old?.map((row) => (row.id === p.id ? { ...row, persona_snapshot: next, persona_generated_at: gen } : row)) || old
-                              );
-                            }}
-                          />
+                          {(() => {
+                            const phoneKey = getProspectPhone(p);
+                            const recent = phoneKey ? recentCallsByPhone.get(phoneKey) : undefined;
+                            return (
+                              <ProspectPersonaSnapshot
+                                prospectId={p.id}
+                                persona={p.persona_snapshot}
+                                generatedAt={p.persona_generated_at}
+                                recentCallAt={recent?.at ?? null}
+                                recentCallSameProspect={recent?.prospectId === p.id}
+                                onSent={() => {
+                                  const nowIso = new Date().toISOString();
+                                  qc.setQueriesData<any[]>({ queryKey: ["prospect-listings"] }, (old) =>
+                                    old?.map((row) => (row.id === p.id ? { ...row, lifecycle_status: "calling", auto_call_triggered_at: nowIso } : row)) || old
+                                  );
+                                }}
+                                onChange={(next, gen) => {
+                                  qc.setQueriesData<any[]>({ queryKey: ["prospect-listings"] }, (old) =>
+                                    old?.map((row) => (row.id === p.id ? { ...row, persona_snapshot: next, persona_generated_at: gen } : row)) || old
+                                  );
+                                }}
+                              />
+                            );
+                          })()}
                           {p.call_summary && (
                             <div className="text-xs text-green-700 mt-1 line-clamp-2">📞 {p.call_summary}</div>
                           )}
