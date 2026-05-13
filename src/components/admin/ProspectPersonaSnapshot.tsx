@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Sparkles, RefreshCw, Pencil, Save, X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, RefreshCw, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Send, AlertTriangle, PhoneOutgoing } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,6 +36,12 @@ interface Props {
   generatedAt: string | null;
   onChange?: (next: PersonaSnapshot, generatedAt: string) => void;
   compact?: boolean;
+  /** ISO timestamp of the most recent call to this phone (any prospect) within the last 48h, if any. */
+  recentCallAt?: string | null;
+  /** Whether the recent call was on this same prospect row. */
+  recentCallSameProspect?: boolean;
+  /** Called after a successful "Trimite" dispatch so the parent can flip lifecycle_status. */
+  onSent?: () => void;
 }
 
 const URGENCY_COLOR = (n: number | undefined) => {
@@ -61,13 +67,42 @@ const TONE_LABEL: Record<string, string> = {
   prietenos: "😊 Prietenos",
 };
 
-export function ProspectPersonaSnapshot({ prospectId, persona, generatedAt, onChange, compact = false }: Props) {
+export function ProspectPersonaSnapshot({ prospectId, persona, generatedAt, onChange, compact = false, recentCallAt = null, recentCallSameProspect = false, onSent }: Props) {
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
   const [draft, setDraft] = useState<PersonaSnapshot>(persona || {});
+
+  const recentCallHours = recentCallAt
+    ? Math.max(0, Math.round((Date.now() - new Date(recentCallAt).getTime()) / 3_600_000))
+    : null;
+  const hasRecentCallWarning = recentCallAt != null;
+
+  const handleSend = async () => {
+    if (hasRecentCallWarning) {
+      const who = recentCallSameProspect ? "acest prospect" : "același număr de telefon";
+      const ok = window.confirm(
+        `⚠ Atenție: ${who} a fost apelat acum ${recentCallHours}h (sub 48h). Continui cu re-apelul?`
+      );
+      if (!ok) return;
+    }
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-auto-dial", {
+        body: { triggered_prospect_id: prospectId, source: "manual_admin_send" },
+      });
+      if (error) throw error;
+      toast({ title: "Apel lansat", description: data?.message || "Twilio dispatch trimis." });
+      onSent?.();
+    } catch (e: any) {
+      toast({ title: "Eroare la trimitere", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handleRegenerate = async () => {
     setRegenerating(true);
@@ -300,10 +335,32 @@ export function ProspectPersonaSnapshot({ prospectId, persona, generatedAt, onCh
         </div>
       )}
 
+      {/* Recent-call warning (last 48h) */}
+      {hasRecentCallWarning && !editing && (
+        <div className="flex items-start gap-1.5 rounded border border-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-1.5 text-[11px] text-amber-800 dark:text-amber-200">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>
+            <strong>Atenție re-apel:</strong>{" "}
+            {recentCallSameProspect ? "acest prospect" : "același număr"} a fost apelat acum{" "}
+            <strong>{recentCallHours}h</strong> (în ultimele 48h).
+          </span>
+        </div>
+      )}
+
       {/* Action buttons */}
-      <div className="flex items-center gap-1 pt-0.5">
+      <div className="flex items-center gap-1 pt-0.5 flex-wrap">
         {!editing ? (
           <>
+            <Button
+              size="sm"
+              className={`h-7 text-[11px] px-2.5 gap-1 font-semibold ${hasRecentCallWarning ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}`}
+              onClick={handleSend}
+              disabled={sending}
+              title={hasRecentCallWarning ? "Re-apel sub 48h — confirmare necesară" : "Trimite către Twilio"}
+            >
+              {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : hasRecentCallWarning ? <PhoneOutgoing className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
+              {hasRecentCallWarning ? "Trimite oricum" : "Trimite"}
+            </Button>
             <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1" onClick={() => { setDraft(persona); setEditing(true); }}>
               <Pencil className="h-3 w-3" /> Editează
             </Button>
