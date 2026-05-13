@@ -49,6 +49,19 @@ const REASON_META: Record<string, { label: string; tone: string; icon: any; help
 
 const PERIOD_DAYS = 7;
 
+interface TrendRow {
+  day: string;
+  rejection_reason: string;
+  cnt: number;
+}
+
+const REASON_COLORS: Record<string, string> = {
+  duplicate: "hsl(38 92% 50%)",
+  landline: "hsl(346 77% 50%)",
+  voip: "hsl(346 77% 35%)",
+  unreachable: "hsl(215 16% 47%)",
+};
+
 export default function ProspectInjectionRejectionStats() {
   const [rows, setRows] = useState<RejectionRow[]>([]);
   const [platformBreakdown, setPlatformBreakdown] = useState<PlatformRow[]>([]);
