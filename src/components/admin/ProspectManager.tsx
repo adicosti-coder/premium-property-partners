@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { detectObjection, OBJECTION_LABEL } from "@/lib/voiceObjections";
 import ProspectInjectionRejectionStats from "./ProspectInjectionRejectionStats";
+import ProspectRejectionAlerts from "./ProspectRejectionAlerts";
 
 interface ProspectListing {
   id: string;
@@ -539,6 +540,9 @@ const ProspectManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Anomaly alerts (banner) */}
+      <ProspectRejectionAlerts />
+
       {/* Auto-rejection stats (cross-platform dedup + Twilio Lookup DNC) */}
       <ProspectInjectionRejectionStats />
 

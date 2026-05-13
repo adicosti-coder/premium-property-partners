@@ -3306,6 +3306,57 @@ export type Database = {
           },
         ]
       }
+      prospect_rejection_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string
+          metric: Json
+          rejection_reason: string | null
+          severity: string
+          signature: string
+          source_platform: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          category: string
+          created_at?: string
+          id?: string
+          message: string
+          metric?: Json
+          rejection_reason?: string | null
+          severity: string
+          signature: string
+          source_platform?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          metric?: Json
+          rejection_reason?: string | null
+          severity?: string
+          signature?: string
+          source_platform?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       public_site_settings: {
         Row: {
           hero_badge_en: string | null
