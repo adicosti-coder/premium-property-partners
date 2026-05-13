@@ -184,7 +184,7 @@ serve(async (req) => {
     const twilioReady = !!(LOVABLE_API_KEY && TWILIO_API_KEY && TWILIO_FROM_NUMBER);
 
     // Resolve prospect to call
-    const PROSPECT_COLS = "id, title, description, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, source_url, search_keywords, retry_count";
+    const PROSPECT_COLS = "id, title, description, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, persona_snapshot, source_url, search_keywords, retry_count";
     let prospect: any = null;
     if (triggeredId) {
       const { data } = await supabase
