@@ -4,9 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Activity, AlertTriangle, CheckCircle2, Loader2, RefreshCw, PlayCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Activity, AlertTriangle, CheckCircle2, Loader2, RefreshCw, PlayCircle, Download, TrendingUp } from "lucide-react";
+import { formatDistanceToNow, format, startOfDay, subDays } from "date-fns";
 import { ro } from "date-fns/locale";
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 
 interface CronRun {
   id: number;
@@ -26,6 +37,8 @@ export default function CronMonitor() {
   const [runs, setRuns] = useState<CronRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [trend, setTrend] = useState<Array<{ day: string; success_rate: number; total: number; failed: number; blacklist: number }>>([]);
+  const [trendLoading, setTrendLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,8 +53,63 @@ export default function CronMonitor() {
     setLoading(false);
   }, []);
 
+  const loadTrend = useCallback(async () => {
+    setTrendLoading(true);
+    const since = subDays(startOfDay(new Date()), 6).toISOString();
+
+    const [{ data: cronData, error: cronErr }, { data: blData, error: blErr }] = await Promise.all([
+      supabase
+        .from("cron_run_log")
+        .select("status, started_at")
+        .in("job_name", TRACKED_JOBS)
+        .gte("started_at", since)
+        .limit(5000),
+      supabase
+        .from("prospect_listings")
+        .select("auto_blacklisted_at, auto_blacklist_reason")
+        .ilike("auto_blacklist_reason", "%Voicemail x3%")
+        .gte("auto_blacklisted_at", since)
+        .limit(5000),
+    ]);
+
+    if (cronErr) toast({ title: "Eroare trend cron", description: cronErr.message, variant: "destructive" });
+    if (blErr) toast({ title: "Eroare trend blacklist", description: blErr.message, variant: "destructive" });
+
+    const buckets = new Map<string, { total: number; failed: number; blacklist: number }>();
+    for (let i = 6; i >= 0; i--) {
+      const d = format(subDays(new Date(), i), "yyyy-MM-dd");
+      buckets.set(d, { total: 0, failed: 0, blacklist: 0 });
+    }
+    (cronData || []).forEach((r: any) => {
+      if (["started", "running"].includes(r.status)) return;
+      const d = format(new Date(r.started_at), "yyyy-MM-dd");
+      const b = buckets.get(d);
+      if (!b) return;
+      b.total += 1;
+      if (r.status !== "success") b.failed += 1;
+    });
+    (blData || []).forEach((r: any) => {
+      if (!r.auto_blacklisted_at) return;
+      const d = format(new Date(r.auto_blacklisted_at), "yyyy-MM-dd");
+      const b = buckets.get(d);
+      if (!b) return;
+      b.blacklist += 1;
+    });
+
+    const arr = Array.from(buckets.entries()).map(([day, v]) => ({
+      day: format(new Date(day), "dd MMM", { locale: ro }),
+      total: v.total,
+      failed: v.failed,
+      blacklist: v.blacklist,
+      success_rate: v.total > 0 ? Math.round(((v.total - v.failed) / v.total) * 100) : 0,
+    }));
+    setTrend(arr);
+    setTrendLoading(false);
+  }, []);
+
   useEffect(() => {
     load();
+    loadTrend();
     const channel = supabase
       .channel("cron_run_log_monitor")
       .on(
@@ -62,8 +130,8 @@ export default function CronMonitor() {
               description: row.error_message || "Execuție eșuată. Verifică logurile.",
               variant: "destructive",
             });
-          } else if (payload.eventType === "UPDATE" && row.status === "success") {
-            // discreet success — no toast spam
+            // Refresh trend on failure
+            loadTrend();
           }
         }
       )
@@ -72,7 +140,7 @@ export default function CronMonitor() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [load]);
+  }, [load, loadTrend]);
 
   const triggerNow = async () => {
     setRunning(true);
@@ -81,12 +149,53 @@ export default function CronMonitor() {
       if (error) throw error;
       toast({ title: "Reconcile pornit", description: `Verificate: ${data?.checked ?? 0}` });
       await load();
+      await loadTrend();
     } catch (e: any) {
       toast({ title: "Eroare la rulare", description: e?.message || "Necunoscut", variant: "destructive" });
     } finally {
       setRunning(false);
     }
   };
+
+  const exportCsv = useCallback(async () => {
+    toast({ title: "Pregătesc exportul...", description: "Descarc ultimele 7 zile de loguri." });
+    const since = subDays(new Date(), 7).toISOString();
+    const { data, error } = await supabase
+      .from("cron_run_log")
+      .select("id, job_name, status, started_at, finished_at, duration_ms, error_message, details")
+      .in("job_name", TRACKED_JOBS)
+      .gte("started_at", since)
+      .order("started_at", { ascending: false })
+      .limit(10000);
+
+    if (error) {
+      toast({ title: "Eroare export", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const headers = ["id", "job_name", "status", "started_at", "finished_at", "duration_ms", "error_message", "details"];
+    const escape = (v: any) => {
+      if (v === null || v === undefined) return "";
+      const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const csv = [
+      headers.join(","),
+      ...(data || []).map((r: any) => headers.map((h) => escape(r[h])).join(",")),
+    ].join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cron-logs-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({ title: "Export complet", description: `${data?.length ?? 0} rânduri descărcate.` });
+  }, []);
 
   const stats = useMemo(() => {
     const last24h = runs.filter((r) => Date.now() - new Date(r.started_at).getTime() < 86_400_000);
@@ -100,6 +209,13 @@ export default function CronMonitor() {
       successRate: finals.length ? Math.round(((finals.length - failed.length) / finals.length) * 100) : null,
     };
   }, [runs]);
+
+  const trendTotals = useMemo(() => {
+    return trend.reduce(
+      (acc, d) => ({ total: acc.total + d.total, failed: acc.failed + d.failed, blacklist: acc.blacklist + d.blacklist }),
+      { total: 0, failed: 0, blacklist: 0 },
+    );
+  }, [trend]);
 
   const statusBadge = (status: string) => {
     if (status === "success")
@@ -133,8 +249,11 @@ export default function CronMonitor() {
             automat la statusuri ≠ success.
           </CardDescription>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+        <div className="flex flex-wrap gap-2 justify-end">
+          <Button size="sm" variant="outline" onClick={exportCsv}>
+            <Download className="w-4 h-4 mr-1" /> Export CSV
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => { load(); loadTrend(); }} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Reîncarcă
           </Button>
           <Button size="sm" onClick={triggerNow} disabled={running}>
@@ -166,6 +285,88 @@ export default function CronMonitor() {
                 ? formatDistanceToNow(new Date(stats.lastSuccess), { addSuffix: true, locale: ro })
                 : "—"}
             </div>
+          </div>
+        </div>
+
+        {/* 7-day trend chart */}
+        <div className="border rounded-lg p-3 bg-card">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <h4 className="text-sm font-semibold">Trend ultimele 7 zile</h4>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Total: <span className="font-medium text-foreground">{trendTotals.total}</span> · Eșuate:{" "}
+              <span className={`font-medium ${trendTotals.failed > 0 ? "text-destructive" : "text-foreground"}`}>
+                {trendTotals.failed}
+              </span>{" "}
+              · AMD blacklist: <span className="font-medium text-foreground">{trendTotals.blacklist}</span>
+            </div>
+          </div>
+          <div className="w-full h-[260px]">
+            {trendLoading ? (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Se încarcă trendul...
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={trend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="day" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                  <YAxis
+                    yAxisId="left"
+                    domain={[0, 100]}
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    tickFormatter={(v) => `${v}%`}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    allowDecimals={false}
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "hsl(var(--background))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                    formatter={(value: any, name: string) => {
+                      if (name === "Success rate") return [`${value}%`, name];
+                      return [value, name];
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="blacklist"
+                    name="AMD blacklist"
+                    fill="hsl(var(--destructive))"
+                    opacity={0.6}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="failed"
+                    name="Eșuate"
+                    fill="hsl(var(--muted-foreground))"
+                    opacity={0.5}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="success_rate"
+                    name="Success rate"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2.5}
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 5 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -221,7 +422,7 @@ export default function CronMonitor() {
 
         <p className="text-xs text-muted-foreground">
           🔔 Adminii primesc automat o notificare în panoul de notificări la orice execuție cu status diferit de
-          „success".
+          „success". Exportul CSV include ultimele 7 zile de loguri.
         </p>
       </CardContent>
     </Card>
