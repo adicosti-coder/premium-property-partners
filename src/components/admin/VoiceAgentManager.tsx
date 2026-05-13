@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap, Volume2, Play as PlayIcon, Mail, MessageCircle, Voicemail, Hourglass, BadgeAlert, Star } from "lucide-react";
+import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap, Volume2, Play as PlayIcon, Mail, MessageCircle, Voicemail, Hourglass, BadgeAlert, Star, RefreshCw } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -59,6 +59,10 @@ const statusColor = (s: string) => {
   if (["failed", "busy", "no-answer", "canceled"].includes(s)) return "bg-red-100 text-red-800";
   return "bg-muted text-muted-foreground";
 };
+
+const ACTIVE_CALL_STATUSES = ["initiating", "queued", "ringing", "answered", "in-progress", "in_progress", "completing"];
+
+const isActiveCall = (call: Pick<VoiceCall, "status">) => ACTIVE_CALL_STATUSES.includes(call.status);
 
 // Legacy emoji map (kept as fallback for raw RO labels). Prefer normalizeSentiment + sentimentEmojiMap for robust display.
 const sentimentEmoji: Record<string, string> = {
