@@ -55,10 +55,13 @@ serve(async (req) => {
     const mode = body?.mode || "batch";
     const limit = Math.min(Math.max(1, Number(body?.limit) || 50), 200);
 
-    // Auth: admin OR service-role internal call
+    // Auth: admin OR service-role internal call OR x-lovable-api-key
     const authHeader = req.headers.get("Authorization") || "";
+    const lovableApiKey = req.headers.get("x-lovable-api-key") || "";
+    const expectedLovableKey = Deno.env.get("LOVABLE_API_KEY");
     const isService = authHeader === `Bearer ${SERVICE_KEY}`;
-    if (!isService) {
+    const isLovableKey = expectedLovableKey && lovableApiKey === expectedLovableKey;
+    if (!isService && !isLovableKey) {
       const token = authHeader.replace("Bearer ", "");
       const { data: { user } } = await supabase.auth.getUser(token);
       if (!user) {
