@@ -39,9 +39,11 @@ serve(async (req) => {
     // Verify caller is admin OR is an internal language-retry call (server-to-server)
     const authHeader = req.headers.get("Authorization");
     const languageRetryHeader = req.headers.get("x-language-retry");
+    const webhookSecret = (req.headers.get("x-webhook-secret") || "").trim();
     const isInternalRetry = !!languageRetryHeader && authHeader === `Bearer ${SERVICE_KEY}`;
+    const isInternalSecret = SERVICE_KEY.length > 0 && webhookSecret === SERVICE_KEY;
 
-    if (!isInternalRetry) {
+    if (!isInternalRetry && !isInternalSecret) {
       if (!authHeader) {
         return new Response(JSON.stringify({ error: "Auth required" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
