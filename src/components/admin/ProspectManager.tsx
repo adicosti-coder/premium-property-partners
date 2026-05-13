@@ -539,6 +539,9 @@ const ProspectManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Auto-rejection stats (cross-platform dedup + Twilio Lookup DNC) */}
+      <ProspectInjectionRejectionStats />
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
