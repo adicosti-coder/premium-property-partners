@@ -50,9 +50,9 @@ const REASON_META: Record<string, { label: string; tone: string; icon: any; help
 const PERIOD_DAYS = 7;
 
 interface TrendRow {
-  day: string;
+  day_label: string;
   rejection_reason: string;
-  cnt: number;
+  count: number;
 }
 
 const REASON_COLORS: Record<string, string> = {
