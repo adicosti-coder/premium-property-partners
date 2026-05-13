@@ -6886,7 +6886,12 @@ export type Database = {
         }[]
       }
       get_prospect_injection_rejection_details: {
-        Args: { p_days?: number; p_limit?: number; p_reason: string }
+        Args: {
+          p_days: number
+          p_limit: number
+          p_platform?: string
+          p_reason: string
+        }
         Returns: {
           contact_phone: string
           dedup_key: string
