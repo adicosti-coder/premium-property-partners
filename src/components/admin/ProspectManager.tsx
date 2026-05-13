@@ -21,6 +21,7 @@ import { ro } from "date-fns/locale";
 import { detectObjection, OBJECTION_LABEL } from "@/lib/voiceObjections";
 import ProspectInjectionRejectionStats from "./ProspectInjectionRejectionStats";
 import ProspectRejectionAlerts from "./ProspectRejectionAlerts";
+import ProspectAlertSettings from "./ProspectAlertSettings";
 
 interface ProspectListing {
   id: string;
