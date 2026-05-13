@@ -67,13 +67,42 @@ const TONE_LABEL: Record<string, string> = {
   prietenos: "😊 Prietenos",
 };
 
-export function ProspectPersonaSnapshot({ prospectId, persona, generatedAt, onChange, compact = false }: Props) {
+export function ProspectPersonaSnapshot({ prospectId, persona, generatedAt, onChange, compact = false, recentCallAt = null, recentCallSameProspect = false, onSent }: Props) {
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
   const [draft, setDraft] = useState<PersonaSnapshot>(persona || {});
+
+  const recentCallHours = recentCallAt
+    ? Math.max(0, Math.round((Date.now() - new Date(recentCallAt).getTime()) / 3_600_000))
+    : null;
+  const hasRecentCallWarning = recentCallAt != null;
+
+  const handleSend = async () => {
+    if (hasRecentCallWarning) {
+      const who = recentCallSameProspect ? "acest prospect" : "același număr de telefon";
+      const ok = window.confirm(
+        `⚠ Atenție: ${who} a fost apelat acum ${recentCallHours}h (sub 48h). Continui cu re-apelul?`
+      );
+      if (!ok) return;
+    }
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-auto-dial", {
+        body: { triggered_prospect_id: prospectId, source: "manual_admin_send" },
+      });
+      if (error) throw error;
+      toast({ title: "Apel lansat", description: data?.message || "Twilio dispatch trimis." });
+      onSent?.();
+    } catch (e: any) {
+      toast({ title: "Eroare la trimitere", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handleRegenerate = async () => {
     setRegenerating(true);
