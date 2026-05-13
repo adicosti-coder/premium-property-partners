@@ -1,0 +1,1 @@
+UPDATE public.phone_intelligence SET lookup_at = NULL, line_type = NULL, lookup_error = NULL WHERE line_type = 'unknown' AND carrier_name IS NULL;
