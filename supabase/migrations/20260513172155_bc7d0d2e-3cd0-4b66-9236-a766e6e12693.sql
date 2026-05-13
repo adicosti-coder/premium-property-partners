@@ -1,0 +1,1 @@
+ALTER VIEW public.prospect_injection_rejection_stats SET (security_invoker = true);
