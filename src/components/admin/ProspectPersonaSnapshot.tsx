@@ -335,10 +335,32 @@ export function ProspectPersonaSnapshot({ prospectId, persona, generatedAt, onCh
         </div>
       )}
 
+      {/* Recent-call warning (last 48h) */}
+      {hasRecentCallWarning && !editing && (
+        <div className="flex items-start gap-1.5 rounded border border-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-1.5 text-[11px] text-amber-800 dark:text-amber-200">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>
+            <strong>Atenție re-apel:</strong>{" "}
+            {recentCallSameProspect ? "acest prospect" : "același număr"} a fost apelat acum{" "}
+            <strong>{recentCallHours}h</strong> (în ultimele 48h).
+          </span>
+        </div>
+      )}
+
       {/* Action buttons */}
-      <div className="flex items-center gap-1 pt-0.5">
+      <div className="flex items-center gap-1 pt-0.5 flex-wrap">
         {!editing ? (
           <>
+            <Button
+              size="sm"
+              className={`h-7 text-[11px] px-2.5 gap-1 font-semibold ${hasRecentCallWarning ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}`}
+              onClick={handleSend}
+              disabled={sending}
+              title={hasRecentCallWarning ? "Re-apel sub 48h — confirmare necesară" : "Trimite către Twilio"}
+            >
+              {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : hasRecentCallWarning ? <PhoneOutgoing className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
+              {hasRecentCallWarning ? "Trimite oricum" : "Trimite"}
+            </Button>
             <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 gap-1" onClick={() => { setDraft(persona); setEditing(true); }}>
               <Pencil className="h-3 w-3" /> Editează
             </Button>
