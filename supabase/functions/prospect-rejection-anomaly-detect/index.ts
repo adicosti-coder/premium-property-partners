@@ -245,15 +245,23 @@ const SEVERITY_EMOJI: Record<string, string> = {
   info: "🔵",
 };
 
-async function sendAlertNotification(a: Alert & { id: string }): Promise<{ channels: string[]; error?: string }> {
+async function sendAlertNotification(
+  a: Alert & { id: string },
+  settings: AlertSettings,
+  flags: { sendEmail: boolean; sendSms: boolean },
+): Promise<{ channels: string[]; error?: string }> {
   const channels: string[] = [];
   const errors: string[] = [];
 
-  const adminEmail = Deno.env.get("ADMIN_ALERT_EMAIL");
-  const adminPhone = Deno.env.get("ADMIN_ALERT_PHONE");
+  const envEmail = Deno.env.get("ADMIN_ALERT_EMAIL");
+  const envPhone = Deno.env.get("ADMIN_ALERT_PHONE");
+  const emails = (settings.recipient_emails?.length ? settings.recipient_emails : (envEmail ? [envEmail] : []))
+    .map((s) => s.trim()).filter(Boolean);
+  const phones = (settings.recipient_phones?.length ? settings.recipient_phones : (envPhone ? [envPhone] : []))
+    .map((s) => s.trim()).filter(Boolean);
 
   // ---- Email via Resend ----
-  if (adminEmail) {
+  if (flags.sendEmail && emails.length > 0) {
     try {
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
       if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY missing");
@@ -280,7 +288,7 @@ async function sendAlertNotification(a: Alert & { id: string }): Promise<{ chann
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
         body: JSON.stringify({
           from: "RealTrust Alerts <alerts@notify.realtrust.ro>",
-          to: [adminEmail],
+          to: emails,
           subject,
           html,
         }),
@@ -295,8 +303,8 @@ async function sendAlertNotification(a: Alert & { id: string }): Promise<{ chann
     }
   }
 
-  // ---- SMS via Twilio (only for critical, to avoid noise/cost) ----
-  if (adminPhone && a.severity === "critical") {
+  // ---- SMS via Twilio ----
+  if (flags.sendSms && phones.length > 0) {
     try {
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
@@ -304,25 +312,27 @@ async function sendAlertNotification(a: Alert & { id: string }): Promise<{ chann
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
       if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY missing");
       if (!TWILIO_FROM_NUMBER) throw new Error("TWILIO_FROM_NUMBER missing");
-      const smsBody = `🔴 RealTrust CRITICAL: ${a.title}. ${a.message.slice(0, 200)}`.slice(0, 400);
-      const r = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "X-Connection-Api-Key": TWILIO_API_KEY,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          To: adminPhone,
-          From: TWILIO_FROM_NUMBER,
-          Body: smsBody,
-        }),
-      });
-      if (!r.ok) {
-        const t = await r.text();
-        throw new Error(`Twilio ${r.status}: ${t.slice(0, 200)}`);
+      const emoji = SEVERITY_EMOJI[a.severity] ?? "⚠️";
+      const smsBody = `${emoji} RealTrust ${a.severity.toUpperCase()}: ${a.title}. ${a.message.slice(0, 180)}`.slice(0, 400);
+      let anyOk = false;
+      for (const to of phones) {
+        const r = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "X-Connection-Api-Key": TWILIO_API_KEY,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ To: to, From: TWILIO_FROM_NUMBER, Body: smsBody }),
+        });
+        if (!r.ok) {
+          const t = await r.text();
+          errors.push(`sms[${to}]:${r.status} ${t.slice(0, 120)}`);
+        } else {
+          anyOk = true;
+        }
       }
-      channels.push("sms");
+      if (anyOk) channels.push("sms");
     } catch (e) {
       errors.push("sms:" + (e instanceof Error ? e.message : String(e)));
     }
