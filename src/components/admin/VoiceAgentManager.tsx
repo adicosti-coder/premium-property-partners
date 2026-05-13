@@ -896,7 +896,7 @@ export default function VoiceAgentManager() {
             <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Istoric apeluri</CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
               {calls.some(isActiveCall) && (
-                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={reconcileStuckCalls} disabled={reconciling}>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => reconcileStuckCalls()} disabled={reconciling}>
                   {reconciling ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
                   Repară queued
                 </Button>
