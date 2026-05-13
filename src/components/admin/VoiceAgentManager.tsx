@@ -507,6 +507,7 @@ export default function VoiceAgentManager() {
       <VoiceAgentBatchCalling />
       <VoiceAgentTrainingLab />
       <VoiceAgentMonitoring />
+      <CronMonitor />
       <VoiceCallerProfilesManager />
       <VoiceAgentKnowledgeBase />
       <VoiceAgentFollowupQueue />
