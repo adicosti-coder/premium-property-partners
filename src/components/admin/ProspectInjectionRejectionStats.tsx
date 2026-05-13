@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
   Shield, RefreshCw, Loader2, PhoneOff, Copy as CopyIcon, AlertCircle,
-  ChevronDown, ChevronRight, ExternalLink,
+  ChevronDown, ChevronRight, ExternalLink, FilterX,
 } from "lucide-react";
 
 interface RejectionRow {
