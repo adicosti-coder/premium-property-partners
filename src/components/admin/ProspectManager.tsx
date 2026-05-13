@@ -540,6 +540,9 @@ const ProspectManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Anomaly alerts (banner) */}
+      <ProspectRejectionAlerts />
+
       {/* Auto-rejection stats (cross-platform dedup + Twilio Lookup DNC) */}
       <ProspectInjectionRejectionStats />
 
