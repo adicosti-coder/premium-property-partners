@@ -203,6 +203,70 @@ export default function ProspectInjectionRejectionStats() {
           </div>
         </div>
 
+        {/* Trend pe ultimele zile */}
+        <div className="border rounded-lg p-3 bg-card">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <TrendingUp className="w-4 h-4 text-amber-500" />
+              Trend respingeri — ultimele {PERIOD_DAYS} zile
+            </div>
+            <Badge variant="outline" className="font-mono text-xs">
+              total: {trendTotal}
+            </Badge>
+          </div>
+          <div className="h-[220px]">
+            {trendLoading && trendChartData.data.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Se încarcă trend-ul...
+              </div>
+            ) : trendChartData.data.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                Fără respingeri în perioada selectată. ✨
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendChartData.data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                  <defs>
+                    {trendChartData.reasons.map((reason) => (
+                      <linearGradient key={reason} id={`grad-${reason}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={REASON_COLORS[reason] || "hsl(var(--primary))"} stopOpacity={0.5} />
+                        <stop offset="95%" stopColor={REASON_COLORS[reason] || "hsl(var(--primary))"} stopOpacity={0} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="day" className="text-[10px] fill-muted-foreground" tickMargin={6} />
+                  <YAxis className="text-[10px] fill-muted-foreground" allowDecimals={false} width={28} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                    formatter={(value: number, name: string) => [value, REASON_META[name]?.label || name]}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: "11px" }}
+                    formatter={(value) => REASON_META[value]?.label || value}
+                  />
+                  {trendChartData.reasons.map((reason) => (
+                    <Area
+                      key={reason}
+                      type="monotone"
+                      dataKey={reason}
+                      stackId="1"
+                      stroke={REASON_COLORS[reason] || "hsl(var(--primary))"}
+                      strokeWidth={2}
+                      fill={`url(#grad-${reason})`}
+                    />
+                  ))}
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
         <div className="border rounded-lg overflow-hidden">
           <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-semibold bg-muted/50">
             <div className="col-span-6">Motiv</div>
