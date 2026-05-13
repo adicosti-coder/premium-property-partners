@@ -23,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/admin/AgencyExplainerDialog";
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
+import { ProspectPersonaSnapshot } from "@/components/admin/ProspectPersonaSnapshot";
 import SEOHead from "@/components/SEOHead";
 import Header from "@/components/Header";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
