@@ -161,10 +161,17 @@ serve(async (req) => {
       From: TWILIO_FROM_NUMBER,
       Url: twimlUrl,
       StatusCallback: statusUrl,
-      StatusCallbackEvent: "initiated ringing answered completed",
+      StatusCallbackMethod: "POST",
       Record: "true",
       RecordingStatusCallback: statusUrl,
+      RecordingStatusCallbackMethod: "POST",
     });
+    // Twilio requires one StatusCallbackEvent field per event. A single
+    // space-separated value is accepted by the API gateway but Twilio marks it
+    // invalid (21626), so callbacks never arrive and calls appear stuck.
+    for (const eventName of ["initiated", "ringing", "answered", "completed"]) {
+      formBody.append("StatusCallbackEvent", eventName);
+    }
 
     // ── AMD (Answering Machine Detection) ──
     // Sync mode: Twilio waits up to N seconds, then passes AnsweredBy to twiml URL.
