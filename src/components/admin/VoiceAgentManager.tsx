@@ -95,6 +95,7 @@ export default function VoiceAgentManager() {
   const [windowFilter, setWindowFilter] = useState<HourWindow | "all">("all");
   const [sentimentFilter, setSentimentFilter] = useState<SentimentBucket | "all">("all");
   const [recoveryRatePct, setRecoveryRatePct] = useState<number | null>(null);
+  const [reconciling, setReconciling] = useState(false);
 
   // Listen for filter requests from heatmap drill-down
   useEffect(() => {
@@ -330,6 +331,29 @@ export default function VoiceAgentManager() {
       }
     } finally {
       setDialing(false);
+    }
+  };
+
+  const reconcileStuckCalls = async () => {
+    const sessionIds = calls.filter(isActiveCall).map((call) => call.id);
+    if (sessionIds.length === 0) {
+      toast({ title: "Nicio coadă activă", description: "Nu există apeluri queued/ringing/in-progress de sincronizat." });
+      return;
+    }
+
+    setReconciling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-reconcile", {
+        body: { sessionIds, staleSeconds: 15, limit: 25 },
+      });
+      if (error || data?.error) {
+        toast({ title: "Sincronizare eșuată", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        toast({ title: "Statusuri actualizate", description: `${data?.checked || 0} apeluri verificate în Twilio.` });
+        loadCalls();
+      }
+    } finally {
+      setReconciling(false);
     }
   };
 
