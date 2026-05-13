@@ -238,29 +238,39 @@ serve(async (req) => {
         .slice(0, 6000);
 
       if (LOVABLE_API_KEY && transcriptText.trim()) {
-        const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [
-              {
-                role: "system",
-                content: `Analizează apelul și returnează STRICT JSON cu cheile: summary, outcome, sentiment, next_action, appointment_iso. Valorile outcome permise: interesat, neinteresat, callback, programare, robot, nicio_legatura.`,
-              },
-              { role: "user", content: transcriptText },
-            ],
-          }),
-        });
+        try {
+          const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "system",
+                  content: `Analizează apelul și returnează STRICT JSON cu cheile: summary, outcome, sentiment, next_action, appointment_iso. Valorile outcome permise: interesat, neinteresat, callback, programare, robot, nicio_legatura.`,
+                },
+                { role: "user", content: transcriptText },
+              ],
+            }),
+            signal: AbortSignal.timeout(20000),
+          });
 
-        if (aiRes.ok) {
-          const aiData = await aiRes.json();
-          const raw = aiData.choices?.[0]?.message?.content?.trim() || "{}";
-          try {
-            parsed = { ...fallbackReport, ...JSON.parse(raw.replace(/```json\n?|```/g, "").trim()) };
-          } catch {
-            parsed = fallbackReport;
+          if (aiRes.ok) {
+            const aiData = await aiRes.json();
+            const raw = aiData.choices?.[0]?.message?.content?.trim() || "{}";
+            try {
+              parsed = { ...fallbackReport, ...JSON.parse(raw.replace(/```json\n?|```/g, "").trim()) };
+            } catch {
+              parsed = fallbackReport;
+            }
+          } else {
+            console.warn("[voice-status] AI gateway non-OK:", aiRes.status);
+            await pushDebugLog(supabase, sessionId, { stage: "ai_summary_failed", reason: `gateway_${aiRes.status}` });
           }
+        } catch (e) {
+          console.error("[voice-status] AI summary call crashed:", (e as Error).message);
+          await pushDebugLog(supabase, sessionId, { stage: "ai_summary_failed", reason: (e as Error).message });
+          parsed = fallbackReport;
         }
       }
 
