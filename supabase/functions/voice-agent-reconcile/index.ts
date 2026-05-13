@@ -52,8 +52,22 @@ serve(async (req) => {
     let isInternal = false;
     if (cronHeader) {
       const { data: cronSecret } = await supabase.rpc("get_cron_reconcile_secret");
-      if (cronSecret && cronHeader === cronSecret) isInternal = true;
+      if (cronSecret && cronHeader === cronSecret) {
+        isInternal = true;
+        isCronCall = true;
+      }
     }
+
+    if (isCronCall) {
+      logSb = supabase;
+      const { data: logRow } = await logSb
+        .from("cron_run_log")
+        .insert({ job_name: "voice-agent-reconcile-5min", status: "started" })
+        .select("id")
+        .maybeSingle();
+      logId = logRow?.id ?? null;
+    }
+
 
     if (!isInternal) {
       const authHeader = req.headers.get("Authorization");
