@@ -3098,12 +3098,15 @@ export type Database = {
           consecutive_failures: number
           contact_name: string | null
           contact_phone: string | null
+          conversion_probability: number | null
           created_at: string | null
           currency: string | null
+          dedup_key: string | null
           description: string | null
           do_not_call: boolean
           do_not_call_at: string | null
           do_not_call_reason: string | null
+          duplicate_of: string | null
           features: string[] | null
           floor: string | null
           followup_sent_at: string | null
@@ -3124,10 +3127,12 @@ export type Database = {
           owner_sentiment: string | null
           phone_normalized: string | null
           pre_campaign_status: string | null
+          predictive_score: number | null
           price: number | null
           price_per_sqm: number | null
           prospect_type: string
           rating: number | null
+          rejection_reason: string | null
           retry_count: number
           review_count: number | null
           rooms: number | null
@@ -3141,6 +3146,8 @@ export type Database = {
           status: string | null
           tags: string[]
           title: string | null
+          tts_context_key: string | null
+          undervaluation_percent: number | null
           updated_at: string | null
           urgency_level: number | null
           voice_call_session_id: string | null
@@ -3162,12 +3169,15 @@ export type Database = {
           consecutive_failures?: number
           contact_name?: string | null
           contact_phone?: string | null
+          conversion_probability?: number | null
           created_at?: string | null
           currency?: string | null
+          dedup_key?: string | null
           description?: string | null
           do_not_call?: boolean
           do_not_call_at?: string | null
           do_not_call_reason?: string | null
+          duplicate_of?: string | null
           features?: string[] | null
           floor?: string | null
           followup_sent_at?: string | null
@@ -3188,10 +3198,12 @@ export type Database = {
           owner_sentiment?: string | null
           phone_normalized?: string | null
           pre_campaign_status?: string | null
+          predictive_score?: number | null
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
           rating?: number | null
+          rejection_reason?: string | null
           retry_count?: number
           review_count?: number | null
           rooms?: number | null
@@ -3205,6 +3217,8 @@ export type Database = {
           status?: string | null
           tags?: string[]
           title?: string | null
+          tts_context_key?: string | null
+          undervaluation_percent?: number | null
           updated_at?: string | null
           urgency_level?: number | null
           voice_call_session_id?: string | null
@@ -3226,12 +3240,15 @@ export type Database = {
           consecutive_failures?: number
           contact_name?: string | null
           contact_phone?: string | null
+          conversion_probability?: number | null
           created_at?: string | null
           currency?: string | null
+          dedup_key?: string | null
           description?: string | null
           do_not_call?: boolean
           do_not_call_at?: string | null
           do_not_call_reason?: string | null
+          duplicate_of?: string | null
           features?: string[] | null
           floor?: string | null
           followup_sent_at?: string | null
@@ -3252,10 +3269,12 @@ export type Database = {
           owner_sentiment?: string | null
           phone_normalized?: string | null
           pre_campaign_status?: string | null
+          predictive_score?: number | null
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
           rating?: number | null
+          rejection_reason?: string | null
           retry_count?: number
           review_count?: number | null
           rooms?: number | null
@@ -3269,13 +3288,23 @@ export type Database = {
           status?: string | null
           tags?: string[]
           title?: string | null
+          tts_context_key?: string | null
+          undervaluation_percent?: number | null
           updated_at?: string | null
           urgency_level?: number | null
           voice_call_session_id?: string | null
           year_built?: number | null
           zone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "prospect_listings_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       public_site_settings: {
         Row: {
@@ -6647,6 +6676,45 @@ export type Database = {
           },
         ]
       }
+      voice_tts_context_cache: {
+        Row: {
+          audio_url: string | null
+          category: string | null
+          context_key: string
+          generated_at: string
+          hits: number
+          last_used_at: string | null
+          summary: string | null
+          updated_at: string
+          voice_id: string | null
+          zone: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          category?: string | null
+          context_key: string
+          generated_at?: string
+          hits?: number
+          last_used_at?: string | null
+          summary?: string | null
+          updated_at?: string
+          voice_id?: string | null
+          zone?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          category?: string | null
+          context_key?: string
+          generated_at?: string
+          hits?: number
+          last_used_at?: string | null
+          summary?: string | null
+          updated_at?: string
+          voice_id?: string | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       booking_availability: {
@@ -6751,6 +6819,14 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_injection_rejection_stats: {
+        Row: {
+          count: number | null
+          day: string | null
+          rejection_reason: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
@@ -6799,6 +6875,14 @@ export type Database = {
           source: string
           title: string
           updated_at: string
+        }[]
+      }
+      get_prospect_injection_rejection_summary: {
+        Args: { p_days?: number }
+        Returns: {
+          count_24h: number
+          count_period: number
+          rejection_reason: string
         }[]
       }
       get_public_profile: {
@@ -6882,6 +6966,10 @@ export type Database = {
         Returns: number
       }
       normalize_ro_phone: { Args: { p: string }; Returns: string }
+      normalize_zone_key: {
+        Args: { p_location: string; p_zone: string }
+        Returns: string
+      }
       process_voice_call_result: {
         Args: {
           p_is_voicemail: boolean
