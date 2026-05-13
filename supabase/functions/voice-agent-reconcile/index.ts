@@ -30,6 +30,11 @@ const appendDebug = (existing: unknown, entry: Record<string, unknown>) => {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const startedAt = Date.now();
+  let logSb: any = null;
+  let logId: number | null = null;
+  let isCronCall = false;
+
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -47,8 +52,22 @@ serve(async (req) => {
     let isInternal = false;
     if (cronHeader) {
       const { data: cronSecret } = await supabase.rpc("get_cron_reconcile_secret");
-      if (cronSecret && cronHeader === cronSecret) isInternal = true;
+      if (cronSecret && cronHeader === cronSecret) {
+        isInternal = true;
+        isCronCall = true;
+      }
     }
+
+    if (isCronCall) {
+      logSb = supabase;
+      const { data: logRow } = await logSb
+        .from("cron_run_log")
+        .insert({ job_name: "voice-agent-reconcile-5min", status: "started" })
+        .select("id")
+        .maybeSingle();
+      logId = logRow?.id ?? null;
+    }
+
 
     if (!isInternal) {
       const authHeader = req.headers.get("Authorization");
@@ -138,9 +157,26 @@ serve(async (req) => {
       reconciled.push({ id: (session as any).id, ok: true, twilio_status: twStatus, duration, final: FINAL_STATUSES.includes(twStatus) });
     }
 
+    if (logSb && logId) {
+      await logSb.from("cron_run_log").update({
+        status: "success",
+        finished_at: new Date().toISOString(),
+        duration_ms: Date.now() - startedAt,
+        details: { checked: sessions?.length || 0, reconciled_count: reconciled.length },
+      }).eq("id", logId);
+    }
+
     return json({ ok: true, checked: sessions?.length || 0, reconciled });
   } catch (e: any) {
     console.error("voice-agent-reconcile error:", e);
+    if (logSb && logId) {
+      await logSb.from("cron_run_log").update({
+        status: "failed",
+        finished_at: new Date().toISOString(),
+        duration_ms: Date.now() - startedAt,
+        error_message: e?.message || String(e),
+      }).eq("id", logId);
+    }
     return json({ error: e.message || "Unknown error" }, 500);
   }
 });
