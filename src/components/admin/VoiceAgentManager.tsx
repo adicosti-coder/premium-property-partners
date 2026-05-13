@@ -334,10 +334,10 @@ export default function VoiceAgentManager() {
     }
   };
 
-  const reconcileStuckCalls = async () => {
+  const reconcileStuckCalls = async (showToast = true) => {
     const sessionIds = calls.filter(isActiveCall).map((call) => call.id);
     if (sessionIds.length === 0) {
-      toast({ title: "Nicio coadă activă", description: "Nu există apeluri queued/ringing/in-progress de sincronizat." });
+      if (showToast) toast({ title: "Nicio coadă activă", description: "Nu există apeluri queued/ringing/in-progress de sincronizat." });
       return;
     }
 
@@ -347,15 +347,24 @@ export default function VoiceAgentManager() {
         body: { sessionIds, staleSeconds: 15, limit: 25 },
       });
       if (error || data?.error) {
-        toast({ title: "Sincronizare eșuată", description: data?.error || error?.message, variant: "destructive" });
+        if (showToast) toast({ title: "Sincronizare eșuată", description: data?.error || error?.message, variant: "destructive" });
       } else {
-        toast({ title: "Statusuri actualizate", description: `${data?.checked || 0} apeluri verificate în Twilio.` });
+        if (showToast) toast({ title: "Statusuri actualizate", description: `${data?.checked || 0} apeluri verificate în Twilio.` });
         loadCalls();
       }
     } finally {
       setReconciling(false);
     }
   };
+
+  useEffect(() => {
+    if (!calls.some(isActiveCall)) return;
+    const interval = window.setInterval(() => {
+      void reconcileStuckCalls(false);
+    }, 30000);
+    return () => window.clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calls]);
 
   const runFullTest = async () => {
     if (!/^\+[1-9]\d{6,14}$/.test(testNumber)) {
