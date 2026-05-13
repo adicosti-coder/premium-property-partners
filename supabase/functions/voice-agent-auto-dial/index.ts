@@ -72,9 +72,12 @@ async function postToMakeWebhook(prospect: any, reason: string) {
           currency: prospect.currency,
           lead_score: prospect.lead_score,
           owner_sentiment: prospect.ai_score_breakdown?.owner_sentiment,
-          urgency_level: prospect.ai_score_breakdown?.urgency_level,
+          urgency_level: prospect.persona_snapshot?.urgency_level ?? prospect.ai_score_breakdown?.urgency_level,
           recommended_pitch: prospect.ai_score_breakdown?.recommended_pitch,
           source_url: prospect.source_url,
+          persona_snapshot: prospect.persona_snapshot ?? null,
+          persona_summary: prospect.persona_snapshot?.summary ?? null,
+          opening_line: prospect.persona_snapshot?.approach?.opening_line ?? null,
         },
         timestamp: new Date().toISOString(),
       }),
@@ -181,7 +184,7 @@ serve(async (req) => {
     const twilioReady = !!(LOVABLE_API_KEY && TWILIO_API_KEY && TWILIO_FROM_NUMBER);
 
     // Resolve prospect to call
-    const PROSPECT_COLS = "id, title, description, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, source_url, search_keywords, retry_count";
+    const PROSPECT_COLS = "id, title, description, category, prospect_type, contact_name, contact_phone, phone_normalized, price, currency, location, zone, lead_score, ai_score_breakdown, persona_snapshot, source_url, search_keywords, retry_count";
     let prospect: any = null;
     if (triggeredId) {
       const { data } = await supabase
