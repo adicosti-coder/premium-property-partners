@@ -46,6 +46,7 @@ interface VoiceCall {
   language_retry_of?: string | null;
   debug_log?: any[] | null;
   is_voicemail?: boolean | null;
+  answered_by?: string | null;
   twilio_failure_reason?: string | null;
   prospect_listing_id?: string | null;
   next_callback_at?: string | null;
@@ -53,12 +54,21 @@ interface VoiceCall {
   is_recovered?: boolean;
 }
 
-const statusColor = (s: string) => {
-  if (["completed"].includes(s)) return "bg-green-100 text-green-800";
-  if (["in-progress", "ringing", "queued", "initiating"].includes(s)) return "bg-blue-100 text-blue-800 animate-pulse";
-  if (["failed", "busy", "no-answer", "canceled"].includes(s)) return "bg-red-100 text-red-800";
-  return "bg-muted text-muted-foreground";
+// Returns a friendly label + tailwind classes for a session.
+// Distinguishes Twilio AMD voicemail/robot from real failures so admins
+// instantly see whether it's worth retrying manually.
+const statusBadge = (call: Pick<VoiceCall, "status" | "is_voicemail" | "answered_by">): { label: string; cls: string } => {
+  const s = call.status;
+  const ans = (call.answered_by || "").toLowerCase();
+  const isAmd = call.is_voicemail === true || ans.startsWith("machine_") || ans === "fax";
+  if (isAmd) return { label: "🤖 Voicemail (AMD)", cls: "bg-amber-100 text-amber-800 border border-amber-300" };
+  if (s === "completed") return { label: "✅ completed", cls: "bg-green-100 text-green-800" };
+  if (["in-progress", "ringing", "queued", "initiating"].includes(s)) return { label: s, cls: "bg-blue-100 text-blue-800 animate-pulse" };
+  if (["failed", "busy", "no-answer", "canceled"].includes(s)) return { label: `❌ ${s}`, cls: "bg-red-100 text-red-800" };
+  return { label: s, cls: "bg-muted text-muted-foreground" };
 };
+
+const statusColor = (s: string) => statusBadge({ status: s }).cls;
 
 const ACTIVE_CALL_STATUSES = ["initiating", "queued", "ringing", "answered", "in-progress", "in_progress", "completing"];
 
@@ -955,7 +965,7 @@ export default function VoiceAgentManager() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{c.to_number}</span>
-                        <Badge className={statusColor(c.status)}>{c.status}</Badge>
+                        {(() => { const b = statusBadge(c); return <Badge className={b.cls}>{b.label}</Badge>; })()}
                         {c.is_recovered && (
                           <span className="inline-flex items-center gap-1">
                             <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs" title="Lead recuperat: prospectul fusese ocupat/nu răspundea, dar acest call back a generat o programare.">
@@ -1035,7 +1045,7 @@ export default function VoiceAgentManager() {
             <DialogTitle className="flex items-center gap-2">
               <PhoneCall className="h-5 w-5" />
               Apel către {selectedCall?.to_number}
-              {selectedCall && <Badge className={statusColor(selectedCall.status)}>{selectedCall.status}</Badge>}
+              {selectedCall && (() => { const b = statusBadge(selectedCall); return <Badge className={b.cls}>{b.label}</Badge>; })()}
             </DialogTitle>
           </DialogHeader>
           {selectedCall && (
