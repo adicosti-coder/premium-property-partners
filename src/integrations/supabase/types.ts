@@ -3179,6 +3179,8 @@ export type Database = {
           migrated_from_scraper_id: string | null
           next_callback_at: string | null
           owner_sentiment: string | null
+          persona_generated_at: string | null
+          persona_snapshot: Json | null
           phone_normalized: string | null
           pre_campaign_status: string | null
           predictive_score: number | null
@@ -3250,6 +3252,8 @@ export type Database = {
           migrated_from_scraper_id?: string | null
           next_callback_at?: string | null
           owner_sentiment?: string | null
+          persona_generated_at?: string | null
+          persona_snapshot?: Json | null
           phone_normalized?: string | null
           pre_campaign_status?: string | null
           predictive_score?: number | null
@@ -3321,6 +3325,8 @@ export type Database = {
           migrated_from_scraper_id?: string | null
           next_callback_at?: string | null
           owner_sentiment?: string | null
+          persona_generated_at?: string | null
+          persona_snapshot?: Json | null
           phone_normalized?: string | null
           pre_campaign_status?: string | null
           predictive_score?: number | null
