@@ -41,17 +41,27 @@ serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Auth required" }, 401);
 
-    const token = authHeader.replace("Bearer ", "");
-    const isInternal = token === SERVICE_KEY;
+    // Internal cron auth: header x-cron-secret matches vault-stored secret
+    const cronHeader = req.headers.get("x-cron-secret");
+    let isInternal = false;
+    if (cronHeader) {
+      const { data: cronSecret } = await supabase.rpc("get_cron_reconcile_secret");
+      if (cronSecret && cronHeader === cronSecret) isInternal = true;
+    }
+
     if (!isInternal) {
-      const { data: { user } } = await supabase.auth.getUser(token);
-      if (!user) return json({ error: "Invalid token" }, 401);
-
-      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
-      if (!isAdmin) return json({ error: "Admin required" }, 403);
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) return json({ error: "Auth required" }, 401);
+      const token = authHeader.replace("Bearer ", "");
+      if (token === SERVICE_KEY) {
+        isInternal = true;
+      } else {
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (!user) return json({ error: "Invalid token" }, 401);
+        const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+        if (!isAdmin) return json({ error: "Admin required" }, 403);
+      }
     }
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
