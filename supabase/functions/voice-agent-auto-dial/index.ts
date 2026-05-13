@@ -357,23 +357,30 @@ serve(async (req) => {
         "X-Connection-Api-Key": TWILIO_API_KEY!,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        To: toNumber,
-        From: TWILIO_FROM_NUMBER!,
-        Url: twimlUrl,
-        StatusCallback: statusUrl,
-        StatusCallbackEvent: "initiated ringing answered completed",
-        Record: "true",
-        RecordingStatusCallback: statusUrl,
-        // ── Machine / voicemail detection ───────────────────────────────
-        // Twilio invokes statusUrl with AnsweredBy=human|machine_start|fax|...
-        // We use Detect (not DetectMessageEnd) to fail-fast on robot pick-ups.
-        MachineDetection: "Enable",
-        AsyncAmd: "true",
-        AsyncAmdStatusCallback: statusUrl,
-        AsyncAmdStatusCallbackMethod: "POST",
-        MachineDetectionTimeout: "10",
-      }),
+      body: (() => {
+        const formBody = new URLSearchParams({
+          To: toNumber,
+          From: TWILIO_FROM_NUMBER!,
+          Url: twimlUrl,
+          StatusCallback: statusUrl,
+          StatusCallbackMethod: "POST",
+          Record: "true",
+          RecordingStatusCallback: statusUrl,
+          RecordingStatusCallbackMethod: "POST",
+          // ── Machine / voicemail detection ───────────────────────────────
+          // Twilio invokes statusUrl with AnsweredBy=human|machine_start|fax|...
+          // We use Detect (not DetectMessageEnd) to fail-fast on robot pick-ups.
+          MachineDetection: "Enable",
+          AsyncAmd: "true",
+          AsyncAmdStatusCallback: statusUrl,
+          AsyncAmdStatusCallbackMethod: "POST",
+          MachineDetectionTimeout: "10",
+        });
+        for (const eventName of ["initiated", "ringing", "answered", "completed"]) {
+          formBody.append("StatusCallbackEvent", eventName);
+        }
+        return formBody;
+      })(),
     });
     const twData = await twRes.json();
 

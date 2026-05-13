@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap, Volume2, Play as PlayIcon, Mail, MessageCircle, Voicemail, Hourglass, BadgeAlert, Star } from "lucide-react";
+import { Phone, PhoneCall, Loader2, Mic, Sparkles, Clock, AlertTriangle, Bot, Zap, Volume2, Play as PlayIcon, Mail, MessageCircle, Voicemail, Hourglass, BadgeAlert, Star, RefreshCw } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -60,6 +60,10 @@ const statusColor = (s: string) => {
   return "bg-muted text-muted-foreground";
 };
 
+const ACTIVE_CALL_STATUSES = ["initiating", "queued", "ringing", "answered", "in-progress", "in_progress", "completing"];
+
+const isActiveCall = (call: Pick<VoiceCall, "status">) => ACTIVE_CALL_STATUSES.includes(call.status);
+
 // Legacy emoji map (kept as fallback for raw RO labels). Prefer normalizeSentiment + sentimentEmojiMap for robust display.
 const sentimentEmoji: Record<string, string> = {
   pozitiv: "😊", neutru: "😐", negativ: "😞",
@@ -91,6 +95,7 @@ export default function VoiceAgentManager() {
   const [windowFilter, setWindowFilter] = useState<HourWindow | "all">("all");
   const [sentimentFilter, setSentimentFilter] = useState<SentimentBucket | "all">("all");
   const [recoveryRatePct, setRecoveryRatePct] = useState<number | null>(null);
+  const [reconciling, setReconciling] = useState(false);
 
   // Listen for filter requests from heatmap drill-down
   useEffect(() => {
@@ -328,6 +333,38 @@ export default function VoiceAgentManager() {
       setDialing(false);
     }
   };
+
+  const reconcileStuckCalls = async (showToast = true) => {
+    const sessionIds = calls.filter(isActiveCall).map((call) => call.id);
+    if (sessionIds.length === 0) {
+      if (showToast) toast({ title: "Nicio coadă activă", description: "Nu există apeluri queued/ringing/in-progress de sincronizat." });
+      return;
+    }
+
+    setReconciling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("voice-agent-reconcile", {
+        body: { sessionIds, staleSeconds: 15, limit: 25 },
+      });
+      if (error || data?.error) {
+        if (showToast) toast({ title: "Sincronizare eșuată", description: data?.error || error?.message, variant: "destructive" });
+      } else {
+        if (showToast) toast({ title: "Statusuri actualizate", description: `${data?.checked || 0} apeluri verificate în Twilio.` });
+        loadCalls();
+      }
+    } finally {
+      setReconciling(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!calls.some(isActiveCall)) return;
+    const interval = window.setInterval(() => {
+      void reconcileStuckCalls(false);
+    }, 30000);
+    return () => window.clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calls]);
 
   const runFullTest = async () => {
     if (!/^\+[1-9]\d{6,14}$/.test(testNumber)) {
@@ -858,6 +895,12 @@ export default function VoiceAgentManager() {
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <CardTitle className="flex items-center gap-2"><Mic className="h-5 w-5" /> Istoric apeluri</CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
+              {calls.some(isActiveCall) && (
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => reconcileStuckCalls()} disabled={reconciling}>
+                  {reconciling ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+                  Repară queued
+                </Button>
+              )}
               <span className="text-xs text-muted-foreground">Fereastră orară:</span>
               <Select value={windowFilter} onValueChange={(v) => setWindowFilter(v as any)}>
                 <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
