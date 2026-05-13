@@ -36,6 +36,12 @@ interface Props {
   generatedAt: string | null;
   onChange?: (next: PersonaSnapshot, generatedAt: string) => void;
   compact?: boolean;
+  /** ISO timestamp of the most recent call to this phone (any prospect) within the last 48h, if any. */
+  recentCallAt?: string | null;
+  /** Whether the recent call was on this same prospect row. */
+  recentCallSameProspect?: boolean;
+  /** Called after a successful "Trimite" dispatch so the parent can flip lifecycle_status. */
+  onSent?: () => void;
 }
 
 const URGENCY_COLOR = (n: number | undefined) => {
