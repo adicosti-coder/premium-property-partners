@@ -6779,6 +6779,7 @@ export type Database = {
         Returns: number
       }
       extract_url_domain: { Args: { p_url: string }; Returns: string }
+      get_cron_reconcile_secret: { Args: never; Returns: string }
       get_owner_property_reviews: {
         Args: { p_property_id?: string }
         Returns: {
