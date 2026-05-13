@@ -157,9 +157,26 @@ serve(async (req) => {
       reconciled.push({ id: (session as any).id, ok: true, twilio_status: twStatus, duration, final: FINAL_STATUSES.includes(twStatus) });
     }
 
+    if (logSb && logId) {
+      await logSb.from("cron_run_log").update({
+        status: "success",
+        finished_at: new Date().toISOString(),
+        duration_ms: Date.now() - startedAt,
+        details: { checked: sessions?.length || 0, reconciled_count: reconciled.length },
+      }).eq("id", logId);
+    }
+
     return json({ ok: true, checked: sessions?.length || 0, reconciled });
   } catch (e: any) {
     console.error("voice-agent-reconcile error:", e);
+    if (logSb && logId) {
+      await logSb.from("cron_run_log").update({
+        status: "failed",
+        finished_at: new Date().toISOString(),
+        duration_ms: Date.now() - startedAt,
+        error_message: e?.message || String(e),
+      }).eq("id", logId);
+    }
     return json({ error: e.message || "Unknown error" }, 500);
   }
 });
