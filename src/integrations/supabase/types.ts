@@ -3315,6 +3315,9 @@ export type Database = {
           id: string
           message: string
           metric: Json
+          notification_channels: string[] | null
+          notification_error: string | null
+          notified_at: string | null
           rejection_reason: string | null
           severity: string
           signature: string
@@ -3331,6 +3334,9 @@ export type Database = {
           id?: string
           message: string
           metric?: Json
+          notification_channels?: string[] | null
+          notification_error?: string | null
+          notified_at?: string | null
           rejection_reason?: string | null
           severity: string
           signature: string
@@ -3347,6 +3353,9 @@ export type Database = {
           id?: string
           message?: string
           metric?: Json
+          notification_channels?: string[] | null
+          notification_error?: string | null
+          notified_at?: string | null
           rejection_reason?: string | null
           severity?: string
           signature?: string

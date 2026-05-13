@@ -129,25 +129,51 @@ Deno.serve(async (req) => {
     }
 
     // ====== Inserare cu deduplicare (UNIQUE WHERE status='open') ======
+    const shouldNotify = body?.notify !== false; // default true
+    const newlyInserted: Array<Alert & { id: string }> = [];
     let inserted = 0;
     let skipped = 0;
     for (const a of alerts) {
-      const { error } = await supabase.from("prospect_rejection_alerts").insert({
-        severity: a.severity,
-        category: a.category,
-        source_platform: a.source_platform,
-        rejection_reason: a.rejection_reason,
-        title: a.title,
-        message: a.message,
-        metric: a.metric,
-        signature: a.signature,
-      });
+      const { data, error } = await supabase
+        .from("prospect_rejection_alerts")
+        .insert({
+          severity: a.severity,
+          category: a.category,
+          source_platform: a.source_platform,
+          rejection_reason: a.rejection_reason,
+          title: a.title,
+          message: a.message,
+          metric: a.metric,
+          signature: a.signature,
+        })
+        .select("id")
+        .single();
       if (error) {
-        // 23505 = unique violation → alerta deschisă există deja
         if ((error as any).code === "23505") skipped++;
         else console.error("insert alert err:", error.message);
       } else {
         inserted++;
+        if (data?.id) newlyInserted.push({ ...a, id: data.id });
+      }
+    }
+
+    // ====== Notificări email/SMS pentru alerte warning/critical ======
+    let notifiedCount = 0;
+    const notifyResults: Array<{ id: string; channels: string[]; error?: string }> = [];
+    if (shouldNotify) {
+      const toNotify = newlyInserted.filter((a) => a.severity === "warning" || a.severity === "critical");
+      for (const a of toNotify) {
+        const result = await sendAlertNotification(a);
+        notifyResults.push({ id: a.id, ...result });
+        await supabase
+          .from("prospect_rejection_alerts")
+          .update({
+            notified_at: new Date().toISOString(),
+            notification_channels: result.channels,
+            notification_error: result.error ?? null,
+          })
+          .eq("id", a.id);
+        if (result.channels.length > 0) notifiedCount++;
       }
     }
 
@@ -155,6 +181,8 @@ Deno.serve(async (req) => {
       detected: alerts.length,
       inserted,
       skipped_duplicates: skipped,
+      notified: notifiedCount,
+      notify_results: notifyResults,
       alerts,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
@@ -165,3 +193,103 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+// ============================================================================
+// Notification helpers (email via Resend, SMS via Twilio gateway)
+// ============================================================================
+
+const SEVERITY_EMOJI: Record<string, string> = {
+  critical: "🔴",
+  warning: "🟠",
+  info: "🔵",
+};
+
+async function sendAlertNotification(a: Alert & { id: string }): Promise<{ channels: string[]; error?: string }> {
+  const channels: string[] = [];
+  const errors: string[] = [];
+
+  const adminEmail = Deno.env.get("ADMIN_ALERT_EMAIL");
+  const adminPhone = Deno.env.get("ADMIN_ALERT_PHONE");
+
+  // ---- Email via Resend ----
+  if (adminEmail) {
+    try {
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY missing");
+      const emoji = SEVERITY_EMOJI[a.severity] ?? "⚠️";
+      const subject = `${emoji} [${a.severity.toUpperCase()}] Anomalie scraper: ${a.title}`;
+      const html = `
+        <div style="font-family:system-ui,-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#111">
+          <h2 style="margin:0 0 8px">${emoji} Anomalie detectată — severitate ${a.severity.toUpperCase()}</h2>
+          <p style="margin:0 0 16px;color:#555">Pipeline-ul de respingere a generat o alertă nouă.</p>
+          <div style="background:#f7f7f8;border-left:4px solid ${a.severity === "critical" ? "#dc2626" : "#f59e0b"};padding:16px;border-radius:6px;margin-bottom:16px">
+            <p style="margin:0 0 8px;font-weight:600;font-size:16px">${a.title}</p>
+            <p style="margin:0;color:#374151;line-height:1.5">${a.message}</p>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:16px">
+            <tr><td style="padding:6px 0;color:#6b7280">Categorie</td><td style="padding:6px 0;font-family:monospace">${a.category}</td></tr>
+            ${a.source_platform ? `<tr><td style="padding:6px 0;color:#6b7280">Sursă</td><td style="padding:6px 0;font-family:monospace">${a.source_platform}</td></tr>` : ""}
+            ${a.rejection_reason ? `<tr><td style="padding:6px 0;color:#6b7280">Motiv</td><td style="padding:6px 0;font-family:monospace">${a.rejection_reason}</td></tr>` : ""}
+            <tr><td style="padding:6px 0;color:#6b7280">Metrici</td><td style="padding:6px 0;font-family:monospace;font-size:12px">${escapeHtml(JSON.stringify(a.metric))}</td></tr>
+          </table>
+          <a href="https://realtrust.ro/admin?tab=prospect-manager" style="display:inline-block;background:#0f1b3d;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">Deschide dashboard</a>
+        </div>`;
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
+        body: JSON.stringify({
+          from: "RealTrust Alerts <alerts@notify.realtrust.ro>",
+          to: [adminEmail],
+          subject,
+          html,
+        }),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`Resend ${r.status}: ${t.slice(0, 200)}`);
+      }
+      channels.push("email");
+    } catch (e) {
+      errors.push("email:" + (e instanceof Error ? e.message : String(e)));
+    }
+  }
+
+  // ---- SMS via Twilio (only for critical, to avoid noise/cost) ----
+  if (adminPhone && a.severity === "critical") {
+    try {
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
+      const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_FROM_NUMBER");
+      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+      if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY missing");
+      if (!TWILIO_FROM_NUMBER) throw new Error("TWILIO_FROM_NUMBER missing");
+      const smsBody = `🔴 RealTrust CRITICAL: ${a.title}. ${a.message.slice(0, 200)}`.slice(0, 400);
+      const r = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "X-Connection-Api-Key": TWILIO_API_KEY,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          To: adminPhone,
+          From: TWILIO_FROM_NUMBER,
+          Body: smsBody,
+        }),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`Twilio ${r.status}: ${t.slice(0, 200)}`);
+      }
+      channels.push("sms");
+    } catch (e) {
+      errors.push("sms:" + (e instanceof Error ? e.message : String(e)));
+    }
+  }
+
+  return { channels, error: errors.length ? errors.join(" | ") : undefined };
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+}
