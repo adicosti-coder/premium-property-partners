@@ -1045,7 +1045,7 @@ export default function VoiceAgentManager() {
             <DialogTitle className="flex items-center gap-2">
               <PhoneCall className="h-5 w-5" />
               Apel către {selectedCall?.to_number}
-              {selectedCall && <Badge className={statusColor(selectedCall.status)}>{selectedCall.status}</Badge>}
+              {selectedCall && (() => { const b = statusBadge(selectedCall); return <Badge className={b.cls}>{b.label}</Badge>; })()}
             </DialogTitle>
           </DialogHeader>
           {selectedCall && (
