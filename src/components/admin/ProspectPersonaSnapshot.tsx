@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Sparkles, RefreshCw, Pencil, Save, X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, RefreshCw, Pencil, Save, X, Loader2, ChevronDown, ChevronUp, Send, AlertTriangle, PhoneOutgoing } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
 
