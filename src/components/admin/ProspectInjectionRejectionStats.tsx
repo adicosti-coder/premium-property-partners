@@ -53,6 +53,7 @@ export default function ProspectInjectionRejectionStats() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [details, setDetails] = useState<Record<string, DetailRow[]>>({});
   const [detailLoading, setDetailLoading] = useState<Record<string, boolean>>({});
+  const [platformFilter, setPlatformFilter] = useState<Record<string, string | null>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -72,17 +73,21 @@ export default function ProspectInjectionRejectionStats() {
     setLoading(false);
   }, []);
 
-  const loadDetails = useCallback(async (reason: string) => {
+  const loadDetails = useCallback(async (reason: string, platform?: string | null) => {
     setDetailLoading((s) => ({ ...s, [reason]: true }));
     const { data, error } = await supabase.rpc("get_prospect_injection_rejection_details", {
       p_reason: reason,
       p_days: PERIOD_DAYS,
       p_limit: 25,
+      p_platform: platform || null,
     });
     if (error) {
       toast({ title: "Eroare detalii", description: error.message, variant: "destructive" });
     } else {
       setDetails((s) => ({ ...s, [reason]: (data as DetailRow[]) || [] }));
+      if (platform !== undefined) {
+        setPlatformFilter((s) => ({ ...s, [reason]: platform }));
+      }
     }
     setDetailLoading((s) => ({ ...s, [reason]: false }));
   }, []);
@@ -91,11 +96,19 @@ export default function ProspectInjectionRejectionStats() {
     setExpanded((s) => {
       const next = { ...s, [reason]: !s[reason] };
       if (next[reason] && !details[reason]) {
-        loadDetails(reason);
+        loadDetails(reason, platformFilter[reason] || null);
       }
       return next;
     });
-  }, [details, loadDetails]);
+  }, [details, loadDetails, platformFilter]);
+
+  const applyPlatformFilter = useCallback((reason: string, platform: string) => {
+    loadDetails(reason, platform);
+  }, [loadDetails]);
+
+  const clearPlatformFilter = useCallback((reason: string) => {
+    loadDetails(reason, null);
+  }, [loadDetails]);
 
   useEffect(() => {
     load();
@@ -167,6 +180,7 @@ export default function ProspectInjectionRejectionStats() {
               const reasonDetails = details[r.rejection_reason] || [];
               const reasonPlatforms = platformsByReason[r.rejection_reason] || [];
               const isLoadingDetails = !!detailLoading[r.rejection_reason];
+              const activeFilter = platformFilter[r.rejection_reason] || null;
               return (
                 <div key={r.rejection_reason}>
                   <button
@@ -192,23 +206,52 @@ export default function ProspectInjectionRejectionStats() {
 
                       {reasonPlatforms.length > 0 && (
                         <div>
-                          <div className="text-xs font-semibold mb-1.5 uppercase tracking-wide text-muted-foreground">
-                            Per platformă (sursă scraper)
+                          <div className="text-xs font-semibold mb-1.5 uppercase tracking-wide text-muted-foreground flex items-center justify-between">
+                            <span>Per platformă (sursă scraper)</span>
+                            {activeFilter && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-xs text-amber-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  clearPlatformFilter(r.rejection_reason);
+                                }}
+                              >
+                                <FilterX className="w-3 h-3 mr-1" /> Reset filtru
+                              </Button>
+                            )}
                           </div>
                           <div className="flex flex-wrap gap-1.5">
-                            {reasonPlatforms.map((p) => (
-                              <Badge key={p.source_platform} variant="secondary" className="font-mono text-xs">
-                                {p.source_platform}: {p.count_period}
-                              </Badge>
-                            ))}
+                            {reasonPlatforms.map((p) => {
+                              const isActive = activeFilter === p.source_platform;
+                              return (
+                                <Badge
+                                  key={p.source_platform}
+                                  variant={isActive ? "default" : "secondary"}
+                                  className={`font-mono text-xs cursor-pointer transition-colors ${isActive ? "bg-primary text-primary-foreground" : "hover:bg-secondary/80"}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    applyPlatformFilter(r.rejection_reason, p.source_platform);
+                                  }}
+                                  title={`Filtrează după ${p.source_platform}`}
+                                >
+                                  {p.source_platform}: {p.count_period}
+                                </Badge>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
 
                       <div>
                         <div className="text-xs font-semibold mb-1.5 uppercase tracking-wide text-muted-foreground flex items-center justify-between">
-                          <span>Ultimele {Math.min(25, reasonDetails.length || 25)} respingeri</span>
-                          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => loadDetails(r.rejection_reason)} disabled={isLoadingDetails}>
+                          <span>
+                            {activeFilter
+                              ? `Ultimele respingeri — filtrat după „${activeFilter}"`
+                              : `Ultimele ${Math.min(25, reasonDetails.length || 25)} respingeri`}
+                          </span>
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={(e) => { e.stopPropagation(); loadDetails(r.rejection_reason, activeFilter); }} disabled={isLoadingDetails}>
                             <RefreshCw className={`w-3 h-3 mr-1 ${isLoadingDetails ? "animate-spin" : ""}`} /> Refresh
                           </Button>
                         </div>
