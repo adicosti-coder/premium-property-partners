@@ -19,6 +19,7 @@ import {
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { detectObjection, OBJECTION_LABEL } from "@/lib/voiceObjections";
+import ProspectInjectionRejectionStats from "./ProspectInjectionRejectionStats";
 
 interface ProspectListing {
   id: string;
