@@ -180,6 +180,7 @@ export default function ProspectInjectionRejectionStats() {
               const reasonDetails = details[r.rejection_reason] || [];
               const reasonPlatforms = platformsByReason[r.rejection_reason] || [];
               const isLoadingDetails = !!detailLoading[r.rejection_reason];
+              const activeFilter = platformFilter[r.rejection_reason] || null;
               return (
                 <div key={r.rejection_reason}>
                   <button
