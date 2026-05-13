@@ -69,9 +69,11 @@ serve(async (req) => {
   }
 
   let prospect_id: string | null = null;
+  let force = false;
   try {
     const body = await req.json();
     prospect_id = body?.prospect_id ?? null;
+    force = body?.force === true;
   } catch {}
 
   if (!prospect_id) return jsonResp({ error: "prospect_id required" }, 400);
@@ -88,8 +90,8 @@ serve(async (req) => {
     return jsonResp({ error: "prospect not found", details: fetchErr?.message }, 404);
   }
 
-  // Idempotency: skip if already generated in last hour
-  if (prospect.persona_generated_at) {
+  // Idempotency: skip if already generated in last hour (unless force=true)
+  if (!force && prospect.persona_generated_at) {
     const ageMs = Date.now() - new Date(prospect.persona_generated_at).getTime();
     if (ageMs < 3600_000) {
       return jsonResp({ skipped: true, reason: "already generated", prospect_id });

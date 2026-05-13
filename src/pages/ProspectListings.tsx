@@ -23,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/admin/AgencyExplainerDialog";
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
+import { ProspectPersonaSnapshot } from "@/components/admin/ProspectPersonaSnapshot";
 import SEOHead from "@/components/SEOHead";
 import Header from "@/components/Header";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
@@ -106,6 +107,8 @@ interface Prospect {
   search_keywords: string[] | null;
   auto_blacklisted_at: string | null;
   auto_blacklist_reason: string | null;
+  persona_snapshot: any;
+  persona_generated_at: string | null;
 }
 
 const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
@@ -591,7 +594,7 @@ const ProspectListings = () => {
     queryFn: async () => {
       let q = supabase
         .from("prospect_listings")
-        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason")
+        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason,persona_snapshot,persona_generated_at")
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
@@ -1443,9 +1446,19 @@ const ProspectListings = () => {
                             {p.rooms && <span>{p.rooms}cam</span>}
                             {p.size && <span>{p.size}mp</span>}
                           </div>
-                          {p.ai_score_breakdown?.recommended_pitch && (
+                          {p.ai_score_breakdown?.recommended_pitch && !p.persona_snapshot && (
                             <div className="text-xs italic text-primary/70 mt-1 line-clamp-1">💡 {p.ai_score_breakdown.recommended_pitch}</div>
                           )}
+                          <ProspectPersonaSnapshot
+                            prospectId={p.id}
+                            persona={p.persona_snapshot}
+                            generatedAt={p.persona_generated_at}
+                            onChange={(next, gen) => {
+                              qc.setQueriesData<any[]>({ queryKey: ["prospect-listings"] }, (old) =>
+                                old?.map((row) => (row.id === p.id ? { ...row, persona_snapshot: next, persona_generated_at: gen } : row)) || old
+                              );
+                            }}
+                          />
                           {p.call_summary && (
                             <div className="text-xs text-green-700 mt-1 line-clamp-2">📞 {p.call_summary}</div>
                           )}
