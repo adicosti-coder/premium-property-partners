@@ -74,6 +74,26 @@ export default function ProspectInjectionRejectionStats() {
   const [platformFilter, setPlatformFilter] = useState<Record<string, string | null>>({});
   const [trend, setTrend] = useState<TrendRow[]>([]);
   const [trendLoading, setTrendLoading] = useState(true);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditText, setAuditText] = useState<string | null>(null);
+  const [auditAt, setAuditAt] = useState<string | null>(null);
+
+  const runAutoAudit = useCallback(async () => {
+    setAuditLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-rejection-auto-audit", {
+        body: { days: PERIOD_DAYS },
+      });
+      if (error) throw error;
+      setAuditText((data as any)?.audit || "Fără răspuns.");
+      setAuditAt(new Date().toISOString());
+      toast({ title: "Auto-Audit gata", description: "Analiză AI generată pentru ultimele " + PERIOD_DAYS + " zile." });
+    } catch (e: any) {
+      toast({ title: "Eroare Auto-Audit", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setAuditLoading(false);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
