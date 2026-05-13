@@ -106,6 +106,8 @@ interface Prospect {
   search_keywords: string[] | null;
   auto_blacklisted_at: string | null;
   auto_blacklist_reason: string | null;
+  persona_snapshot: any;
+  persona_generated_at: string | null;
 }
 
 const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
