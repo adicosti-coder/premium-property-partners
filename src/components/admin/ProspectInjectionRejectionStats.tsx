@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
   Shield, RefreshCw, Loader2, PhoneOff, Copy as CopyIcon, AlertCircle,
-  ChevronDown, ChevronRight, ExternalLink, FilterX,
+  ChevronDown, ChevronRight, ExternalLink, FilterX, TrendingUp,
 } from "lucide-react";
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
 
 interface RejectionRow {
   rejection_reason: string;
@@ -46,6 +49,19 @@ const REASON_META: Record<string, { label: string; tone: string; icon: any; help
 
 const PERIOD_DAYS = 7;
 
+interface TrendRow {
+  day_label: string;
+  rejection_reason: string;
+  count: number;
+}
+
+const REASON_COLORS: Record<string, string> = {
+  duplicate: "hsl(38 92% 50%)",
+  landline: "hsl(346 77% 50%)",
+  voip: "hsl(346 77% 35%)",
+  unreachable: "hsl(215 16% 47%)",
+};
+
 export default function ProspectInjectionRejectionStats() {
   const [rows, setRows] = useState<RejectionRow[]>([]);
   const [platformBreakdown, setPlatformBreakdown] = useState<PlatformRow[]>([]);
@@ -54,12 +70,16 @@ export default function ProspectInjectionRejectionStats() {
   const [details, setDetails] = useState<Record<string, DetailRow[]>>({});
   const [detailLoading, setDetailLoading] = useState<Record<string, boolean>>({});
   const [platformFilter, setPlatformFilter] = useState<Record<string, string | null>>({});
+  const [trend, setTrend] = useState<TrendRow[]>([]);
+  const [trendLoading, setTrendLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [summaryRes, platformRes] = await Promise.all([
+    setTrendLoading(true);
+    const [summaryRes, platformRes, trendRes] = await Promise.all([
       supabase.rpc("get_prospect_injection_rejection_summary", { p_days: PERIOD_DAYS }),
       supabase.rpc("get_prospect_injection_rejection_by_platform", { p_days: PERIOD_DAYS }),
+      supabase.rpc("get_prospect_injection_rejection_trend", { p_days: PERIOD_DAYS }),
     ]);
     if (summaryRes.error) {
       toast({ title: "Eroare la încărcare", description: summaryRes.error.message, variant: "destructive" });
@@ -70,7 +90,11 @@ export default function ProspectInjectionRejectionStats() {
     if (!platformRes.error) {
       setPlatformBreakdown((platformRes.data as PlatformRow[]) || []);
     }
+    if (!trendRes.error) {
+      setTrend((trendRes.data as TrendRow[]) || []);
+    }
     setLoading(false);
+    setTrendLoading(false);
   }, []);
 
   const loadDetails = useCallback(async (reason: string, platform?: string | null) => {
@@ -128,6 +152,29 @@ export default function ProspectInjectionRejectionStats() {
     return map;
   }, [platformBreakdown]);
 
+  const trendChartData = useMemo(() => {
+    const byDay = new Map<string, Record<string, number | string>>();
+    const reasons = new Set<string>();
+    for (const t of trend) {
+      reasons.add(t.rejection_reason);
+      const row = byDay.get(t.day_label) || { day: t.day_label };
+      row[t.rejection_reason] = (row[t.rejection_reason] as number | undefined ?? 0) + Number(t.count || 0);
+      byDay.set(t.day_label, row);
+    }
+    // ensure all reasons exist on every row
+    const data = Array.from(byDay.values()).map((row) => {
+      const filled: Record<string, number | string> = { ...row };
+      for (const r of reasons) if (filled[r] == null) filled[r] = 0;
+      return filled;
+    });
+    return { data, reasons: Array.from(reasons) };
+  }, [trend]);
+
+  const trendTotal = useMemo(
+    () => trend.reduce((s, t) => s + Number(t.count || 0), 0),
+    [trend]
+  );
+
   return (
     <Card className="border-2 border-amber-500/20">
       <CardHeader className="flex flex-row items-start justify-between gap-2">
@@ -153,6 +200,70 @@ export default function ProspectInjectionRejectionStats() {
           <div className="p-3 rounded-lg border bg-card">
             <div className="text-xs text-muted-foreground">Respinse ultimele {PERIOD_DAYS} zile</div>
             <div className="text-2xl font-bold">{totals.tp}</div>
+          </div>
+        </div>
+
+        {/* Trend pe ultimele zile */}
+        <div className="border rounded-lg p-3 bg-card">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <TrendingUp className="w-4 h-4 text-amber-500" />
+              Trend respingeri — ultimele {PERIOD_DAYS} zile
+            </div>
+            <Badge variant="outline" className="font-mono text-xs">
+              total: {trendTotal}
+            </Badge>
+          </div>
+          <div className="h-[220px]">
+            {trendLoading && trendChartData.data.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Se încarcă trend-ul...
+              </div>
+            ) : trendChartData.data.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
+                Fără respingeri în perioada selectată. ✨
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendChartData.data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                  <defs>
+                    {trendChartData.reasons.map((reason) => (
+                      <linearGradient key={reason} id={`grad-${reason}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={REASON_COLORS[reason] || "hsl(var(--primary))"} stopOpacity={0.5} />
+                        <stop offset="95%" stopColor={REASON_COLORS[reason] || "hsl(var(--primary))"} stopOpacity={0} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="day" className="text-[10px] fill-muted-foreground" tickMargin={6} />
+                  <YAxis className="text-[10px] fill-muted-foreground" allowDecimals={false} width={28} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                    formatter={(value: number, name: string) => [value, REASON_META[name]?.label || name]}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: "11px" }}
+                    formatter={(value) => REASON_META[value]?.label || value}
+                  />
+                  {trendChartData.reasons.map((reason) => (
+                    <Area
+                      key={reason}
+                      type="monotone"
+                      dataKey={reason}
+                      stackId="1"
+                      stroke={REASON_COLORS[reason] || "hsl(var(--primary))"}
+                      strokeWidth={2}
+                      fill={`url(#grad-${reason})`}
+                    />
+                  ))}
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
