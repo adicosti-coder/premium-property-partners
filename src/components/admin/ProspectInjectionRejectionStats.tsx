@@ -4,11 +4,36 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Shield, RefreshCw, Loader2, PhoneOff, Copy as CopyIcon, AlertCircle } from "lucide-react";
+import {
+  Shield, RefreshCw, Loader2, PhoneOff, Copy as CopyIcon, AlertCircle,
+  ChevronDown, ChevronRight, ExternalLink,
+} from "lucide-react";
 
 interface RejectionRow {
   rejection_reason: string;
   count_24h: number;
+  count_period: number;
+}
+
+interface DetailRow {
+  id: string;
+  source_platform: string | null;
+  source_url: string | null;
+  title: string | null;
+  zone: string | null;
+  rooms: number | null;
+  size: number | null;
+  price: number | null;
+  contact_phone: string | null;
+  phone_normalized: string | null;
+  dedup_key: string | null;
+  scraped_at: string;
+  rejection_reason: string;
+}
+
+interface PlatformRow {
+  rejection_reason: string;
+  source_platform: string;
   count_period: number;
 }
 
@@ -23,19 +48,54 @@ const PERIOD_DAYS = 7;
 
 export default function ProspectInjectionRejectionStats() {
   const [rows, setRows] = useState<RejectionRow[]>([]);
+  const [platformBreakdown, setPlatformBreakdown] = useState<PlatformRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [details, setDetails] = useState<Record<string, DetailRow[]>>({});
+  const [detailLoading, setDetailLoading] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_prospect_injection_rejection_summary", { p_days: PERIOD_DAYS });
-    if (error) {
-      toast({ title: "Eroare la încărcare", description: error.message, variant: "destructive" });
+    const [summaryRes, platformRes] = await Promise.all([
+      supabase.rpc("get_prospect_injection_rejection_summary", { p_days: PERIOD_DAYS }),
+      supabase.rpc("get_prospect_injection_rejection_by_platform", { p_days: PERIOD_DAYS }),
+    ]);
+    if (summaryRes.error) {
+      toast({ title: "Eroare la încărcare", description: summaryRes.error.message, variant: "destructive" });
       setRows([]);
     } else {
-      setRows((data as RejectionRow[]) || []);
+      setRows((summaryRes.data as RejectionRow[]) || []);
+    }
+    if (!platformRes.error) {
+      setPlatformBreakdown((platformRes.data as PlatformRow[]) || []);
     }
     setLoading(false);
   }, []);
+
+  const loadDetails = useCallback(async (reason: string) => {
+    setDetailLoading((s) => ({ ...s, [reason]: true }));
+    const { data, error } = await supabase.rpc("get_prospect_injection_rejection_details", {
+      p_reason: reason,
+      p_days: PERIOD_DAYS,
+      p_limit: 25,
+    });
+    if (error) {
+      toast({ title: "Eroare detalii", description: error.message, variant: "destructive" });
+    } else {
+      setDetails((s) => ({ ...s, [reason]: (data as DetailRow[]) || [] }));
+    }
+    setDetailLoading((s) => ({ ...s, [reason]: false }));
+  }, []);
+
+  const toggleExpand = useCallback((reason: string) => {
+    setExpanded((s) => {
+      const next = { ...s, [reason]: !s[reason] };
+      if (next[reason] && !details[reason]) {
+        loadDetails(reason);
+      }
+      return next;
+    });
+  }, [details, loadDetails]);
 
   useEffect(() => {
     load();
@@ -47,6 +107,14 @@ export default function ProspectInjectionRejectionStats() {
     return { t24, tp };
   }, [rows]);
 
+  const platformsByReason = useMemo(() => {
+    const map: Record<string, PlatformRow[]> = {};
+    for (const r of platformBreakdown) {
+      (map[r.rejection_reason] ||= []).push(r);
+    }
+    return map;
+  }, [platformBreakdown]);
+
   return (
     <Card className="border-2 border-amber-500/20">
       <CardHeader className="flex flex-row items-start justify-between gap-2">
@@ -55,8 +123,7 @@ export default function ProspectInjectionRejectionStats() {
             <Shield className="w-5 h-5 text-amber-500" /> Numere respinse automat la injecție
           </CardTitle>
           <CardDescription>
-            Filtrare cross-platform + Twilio Lookup. Numerele de tip <strong>fix / VoIP / unreachable</strong> sunt marcate
-            instant <code className="text-xs">do_not_call</code> pentru a proteja bugetul.
+            Filtrare cross-platform + Twilio Lookup. Click pe o categorie pentru drill-down per platformă & sursă.
           </CardDescription>
         </div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
@@ -96,18 +163,113 @@ export default function ProspectInjectionRejectionStats() {
             {rows.map((r) => {
               const meta = REASON_META[r.rejection_reason] || { label: r.rejection_reason, tone: "", icon: AlertCircle, help: "" };
               const Icon = meta.icon;
+              const isOpen = !!expanded[r.rejection_reason];
+              const reasonDetails = details[r.rejection_reason] || [];
+              const reasonPlatforms = platformsByReason[r.rejection_reason] || [];
+              const isLoadingDetails = !!detailLoading[r.rejection_reason];
               return (
-                <div key={r.rejection_reason} className="grid grid-cols-12 gap-2 px-3 py-2 text-sm items-center">
-                  <div className="col-span-6 flex items-center gap-2">
-                    <Badge variant="outline" className={meta.tone}>
-                      <Icon className="w-3 h-3 mr-1" /> {meta.label}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground hidden md:inline" title={meta.help}>
-                      {meta.help}
-                    </span>
-                  </div>
-                  <div className="col-span-3 text-right font-mono font-medium">{r.count_24h}</div>
-                  <div className="col-span-3 text-right font-mono font-medium">{r.count_period}</div>
+                <div key={r.rejection_reason}>
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(r.rejection_reason)}
+                    className="w-full grid grid-cols-12 gap-2 px-3 py-2 text-sm items-center hover:bg-muted/30 transition-colors text-left"
+                    aria-expanded={isOpen}
+                    aria-label={`Detalii ${meta.label}`}
+                  >
+                    <div className="col-span-6 flex items-center gap-2">
+                      {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />}
+                      <Badge variant="outline" className={meta.tone}>
+                        <Icon className="w-3 h-3 mr-1" /> {meta.label}
+                      </Badge>
+                    </div>
+                    <div className="col-span-3 text-right font-mono font-medium">{r.count_24h}</div>
+                    <div className="col-span-3 text-right font-mono font-medium">{r.count_period}</div>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-3 py-3 bg-muted/20 border-t space-y-3">
+                      <p className="text-xs text-muted-foreground">{meta.help}</p>
+
+                      {reasonPlatforms.length > 0 && (
+                        <div>
+                          <div className="text-xs font-semibold mb-1.5 uppercase tracking-wide text-muted-foreground">
+                            Per platformă (sursă scraper)
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {reasonPlatforms.map((p) => (
+                              <Badge key={p.source_platform} variant="secondary" className="font-mono text-xs">
+                                {p.source_platform}: {p.count_period}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="text-xs font-semibold mb-1.5 uppercase tracking-wide text-muted-foreground flex items-center justify-between">
+                          <span>Ultimele {Math.min(25, reasonDetails.length || 25)} respingeri</span>
+                          <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => loadDetails(r.rejection_reason)} disabled={isLoadingDetails}>
+                            <RefreshCw className={`w-3 h-3 mr-1 ${isLoadingDetails ? "animate-spin" : ""}`} /> Refresh
+                          </Button>
+                        </div>
+
+                        {isLoadingDetails && reasonDetails.length === 0 && (
+                          <div className="p-3 text-center text-xs text-muted-foreground">
+                            <Loader2 className="w-3 h-3 inline mr-1 animate-spin" /> Se încarcă detaliile...
+                          </div>
+                        )}
+                        {!isLoadingDetails && reasonDetails.length === 0 && (
+                          <div className="p-3 text-center text-xs text-muted-foreground">Fără detalii disponibile.</div>
+                        )}
+                        {reasonDetails.length > 0 && (
+                          <div className="overflow-x-auto rounded border bg-background">
+                            <table className="w-full text-xs">
+                              <thead className="bg-muted/50">
+                                <tr className="text-left">
+                                  <th className="px-2 py-1.5 font-semibold">Platformă</th>
+                                  <th className="px-2 py-1.5 font-semibold">Titlu</th>
+                                  <th className="px-2 py-1.5 font-semibold">Zonă</th>
+                                  <th className="px-2 py-1.5 font-semibold">Cam.</th>
+                                  <th className="px-2 py-1.5 font-semibold">m²</th>
+                                  <th className="px-2 py-1.5 font-semibold">Telefon</th>
+                                  <th className="px-2 py-1.5 font-semibold">Când</th>
+                                  <th className="px-2 py-1.5 font-semibold"></th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y">
+                                {reasonDetails.map((d) => (
+                                  <tr key={d.id} className="hover:bg-muted/30">
+                                    <td className="px-2 py-1.5 font-mono">{d.source_platform || "—"}</td>
+                                    <td className="px-2 py-1.5 max-w-[220px] truncate" title={d.title || ""}>{d.title || "—"}</td>
+                                    <td className="px-2 py-1.5">{d.zone || "—"}</td>
+                                    <td className="px-2 py-1.5">{d.rooms ?? "—"}</td>
+                                    <td className="px-2 py-1.5">{d.size ?? "—"}</td>
+                                    <td className="px-2 py-1.5 font-mono">{d.phone_normalized || d.contact_phone || "—"}</td>
+                                    <td className="px-2 py-1.5 text-muted-foreground whitespace-nowrap">
+                                      {new Date(d.scraped_at).toLocaleString("ro-RO", { dateStyle: "short", timeStyle: "short" })}
+                                    </td>
+                                    <td className="px-2 py-1.5">
+                                      {d.source_url && (
+                                        <a
+                                          href={d.source_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-primary hover:underline inline-flex items-center gap-0.5"
+                                          aria-label="Deschide anunțul sursă"
+                                        >
+                                          <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -115,8 +277,7 @@ export default function ProspectInjectionRejectionStats() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          🛡️ Trigger-ul rulează la fiecare inserare în <code className="text-xs">prospect_listings</code>. Anunțurile duplicate
-          sunt detectate prin <code className="text-xs">phone_normalized + cartier + camere + suprafață</code>.
+          🛡️ Trigger-ul rulează la fiecare inserare în <code className="text-xs">prospect_listings</code>. Drill-down: click pe o categorie pentru lista anunțurilor și breakdown per <code className="text-xs">source_platform</code> — util pentru a optimiza scraperele care produc cele mai multe respingeri.
         </p>
       </CardContent>
     </Card>
