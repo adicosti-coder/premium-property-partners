@@ -25,6 +25,38 @@ type Alert = {
   signature: string;
 };
 
+interface AlertSettings {
+  recipient_emails: string[];
+  recipient_phones: string[];
+  dominance_warning_ratio: number;
+  dominance_critical_ratio: number;
+  dominance_min_total: number;
+  spike_warning_ratio: number;
+  spike_critical_ratio: number;
+  spike_min_count: number;
+  surge_threshold: number;
+  sms_min_severity: "warning" | "critical";
+  email_min_severity: "info" | "warning" | "critical";
+  notifications_enabled: boolean;
+}
+
+const DEFAULT_SETTINGS: AlertSettings = {
+  recipient_emails: [],
+  recipient_phones: [],
+  dominance_warning_ratio: 0.7,
+  dominance_critical_ratio: 0.85,
+  dominance_min_total: 10,
+  spike_warning_ratio: 1.5,
+  spike_critical_ratio: 3.0,
+  spike_min_count: 5,
+  surge_threshold: 50,
+  sms_min_severity: "critical",
+  email_min_severity: "warning",
+  notifications_enabled: true,
+};
+
+const SEV_RANK: Record<string, number> = { info: 0, warning: 1, critical: 2 };
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -32,6 +64,14 @@ Deno.serve(async (req) => {
     const days = Number(body?.days ?? 7);
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+    // Load settings (fallback to defaults; env emails/phones still supported as fallback)
+    const { data: settingsRow } = await supabase
+      .from("prospect_alert_settings")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
+    const settings: AlertSettings = { ...DEFAULT_SETTINGS, ...(settingsRow ?? {}) };
 
     const [platformRes, trendRes] = await Promise.all([
       supabase.rpc("get_prospect_injection_rejection_by_platform", { p_days: days }),
