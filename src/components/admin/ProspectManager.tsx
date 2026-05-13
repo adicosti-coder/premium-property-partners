@@ -544,6 +544,9 @@ const ProspectManager = () => {
       {/* Anomaly alerts (banner) */}
       <ProspectRejectionAlerts />
 
+      {/* Settings: recipients + thresholds */}
+      <ProspectAlertSettings />
+
       {/* Auto-rejection stats (cross-platform dedup + Twilio Lookup DNC) */}
       <ProspectInjectionRejectionStats />
 
