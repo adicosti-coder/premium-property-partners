@@ -129,25 +129,51 @@ Deno.serve(async (req) => {
     }
 
     // ====== Inserare cu deduplicare (UNIQUE WHERE status='open') ======
+    const shouldNotify = body?.notify !== false; // default true
+    const newlyInserted: Array<Alert & { id: string }> = [];
     let inserted = 0;
     let skipped = 0;
     for (const a of alerts) {
-      const { error } = await supabase.from("prospect_rejection_alerts").insert({
-        severity: a.severity,
-        category: a.category,
-        source_platform: a.source_platform,
-        rejection_reason: a.rejection_reason,
-        title: a.title,
-        message: a.message,
-        metric: a.metric,
-        signature: a.signature,
-      });
+      const { data, error } = await supabase
+        .from("prospect_rejection_alerts")
+        .insert({
+          severity: a.severity,
+          category: a.category,
+          source_platform: a.source_platform,
+          rejection_reason: a.rejection_reason,
+          title: a.title,
+          message: a.message,
+          metric: a.metric,
+          signature: a.signature,
+        })
+        .select("id")
+        .single();
       if (error) {
-        // 23505 = unique violation → alerta deschisă există deja
         if ((error as any).code === "23505") skipped++;
         else console.error("insert alert err:", error.message);
       } else {
         inserted++;
+        if (data?.id) newlyInserted.push({ ...a, id: data.id });
+      }
+    }
+
+    // ====== Notificări email/SMS pentru alerte warning/critical ======
+    let notifiedCount = 0;
+    const notifyResults: Array<{ id: string; channels: string[]; error?: string }> = [];
+    if (shouldNotify) {
+      const toNotify = newlyInserted.filter((a) => a.severity === "warning" || a.severity === "critical");
+      for (const a of toNotify) {
+        const result = await sendAlertNotification(a);
+        notifyResults.push({ id: a.id, ...result });
+        await supabase
+          .from("prospect_rejection_alerts")
+          .update({
+            notified_at: new Date().toISOString(),
+            notification_channels: result.channels,
+            notification_error: result.error ?? null,
+          })
+          .eq("id", a.id);
+        if (result.channels.length > 0) notifiedCount++;
       }
     }
 
@@ -155,6 +181,8 @@ Deno.serve(async (req) => {
       detected: alerts.length,
       inserted,
       skipped_duplicates: skipped,
+      notified: notifiedCount,
+      notify_results: notifyResults,
       alerts,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
