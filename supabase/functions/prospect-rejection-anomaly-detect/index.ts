@@ -193,13 +193,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ====== Notificări email/SMS pentru alerte warning/critical ======
+    // ====== Notificări email/SMS — folosesc setările din UI (cu fallback ENV) ======
     let notifiedCount = 0;
     const notifyResults: Array<{ id: string; channels: string[]; error?: string }> = [];
-    if (shouldNotify) {
-      const toNotify = newlyInserted.filter((a) => a.severity === "warning" || a.severity === "critical");
-      for (const a of toNotify) {
-        const result = await sendAlertNotification(a);
+    if (shouldNotify && settings.notifications_enabled) {
+      const emailMin = SEV_RANK[settings.email_min_severity];
+      const smsMin = SEV_RANK[settings.sms_min_severity];
+      for (const a of newlyInserted) {
+        const sev = SEV_RANK[a.severity];
+        const sendEmail = sev >= emailMin;
+        const sendSms = sev >= smsMin;
+        if (!sendEmail && !sendSms) continue;
+        const result = await sendAlertNotification(a, settings, { sendEmail, sendSms });
         notifyResults.push({ id: a.id, ...result });
         await supabase
           .from("prospect_rejection_alerts")
