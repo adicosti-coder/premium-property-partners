@@ -289,6 +289,44 @@ export default function ProspectInjectionRejectionStats() {
           </div>
         </div>
 
+        {/* Auto-Audit AI */}
+        <div className="border rounded-lg p-3 bg-gradient-to-br from-amber-500/5 to-primary/5">
+          <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              Auto-Audit AI — pattern-uri & recomandări
+            </div>
+            <div className="flex items-center gap-2">
+              {auditAt && (
+                <span className="text-[10px] text-muted-foreground">
+                  generat {new Date(auditAt).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+              <Button size="sm" variant="default" onClick={runAutoAudit} disabled={auditLoading}>
+                {auditLoading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
+                {auditText ? "Re-rulează" : "Rulează Auto-Audit"}
+              </Button>
+            </div>
+          </div>
+          {auditLoading && !auditText && (
+            <div className="text-xs text-muted-foreground py-3 text-center">
+              <Loader2 className="w-3 h-3 inline mr-1 animate-spin" />
+              AI analizează ultimele {PERIOD_DAYS} zile...
+            </div>
+          )}
+          {auditText ? (
+            <div className="prose prose-sm dark:prose-invert max-w-none text-sm
+                            prose-headings:mt-3 prose-headings:mb-1 prose-headings:text-foreground
+                            prose-p:my-1 prose-li:my-0.5 prose-strong:text-foreground">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{auditText}</ReactMarkdown>
+            </div>
+          ) : !auditLoading ? (
+            <p className="text-xs text-muted-foreground">
+              Cere AI-ului să identifice tipare („Sursa X produce Y% din landline") și să sugereze ajustări la scrapere.
+            </p>
+          ) : null}
+        </div>
+
         <div className="border rounded-lg overflow-hidden">
           <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-semibold bg-muted/50">
             <div className="col-span-6">Motiv</div>
