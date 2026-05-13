@@ -965,7 +965,7 @@ export default function VoiceAgentManager() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{c.to_number}</span>
-                        <Badge className={statusColor(c.status)}>{c.status}</Badge>
+                        {(() => { const b = statusBadge(c); return <Badge className={b.cls}>{b.label}</Badge>; })()}
                         {c.is_recovered && (
                           <span className="inline-flex items-center gap-1">
                             <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs" title="Lead recuperat: prospectul fusese ocupat/nu răspundea, dar acest call back a generat o programare.">
