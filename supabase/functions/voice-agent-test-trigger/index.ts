@@ -15,6 +15,20 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const body = await req.json().catch(() => ({}));
+    const action = body.action || "initiate";
+
+    if (action === "reconcile") {
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/voice-agent-reconcile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}` },
+        body: JSON.stringify(body.payload || {}),
+      });
+      const text = await resp.text();
+      return new Response(JSON.stringify({ status: resp.status, body: tryParse(text) }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const toNumber = body.toNumber || "+40770294069";
     const objective = body.objective || "Test E2E – validare webhook status";
     const customPrompt = body.customPrompt || "";
