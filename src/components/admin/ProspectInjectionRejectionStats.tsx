@@ -70,12 +70,16 @@ export default function ProspectInjectionRejectionStats() {
   const [details, setDetails] = useState<Record<string, DetailRow[]>>({});
   const [detailLoading, setDetailLoading] = useState<Record<string, boolean>>({});
   const [platformFilter, setPlatformFilter] = useState<Record<string, string | null>>({});
+  const [trend, setTrend] = useState<TrendRow[]>([]);
+  const [trendLoading, setTrendLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [summaryRes, platformRes] = await Promise.all([
+    setTrendLoading(true);
+    const [summaryRes, platformRes, trendRes] = await Promise.all([
       supabase.rpc("get_prospect_injection_rejection_summary", { p_days: PERIOD_DAYS }),
       supabase.rpc("get_prospect_injection_rejection_by_platform", { p_days: PERIOD_DAYS }),
+      supabase.rpc("get_prospect_injection_rejection_trend", { p_days: PERIOD_DAYS }),
     ]);
     if (summaryRes.error) {
       toast({ title: "Eroare la încărcare", description: summaryRes.error.message, variant: "destructive" });
@@ -86,7 +90,11 @@ export default function ProspectInjectionRejectionStats() {
     if (!platformRes.error) {
       setPlatformBreakdown((platformRes.data as PlatformRow[]) || []);
     }
+    if (!trendRes.error) {
+      setTrend((trendRes.data as TrendRow[]) || []);
+    }
     setLoading(false);
+    setTrendLoading(false);
   }, []);
 
   const loadDetails = useCallback(async (reason: string, platform?: string | null) => {
