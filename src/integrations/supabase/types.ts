@@ -3082,6 +3082,60 @@ export type Database = {
           },
         ]
       }
+      prospect_alert_settings: {
+        Row: {
+          dominance_critical_ratio: number
+          dominance_min_total: number
+          dominance_warning_ratio: number
+          email_min_severity: string
+          id: number
+          notifications_enabled: boolean
+          recipient_emails: string[]
+          recipient_phones: string[]
+          sms_min_severity: string
+          spike_critical_ratio: number
+          spike_min_count: number
+          spike_warning_ratio: number
+          surge_threshold: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          dominance_critical_ratio?: number
+          dominance_min_total?: number
+          dominance_warning_ratio?: number
+          email_min_severity?: string
+          id?: number
+          notifications_enabled?: boolean
+          recipient_emails?: string[]
+          recipient_phones?: string[]
+          sms_min_severity?: string
+          spike_critical_ratio?: number
+          spike_min_count?: number
+          spike_warning_ratio?: number
+          surge_threshold?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          dominance_critical_ratio?: number
+          dominance_min_total?: number
+          dominance_warning_ratio?: number
+          email_min_severity?: string
+          id?: number
+          notifications_enabled?: boolean
+          recipient_emails?: string[]
+          recipient_phones?: string[]
+          sms_min_severity?: string
+          spike_critical_ratio?: number
+          spike_min_count?: number
+          spike_warning_ratio?: number
+          surge_threshold?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       prospect_listings: {
         Row: {
           admin_notes: string | null

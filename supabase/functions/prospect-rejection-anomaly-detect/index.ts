@@ -25,6 +25,38 @@ type Alert = {
   signature: string;
 };
 
+interface AlertSettings {
+  recipient_emails: string[];
+  recipient_phones: string[];
+  dominance_warning_ratio: number;
+  dominance_critical_ratio: number;
+  dominance_min_total: number;
+  spike_warning_ratio: number;
+  spike_critical_ratio: number;
+  spike_min_count: number;
+  surge_threshold: number;
+  sms_min_severity: "warning" | "critical";
+  email_min_severity: "info" | "warning" | "critical";
+  notifications_enabled: boolean;
+}
+
+const DEFAULT_SETTINGS: AlertSettings = {
+  recipient_emails: [],
+  recipient_phones: [],
+  dominance_warning_ratio: 0.7,
+  dominance_critical_ratio: 0.85,
+  dominance_min_total: 10,
+  spike_warning_ratio: 1.5,
+  spike_critical_ratio: 3.0,
+  spike_min_count: 5,
+  surge_threshold: 50,
+  sms_min_severity: "critical",
+  email_min_severity: "warning",
+  notifications_enabled: true,
+};
+
+const SEV_RANK: Record<string, number> = { info: 0, warning: 1, critical: 2 };
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -32,6 +64,14 @@ Deno.serve(async (req) => {
     const days = Number(body?.days ?? 7);
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+    // Load settings (fallback to defaults; env emails/phones still supported as fallback)
+    const { data: settingsRow } = await supabase
+      .from("prospect_alert_settings")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
+    const settings: AlertSettings = { ...DEFAULT_SETTINGS, ...(settingsRow ?? {}) };
 
     const [platformRes, trendRes] = await Promise.all([
       supabase.rpc("get_prospect_injection_rejection_by_platform", { p_days: days }),
@@ -56,13 +96,13 @@ Deno.serve(async (req) => {
     }
     for (const reason of Object.keys(byReasonPlatform)) {
       const total = totalByReason[reason] || 0;
-      if (total < 10) continue;
+      if (total < settings.dominance_min_total) continue;
       for (const [platform, cnt] of Object.entries(byReasonPlatform[reason])) {
         const ratio = cnt / total;
-        if (ratio >= 0.7) {
+        if (ratio >= settings.dominance_warning_ratio) {
           const pct = Math.round(ratio * 100);
           alerts.push({
-            severity: ratio >= 0.85 ? "critical" : "warning",
+            severity: ratio >= settings.dominance_critical_ratio ? "critical" : "warning",
             category: "dominance",
             source_platform: platform,
             rejection_reason: reason,
@@ -75,13 +115,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ====== 2) SPIKE per platformă (prima vs a doua jumătate) ======
-    // Trend e per (zi × motiv); facem split în două ferestre după dayLabels sortate.
+    // ====== 2) SPIKE per motiv (prima vs a doua jumătate) ======
     const sortedDays = Array.from(new Set(trend.map((t) => t.day_label))).sort();
     if (sortedDays.length >= 4) {
       const mid = Math.floor(sortedDays.length / 2);
       const firstHalf = new Set(sortedDays.slice(0, mid));
-      // Re-agregăm trend pe (motiv) pentru ferestre — nu avem platform în trend, deci facem doar SPIKE per motiv.
       const halfStats: Record<string, { a: number; b: number }> = {};
       for (const t of trend) {
         const slot = (halfStats[t.rejection_reason] ||= { a: 0, b: 0 });
@@ -89,12 +127,13 @@ Deno.serve(async (req) => {
         else slot.b += Number(t.count || 0);
       }
       for (const [reason, s] of Object.entries(halfStats)) {
-        if (s.b < 5) continue;
+        if (s.b < settings.spike_min_count) continue;
         const baseline = Math.max(1, s.a);
         const ratio = s.b / baseline;
-        if (ratio >= 1.5) {
+        if (ratio >= settings.spike_warning_ratio) {
           const growth = Math.round((ratio - 1) * 100);
-          const sev: Alert["severity"] = ratio >= 3 ? "critical" : ratio >= 2 ? "warning" : "info";
+          const sev: Alert["severity"] =
+            ratio >= settings.spike_critical_ratio ? "critical" : "warning";
           alerts.push({
             severity: sev,
             category: "spike_reason",
@@ -111,21 +150,18 @@ Deno.serve(async (req) => {
 
     // ====== 3) SURGE total (volum total mare) ======
     const grandTotal = Object.values(totalByReason).reduce((a, b) => a + b, 0);
-    if (grandTotal >= 50) {
-      // pseudo-baseline: ~7-day rolling — folosim direct un threshold absolut configurabil
-      const threshold = 50;
-      if (grandTotal >= threshold * 2) {
-        alerts.push({
-          severity: "warning",
-          category: "surge_total",
-          source_platform: null,
-          rejection_reason: null,
-          title: `Volum mare de respingeri: ${grandTotal} în ${days} zile`,
-          message: `Pipeline-ul a respins ${grandTotal} anunțuri în ultimele ${days} zile (peste pragul de ${threshold * 2}). Posibilă regresie la un scraper sau o sursă nouă cu calitate slabă.`,
-          metric: { total: grandTotal, threshold, days },
-          signature: `surge_total:d${days}`,
-        });
-      }
+    const threshold = settings.surge_threshold;
+    if (grandTotal >= threshold * 2) {
+      alerts.push({
+        severity: "warning",
+        category: "surge_total",
+        source_platform: null,
+        rejection_reason: null,
+        title: `Volum mare de respingeri: ${grandTotal} în ${days} zile`,
+        message: `Pipeline-ul a respins ${grandTotal} anunțuri în ultimele ${days} zile (peste pragul de ${threshold * 2}). Posibilă regresie la un scraper sau o sursă nouă cu calitate slabă.`,
+        metric: { total: grandTotal, threshold, days },
+        signature: `surge_total:d${days}`,
+      });
     }
 
     // ====== Inserare cu deduplicare (UNIQUE WHERE status='open') ======
@@ -157,13 +193,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ====== Notificări email/SMS pentru alerte warning/critical ======
+    // ====== Notificări email/SMS — folosesc setările din UI (cu fallback ENV) ======
     let notifiedCount = 0;
     const notifyResults: Array<{ id: string; channels: string[]; error?: string }> = [];
-    if (shouldNotify) {
-      const toNotify = newlyInserted.filter((a) => a.severity === "warning" || a.severity === "critical");
-      for (const a of toNotify) {
-        const result = await sendAlertNotification(a);
+    if (shouldNotify && settings.notifications_enabled) {
+      const emailMin = SEV_RANK[settings.email_min_severity];
+      const smsMin = SEV_RANK[settings.sms_min_severity];
+      for (const a of newlyInserted) {
+        const sev = SEV_RANK[a.severity];
+        const sendEmail = sev >= emailMin;
+        const sendSms = sev >= smsMin;
+        if (!sendEmail && !sendSms) continue;
+        const result = await sendAlertNotification(a, settings, { sendEmail, sendSms });
         notifyResults.push({ id: a.id, ...result });
         await supabase
           .from("prospect_rejection_alerts")
@@ -204,15 +245,23 @@ const SEVERITY_EMOJI: Record<string, string> = {
   info: "🔵",
 };
 
-async function sendAlertNotification(a: Alert & { id: string }): Promise<{ channels: string[]; error?: string }> {
+async function sendAlertNotification(
+  a: Alert & { id: string },
+  settings: AlertSettings,
+  flags: { sendEmail: boolean; sendSms: boolean },
+): Promise<{ channels: string[]; error?: string }> {
   const channels: string[] = [];
   const errors: string[] = [];
 
-  const adminEmail = Deno.env.get("ADMIN_ALERT_EMAIL");
-  const adminPhone = Deno.env.get("ADMIN_ALERT_PHONE");
+  const envEmail = Deno.env.get("ADMIN_ALERT_EMAIL");
+  const envPhone = Deno.env.get("ADMIN_ALERT_PHONE");
+  const emails = (settings.recipient_emails?.length ? settings.recipient_emails : (envEmail ? [envEmail] : []))
+    .map((s) => s.trim()).filter(Boolean);
+  const phones = (settings.recipient_phones?.length ? settings.recipient_phones : (envPhone ? [envPhone] : []))
+    .map((s) => s.trim()).filter(Boolean);
 
   // ---- Email via Resend ----
-  if (adminEmail) {
+  if (flags.sendEmail && emails.length > 0) {
     try {
       const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
       if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY missing");
@@ -239,7 +288,7 @@ async function sendAlertNotification(a: Alert & { id: string }): Promise<{ chann
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
         body: JSON.stringify({
           from: "RealTrust Alerts <alerts@notify.realtrust.ro>",
-          to: [adminEmail],
+          to: emails,
           subject,
           html,
         }),
@@ -254,8 +303,8 @@ async function sendAlertNotification(a: Alert & { id: string }): Promise<{ chann
     }
   }
 
-  // ---- SMS via Twilio (only for critical, to avoid noise/cost) ----
-  if (adminPhone && a.severity === "critical") {
+  // ---- SMS via Twilio ----
+  if (flags.sendSms && phones.length > 0) {
     try {
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
@@ -263,25 +312,27 @@ async function sendAlertNotification(a: Alert & { id: string }): Promise<{ chann
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
       if (!TWILIO_API_KEY) throw new Error("TWILIO_API_KEY missing");
       if (!TWILIO_FROM_NUMBER) throw new Error("TWILIO_FROM_NUMBER missing");
-      const smsBody = `🔴 RealTrust CRITICAL: ${a.title}. ${a.message.slice(0, 200)}`.slice(0, 400);
-      const r = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "X-Connection-Api-Key": TWILIO_API_KEY,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          To: adminPhone,
-          From: TWILIO_FROM_NUMBER,
-          Body: smsBody,
-        }),
-      });
-      if (!r.ok) {
-        const t = await r.text();
-        throw new Error(`Twilio ${r.status}: ${t.slice(0, 200)}`);
+      const emoji = SEVERITY_EMOJI[a.severity] ?? "⚠️";
+      const smsBody = `${emoji} RealTrust ${a.severity.toUpperCase()}: ${a.title}. ${a.message.slice(0, 180)}`.slice(0, 400);
+      let anyOk = false;
+      for (const to of phones) {
+        const r = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "X-Connection-Api-Key": TWILIO_API_KEY,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ To: to, From: TWILIO_FROM_NUMBER, Body: smsBody }),
+        });
+        if (!r.ok) {
+          const t = await r.text();
+          errors.push(`sms[${to}]:${r.status} ${t.slice(0, 120)}`);
+        } else {
+          anyOk = true;
+        }
       }
-      channels.push("sms");
+      if (anyOk) channels.push("sms");
     } catch (e) {
       errors.push("sms:" + (e instanceof Error ? e.message : String(e)));
     }
