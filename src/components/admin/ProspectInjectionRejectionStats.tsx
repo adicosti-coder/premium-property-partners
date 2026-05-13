@@ -152,6 +152,29 @@ export default function ProspectInjectionRejectionStats() {
     return map;
   }, [platformBreakdown]);
 
+  const trendChartData = useMemo(() => {
+    const byDay = new Map<string, Record<string, number | string>>();
+    const reasons = new Set<string>();
+    for (const t of trend) {
+      reasons.add(t.rejection_reason);
+      const row = byDay.get(t.day_label) || { day: t.day_label };
+      row[t.rejection_reason] = (row[t.rejection_reason] as number | undefined ?? 0) + Number(t.count || 0);
+      byDay.set(t.day_label, row);
+    }
+    // ensure all reasons exist on every row
+    const data = Array.from(byDay.values()).map((row) => {
+      const filled: Record<string, number | string> = { ...row };
+      for (const r of reasons) if (filled[r] == null) filled[r] = 0;
+      return filled;
+    });
+    return { data, reasons: Array.from(reasons) };
+  }, [trend]);
+
+  const trendTotal = useMemo(
+    () => trend.reduce((s, t) => s + Number(t.count || 0), 0),
+    [trend]
+  );
+
   return (
     <Card className="border-2 border-amber-500/20">
       <CardHeader className="flex flex-row items-start justify-between gap-2">
