@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
   Shield, RefreshCw, Loader2, PhoneOff, Copy as CopyIcon, AlertCircle,
-  ChevronDown, ChevronRight, ExternalLink, FilterX,
+  ChevronDown, ChevronRight, ExternalLink, FilterX, TrendingUp,
 } from "lucide-react";
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
 
 interface RejectionRow {
   rejection_reason: string;
