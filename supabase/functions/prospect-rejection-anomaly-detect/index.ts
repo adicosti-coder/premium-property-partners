@@ -96,13 +96,13 @@ Deno.serve(async (req) => {
     }
     for (const reason of Object.keys(byReasonPlatform)) {
       const total = totalByReason[reason] || 0;
-      if (total < 10) continue;
+      if (total < settings.dominance_min_total) continue;
       for (const [platform, cnt] of Object.entries(byReasonPlatform[reason])) {
         const ratio = cnt / total;
-        if (ratio >= 0.7) {
+        if (ratio >= settings.dominance_warning_ratio) {
           const pct = Math.round(ratio * 100);
           alerts.push({
-            severity: ratio >= 0.85 ? "critical" : "warning",
+            severity: ratio >= settings.dominance_critical_ratio ? "critical" : "warning",
             category: "dominance",
             source_platform: platform,
             rejection_reason: reason,
@@ -115,13 +115,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ====== 2) SPIKE per platformă (prima vs a doua jumătate) ======
-    // Trend e per (zi × motiv); facem split în două ferestre după dayLabels sortate.
+    // ====== 2) SPIKE per motiv (prima vs a doua jumătate) ======
     const sortedDays = Array.from(new Set(trend.map((t) => t.day_label))).sort();
     if (sortedDays.length >= 4) {
       const mid = Math.floor(sortedDays.length / 2);
       const firstHalf = new Set(sortedDays.slice(0, mid));
-      // Re-agregăm trend pe (motiv) pentru ferestre — nu avem platform în trend, deci facem doar SPIKE per motiv.
       const halfStats: Record<string, { a: number; b: number }> = {};
       for (const t of trend) {
         const slot = (halfStats[t.rejection_reason] ||= { a: 0, b: 0 });
@@ -129,12 +127,13 @@ Deno.serve(async (req) => {
         else slot.b += Number(t.count || 0);
       }
       for (const [reason, s] of Object.entries(halfStats)) {
-        if (s.b < 5) continue;
+        if (s.b < settings.spike_min_count) continue;
         const baseline = Math.max(1, s.a);
         const ratio = s.b / baseline;
-        if (ratio >= 1.5) {
+        if (ratio >= settings.spike_warning_ratio) {
           const growth = Math.round((ratio - 1) * 100);
-          const sev: Alert["severity"] = ratio >= 3 ? "critical" : ratio >= 2 ? "warning" : "info";
+          const sev: Alert["severity"] =
+            ratio >= settings.spike_critical_ratio ? "critical" : "warning";
           alerts.push({
             severity: sev,
             category: "spike_reason",
@@ -151,21 +150,18 @@ Deno.serve(async (req) => {
 
     // ====== 3) SURGE total (volum total mare) ======
     const grandTotal = Object.values(totalByReason).reduce((a, b) => a + b, 0);
-    if (grandTotal >= 50) {
-      // pseudo-baseline: ~7-day rolling — folosim direct un threshold absolut configurabil
-      const threshold = 50;
-      if (grandTotal >= threshold * 2) {
-        alerts.push({
-          severity: "warning",
-          category: "surge_total",
-          source_platform: null,
-          rejection_reason: null,
-          title: `Volum mare de respingeri: ${grandTotal} în ${days} zile`,
-          message: `Pipeline-ul a respins ${grandTotal} anunțuri în ultimele ${days} zile (peste pragul de ${threshold * 2}). Posibilă regresie la un scraper sau o sursă nouă cu calitate slabă.`,
-          metric: { total: grandTotal, threshold, days },
-          signature: `surge_total:d${days}`,
-        });
-      }
+    const threshold = settings.surge_threshold;
+    if (grandTotal >= threshold * 2) {
+      alerts.push({
+        severity: "warning",
+        category: "surge_total",
+        source_platform: null,
+        rejection_reason: null,
+        title: `Volum mare de respingeri: ${grandTotal} în ${days} zile`,
+        message: `Pipeline-ul a respins ${grandTotal} anunțuri în ultimele ${days} zile (peste pragul de ${threshold * 2}). Posibilă regresie la un scraper sau o sursă nouă cu calitate slabă.`,
+        metric: { total: grandTotal, threshold, days },
+        signature: `surge_total:d${days}`,
+      });
     }
 
     // ====== Inserare cu deduplicare (UNIQUE WHERE status='open') ======
