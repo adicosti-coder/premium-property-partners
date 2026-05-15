@@ -5035,6 +5035,9 @@ export type Database = {
           ab_variant_b: Json | null
           ab_winner: string | null
           ab_winner_resolved_at: string | null
+          ai_generated: boolean
+          ai_generated_at: string | null
+          ai_model: string | null
           alt_text_suggestions: Json | null
           applied_at: string
           applied_by: string | null
@@ -5047,6 +5050,7 @@ export type Database = {
           last_validated_at: string | null
           last_validation_status: string | null
           meta_description: string | null
+          pending_review: boolean
           source_audit_id: string | null
           structural_todos: Json | null
           title: string | null
@@ -5059,6 +5063,9 @@ export type Database = {
           ab_variant_b?: Json | null
           ab_winner?: string | null
           ab_winner_resolved_at?: string | null
+          ai_generated?: boolean
+          ai_generated_at?: string | null
+          ai_model?: string | null
           alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
@@ -5071,6 +5078,7 @@ export type Database = {
           last_validated_at?: string | null
           last_validation_status?: string | null
           meta_description?: string | null
+          pending_review?: boolean
           source_audit_id?: string | null
           structural_todos?: Json | null
           title?: string | null
@@ -5083,6 +5091,9 @@ export type Database = {
           ab_variant_b?: Json | null
           ab_winner?: string | null
           ab_winner_resolved_at?: string | null
+          ai_generated?: boolean
+          ai_generated_at?: string | null
+          ai_model?: string | null
           alt_text_suggestions?: Json | null
           applied_at?: string
           applied_by?: string | null
@@ -5095,6 +5106,7 @@ export type Database = {
           last_validated_at?: string | null
           last_validation_status?: string | null
           meta_description?: string | null
+          pending_review?: boolean
           source_audit_id?: string | null
           structural_todos?: Json | null
           title?: string | null
