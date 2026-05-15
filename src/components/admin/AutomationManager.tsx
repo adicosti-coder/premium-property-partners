@@ -80,6 +80,7 @@ const AutomationManager = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [pendingToggle, setPendingToggle] = useState<string | null>(null);
+  const [runningJob, setRunningJob] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
