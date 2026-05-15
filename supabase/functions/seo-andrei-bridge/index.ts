@@ -60,6 +60,103 @@ serve(async (req) => {
     let body: any = {};
     try { body = await req.json(); } catch { /* empty body for cron */ }
     const dryRun = body.dry_run === true;
+
+    // ── Retry mode ─────────────────────────────────────────────────────────
+    if (body.retry_bridge_id) {
+      const RETRY_COOLDOWN_MIN = Math.max(5, body.cooldown_min ?? 30);
+      const MAX_RETRIES = Math.max(1, body.max_retries ?? 3);
+      const bridgeId: string = body.retry_bridge_id;
+
+      // Walk to root (parent_bridge_id IS NULL) to enforce per-lineage retry budget
+      const { data: target, error: tErr } = await sb
+        .from("seo_andrei_bridge")
+        .select("id, opportunity_id, prospect_id, query, page, matched_keywords, score_after, retry_count, last_retry_at, triggered_at, parent_bridge_id, call_session_id, status")
+        .eq("id", bridgeId).maybeSingle();
+      if (tErr || !target) return json({ error: "Bridge not found" }, 404);
+
+      let rootId = target.parent_bridge_id || target.id;
+      const { data: root } = await sb.from("seo_andrei_bridge")
+        .select("id, retry_count, last_retry_at, triggered_at").eq("id", rootId).maybeSingle();
+      const rootRow = root || target;
+
+      // Eligibility: status failed OR call session failed/no-answer
+      let sessionStatus: string | null = null;
+      if (target.call_session_id) {
+        const { data: s } = await sb.from("voice_call_sessions").select("status").eq("id", target.call_session_id).maybeSingle();
+        sessionStatus = s?.status || null;
+      }
+      const isFailLike = ["failed", "no-answer", "no_answer", "noanswer", "busy", "voicemail"].includes((sessionStatus || "").toLowerCase());
+      const eligible = target.status === "failed" || isFailLike;
+      if (!eligible) return json({ error: `Bridge not retry-eligible (status=${target.status}, session=${sessionStatus})` }, 400);
+
+      // Cooldown
+      const lastTs = new Date(rootRow.last_retry_at || rootRow.triggered_at).getTime();
+      const sinceMin = (Date.now() - lastTs) / 60000;
+      if (sinceMin < RETRY_COOLDOWN_MIN) {
+        return json({ error: `Cooldown activ. Mai așteaptă ${Math.ceil(RETRY_COOLDOWN_MIN - sinceMin)} min.`, cooldown_remaining_min: Math.ceil(RETRY_COOLDOWN_MIN - sinceMin) }, 429);
+      }
+      const currentRetries = rootRow.retry_count || 0;
+      if (currentRetries >= MAX_RETRIES) {
+        return json({ error: `Limită retry atinsă (${currentRetries}/${MAX_RETRIES}).` }, 400);
+      }
+
+      // Fetch prospect for current snapshot
+      const { data: prospect } = await sb.from("prospect_listings")
+        .select("id, title, phone_normalized, lifecycle_status, is_active").eq("id", target.prospect_id).maybeSingle();
+      if (!prospect || !prospect.is_active || !prospect.phone_normalized) {
+        return json({ error: "Prospect inactiv sau fără telefon" }, 400);
+      }
+
+      let dialResp: any = { skipped: "dry_run" };
+      let callSessionId: string | null = null;
+      let status = "queued";
+      const newRetryCount = currentRetries + 1;
+
+      if (!dryRun) {
+        try {
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/voice-agent-auto-dial`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SERVICE_KEY}`, "x-webhook-secret": SERVICE_KEY },
+            body: JSON.stringify({
+              prospect_id: prospect.id, manual: true, source: "seo_andrei_bridge_retry",
+              context_note: `RETRY #${newRetryCount} — apel SEO×Andrei pentru "${target.query}" (bridge ${rootId.slice(0, 8)})`,
+            }),
+          });
+          dialResp = await r.json();
+          callSessionId = dialResp.session_id || dialResp.sessionId || null;
+          status = r.ok ? (dialResp.skipped ? "skipped" : "called") : "failed";
+        } catch (e: any) {
+          dialResp = { error: e?.message || "fetch failed" };
+          status = "failed";
+        }
+      }
+
+      // Insert new bridge row as a retry child of root
+      const { data: newBridge } = await sb.from("seo_andrei_bridge").insert({
+        opportunity_id: target.opportunity_id,
+        prospect_id: target.prospect_id,
+        query: target.query, page: target.page,
+        matched_keywords: target.matched_keywords,
+        match_reason: `retry #${newRetryCount} of bridge ${rootId.slice(0, 8)}`,
+        score_before: target.score_after, score_after: target.score_after,
+        call_session_id: callSessionId,
+        auto_dial_response: dialResp,
+        status,
+        parent_bridge_id: rootId,
+        retry_count: newRetryCount,
+      }).select().maybeSingle();
+
+      // Update root retry counters
+      if (!dryRun) {
+        await sb.from("seo_andrei_bridge").update({
+          retry_count: newRetryCount, last_retry_at: new Date().toISOString(),
+        }).eq("id", rootId);
+      }
+
+      return json({ success: true, mode: "retry", retry_count: newRetryCount, max_retries: MAX_RETRIES, status, call_session_id: callSessionId, bridge_id: newBridge?.id, dial: dialResp });
+    }
+    // ── End retry mode ─────────────────────────────────────────────────────
+
     const maxCalls: number = Math.max(1, Math.min(10, body.max_calls ?? 3));
     const minOppScore: number = body.min_opp_score ?? 50;
     const minMatchScore: number = body.min_match_score ?? 4;
