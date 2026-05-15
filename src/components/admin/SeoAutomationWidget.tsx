@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, TrendingUp, AlertTriangle, RefreshCw, Sparkles, ExternalLink, Target, FileSearch, Swords, History, CheckCircle2, X, PhoneCall, Phone, PhoneOff, PhoneForwarded } from "lucide-react";
+import { Loader2, TrendingUp, AlertTriangle, RefreshCw, Sparkles, ExternalLink, Target, FileSearch, Swords, History, CheckCircle2, X, PhoneCall, Phone, PhoneOff, PhoneForwarded, RotateCcw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -30,9 +30,14 @@ const SEVERITY_COLOR: Record<string, string> = {
   low: "bg-muted text-muted-foreground border-border",
 };
 
+const RETRY_COOLDOWN_MIN = 30;
+const MAX_RETRIES = 3;
+const FAIL_SESSION_STATUSES = new Set(["failed", "no-answer", "no_answer", "noanswer", "busy", "voicemail"]);
+
 const SeoAutomationWidget = () => {
   const [running, setRunning] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<any>({
     queryKey: ["seo-automation-data"],
@@ -75,6 +80,33 @@ const SeoAutomationWidget = () => {
     await supabase.from("seo_opportunities").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     toast({ title: status === "applied" ? "✅ Marcat ca aplicat" : "Eliminat" });
     refetch();
+  };
+
+  const isRetryEligible = (b: any) => {
+    if (b.status === "failed") return true;
+    const ss = String(b.call_session?.status || "").toLowerCase();
+    return FAIL_SESSION_STATUSES.has(ss);
+  };
+
+  const cooldownRemainingMin = (b: any): number => {
+    const lastTs = new Date(b.last_retry_at || b.triggered_at).getTime();
+    const elapsed = (Date.now() - lastTs) / 60000;
+    return Math.max(0, Math.ceil(RETRY_COOLDOWN_MIN - elapsed));
+  };
+
+  const retryBridge = async (bridgeId: string) => {
+    setRetrying(bridgeId);
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-andrei-bridge", {
+        body: { retry_bridge_id: bridgeId, cooldown_min: RETRY_COOLDOWN_MIN, max_retries: MAX_RETRIES },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "🔄 Retry declanșat", description: `Status: ${data.status} · retry ${data.retry_count}/${data.max_retries}` });
+      refetch();
+    } catch (e: any) {
+      toast({ title: "Retry eșuat", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally { setRetrying(null); }
   };
 
   if (isLoading) return (
@@ -347,11 +379,32 @@ const SeoAutomationWidget = () => {
                           <p className="text-[11px] text-red-600 mt-1">{String(b.auto_dial_response.error).slice(0, 200)}</p>
                         )}
                       </div>
-                      {b.page && (
-                        <a href={b.page} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline shrink-0">
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        {b.page && (
+                          <a href={b.page} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline" aria-label="Deschide pagina">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {isRetryEligible(b) && !b.parent_bridge_id && (() => {
+                          const cd = cooldownRemainingMin(b);
+                          const used = b.retry_count || 0;
+                          const maxed = used >= MAX_RETRIES;
+                          const disabled = retrying !== null || cd > 0 || maxed;
+                          const label = maxed ? `Max retry (${used}/${MAX_RETRIES})` : cd > 0 ? `Așteaptă ${cd}m` : `Retry apel (${used}/${MAX_RETRIES})`;
+                          return (
+                            <Button size="sm" variant="outline" onClick={() => retryBridge(b.id)} disabled={disabled} className="h-7 text-[11px] px-2" title={label}>
+                              {retrying === b.id ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                              {label}
+                            </Button>
+                          );
+                        })()}
+                        {b.retry_count > 0 && !b.parent_bridge_id && (
+                          <span className="text-[10px] text-muted-foreground">Retry: {b.retry_count}/{MAX_RETRIES}</span>
+                        )}
+                        {b.parent_bridge_id && (
+                          <Badge variant="outline" className="text-[9px] border-blue-500/40 text-blue-700">retry #{b.retry_count}</Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

@@ -79,7 +79,7 @@ serve(async (req) => {
     const since30 = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
     const { data: bridges } = await sb
       .from("seo_andrei_bridge")
-      .select("id, opportunity_id, prospect_id, query, page, matched_keywords, score_before, score_after, status, call_session_id, triggered_at, auto_dial_response")
+      .select("id, opportunity_id, prospect_id, query, page, matched_keywords, score_before, score_after, status, call_session_id, triggered_at, auto_dial_response, retry_count, last_retry_at, parent_bridge_id")
       .gte("triggered_at", since30)
       .order("triggered_at", { ascending: false })
       .limit(100);

@@ -4045,12 +4045,15 @@ export type Database = {
           call_session_id: string | null
           created_at: string
           id: string
+          last_retry_at: string | null
           match_reason: string | null
           matched_keywords: string[] | null
           opportunity_id: string | null
           page: string | null
+          parent_bridge_id: string | null
           prospect_id: string | null
           query: string | null
+          retry_count: number
           score_after: number | null
           score_before: number | null
           status: string
@@ -4062,12 +4065,15 @@ export type Database = {
           call_session_id?: string | null
           created_at?: string
           id?: string
+          last_retry_at?: string | null
           match_reason?: string | null
           matched_keywords?: string[] | null
           opportunity_id?: string | null
           page?: string | null
+          parent_bridge_id?: string | null
           prospect_id?: string | null
           query?: string | null
+          retry_count?: number
           score_after?: number | null
           score_before?: number | null
           status?: string
@@ -4079,12 +4085,15 @@ export type Database = {
           call_session_id?: string | null
           created_at?: string
           id?: string
+          last_retry_at?: string | null
           match_reason?: string | null
           matched_keywords?: string[] | null
           opportunity_id?: string | null
           page?: string | null
+          parent_bridge_id?: string | null
           prospect_id?: string | null
           query?: string | null
+          retry_count?: number
           score_after?: number | null
           score_before?: number | null
           status?: string
@@ -4097,6 +4106,13 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "seo_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_andrei_bridge_parent_bridge_id_fkey"
+            columns: ["parent_bridge_id"]
+            isOneToOne: false
+            referencedRelation: "seo_andrei_bridge"
             referencedColumns: ["id"]
           },
           {
