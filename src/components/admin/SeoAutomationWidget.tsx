@@ -417,26 +417,41 @@ const SeoAutomationWidget = () => {
                   <PopoverContent align="end" className="w-72 space-y-3">
                     <div>
                       <h4 className="text-sm font-semibold">Setări retry apeluri</h4>
-                      <p className="text-[11px] text-muted-foreground">Aplicate la următoarele retry-uri din UI. Salvare locală per browser.</p>
+                      <p className="text-[11px] text-muted-foreground">Sincronizate cloud (toți adminii). Validare la salvare.</p>
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="retry-cooldown" className="text-xs">Cooldown (minute)</Label>
-                      <Input id="retry-cooldown" type="number" min={5} max={720} step={5} defaultValue={RETRY_COOLDOWN_MIN}
-                        onBlur={(e) => saveRetrySettings(Number(e.target.value), MAX_RETRIES)}
+                      <Input id="retry-cooldown" type="number" inputMode="numeric"
+                        min={RETRY_COOLDOWN_BOUNDS.min} max={RETRY_COOLDOWN_BOUNDS.max} step={5}
+                        defaultValue={RETRY_COOLDOWN_MIN}
+                        aria-invalid={!!settingsErrors.cooldown}
+                        className={settingsErrors.cooldown ? "border-destructive focus-visible:ring-destructive" : ""}
+                        onBlur={(e) => saveRetrySettings(e.target.value, MAX_RETRIES)}
                         onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                        disabled={settingsSyncing}
                       />
-                      <p className="text-[10px] text-muted-foreground">Între 5 și 720 minute.</p>
+                      {settingsErrors.cooldown
+                        ? <p className="text-[10px] text-destructive font-medium">{settingsErrors.cooldown}</p>
+                        : <p className="text-[10px] text-muted-foreground">Între {RETRY_COOLDOWN_BOUNDS.min} și {RETRY_COOLDOWN_BOUNDS.max} minute.</p>}
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="retry-max" className="text-xs">Număr maxim încercări / lead</Label>
-                      <Input id="retry-max" type="number" min={1} max={10} step={1} defaultValue={MAX_RETRIES}
-                        onBlur={(e) => saveRetrySettings(RETRY_COOLDOWN_MIN, Number(e.target.value))}
+                      <Input id="retry-max" type="number" inputMode="numeric"
+                        min={MAX_RETRIES_BOUNDS.min} max={MAX_RETRIES_BOUNDS.max} step={1}
+                        defaultValue={MAX_RETRIES}
+                        aria-invalid={!!settingsErrors.max}
+                        className={settingsErrors.max ? "border-destructive focus-visible:ring-destructive" : ""}
+                        onBlur={(e) => saveRetrySettings(RETRY_COOLDOWN_MIN, e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                        disabled={settingsSyncing}
                       />
-                      <p className="text-[10px] text-muted-foreground">Între 1 și 10 încercări.</p>
+                      {settingsErrors.max
+                        ? <p className="text-[10px] text-destructive font-medium">{settingsErrors.max}</p>
+                        : <p className="text-[10px] text-muted-foreground">Între {MAX_RETRIES_BOUNDS.min} și {MAX_RETRIES_BOUNDS.max} încercări.</p>}
                     </div>
-                    <Button size="sm" variant="ghost" className="w-full h-7 text-[11px]"
+                    <Button size="sm" variant="ghost" className="w-full h-7 text-[11px]" disabled={settingsSyncing}
                       onClick={() => saveRetrySettings(DEFAULT_RETRY_COOLDOWN_MIN, DEFAULT_MAX_RETRIES)}>
+                      {settingsSyncing ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
                       Resetează la implicit ({DEFAULT_RETRY_COOLDOWN_MIN}m · {DEFAULT_MAX_RETRIES})
                     </Button>
                   </PopoverContent>
