@@ -215,8 +215,12 @@ const GooglePerformanceWidget = () => {
             <span>{(error as Error).message}</span>
           </div>
         ) : data ? (
-          <>
-            {/* KPI cards */}
+          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2 max-w-sm">
+              <TabsTrigger value="performance" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />Performanță</TabsTrigger>
+              <TabsTrigger value="indexing" className="gap-1.5"><Activity className="w-3.5 h-3.5" />Indexare</TabsTrigger>
+            </TabsList>
+            <TabsContent value="performance" className="space-y-4 mt-0">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="rounded-lg border border-border bg-card p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground"><MousePointerClick className="w-3.5 h-3.5" />Clickuri</div>
