@@ -3316,6 +3316,9 @@ export type Database = {
       prospect_listings: {
         Row: {
           admin_notes: string | null
+          agency_classified_at: string | null
+          agency_suspicion_reason: string | null
+          agency_suspicion_score: number | null
           ai_score_breakdown: Json | null
           ai_scored_at: string | null
           assigned_to: string | null
@@ -3389,6 +3392,9 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          agency_classified_at?: string | null
+          agency_suspicion_reason?: string | null
+          agency_suspicion_score?: number | null
           ai_score_breakdown?: Json | null
           ai_scored_at?: string | null
           assigned_to?: string | null
@@ -3462,6 +3468,9 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          agency_classified_at?: string | null
+          agency_suspicion_reason?: string | null
+          agency_suspicion_score?: number | null
           ai_score_breakdown?: Json | null
           ai_scored_at?: string | null
           assigned_to?: string | null
@@ -7458,6 +7467,15 @@ export type Database = {
       auto_blacklist_prospect: {
         Args: { p_prospect_id: string; p_reasons?: string[]; p_score: number }
         Returns: Json
+      }
+      automation_complete_run: {
+        Args: {
+          _error?: string
+          _job_key: string
+          _payload?: Json
+          _success: boolean
+        }
+        Returns: undefined
       }
       bulk_archive_detected_agencies: { Args: never; Returns: Json }
       check_and_award_badges: {

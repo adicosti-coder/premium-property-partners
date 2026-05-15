@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
-  Sparkles, Phone, Activity, Inbox, History,
+  Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
 } from "lucide-react";
 
 type Settings = {
@@ -80,6 +80,7 @@ const AutomationManager = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [pendingToggle, setPendingToggle] = useState<string | null>(null);
+  const [runningJob, setRunningJob] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -147,6 +148,38 @@ const AutomationManager = () => {
         : "Acest job nu va mai rula până nu îl reactivezi.",
     });
     load();
+  };
+
+  const runNow = async (job: Job) => {
+    setRunningJob(job.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("automation-orchestrator", {
+        body: { job_key: job.job_key },
+      });
+      if (error) throw error;
+      const result = (data as { results?: Array<{ ok: boolean; error?: string }> })?.results?.[0];
+      if (result && !result.ok) {
+        toast({
+          title: `${job.label} → eșuat`,
+          description: result.error?.slice(0, 200) ?? "Verifică logurile",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: `${job.label} → declanșat`,
+          description: "Rulează acum în background. Reîmprospătează în câteva secunde.",
+        });
+      }
+      setTimeout(load, 2500);
+    } catch (e) {
+      toast({
+        title: "Eroare la rulare",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setRunningJob(null);
+    }
   };
 
   if (loading) {
@@ -295,12 +328,29 @@ const AutomationManager = () => {
                           <p className="text-xs text-destructive mt-1 truncate">⚠ {job.last_error}</p>
                         )}
                       </div>
-                      <Switch
-                        checked={job.enabled && globalOn}
-                        disabled={!globalOn || pendingToggle === job.id}
-                        onCheckedChange={(v) => toggleJob(job, v)}
-                        aria-label={`Toggle ${job.label}`}
-                      />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!globalOn || runningJob === job.id}
+                          onClick={() => runNow(job)}
+                          aria-label={`Rulează acum ${job.label}`}
+                          title="Declanșează manual acum"
+                        >
+                          {runningJob === job.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Zap className="w-3 h-3" />
+                          )}
+                          <span className="hidden md:inline ml-1">Run</span>
+                        </Button>
+                        <Switch
+                          checked={job.enabled && globalOn}
+                          disabled={!globalOn || pendingToggle === job.id}
+                          onCheckedChange={(v) => toggleJob(job, v)}
+                          aria-label={`Toggle ${job.label}`}
+                        />
+                      </div>
                     </div>
                   ))}
                 </CardContent>
