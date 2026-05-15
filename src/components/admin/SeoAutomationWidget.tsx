@@ -379,11 +379,32 @@ const SeoAutomationWidget = () => {
                           <p className="text-[11px] text-red-600 mt-1">{String(b.auto_dial_response.error).slice(0, 200)}</p>
                         )}
                       </div>
-                      {b.page && (
-                        <a href={b.page} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline shrink-0">
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        {b.page && (
+                          <a href={b.page} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline" aria-label="Deschide pagina">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {isRetryEligible(b) && !b.parent_bridge_id && (() => {
+                          const cd = cooldownRemainingMin(b);
+                          const used = b.retry_count || 0;
+                          const maxed = used >= MAX_RETRIES;
+                          const disabled = retrying !== null || cd > 0 || maxed;
+                          const label = maxed ? `Max retry (${used}/${MAX_RETRIES})` : cd > 0 ? `Așteaptă ${cd}m` : `Retry apel (${used}/${MAX_RETRIES})`;
+                          return (
+                            <Button size="sm" variant="outline" onClick={() => retryBridge(b.id)} disabled={disabled} className="h-7 text-[11px] px-2" title={label}>
+                              {retrying === b.id ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                              {label}
+                            </Button>
+                          );
+                        })()}
+                        {b.retry_count > 0 && !b.parent_bridge_id && (
+                          <span className="text-[10px] text-muted-foreground">Retry: {b.retry_count}/{MAX_RETRIES}</span>
+                        )}
+                        {b.parent_bridge_id && (
+                          <Badge variant="outline" className="text-[9px] border-blue-500/40 text-blue-700">retry #{b.retry_count}</Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
