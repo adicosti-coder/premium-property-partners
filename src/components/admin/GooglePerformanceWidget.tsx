@@ -628,50 +628,135 @@ const GooglePerformanceWidget = () => {
 
               {/* Per-page indexing controls */}
               <div>
-                <h4 className="text-sm font-semibold mb-2 text-foreground">Pagini cu trafic — control indexare</h4>
-                <div className="space-y-1.5">
-                  {data.topPages.length === 0 && (
-                    <p className="text-xs text-muted-foreground">Fără pagini de afișat.</p>
-                  )}
-                  {data.topPages.map((p, i) => {
-                    const url = p.page || "";
-                    const path = url.replace(/^https?:\/\/[^/]+/, "") || "/";
-                    const isLoading = reindexing === url;
-                    return (
-                      <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground" />
-                          <a href={url} target="_blank" rel="noopener noreferrer" className="truncate font-medium text-foreground hover:underline">
-                            {path}
-                          </a>
-                          <Badge variant="secondary" className="text-[10px] shrink-0">{fmt(p.clicks)} clk</Badge>
-                          <Badge variant="outline" className="text-[10px] shrink-0">poz. {p.position}</Badge>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <a
-                            href={gscInspectUrl(url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground inline-flex items-center gap-1"
-                            title="Deschide URL Inspection în Google Search Console"
-                          >
-                            GSC <ExternalLink className="w-2.5 h-2.5" />
-                          </a>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 px-2 text-[10px]"
-                            onClick={() => requestReindex(url)}
-                            disabled={isLoading || !url}
-                          >
-                            {isLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
-                            Re-indexare
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+                  <h4 className="text-sm font-semibold text-foreground">Tabel pagini — status indexare</h4>
+                  <p className="text-[10px] text-muted-foreground">Apasă "Verifică indexare" pentru a popula coloana Status.</p>
                 </div>
+                {data.topPages.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Fără pagini de afișat.</p>
+                ) : (() => {
+                  const STATUS_RANK: Record<string, number> = { ISSUE: 0, NEUTRAL: 1, PARTIAL: 2, PASS: 3, UNKNOWN: 4 };
+                  const statusOf = (url: string) => {
+                    const s = indexStatus[url];
+                    if (!s) return "UNKNOWN";
+                    if (s.verdict === "PASS") return "PASS";
+                    if (s.verdict === "PARTIAL") return "PARTIAL";
+                    if (s.verdict === "NEUTRAL") return "NEUTRAL";
+                    return "ISSUE";
+                  };
+                  const rows = [...data.topPages].sort((a, b) => {
+                    const dir = idxSortDir === "asc" ? 1 : -1;
+                    if (idxSortBy === "status") {
+                      const sa = STATUS_RANK[statusOf(a.page || "")] ?? 4;
+                      const sb = STATUS_RANK[statusOf(b.page || "")] ?? 4;
+                      return (sa - sb) * dir;
+                    }
+                    if (idxSortBy === "clicks") return ((b.clicks || 0) - (a.clicks || 0)) * (dir === 1 ? -1 : 1) * -1 * (dir === 1 ? -1 : 1);
+                    if (idxSortBy === "position") return ((a.position || 999) - (b.position || 999)) * dir;
+                    if (idxSortBy === "page") return ((a.page || "").localeCompare(b.page || "")) * dir;
+                    return 0;
+                  });
+
+                  const setSort = (col: typeof idxSortBy) => {
+                    if (idxSortBy === col) setIdxSortDir(d => d === "asc" ? "desc" : "asc");
+                    else { setIdxSortBy(col); setIdxSortDir(col === "status" || col === "page" ? "asc" : "desc"); }
+                  };
+
+                  const SortBtn = ({ col, label, align = "left" }: { col: typeof idxSortBy; label: string; align?: "left" | "right" | "center" }) => (
+                    <button
+                      onClick={() => setSort(col)}
+                      className={`w-full flex items-center gap-1 font-medium text-foreground hover:text-primary transition ${align === "right" ? "justify-end" : align === "center" ? "justify-center" : "justify-start"}`}
+                      aria-label={`Sortează după ${label}`}
+                    >
+                      {label}
+                      <span className="text-[9px] text-muted-foreground w-2">
+                        {idxSortBy === col ? (idxSortDir === "asc" ? "▲" : "▼") : ""}
+                      </span>
+                    </button>
+                  );
+
+                  const StatusBadge = ({ url }: { url: string }) => {
+                    const s = indexStatus[url];
+                    if (!s) return <Badge variant="outline" className="text-[10px] text-muted-foreground border-dashed">neverificat</Badge>;
+                    if (s.verdict === "PASS") return <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-600 bg-emerald-500/5">✓ Indexat</Badge>;
+                    if (s.verdict === "NEUTRAL") return <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-600 bg-amber-500/5">⚠ {s.coverageState || "Neutru"}</Badge>;
+                    if (s.verdict === "PARTIAL") return <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-600 bg-amber-500/5">⚠ Parțial</Badge>;
+                    return <Badge variant="outline" className="text-[10px] border-red-500/40 text-red-600 bg-red-500/5" title={s.coverageState}>✗ {s.coverageState || "Neindexat"}</Badge>;
+                  };
+
+                  return (
+                    <div className="border border-border rounded-md overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead className="bg-muted/60 border-b border-border">
+                            <tr className="text-[11px] text-muted-foreground">
+                              <th className="text-left p-2 w-[40%]"><SortBtn col="page" label="Pagină" /></th>
+                              <th className="text-right p-2 w-[10%]"><SortBtn col="clicks" label="Clk" align="right" /></th>
+                              <th className="text-right p-2 w-[10%]"><SortBtn col="position" label="Poz." align="right" /></th>
+                              <th className="text-left p-2 w-[18%]"><SortBtn col="status" label="Status indexare" /></th>
+                              <th className="text-right p-2 w-[22%]">Acțiuni</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map((p, i) => {
+                              const url = p.page || "";
+                              const path = url.replace(/^https?:\/\/[^/]+/, "") || "/";
+                              const isLoading = reindexing === url;
+                              const isChecking = running;
+                              return (
+                                <tr key={i} className="border-b border-border/60 last:border-b-0 hover:bg-muted/30">
+                                  <td className="p-2 min-w-0">
+                                    <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-foreground hover:text-primary hover:underline truncate" title={url}>
+                                      <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground" />
+                                      <span className="truncate">{path}</span>
+                                    </a>
+                                  </td>
+                                  <td className="p-2 text-right font-mono text-foreground">{fmt(p.clicks)}</td>
+                                  <td className="p-2 text-right font-mono text-muted-foreground">{p.position}</td>
+                                  <td className="p-2"><StatusBadge url={url} /></td>
+                                  <td className="p-2">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 px-2 text-[10px]"
+                                        onClick={() => runIndexCheck([url])}
+                                        disabled={isChecking}
+                                        title="Verifică status indexare în Google"
+                                      >
+                                        {isChecking ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
+                                      </Button>
+                                      <a
+                                        href={gscInspectUrl(url)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground inline-flex items-center gap-1"
+                                        title="Deschide URL Inspection în Google Search Console"
+                                      >
+                                        GSC <ExternalLink className="w-2.5 h-2.5" />
+                                      </a>
+                                      <Button
+                                        size="sm"
+                                        variant="default"
+                                        className="h-7 px-2 text-[10px]"
+                                        onClick={() => requestReindex(url)}
+                                        disabled={isLoading || !url}
+                                        title="Cere re-indexare imediată (IndexNow + GSC)"
+                                      >
+                                        {isLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
+                                        Re-indexare
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </TabsContent>
           </Tabs>
