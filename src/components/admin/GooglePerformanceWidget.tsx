@@ -19,9 +19,10 @@ interface GSCRow {
 
 interface GSCResponse {
   summary: { clicks: number; impressions: number; ctr: number; position: number; startDate: string; endDate: string; site: string };
-  trend: Array<{ date: string; clicks: number; impressions: number; ctr: number; position: number }>;
+  trend: Array<{ date: string; clicks: number; impressions: number; ctr: number; position: number; leads?: number }>;
   topQueries: GSCRow[];
   topPages: GSCRow[];
+  leads?: { total: number; byDay: Array<{ date: string; leads: number }>; conversionRate: number };
   error?: string;
 }
 
