@@ -189,11 +189,11 @@ const GooglePerformanceWidget = () => {
                     <XAxis dataKey="date" className="text-xs fill-muted-foreground" tickFormatter={(d) => d.slice(5)} />
                     <YAxis yAxisId="left" className="text-xs fill-muted-foreground" />
                     <YAxis yAxisId="right" orientation="right" className="text-xs fill-muted-foreground" />
-                    <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line yAxisId="left" type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" strokeWidth={2} name="Clickuri" dot={false} />
-                    <Line yAxisId="right" type="monotone" dataKey="impressions" stroke="hsl(var(--chart-2))" strokeWidth={2} name="Impresii" dot={false} />
-                    <Line yAxisId="left" type="monotone" dataKey="leads" stroke="hsl(var(--accent))" strokeWidth={2} name="Lead-uri" dot={{ r: 3 }} />
+                    <Tooltip content={<TrendTooltip />} cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.2 }} />
+                    <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="circle" />
+                    <Line yAxisId="left" type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" strokeWidth={2} name="Clickuri" dot={{ r: 2 }} activeDot={{ r: 5 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="impressions" stroke="hsl(var(--chart-2))" strokeWidth={2} name="Impresii" dot={{ r: 2 }} activeDot={{ r: 5 }} />
+                    <Line yAxisId="left" type="monotone" dataKey="leads" stroke="hsl(var(--accent))" strokeWidth={2} name="Lead-uri" dot={{ r: 3 }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
