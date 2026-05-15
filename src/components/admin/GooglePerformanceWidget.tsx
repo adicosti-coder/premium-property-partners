@@ -128,15 +128,34 @@ const GooglePerformanceWidget = () => {
     </div>
   );
 
-  const runIndexCheck = async () => {
+  const runIndexCheck = async (targetUrls?: string[]) => {
     setRunning(true);
     try {
-      const { data, error } = await supabase.functions.invoke("seo-indexing-alerts", { body: {} });
+      const body: any = {};
+      const urls = targetUrls && targetUrls.length > 0 ? targetUrls : (data?.topPages || []).map(p => p.page!).filter(Boolean);
+      if (urls.length > 0) body.urls = urls;
+      const { data: res, error } = await supabase.functions.invoke("seo-indexing-alerts", { body });
       if (error) throw error;
-      if (data?.issues > 0) {
-        toast({ title: `⚠️ ${data.issues} probleme de indexare`, description: `Verificate ${data.checked} pagini. Detalii trimise pe email.`, variant: "destructive" });
+
+      // Build status map: pages NOT in details = PASS, others use returned verdict
+      const checkedAt = new Date().toISOString();
+      const issuesMap = new Map<string, any>();
+      (res?.details || []).forEach((i: any) => issuesMap.set(i.url, i));
+      setIndexStatus((prev) => {
+        const next = { ...prev };
+        urls.forEach((u) => {
+          const issue = issuesMap.get(u);
+          next[u] = issue
+            ? { verdict: issue.verdict || "ISSUE", coverageState: issue.coverageState, lastCrawl: issue.lastCrawl, checkedAt }
+            : { verdict: "PASS", checkedAt };
+        });
+        return next;
+      });
+
+      if (res?.issues > 0) {
+        toast({ title: `⚠️ ${res.issues} probleme de indexare`, description: `Verificate ${res.checked} pagini. Status actualizat în tabel.`, variant: "destructive" });
       } else {
-        toast({ title: "✅ Indexare OK", description: `${data?.checked || 0} pagini verificate, fără probleme.` });
+        toast({ title: "✅ Indexare OK", description: `${res?.checked || 0} pagini verificate, toate indexate.` });
       }
     } catch (e: any) {
       toast({ title: "Eroare verificare", description: e?.message || "Necunoscut", variant: "destructive" });
