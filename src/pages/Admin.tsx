@@ -355,6 +355,7 @@ const Admin = () => {
                   <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
                   <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
                   <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
+                  <TabsContent value="automation"><AutomationManager /></TabsContent>
                 </Tabs>
               </main>
 
