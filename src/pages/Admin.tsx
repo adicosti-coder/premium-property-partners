@@ -62,6 +62,7 @@ import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
 import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
+import AutomationManager from "@/components/admin/AutomationManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -354,6 +355,7 @@ const Admin = () => {
                   <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
                   <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
                   <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
+                  <TabsContent value="automation"><AutomationManager /></TabsContent>
                 </Tabs>
               </main>
 

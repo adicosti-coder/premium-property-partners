@@ -379,6 +379,183 @@ export type Database = {
           },
         ]
       }
+      automation_anomalies: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          baseline: number | null
+          context: Json
+          created_at: string
+          delta_pct: number | null
+          id: string
+          metric: string
+          notified: boolean
+          observed: number | null
+          severity: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          baseline?: number | null
+          context?: Json
+          created_at?: string
+          delta_pct?: number | null
+          id?: string
+          metric: string
+          notified?: boolean
+          observed?: number | null
+          severity?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          baseline?: number | null
+          context?: Json
+          created_at?: string
+          delta_pct?: number | null
+          id?: string
+          metric?: string
+          notified?: boolean
+          observed?: number | null
+          severity?: string
+        }
+        Relationships: []
+      }
+      automation_approvals: {
+        Row: {
+          action_type: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          evidence: Json
+          expires_at: string
+          id: string
+          job_key: string
+          proposal: Json
+          rejected_reason: string | null
+          severity: string
+          status: string
+        }
+        Insert: {
+          action_type: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          evidence?: Json
+          expires_at?: string
+          id?: string
+          job_key: string
+          proposal?: Json
+          rejected_reason?: string | null
+          severity?: string
+          status?: string
+        }
+        Update: {
+          action_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          evidence?: Json
+          expires_at?: string
+          id?: string
+          job_key?: string
+          proposal?: Json
+          rejected_reason?: string | null
+          severity?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      automation_jobs: {
+        Row: {
+          category: string
+          config: Json
+          consecutive_failures: number
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          job_key: string
+          label: string
+          last_error: string | null
+          last_run_at: string | null
+          last_status: string | null
+          schedule: string | null
+          total_runs: number
+          total_successes: number
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          config?: Json
+          consecutive_failures?: number
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          job_key: string
+          label: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          schedule?: string | null
+          total_runs?: number
+          total_successes?: number
+          trigger_type?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          config?: Json
+          consecutive_failures?: number
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          job_key?: string
+          label?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          last_status?: string | null
+          schedule?: string | null
+          total_runs?: number
+          total_successes?: number
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      automation_settings: {
+        Row: {
+          enabled: boolean
+          id: boolean
+          paused_reason: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+          paused_reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+          paused_reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       blog_article_views: {
         Row: {
           article_id: string
