@@ -35,7 +35,14 @@ serve(async (req) => {
       "Content-Type": "application/json",
     };
 
-    const days = 28;
+    let days = 28;
+    try {
+      if (req.method === "POST") {
+        const body = await req.json().catch(() => ({}));
+        const d = Number(body?.days);
+        if ([7, 28, 90].includes(d)) days = d;
+      }
+    } catch (_) { /* ignore */ }
     const startDate = isoDaysAgo(days);
     const endDate = isoDaysAgo(2); // GSC has ~2 day lag
 
