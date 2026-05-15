@@ -150,7 +150,37 @@ const AutomationManager = () => {
     load();
   };
 
-  if (loading) {
+  const runNow = async (job: Job) => {
+    setRunningJob(job.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("automation-orchestrator", {
+        body: { job_key: job.job_key },
+      });
+      if (error) throw error;
+      const result = (data as { results?: Array<{ ok: boolean; error?: string }> })?.results?.[0];
+      if (result && !result.ok) {
+        toast({
+          title: `${job.label} → eșuat`,
+          description: result.error?.slice(0, 200) ?? "Verifică logurile",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: `${job.label} → declanșat`,
+          description: "Rulează acum în background. Reîmprospătează în câteva secunde.",
+        });
+      }
+      setTimeout(load, 2500);
+    } catch (e) {
+      toast({
+        title: "Eroare la rulare",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setRunningJob(null);
+    }
+  };
     return (
       <div className="space-y-4">
         <Skeleton className="h-32 w-full" />
