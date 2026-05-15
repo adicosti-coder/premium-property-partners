@@ -90,6 +90,8 @@ const SeoAutomationWidget = () => {
   const audits = data?.audits || [];
   const matrix = data?.competitor_matrix || {};
   const trend = data?.trend_90d || [];
+  const bridges = data?.andrei_bridges || [];
+  const bridgeStats = stats.bridge_stats || { total_30d: 0, called: 0, skipped: 0, failed: 0 };
 
   const competitorDomains = ["realtrust.ro", "storia.ro", "imobiliare.ro", "olx.ro", "anuntul.ro"];
   const matrixQueries = Object.keys(matrix);
