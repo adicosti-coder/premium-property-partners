@@ -429,7 +429,9 @@ const GooglePerformanceWidget = () => {
                 </ResponsiveContainer>
               </div>
             )}
+            </TabsContent>
 
+            <TabsContent value="keywords" className="space-y-4 mt-0">
             {/* Top queries & pages */}
             {(() => {
               const convRate = data.leads?.conversionRate || 0; // %
