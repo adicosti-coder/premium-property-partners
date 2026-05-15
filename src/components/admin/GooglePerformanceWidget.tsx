@@ -45,11 +45,16 @@ const TREND_LABELS: Record<string, { label: string; color: string; suffix?: stri
 const TrendTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload;
-  const ctr = row.ctr ?? 0;
-  const pos = row.position ?? 0;
+  const ctr = Number(row.ctr ?? 0);
+  const pos = Number(row.position ?? 0);
+  const clicks = Number(row.clicks ?? 0);
+  const impressions = Number(row.impressions ?? 0);
+  const leads = Number(row.leads ?? 0);
+  const ctrTone = ctr >= 5 ? "text-emerald-600" : ctr >= 2 ? "text-amber-600" : "text-muted-foreground";
+  const posTone = pos > 0 && pos <= 3 ? "text-emerald-600" : pos <= 10 ? "text-amber-600" : "text-muted-foreground";
   return (
-    <div className="rounded-lg border border-border bg-card p-3 shadow-lg text-xs min-w-[180px]">
-      <p className="font-semibold text-foreground mb-1.5">{label}</p>
+    <div className="rounded-lg border border-border bg-card p-3 shadow-lg text-xs min-w-[220px]">
+      <p className="font-semibold text-foreground mb-2">{label}</p>
       <div className="space-y-1">
         {payload.map((p: any) => {
           const meta = TREND_LABELS[p.dataKey] || { label: p.dataKey, color: p.color, suffix: "" };
@@ -63,18 +68,25 @@ const TrendTooltip = ({ active, payload, label }: any) => {
             </div>
           );
         })}
-        <div className="border-t border-border/60 pt-1 mt-1 flex items-center justify-between gap-3">
-          <span className="text-muted-foreground">CTR · Poziție</span>
-          <span className="font-mono text-foreground">{ctr}% · {pos}</span>
+        <div className="border-t border-border/60 pt-1.5 mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1">
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">CTR</span><span className={`font-mono font-medium ${ctrTone}`}>{ctr}%</span></div>
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">Poziție</span><span className={`font-mono font-medium ${posTone}`}>{pos || "—"}</span></div>
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">Clk/Imp</span><span className="font-mono text-foreground">{impressions > 0 ? ((clicks / impressions) * 100).toFixed(2) : "0"}%</span></div>
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">Lead-uri</span><span className="font-mono text-foreground">{leads}</span></div>
         </div>
       </div>
     </div>
   );
 };
 
+const PAGE_SIZE_OPTIONS = [5, 10, 25, 50] as const;
+
 const GooglePerformanceWidget = () => {
   const [running, setRunning] = useState(false);
   const [days, setDays] = useState<7 | 28 | 90>(28);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [queryPage, setQueryPage] = useState(1);
+  const [pagePage, setPagePage] = useState(1);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<GSCResponse>({
     queryKey: ["gsc-performance", days],
@@ -215,56 +227,101 @@ const GooglePerformanceWidget = () => {
                   : rate >= 2
                   ? "border-amber-500/40 text-amber-600 bg-amber-500/5"
                   : "border-border text-muted-foreground";
-              return (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2 text-foreground flex items-center justify-between">
-                      <span>Top căutări</span>
-                      <span className="text-[10px] font-normal text-muted-foreground">conv. estimată @ {convRate}%</span>
-                    </h4>
-                    <div className="space-y-1.5">
-                      {data.topQueries.slice(0, 8).map((q, i) => (
-                        <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40">
-                          <span className="truncate font-medium text-foreground flex-1">{q.query}</span>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <Badge variant="secondary" className="text-[10px]">{fmt(q.clicks)} clk</Badge>
-                            <Badge variant="outline" className={`text-[10px] ${q.ctr >= 5 ? "border-emerald-500/40 text-emerald-600" : q.ctr >= 2 ? "border-amber-500/40 text-amber-600" : "border-border text-muted-foreground"}`}>
-                              CTR {q.ctr}%
-                            </Badge>
-                            <Badge variant="outline" className={`text-[10px] ${convBadge(convRate)}`} title="Lead-uri estimate (clickuri × rata globală de conversie)">
-                              ~{estLeads(q.clicks)} lead
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                      {data.topQueries.length === 0 && <p className="text-xs text-muted-foreground">Fără date.</p>}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2 text-foreground flex items-center justify-between">
-                      <span>Top pagini</span>
-                      <span className="text-[10px] font-normal text-muted-foreground">conv. estimată @ {convRate}%</span>
-                    </h4>
-                    <div className="space-y-1.5">
-                      {data.topPages.slice(0, 8).map((p, i) => (
-                        <a key={i} href={p.page} target="_blank" rel="noopener noreferrer"
-                           className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40 hover:bg-muted">
-                          <span className="truncate font-medium text-foreground flex items-center gap-1 flex-1">
-                            <ExternalLink className="w-3 h-3 shrink-0" />
-                            {p.page?.replace(/^https?:\/\/[^/]+/, "") || "/"}
-                          </span>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <Badge variant="secondary" className="text-[10px]">{fmt(p.clicks)} clk</Badge>
-                            <Badge variant="outline" className={`text-[10px] ${convBadge(convRate)}`} title="Lead-uri estimate (clickuri × rata globală de conversie)">
-                              ~{estLeads(p.clicks)} lead
-                            </Badge>
-                          </div>
-                        </a>
-                      ))}
-                      {data.topPages.length === 0 && <p className="text-xs text-muted-foreground">Fără date.</p>}
-                    </div>
+
+              const qTotal = data.topQueries.length;
+              const pTotal = data.topPages.length;
+              const qPages = Math.max(1, Math.ceil(qTotal / pageSize));
+              const pPages = Math.max(1, Math.ceil(pTotal / pageSize));
+              const qPage = Math.min(queryPage, qPages);
+              const pPage = Math.min(pagePage, pPages);
+              const qSlice = data.topQueries.slice((qPage - 1) * pageSize, qPage * pageSize);
+              const pSlice = data.topPages.slice((pPage - 1) * pageSize, pPage * pageSize);
+
+              const Pager = ({ page, pages, total, onPrev, onNext }: { page: number; pages: number; total: number; onPrev: () => void; onNext: () => void }) => (
+                <div className="flex items-center justify-between gap-2 mt-2 text-[11px] text-muted-foreground">
+                  <span>{total === 0 ? "0" : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)}`} / {total}</span>
+                  <div className="flex items-center gap-1">
+                    <button onClick={onPrev} disabled={page <= 1} className="px-2 py-0.5 rounded border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">‹</button>
+                    <span className="font-mono">{page}/{pages}</span>
+                    <button onClick={onNext} disabled={page >= pages} className="px-2 py-0.5 rounded border border-border hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed">›</button>
                   </div>
                 </div>
+              );
+
+              return (
+                <>
+                  <div className="flex items-center justify-end gap-2 text-xs">
+                    <span className="text-muted-foreground">Pagini:</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => { setPageSize(Number(e.target.value)); setQueryPage(1); setPagePage(1); }}
+                      className="bg-background border border-border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                      aria-label="Rânduri pe pagină"
+                    >
+                      {PAGE_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}/pag</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2 text-foreground flex items-center justify-between">
+                        <span>Top căutări</span>
+                        <span className="text-[10px] font-normal text-muted-foreground">conv. estimată @ {convRate}%</span>
+                      </h4>
+                      <div className="space-y-1.5">
+                        {qSlice.map((q, i) => (
+                          <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40"
+                               title={`Clickuri: ${fmt(q.clicks)}\nImpresii: ${fmt(q.impressions)}\nCTR: ${q.ctr}%\nPoziție: ${q.position}`}>
+                            <span className="truncate font-medium text-foreground flex-1">{q.query}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Badge variant="secondary" className="text-[10px]">{fmt(q.clicks)} clk</Badge>
+                              <Badge variant="outline" className={`text-[10px] ${q.ctr >= 5 ? "border-emerald-500/40 text-emerald-600" : q.ctr >= 2 ? "border-amber-500/40 text-amber-600" : "border-border text-muted-foreground"}`}>
+                                CTR {q.ctr}%
+                              </Badge>
+                              <Badge variant="outline" className={`text-[10px] ${convBadge(convRate)}`} title="Lead-uri estimate (clickuri × rata globală de conversie)">
+                                ~{estLeads(q.clicks)} lead
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                        {qTotal === 0 && <p className="text-xs text-muted-foreground">Fără date.</p>}
+                      </div>
+                      {qTotal > pageSize && (
+                        <Pager page={qPage} pages={qPages} total={qTotal} onPrev={() => setQueryPage((p) => Math.max(1, p - 1))} onNext={() => setQueryPage((p) => Math.min(qPages, p + 1))} />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2 text-foreground flex items-center justify-between">
+                        <span>Top pagini</span>
+                        <span className="text-[10px] font-normal text-muted-foreground">conv. estimată @ {convRate}%</span>
+                      </h4>
+                      <div className="space-y-1.5">
+                        {pSlice.map((p, i) => (
+                          <a key={i} href={p.page} target="_blank" rel="noopener noreferrer"
+                             title={`Clickuri: ${fmt(p.clicks)}\nImpresii: ${fmt(p.impressions)}\nCTR: ${p.ctr}%\nPoziție: ${p.position}`}
+                             className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40 hover:bg-muted">
+                            <span className="truncate font-medium text-foreground flex items-center gap-1 flex-1">
+                              <ExternalLink className="w-3 h-3 shrink-0" />
+                              {p.page?.replace(/^https?:\/\/[^/]+/, "") || "/"}
+                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Badge variant="secondary" className="text-[10px]">{fmt(p.clicks)} clk</Badge>
+                              <Badge variant="outline" className={`text-[10px] ${p.ctr >= 5 ? "border-emerald-500/40 text-emerald-600" : p.ctr >= 2 ? "border-amber-500/40 text-amber-600" : "border-border text-muted-foreground"}`}>
+                                CTR {p.ctr}%
+                              </Badge>
+                              <Badge variant="outline" className={`text-[10px] ${convBadge(convRate)}`} title="Lead-uri estimate (clickuri × rata globală de conversie)">
+                                ~{estLeads(p.clicks)} lead
+                              </Badge>
+                            </div>
+                          </a>
+                        ))}
+                        {pTotal === 0 && <p className="text-xs text-muted-foreground">Fără date.</p>}
+                      </div>
+                      {pTotal > pageSize && (
+                        <Pager page={pPage} pages={pPages} total={pTotal} onPrev={() => setPagePage((p) => Math.max(1, p - 1))} onNext={() => setPagePage((p) => Math.min(pPages, p + 1))} />
+                      )}
+                    </div>
+                  </div>
+                </>
               );
             })()}
           </>
