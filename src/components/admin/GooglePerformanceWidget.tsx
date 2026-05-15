@@ -346,6 +346,10 @@ const GooglePerformanceWidget = () => {
               </button>
             ))}
           </div>
+          <Button size="sm" variant="outline" onClick={exportPdf} disabled={exporting || !data} className="h-7 text-xs">
+            {exporting ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5 mr-1.5" />}
+            Export PDF
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
           </Button>
