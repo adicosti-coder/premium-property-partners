@@ -12,6 +12,7 @@ import { Loader2, TrendingUp, AlertTriangle, RefreshCw, Sparkles, ExternalLink, 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import { z } from "zod";
 
 const fmt = (n: number) => new Intl.NumberFormat("ro-RO").format(Math.round(n || 0));
 const fmtCompact = (n: number) => {
