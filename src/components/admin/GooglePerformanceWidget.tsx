@@ -46,7 +46,7 @@ const TrendTooltip = ({ active, payload, label }: any) => {
       <p className="font-semibold text-foreground mb-1.5">{label}</p>
       <div className="space-y-1">
         {payload.map((p: any) => {
-          const meta = TREND_LABELS[p.dataKey] || { label: p.dataKey, color: p.color };
+          const meta = TREND_LABELS[p.dataKey] || { label: p.dataKey, color: p.color, suffix: "" };
           return (
             <div key={p.dataKey} className="flex items-center justify-between gap-3">
               <span className="flex items-center gap-1.5 text-muted-foreground">
