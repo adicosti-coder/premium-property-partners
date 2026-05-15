@@ -30,9 +30,14 @@ const SEVERITY_COLOR: Record<string, string> = {
   low: "bg-muted text-muted-foreground border-border",
 };
 
+const RETRY_COOLDOWN_MIN = 30;
+const MAX_RETRIES = 3;
+const FAIL_SESSION_STATUSES = new Set(["failed", "no-answer", "no_answer", "noanswer", "busy", "voicemail"]);
+
 const SeoAutomationWidget = () => {
   const [running, setRunning] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<any>({
     queryKey: ["seo-automation-data"],
