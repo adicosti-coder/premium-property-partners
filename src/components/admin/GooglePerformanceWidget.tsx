@@ -260,16 +260,40 @@ const GooglePerformanceWidget = () => {
 
               return (
                 <>
-                  <div className="flex items-center justify-end gap-2 text-xs">
-                    <span className="text-muted-foreground">Pagini:</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => { setPageSize(Number(e.target.value)); setQueryPage(1); setPagePage(1); }}
-                      className="bg-background border border-border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                      aria-label="Rânduri pe pagină"
-                    >
-                      {PAGE_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}/pag</option>)}
-                    </select>
+                  <div className="flex items-center justify-end gap-3 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Sortare:</span>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => { setSortBy(e.target.value as typeof sortBy); setQueryPage(1); setPagePage(1); }}
+                        className="bg-background border border-border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        aria-label="Sortare după"
+                      >
+                        <option value="clicks">Clickuri</option>
+                        <option value="impressions">Impresii</option>
+                        <option value="ctr">CTR</option>
+                        <option value="position">Poziție</option>
+                      </select>
+                      <button
+                        onClick={() => setSortDir((d) => d === 'desc' ? 'asc' : 'desc')}
+                        className="px-1.5 py-0.5 rounded border border-border hover:bg-muted text-muted-foreground"
+                        title={sortDir === 'desc' ? 'Descendent' : 'Ascendent'}
+                        aria-label={sortDir === 'desc' ? 'Sortare descendentă' : 'Sortare ascendentă'}
+                      >
+                        {sortDir === 'desc' ? '↓' : '↑'}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Pagini:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => { setPageSize(Number(e.target.value)); setQueryPage(1); setPagePage(1); }}
+                        className="bg-background border border-border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        aria-label="Rânduri pe pagină"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}/pag</option>)}
+                      </select>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
