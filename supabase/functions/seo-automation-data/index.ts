@@ -121,6 +121,7 @@ serve(async (req) => {
       audits: audits || [],
       competitor_matrix: compMatrix,
       trend_90d: trend90,
+      andrei_bridges: bridgesEnriched,
       stats: {
         opp_total: opportunities?.length || 0,
         opp_by_type: oppByType,
@@ -129,6 +130,7 @@ serve(async (req) => {
         audit_avg_score: auditAvgScore,
         audit_high_issues: auditHighIssues,
         comp_queries_tracked: Object.keys(compMatrix).length,
+        bridge_stats: bridgeStats,
       },
     });
   } catch (e) {
