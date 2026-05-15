@@ -102,6 +102,21 @@ const GooglePerformanceWidget = () => {
     staleTime: 1000 * 60 * 30,
   });
 
+  const TableSkeleton = ({ rows = 5 }: { rows?: number }) => (
+    <div className="space-y-1.5">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-2 p-2 rounded">
+          <Skeleton className="h-4 w-3/5" />
+          <div className="ml-auto flex gap-1.5">
+            <Skeleton className="h-4 w-14" />
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-4 w-12" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   const runIndexCheck = async () => {
     setRunning(true);
     try {
