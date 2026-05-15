@@ -28,6 +28,44 @@ interface GSCResponse {
 
 const fmt = (n: number) => new Intl.NumberFormat("ro-RO").format(Math.round(n));
 
+const TREND_LABELS: Record<string, { label: string; color: string; suffix?: string }> = {
+  clicks: { label: "Clickuri", color: "hsl(var(--primary))" },
+  impressions: { label: "Impresii", color: "hsl(var(--chart-2))" },
+  leads: { label: "Lead-uri", color: "hsl(var(--accent))" },
+  ctr: { label: "CTR", color: "hsl(var(--chart-3))", suffix: "%" },
+  position: { label: "Poziție medie", color: "hsl(var(--chart-4))" },
+};
+
+const TrendTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload;
+  const ctr = row.ctr ?? 0;
+  const pos = row.position ?? 0;
+  return (
+    <div className="rounded-lg border border-border bg-card p-3 shadow-lg text-xs min-w-[180px]">
+      <p className="font-semibold text-foreground mb-1.5">{label}</p>
+      <div className="space-y-1">
+        {payload.map((p: any) => {
+          const meta = TREND_LABELS[p.dataKey] || { label: p.dataKey, color: p.color };
+          return (
+            <div key={p.dataKey} className="flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <span className="w-2 h-2 rounded-full" style={{ background: meta.color }} />
+                {meta.label}
+              </span>
+              <span className="font-mono font-medium text-foreground">{fmt(p.value)}{meta.suffix || ""}</span>
+            </div>
+          );
+        })}
+        <div className="border-t border-border/60 pt-1 mt-1 flex items-center justify-between gap-3">
+          <span className="text-muted-foreground">CTR · Poziție</span>
+          <span className="font-mono text-foreground">{ctr}% · {pos}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const GooglePerformanceWidget = () => {
   const [running, setRunning] = useState(false);
   const [days, setDays] = useState<7 | 28 | 90>(28);
