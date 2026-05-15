@@ -609,7 +609,7 @@ const GooglePerformanceWidget = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" onClick={runIndexCheck} disabled={running}>
+                    <Button size="sm" variant="outline" onClick={() => runIndexCheck()} disabled={running}>
                       {running ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />}
                       Verifică indexare
                     </Button>
