@@ -199,10 +199,6 @@ const GooglePerformanceWidget = () => {
               </button>
             ))}
           </div>
-          <Button size="sm" variant="outline" onClick={runIndexCheck} disabled={running}>
-            {running ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />}
-            Verifică indexare
-          </Button>
           <Button size="sm" variant="ghost" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
           </Button>
