@@ -351,7 +351,41 @@ const SeoAutomationWidget = () => {
                 <Badge variant="outline" className="border-amber-500/40 text-amber-700"><PhoneForwarded className="w-3 h-3 mr-1" />Skip: {bridgeStats.skipped}</Badge>
                 <Badge variant="outline" className="border-red-500/40 text-red-700"><PhoneOff className="w-3 h-3 mr-1" />Failed: {bridgeStats.failed}</Badge>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="ghost" className="h-8 px-2" title="Setări retry" aria-label="Setări retry">
+                      <Settings2 className="w-3.5 h-3.5 mr-1.5" />
+                      <span className="text-[11px]">Cooldown {RETRY_COOLDOWN_MIN}m · Max {MAX_RETRIES}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-72 space-y-3">
+                    <div>
+                      <h4 className="text-sm font-semibold">Setări retry apeluri</h4>
+                      <p className="text-[11px] text-muted-foreground">Aplicate la următoarele retry-uri din UI. Salvare locală per browser.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="retry-cooldown" className="text-xs">Cooldown (minute)</Label>
+                      <Input id="retry-cooldown" type="number" min={5} max={720} step={5} defaultValue={RETRY_COOLDOWN_MIN}
+                        onBlur={(e) => saveRetrySettings(Number(e.target.value), MAX_RETRIES)}
+                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                      />
+                      <p className="text-[10px] text-muted-foreground">Între 5 și 720 minute.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="retry-max" className="text-xs">Număr maxim încercări / lead</Label>
+                      <Input id="retry-max" type="number" min={1} max={10} step={1} defaultValue={MAX_RETRIES}
+                        onBlur={(e) => saveRetrySettings(RETRY_COOLDOWN_MIN, Number(e.target.value))}
+                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                      />
+                      <p className="text-[10px] text-muted-foreground">Între 1 și 10 încercări.</p>
+                    </div>
+                    <Button size="sm" variant="ghost" className="w-full h-7 text-[11px]"
+                      onClick={() => saveRetrySettings(DEFAULT_RETRY_COOLDOWN_MIN, DEFAULT_MAX_RETRIES)}>
+                      Resetează la implicit ({DEFAULT_RETRY_COOLDOWN_MIN}m · {DEFAULT_MAX_RETRIES})
+                    </Button>
+                  </PopoverContent>
+                </Popover>
                 <Button size="sm" variant="ghost" onClick={() => triggerJob("Bridge dry-run", "seo-andrei-bridge", { dry_run: true, max_calls: 5 })} disabled={running !== null}>
                   {running === "Bridge dry-run" ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1.5" />}
                   Simulare
