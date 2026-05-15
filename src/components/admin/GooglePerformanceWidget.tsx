@@ -98,6 +98,9 @@ const GooglePerformanceWidget = () => {
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
   const [tab, setTab] = useState<'performance' | 'keywords' | 'indexing'>('performance');
   const [exporting, setExporting] = useState(false);
+  const [indexStatus, setIndexStatus] = useState<Record<string, { verdict: string; coverageState?: string; lastCrawl?: string; checkedAt: string }>>({});
+  const [idxSortBy, setIdxSortBy] = useState<'status' | 'clicks' | 'position' | 'page'>('status');
+  const [idxSortDir, setIdxSortDir] = useState<'asc' | 'desc'>('asc');
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<GSCResponse>({
     queryKey: ["gsc-performance", days],
