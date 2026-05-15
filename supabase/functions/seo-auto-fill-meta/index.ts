@@ -54,6 +54,9 @@ Răspunde DOAR JSON: {"title":"...","meta_description":"...","rationale":"max 10
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const reqBody = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+  const dryRun = reqBody?.dry_run === true;
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -91,6 +94,7 @@ Deno.serve(async (req) => {
   let created = 0;
   let approvalsCreated = 0;
   const errors: string[] = [];
+  const drafts: Array<{ page: string; title: string; meta_description: string; rationale: string }> = [];
   const now = new Date().toISOString();
 
   for (const audit of audits) {
@@ -99,41 +103,51 @@ Deno.serve(async (req) => {
       const draft = await generateMeta(audit as Audit);
       if (!draft?.title || !draft?.meta_description) continue;
 
-      // upsert as pending_review (does NOT replace active overrides)
-      const { error: upErr } = await supabase
-        .from("seo_overrides")
-        .upsert({
-          url_path: audit.page,
-          title: draft.title.slice(0, 70),
-          meta_description: draft.meta_description.slice(0, 170),
-          pending_review: true,
-          ai_generated: true,
-          ai_model: MODEL,
-          ai_generated_at: now,
-          is_active: false, // explicit: don't go live until admin approves
-        }, { onConflict: "url_path" });
-      if (upErr) { errors.push(`${audit.page}: ${upErr.message}`); continue; }
+      drafts.push({
+        page: audit.page,
+        title: draft.title.slice(0, 70),
+        meta_description: draft.meta_description.slice(0, 170),
+        rationale: draft.rationale ?? "",
+      });
+
+      if (!dryRun) {
+        const { error: upErr } = await supabase
+          .from("seo_overrides")
+          .upsert({
+            url_path: audit.page,
+            title: draft.title.slice(0, 70),
+            meta_description: draft.meta_description.slice(0, 170),
+            pending_review: true,
+            ai_generated: true,
+            ai_model: MODEL,
+            ai_generated_at: now,
+            is_active: false,
+          }, { onConflict: "url_path" });
+        if (upErr) { errors.push(`${audit.page}: ${upErr.message}`); continue; }
+      }
       created++;
 
-      await supabase.from("automation_approvals").insert({
-        job_key: "seo.auto_fill_meta",
-        action_type: "apply_meta_draft",
-        entity_type: "seo_override",
-        entity_id: null,
-        severity: "info",
-        proposal: {
-          url_path: audit.page,
-          title: draft.title,
-          meta_description: draft.meta_description,
-          rationale: draft.rationale ?? "",
-        },
-        evidence: {
-          old_title: audit.title,
-          old_meta: audit.meta_description,
-          health_score: audit.health_score,
-          model: MODEL,
-        },
-      });
+      if (!dryRun) {
+        await supabase.from("automation_approvals").insert({
+          job_key: "seo.auto_fill_meta",
+          action_type: "apply_meta_draft",
+          entity_type: "seo_override",
+          entity_id: null,
+          severity: "info",
+          proposal: {
+            url_path: audit.page,
+            title: draft.title,
+            meta_description: draft.meta_description,
+            rationale: draft.rationale ?? "",
+          },
+          evidence: {
+            old_title: audit.title,
+            old_meta: audit.meta_description,
+            health_score: audit.health_score,
+            model: MODEL,
+          },
+        });
+      }
       approvalsCreated++;
     } catch (e) {
       errors.push(`${audit.page}: ${e instanceof Error ? e.message : String(e)}`);
@@ -141,9 +155,13 @@ Deno.serve(async (req) => {
   }
 
   return new Response(JSON.stringify({
-    drafts_created: created,
-    approvals_created: approvalsCreated,
+    dry_run: dryRun,
+    drafts_created: dryRun ? 0 : created,
+    would_create_drafts: dryRun ? created : undefined,
+    approvals_created: dryRun ? 0 : approvalsCreated,
+    would_create_approvals: dryRun ? approvalsCreated : undefined,
     skipped_existing: skipSet.size,
+    drafts,
     errors,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

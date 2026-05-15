@@ -43,17 +43,19 @@ Deno.serve(async (req) => {
   );
 
   let manualJobKey: string | null = null;
+  let dryRun = false;
   try {
     if (req.method === "POST") {
       const body = await req.json().catch(() => ({}));
       if (typeof body?.job_key === "string") manualJobKey = body.job_key;
+      if (body?.dry_run === true) dryRun = true;
     }
   } catch { /* ignore */ }
 
-  // global kill switch
+  // global kill switch (bypassed for dry-run tests)
   const { data: settings } = await supabase
     .from("automation_settings").select("enabled, paused_reason").eq("id", true).maybeSingle();
-  if (!settings?.enabled && !manualJobKey) {
+  if (!settings?.enabled && !manualJobKey && !dryRun) {
     return new Response(JSON.stringify({ skipped: "global_off", reason: settings?.paused_reason }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -71,7 +73,7 @@ Deno.serve(async (req) => {
     return isDue(j.schedule, j.last_run_at, now);
   });
 
-  const results: Array<{ job_key: string; ok: boolean; error?: string }> = [];
+  const results: Array<{ job_key: string; ok: boolean; error?: string; output?: unknown; duration_ms?: number }> = [];
 
   for (const job of candidates) {
     const fnName = JOB_FN[job.job_key];
@@ -79,29 +81,34 @@ Deno.serve(async (req) => {
       results.push({ job_key: job.job_key, ok: false, error: "no_handler" });
       continue;
     }
+    const startedAt = Date.now();
     try {
       const { data, error } = await supabase.functions.invoke(fnName, {
-        body: { triggered_by: "orchestrator", job_key: job.job_key },
+        body: { triggered_by: "orchestrator", job_key: job.job_key, dry_run: dryRun },
       });
       if (error) throw error;
-      await supabase.rpc("automation_complete_run", {
-        _job_key: job.job_key,
-        _success: true,
-        _payload: (data ?? {}) as Record<string, unknown>,
-      });
-      results.push({ job_key: job.job_key, ok: true });
+      if (!dryRun) {
+        await supabase.rpc("automation_complete_run", {
+          _job_key: job.job_key,
+          _success: true,
+          _payload: (data ?? {}) as Record<string, unknown>,
+        });
+      }
+      results.push({ job_key: job.job_key, ok: true, output: data, duration_ms: Date.now() - startedAt });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      await supabase.rpc("automation_complete_run", {
-        _job_key: job.job_key,
-        _success: false,
-        _error: msg.slice(0, 500),
-      });
-      results.push({ job_key: job.job_key, ok: false, error: msg });
+      if (!dryRun) {
+        await supabase.rpc("automation_complete_run", {
+          _job_key: job.job_key,
+          _success: false,
+          _error: msg.slice(0, 500),
+        });
+      }
+      results.push({ job_key: job.job_key, ok: false, error: msg, duration_ms: Date.now() - startedAt });
     }
   }
 
-  return new Response(JSON.stringify({ ran: results.length, results, manual: manualJobKey }), {
+  return new Response(JSON.stringify({ ran: results.length, results, manual: manualJobKey, dry_run: dryRun }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });

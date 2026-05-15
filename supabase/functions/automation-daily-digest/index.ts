@@ -7,6 +7,9 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const reqBody = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+  const dryRun = reqBody?.dry_run === true;
+
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -74,25 +77,29 @@ Deno.serve(async (req) => {
   };
 
   // Email — one per recipient via existing transactional pipeline
-  const emailResults: Array<{ to: string; ok: boolean; status: number }> = [];
-  for (const to of recipients) {
-    const idempotencyKey = `automation-digest-${new Date().toISOString().slice(0, 10)}-${to}`;
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        "x-webhook-secret": SERVICE_KEY,
-      },
-      body: JSON.stringify({
-        template_name: "automation-daily-digest",
-        to,
-        idempotency_key: idempotencyKey,
-        purpose: "transactional",
-        data,
-      }),
-    });
-    emailResults.push({ to, ok: res.ok, status: res.status });
+  const emailResults: Array<{ to: string; ok: boolean; status: number; skipped?: boolean }> = [];
+  if (dryRun) {
+    for (const to of recipients) emailResults.push({ to, ok: true, status: 0, skipped: true });
+  } else {
+    for (const to of recipients) {
+      const idempotencyKey = `automation-digest-${new Date().toISOString().slice(0, 10)}-${to}`;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          "x-webhook-secret": SERVICE_KEY,
+        },
+        body: JSON.stringify({
+          template_name: "automation-daily-digest",
+          to,
+          idempotency_key: idempotencyKey,
+          purpose: "transactional",
+          data,
+        }),
+      });
+      emailResults.push({ to, ok: res.ok, status: res.status });
+    }
   }
 
   // WhatsApp critical alert: only if there are critical-severity approvals or self-healing-disabled jobs
@@ -113,21 +120,25 @@ Deno.serve(async (req) => {
         `Acțiune: realtrust.ro/admin/automation`,
       ].filter(Boolean).join("\n");
 
-      try {
-        const resp = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event: "automation_critical_alert",
-            timestamp: new Date().toISOString(),
-            to: "+40799069256",
-            message: lines,
-            summary: { critical_approvals: criticalApprovals, disabled_jobs: disabled.length },
-          }),
-        });
-        whatsappResult = { status: resp.status };
-      } catch (e) {
-        whatsappResult = { error: e instanceof Error ? e.message : String(e) };
+      if (dryRun) {
+        whatsappResult = { skipped: true, error: "dry_run" } as { skipped: boolean; error: string };
+      } else {
+        try {
+          const resp = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event: "automation_critical_alert",
+              timestamp: new Date().toISOString(),
+              to: "+40799069256",
+              message: lines,
+              summary: { critical_approvals: criticalApprovals, disabled_jobs: disabled.length },
+            }),
+          });
+          whatsappResult = { status: resp.status };
+        } catch (e) {
+          whatsappResult = { error: e instanceof Error ? e.message : String(e) };
+        }
       }
     } else {
       whatsappResult = { skipped: true, error: "no_webhook_configured" } as { skipped: boolean; error: string };
@@ -136,6 +147,7 @@ Deno.serve(async (req) => {
 
   return new Response(JSON.stringify({
     ok: true,
+    dry_run: dryRun,
     recipients: emailResults,
     whatsapp: whatsappResult,
     digest: data,
