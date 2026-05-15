@@ -7,6 +7,7 @@ import { Loader2, Search, MousePointerClick, Eye, TrendingUp, AlertTriangle, Ref
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface GSCRow {
   query?: string;
