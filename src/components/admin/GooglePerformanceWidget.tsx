@@ -87,6 +87,8 @@ const GooglePerformanceWidget = () => {
   const [pageSize, setPageSize] = useState<number>(10);
   const [queryPage, setQueryPage] = useState(1);
   const [pagePage, setPagePage] = useState(1);
+  const [sortBy, setSortBy] = useState<'clicks' | 'impressions' | 'ctr' | 'position'>('clicks');
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<GSCResponse>({
     queryKey: ["gsc-performance", days],
@@ -204,9 +206,9 @@ const GooglePerformanceWidget = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.trend}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="date" className="text-xs fill-muted-foreground" tickFormatter={(d) => d.slice(5)} />
-                    <YAxis yAxisId="left" className="text-xs fill-muted-foreground" tickFormatter={fmtCompact} width={42} />
-                    <YAxis yAxisId="right" orientation="right" className="text-xs fill-muted-foreground" tickFormatter={fmtCompact} width={42} />
+                    <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} tickLine={{ stroke: 'hsl(var(--border))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickFormatter={(d) => d.slice(5)} />
+                    <YAxis yAxisId="left" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} tickLine={{ stroke: 'hsl(var(--border))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickFormatter={fmtCompact} width={48} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} tickLine={{ stroke: 'hsl(var(--border))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickFormatter={fmtCompact} width={48} />
                     <Tooltip content={<TrendTooltip />} cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.2 }} />
                     <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="circle" />
                     <Line yAxisId="left" type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" strokeWidth={2} name="Clickuri" dot={{ r: 2 }} activeDot={{ r: 5 }} />
@@ -228,14 +230,22 @@ const GooglePerformanceWidget = () => {
                   ? "border-amber-500/40 text-amber-600 bg-amber-500/5"
                   : "border-border text-muted-foreground";
 
-              const qTotal = data.topQueries.length;
-              const pTotal = data.topPages.length;
+              const sorter = (a: GSCRow, b: GSCRow) => {
+                const dir = sortDir === 'asc' ? 1 : -1;
+                if (sortBy === 'position') return (a.position - b.position) * dir;
+                return ((b[sortBy] as number) - (a[sortBy] as number)) * dir;
+              };
+              const sortedQueries = [...data.topQueries].sort(sorter);
+              const sortedPages = [...data.topPages].sort(sorter);
+
+              const qTotal = sortedQueries.length;
+              const pTotal = sortedPages.length;
               const qPages = Math.max(1, Math.ceil(qTotal / pageSize));
               const pPages = Math.max(1, Math.ceil(pTotal / pageSize));
               const qPage = Math.min(queryPage, qPages);
               const pPage = Math.min(pagePage, pPages);
-              const qSlice = data.topQueries.slice((qPage - 1) * pageSize, qPage * pageSize);
-              const pSlice = data.topPages.slice((pPage - 1) * pageSize, pPage * pageSize);
+              const qSlice = sortedQueries.slice((qPage - 1) * pageSize, qPage * pageSize);
+              const pSlice = sortedPages.slice((pPage - 1) * pageSize, pPage * pageSize);
 
               const Pager = ({ page, pages, total, onPrev, onNext }: { page: number; pages: number; total: number; onPrev: () => void; onNext: () => void }) => (
                 <div className="flex items-center justify-between gap-2 mt-2 text-[11px] text-muted-foreground">
@@ -250,16 +260,40 @@ const GooglePerformanceWidget = () => {
 
               return (
                 <>
-                  <div className="flex items-center justify-end gap-2 text-xs">
-                    <span className="text-muted-foreground">Pagini:</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => { setPageSize(Number(e.target.value)); setQueryPage(1); setPagePage(1); }}
-                      className="bg-background border border-border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                      aria-label="Rânduri pe pagină"
-                    >
-                      {PAGE_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}/pag</option>)}
-                    </select>
+                  <div className="flex items-center justify-end gap-3 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Sortare:</span>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => { setSortBy(e.target.value as typeof sortBy); setQueryPage(1); setPagePage(1); }}
+                        className="bg-background border border-border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        aria-label="Sortare după"
+                      >
+                        <option value="clicks">Clickuri</option>
+                        <option value="impressions">Impresii</option>
+                        <option value="ctr">CTR</option>
+                        <option value="position">Poziție</option>
+                      </select>
+                      <button
+                        onClick={() => setSortDir((d) => d === 'desc' ? 'asc' : 'desc')}
+                        className="px-1.5 py-0.5 rounded border border-border hover:bg-muted text-muted-foreground"
+                        title={sortDir === 'desc' ? 'Descendent' : 'Ascendent'}
+                        aria-label={sortDir === 'desc' ? 'Sortare descendentă' : 'Sortare ascendentă'}
+                      >
+                        {sortDir === 'desc' ? '↓' : '↑'}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Pagini:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => { setPageSize(Number(e.target.value)); setQueryPage(1); setPagePage(1); }}
+                        className="bg-background border border-border rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                        aria-label="Rânduri pe pagină"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}/pag</option>)}
+                      </select>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
