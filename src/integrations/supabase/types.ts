@@ -4039,6 +4039,75 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_andrei_bridge: {
+        Row: {
+          auto_dial_response: Json | null
+          call_session_id: string | null
+          created_at: string
+          id: string
+          match_reason: string | null
+          matched_keywords: string[] | null
+          opportunity_id: string | null
+          page: string | null
+          prospect_id: string | null
+          query: string | null
+          score_after: number | null
+          score_before: number | null
+          status: string
+          triggered_at: string
+          triggered_date: string
+        }
+        Insert: {
+          auto_dial_response?: Json | null
+          call_session_id?: string | null
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          matched_keywords?: string[] | null
+          opportunity_id?: string | null
+          page?: string | null
+          prospect_id?: string | null
+          query?: string | null
+          score_after?: number | null
+          score_before?: number | null
+          status?: string
+          triggered_at?: string
+          triggered_date?: string
+        }
+        Update: {
+          auto_dial_response?: Json | null
+          call_session_id?: string | null
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          matched_keywords?: string[] | null
+          opportunity_id?: string | null
+          page?: string | null
+          prospect_id?: string | null
+          query?: string | null
+          score_after?: number | null
+          score_before?: number | null
+          status?: string
+          triggered_at?: string
+          triggered_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_andrei_bridge_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "seo_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_andrei_bridge_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_anomaly_log: {
         Row: {
           alert_key: string
