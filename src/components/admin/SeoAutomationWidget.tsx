@@ -11,7 +11,7 @@ import { Settings2 } from "lucide-react";
 import { Loader2, TrendingUp, AlertTriangle, RefreshCw, Sparkles, ExternalLink, Target, FileSearch, Swords, History, CheckCircle2, X, PhoneCall, Phone, PhoneOff, PhoneForwarded, RotateCcw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const fmt = (n: number) => new Intl.NumberFormat("ro-RO").format(Math.round(n || 0));
 const fmtCompact = (n: number) => {
@@ -36,18 +36,21 @@ const SEVERITY_COLOR: Record<string, string> = {
 
 const DEFAULT_RETRY_COOLDOWN_MIN = 30;
 const DEFAULT_MAX_RETRIES = 3;
-const RETRY_SETTINGS_KEY = "seo_andrei_retry_settings_v1";
+const RETRY_SETTINGS_KEY = "andrei_retry_config";
+const RETRY_SETTINGS_LOCAL_FALLBACK = "seo_andrei_retry_settings_v1";
 const FAIL_SESSION_STATUSES = new Set(["failed", "no-answer", "no_answer", "noanswer", "busy", "voicemail"]);
 
-const loadRetrySettings = () => {
+const clampSettings = (cooldown: any, max: any) => ({
+  cooldown: Math.max(5, Math.min(720, Math.round(Number(cooldown)) || DEFAULT_RETRY_COOLDOWN_MIN)),
+  max: Math.max(1, Math.min(10, Math.round(Number(max)) || DEFAULT_MAX_RETRIES)),
+});
+
+const loadLocalFallback = () => {
   try {
-    const raw = localStorage.getItem(RETRY_SETTINGS_KEY);
+    const raw = localStorage.getItem(RETRY_SETTINGS_LOCAL_FALLBACK);
     if (!raw) return { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES };
     const p = JSON.parse(raw);
-    return {
-      cooldown: Math.max(5, Math.min(720, Number(p.cooldown) || DEFAULT_RETRY_COOLDOWN_MIN)),
-      max: Math.max(1, Math.min(10, Number(p.max) || DEFAULT_MAX_RETRIES)),
-    };
+    return clampSettings(p.cooldown, p.max);
   } catch { return { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES }; }
 };
 
@@ -55,18 +58,41 @@ const SeoAutomationWidget = () => {
   const [running, setRunning] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [retrying, setRetrying] = useState<string | null>(null);
-  const [retrySettings, setRetrySettings] = useState(() => loadRetrySettings());
+  const [retrySettings, setRetrySettings] = useState(() => loadLocalFallback());
+  const [settingsSyncing, setSettingsSyncing] = useState(false);
   const RETRY_COOLDOWN_MIN = retrySettings.cooldown;
   const MAX_RETRIES = retrySettings.max;
 
-  const saveRetrySettings = (cooldown: number, max: number) => {
-    const safe = {
-      cooldown: Math.max(5, Math.min(720, Math.round(cooldown) || DEFAULT_RETRY_COOLDOWN_MIN)),
-      max: Math.max(1, Math.min(10, Math.round(max) || DEFAULT_MAX_RETRIES)),
-    };
+  // Load persisted settings from DB (shared across devices/admins)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("seo_settings")
+        .select("value")
+        .eq("key", RETRY_SETTINGS_KEY)
+        .maybeSingle();
+      if (cancelled || error || !data?.value) return;
+      const v = data.value as any;
+      setRetrySettings(clampSettings(v.cooldown, v.max));
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const saveRetrySettings = async (cooldown: number, max: number) => {
+    const safe = clampSettings(cooldown, max);
     setRetrySettings(safe);
-    try { localStorage.setItem(RETRY_SETTINGS_KEY, JSON.stringify(safe)); } catch {}
-    toast({ title: "⚙️ Setări retry salvate", description: `Cooldown: ${safe.cooldown}m · Max retry: ${safe.max}` });
+    setSettingsSyncing(true);
+    try { localStorage.setItem(RETRY_SETTINGS_LOCAL_FALLBACK, JSON.stringify(safe)); } catch {}
+    const { error } = await supabase
+      .from("seo_settings")
+      .upsert({ key: RETRY_SETTINGS_KEY, value: safe as any, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    setSettingsSyncing(false);
+    if (error) {
+      toast({ title: "Eroare salvare în cloud", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "☁️ Setări retry sincronizate", description: `Cooldown: ${safe.cooldown}m · Max retry: ${safe.max}` });
   };
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<any>({
