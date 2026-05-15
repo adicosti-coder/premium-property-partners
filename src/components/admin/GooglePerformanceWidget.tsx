@@ -218,7 +218,12 @@ const GooglePerformanceWidget = () => {
 
             {/* Trend chart */}
             {data.trend.length > 0 && (
-              <div className="h-[260px] mt-2">
+              <div className="h-[260px] mt-2 font-sans relative">
+                {isFetching && (
+                  <div className="absolute top-1 right-2 z-10 flex items-center gap-1.5 text-[10px] text-muted-foreground bg-background/80 backdrop-blur px-2 py-0.5 rounded-full border border-border">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Actualizare...
+                  </div>
+                )}
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.trend}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
