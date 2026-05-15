@@ -6,6 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame, ClipboardList, ArrowRight } from "lucide-react";
+import GooglePerformanceWidget from "./GooglePerformanceWidget";
 import { toast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
