@@ -84,6 +84,9 @@ const PAGE_SIZE_OPTIONS = [5, 10, 25, 50] as const;
 const GooglePerformanceWidget = () => {
   const [running, setRunning] = useState(false);
   const [days, setDays] = useState<7 | 28 | 90>(28);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [queryPage, setQueryPage] = useState(1);
+  const [pagePage, setPagePage] = useState(1);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<GSCResponse>({
     queryKey: ["gsc-performance", days],
