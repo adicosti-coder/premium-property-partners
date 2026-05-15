@@ -3,11 +3,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, MousePointerClick, Eye, TrendingUp, AlertTriangle, RefreshCw, ExternalLink, ShieldCheck } from "lucide-react";
+import { Loader2, Search, MousePointerClick, Eye, TrendingUp, AlertTriangle, RefreshCw, ExternalLink, ShieldCheck, Send, BarChart3, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { notifyIndexNow } from "@/hooks/useIndexNowNotify";
 
 interface GSCRow {
   query?: string;
@@ -84,12 +86,15 @@ const PAGE_SIZE_OPTIONS = [5, 10, 25, 50] as const;
 
 const GooglePerformanceWidget = () => {
   const [running, setRunning] = useState(false);
+  const [reindexing, setReindexing] = useState<string | null>(null);
+  const [bulkReindexing, setBulkReindexing] = useState(false);
   const [days, setDays] = useState<7 | 28 | 90>(28);
   const [pageSize, setPageSize] = useState<number>(10);
   const [queryPage, setQueryPage] = useState(1);
   const [pagePage, setPagePage] = useState(1);
   const [sortBy, setSortBy] = useState<'clicks' | 'impressions' | 'ctr' | 'position'>('clicks');
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
+  const [tab, setTab] = useState<'performance' | 'indexing'>('performance');
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<GSCResponse>({
     queryKey: ["gsc-performance", days],
@@ -134,6 +139,39 @@ const GooglePerformanceWidget = () => {
     }
   };
 
+  const requestReindex = async (url: string) => {
+    if (!url) return;
+    setReindexing(url);
+    try {
+      await notifyIndexNow([url]);
+      toast({ title: "🔄 Re-indexare cerută", description: `Trimis la IndexNow (Bing/Yandex). Pentru Google, deschide URL Inspection în Search Console.` });
+    } catch (e: any) {
+      toast({ title: "Eroare re-indexare", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally {
+      setReindexing(null);
+    }
+  };
+
+  const requestBulkReindex = async (urls: string[]) => {
+    if (!urls.length) return;
+    setBulkReindexing(true);
+    try {
+      await notifyIndexNow(urls);
+      toast({ title: `🔄 Re-indexare bulk cerută`, description: `${urls.length} pagini trimise la IndexNow (Bing/Yandex).` });
+    } catch (e: any) {
+      toast({ title: "Eroare re-indexare", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally {
+      setBulkReindexing(false);
+    }
+  };
+
+  const gscInspectUrl = (url: string) => {
+    const site = data?.summary?.site || "";
+    const sc = encodeURIComponent(site);
+    const u = encodeURIComponent(url);
+    return `https://search.google.com/search-console/inspect?resource_id=${sc}&id=${u}`;
+  };
+
   return (
     <Card className="border-primary/20">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -161,10 +199,6 @@ const GooglePerformanceWidget = () => {
               </button>
             ))}
           </div>
-          <Button size="sm" variant="outline" onClick={runIndexCheck} disabled={running}>
-            {running ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />}
-            Verifică indexare
-          </Button>
           <Button size="sm" variant="ghost" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
           </Button>
@@ -181,8 +215,12 @@ const GooglePerformanceWidget = () => {
             <span>{(error as Error).message}</span>
           </div>
         ) : data ? (
-          <>
-            {/* KPI cards */}
+          <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2 max-w-sm">
+              <TabsTrigger value="performance" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />Performanță</TabsTrigger>
+              <TabsTrigger value="indexing" className="gap-1.5"><Activity className="w-3.5 h-3.5" />Indexare</TabsTrigger>
+            </TabsList>
+            <TabsContent value="performance" className="space-y-4 mt-0">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="rounded-lg border border-border bg-card p-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground"><MousePointerClick className="w-3.5 h-3.5" />Clickuri</div>
@@ -379,7 +417,88 @@ const GooglePerformanceWidget = () => {
                 </>
               );
             })()}
-          </>
+            </TabsContent>
+
+            <TabsContent value="indexing" className="space-y-4 mt-0">
+              {/* Bulk actions */}
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-primary" /> Verificare & re-indexare
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Rulează auditul de indexare sau cere re-indexare pentru paginile cu trafic.
+                      Re-indexarea folosește IndexNow (Bing/Yandex) — pentru Google deschide URL Inspection.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={runIndexCheck} disabled={running}>
+                      {running ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />}
+                      Verifică indexare
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => requestBulkReindex(data.topPages.map(p => p.page!).filter(Boolean))}
+                      disabled={bulkReindexing || !data.topPages.length}
+                    >
+                      {bulkReindexing ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1.5" />}
+                      Re-indexare top {data.topPages.length}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Per-page indexing controls */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-foreground">Pagini cu trafic — control indexare</h4>
+                <div className="space-y-1.5">
+                  {data.topPages.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Fără pagini de afișat.</p>
+                  )}
+                  {data.topPages.map((p, i) => {
+                    const url = p.page || "";
+                    const path = url.replace(/^https?:\/\/[^/]+/, "") || "/";
+                    const isLoading = reindexing === url;
+                    return (
+                      <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground" />
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="truncate font-medium text-foreground hover:underline">
+                            {path}
+                          </a>
+                          <Badge variant="secondary" className="text-[10px] shrink-0">{fmt(p.clicks)} clk</Badge>
+                          <Badge variant="outline" className="text-[10px] shrink-0">poz. {p.position}</Badge>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a
+                            href={gscInspectUrl(url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground inline-flex items-center gap-1"
+                            title="Deschide URL Inspection în Google Search Console"
+                          >
+                            GSC <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-[10px]"
+                            onClick={() => requestReindex(url)}
+                            disabled={isLoading || !url}
+                          >
+                            {isLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
+                            Re-indexare
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         ) : null}
       </CardContent>
     </Card>
