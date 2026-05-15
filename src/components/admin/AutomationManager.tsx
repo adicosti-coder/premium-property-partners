@@ -182,6 +182,81 @@ const AutomationManager = () => {
     }
   };
 
+  const applyApproval = async (a: Approval) => {
+    setRunningJob(`approval:${a.id}`);
+    try {
+      const proposal = a.proposal as Record<string, unknown>;
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (a.action_type === "auto_blacklist_agency" && a.entity_id) {
+        const { error } = await supabase
+          .from("prospect_listings")
+          .update({
+            do_not_call: true,
+            do_not_call_at: new Date().toISOString(),
+            do_not_call_reason: `Auto-blacklist agency (score ${proposal.score ?? "?"}): ${proposal.reason ?? ""}`.slice(0, 500),
+            auto_blacklisted_at: new Date().toISOString(),
+            auto_blacklist_reason: String(proposal.reason ?? "agency-suspect"),
+          })
+          .eq("id", a.entity_id);
+        if (error) throw error;
+      } else if (a.action_type === "apply_meta_draft" && typeof proposal.url_path === "string") {
+        const { error } = await supabase
+          .from("seo_overrides")
+          .update({
+            pending_review: false,
+            is_active: true,
+            applied_by: user?.id ?? null,
+            applied_at: new Date().toISOString(),
+          })
+          .eq("url_path", proposal.url_path);
+        if (error) throw error;
+      }
+      // investigate_seo_drop & others: just mark resolved (no auto-action)
+
+      const { error: aErr } = await supabase
+        .from("automation_approvals")
+        .update({
+          status: "approved",
+          resolved_at: new Date().toISOString(),
+          resolved_by: user?.id ?? null,
+        })
+        .eq("id", a.id);
+      if (aErr) throw aErr;
+
+      toast({ title: "Aprobat", description: "Acțiunea a fost aplicată." });
+      load();
+    } catch (e) {
+      toast({
+        title: "Eroare aprobare",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setRunningJob(null);
+    }
+  };
+
+  const rejectApproval = async (a: Approval) => {
+    setRunningJob(`approval:${a.id}`);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("automation_approvals")
+      .update({
+        status: "rejected",
+        resolved_at: new Date().toISOString(),
+        resolved_by: user?.id ?? null,
+      })
+      .eq("id", a.id);
+    setRunningJob(null);
+    if (error) {
+      toast({ title: "Eroare", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Respinsă", description: "Propunerea a fost respinsă." });
+    load();
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
