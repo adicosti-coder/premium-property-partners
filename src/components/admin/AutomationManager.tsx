@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
-  Sparkles, Phone, Activity, Inbox, History,
+  Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
 } from "lucide-react";
 
 type Settings = {
