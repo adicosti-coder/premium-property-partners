@@ -206,9 +206,9 @@ const GooglePerformanceWidget = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.trend}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="date" className="text-xs fill-muted-foreground" tickFormatter={(d) => d.slice(5)} />
-                    <YAxis yAxisId="left" className="text-xs fill-muted-foreground" tickFormatter={fmtCompact} width={42} />
-                    <YAxis yAxisId="right" orientation="right" className="text-xs fill-muted-foreground" tickFormatter={fmtCompact} width={42} />
+                    <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} tickLine={{ stroke: 'hsl(var(--border))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickFormatter={(d) => d.slice(5)} />
+                    <YAxis yAxisId="left" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} tickLine={{ stroke: 'hsl(var(--border))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickFormatter={fmtCompact} width={48} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} tickLine={{ stroke: 'hsl(var(--border))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickFormatter={fmtCompact} width={48} />
                     <Tooltip content={<TrendTooltip />} cursor={{ stroke: "hsl(var(--muted-foreground))", strokeOpacity: 0.2 }} />
                     <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} iconType="circle" />
                     <Line yAxisId="left" type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" strokeWidth={2} name="Clickuri" dot={{ r: 2 }} activeDot={{ r: 5 }} />
