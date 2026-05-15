@@ -1,0 +1,227 @@
+// SEO × Andrei bridge — connects SEO opportunities to Andrei's voice agent.
+// Reads top commercial-intent SEO opportunities (striking_distance, ctr_low),
+// finds matching prospect_listings (by search_keywords overlap, location, or query tokens),
+// and triggers voice-agent-auto-dial for those with phone + lifecycle eligible.
+// Cron 06:30 daily, also callable manually from admin UI.
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+// Romanian commercial-intent keywords for real estate (Timișoara focus)
+const COMMERCIAL_TOKENS = [
+  "regim hotelier", "investitie", "investiție", "randament", "roi",
+  "apartament", "garsoniera", "garsonieră", "casa", "casă", "vila", "vilă",
+  "vanzare", "vânzare", "vand", "vând", "de vanzare", "de vânzare",
+  "inchiriere", "închiriere", "chirie", "de inchiriat", "de închiriat",
+  "fara comision", "fără comision", "direct proprietar", "proprietar",
+  "timisoara", "timișoara", "cetate", "iosefin", "fabric", "dumbravita", "dumbrăvița", "aradului",
+  "cazare", "airbnb", "booking",
+];
+
+const norm = (s: string) =>
+  (s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const tokens = (s: string) => norm(s).split(" ").filter((t) => t.length >= 3);
+
+function isCommercialQuery(q: string): boolean {
+  const n = norm(q);
+  return COMMERCIAL_TOKENS.some((t) => n.includes(norm(t)));
+}
+
+function matchScore(queryTokens: string[], prospectBlob: string, prospectKeywords: string[]): { score: number; matched: string[] } {
+  const blob = norm(prospectBlob);
+  const kwBlob = norm((prospectKeywords || []).join(" "));
+  const matched: string[] = [];
+  let score = 0;
+  for (const t of queryTokens) {
+    if (blob.includes(t)) { score += 2; matched.push(t); }
+    else if (kwBlob.includes(t)) { score += 1; matched.push(t); }
+  }
+  return { score, matched };
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    let body: any = {};
+    try { body = await req.json(); } catch { /* empty body for cron */ }
+    const dryRun = body.dry_run === true;
+    const maxCalls: number = Math.max(1, Math.min(10, body.max_calls ?? 3));
+    const minOppScore: number = body.min_opp_score ?? 50;
+    const minMatchScore: number = body.min_match_score ?? 4;
+    const minProspectScore: number = body.min_prospect_score ?? 60;
+
+    // 1. Fetch top commercial SEO opportunities (open, last 14d)
+    const since = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
+    const { data: opps, error: oppsErr } = await sb
+      .from("seo_opportunities")
+      .select("id, type, query, page, score, potential_clicks, current_position")
+      .in("type", ["striking_distance", "ctr_low"])
+      .eq("status", "open")
+      .gte("created_at", since)
+      .gte("score", minOppScore)
+      .not("query", "is", null)
+      .order("score", { ascending: false })
+      .limit(40);
+    if (oppsErr) return json({ error: oppsErr.message }, 500);
+
+    const commercialOpps = (opps || []).filter((o: any) => isCommercialQuery(o.query));
+    if (commercialOpps.length === 0) {
+      return json({ success: true, message: "No commercial-intent SEO opportunities found.", checked: opps?.length || 0, bridged: 0 });
+    }
+
+    // 2. Fetch eligible prospects (active, has phone, status new/queued, score >= threshold, not already bridged today)
+    const { data: prospects, error: prErr } = await sb
+      .from("prospect_listings")
+      .select("id, title, description, location, search_keywords, phone_normalized, lifecycle_status, lead_score, prospect_type, is_active")
+      .not("phone_normalized", "is", null)
+      .in("lifecycle_status", ["new", "queued"])
+      .eq("is_active", true)
+      .neq("prospect_type", "agentie")
+      .gte("lead_score", minProspectScore)
+      .order("lead_score", { ascending: false })
+      .limit(500);
+    if (prErr) return json({ error: prErr.message }, 500);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: alreadyBridged } = await sb
+      .from("seo_andrei_bridge")
+      .select("prospect_id")
+      .eq("triggered_date", today);
+    const bridgedSet = new Set((alreadyBridged || []).map((r: any) => r.prospect_id));
+
+    // 3. For each opportunity, find best matching prospect; assemble bridges
+    const bridges: any[] = [];
+    const usedProspects = new Set<string>();
+    for (const opp of commercialOpps) {
+      const qTokens = tokens(opp.query).filter((t) => t.length >= 4);
+      if (qTokens.length === 0) continue;
+      let best: { prospect: any; score: number; matched: string[] } | null = null;
+      for (const p of prospects || []) {
+        if (usedProspects.has(p.id) || bridgedSet.has(p.id)) continue;
+        const blob = `${p.title || ""} ${p.description || ""} ${p.location || ""}`;
+        const { score, matched } = matchScore(qTokens, blob, p.search_keywords || []);
+        if (score < minMatchScore) continue;
+        if (!best || score > best.score) best = { prospect: p, score, matched };
+      }
+      if (!best) continue;
+      usedProspects.add(best.prospect.id);
+      bridges.push({
+        opportunity: opp,
+        prospect: best.prospect,
+        match_score: best.score,
+        matched_keywords: best.matched,
+      });
+      if (bridges.length >= maxCalls) break;
+    }
+
+    if (bridges.length === 0) {
+      return json({ success: true, message: "No prospect matches found for commercial SEO opportunities.", commercial_opps: commercialOpps.length, eligible_prospects: prospects?.length || 0, bridged: 0 });
+    }
+
+    // 4. Trigger auto-dial for each + log into seo_andrei_bridge
+    const results: any[] = [];
+    for (const b of bridges) {
+      const scoreBefore = b.prospect.lead_score;
+      const scoreAfter = Math.max(scoreBefore, 85);
+
+      // Boost prospect score so it surfaces in the dialer queue too
+      if (!dryRun && scoreAfter > scoreBefore) {
+        await sb.from("prospect_listings")
+          .update({ lead_score: scoreAfter, admin_notes: `[SEO×Andrei] boost from query "${b.opportunity.query}" (+${scoreAfter - scoreBefore}pts)` })
+          .eq("id", b.prospect.id);
+      }
+
+      let dialResp: any = { skipped: "dry_run" };
+      let callSessionId: string | null = null;
+      let status = "queued";
+
+      if (!dryRun) {
+        try {
+          const r = await fetch(`${SUPABASE_URL}/functions/v1/voice-agent-auto-dial`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${SERVICE_KEY}`,
+              "x-webhook-secret": SERVICE_KEY,
+            },
+            body: JSON.stringify({
+              prospect_id: b.prospect.id,
+              manual: true,
+              source: "seo_andrei_bridge",
+              context_note: `Apel declanșat de oportunitate SEO: "${b.opportunity.query}" (poziție ${b.opportunity.current_position}, +${b.opportunity.potential_clicks} clk potențial)`,
+            }),
+          });
+          dialResp = await r.json();
+          callSessionId = dialResp.session_id || dialResp.sessionId || null;
+          status = r.ok ? (dialResp.skipped ? "skipped" : "called") : "failed";
+        } catch (e: any) {
+          dialResp = { error: e?.message || "fetch failed" };
+          status = "failed";
+        }
+      }
+
+      const { data: bridgeRow } = await sb.from("seo_andrei_bridge").insert({
+        opportunity_id: b.opportunity.id,
+        prospect_id: b.prospect.id,
+        query: b.opportunity.query,
+        page: b.opportunity.page,
+        matched_keywords: b.matched_keywords,
+        match_reason: `query "${b.opportunity.query}" → ${b.matched_keywords.length} kw match (score ${b.match_score})`,
+        score_before: scoreBefore,
+        score_after: scoreAfter,
+        call_session_id: callSessionId,
+        auto_dial_response: dialResp,
+        status,
+      }).select().maybeSingle();
+
+      results.push({
+        bridge_id: bridgeRow?.id,
+        opportunity_id: b.opportunity.id,
+        prospect_id: b.prospect.id,
+        query: b.opportunity.query,
+        match_score: b.match_score,
+        matched: b.matched_keywords,
+        status,
+        call_session_id: callSessionId,
+      });
+    }
+
+    // 5. Log into cron_run_log if available
+    try {
+      await sb.from("cron_run_log").insert({
+        job_name: "seo-andrei-bridge",
+        status: "success",
+        finished_at: new Date().toISOString(),
+        duration_ms: 0,
+        details: { commercial_opps: commercialOpps.length, prospects_eligible: prospects?.length || 0, bridged: results.length, dry_run: dryRun },
+      });
+    } catch { /* table may not exist */ }
+
+    return json({
+      success: true,
+      commercial_opps: commercialOpps.length,
+      eligible_prospects: prospects?.length || 0,
+      bridged: results.length,
+      dry_run: dryRun,
+      results,
+    });
+  } catch (e) {
+    console.error("seo-andrei-bridge", e);
+    return json({ error: (e as Error).message }, 500);
+  }
+});
