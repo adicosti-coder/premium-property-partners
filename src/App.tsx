@@ -186,6 +186,7 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <FAQSchemaProvider>
+              <TrailingSlashRedirect />
               <CanonicalHreflang />
               <ScrollToTop />
               <DeferredShell>
