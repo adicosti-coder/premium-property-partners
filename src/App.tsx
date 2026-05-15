@@ -7,6 +7,7 @@ import { AnimationPreferenceProvider } from "@/hooks/useAnimationPreference";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
 import CanonicalHreflang from "@/components/seo/CanonicalHreflang";
+import TrailingSlashRedirect from "@/components/seo/TrailingSlashRedirect";
 
 const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
@@ -185,6 +186,7 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <FAQSchemaProvider>
+              <TrailingSlashRedirect />
               <CanonicalHreflang />
               <ScrollToTop />
               <DeferredShell>
