@@ -4425,6 +4425,33 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_indexing_snapshots: {
+        Row: {
+          checked_pages: number
+          created_at: string
+          id: string
+          issues: Json
+          issues_count: number
+          site: string
+        }
+        Insert: {
+          checked_pages?: number
+          created_at?: string
+          id?: string
+          issues?: Json
+          issues_count?: number
+          site: string
+        }
+        Update: {
+          checked_pages?: number
+          created_at?: string
+          id?: string
+          issues?: Json
+          issues_count?: number
+          site?: string
+        }
+        Relationships: []
+      }
       seo_internal_link_suggestions: {
         Row: {
           anchor_text: string
