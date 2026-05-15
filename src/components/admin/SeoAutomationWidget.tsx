@@ -30,14 +30,40 @@ const SEVERITY_COLOR: Record<string, string> = {
   low: "bg-muted text-muted-foreground border-border",
 };
 
-const RETRY_COOLDOWN_MIN = 30;
-const MAX_RETRIES = 3;
+const DEFAULT_RETRY_COOLDOWN_MIN = 30;
+const DEFAULT_MAX_RETRIES = 3;
+const RETRY_SETTINGS_KEY = "seo_andrei_retry_settings_v1";
 const FAIL_SESSION_STATUSES = new Set(["failed", "no-answer", "no_answer", "noanswer", "busy", "voicemail"]);
+
+const loadRetrySettings = () => {
+  try {
+    const raw = localStorage.getItem(RETRY_SETTINGS_KEY);
+    if (!raw) return { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES };
+    const p = JSON.parse(raw);
+    return {
+      cooldown: Math.max(5, Math.min(720, Number(p.cooldown) || DEFAULT_RETRY_COOLDOWN_MIN)),
+      max: Math.max(1, Math.min(10, Number(p.max) || DEFAULT_MAX_RETRIES)),
+    };
+  } catch { return { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES }; }
+};
 
 const SeoAutomationWidget = () => {
   const [running, setRunning] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [retrySettings, setRetrySettings] = useState(() => loadRetrySettings());
+  const RETRY_COOLDOWN_MIN = retrySettings.cooldown;
+  const MAX_RETRIES = retrySettings.max;
+
+  const saveRetrySettings = (cooldown: number, max: number) => {
+    const safe = {
+      cooldown: Math.max(5, Math.min(720, Math.round(cooldown) || DEFAULT_RETRY_COOLDOWN_MIN)),
+      max: Math.max(1, Math.min(10, Math.round(max) || DEFAULT_MAX_RETRIES)),
+    };
+    setRetrySettings(safe);
+    try { localStorage.setItem(RETRY_SETTINGS_KEY, JSON.stringify(safe)); } catch {}
+    toast({ title: "⚙️ Setări retry salvate", description: `Cooldown: ${safe.cooldown}m · Max retry: ${safe.max}` });
+  };
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<any>({
     queryKey: ["seo-automation-data"],
