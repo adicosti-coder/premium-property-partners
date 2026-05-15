@@ -9,11 +9,11 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 const JOB_FN: Record<string, string> = {
   "lead.auto_classify_agency": "lead-auto-classify-agency",
   "lead.auto_dedup": "lead-auto-dedup",
+  "seo.auto_fill_meta": "seo-auto-fill-meta",
+  "seo.anomaly_detector": "seo-anomaly-detector",
   // future iterations will plug more handlers here:
   // "lead.auto_recall_no_answer": "lead-auto-recall",
   // "seo.auto_audit_on_update": "seo-auto-audit",
-  // "seo.auto_fill_meta": "seo-auto-fill-meta",
-  // "seo.anomaly_detector": "seo-anomaly-detector",
   // "system.daily_digest": "automation-daily-digest",
 };
 

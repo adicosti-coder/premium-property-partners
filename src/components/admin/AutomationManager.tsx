@@ -182,6 +182,81 @@ const AutomationManager = () => {
     }
   };
 
+  const applyApproval = async (a: Approval) => {
+    setRunningJob(`approval:${a.id}`);
+    try {
+      const proposal = a.proposal as Record<string, unknown>;
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (a.action_type === "auto_blacklist_agency" && a.entity_id) {
+        const { error } = await supabase
+          .from("prospect_listings")
+          .update({
+            do_not_call: true,
+            do_not_call_at: new Date().toISOString(),
+            do_not_call_reason: `Auto-blacklist agency (score ${proposal.score ?? "?"}): ${proposal.reason ?? ""}`.slice(0, 500),
+            auto_blacklisted_at: new Date().toISOString(),
+            auto_blacklist_reason: String(proposal.reason ?? "agency-suspect"),
+          })
+          .eq("id", a.entity_id);
+        if (error) throw error;
+      } else if (a.action_type === "apply_meta_draft" && typeof proposal.url_path === "string") {
+        const { error } = await supabase
+          .from("seo_overrides")
+          .update({
+            pending_review: false,
+            is_active: true,
+            applied_by: user?.id ?? null,
+            applied_at: new Date().toISOString(),
+          })
+          .eq("url_path", proposal.url_path);
+        if (error) throw error;
+      }
+      // investigate_seo_drop & others: just mark resolved (no auto-action)
+
+      const { error: aErr } = await supabase
+        .from("automation_approvals")
+        .update({
+          status: "approved",
+          resolved_at: new Date().toISOString(),
+          resolved_by: user?.id ?? null,
+        })
+        .eq("id", a.id);
+      if (aErr) throw aErr;
+
+      toast({ title: "Aprobat", description: "Acțiunea a fost aplicată." });
+      load();
+    } catch (e) {
+      toast({
+        title: "Eroare aprobare",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setRunningJob(null);
+    }
+  };
+
+  const rejectApproval = async (a: Approval) => {
+    setRunningJob(`approval:${a.id}`);
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("automation_approvals")
+      .update({
+        status: "rejected",
+        resolved_at: new Date().toISOString(),
+        resolved_by: user?.id ?? null,
+      })
+      .eq("id", a.id);
+    setRunningJob(null);
+    if (error) {
+      toast({ title: "Eroare", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Respinsă", description: "Propunerea a fost respinsă." });
+    load();
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -364,9 +439,8 @@ const AutomationManager = () => {
             <CardHeader>
               <CardTitle className="text-base">Acțiuni propuse de AI care așteaptă aprobare</CardTitle>
               <CardDescription>
-                Aici vor apărea propuneri precum auto-blacklist agenții (suspicion ≥ 85), aplicare meta SEO generată,
-                sau alte acțiuni cu impact ce necesită confirmare. Iterația 1 setează doar coada — propunerile
-                vor curge după activarea joburilor în iterațiile 2–4.
+                Propuneri AI cu impact (auto-blacklist agenții, aplicare meta SEO, investigare scor în scădere).
+                Aprobă pentru a aplica acțiunea, sau respinge pentru a o ignora. Toate acțiunile sunt logate în audit.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -377,28 +451,38 @@ const AutomationManager = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {approvals.map((a) => (
-                    <div key={a.id} className="p-3 border rounded-lg">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge>{a.action_type}</Badge>
-                        <Badge variant="outline">{a.entity_type}</Badge>
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          expiră {new Date(a.expires_at).toLocaleDateString("ro-RO")}
-                        </span>
+                  {approvals.map((a) => {
+                    const busy = runningJob === `approval:${a.id}`;
+                    const sev =
+                      a.severity === "critical" ? "destructive" :
+                      a.severity === "warning" ? "secondary" : "outline";
+                    return (
+                      <div key={a.id} className="p-3 border rounded-lg">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge>{a.action_type}</Badge>
+                          <Badge variant="outline">{a.entity_type}</Badge>
+                          <Badge variant={sev as "destructive" | "secondary" | "outline"}>
+                            {a.severity}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            expiră {new Date(a.expires_at).toLocaleDateString("ro-RO")}
+                          </span>
+                        </div>
+                        <pre className="text-xs mt-2 bg-muted/50 p-2 rounded overflow-x-auto max-h-48">
+                          {JSON.stringify(a.proposal, null, 2)}
+                        </pre>
+                        <div className="flex gap-2 mt-2">
+                          <Button size="sm" variant="default" disabled={busy} onClick={() => applyApproval(a)}>
+                            {busy ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />}
+                            Aprobă
+                          </Button>
+                          <Button size="sm" variant="outline" disabled={busy} onClick={() => rejectApproval(a)}>
+                            Respinge
+                          </Button>
+                        </div>
                       </div>
-                      <pre className="text-xs mt-2 bg-muted/50 p-2 rounded overflow-x-auto">
-                        {JSON.stringify(a.proposal, null, 2)}
-                      </pre>
-                      <div className="flex gap-2 mt-2">
-                        <Button size="sm" variant="default">
-                          <Play className="w-3 h-3 mr-1" /> Aprobă
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          Respinge
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
