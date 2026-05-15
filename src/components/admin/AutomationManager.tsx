@@ -291,6 +291,65 @@ const AutomationManager = () => {
     load();
   };
 
+  const runTest = async () => {
+    const target = TESTABLE_FUNCTIONS.find((t) => t.key === testTarget);
+    if (!target) return;
+    setTesting(true);
+    const startedAt = Date.now();
+    try {
+      const isOrchestrator = target.key === "__orchestrator__";
+      const body: Record<string, unknown> = { dry_run: true, triggered_by: "manual_test" };
+      if (!isOrchestrator) body.job_key = target.key;
+
+      const { data, error } = await supabase.functions.invoke("automation-orchestrator", { body });
+      const duration = Date.now() - startedAt;
+      const ok = !error;
+      const result: TestResult = {
+        function_name: target.fn,
+        job_key: target.key,
+        ok,
+        status: ok ? 200 : null,
+        duration_ms: duration,
+        output: data ?? null,
+        error: error ? (error.message || String(error)) : null,
+        ran_at: new Date().toISOString(),
+      };
+      setTestHistory((h) => [result, ...h].slice(0, 10));
+      toast({
+        title: ok ? `${target.label} → dry-run OK` : `${target.label} → eroare`,
+        description: ok
+          ? `Output disponibil mai jos. ${duration}ms.`
+          : (error?.message || String(error)).slice(0, 200),
+        variant: ok ? "default" : "destructive",
+      });
+    } catch (e) {
+      const duration = Date.now() - startedAt;
+      const msg = e instanceof Error ? e.message : String(e);
+      setTestHistory((h) => [{
+        function_name: target.fn,
+        job_key: target.key,
+        ok: false,
+        status: null,
+        duration_ms: duration,
+        output: null,
+        error: msg,
+        ran_at: new Date().toISOString(),
+      }, ...h].slice(0, 10));
+      toast({ title: "Eroare execuție test", description: msg.slice(0, 200), variant: "destructive" });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const copyOutput = async (r: TestResult) => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(r.output, null, 2));
+      toast({ title: "Copiat", description: "Output JSON în clipboard." });
+    } catch {
+      /* noop */
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
