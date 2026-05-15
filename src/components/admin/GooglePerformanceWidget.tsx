@@ -168,9 +168,15 @@ const GooglePerformanceWidget = () => {
                 <div className="space-y-1.5">
                   {data.topQueries.slice(0, 8).map((q, i) => (
                     <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40">
-                      <span className="truncate font-medium text-foreground">{q.query}</span>
+                      <span className="truncate font-medium text-foreground flex-1">{q.query}</span>
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge variant="secondary" className="text-[10px]">{fmt(q.clicks)} clk</Badge>
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] ${q.ctr >= 5 ? "border-emerald-500/40 text-emerald-600" : q.ctr >= 2 ? "border-amber-500/40 text-amber-600" : "border-border text-muted-foreground"}`}
+                        >
+                          CTR {q.ctr}%
+                        </Badge>
                         <span className="text-muted-foreground">poz. {q.position}</span>
                       </div>
                     </div>
