@@ -82,6 +82,33 @@ const SeoAutomationWidget = () => {
     refetch();
   };
 
+  const isRetryEligible = (b: any) => {
+    if (b.status === "failed") return true;
+    const ss = String(b.call_session?.status || "").toLowerCase();
+    return FAIL_SESSION_STATUSES.has(ss);
+  };
+
+  const cooldownRemainingMin = (b: any): number => {
+    const lastTs = new Date(b.last_retry_at || b.triggered_at).getTime();
+    const elapsed = (Date.now() - lastTs) / 60000;
+    return Math.max(0, Math.ceil(RETRY_COOLDOWN_MIN - elapsed));
+  };
+
+  const retryBridge = async (bridgeId: string) => {
+    setRetrying(bridgeId);
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-andrei-bridge", {
+        body: { retry_bridge_id: bridgeId, cooldown_min: RETRY_COOLDOWN_MIN, max_retries: MAX_RETRIES },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "🔄 Retry declanșat", description: `Status: ${data.status} · retry ${data.retry_count}/${data.max_retries}` });
+      refetch();
+    } catch (e: any) {
+      toast({ title: "Retry eșuat", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally { setRetrying(null); }
+  };
+
   if (isLoading) return (
     <Card className="border-primary/20"><CardContent className="py-12 flex items-center justify-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Se încarcă date automatizare SEO…</CardContent></Card>
   );
