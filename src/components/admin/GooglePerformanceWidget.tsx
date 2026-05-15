@@ -175,6 +175,150 @@ const GooglePerformanceWidget = () => {
     return `https://search.google.com/search-console/inspect?resource_id=${sc}&id=${u}`;
   };
 
+  const exportPdf = async () => {
+    if (!data) return;
+    setExporting(true);
+    try {
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      const margin = 40;
+      let y = margin;
+
+      // Header
+      doc.setFillColor(20, 20, 20);
+      doc.rect(0, 0, pageW, 70, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Raport SEO — Search Console", margin, 32);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(212, 175, 55);
+      doc.text(`${data.summary.site}  ·  ${data.summary.startDate} → ${data.summary.endDate}  ·  ${days} zile`, margin, 52);
+      y = 100;
+
+      // Summary KPIs
+      doc.setTextColor(20, 20, 20);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Sumar performanță", margin, y);
+      y += 6;
+      autoTable(doc, {
+        startY: y + 6,
+        head: [["Metric", "Valoare"]],
+        body: [
+          ["Clickuri", fmt(data.summary.clicks)],
+          ["Impresii", fmt(data.summary.impressions)],
+          ["CTR mediu", `${data.summary.ctr}%`],
+          ["Poziție medie", String(data.summary.position)],
+        ],
+        theme: "striped",
+        headStyles: { fillColor: [20, 20, 20], textColor: 255 },
+        styles: { fontSize: 9 },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as any).lastAutoTable.finalY + 20;
+
+      // Conversion summary
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(20, 20, 20);
+      doc.text("Sumar rate de conversie (SEO → Lead-uri)", margin, y);
+      y += 6;
+      const convRate = data.leads?.conversionRate || 0;
+      const totalLeads = data.leads?.total || 0;
+      const totalClicks = data.summary.clicks || 0;
+      const impressionToClick = data.summary.impressions > 0 ? (totalClicks / data.summary.impressions) * 100 : 0;
+      const impressionToLead = data.summary.impressions > 0 ? (totalLeads / data.summary.impressions) * 100 : 0;
+      autoTable(doc, {
+        startY: y + 6,
+        head: [["Metric conversie", "Valoare", "Detalii"]],
+        body: [
+          ["Lead-uri în perioadă", fmt(totalLeads), `${days} zile`],
+          ["Rata conversie SEO → Lead", `${convRate}%`, "lead-uri / clickuri Google"],
+          ["Rata click-through (CTR)", `${impressionToClick.toFixed(2)}%`, "clickuri / impresii"],
+          ["Funnel total Impresii → Lead", `${impressionToLead.toFixed(3)}%`, "lead-uri / impresii"],
+          ["Estimat lead-uri @ +10% trafic", fmt(Math.round((totalClicks * 1.1 * convRate) / 100)), "proiecție"],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [212, 175, 55], textColor: 20 },
+        styles: { fontSize: 9 },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as any).lastAutoTable.finalY + 20;
+
+      // Top queries
+      const sorter = (a: GSCRow, b: GSCRow) => (b.clicks - a.clicks);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Top căutări (cuvinte cheie)", margin, y);
+      autoTable(doc, {
+        startY: y + 10,
+        head: [["#", "Query", "Clk", "Imp", "CTR", "Poz", "Lead est."]],
+        body: [...data.topQueries].sort(sorter).slice(0, 25).map((q, i) => [
+          String(i + 1),
+          q.query || "—",
+          fmt(q.clicks),
+          fmt(q.impressions),
+          `${q.ctr}%`,
+          String(q.position),
+          String(Math.round((q.clicks * convRate) / 100)),
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [20, 20, 20], textColor: 255 },
+        styles: { fontSize: 8 },
+        columnStyles: { 1: { cellWidth: 200 } },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as any).lastAutoTable.finalY + 20;
+
+      if (y > 700) { doc.addPage(); y = margin; }
+
+      // Top pages
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Top pagini", margin, y);
+      autoTable(doc, {
+        startY: y + 10,
+        head: [["#", "Pagină", "Clk", "Imp", "CTR", "Poz", "Lead est."]],
+        body: [...data.topPages].sort(sorter).slice(0, 25).map((p, i) => [
+          String(i + 1),
+          (p.page || "/").replace(/^https?:\/\/[^/]+/, "") || "/",
+          fmt(p.clicks),
+          fmt(p.impressions),
+          `${p.ctr}%`,
+          String(p.position),
+          String(Math.round((p.clicks * convRate) / 100)),
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [20, 20, 20], textColor: 255 },
+        styles: { fontSize: 8 },
+        columnStyles: { 1: { cellWidth: 220 } },
+        margin: { left: margin, right: margin },
+      });
+
+      // Footer pe fiecare pagină
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        doc.text(
+          `RealTrust · Raport generat ${new Date().toLocaleDateString("ro-RO")} · pag. ${i}/${pageCount}`,
+          margin,
+          doc.internal.pageSize.getHeight() - 20
+        );
+      }
+
+      doc.save(`raport-seo-${data.summary.startDate}_${data.summary.endDate}.pdf`);
+      toast({ title: "📄 Raport SEO exportat", description: "PDF descărcat cu sumar conversii." });
+    } catch (e: any) {
+      toast({ title: "Eroare export PDF", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <Card className="border-primary/20">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
