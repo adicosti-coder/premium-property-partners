@@ -27,6 +27,12 @@ interface GSCResponse {
 }
 
 const fmt = (n: number) => new Intl.NumberFormat("ro-RO").format(Math.round(n));
+const fmtCompact = (n: number) => {
+  const v = Math.round(n);
+  if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1).replace(/\.0$/, "") + "M";
+  if (Math.abs(v) >= 1_000) return (v / 1_000).toFixed(v % 1_000 === 0 ? 0 : 1).replace(/\.0$/, "") + "K";
+  return String(v);
+};
 
 const TREND_LABELS: Record<string, { label: string; color: string; suffix?: string }> = {
   clicks: { label: "Clickuri", color: "hsl(var(--primary))" },
