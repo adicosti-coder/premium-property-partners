@@ -367,9 +367,10 @@ const GooglePerformanceWidget = () => {
           </div>
         ) : data ? (
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2 max-w-sm">
+            <TabsList className="grid w-full grid-cols-3 max-w-md">
               <TabsTrigger value="performance" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />Performanță</TabsTrigger>
-              <TabsTrigger value="indexing" className="gap-1.5"><Activity className="w-3.5 h-3.5" />Indexare</TabsTrigger>
+              <TabsTrigger value="keywords" className="gap-1.5"><KeyRound className="w-3.5 h-3.5" />Cuvinte cheie</TabsTrigger>
+              <TabsTrigger value="indexing" className="gap-1.5"><Activity className="w-3.5 h-3.5" />Status indexare</TabsTrigger>
             </TabsList>
             <TabsContent value="performance" className="space-y-4 mt-0">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
