@@ -485,8 +485,6 @@ const AutomationManager = () => {
                   })}
                 </div>
               )}
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
