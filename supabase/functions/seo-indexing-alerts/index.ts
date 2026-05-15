@@ -34,18 +34,33 @@ serve(async (req) => {
       "Content-Type": "application/json",
     };
 
-    // Top 10 most-impressed pages from last 7 days
-    const end = new Date(); end.setUTCDate(end.getUTCDate() - 2);
-    const start = new Date(); start.setUTCDate(start.getUTCDate() - 9);
-    const startDate = start.toISOString().slice(0, 10);
-    const endDate = end.toISOString().slice(0, 10);
+    // Allow targeted inspection: { urls: [...] } overrides the GSC top-pages list.
+    let pages: string[] = [];
+    let mode: "auto" | "targeted" = "auto";
+    try {
+      if (req.method === "POST") {
+        const body = await req.json().catch(() => ({}));
+        if (Array.isArray(body?.urls) && body.urls.length > 0) {
+          pages = body.urls.filter((u: any) => typeof u === "string" && u.startsWith("http")).slice(0, 25);
+          mode = "targeted";
+        }
+      }
+    } catch (_) { /* ignore */ }
 
-    const pagesRes = await fetch(
-      `${GATEWAY}/webmasters/v3/sites/${SITE_ENC}/searchAnalytics/query`,
-      { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["page"], rowLimit: 10 }) },
-    );
-    const pagesJson = pagesRes.ok ? await pagesRes.json() : { rows: [] };
-    const pages: string[] = (pagesJson.rows || []).map((r: any) => r.keys[0]);
+    if (mode === "auto") {
+      // Top 10 most-impressed pages from last 7 days
+      const end = new Date(); end.setUTCDate(end.getUTCDate() - 2);
+      const start = new Date(); start.setUTCDate(start.getUTCDate() - 9);
+      const startDate = start.toISOString().slice(0, 10);
+      const endDate = end.toISOString().slice(0, 10);
+
+      const pagesRes = await fetch(
+        `${GATEWAY}/webmasters/v3/sites/${SITE_ENC}/searchAnalytics/query`,
+        { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["page"], rowLimit: 10 }) },
+      );
+      const pagesJson = pagesRes.ok ? await pagesRes.json() : { rows: [] };
+      pages = (pagesJson.rows || []).map((r: any) => r.keys[0]);
+    }
 
     // URL Inspection for each
     const issues: Array<{ url: string; verdict: string; coverageState: string; lastCrawl?: string }> = [];
@@ -82,7 +97,7 @@ serve(async (req) => {
     });
 
     // Send alert if any critical issues + Resend configured
-    if (issues.length > 0 && RESEND_API_KEY) {
+    if (mode === "auto" && issues.length > 0 && RESEND_API_KEY) {
       const html = `
         <h2>⚠️ Alertă SEO: ${issues.length} probleme de indexare detectate</h2>
         <p>Site: <strong>${SITE}</strong></p>
