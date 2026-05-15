@@ -585,6 +585,108 @@ const AutomationManager = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="test" className="space-y-4">
+          <Card className="border-amber-500/40">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FlaskConical className="w-4 h-4 text-amber-500" />
+                Mod de test manual (dry-run)
+              </CardTitle>
+              <CardDescription>
+                Selectează una dintre cele {TESTABLE_FUNCTIONS.length} edge functions și rulează-o în <strong>dry-run</strong>.
+                Nu se scrie în baza de date, nu se trimit emailuri sau WhatsApp, nu se actualizează metricele jobului.
+                Poți testa indiferent dacă <em>Kill Switch</em>-ul global este pornit sau oprit.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-[1fr,auto] gap-3 items-end">
+                <div className="space-y-1.5">
+                  <Label htmlFor="test-target">Funcție de testat</Label>
+                  <Select value={testTarget} onValueChange={setTestTarget}>
+                    <SelectTrigger id="test-target">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TESTABLE_FUNCTIONS.map((t) => (
+                        <SelectItem key={t.key} value={t.key}>
+                          <span className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[10px] uppercase">{t.category}</Badge>
+                            {t.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {TESTABLE_FUNCTIONS.find((t) => t.key === testTarget)?.description}
+                  </p>
+                </div>
+                <Button onClick={runTest} disabled={testing} className="gap-2">
+                  {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FlaskConical className="w-4 h-4" />}
+                  Rulează dry-run
+                </Button>
+              </div>
+
+              <Alert>
+                <Shield className="h-4 w-4" />
+                <AlertTitle className="text-xs">Sigur de rulat</AlertTitle>
+                <AlertDescription className="text-xs">
+                  Funcțiile primesc <code>{`{ dry_run: true }`}</code>. Citirile + apelurile Gemini rulează normal,
+                  dar toate <code>insert</code>/<code>update</code>/<code>upsert</code>, emailurile și webhook-urile
+                  WhatsApp sunt sărite. Output-ul include contoare <code>would_*</code> care arată câte modificări <em>ar fi</em> aplicat.
+                </AlertDescription>
+              </Alert>
+
+              {testHistory.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground border rounded-lg border-dashed">
+                  <FlaskConical className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Niciun test rulat încă în această sesiune.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-xs font-medium text-muted-foreground">
+                    Ultimele {testHistory.length} rulări (sesiune curentă)
+                  </div>
+                  {testHistory.map((r, idx) => (
+                    <div key={`${r.ran_at}-${idx}`} className="border rounded-lg overflow-hidden">
+                      <div className={`flex items-center gap-2 p-2.5 flex-wrap ${
+                        r.ok ? "bg-primary/5" : "bg-destructive/10"
+                      }`}>
+                        {r.ok ? (
+                          <CheckCircle2 className="w-4 h-4 text-primary" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-destructive" />
+                        )}
+                        <span className="font-medium text-sm">{r.function_name}</span>
+                        <Badge variant="outline" className="text-[10px]">{r.duration_ms}ms</Badge>
+                        <Badge variant="secondary" className="text-[10px]">DRY-RUN</Badge>
+                        <span className="text-[10px] text-muted-foreground ml-auto">
+                          {new Date(r.ran_at).toLocaleTimeString("ro-RO")}
+                        </span>
+                        {r.output != null && (
+                          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => copyOutput(r)}>
+                            <Copy className="w-3 h-3 mr-1" /> Copiază JSON
+                          </Button>
+                        )}
+                      </div>
+                      {r.error && (
+                        <div className="px-3 py-2 border-t bg-destructive/5 text-xs text-destructive font-mono break-all">
+                          ⚠ {r.error}
+                        </div>
+                      )}
+                      {r.output != null && (
+                        <pre className="text-[11px] bg-muted/40 p-3 overflow-x-auto max-h-96 font-mono">
+                          {JSON.stringify(r.output, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="audit">
           <Card>
             <CardHeader>
