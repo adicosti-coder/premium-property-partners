@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Settings2 } from "lucide-react";
 import { Loader2, TrendingUp, AlertTriangle, RefreshCw, Sparkles, ExternalLink, Target, FileSearch, Swords, History, CheckCircle2, X, PhoneCall, Phone, PhoneOff, PhoneForwarded, RotateCcw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "@/hooks/use-toast";
@@ -30,14 +34,40 @@ const SEVERITY_COLOR: Record<string, string> = {
   low: "bg-muted text-muted-foreground border-border",
 };
 
-const RETRY_COOLDOWN_MIN = 30;
-const MAX_RETRIES = 3;
+const DEFAULT_RETRY_COOLDOWN_MIN = 30;
+const DEFAULT_MAX_RETRIES = 3;
+const RETRY_SETTINGS_KEY = "seo_andrei_retry_settings_v1";
 const FAIL_SESSION_STATUSES = new Set(["failed", "no-answer", "no_answer", "noanswer", "busy", "voicemail"]);
+
+const loadRetrySettings = () => {
+  try {
+    const raw = localStorage.getItem(RETRY_SETTINGS_KEY);
+    if (!raw) return { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES };
+    const p = JSON.parse(raw);
+    return {
+      cooldown: Math.max(5, Math.min(720, Number(p.cooldown) || DEFAULT_RETRY_COOLDOWN_MIN)),
+      max: Math.max(1, Math.min(10, Number(p.max) || DEFAULT_MAX_RETRIES)),
+    };
+  } catch { return { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES }; }
+};
 
 const SeoAutomationWidget = () => {
   const [running, setRunning] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [retrySettings, setRetrySettings] = useState(() => loadRetrySettings());
+  const RETRY_COOLDOWN_MIN = retrySettings.cooldown;
+  const MAX_RETRIES = retrySettings.max;
+
+  const saveRetrySettings = (cooldown: number, max: number) => {
+    const safe = {
+      cooldown: Math.max(5, Math.min(720, Math.round(cooldown) || DEFAULT_RETRY_COOLDOWN_MIN)),
+      max: Math.max(1, Math.min(10, Math.round(max) || DEFAULT_MAX_RETRIES)),
+    };
+    setRetrySettings(safe);
+    try { localStorage.setItem(RETRY_SETTINGS_KEY, JSON.stringify(safe)); } catch {}
+    toast({ title: "⚙️ Setări retry salvate", description: `Cooldown: ${safe.cooldown}m · Max retry: ${safe.max}` });
+  };
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<any>({
     queryKey: ["seo-automation-data"],
@@ -321,7 +351,41 @@ const SeoAutomationWidget = () => {
                 <Badge variant="outline" className="border-amber-500/40 text-amber-700"><PhoneForwarded className="w-3 h-3 mr-1" />Skip: {bridgeStats.skipped}</Badge>
                 <Badge variant="outline" className="border-red-500/40 text-red-700"><PhoneOff className="w-3 h-3 mr-1" />Failed: {bridgeStats.failed}</Badge>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button size="sm" variant="ghost" className="h-8 px-2" title="Setări retry" aria-label="Setări retry">
+                      <Settings2 className="w-3.5 h-3.5 mr-1.5" />
+                      <span className="text-[11px]">Cooldown {RETRY_COOLDOWN_MIN}m · Max {MAX_RETRIES}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-72 space-y-3">
+                    <div>
+                      <h4 className="text-sm font-semibold">Setări retry apeluri</h4>
+                      <p className="text-[11px] text-muted-foreground">Aplicate la următoarele retry-uri din UI. Salvare locală per browser.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="retry-cooldown" className="text-xs">Cooldown (minute)</Label>
+                      <Input id="retry-cooldown" type="number" min={5} max={720} step={5} defaultValue={RETRY_COOLDOWN_MIN}
+                        onBlur={(e) => saveRetrySettings(Number(e.target.value), MAX_RETRIES)}
+                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                      />
+                      <p className="text-[10px] text-muted-foreground">Între 5 și 720 minute.</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="retry-max" className="text-xs">Număr maxim încercări / lead</Label>
+                      <Input id="retry-max" type="number" min={1} max={10} step={1} defaultValue={MAX_RETRIES}
+                        onBlur={(e) => saveRetrySettings(RETRY_COOLDOWN_MIN, Number(e.target.value))}
+                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                      />
+                      <p className="text-[10px] text-muted-foreground">Între 1 și 10 încercări.</p>
+                    </div>
+                    <Button size="sm" variant="ghost" className="w-full h-7 text-[11px]"
+                      onClick={() => saveRetrySettings(DEFAULT_RETRY_COOLDOWN_MIN, DEFAULT_MAX_RETRIES)}>
+                      Resetează la implicit ({DEFAULT_RETRY_COOLDOWN_MIN}m · {DEFAULT_MAX_RETRIES})
+                    </Button>
+                  </PopoverContent>
+                </Popover>
                 <Button size="sm" variant="ghost" onClick={() => triggerJob("Bridge dry-run", "seo-andrei-bridge", { dry_run: true, max_calls: 5 })} disabled={running !== null}>
                   {running === "Bridge dry-run" ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1.5" />}
                   Simulare
