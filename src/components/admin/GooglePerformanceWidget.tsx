@@ -230,14 +230,22 @@ const GooglePerformanceWidget = () => {
                   ? "border-amber-500/40 text-amber-600 bg-amber-500/5"
                   : "border-border text-muted-foreground";
 
-              const qTotal = data.topQueries.length;
-              const pTotal = data.topPages.length;
+              const sorter = (a: GSCRow, b: GSCRow) => {
+                const dir = sortDir === 'asc' ? 1 : -1;
+                if (sortBy === 'position') return (a.position - b.position) * dir;
+                return ((b[sortBy] as number) - (a[sortBy] as number)) * dir;
+              };
+              const sortedQueries = [...data.topQueries].sort(sorter);
+              const sortedPages = [...data.topPages].sort(sorter);
+
+              const qTotal = sortedQueries.length;
+              const pTotal = sortedPages.length;
               const qPages = Math.max(1, Math.ceil(qTotal / pageSize));
               const pPages = Math.max(1, Math.ceil(pTotal / pageSize));
               const qPage = Math.min(queryPage, qPages);
               const pPage = Math.min(pagePage, pPages);
-              const qSlice = data.topQueries.slice((qPage - 1) * pageSize, qPage * pageSize);
-              const pSlice = data.topPages.slice((pPage - 1) * pageSize, pPage * pageSize);
+              const qSlice = sortedQueries.slice((qPage - 1) * pageSize, qPage * pageSize);
+              const pSlice = sortedPages.slice((pPage - 1) * pageSize, pPage * pageSize);
 
               const Pager = ({ page, pages, total, onPrev, onNext }: { page: number; pages: number; total: number; onPrev: () => void; onNext: () => void }) => (
                 <div className="flex items-center justify-between gap-2 mt-2 text-[11px] text-muted-foreground">
