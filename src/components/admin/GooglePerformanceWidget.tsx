@@ -200,45 +200,67 @@ const GooglePerformanceWidget = () => {
             )}
 
             {/* Top queries & pages */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-semibold mb-2 text-foreground">Top căutări</h4>
-                <div className="space-y-1.5">
-                  {data.topQueries.slice(0, 8).map((q, i) => (
-                    <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40">
-                      <span className="truncate font-medium text-foreground flex-1">{q.query}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="secondary" className="text-[10px]">{fmt(q.clicks)} clk</Badge>
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] ${q.ctr >= 5 ? "border-emerald-500/40 text-emerald-600" : q.ctr >= 2 ? "border-amber-500/40 text-amber-600" : "border-border text-muted-foreground"}`}
-                        >
-                          CTR {q.ctr}%
-                        </Badge>
-                        <span className="text-muted-foreground">poz. {q.position}</span>
-                      </div>
+            {(() => {
+              const convRate = data.leads?.conversionRate || 0; // %
+              const estLeads = (clicks: number) => Math.round((clicks * convRate) / 100);
+              const convBadge = (rate: number) =>
+                rate >= 5
+                  ? "border-emerald-500/40 text-emerald-600 bg-emerald-500/5"
+                  : rate >= 2
+                  ? "border-amber-500/40 text-amber-600 bg-amber-500/5"
+                  : "border-border text-muted-foreground";
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2 text-foreground flex items-center justify-between">
+                      <span>Top căutări</span>
+                      <span className="text-[10px] font-normal text-muted-foreground">conv. estimată @ {convRate}%</span>
+                    </h4>
+                    <div className="space-y-1.5">
+                      {data.topQueries.slice(0, 8).map((q, i) => (
+                        <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40">
+                          <span className="truncate font-medium text-foreground flex-1">{q.query}</span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Badge variant="secondary" className="text-[10px]">{fmt(q.clicks)} clk</Badge>
+                            <Badge variant="outline" className={`text-[10px] ${q.ctr >= 5 ? "border-emerald-500/40 text-emerald-600" : q.ctr >= 2 ? "border-amber-500/40 text-amber-600" : "border-border text-muted-foreground"}`}>
+                              CTR {q.ctr}%
+                            </Badge>
+                            <Badge variant="outline" className={`text-[10px] ${convBadge(convRate)}`} title="Lead-uri estimate (clickuri × rata globală de conversie)">
+                              ~{estLeads(q.clicks)} lead
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                      {data.topQueries.length === 0 && <p className="text-xs text-muted-foreground">Fără date.</p>}
                     </div>
-                  ))}
-                  {data.topQueries.length === 0 && <p className="text-xs text-muted-foreground">Fără date.</p>}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2 text-foreground flex items-center justify-between">
+                      <span>Top pagini</span>
+                      <span className="text-[10px] font-normal text-muted-foreground">conv. estimată @ {convRate}%</span>
+                    </h4>
+                    <div className="space-y-1.5">
+                      {data.topPages.slice(0, 8).map((p, i) => (
+                        <a key={i} href={p.page} target="_blank" rel="noopener noreferrer"
+                           className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40 hover:bg-muted">
+                          <span className="truncate font-medium text-foreground flex items-center gap-1 flex-1">
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                            {p.page?.replace(/^https?:\/\/[^/]+/, "") || "/"}
+                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Badge variant="secondary" className="text-[10px]">{fmt(p.clicks)} clk</Badge>
+                            <Badge variant="outline" className={`text-[10px] ${convBadge(convRate)}`} title="Lead-uri estimate (clickuri × rata globală de conversie)">
+                              ~{estLeads(p.clicks)} lead
+                            </Badge>
+                          </div>
+                        </a>
+                      ))}
+                      {data.topPages.length === 0 && <p className="text-xs text-muted-foreground">Fără date.</p>}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold mb-2 text-foreground">Top pagini</h4>
-                <div className="space-y-1.5">
-                  {data.topPages.slice(0, 8).map((p, i) => (
-                    <a key={i} href={p.page} target="_blank" rel="noopener noreferrer"
-                       className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40 hover:bg-muted">
-                      <span className="truncate font-medium text-foreground flex items-center gap-1">
-                        <ExternalLink className="w-3 h-3 shrink-0" />
-                        {p.page?.replace(/^https?:\/\/[^/]+/, "") || "/"}
-                      </span>
-                      <Badge variant="secondary" className="text-[10px] shrink-0">{fmt(p.clicks)} clk</Badge>
-                    </a>
-                  ))}
-                  {data.topPages.length === 0 && <p className="text-xs text-muted-foreground">Fără date.</p>}
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </>
         ) : null}
       </CardContent>
