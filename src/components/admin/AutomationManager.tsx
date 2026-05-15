@@ -77,6 +77,33 @@ const StatusBadge = ({ status }: { status: Job["last_status"] }) => {
   return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
 };
 
+// Funcții testabile în „Mod test" (dry-run, fără side-effects).
+const TESTABLE_FUNCTIONS: Array<{
+  key: string; // job_key sau '__orchestrator__'
+  fn: string;  // numele edge function invocat
+  label: string;
+  category: "lead" | "seo" | "system";
+  description: string;
+}> = [
+  { key: "__orchestrator__", fn: "automation-orchestrator", label: "Orchestrator (full pass)", category: "system", description: "Rulează un ciclu complet — invocă toate joburile cron care ar fi due, în dry-run." },
+  { key: "lead.auto_classify_agency", fn: "lead-auto-classify-agency", label: "Lead • Auto-clasificare agenții", category: "lead", description: "Citește pana la 25 prospecte neevaluate, rulează Gemini, NU scrie scoruri și NU creează aprobări." },
+  { key: "lead.auto_dedup", fn: "lead-auto-dedup", label: "Lead • Auto-dedup", category: "lead", description: "Calculează dedup_key și grupuri duplicate; NU updatează rândurile." },
+  { key: "seo.auto_fill_meta", fn: "seo-auto-fill-meta", label: "SEO • Auto-fill meta (drafturi)", category: "seo", description: "Generează drafturi title+meta cu Gemini; NU scrie în seo_overrides." },
+  { key: "seo.anomaly_detector", fn: "seo-anomaly-detector", label: "SEO • Detector anomalii", category: "seo", description: "Calculează scăderi >15% săptămână peste săptămână; NU loghează alertele." },
+  { key: "system.daily_digest", fn: "automation-daily-digest", label: "System • Digest zilnic", category: "system", description: "Agregează KPIs ultimele 24h; NU trimite email și NU notifică WhatsApp." },
+];
+
+type TestResult = {
+  function_name: string;
+  job_key: string;
+  ok: boolean;
+  status: number | null;
+  duration_ms: number;
+  output: unknown;
+  error: string | null;
+  ran_at: string;
+};
+
 const AutomationManager = () => {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -84,6 +111,10 @@ const AutomationManager = () => {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [pendingToggle, setPendingToggle] = useState<string | null>(null);
   const [runningJob, setRunningJob] = useState<string | null>(null);
+  // Mod test
+  const [testTarget, setTestTarget] = useState<string>(TESTABLE_FUNCTIONS[0].key);
+  const [testing, setTesting] = useState(false);
+  const [testHistory, setTestHistory] = useState<TestResult[]>([]);
 
   const load = async () => {
     setLoading(true);
