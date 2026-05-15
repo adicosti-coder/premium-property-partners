@@ -181,6 +181,8 @@ const AutomationManager = () => {
       setRunningJob(null);
     }
   };
+
+  if (loading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-32 w-full" />
