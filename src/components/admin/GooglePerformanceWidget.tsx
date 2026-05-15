@@ -29,11 +29,12 @@ const fmt = (n: number) => new Intl.NumberFormat("ro-RO").format(Math.round(n));
 
 const GooglePerformanceWidget = () => {
   const [running, setRunning] = useState(false);
+  const [days, setDays] = useState<7 | 28 | 90>(28);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<GSCResponse>({
-    queryKey: ["gsc-performance"],
+    queryKey: ["gsc-performance", days],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("gsc-performance", { body: {} });
+      const { data, error } = await supabase.functions.invoke("gsc-performance", { body: { days } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
@@ -73,6 +74,18 @@ const GooglePerformanceWidget = () => {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex rounded-md border border-border overflow-hidden">
+            {[7, 28, 90].map((d) => (
+              <button
+                key={d}
+                onClick={() => setDays(d as 7 | 28 | 90)}
+                className={`px-2.5 py-1 text-xs font-medium transition ${days === d ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+                aria-pressed={days === d}
+              >
+                {d}z
+              </button>
+            ))}
+          </div>
           <Button size="sm" variant="outline" onClick={runIndexCheck} disabled={running}>
             {running ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />}
             Verifică indexare
