@@ -114,10 +114,11 @@ const SeoAutomationWidget = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="opportunities">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="opportunities" className="text-xs"><Target className="w-3.5 h-3.5 mr-1.5" />Oportunități</TabsTrigger>
             <TabsTrigger value="audit" className="text-xs"><FileSearch className="w-3.5 h-3.5 mr-1.5" />Audit on-page</TabsTrigger>
             <TabsTrigger value="competitors" className="text-xs"><Swords className="w-3.5 h-3.5 mr-1.5" />Competitori</TabsTrigger>
+            <TabsTrigger value="andrei" className="text-xs"><PhoneCall className="w-3.5 h-3.5 mr-1.5" />Andrei × SEO</TabsTrigger>
             <TabsTrigger value="history" className="text-xs"><History className="w-3.5 h-3.5 mr-1.5" />Istoric 90z</TabsTrigger>
           </TabsList>
 
