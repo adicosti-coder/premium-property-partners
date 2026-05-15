@@ -45,11 +45,16 @@ const TREND_LABELS: Record<string, { label: string; color: string; suffix?: stri
 const TrendTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload;
-  const ctr = row.ctr ?? 0;
-  const pos = row.position ?? 0;
+  const ctr = Number(row.ctr ?? 0);
+  const pos = Number(row.position ?? 0);
+  const clicks = Number(row.clicks ?? 0);
+  const impressions = Number(row.impressions ?? 0);
+  const leads = Number(row.leads ?? 0);
+  const ctrTone = ctr >= 5 ? "text-emerald-600" : ctr >= 2 ? "text-amber-600" : "text-muted-foreground";
+  const posTone = pos > 0 && pos <= 3 ? "text-emerald-600" : pos <= 10 ? "text-amber-600" : "text-muted-foreground";
   return (
-    <div className="rounded-lg border border-border bg-card p-3 shadow-lg text-xs min-w-[180px]">
-      <p className="font-semibold text-foreground mb-1.5">{label}</p>
+    <div className="rounded-lg border border-border bg-card p-3 shadow-lg text-xs min-w-[220px]">
+      <p className="font-semibold text-foreground mb-2">{label}</p>
       <div className="space-y-1">
         {payload.map((p: any) => {
           const meta = TREND_LABELS[p.dataKey] || { label: p.dataKey, color: p.color, suffix: "" };
@@ -63,14 +68,18 @@ const TrendTooltip = ({ active, payload, label }: any) => {
             </div>
           );
         })}
-        <div className="border-t border-border/60 pt-1 mt-1 flex items-center justify-between gap-3">
-          <span className="text-muted-foreground">CTR · Poziție</span>
-          <span className="font-mono text-foreground">{ctr}% · {pos}</span>
+        <div className="border-t border-border/60 pt-1.5 mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1">
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">CTR</span><span className={`font-mono font-medium ${ctrTone}`}>{ctr}%</span></div>
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">Poziție</span><span className={`font-mono font-medium ${posTone}`}>{pos || "—"}</span></div>
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">Clk/Imp</span><span className="font-mono text-foreground">{impressions > 0 ? ((clicks / impressions) * 100).toFixed(2) : "0"}%</span></div>
+          <div className="flex justify-between gap-2"><span className="text-muted-foreground">Lead-uri</span><span className="font-mono text-foreground">{leads}</span></div>
         </div>
       </div>
     </div>
   );
 };
+
+const PAGE_SIZE_OPTIONS = [5, 10, 25, 50] as const;
 
 const GooglePerformanceWidget = () => {
   const [running, setRunning] = useState(false);
