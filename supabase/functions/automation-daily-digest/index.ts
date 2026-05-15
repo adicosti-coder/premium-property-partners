@@ -120,21 +120,25 @@ Deno.serve(async (req) => {
         `Acțiune: realtrust.ro/admin/automation`,
       ].filter(Boolean).join("\n");
 
-      try {
-        const resp = await fetch(webhookUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event: "automation_critical_alert",
-            timestamp: new Date().toISOString(),
-            to: "+40799069256",
-            message: lines,
-            summary: { critical_approvals: criticalApprovals, disabled_jobs: disabled.length },
-          }),
-        });
-        whatsappResult = { status: resp.status };
-      } catch (e) {
-        whatsappResult = { error: e instanceof Error ? e.message : String(e) };
+      if (dryRun) {
+        whatsappResult = { skipped: true, error: "dry_run" } as { skipped: boolean; error: string };
+      } else {
+        try {
+          const resp = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event: "automation_critical_alert",
+              timestamp: new Date().toISOString(),
+              to: "+40799069256",
+              message: lines,
+              summary: { critical_approvals: criticalApprovals, disabled_jobs: disabled.length },
+            }),
+          });
+          whatsappResult = { status: resp.status };
+        } catch (e) {
+          whatsappResult = { error: e instanceof Error ? e.message : String(e) };
+        }
       }
     } else {
       whatsappResult = { skipped: true, error: "no_webhook_configured" } as { skipped: boolean; error: string };
@@ -143,6 +147,7 @@ Deno.serve(async (req) => {
 
   return new Response(JSON.stringify({
     ok: true,
+    dry_run: dryRun,
     recipients: emailResults,
     whatsapp: whatsappResult,
     digest: data,
