@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
   Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
+  FlaskConical, Copy, XCircle,
 } from "lucide-react";
 
 type Settings = {
