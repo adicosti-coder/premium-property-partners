@@ -280,7 +280,85 @@ const SeoAutomationWidget = () => {
             )}
           </TabsContent>
 
-          {/* History */}
+          {/* Andrei × SEO */}
+          <TabsContent value="andrei" className="space-y-3 mt-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 text-xs">
+                <Badge variant="outline">Total 30z: <b className="ml-1">{bridgeStats.total_30d}</b></Badge>
+                <Badge variant="outline" className="border-emerald-500/40 text-emerald-700"><Phone className="w-3 h-3 mr-1" />Apelate: {bridgeStats.called}</Badge>
+                <Badge variant="outline" className="border-amber-500/40 text-amber-700"><PhoneForwarded className="w-3 h-3 mr-1" />Skip: {bridgeStats.skipped}</Badge>
+                <Badge variant="outline" className="border-red-500/40 text-red-700"><PhoneOff className="w-3 h-3 mr-1" />Failed: {bridgeStats.failed}</Badge>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={() => triggerJob("Bridge dry-run", "seo-andrei-bridge", { dry_run: true, max_calls: 5 })} disabled={running !== null}>
+                  {running === "Bridge dry-run" ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1.5" />}
+                  Simulare
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => triggerJob("Bridge → Andrei", "seo-andrei-bridge", { max_calls: 3 })} disabled={running !== null}>
+                  {running === "Bridge → Andrei" ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <PhoneCall className="w-3.5 h-3.5 mr-1.5" />}
+                  Rulează acum
+                </Button>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Detectorul leagă query-urile SEO cu intenție comercială (regim hotelier, vânzare, închiriere, proprietar etc.) de prospectele active cu telefon și declanșează un apel Andrei. Rulare automată: zilnic 06:30.
+            </p>
+            {bridges.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">Niciun apel SEO→Andrei încă. Apasă "Rulează acum" pentru a procesa oportunitățile curente.</p>
+            ) : (
+              <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                {bridges.map((b: any) => (
+                  <div key={b.id} className="border border-border rounded-lg p-3 bg-card">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <Badge variant="outline" className={
+                            b.status === "called" ? "border-emerald-500/40 text-emerald-700" :
+                            b.status === "skipped" ? "border-amber-500/40 text-amber-700" :
+                            b.status === "failed" ? "border-red-500/40 text-red-700" :
+                            "border-border text-muted-foreground"
+                          }>{b.status}</Badge>
+                          {b.score_after > b.score_before && (
+                            <Badge variant="secondary" className="text-[10px]">scor {b.score_before} → {b.score_after}</Badge>
+                          )}
+                          <span className="text-[10px] text-muted-foreground">{new Date(b.triggered_at).toLocaleString("ro-RO")}</span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground truncate">"{b.query}"</p>
+                        {b.prospect && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            → {b.prospect.title || "Prospect"} · {b.prospect.location || "—"} · {b.prospect.phone_normalized}
+                          </p>
+                        )}
+                        {b.matched_keywords?.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {b.matched_keywords.slice(0, 6).map((k: string, i: number) => (
+                              <Badge key={i} variant="outline" className="text-[9px]">{k}</Badge>
+                            ))}
+                          </div>
+                        )}
+                        {b.call_session && (
+                          <div className="mt-2 text-[11px] text-muted-foreground border-t border-border/60 pt-2">
+                            Sesiune: <b className="text-foreground">{b.call_session.status}</b>
+                            {b.call_session.duration_seconds != null && <> · {b.call_session.duration_seconds}s</>}
+                            {b.call_session.outcome_summary && <> · <span className="italic">"{String(b.call_session.outcome_summary).slice(0, 120)}"</span></>}
+                          </div>
+                        )}
+                        {b.status === "failed" && b.auto_dial_response?.error && (
+                          <p className="text-[11px] text-red-600 mt-1">{String(b.auto_dial_response.error).slice(0, 200)}</p>
+                        )}
+                      </div>
+                      {b.page && (
+                        <a href={b.page} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline shrink-0">
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="history" className="space-y-3 mt-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <p className="text-xs text-muted-foreground">Trend lung 90 zile (din snapshot zilnic GSC)</p>
