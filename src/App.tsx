@@ -184,6 +184,7 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <FAQSchemaProvider>
+              <CanonicalHreflang />
               <ScrollToTop />
               <DeferredShell>
                 <Suspense fallback={<PageLoader />}>
