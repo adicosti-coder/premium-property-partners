@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, TrendingUp, AlertTriangle, RefreshCw, Sparkles, ExternalLink, Target, FileSearch, Swords, History, CheckCircle2, X } from "lucide-react";
+import { Loader2, TrendingUp, AlertTriangle, RefreshCw, Sparkles, ExternalLink, Target, FileSearch, Swords, History, CheckCircle2, X, PhoneCall, Phone, PhoneOff, PhoneForwarded } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
