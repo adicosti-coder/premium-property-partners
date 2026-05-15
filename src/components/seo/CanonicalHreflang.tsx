@@ -14,11 +14,11 @@ const SITE_ORIGIN = "https://realtrust.ro";
 const CanonicalHreflang = () => {
   const { pathname } = useLocation();
 
-  // Normalize trailing slash: keep "/" for root, strip elsewhere.
-  const normalizedPath =
-    pathname.length > 1 && pathname.endsWith("/")
-      ? pathname.slice(0, -1)
-      : pathname;
+  // Normalize trailing slash(es): keep "/" for root, strip ALL trailing
+  // slashes elsewhere ("/foo", "/foo/", "/foo///" => "/foo").
+  // Ensures a single canonical form across the whole site.
+  const stripped = pathname.replace(/\/+$/, "");
+  const normalizedPath = stripped === "" ? "/" : stripped;
 
   // Canonical strips ALL query params (utm_*, fbclid, gclid, lang, etc.)
   // — keeps only the clean path. This prevents duplicate-content from
