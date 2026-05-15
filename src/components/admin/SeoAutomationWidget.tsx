@@ -11,7 +11,7 @@ import { Settings2 } from "lucide-react";
 import { Loader2, TrendingUp, AlertTriangle, RefreshCw, Sparkles, ExternalLink, Target, FileSearch, Swords, History, CheckCircle2, X, PhoneCall, Phone, PhoneOff, PhoneForwarded, RotateCcw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const fmt = (n: number) => new Intl.NumberFormat("ro-RO").format(Math.round(n || 0));
 const fmtCompact = (n: number) => {
