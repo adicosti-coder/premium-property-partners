@@ -3,11 +3,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, MousePointerClick, Eye, TrendingUp, AlertTriangle, RefreshCw, ExternalLink, ShieldCheck } from "lucide-react";
+import { Loader2, Search, MousePointerClick, Eye, TrendingUp, AlertTriangle, RefreshCw, ExternalLink, ShieldCheck, Send, BarChart3, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { notifyIndexNow } from "@/hooks/useIndexNowNotify";
 
 interface GSCRow {
   query?: string;
