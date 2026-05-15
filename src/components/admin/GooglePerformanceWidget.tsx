@@ -417,7 +417,88 @@ const GooglePerformanceWidget = () => {
                 </>
               );
             })()}
-          </>
+            </TabsContent>
+
+            <TabsContent value="indexing" className="space-y-4 mt-0">
+              {/* Bulk actions */}
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-primary" /> Verificare & re-indexare
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Rulează auditul de indexare sau cere re-indexare pentru paginile cu trafic.
+                      Re-indexarea folosește IndexNow (Bing/Yandex) — pentru Google deschide URL Inspection.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={runIndexCheck} disabled={running}>
+                      {running ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />}
+                      Verifică indexare
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => requestBulkReindex(data.topPages.map(p => p.page!).filter(Boolean))}
+                      disabled={bulkReindexing || !data.topPages.length}
+                    >
+                      {bulkReindexing ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1.5" />}
+                      Re-indexare top {data.topPages.length}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Per-page indexing controls */}
+              <div>
+                <h4 className="text-sm font-semibold mb-2 text-foreground">Pagini cu trafic — control indexare</h4>
+                <div className="space-y-1.5">
+                  {data.topPages.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Fără pagini de afișat.</p>
+                  )}
+                  {data.topPages.map((p, i) => {
+                    const url = p.page || "";
+                    const path = url.replace(/^https?:\/\/[^/]+/, "") || "/";
+                    const isLoading = reindexing === url;
+                    return (
+                      <div key={i} className="flex items-center justify-between gap-2 text-xs p-2 rounded bg-muted/40">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground" />
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="truncate font-medium text-foreground hover:underline">
+                            {path}
+                          </a>
+                          <Badge variant="secondary" className="text-[10px] shrink-0">{fmt(p.clicks)} clk</Badge>
+                          <Badge variant="outline" className="text-[10px] shrink-0">poz. {p.position}</Badge>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a
+                            href={gscInspectUrl(url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 rounded border border-border text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground inline-flex items-center gap-1"
+                            title="Deschide URL Inspection în Google Search Console"
+                          >
+                            GSC <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-[10px]"
+                            onClick={() => requestReindex(url)}
+                            disabled={isLoading || !url}
+                          >
+                            {isLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />}
+                            Re-indexare
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         ) : null}
       </CardContent>
     </Card>
