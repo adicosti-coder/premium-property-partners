@@ -97,7 +97,7 @@ serve(async (req) => {
     });
 
     // Send alert if any critical issues + Resend configured
-    if (issues.length > 0 && RESEND_API_KEY) {
+    if (mode === "auto" && issues.length > 0 && RESEND_API_KEY) {
       const html = `
         <h2>⚠️ Alertă SEO: ${issues.length} probleme de indexare detectate</h2>
         <p>Site: <strong>${SITE}</strong></p>
