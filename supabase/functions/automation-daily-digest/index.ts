@@ -77,25 +77,29 @@ Deno.serve(async (req) => {
   };
 
   // Email — one per recipient via existing transactional pipeline
-  const emailResults: Array<{ to: string; ok: boolean; status: number }> = [];
-  for (const to of recipients) {
-    const idempotencyKey = `automation-digest-${new Date().toISOString().slice(0, 10)}-${to}`;
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        "x-webhook-secret": SERVICE_KEY,
-      },
-      body: JSON.stringify({
-        template_name: "automation-daily-digest",
-        to,
-        idempotency_key: idempotencyKey,
-        purpose: "transactional",
-        data,
-      }),
-    });
-    emailResults.push({ to, ok: res.ok, status: res.status });
+  const emailResults: Array<{ to: string; ok: boolean; status: number; skipped?: boolean }> = [];
+  if (dryRun) {
+    for (const to of recipients) emailResults.push({ to, ok: true, status: 0, skipped: true });
+  } else {
+    for (const to of recipients) {
+      const idempotencyKey = `automation-digest-${new Date().toISOString().slice(0, 10)}-${to}`;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          "x-webhook-secret": SERVICE_KEY,
+        },
+        body: JSON.stringify({
+          template_name: "automation-daily-digest",
+          to,
+          idempotency_key: idempotencyKey,
+          purpose: "transactional",
+          data,
+        }),
+      });
+      emailResults.push({ to, ok: res.ok, status: res.status });
+    }
   }
 
   // WhatsApp critical alert: only if there are critical-severity approvals or self-healing-disabled jobs
