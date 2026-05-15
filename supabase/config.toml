@@ -131,3 +131,9 @@ project_id = "mvzssjyzbwccioqvhjpo"
     verify_jwt = false
   [functions.seo-track-impression]
     verify_jwt = false
+  [functions.seo-indexing-alerts]
+    verify_jwt = false
+  [functions.seo-weekly-report]
+    verify_jwt = false
+  [functions.gsc-performance]
+    verify_jwt = false
