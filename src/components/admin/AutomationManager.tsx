@@ -328,12 +328,29 @@ const AutomationManager = () => {
                           <p className="text-xs text-destructive mt-1 truncate">⚠ {job.last_error}</p>
                         )}
                       </div>
-                      <Switch
-                        checked={job.enabled && globalOn}
-                        disabled={!globalOn || pendingToggle === job.id}
-                        onCheckedChange={(v) => toggleJob(job, v)}
-                        aria-label={`Toggle ${job.label}`}
-                      />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!globalOn || runningJob === job.id}
+                          onClick={() => runNow(job)}
+                          aria-label={`Rulează acum ${job.label}`}
+                          title="Declanșează manual acum"
+                        >
+                          {runningJob === job.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Zap className="w-3 h-3" />
+                          )}
+                          <span className="hidden md:inline ml-1">Run</span>
+                        </Button>
+                        <Switch
+                          checked={job.enabled && globalOn}
+                          disabled={!globalOn || pendingToggle === job.id}
+                          onCheckedChange={(v) => toggleJob(job, v)}
+                          aria-label={`Toggle ${job.label}`}
+                        />
+                      </div>
                     </div>
                   ))}
                 </CardContent>
