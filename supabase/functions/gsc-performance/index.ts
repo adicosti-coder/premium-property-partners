@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -96,8 +97,37 @@ serve(async (req) => {
       position: Number((r.position || 0).toFixed(1)),
     }));
 
+    // Correlate with leads from DB in same window
+    let leadsTotal = 0;
+    let leadsByDay: Array<{ date: string; leads: number }> = [];
+    try {
+      const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+      const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+      const { data: leadsRows } = await sb
+        .from("leads")
+        .select("created_at")
+        .gte("created_at", `${startDate}T00:00:00Z`)
+        .lte("created_at", `${endDate}T23:59:59Z`);
+      const counts: Record<string, number> = {};
+      (leadsRows || []).forEach((r: any) => {
+        const d = String(r.created_at).slice(0, 10);
+        counts[d] = (counts[d] || 0) + 1;
+      });
+      leadsTotal = (leadsRows || []).length;
+      leadsByDay = Object.entries(counts).map(([date, leads]) => ({ date, leads })).sort((a, b) => a.date.localeCompare(b.date));
+    } catch (e) {
+      console.error("leads correlation error:", e);
+    }
+
+    const conversionRate = summary.clicks > 0 ? Number(((leadsTotal / summary.clicks) * 100).toFixed(2)) : 0;
+
+    // Merge leads into trend by date
+    const leadsMap = new Map(leadsByDay.map((l) => [l.date, l.leads]));
+    const trendWithLeads = trend.map((t: any) => ({ ...t, leads: leadsMap.get(t.date) || 0 }));
+
     return new Response(
-      JSON.stringify({ summary, trend, topQueries, topPages }),
+      JSON.stringify({ summary, trend: trendWithLeads, topQueries, topPages, leads: { total: leadsTotal, byDay: leadsByDay, conversionRate } }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e: any) {
