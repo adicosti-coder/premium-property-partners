@@ -75,6 +75,40 @@ serve(async (req) => {
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([date, v]) => ({ date, clicks: v.clicks, impressions: v.impressions, ctr: v.impressions ? Number((v.clicks / v.impressions * 100).toFixed(2)) : 0 }));
 
+    // Andrei × SEO bridges (last 30d)
+    const since30 = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    const { data: bridges } = await sb
+      .from("seo_andrei_bridge")
+      .select("id, opportunity_id, prospect_id, query, page, matched_keywords, score_before, score_after, status, call_session_id, triggered_at, auto_dial_response")
+      .gte("triggered_at", since30)
+      .order("triggered_at", { ascending: false })
+      .limit(100);
+
+    // Enrich with prospect + call session info
+    const prospectIds = [...new Set((bridges || []).map((b: any) => b.prospect_id).filter(Boolean))];
+    const sessionIds = [...new Set((bridges || []).map((b: any) => b.call_session_id).filter(Boolean))];
+    const [{ data: prospectsInfo }, { data: sessionsInfo }] = await Promise.all([
+      prospectIds.length
+        ? sb.from("prospect_listings").select("id, title, phone_normalized, location, lifecycle_status").in("id", prospectIds)
+        : Promise.resolve({ data: [] }),
+      sessionIds.length
+        ? sb.from("voice_call_sessions").select("id, status, call_objective, started_at, ended_at, duration_seconds, outcome_summary, recording_url").in("id", sessionIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+    const prospectMap = new Map((prospectsInfo || []).map((p: any) => [p.id, p]));
+    const sessionMap = new Map((sessionsInfo || []).map((s: any) => [s.id, s]));
+    const bridgesEnriched = (bridges || []).map((b: any) => ({
+      ...b,
+      prospect: prospectMap.get(b.prospect_id) || null,
+      call_session: b.call_session_id ? sessionMap.get(b.call_session_id) || null : null,
+    }));
+    const bridgeStats = {
+      total_30d: bridges?.length || 0,
+      called: bridgesEnriched.filter((b: any) => b.status === "called").length,
+      skipped: bridgesEnriched.filter((b: any) => b.status === "skipped").length,
+      failed: bridgesEnriched.filter((b: any) => b.status === "failed").length,
+    };
+
     // Stats
     const oppByType = (opportunities || []).reduce((acc: any, o: any) => { acc[o.type] = (acc[o.type] || 0) + 1; return acc; }, {});
     const oppPotential = (opportunities || []).reduce((s: number, o: any) => s + (o.potential_clicks || 0), 0);
@@ -87,6 +121,7 @@ serve(async (req) => {
       audits: audits || [],
       competitor_matrix: compMatrix,
       trend_90d: trend90,
+      andrei_bridges: bridgesEnriched,
       stats: {
         opp_total: opportunities?.length || 0,
         opp_by_type: oppByType,
@@ -95,6 +130,7 @@ serve(async (req) => {
         audit_avg_score: auditAvgScore,
         audit_high_issues: auditHighIssues,
         comp_queries_tracked: Object.keys(compMatrix).length,
+        bridge_stats: bridgeStats,
       },
     });
   } catch (e) {
