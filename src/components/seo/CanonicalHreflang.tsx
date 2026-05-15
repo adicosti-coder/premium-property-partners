@@ -12,26 +12,21 @@ const SITE_ORIGIN = "https://realtrust.ro";
  * Mounted once near the top of the router so it applies to every route.
  */
 const CanonicalHreflang = () => {
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
 
-  // Strip lang param from search to build the canonical (RO) URL.
-  const params = new URLSearchParams(search);
-  params.delete("lang");
-  const cleanSearch = params.toString();
-
-  // Normalize trailing slash: keep "/" for root, no trailing slash elsewhere.
+  // Normalize trailing slash: keep "/" for root, strip elsewhere.
   const normalizedPath =
     pathname.length > 1 && pathname.endsWith("/")
       ? pathname.slice(0, -1)
       : pathname;
 
-  const canonicalUrl =
-    SITE_ORIGIN + normalizedPath + (cleanSearch ? `?${cleanSearch}` : "");
+  // Canonical strips ALL query params (utm_*, fbclid, gclid, lang, etc.)
+  // — keeps only the clean path. This prevents duplicate-content from
+  // tracking parameters in Google Search Console.
+  const canonicalUrl = SITE_ORIGIN + normalizedPath;
 
-  // English alternate: append lang=en to the cleaned query.
-  const enParams = new URLSearchParams(cleanSearch);
-  enParams.set("lang", "en");
-  const enUrl = `${SITE_ORIGIN}${normalizedPath}?${enParams.toString()}`;
+  // English alternate: clean path + ?lang=en only.
+  const enUrl = `${canonicalUrl}?lang=en`;
 
   return (
     <Helmet>
