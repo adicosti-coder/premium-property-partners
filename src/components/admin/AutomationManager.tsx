@@ -446,6 +446,9 @@ const AutomationManager = () => {
           <TabsTrigger value="approvals">
             <Inbox className="w-4 h-4 mr-2" /> Aprobări ({approvals.length})
           </TabsTrigger>
+          <TabsTrigger value="test">
+            <FlaskConical className="w-4 h-4 mr-2" /> Mod test
+          </TabsTrigger>
           <TabsTrigger value="audit">
             <History className="w-4 h-4 mr-2" /> Audit
           </TabsTrigger>
