@@ -76,37 +76,39 @@ Deno.serve(async (req) => {
       .limit(1);
     if (dup && dup.length > 0) continue;
 
-    await supabase.from("seo_anomaly_log").insert({
-      alert_key: alertKey,
-      payload: a,
-    });
+    if (!dryRun) {
+      await supabase.from("seo_anomaly_log").insert({ alert_key: alertKey, payload: a });
+    }
     alertsCreated++;
 
-    await supabase.from("automation_approvals").insert({
-      job_key: "seo.anomaly_detector",
-      action_type: "investigate_seo_drop",
-      entity_type: "seo_page",
-      entity_id: null,
-      severity: a.drop_pct >= 30 ? "critical" : "warning",
-      proposal: {
-        action: "Reauditează și regenerează meta pentru pagina cu scor în scădere",
-        page: a.page,
-        drop_pct: a.drop_pct,
-        recent_score: a.recent,
-        previous_score: a.previous,
-      },
-      evidence: {
-        threshold_pct: DROP_THRESHOLD,
-        sample_window_days: 14,
-      },
-    });
+    if (!dryRun) {
+      await supabase.from("automation_approvals").insert({
+        job_key: "seo.anomaly_detector",
+        action_type: "investigate_seo_drop",
+        entity_type: "seo_page",
+        entity_id: null,
+        severity: a.drop_pct >= 30 ? "critical" : "warning",
+        proposal: {
+          action: "Reauditează și regenerează meta pentru pagina cu scor în scădere",
+          page: a.page,
+          drop_pct: a.drop_pct,
+          recent_score: a.recent,
+          previous_score: a.previous,
+        },
+        evidence: { threshold_pct: DROP_THRESHOLD, sample_window_days: 14 },
+      });
+    }
     approvalsCreated++;
   }
 
   return new Response(JSON.stringify({
+    dry_run: dryRun,
     pages_analyzed: byPage.size,
     anomalies_detected: anomalies.length,
-    alerts_created: alertsCreated,
-    approvals_created: approvalsCreated,
+    alerts_created: dryRun ? 0 : alertsCreated,
+    would_create_alerts: dryRun ? alertsCreated : undefined,
+    approvals_created: dryRun ? 0 : approvalsCreated,
+    would_create_approvals: dryRun ? approvalsCreated : undefined,
+    anomalies,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
