@@ -37,21 +37,35 @@ const SEVERITY_COLOR: Record<string, string> = {
 
 const DEFAULT_RETRY_COOLDOWN_MIN = 30;
 const DEFAULT_MAX_RETRIES = 3;
+const RETRY_COOLDOWN_BOUNDS = { min: 5, max: 720 } as const;
+const MAX_RETRIES_BOUNDS = { min: 1, max: 3 } as const;
 const RETRY_SETTINGS_KEY = "andrei_retry_config";
 const RETRY_SETTINGS_LOCAL_FALLBACK = "seo_andrei_retry_settings_v1";
 const FAIL_SESSION_STATUSES = new Set(["failed", "no-answer", "no_answer", "noanswer", "busy", "voicemail"]);
 
-const clampSettings = (cooldown: any, max: any) => ({
-  cooldown: Math.max(5, Math.min(720, Math.round(Number(cooldown)) || DEFAULT_RETRY_COOLDOWN_MIN)),
-  max: Math.max(1, Math.min(10, Math.round(Number(max)) || DEFAULT_MAX_RETRIES)),
+const RetrySettingsSchema = z.object({
+  cooldown: z.coerce.number({ invalid_type_error: "Cooldown trebuie să fie un număr." })
+    .int("Cooldown trebuie să fie număr întreg de minute.")
+    .min(RETRY_COOLDOWN_BOUNDS.min, `Cooldown minim ${RETRY_COOLDOWN_BOUNDS.min} minute.`)
+    .max(RETRY_COOLDOWN_BOUNDS.max, `Cooldown maxim ${RETRY_COOLDOWN_BOUNDS.max} minute.`),
+  max: z.coerce.number({ invalid_type_error: "Numărul de retry-uri trebuie să fie un număr." })
+    .int("Numărul maxim de retry-uri trebuie să fie întreg.")
+    .min(MAX_RETRIES_BOUNDS.min, `Minim ${MAX_RETRIES_BOUNDS.min} retry permis.`)
+    .max(MAX_RETRIES_BOUNDS.max, `Maxim ${MAX_RETRIES_BOUNDS.max} retry-uri permise.`),
 });
 
-const loadLocalFallback = () => {
+type RetrySettings = z.infer<typeof RetrySettingsSchema>;
+
+const safeParseSettings = (raw: any): RetrySettings => {
+  const parsed = RetrySettingsSchema.safeParse({ cooldown: raw?.cooldown, max: raw?.max });
+  return parsed.success ? parsed.data : { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES };
+};
+
+const loadLocalFallback = (): RetrySettings => {
   try {
     const raw = localStorage.getItem(RETRY_SETTINGS_LOCAL_FALLBACK);
     if (!raw) return { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES };
-    const p = JSON.parse(raw);
-    return clampSettings(p.cooldown, p.max);
+    return safeParseSettings(JSON.parse(raw));
   } catch { return { cooldown: DEFAULT_RETRY_COOLDOWN_MIN, max: DEFAULT_MAX_RETRIES }; }
 };
 
@@ -59,8 +73,9 @@ const SeoAutomationWidget = () => {
   const [running, setRunning] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState<string | null>(null);
   const [retrying, setRetrying] = useState<string | null>(null);
-  const [retrySettings, setRetrySettings] = useState(() => loadLocalFallback());
+  const [retrySettings, setRetrySettings] = useState<RetrySettings>(() => loadLocalFallback());
   const [settingsSyncing, setSettingsSyncing] = useState(false);
+  const [settingsErrors, setSettingsErrors] = useState<{ cooldown?: string; max?: string }>({});
   const RETRY_COOLDOWN_MIN = retrySettings.cooldown;
   const MAX_RETRIES = retrySettings.max;
 
@@ -74,14 +89,26 @@ const SeoAutomationWidget = () => {
         .eq("key", RETRY_SETTINGS_KEY)
         .maybeSingle();
       if (cancelled || error || !data?.value) return;
-      const v = data.value as any;
-      setRetrySettings(clampSettings(v.cooldown, v.max));
+      setRetrySettings(safeParseSettings(data.value as any));
     })();
     return () => { cancelled = true; };
   }, []);
 
-  const saveRetrySettings = async (cooldown: number, max: number) => {
-    const safe = clampSettings(cooldown, max);
+  const saveRetrySettings = async (cooldown: number | string, max: number | string) => {
+    const parsed = RetrySettingsSchema.safeParse({ cooldown, max });
+    if (!parsed.success) {
+      const fields = parsed.error.flatten().fieldErrors;
+      const errs = { cooldown: fields.cooldown?.[0], max: fields.max?.[0] };
+      setSettingsErrors(errs);
+      toast({
+        title: "❌ Setări invalide",
+        description: [errs.cooldown, errs.max].filter(Boolean).join(" · ") || "Verifică valorile introduse.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    setSettingsErrors({});
+    const safe = parsed.data;
     setRetrySettings(safe);
     setSettingsSyncing(true);
     try { localStorage.setItem(RETRY_SETTINGS_LOCAL_FALLBACK, JSON.stringify(safe)); } catch {}
@@ -91,9 +118,10 @@ const SeoAutomationWidget = () => {
     setSettingsSyncing(false);
     if (error) {
       toast({ title: "Eroare salvare în cloud", description: error.message, variant: "destructive" });
-      return;
+      return false;
     }
     toast({ title: "☁️ Setări retry sincronizate", description: `Cooldown: ${safe.cooldown}m · Max retry: ${safe.max}` });
+    return true;
   };
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<any>({
