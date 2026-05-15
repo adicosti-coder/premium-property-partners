@@ -29,11 +29,12 @@ const fmt = (n: number) => new Intl.NumberFormat("ro-RO").format(Math.round(n));
 
 const GooglePerformanceWidget = () => {
   const [running, setRunning] = useState(false);
+  const [days, setDays] = useState<7 | 28 | 90>(28);
 
   const { data, isLoading, error, refetch, isFetching } = useQuery<GSCResponse>({
-    queryKey: ["gsc-performance"],
+    queryKey: ["gsc-performance", days],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("gsc-performance", { body: {} });
+      const { data, error } = await supabase.functions.invoke("gsc-performance", { body: { days } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
