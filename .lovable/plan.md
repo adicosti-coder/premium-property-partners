@@ -1,113 +1,211 @@
-# Automatizare completă GSC + Scraping + SEO
+# Plan automatizare Admin RealTrust — Faza 1
 
-Scop: transformăm widget-ul GSC într-un sistem autonom care zilnic colectează date din Search Console, le încrucișează cu scraping (Firecrawl) și AI (Gemini), generează acțiuni recomandate și trimite alerte. Totul rulează automat prin cron, fără intervenție manuală.
+Scop: să transformăm Admin-ul dintr-un panou operat manual într-un sistem care lucrează singur pe acțiunile sigure și escaladează doar ce contează spre tine. Două zone în Faza 1: **Lead Pipeline (Scraper + Voice Agent)** și **SEO & Indexare automată**. Risk: echilibrat (auto pe sigur, aprobare pe destructiv). Canale: WhatsApp urgențe, Email digest, In-app pentru tot.
 
-## Arhitectura
+## Principii care guvernează tot
 
-```text
-[Cron zilnic 06:00] ─┬─► gsc-daily-snapshot ──► tabel seo_gsc_daily (per query+page)
-                     ├─► seo-page-audit-cron ──► Firecrawl scrape top pagini ──► tabel seo_page_audits
-                     ├─► seo-opportunity-detector ──► Gemini ──► tabel seo_opportunities
-                     └─► seo-anomaly-alerts ──► Resend email + admin notification
+1. **Audit log obligatoriu** — orice acțiune autonomă scrie în `admin_audit_log` (cine/ce/când/de ce + payload reversibil).
+2. **Kill switch global** — un singur toggle în Admin → Automation (`automation_enabled`) oprește toate joburile fără deploy.
+3. **Reversibil** — fiecare acțiune are buton "Revert" 1-click în UI (ex: un-blacklist, un-archive, re-publish).
+4. **Quotas + circuit breaker** — dacă o automatizare eșuează 3x consecutiv, se auto-dezactivează și te alertează.
+5. **Idempotență** — toate joburile pot rula de 2x fără efecte duble (folosim chei `dedupe_key`).
 
-[Widget Admin] ──► citește toate tabelele ──► dashboard unificat cu 5 tab-uri
+---
+
+## Zona 1 — Lead Pipeline (Scraper + Voice Agent)
+
+### A. Auto pe acțiuni sigure (fără aprobare)
+
+| Acțiune | Trigger | Ce face |
+|---|---|---|
+| **Auto-tag agency suspicion score** | La fiecare insert în `prospect_listings` | Gemini 2.5 Flash analizează titlu+descriere+telefon → scor 0-100, salvat în `agency_suspicion_score`. Sub 70 = sigur owner. |
+| **Auto-dedup cross-platform** | Insert prospect | Hash `phone_normalized + zone_key + rooms + size_bucket` → skip dacă există în ultimele 30 zile (deja există parțial; îl extindem pe toate cele 3 surse). |
+| **Auto Twilio Lookup** | Insert cu telefon nou | Verifică line_type → dacă landline/voip, marchează `do_not_call=true` automat. |
+| **Auto-archive caller profiles** | Cron zilnic 03:00 | Profilurile fără apel de 6+ luni → arhivat (deja există funcția `voice_caller_archive_stale`, o rulăm cu cron). |
+| **Auto-recall după no-answer** | Apel finalizat cu `status='no_answer'` | Reprogramare automată după 4h, max 2 retries; al 3-lea no-answer → marchează `cold` și oprește. |
+| **Auto-injectare în voice queue** | Lead score ≥ 80 și `lifecycle_status='new'` | Deja există trigger-ul; îl extindem cu **rate limiting** (max 5 apeluri auto/oră) ca să nu suprasolicităm. |
+
+### B. Aprobare necesară (semi-auto)
+
+| Acțiune | Cum funcționează |
+|---|---|
+| **Auto-blacklist agency** | Scor suspicion ≥ 85 → propunere în "Pending Approvals" tab cu evidence (3 listings, telefon, domain). 1 click "Approve" execută `auto_blacklist_prospect`. |
+| **Recall lead 90+** | Lead 90+ care n-a răspuns la primul auto-call → notificare WhatsApp către admin cu opțiunea "Sun-l manual" (deep link `tel:`). |
+| **Bulk archive agency** | Buton existent `bulk_archive_detected_agencies` → adăugăm preview "Vei arhiva X listinguri" + audit. |
+
+### C. Notificări & escaladare
+
+- **WhatsApp imediat** (folosim `notify-new-lead-whatsapp` existent):
+  - Lead score ≥ 90 nou
+  - Auto-call eșuat 3x pe lead 90+
+  - Circuit breaker activat (ceva s-a oprit singur)
+- **In-app** (`user_notifications`):
+  - Pending approvals (auto-blacklist propus)
+  - Anomalii (drop > 30% lead-uri zilnic vs media săptămânală)
+- **Email digest zilnic 08:00**:
+  - Top 10 leaduri noi 80+, conversii ieri, apeluri reușite/eșuate, cost Twilio estimat, anomalii detectate
+
+### D. Self-healing (cron monitor)
+
+- Job eșuat 1x → retry exponențial (1min, 5min, 15min)
+- Job eșuat 3x consecutiv → auto-disable + WhatsApp + In-app
+- Recovery automat: când job-ul rulează cu succes după disable, se re-activează singur și logheaz "self-recovered"
+
+---
+
+## Zona 2 — SEO & Indexare automată
+
+### A. Auto pe acțiuni sigure
+
+| Acțiune | Trigger | Ce face |
+|---|---|---|
+| **Auto-audit URL la modificare** | Update pe `properties`, `blog_articles`, `complex_landing_pages` | Edge function `seo-auto-audit` rulează Gemini pe noul conținut → salvează scor + sugestii în `seo_audit_cache`. |
+| **Auto-push IndexNow** | Insert/update pe content tables | Trigger DB → edge function `indexnow-push` (există deja) cu URL nou/modificat. |
+| **Auto-fill meta lipsă** | Cron 04:00 zilnic | Detectează properties fără `meta_title` sau `meta_description` → Gemini generează draft → **status='pending_review'** (NU publică). Tu aprobi din Admin → SEO. |
+| **Auto-detect canonical conflicts** | Cron săptămânal duminică | Crawl sitemap, verifică că fiecare URL are canonical curat, fără slash, fără query. Raportează conflictele. |
+| **Auto-refresh pe drop SEO** | Cron zilnic | Compară `semrush seo_trend` ultimele 7 zile → dacă scădere > 15%, generează raport "Pages with biggest position drops". |
+
+### B. Aprobare necesară
+
+| Acțiune | Cum |
+|---|---|
+| **Apply meta suggestions** | Lista de propuneri Gemini cu "Approve all" / "Approve individual" / "Reject" |
+| **Republish improved page** | Când AI rescrie un title/meta, trebuie aprobat înainte să-l salvezi în DB |
+
+### C. Notificări
+
+- **In-app**: meta lipsă detectată, audit URL gata, SEO drop > 15%
+- **Email săptămânal luni 09:00**: Raport SEO complet (poziții, top pagini, recomandări AI, ce-am auto-fixat)
+
+---
+
+## Detalii tehnice (pentru memoria proiectului)
+
+### Schema nouă
+
+```sql
+-- Centralizator pentru toate automatizările
+CREATE TABLE automation_jobs (
+  id uuid PRIMARY KEY,
+  job_key text UNIQUE,            -- 'lead.auto_dedup', 'seo.auto_audit', etc.
+  enabled boolean DEFAULT true,
+  schedule text,                   -- cron expression sau 'event-driven'
+  last_run_at timestamptz,
+  last_status text,                -- success | failed | disabled
+  consecutive_failures int DEFAULT 0,
+  config jsonb DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+
+-- Acțiuni propuse care așteaptă aprobare
+CREATE TABLE automation_approvals (
+  id uuid PRIMARY KEY,
+  job_key text,
+  action_type text,                -- 'blacklist_agency', 'apply_meta', etc.
+  entity_type text,
+  entity_id text,
+  proposal jsonb,                  -- ce vrea să facă
+  evidence jsonb,                  -- de ce propune
+  status text DEFAULT 'pending',   -- pending | approved | rejected | expired
+  approved_by uuid,
+  approved_at timestamptz,
+  expires_at timestamptz,          -- auto-expire după 7 zile
+  created_at timestamptz DEFAULT now()
+);
+
+-- Anomalies detectate (pt dashboard)
+CREATE TABLE automation_anomalies (
+  id uuid PRIMARY KEY,
+  metric text,                     -- 'leads_per_day', 'seo_position_avg', etc.
+  baseline numeric,
+  observed numeric,
+  delta_pct numeric,
+  severity text,                   -- info | warning | critical
+  context jsonb,
+  notified boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
 ```
-
-## Ce automatizăm
-
-### 1. Snapshot zilnic GSC (`gsc-daily-snapshot`)
-- Cron 06:00 fiecare zi
-- Salvează clicks/impressions/CTR/poziție pentru fiecare (query, page, date) în `seo_gsc_daily`
-- Permite trend analysis pe orizont lung (90+ zile) fără re-fetch GSC
-- Calculează delta vs ziua precedentă, săptămâna precedentă
-
-### 2. Detector oportunități SEO (`seo-opportunity-detector`)
-Identifică automat 4 tipuri de oportunități:
-- **Striking distance**: query-uri pe poziția 4-15 cu impressions mari → push pentru top 3
-- **CTR underperformers**: poziție bună (1-5) dar CTR sub media SERP → optimizare title/meta
-- **Decay**: pagini cu trend descendent >20% în 7 zile → alertă urgentă
-- **Cannibalization**: 2+ pagini ranking pentru același query → recomandare consolidare
-- Fiecare oportunitate primește scor de impact (clicks potențiale câștigate)
-
-### 3. Audit on-page automat (`seo-page-audit-cron`)
-- Pentru top 20 pagini din GSC + pagini cu oportunități
-- Firecrawl scrape (markdown + html + metadata) o dată pe săptămână
-- Extrage: title, meta description, H1, H2, word count, schema JSON-LD, internal links, alt-text missing
-- Stochează în `seo_page_audits` cu issue flags: title prea lung/scurt, meta lipsă, H1 duplicat, etc.
-
-### 4. AI Action Plan (Gemini)
-- Pentru fiecare oportunitate top 10, Gemini generează:
-  - Sugestie title nou (cu keyword target)
-  - Sugestie meta description
-  - 3 acțiuni concrete (ex: "adaugă secțiune FAQ despre X", "internal link de la /pagina-y")
-- Cache rezultate 7 zile (mem://technical/ai-quota-caching-strategy)
-
-### 5. Competitor SERP tracking (extindere `seo-competitor-snapshot`)
-- Pentru top 20 query-uri proprii: SERP scrape săptămânal cu Firecrawl
-- Track poziție vs 3 competitori principali
-- Alertă când un competitor depășește RealTrust pentru query important
-
-### 6. Alerte automate
-- **Email săptămânal** (extindere `seo-weekly-report`): include top oportunități + audit issues + competitor moves
-- **Alertă instant** (Resend + admin notification): drop >30% clicks pe pagină importantă, deindexare detectată, competitor a urcat pe poziția 1
-- **IndexNow** (există deja): re-ping automat când o pagină e modificată
-
-## Schimbări UI — Widget GSC extins în 5 tab-uri
-
-```text
-┌─ Performanță Google (Search Console) ─────────────────────┐
-│ [Overview] [Oportunități] [Audit] [Competitori] [Istoric] │
-├───────────────────────────────────────────────────────────┤
-│ Overview: KPI-uri actuale + chart trend (existent)        │
-│ Oportunități: tabel cu scor impact + buton "Aplică AI"    │
-│ Audit: lista pagini cu issues + CTA "Re-scrape acum"      │
-│ Competitori: matrice query × competitor cu poziții        │
-│ Istoric: trend 90 zile cu zoom + compară perioade         │
-└───────────────────────────────────────────────────────────┘
-```
-
-## Detalii tehnice
-
-### Tabele noi (migrații)
-- `seo_gsc_daily` — (date, query, page, clicks, impressions, ctr, position) cu PK compus
-- `seo_opportunities` — (id, type, query, page, score, suggested_title, suggested_meta, ai_actions jsonb, status, created_at)
-- `seo_page_audits` — (page, last_scraped_at, title, meta, h1, word_count, issues jsonb, schema_present)
-- `seo_competitor_rankings` — (date, query, our_position, competitor_domain, competitor_position)
-- RLS: doar admin (`has_role(auth.uid(), 'admin')`)
 
 ### Edge functions noi
-- `gsc-daily-snapshot` (cron, verify_jwt false)
-- `seo-opportunity-detector` (cron + manual)
-- `seo-page-audit-cron` (cron săptămânal)
-- `seo-ai-action-plan` (manual din UI per oportunitate)
-- `seo-competitor-rank-tracker` (cron săptămânal, Firecrawl SERP)
 
-### Cron schedule (pg_cron)
-- 06:00 zilnic → gsc-daily-snapshot
-- 06:15 zilnic → seo-opportunity-detector + seo-anomaly-alerts
-- Luni 07:00 → seo-page-audit-cron + seo-competitor-rank-tracker + seo-weekly-report (existent)
+```text
+supabase/functions/
+├── automation-orchestrator/      # rulează la 5 min, dispatch job-uri due
+├── lead-auto-classify-agency/    # Gemini pentru suspicion score
+├── lead-auto-dedup/              # extinde dedup-ul existent
+├── lead-auto-recall/             # programare retry-uri
+├── seo-auto-audit/               # audit URL după modificări
+├── seo-auto-fill-meta/           # generare meta cu Gemini → pending
+├── seo-anomaly-detector/         # compară Semrush week-over-week
+└── automation-daily-digest/      # email + WhatsApp digest 08:00
+```
 
-### Dependențe externe
-- **Google Search Console**: connector există (gateway)
-- **Firecrawl**: connector există (scrape + SERP search)
-- **Lovable AI Gateway** (Gemini 2.5 Flash): pentru opportunity scoring + action plans
-- **Resend**: există pentru email
+### Cron jobs (pg_cron)
 
-## Ce NU includem
-- Backlink monitoring (necesită Semrush API plătit per call)
-- Auto-rewrite live al meta tag-urilor (riscant fără review uman) — păstrăm flow "AI suggest → admin approve → apply"
-- Rank tracking pentru >20 keywords (cost Firecrawl)
+```text
+*/5 * * * *   automation-orchestrator    (dispatcher principal)
+0 3 * * *     voice-caller-archive       (deja existent, doar îl confirmăm activ)
+0 4 * * *     seo-auto-fill-meta         (scan + draft)
+0 8 * * *     automation-daily-digest    (email + WA)
+0 9 * * 1     seo-weekly-report          (luni dimineață)
+0 0 * * 0     canonical-conflict-scan    (duminică noapte)
+```
 
-## Ordine implementare
-1. Migrații tabele + RLS
-2. `gsc-daily-snapshot` + cron + backfill 28 zile
-3. `seo-opportunity-detector` + tab UI Oportunități
-4. `seo-page-audit-cron` + tab UI Audit
-5. `seo-ai-action-plan` (buton per oportunitate)
-6. `seo-competitor-rank-tracker` + tab UI Competitori
-7. Anomaly alerts + extindere weekly report
+### UI nou în Admin
 
-## Întrebări înainte de start
-1. **Competitori de tracked**: care 3 domenii? (ex: storia.ro, imobiliare.ro, olx.ro?)
-2. **Top query-uri prioritare**: vrei să fixez tu lista de ~20 sau le aleg automat din GSC top impressions?
-3. **Threshold alertă drop**: 30% scădere clicks pe pagină cheie e ok ca trigger, sau preferi 50%?
+```text
+/admin/automation/
+├── /                  → Dashboard: status fiecare job, anomalies, kill switch global
+├── /pending-approvals → coadă de propuneri (auto-blacklist, meta-apply)
+├── /audit-log         → ultimele 200 acțiuni auto + filtre
+└── /settings          → config per-job (intervale, praguri, on/off granular)
+```
+
+### Securitate & RLS
+
+- Toate tabelele `automation_*` → RLS doar pentru `admin` role
+- Funcțiile RPC noi → `SECURITY DEFINER` cu `has_role(auth.uid(), 'admin')` check
+- Edge functions de orchestrator → secret `x-automation-secret` validation
+
+---
+
+## Plan de execuție în iterații
+
+| Iter | Conținut | Risc |
+|---|---|---|
+| **1** | Schema (`automation_jobs`, `automation_approvals`, `automation_anomalies`) + UI shell `/admin/automation` cu kill switch | Mic — doar tabele noi + UI read-only |
+| **2** | Lead: auto-dedup extins + auto-classify agency + Twilio lookup. Audit log activ. | Mediu — modifică flow-ul de scrap |
+| **3** | Lead: auto-recall + pending approvals UI + WhatsApp escalation | Mediu |
+| **4** | SEO: auto-audit pe modificări + auto-push IndexNow + auto-fill meta (draft, NU live) | Mic |
+| **5** | Daily digest (email + WhatsApp) + Anomaly detector + Self-healing cron monitor | Mic |
+| **6** | SEO weekly report cu Semrush + canonical conflict scan | Mic |
+
+Fiecare iterație îți cere "Continui?" la final. Poți opri oricând.
+
+---
+
+## Ce NU automatizez în Faza 1
+
+- Auto-publish properties (rămâne aprobare manuală)
+- Auto-reply chatbot către lead (doar sugerare draft)
+- Auto-modificare prețuri sau ROI (doar recalcul matematic)
+- Acțiuni pe `auth.users`, `profiles`, `payments` (zero risc accept)
+
+---
+
+## Cost & resurse estimate
+
+- **Gemini API**: ~30K tokens/zi pentru clasificări + audits → în quota gratis
+- **Twilio Lookup**: ~$0.005/lead nou → ~$5/lună la volum actual
+- **Email digest**: 1/zi via Lovable Emails → gratis în quota
+- **DB storage**: tabelele noi ~5MB/lună
+- **Edge functions**: ~10K invocations/lună → în quota
+
+---
+
+## Următorul pas
+
+Aprobi planul → încep cu **Iterația 1** (schema + UI shell + kill switch). E iterația cu cel mai mic risc și îți dă imediat un loc unde să vezi și să oprești totul. După confirmare, îți dau preview UI înainte să continui cu Iterația 2.
+
+Dacă vrei modificări la plan (schimbare priorități, adaugare/eliminare automatizări, alt risk profile pe o zonă specifică), spune acum.
