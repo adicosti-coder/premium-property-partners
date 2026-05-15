@@ -126,6 +126,20 @@ const GooglePerformanceWidget = () => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground"><Search className="w-3.5 h-3.5" />Poziție medie</div>
                 <p className="text-2xl font-bold text-foreground mt-1">{data.summary.position}</p>
               </div>
+              {data.leads && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 col-span-2 lg:col-span-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground"><TrendingUp className="w-3.5 h-3.5 text-primary" />Conversie SEO → Lead-uri</div>
+                      <p className="text-xs text-muted-foreground mt-0.5">Lead-uri în perioadă: <span className="font-semibold text-foreground">{fmt(data.leads.total)}</span> · CTR mediu: <span className="font-semibold text-foreground">{data.summary.ctr}%</span></p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-primary">{data.leads.conversionRate}%</p>
+                      <p className="text-[10px] text-muted-foreground">lead-uri / clickuri Google</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Trend chart */}
@@ -141,6 +155,7 @@ const GooglePerformanceWidget = () => {
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Line yAxisId="left" type="monotone" dataKey="clicks" stroke="hsl(var(--primary))" strokeWidth={2} name="Clickuri" dot={false} />
                     <Line yAxisId="right" type="monotone" dataKey="impressions" stroke="hsl(var(--chart-2))" strokeWidth={2} name="Impresii" dot={false} />
+                    <Line yAxisId="left" type="monotone" dataKey="leads" stroke="hsl(var(--accent))" strokeWidth={2} name="Lead-uri" dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
