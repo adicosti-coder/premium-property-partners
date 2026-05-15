@@ -4039,6 +4039,27 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_anomaly_log: {
+        Row: {
+          alert_key: string
+          id: number
+          payload: Json
+          sent_at: string
+        }
+        Insert: {
+          alert_key: string
+          id?: number
+          payload?: Json
+          sent_at?: string
+        }
+        Update: {
+          alert_key?: string
+          id?: number
+          payload?: Json
+          sent_at?: string
+        }
+        Relationships: []
+      }
       seo_audit_log: {
         Row: {
           action: string
@@ -4260,6 +4281,42 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_competitor_rankings: {
+        Row: {
+          created_at: string
+          date: string
+          domain: string
+          id: number
+          is_us: boolean
+          position: number | null
+          query: string
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          domain: string
+          id?: number
+          is_us?: boolean
+          position?: number | null
+          query: string
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          domain?: string
+          id?: number
+          is_us?: boolean
+          position?: number | null
+          query?: string
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       seo_competitor_schedules: {
         Row: {
           competitor_urls: Json
@@ -4425,6 +4482,42 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_gsc_daily: {
+        Row: {
+          clicks: number
+          created_at: string
+          ctr: number
+          date: string
+          id: number
+          impressions: number
+          page: string
+          position: number
+          query: string
+        }
+        Insert: {
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          date: string
+          id?: number
+          impressions?: number
+          page?: string
+          position?: number
+          query?: string
+        }
+        Update: {
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          date?: string
+          id?: number
+          impressions?: number
+          page?: string
+          position?: number
+          query?: string
+        }
+        Relationships: []
+      }
       seo_indexing_snapshots: {
         Row: {
           checked_pages: number
@@ -4524,6 +4617,72 @@ export type Database = {
           status?: Database["public"]["Enums"]["seo_local_rec_status_enum"]
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      seo_opportunities: {
+        Row: {
+          ai_actions: Json | null
+          ai_generated_at: string | null
+          ai_meta: string | null
+          ai_title: string | null
+          created_at: string
+          current_clicks: number | null
+          current_ctr: number | null
+          current_impressions: number | null
+          current_position: number | null
+          details: Json | null
+          id: string
+          page: string | null
+          pages: Json | null
+          potential_clicks: number | null
+          query: string | null
+          score: number
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          ai_actions?: Json | null
+          ai_generated_at?: string | null
+          ai_meta?: string | null
+          ai_title?: string | null
+          created_at?: string
+          current_clicks?: number | null
+          current_ctr?: number | null
+          current_impressions?: number | null
+          current_position?: number | null
+          details?: Json | null
+          id?: string
+          page?: string | null
+          pages?: Json | null
+          potential_clicks?: number | null
+          query?: string | null
+          score?: number
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          ai_actions?: Json | null
+          ai_generated_at?: string | null
+          ai_meta?: string | null
+          ai_title?: string | null
+          created_at?: string
+          current_clicks?: number | null
+          current_ctr?: number | null
+          current_impressions?: number | null
+          current_position?: number | null
+          details?: Json | null
+          id?: string
+          page?: string | null
+          pages?: Json | null
+          potential_clicks?: number | null
+          query?: string | null
+          score?: number
+          status?: string
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -4680,6 +4839,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seo_page_audits: {
+        Row: {
+          created_at: string
+          external_links: number | null
+          h1: string | null
+          h2_count: number | null
+          health_score: number | null
+          id: string
+          images_missing_alt: number | null
+          images_total: number | null
+          internal_links: number | null
+          issues: Json | null
+          last_scraped_at: string
+          meta_description: string | null
+          page: string
+          schema_types: string[] | null
+          title: string | null
+          word_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          external_links?: number | null
+          h1?: string | null
+          h2_count?: number | null
+          health_score?: number | null
+          id?: string
+          images_missing_alt?: number | null
+          images_total?: number | null
+          internal_links?: number | null
+          issues?: Json | null
+          last_scraped_at?: string
+          meta_description?: string | null
+          page: string
+          schema_types?: string[] | null
+          title?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          external_links?: number | null
+          h1?: string | null
+          h2_count?: number | null
+          health_score?: number | null
+          id?: string
+          images_missing_alt?: number | null
+          images_total?: number | null
+          internal_links?: number | null
+          issues?: Json | null
+          last_scraped_at?: string
+          meta_description?: string | null
+          page?: string
+          schema_types?: string[] | null
+          title?: string | null
+          word_count?: number | null
+        }
+        Relationships: []
       }
       seo_robots_cache: {
         Row: {
