@@ -139,6 +139,39 @@ const GooglePerformanceWidget = () => {
     }
   };
 
+  const requestReindex = async (url: string) => {
+    if (!url) return;
+    setReindexing(url);
+    try {
+      await notifyIndexNow([url]);
+      toast({ title: "🔄 Re-indexare cerută", description: `Trimis la IndexNow (Bing/Yandex). Pentru Google, deschide URL Inspection în Search Console.` });
+    } catch (e: any) {
+      toast({ title: "Eroare re-indexare", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally {
+      setReindexing(null);
+    }
+  };
+
+  const requestBulkReindex = async (urls: string[]) => {
+    if (!urls.length) return;
+    setBulkReindexing(true);
+    try {
+      await notifyIndexNow(urls);
+      toast({ title: `🔄 Re-indexare bulk cerută`, description: `${urls.length} pagini trimise la IndexNow (Bing/Yandex).` });
+    } catch (e: any) {
+      toast({ title: "Eroare re-indexare", description: e?.message || "Necunoscut", variant: "destructive" });
+    } finally {
+      setBulkReindexing(false);
+    }
+  };
+
+  const gscInspectUrl = (url: string) => {
+    const site = data?.summary?.site || "";
+    const sc = encodeURIComponent(site);
+    const u = encodeURIComponent(url);
+    return `https://search.google.com/search-console/inspect?resource_id=${sc}&id=${u}`;
+  };
+
   return (
     <Card className="border-primary/20">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
