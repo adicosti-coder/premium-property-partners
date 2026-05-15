@@ -53,8 +53,8 @@ serve(async (req) => {
     const [byDayRes, totalsRes, queriesRes, pagesRes] = await Promise.all([
       fetch(queryEndpoint, { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["date"], rowLimit: 1000 }) }),
       fetch(queryEndpoint, { method: "POST", headers, body: JSON.stringify({ startDate, endDate, rowLimit: 1 }) }),
-      fetch(queryEndpoint, { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["query"], rowLimit: 10 }) }),
-      fetch(queryEndpoint, { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["page"], rowLimit: 10 }) }),
+      fetch(queryEndpoint, { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["query"], rowLimit: 100 }) }),
+      fetch(queryEndpoint, { method: "POST", headers, body: JSON.stringify({ startDate, endDate, dimensions: ["page"], rowLimit: 100 }) }),
     ]);
 
     const byDay = byDayRes.ok ? await byDayRes.json() : { rows: [] };
