@@ -93,6 +93,43 @@ const BlogArticlePage = () => {
     }
   }, [article?.slug]);
 
+  // Conversion tracking: blog CTA clicks (data-cta-blog="evaluare-gratuita|contact")
+  useEffect(() => {
+    if (!article?.id) return;
+    const handler = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement | null)?.closest?.('a[data-cta-blog]') as HTMLAnchorElement | null;
+      if (!target) return;
+      const ctaTarget = target.getAttribute('data-cta-blog') || 'unknown';
+      const ctaContext = target.getAttribute('data-cta-context') || article.category || '';
+      const anchorText = (target.textContent || '').trim().slice(0, 120);
+      const params = {
+        cta_target: ctaTarget,
+        cta_context: ctaContext,
+        article_slug: article.slug,
+        article_title: article.title,
+        article_category: article.category,
+        anchor_text: anchorText,
+        page_path: typeof window !== 'undefined' ? window.location.pathname : '',
+      };
+      try {
+        const consent = typeof window !== 'undefined' ? window.localStorage.getItem('cookie_consent_v2') : null;
+        const parsedConsent = consent ? JSON.parse(consent) : null;
+        const hasConsent = parsedConsent === 'all' || parsedConsent === 'analytics_only';
+        if (hasConsent && typeof window !== 'undefined' && typeof window.gtag === 'function') {
+          window.gtag('event', 'cta_blog_click', params);
+          window.gtag('event', 'generate_lead', { ...params, lead_source: 'blog_cta' });
+        }
+      } catch { /* ignore */ }
+      supabase.from('cta_analytics').insert({
+        cta_type: 'form_submit',
+        page_path: typeof window !== 'undefined' ? window.location.pathname : '',
+        metadata: { source: 'blog_cta_click', ...params },
+      }).then(() => undefined, () => undefined);
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [article?.id, article?.slug, article?.title, article?.category]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
