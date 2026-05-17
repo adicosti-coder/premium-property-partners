@@ -39,6 +39,11 @@ import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { markInvestmentArticleVisit, INVESTMENT_ARTICLE_SLUG } from "@/lib/investmentReferralTracking";
+import {
+  injectUtmParams,
+  getOrAssignCtaVariant,
+  type BlogCtaTarget,
+} from "@/lib/blogCtaUtm";
 
 interface BlogArticle {
   id: string;
@@ -93,23 +98,59 @@ const BlogArticlePage = () => {
     }
   }, [article?.slug]);
 
-  // Conversion tracking: blog CTA clicks (data-cta-blog="evaluare-gratuita|contact")
+  // Conversion tracking + UTM injection + CTA A/B variants
+  // for data-cta-blog="evaluare-gratuita|contact" anchors inside article body.
   useEffect(() => {
     if (!article?.id) return;
+
+    // Re-run rewrite after the sanitized HTML mounts. A short rAF chain
+    // is enough because content is set synchronously via dangerouslySetInnerHTML.
+    let cancelled = false;
+    const applyRewrite = () => {
+      if (cancelled) return;
+      const root = document.querySelector('[data-blog-content-root="1"]');
+      if (!root) return;
+      const anchors = root.querySelectorAll<HTMLAnchorElement>("a[data-cta-blog]");
+      anchors.forEach((a) => {
+        if (a.dataset.ctaRewritten === "1") return;
+        const target = (a.getAttribute("data-cta-blog") || "") as BlogCtaTarget;
+        if (target !== "evaluare-gratuita" && target !== "contact") return;
+        const variant = getOrAssignCtaVariant(target);
+        // Replace anchor text with assigned A/B variant (only if non-empty)
+        if (variant.label) a.textContent = variant.label;
+        // Inject UTM parameters
+        const newHref = injectUtmParams(a.getAttribute("href") || `/${target}`, {
+          target,
+          slug: article.slug,
+          category: article.category,
+          variantId: variant.id,
+        });
+        a.setAttribute("href", newHref);
+        a.dataset.ctaVariant = variant.id;
+        a.dataset.ctaRewritten = "1";
+      });
+    };
+    // run a couple of times to catch late DOM commits
+    requestAnimationFrame(applyRewrite);
+    const t = window.setTimeout(applyRewrite, 250);
+
     const handler = (e: MouseEvent) => {
       const target = (e.target as HTMLElement | null)?.closest?.('a[data-cta-blog]') as HTMLAnchorElement | null;
       if (!target) return;
       const ctaTarget = target.getAttribute('data-cta-blog') || 'unknown';
       const ctaContext = target.getAttribute('data-cta-context') || article.category || '';
+      const ctaVariantId = target.dataset.ctaVariant || 'unassigned';
       const anchorText = (target.textContent || '').trim().slice(0, 120);
       const params = {
         cta_target: ctaTarget,
         cta_context: ctaContext,
+        cta_variant_id: ctaVariantId,
         article_slug: article.slug,
         article_title: article.title,
         article_category: article.category,
         anchor_text: anchorText,
         page_path: typeof window !== 'undefined' ? window.location.pathname : '',
+        href: target.getAttribute('href') || '',
       };
       try {
         const consent = typeof window !== 'undefined' ? window.localStorage.getItem('cookie_consent_v2') : null;
@@ -127,7 +168,11 @@ const BlogArticlePage = () => {
       }).then(() => undefined, () => undefined);
     };
     document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+      document.removeEventListener('click', handler);
+    };
   }, [article?.id, article?.slug, article?.title, article?.category]);
 
   useEffect(() => {
@@ -474,7 +519,10 @@ const BlogArticlePage = () => {
 
           {/* Article Content - sanitized for XSS protection */}
           {article.slug === 'ghid-investitii-imobiliare-timisoara-2026' ? (
-            <div className="prose prose-lg dark:prose-invert max-w-none mb-8">
+            <div
+              className="prose prose-lg dark:prose-invert max-w-none mb-8"
+              data-blog-content-root="1"
+            >
               {(() => {
                 const chartMap: Record<string, JSX.Element> = {
                   'roi-by-neighborhood': <RoiByNeighborhoodChart key="c1" />,
@@ -491,6 +539,7 @@ const BlogArticlePage = () => {
           ) : (
             <div
               className="prose prose-lg dark:prose-invert max-w-none mb-8"
+              data-blog-content-root="1"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
             />
           )}
