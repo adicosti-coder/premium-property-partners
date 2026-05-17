@@ -184,6 +184,14 @@ const BlogArticlePage = () => {
         page_path: typeof window !== 'undefined' ? window.location.pathname : '',
         href: target.getAttribute('href') || '',
       };
+      const dedupKey = `${ctaTarget}::${ctaVariantId}::${article.slug}`;
+      const now = Date.now();
+      const last = recentClicks.get(dedupKey) || 0;
+      if (now - last < DEBOUNCE_MS) {
+        return; // debounce duplicate fire
+      }
+      recentClicks.set(dedupKey, now);
+
       try {
         const consent = typeof window !== 'undefined' ? window.localStorage.getItem('cookie_consent_v2') : null;
         const parsedConsent = consent ? JSON.parse(consent) : null;
