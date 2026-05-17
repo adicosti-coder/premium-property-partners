@@ -63,6 +63,7 @@ import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
 import AutomationManager from "@/components/admin/AutomationManager";
+import BlogCtaABDashboard from "@/components/admin/BlogCtaABDashboard";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -319,6 +320,7 @@ const Admin = () => {
                   <TabsContent value="captcha"><CaptchaLogsManager /></TabsContent>
                   <TabsContent value="community"><CommunityManager /></TabsContent>
                   <TabsContent value="cta-analytics"><CtaAnalyticsManager /></TabsContent>
+                  <TabsContent value="blog-cta-ab"><BlogCtaABDashboard /></TabsContent>
                   <TabsContent value="evaluare-engagement"><EvaluareEngagementManager /></TabsContent>
                   <TabsContent value="funnel-analytics"><FunnelAnalyticsManager /></TabsContent>
                   <TabsContent value="security"><SecurityChecklist /></TabsContent>

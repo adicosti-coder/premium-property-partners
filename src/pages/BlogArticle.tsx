@@ -130,9 +130,41 @@ const BlogArticlePage = () => {
         a.dataset.ctaRewritten = "1";
       });
     };
-    // run a couple of times to catch late DOM commits
-    requestAnimationFrame(applyRewrite);
-    const t = window.setTimeout(applyRewrite, 250);
+    // run a couple of times to catch late DOM commits, then log impressions
+    const logImpressions = () => {
+      const root = document.querySelector('[data-blog-content-root="1"]');
+      if (!root) return;
+      const seenKey = `blog_cta_imp_${article.slug}`;
+      let seen: Record<string, number> = {};
+      try { seen = JSON.parse(sessionStorage.getItem(seenKey) || '{}'); } catch { /* ignore */ }
+      const anchors = root.querySelectorAll<HTMLAnchorElement>('a[data-cta-blog][data-cta-rewritten="1"]');
+      anchors.forEach((a) => {
+        const target = a.getAttribute('data-cta-blog') || '';
+        const variantId = a.dataset.ctaVariant || 'unassigned';
+        const key = `${target}::${variantId}`;
+        if (seen[key]) return;
+        seen[key] = Date.now();
+        supabase.from('cta_analytics').insert({
+          cta_type: 'form_submit',
+          page_path: typeof window !== 'undefined' ? window.location.pathname : '',
+          metadata: {
+            source: 'blog_cta_impression',
+            cta_target: target,
+            cta_variant_id: variantId,
+            article_slug: article.slug,
+            article_title: article.title,
+            article_category: article.category,
+          },
+        }).then(() => undefined, () => undefined);
+      });
+      try { sessionStorage.setItem(seenKey, JSON.stringify(seen)); } catch { /* ignore */ }
+    };
+    requestAnimationFrame(() => { applyRewrite(); logImpressions(); });
+    const t = window.setTimeout(() => { applyRewrite(); logImpressions(); }, 400);
+
+    // Debounce: dedupe identical clicks fired within 1500ms (double-tap, accidental re-click)
+    const recentClicks = new Map<string, number>();
+    const DEBOUNCE_MS = 1500;
 
     const handler = (e: MouseEvent) => {
       const target = (e.target as HTMLElement | null)?.closest?.('a[data-cta-blog]') as HTMLAnchorElement | null;
@@ -152,6 +184,14 @@ const BlogArticlePage = () => {
         page_path: typeof window !== 'undefined' ? window.location.pathname : '',
         href: target.getAttribute('href') || '',
       };
+      const dedupKey = `${ctaTarget}::${ctaVariantId}::${article.slug}`;
+      const now = Date.now();
+      const last = recentClicks.get(dedupKey) || 0;
+      if (now - last < DEBOUNCE_MS) {
+        return; // debounce duplicate fire
+      }
+      recentClicks.set(dedupKey, now);
+
       try {
         const consent = typeof window !== 'undefined' ? window.localStorage.getItem('cookie_consent_v2') : null;
         const parsedConsent = consent ? JSON.parse(consent) : null;
