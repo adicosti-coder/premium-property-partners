@@ -519,7 +519,10 @@ const BlogArticlePage = () => {
 
           {/* Article Content - sanitized for XSS protection */}
           {article.slug === 'ghid-investitii-imobiliare-timisoara-2026' ? (
-            <div className="prose prose-lg dark:prose-invert max-w-none mb-8">
+            <div
+              className="prose prose-lg dark:prose-invert max-w-none mb-8"
+              data-blog-content-root="1"
+            >
               {(() => {
                 const chartMap: Record<string, JSX.Element> = {
                   'roi-by-neighborhood': <RoiByNeighborhoodChart key="c1" />,
@@ -536,6 +539,7 @@ const BlogArticlePage = () => {
           ) : (
             <div
               className="prose prose-lg dark:prose-invert max-w-none mb-8"
+              data-blog-content-root="1"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
             />
           )}
