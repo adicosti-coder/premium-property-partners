@@ -39,6 +39,11 @@ import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { markInvestmentArticleVisit, INVESTMENT_ARTICLE_SLUG } from "@/lib/investmentReferralTracking";
+import {
+  injectUtmParams,
+  getOrAssignCtaVariant,
+  type BlogCtaTarget,
+} from "@/lib/blogCtaUtm";
 
 interface BlogArticle {
   id: string;
