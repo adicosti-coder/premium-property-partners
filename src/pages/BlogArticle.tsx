@@ -606,6 +606,9 @@ const BlogArticlePage = () => {
                   to={`/blog/locatie/${slugifyLocation(geoLocation)}`}
                   className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
                   aria-label={`Vezi mai multe articole despre ${geoLocation}`}
+                  onMouseEnter={() => prefetchHub(slugifyLocation(geoLocation))}
+                  onFocus={() => prefetchHub(slugifyLocation(geoLocation))}
+                  onClick={() => trackHubClick(geoLocation, "inline")}
                 >
                   <MapPin className="w-3.5 h-3.5" />
                   <span>
