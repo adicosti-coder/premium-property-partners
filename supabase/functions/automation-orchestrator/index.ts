@@ -80,50 +80,80 @@ async function runJob(
   job: Job,
   triggeredBy: string,
   dryRun: boolean,
-): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown }> {
+): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown; retries: number }> {
   const fnName = JOB_FN[job.job_key];
   if (!fnName) {
-    return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped" };
+    return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped", retries: 0 };
   }
   const cfg = (job.config ?? {}) as Record<string, unknown>;
   const timeoutMs = Number(cfg.timeout_ms) > 0 ? Number(cfg.timeout_ms) : DEFAULT_TIMEOUT_MS;
+  const maxRetries = Math.max(0, Math.min(3, Number(cfg.max_retries ?? (dryRun ? 0 : 1))));
   const startedAt = Date.now();
-  try {
-    const { data, error } = await runWithTimeout(
-      supabase.functions.invoke(fnName, {
-        body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun },
-      }),
-      timeoutMs,
-    );
-    if (error) throw error;
-    const duration = Date.now() - startedAt;
-    if (!dryRun) {
-      await supabase.rpc("automation_complete_run", {
-        _job_key: job.job_key,
-        _success: true,
-        _payload: (data ?? {}) as Record<string, unknown>,
-        _duration_ms: duration,
-        _status: "success",
-        _triggered_by: triggeredBy,
-      });
+
+  let attempt = 0;
+  let lastErr: string | null = null;
+  let lastStatus: string = "failed";
+  let lastData: unknown = null;
+
+  while (attempt <= maxRetries) {
+    try {
+      const { data, error } = await runWithTimeout(
+        supabase.functions.invoke(fnName, {
+          body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt },
+        }),
+        timeoutMs,
+      );
+      if (error) throw error;
+      lastData = data;
+      lastStatus = "success";
+      lastErr = null;
+      break;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      lastErr = msg;
+      lastStatus = msg.startsWith("timeout") ? "timeout" : "failed";
+      // do not retry on timeouts (likely deterministic), retry only transient failures
+      if (lastStatus === "timeout" || attempt >= maxRetries) break;
+      // exponential backoff: 1s, 4s, 9s
+      const backoffMs = Math.min(9_000, 1_000 * Math.pow(attempt + 1, 2));
+      await new Promise((r) => setTimeout(r, backoffMs));
+      attempt++;
     }
-    return { job_key: job.job_key, ok: true, output: data, duration_ms: duration, status: "success" };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    const duration = Date.now() - startedAt;
-    const status = msg.startsWith("timeout") ? "timeout" : "failed";
-    if (!dryRun) {
-      await supabase.rpc("automation_complete_run", {
-        _job_key: job.job_key,
-        _success: false,
-        _error: msg.slice(0, 500),
-        _duration_ms: duration,
-        _status: status,
-        _triggered_by: triggeredBy,
-      });
-    }
-    return { job_key: job.job_key, ok: false, error: msg, duration_ms: duration, status };
   }
+
+  const duration = Date.now() - startedAt;
+  const ok = lastStatus === "success";
+
+  if (!dryRun) {
+    await supabase.rpc("automation_complete_run", {
+      _job_key: job.job_key,
+      _success: ok,
+      _payload: ok ? ((lastData ?? {}) as Record<string, unknown>) : {},
+      _error: ok ? null : (lastErr ?? "").slice(0, 500),
+      _duration_ms: duration,
+      _status: lastStatus,
+      _triggered_by: triggeredBy,
+    });
+    // Best-effort: stamp retry_count on most recent run row
+    if (attempt > 0) {
+      await supabase
+        .from("automation_runs")
+        .update({ retry_count: attempt })
+        .eq("job_key", job.job_key)
+        .order("started_at", { ascending: false })
+        .limit(1);
+    }
+  }
+
+  return {
+    job_key: job.job_key,
+    ok,
+    error: ok ? undefined : (lastErr ?? undefined),
+    duration_ms: duration,
+    status: lastStatus,
+    output: lastData,
+    retries: attempt,
+  };
 }
 
 /** Run promises with a concurrency cap. */
