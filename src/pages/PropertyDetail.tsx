@@ -526,13 +526,17 @@ const PropertyDetail = () => {
       capitalNecesar: dbProperty?.capital_necesar,
       estimatedRevenue: dbProperty?.estimated_revenue,
     }),
-    // LodgingBusiness with AggregateRating + real reviews
+    // LodgingBusiness with AggregateRating + real reviews. Stable @id +
+    // provider reference to the canonical RealEstateAgent so Google merges
+    // entities across pages.
     {
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
+      "@id": `https://realtrust.ro/proprietate/${slug}#lodgingbusiness`,
       "name": displayName,
       "url": `https://realtrust.ro/proprietate/${slug}`,
       "image": galleryImages[0] || "",
+      "provider": { "@id": "https://realtrust.ro/#realestateagent" },
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": avgRating,
@@ -555,6 +559,7 @@ const PropertyDetail = () => {
         },
       }),
     },
+
     // RealEstateListing schema from generatePropertySEO utility
     ...(dbProperty ? generatePropertySEO({
       name: displayName,

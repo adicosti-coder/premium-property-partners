@@ -2,11 +2,12 @@ import { Helmet } from "react-helmet-async";
 import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSeoOverride } from "@/hooks/useSeoOverride";
+import { BRAND, ORG_ID, SITE_ORIGIN } from "@/lib/orgIdentity";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
 // Mismatching www/non-www between og:url, canonical and hreflang triggers
 // Lighthouse "Document does not have a valid rel=canonical".
-const BASE_URL = "https://realtrust.ro";
+const BASE_URL = SITE_ORIGIN;
 
 interface SEOHeadProps {
   title?: string;
@@ -59,10 +60,11 @@ const generateArticleJsonLd = (
   },
   "publisher": {
     "@type": "Organization",
-    "name": "RealTrust & ApArt Hotel",
+    "@id": ORG_ID,
+    "name": BRAND.name,
     "logo": {
       "@type": "ImageObject",
-      "url": `${BASE_URL}/images/hero-optimized-800w.webp`,
+      "url": BRAND.logo,
       "width": 800,
       "height": 450,
     },
@@ -210,32 +212,36 @@ const SEOHead = ({
   // URL as a single canonical page in multiple languages.
   const getAlternateUrl = (_lang: string) => finalUrl;
   
-  // Default JSON-LD for LocalBusiness (AggregateRating injected dynamically on homepage)
+  // Default LocalBusiness — uses canonical brand identity. Links to the
+  // canonical Organization node via parentOrganization @id, so Google merges
+  // this with the homepage Organization/RealEstateAgent entities.
   const defaultJsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "RealTrust & ApArt Hotel Timișoara",
+    "@id": `${BASE_URL}/#localbusiness`,
+    "name": `${BRAND.name} Timișoara`,
     "image": image,
     "description": finalDescription,
-    "@id": BASE_URL,
     "url": BASE_URL,
-    "telephone": "+40799069256",
-    "email": "info@realtrust.ro",
+    "telephone": BRAND.telephone,
+    "email": BRAND.email,
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
-      "addressLocality": "Timișoara",
-      "addressRegion": "Timiș",
-      "postalCode": "300125",
-      "addressCountry": "RO"
+      "streetAddress": BRAND.address.streetAddress,
+      "addressLocality": BRAND.address.addressLocality,
+      "addressRegion": BRAND.address.addressRegion,
+      "postalCode": BRAND.address.postalCode,
+      "addressCountry": BRAND.address.addressCountry,
     },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": 45.7489,
-      "longitude": 21.2087
+      "latitude": BRAND.geo.latitude,
+      "longitude": BRAND.geo.longitude,
     },
-    "priceRange": "$$"
+    "parentOrganization": { "@id": ORG_ID },
+    "priceRange": "€€",
   };
+
   
   // SEO override from admin can inject a custom JSON-LD that wins over everything below.
   const overrideJsonLd = override?.json_ld || null;
