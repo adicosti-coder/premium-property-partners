@@ -8,7 +8,8 @@ import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent, Download, Fi
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { startOfDay, endOfDay, format, subDays, eachDayOfInterval } from "date-fns";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, Brush } from "recharts";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { slugifyLocation } from "@/lib/blogLocations";
 
 interface HubRow {
