@@ -323,6 +323,52 @@ const BlogHubClicksDashboard = () => {
       </div>
 
       <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" /> Evoluție zilnică
+          </CardTitle>
+          <Select value={trendLocation} onValueChange={setTrendLocation}>
+            <SelectTrigger className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Total site (toate locațiile)</SelectItem>
+              {rows.map((r) => (
+                <SelectItem key={r.locationSlug} value={r.locationSlug}>
+                  {r.location}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dailyTrend} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" className="text-xs" />
+                <YAxis allowDecimals={false} className="text-xs" />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Line type="monotone" dataKey="total" name="Total click-uri" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="unique" name="Click-uri unice" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Filtrare: {trendLocation === "all" ? "tot site-ul" : rows.find((r) => r.locationSlug === trendLocation)?.location ?? trendLocation}.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader>
           <CardTitle>Click-uri per locație</CardTitle>
         </CardHeader>
