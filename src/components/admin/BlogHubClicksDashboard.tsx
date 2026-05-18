@@ -133,6 +133,27 @@ const BlogHubClicksDashboard = () => {
 
   if (isLoading) return <Skeleton className="h-96 w-full" />;
 
+  const handleExportCsv = useCallback(() => {
+    const headers = ["Locatie", "Afișări", "Click-uri Inline", "Click-uri Card", "Total Click-uri", "Click-uri Unice", "CTR %"];
+    const csvRows = rows.map((r) => [
+      r.location,
+      r.impressions,
+      r.inline,
+      r.card,
+      r.total,
+      r.uniqueTotal,
+      r.ctr.toFixed(2),
+    ]);
+    const csv = [headers.join(";"), ...csvRows.map((r) => r.join(";"))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hub-clicks-${dateRange}zile-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [rows, dateRange]);
+
   const fmtCtr = (v: number) => (v > 0 ? `${v.toFixed(2)}%` : "—");
 
   return (
