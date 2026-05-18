@@ -542,7 +542,7 @@ const BlogArticlePage = () => {
                 alt={displayTitle}
                 loading="eager"
                 decoding="async"
-                fetchPriority="high"
+                {...({ fetchpriority: "high" } as Record<string, string>)}
                 sizes="(max-width: 768px) 100vw, 800px"
                 className="w-full h-full object-cover"
               />
