@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabaseClient";
@@ -73,6 +74,52 @@ const BlogArticlePage = () => {
   const dateLocale = language === "ro" ? ro : enUS;
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const queryClient = useQueryClient();
+  const { trackCta } = useCtaAnalytics();
+
+  const prefetchHub = (locSlug: string) => {
+    queryClient.prefetchQuery({
+      queryKey: ["blog-location", locSlug],
+      queryFn: async () => {
+        const { data } = await supabase
+          .from("blog_articles")
+          .select(
+            "id, slug, title, excerpt, cover_image, main_image_url, category, geo_location, published_at, created_at, view_count"
+          )
+          .eq("is_published", true)
+          .not("geo_location", "is", null)
+          .order("published_at", { ascending: false });
+        return (data ?? []).filter(
+          (a: { geo_location: string | null }) =>
+            a.geo_location && slugifyLocation(a.geo_location) === locSlug
+        );
+      },
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+
+  const trackHubClick = (loc: string, source: "inline" | "card") => {
+    const locSlug = slugifyLocation(loc);
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", "blog_location_hub_click", {
+        location: loc,
+        location_slug: locSlug,
+        source,
+        article_slug: slug,
+      });
+    }
+    void trackCta({
+      ctaType: "form_submit",
+      metadata: {
+        event: "blog_location_hub_click",
+        location: loc,
+        location_slug: locSlug,
+        source,
+        article_slug: slug,
+      },
+    });
+  };
+
 
   const { data: article, isLoading, error } = useQuery({
     queryKey: ["blog-article", slug],
@@ -559,6 +606,9 @@ const BlogArticlePage = () => {
                   to={`/blog/locatie/${slugifyLocation(geoLocation)}`}
                   className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
                   aria-label={`Vezi mai multe articole despre ${geoLocation}`}
+                  onMouseEnter={() => prefetchHub(slugifyLocation(geoLocation))}
+                  onFocus={() => prefetchHub(slugifyLocation(geoLocation))}
+                  onClick={() => trackHubClick(geoLocation, "inline")}
                 >
                   <MapPin className="w-3.5 h-3.5" />
                   <span>
@@ -660,6 +710,9 @@ const BlogArticlePage = () => {
                 to={`/blog/locatie/${slugifyLocation(geoLocation)}`}
                 className="mt-8 flex items-center justify-between gap-4 p-5 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40 transition-colors group"
                 aria-label={`Vezi mai multe articole despre ${geoLocation}`}
+                onMouseEnter={() => prefetchHub(slugifyLocation(geoLocation))}
+                onFocus={() => prefetchHub(slugifyLocation(geoLocation))}
+                onClick={() => trackHubClick(geoLocation, "card")}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
