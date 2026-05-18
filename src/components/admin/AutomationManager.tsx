@@ -139,6 +139,9 @@ const AutomationManager = () => {
   const [runs, setRuns] = useState<Run[]>([]);
   const [runsFilter, setRunsFilter] = useState<string>("__all__");
   const [realtimeOn, setRealtimeOn] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
+  const [lastReportAt, setLastReportAt] = useState<string | null>(null);
+  const [reportEmail, setReportEmail] = useState<string>("adicosti@gmail.com");
 
   const load = async () => {
     setLoading(true);
