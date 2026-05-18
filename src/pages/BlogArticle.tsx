@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabaseClient";
