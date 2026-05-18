@@ -39,11 +39,11 @@
           imagesrcset="/images/hero-optimized-800w.webp 800w, /images/hero-cinematic-1600w.webp 1600w"
           imagesizes="(max-width: 767px) 100vw, 100vw" />
 
-    <!-- Preload only fonts visible in the LCP shell. Both use font-display:swap
-         and metric-matched fallbacks to avoid render blocking and CLS. -->
+    <!-- Preload only fonts visible in the Romanian LCP shell. Avoid extra
+         font preloads here: every additional high-priority font competes with
+         the hero image on mobile Lighthouse. -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-Regular.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter-SemiBold.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/PlayfairDisplay-SemiBold-latin-ext.woff2" crossorigin />
 
     <!-- Critical above-fold CSS inlined to eliminate render-blocking wait.
          Includes header + hero shell styles so first paint is complete before
