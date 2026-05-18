@@ -2,11 +2,12 @@ import { Helmet } from "react-helmet-async";
 import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSeoOverride } from "@/hooks/useSeoOverride";
+import { BRAND, ORG_ID, SITE_ORIGIN } from "@/lib/orgIdentity";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
 // Mismatching www/non-www between og:url, canonical and hreflang triggers
 // Lighthouse "Document does not have a valid rel=canonical".
-const BASE_URL = "https://realtrust.ro";
+const BASE_URL = SITE_ORIGIN;
 
 interface SEOHeadProps {
   title?: string;
