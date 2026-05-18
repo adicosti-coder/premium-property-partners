@@ -67,6 +67,7 @@ const Guests = lazyWithRetry(() => import("./pages/Guests"));
 const Imobiliare = lazyWithRetry(() => import("./pages/Imobiliare"));
 const Blog = lazyWithRetry(() => import("./pages/Blog"));
 const BlogCategory = lazyWithRetry(() => import("./pages/BlogCategory"));
+const BlogLocation = lazyWithRetry(() => import("./pages/BlogLocation"));
 const BlogArticlePage = lazyWithRetry(() => import("./pages/BlogArticle"));
 const Investitii = lazyWithRetry(() => import("./pages/Investitii"));
 const WhyBookDirect = lazyWithRetry(() => import("./pages/WhyBookDirect"));
@@ -203,6 +204,7 @@ const App = () => (
                     <Route path="/imobiliare" element={<Imobiliare />} />
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/categorie/:slug" element={<BlogCategory />} />
+                    <Route path="/blog/locatie/:location" element={<BlogLocation />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/proprietate/:slug" element={<PropertyDetail />} />
                     <Route path="/ring-apart-hotel-spacious-deluxe" element={<PropertyDetail />} />

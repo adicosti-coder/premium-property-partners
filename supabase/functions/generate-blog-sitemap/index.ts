@@ -30,12 +30,32 @@ serve(async (req: Request) => {
 
     const { data: articles } = await supabase
       .from("blog_articles")
-      .select("slug, title, published_at, updated_at, created_at, cover_image")
+      .select("slug, title, published_at, updated_at, created_at, cover_image, main_image_url, geo_location")
       .eq("is_published", true)
       .order("published_at", { ascending: false });
 
     const STORAGE_BASE = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/blog-images`;
     const today = new Date().toISOString().split("T")[0];
+
+    const slugifyLocation = (input: string): string =>
+      input
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+    // Distinct location slugs with their most recent article date.
+    const locationLastmod = new Map<string, string>();
+    for (const a of articles ?? []) {
+      if (!a.geo_location) continue;
+      const s = slugifyLocation(a.geo_location);
+      if (!s) continue;
+      const d = (a.updated_at || a.published_at || a.created_at || today).split("T")[0];
+      const prev = locationLastmod.get(s);
+      if (!prev || d > prev) locationLastmod.set(s, d);
+    }
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -62,12 +82,25 @@ serve(async (req: Request) => {
 `;
     }
 
+    // Location archive hubs (auto-generated from geo_location)
+    for (const [slug, lastmod] of locationLastmod) {
+      xml += `  <url>
+    <loc>${BASE_URL}/blog/locatie/${slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+`;
+    }
+
+
     // Articles
     for (const a of articles ?? []) {
       const lastmod = (a.updated_at || a.published_at || a.created_at || new Date().toISOString()).split("T")[0];
       let imageTag = "";
-      if (a.cover_image) {
-        const imgUrl = a.cover_image.startsWith("http") ? a.cover_image : `${STORAGE_BASE}/${a.cover_image}`;
+      const rawImage = (a as { main_image_url?: string | null }).main_image_url || a.cover_image;
+      if (rawImage) {
+        const imgUrl = rawImage.startsWith("http") ? rawImage : `${STORAGE_BASE}/${rawImage}`;
         imageTag = `
     <image:image>
       <image:loc>${escapeXml(imgUrl)}</image:loc>
