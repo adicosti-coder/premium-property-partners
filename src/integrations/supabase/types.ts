@@ -7529,6 +7529,13 @@ export type Database = {
           impressions: number
         }[]
       }
+      get_blog_hub_impressions_range: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: {
+          geo_location: string
+          impressions: number
+        }[]
+      }
       get_cron_reconcile_secret: { Args: never; Returns: string }
       get_owner_property_reviews: {
         Args: { p_property_id?: string }
