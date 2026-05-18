@@ -301,16 +301,14 @@ Deno.serve(async (req) => {
   //    DNS for notify.realtrust.ro is currently in failed state, so the Go API
   //    returns "Emails disabled for this project". Resend works regardless of DNS.
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
 
-  if (RESEND_API_KEY && LOVABLE_API_KEY) {
+  if (RESEND_API_KEY) {
     try {
-      const resendResp = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+      const resendResp = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'X-Connection-Api-Key': RESEND_API_KEY,
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
           from: `${SITE_NAME} <onboarding@resend.dev>`,
@@ -321,6 +319,7 @@ Deno.serve(async (req) => {
           headers: { 'X-Idempotency-Key': idempotencyKey },
         }),
       })
+
 
       const respBody = await resendResp.json().catch(() => ({}))
       if (resendResp.ok && respBody?.id) {
