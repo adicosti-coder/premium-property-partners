@@ -21,6 +21,7 @@ import { getBlogCoverImage } from "@/utils/blogImageMap";
 import { User } from "@supabase/supabase-js";
 import SEOHead from "@/components/SEOHead";
 import { generateBlogCollectionSchema, generateBreadcrumbSchema } from "@/utils/schemaGenerators";
+import { REAL_ESTATE_AGENT_SCHEMA } from "@/lib/orgIdentity";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
@@ -292,38 +293,8 @@ const Blog = () => {
           { "@type": "Thing", "name": "Randament chirie Timișoara" }
         ]
       },
-      // RealEstateAgent schema (entity consolidation)
-      {
-        "@context": "https://schema.org",
-        "@type": "RealEstateAgent",
-        "@id": "https://realtrust.ro/#realestateagent",
-        "name": "RealTrust Imobiliare Timișoara",
-        "url": "https://realtrust.ro",
-        "telephone": "+40799069256",
-        "email": "info@realtrust.ro",
-        "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
-        "priceRange": "€€",
-        "areaServed": {
-          "@type": "City",
-          "name": "Timișoara",
-          "containedInPlace": { "@type": "AdministrativeArea", "name": "Timiș" }
-        },
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
-          "addressLocality": "Timișoara",
-          "postalCode": "300125",
-          "addressCountry": "RO"
-        },
-        "knowsAbout": [
-          "Investiții imobiliare",
-          "Regim hotelier",
-          "Vânzări apartamente Timișoara",
-          "Închirieri pe termen lung",
-          "Evaluare proprietăți",
-          "Randament chirie"
-        ]
-      },
+      // RealEstateAgent schema — single source of truth (orgIdentity)
+      REAL_ESTATE_AGENT_SCHEMA,
     ];
     if (articles && articles.length > 0) {
       schemas.push(generateBlogCollectionSchema(articles));

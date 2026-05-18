@@ -10,6 +10,7 @@ import PageSummary from "@/components/PageSummary";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { REAL_ESTATE_AGENT_SCHEMA } from "@/lib/orgIdentity";
 import {
   Building2,
   MapPin,
@@ -187,20 +188,7 @@ const Complexe = () => {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "RealEstateAgent",
-        "@id": "https://realtrust.ro/#organization",
-        "name": "RealTrust & ApArt Hotel",
-        "url": "https://realtrust.ro",
-        "areaServed": {
-          "@type": "City",
-          "name": "Timișoara",
-        },
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "Timișoara",
-          "addressRegion": "Timiș",
-          "addressCountry": "RO",
-        },
+        ...REAL_ESTATE_AGENT_SCHEMA,
         "hasOfferCatalog": {
           "@type": "OfferCatalog",
           "name": language === "en" ? "Residential Complexes Managed" : "Complexe Rezidențiale Administrate",

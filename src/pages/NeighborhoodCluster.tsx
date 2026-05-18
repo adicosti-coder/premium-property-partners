@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import { REAL_ESTATE_AGENT_SCHEMA } from "@/lib/orgIdentity";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -272,11 +273,7 @@ const NeighborhoodCluster = () => {
       },
     },
     {
-      "@context": "https://schema.org",
-      "@type": "RealEstateAgent",
-      "@id": "https://realtrust.ro/#realestateagent",
-      name: "RealTrust & ApArt Hotel Timișoara",
-      url: "https://realtrust.ro",
+      ...REAL_ESTATE_AGENT_SCHEMA,
       areaServed: {
         "@type": "Place",
         name: `${n.name}, Timișoara`,
