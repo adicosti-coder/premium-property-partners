@@ -13,8 +13,9 @@ import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
   Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
-  FlaskConical, Copy, XCircle, Newspaper, Brain, ListTree, Radio,
+  FlaskConical, Copy, XCircle, Newspaper, Brain, ListTree, Radio, BarChart3,
 } from "lucide-react";
+import { AutomationAnalytics } from "./AutomationAnalytics";
 
 type Settings = {
   enabled: boolean;
