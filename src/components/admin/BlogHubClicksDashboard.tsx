@@ -265,6 +265,9 @@ const BlogHubClicksDashboard = () => {
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="default" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="gap-1.5">
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} /> {isRefreshing ? "Se reîncarcă..." : "Run Now"}
+            </Button>
             <Button variant="outline" size="sm" onClick={handleExportSummary} className="gap-1.5">
               <Download className="w-4 h-4" /> Export rezumat
             </Button>
