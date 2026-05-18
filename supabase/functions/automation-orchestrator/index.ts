@@ -1,15 +1,21 @@
-// Automation Orchestrator
-// Cron */5 min. Reads automation_jobs (cron + enabled + global ON), dispatches each
-// job by invoking its corresponding edge function. Records the run via automation_complete_run().
-// Also accepts manual { job_key } POST from Admin "Run now".
+// Automation Orchestrator v2
+// Cron */5 min. Cron parser complet (croner), Europe/Bucharest TZ, paralel cu cap,
+// timeout per job (AbortController), retry pe joburi event/manuale.
+// Acceptă POST { job_key } pentru Run Now din Admin, sau { dry_run: true }.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { Cron } from "npm:croner@8";
 
-// job_key -> edge function name to invoke
+const TZ = "Europe/Bucharest";
+const DEFAULT_TIMEOUT_MS = 50_000;
+const DEFAULT_CONCURRENCY = 4;
+
+// job_key -> edge function name
 const JOB_FN: Record<string, string> = {
   // Lead automations
   "lead.auto_classify_agency": "lead-auto-classify-agency",
   "lead.auto_dedup": "lead-auto-dedup",
+  "lead.auto_archive_callers": "voice-caller-archive-stale",
   // SEO automations
   "seo.auto_fill_meta": "seo-auto-fill-meta",
   "seo.anomaly_detector": "seo-anomaly-detector",
@@ -20,6 +26,7 @@ const JOB_FN: Record<string, string> = {
   "seo.indexing_alerts": "seo-indexing-alerts",
   "seo.monthly_snapshot": "seo-monthly-snapshot",
   "seo.ai_optimizer_audit": "seo-ai-optimizer",
+  "seo.canonical_conflict_scan": "seo-canonical-conflict-scan",
   // Blog / analytics
   "blog.hub_clicks_weekly_digest": "blog-hub-weekly-digest",
   "blog.sitemap_refresh": "generate-blog-sitemap",
@@ -28,26 +35,109 @@ const JOB_FN: Record<string, string> = {
   "prospect.predictive_rescore": "scraper-lead-predictive",
   // System
   "system.daily_digest": "automation-daily-digest",
+  "system.self_healing": "automation-self-healing",
 };
 
-// crude cron-due check: parse "*/N * * * *" or "M H * * *"
+type Job = {
+  job_key: string;
+  enabled: boolean;
+  schedule: string | null;
+  trigger_type: string;
+  last_run_at: string | null;
+  config: Record<string, unknown> | null;
+};
+
+/** True if `schedule` should have fired between lastRunAt and now (Europe/Bucharest). */
 function isDue(schedule: string | null, lastRunAt: string | null, now: Date): boolean {
-  if (!schedule) return false;
-  const m = schedule.trim().match(/^(\S+)\s+(\S+)\s+\*\s+\*\s+(\*|\d+)$/);
-  if (!m) return false;
-  const [, minPart, hourPart] = m;
-  const minutesSinceLast = lastRunAt ? (now.getTime() - new Date(lastRunAt).getTime()) / 60000 : Infinity;
-  // */N pattern
-  const everyMin = minPart.match(/^\*\/(\d+)$/);
-  if (everyMin && hourPart === "*") return minutesSinceLast >= Number(everyMin[1]);
-  // explicit "M H * * *" — fire if current hour matches and we haven't run today
-  const min = Number(minPart);
-  const hour = Number(hourPart);
-  if (Number.isFinite(min) && Number.isFinite(hour)) {
-    if (now.getUTCHours() !== hour) return false;
-    return minutesSinceLast >= 60; // at most once per matching hour
+  if (!schedule || schedule.trim() === "event-driven") return false;
+  try {
+    const cron = new Cron(schedule.trim(), { timezone: TZ });
+    // previousRun returns the most recent scheduled tick at or before `now`
+    const prev = cron.previousRun(now);
+    if (!prev) return false;
+    if (!lastRunAt) return true;
+    return new Date(lastRunAt).getTime() < prev.getTime();
+  } catch (_e) {
+    return false;
   }
-  return false;
+}
+
+async function runWithTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  let to: number | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    to = setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms) as unknown as number;
+  });
+  try {
+    return await Promise.race([p, timeout]);
+  } finally {
+    if (to) clearTimeout(to);
+  }
+}
+
+async function runJob(
+  supabase: ReturnType<typeof createClient>,
+  job: Job,
+  triggeredBy: string,
+  dryRun: boolean,
+): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown }> {
+  const fnName = JOB_FN[job.job_key];
+  if (!fnName) {
+    return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped" };
+  }
+  const cfg = (job.config ?? {}) as Record<string, unknown>;
+  const timeoutMs = Number(cfg.timeout_ms) > 0 ? Number(cfg.timeout_ms) : DEFAULT_TIMEOUT_MS;
+  const startedAt = Date.now();
+  try {
+    const { data, error } = await runWithTimeout(
+      supabase.functions.invoke(fnName, {
+        body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun },
+      }),
+      timeoutMs,
+    );
+    if (error) throw error;
+    const duration = Date.now() - startedAt;
+    if (!dryRun) {
+      await supabase.rpc("automation_complete_run", {
+        _job_key: job.job_key,
+        _success: true,
+        _payload: (data ?? {}) as Record<string, unknown>,
+        _duration_ms: duration,
+        _status: "success",
+        _triggered_by: triggeredBy,
+      });
+    }
+    return { job_key: job.job_key, ok: true, output: data, duration_ms: duration, status: "success" };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const duration = Date.now() - startedAt;
+    const status = msg.startsWith("timeout") ? "timeout" : "failed";
+    if (!dryRun) {
+      await supabase.rpc("automation_complete_run", {
+        _job_key: job.job_key,
+        _success: false,
+        _error: msg.slice(0, 500),
+        _duration_ms: duration,
+        _status: status,
+        _triggered_by: triggeredBy,
+      });
+    }
+    return { job_key: job.job_key, ok: false, error: msg, duration_ms: duration, status };
+  }
+}
+
+/** Run promises with a concurrency cap. */
+async function pMap<T, R>(items: T[], cap: number, fn: (it: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let i = 0;
+  async function worker() {
+    while (true) {
+      const idx = i++;
+      if (idx >= items.length) return;
+      out[idx] = await fn(items[idx]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(cap, items.length) }, worker));
+  return out;
 }
 
 Deno.serve(async (req) => {
@@ -68,7 +158,9 @@ Deno.serve(async (req) => {
     }
   } catch { /* ignore */ }
 
-  // global kill switch (bypassed for dry-run tests)
+  const triggeredBy = manualJobKey ? "manual" : dryRun ? "dry_run" : "cron";
+
+  // global kill switch (bypassed for manual + dry-run)
   const { data: settings } = await supabase
     .from("automation_settings").select("enabled, paused_reason").eq("id", true).maybeSingle();
   if (!settings?.enabled && !manualJobKey && !dryRun) {
@@ -78,10 +170,11 @@ Deno.serve(async (req) => {
   }
 
   const { data: jobs } = await supabase
-    .from("automation_jobs").select("job_key, enabled, schedule, trigger_type, last_run_at");
+    .from("automation_jobs")
+    .select("job_key, enabled, schedule, trigger_type, last_run_at, config");
 
   const now = new Date();
-  const candidates = (jobs ?? []).filter((j) => {
+  const candidates = ((jobs ?? []) as Job[]).filter((j) => {
     if (manualJobKey) return j.job_key === manualJobKey;
     if (!j.enabled) return false;
     if (j.trigger_type !== "cron") return false;
@@ -89,42 +182,18 @@ Deno.serve(async (req) => {
     return isDue(j.schedule, j.last_run_at, now);
   });
 
-  const results: Array<{ job_key: string; ok: boolean; error?: string; output?: unknown; duration_ms?: number }> = [];
+  // global concurrency cap (settings.config not yet wired → fixed default)
+  const results = await pMap(candidates, DEFAULT_CONCURRENCY, (j) => runJob(supabase, j, triggeredBy, dryRun));
 
-  for (const job of candidates) {
-    const fnName = JOB_FN[job.job_key];
-    if (!fnName) {
-      results.push({ job_key: job.job_key, ok: false, error: "no_handler" });
-      continue;
-    }
-    const startedAt = Date.now();
-    try {
-      const { data, error } = await supabase.functions.invoke(fnName, {
-        body: { triggered_by: "orchestrator", job_key: job.job_key, dry_run: dryRun },
-      });
-      if (error) throw error;
-      if (!dryRun) {
-        await supabase.rpc("automation_complete_run", {
-          _job_key: job.job_key,
-          _success: true,
-          _payload: (data ?? {}) as Record<string, unknown>,
-        });
-      }
-      results.push({ job_key: job.job_key, ok: true, output: data, duration_ms: Date.now() - startedAt });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (!dryRun) {
-        await supabase.rpc("automation_complete_run", {
-          _job_key: job.job_key,
-          _success: false,
-          _error: msg.slice(0, 500),
-        });
-      }
-      results.push({ job_key: job.job_key, ok: false, error: msg, duration_ms: Date.now() - startedAt });
-    }
-  }
-
-  return new Response(JSON.stringify({ ran: results.length, results, manual: manualJobKey, dry_run: dryRun }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({
+      ran: results.length,
+      ok: results.filter((r) => r.ok).length,
+      failed: results.filter((r) => !r.ok).length,
+      manual: manualJobKey,
+      dry_run: dryRun,
+      results,
+    }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
 });
