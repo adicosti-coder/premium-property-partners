@@ -532,6 +532,50 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_runs: {
+        Row: {
+          duration_ms: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          job_key: string
+          output_summary: Json
+          started_at: string
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job_key: string
+          output_summary?: Json
+          started_at?: string
+          status: string
+          triggered_by?: string | null
+        }
+        Update: {
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          job_key?: string
+          output_summary?: Json
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_runs_job_key_fkey"
+            columns: ["job_key"]
+            isOneToOne: false
+            referencedRelation: "automation_jobs"
+            referencedColumns: ["job_key"]
+          },
+        ]
+      }
       automation_settings: {
         Row: {
           enabled: boolean
@@ -7492,14 +7536,31 @@ export type Database = {
         Args: { p_prospect_id: string; p_reasons?: string[]; p_score: number }
         Returns: Json
       }
-      automation_complete_run: {
-        Args: {
-          _error?: string
-          _job_key: string
-          _payload?: Json
-          _success: boolean
-        }
-        Returns: undefined
+      automation_complete_run:
+        | {
+            Args: {
+              _error?: string
+              _job_key: string
+              _payload?: Json
+              _success: boolean
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _duration_ms?: number
+              _error?: string
+              _job_key: string
+              _payload?: Json
+              _status?: string
+              _success: boolean
+              _triggered_by?: string
+            }
+            Returns: undefined
+          }
+      automation_runs_cleanup: {
+        Args: { _retention_days?: number }
+        Returns: number
       }
       bulk_archive_detected_agencies: { Args: never; Returns: Json }
       check_and_award_badges: {
