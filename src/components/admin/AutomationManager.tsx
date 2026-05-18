@@ -364,8 +364,8 @@ const AutomationManager = () => {
   }
 
   const globalOn = settings?.enabled ?? false;
-  const grouped: Record<Job["category"], Job[]> = { lead: [], seo: [], system: [] };
-  jobs.forEach((j) => grouped[j.category].push(j));
+  const grouped: Record<Job["category"], Job[]> = { lead: [], seo: [], system: [], blog: [], ai: [] };
+  jobs.forEach((j) => { (grouped[j.category] ??= []).push(j); });
 
   return (
     <div className="space-y-6">
