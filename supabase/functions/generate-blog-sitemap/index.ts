@@ -98,8 +98,9 @@ serve(async (req: Request) => {
     for (const a of articles ?? []) {
       const lastmod = (a.updated_at || a.published_at || a.created_at || new Date().toISOString()).split("T")[0];
       let imageTag = "";
-      if (a.cover_image) {
-        const imgUrl = a.cover_image.startsWith("http") ? a.cover_image : `${STORAGE_BASE}/${a.cover_image}`;
+      const rawImage = (a as { main_image_url?: string | null }).main_image_url || a.cover_image;
+      if (rawImage) {
+        const imgUrl = rawImage.startsWith("http") ? rawImage : `${STORAGE_BASE}/${rawImage}`;
         imageTag = `
     <image:image>
       <image:loc>${escapeXml(imgUrl)}</image:loc>
