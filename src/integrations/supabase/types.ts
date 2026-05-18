@@ -7536,28 +7536,18 @@ export type Database = {
         Args: { p_prospect_id: string; p_reasons?: string[]; p_score: number }
         Returns: Json
       }
-      automation_complete_run:
-        | {
-            Args: {
-              _error?: string
-              _job_key: string
-              _payload?: Json
-              _success: boolean
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              _duration_ms?: number
-              _error?: string
-              _job_key: string
-              _payload?: Json
-              _status?: string
-              _success: boolean
-              _triggered_by?: string
-            }
-            Returns: undefined
-          }
+      automation_complete_run: {
+        Args: {
+          _duration_ms?: number
+          _error?: string
+          _job_key: string
+          _payload?: Json
+          _status?: string
+          _success: boolean
+          _triggered_by?: string
+        }
+        Returns: undefined
+      }
       automation_runs_cleanup: {
         Args: { _retention_days?: number }
         Returns: number
