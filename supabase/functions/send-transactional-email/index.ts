@@ -297,10 +297,61 @@ Deno.serve(async (req) => {
       ? template.subject(templateData)
       : template.subject
 
-  // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
-  // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
+  // 5. Try Resend FIRST (bypass Lovable Emails queue which requires DNS verification).
+  //    DNS for notify.realtrust.ro is currently in failed state, so the Go API
+  //    returns "Emails disabled for this project". Resend works regardless of DNS.
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
 
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
+  if (RESEND_API_KEY && LOVABLE_API_KEY) {
+    try {
+      const resendResp = await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'X-Connection-Api-Key': RESEND_API_KEY,
+        },
+        body: JSON.stringify({
+          from: `${SITE_NAME} <onboarding@resend.dev>`,
+          to: [effectiveRecipient],
+          subject: resolvedSubject,
+          html,
+          text: plainText,
+          headers: { 'X-Idempotency-Key': idempotencyKey },
+        }),
+      })
+
+      const respBody = await resendResp.json().catch(() => ({}))
+      if (resendResp.ok && respBody?.id) {
+        await supabase.from('email_send_log').insert({
+          message_id: messageId,
+          template_name: templateName,
+          recipient_email: effectiveRecipient,
+          status: 'sent',
+        })
+        return new Response(
+          JSON.stringify({ success: true, provider: 'resend', id: respBody.id }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+
+      const errMsg = `Resend ${resendResp.status}: ${JSON.stringify(respBody).slice(0, 400)}`
+      console.error('Resend send failed, falling back to queue', errMsg)
+      await supabase.from('email_send_log').insert({
+        message_id: messageId,
+        template_name: templateName,
+        recipient_email: effectiveRecipient,
+        status: 'failed',
+        error_message: errMsg.slice(0, 500),
+      })
+      // Continue to queue fallback below
+    } catch (e) {
+      console.error('Resend fetch threw, falling back to queue', e)
+    }
+  }
+
+  // 6. Fallback: enqueue via Lovable Emails (requires DNS-verified domain).
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: templateName,
@@ -327,12 +378,7 @@ Deno.serve(async (req) => {
   })
 
   if (enqueueError) {
-    console.error('Failed to enqueue email', {
-      error: enqueueError,
-      templateName,
-      effectiveRecipient,
-    })
-
+    console.error('Failed to enqueue email', { error: enqueueError, templateName, effectiveRecipient })
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
@@ -340,20 +386,16 @@ Deno.serve(async (req) => {
       status: 'failed',
       error_message: 'Failed to enqueue email',
     })
-
     return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  console.log('Transactional email enqueued', { templateName, effectiveRecipient })
-
+  console.log('Transactional email enqueued (Lovable Emails fallback)', { templateName, effectiveRecipient })
   return new Response(
-    JSON.stringify({ success: true, queued: true }),
-    {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    }
+    JSON.stringify({ success: true, queued: true, provider: 'lovable-emails' }),
+    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   )
 })
+
