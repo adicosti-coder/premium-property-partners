@@ -489,11 +489,20 @@ const AutomationManager = () => {
         />
       </div>
 
+      {/* REALTIME INDICATOR */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Radio className={`w-3 h-3 ${realtimeOn ? "text-primary animate-pulse" : "text-muted-foreground"}`} />
+        {realtimeOn ? "Live · actualizări realtime active" : "Conectare realtime..."}
+      </div>
+
       {/* TABS */}
       <Tabs defaultValue="jobs" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="jobs">
             <Activity className="w-4 h-4 mr-2" /> Joburi ({jobs.length})
+          </TabsTrigger>
+          <TabsTrigger value="runs">
+            <ListTree className="w-4 h-4 mr-2" /> Istoric rulaje ({runs.length})
           </TabsTrigger>
           <TabsTrigger value="approvals">
             <Inbox className="w-4 h-4 mr-2" /> Aprobări ({approvals.length})
