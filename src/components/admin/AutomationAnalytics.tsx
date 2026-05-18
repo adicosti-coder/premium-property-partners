@@ -3,7 +3,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Activity, Clock, Flame, TrendingUp, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Activity, Clock, Flame, TrendingUp, AlertTriangle, SlidersHorizontal, Filter } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
 } from "recharts";
@@ -20,10 +25,45 @@ const GEMINI_AVG_COST = 0.0008;
 const AI_JOB_PREFIXES = ["ai.", "seo.auto_fill_meta", "seo.ai_optimizer_audit", "prospect.predictive_rescore", "lead.auto_classify_agency"];
 
 const isAiJob = (k: string) => AI_JOB_PREFIXES.some((p) => k.startsWith(p) || k === p);
+const categoryOf = (k: string) => (k.includes(".") ? k.split(".")[0] : "other");
+
+type Thresholds = {
+  successWarn: number;   // below = amber
+  successBad: number;    // below = red
+  costWarn: number;      // above = amber (USD per job, 7d)
+  costBad: number;       // above = red
+};
+
+const DEFAULT_THRESHOLDS: Thresholds = {
+  successWarn: 95,
+  successBad: 80,
+  costWarn: 0.05,
+  costBad: 0.20,
+};
+
+const STORAGE_KEY = "automation_analytics_thresholds_v1";
+
+const loadThresholds = (): Thresholds => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_THRESHOLDS;
+    return { ...DEFAULT_THRESHOLDS, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_THRESHOLDS;
+  }
+};
 
 export const AutomationAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [runs, setRuns] = useState<RunRow[]>([]);
+  const [category, setCategory] = useState<string>("all");
+  const [thresholds, setThresholds] = useState<Thresholds>(loadThresholds);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(thresholds));
+    } catch { /* noop */ }
+  }, [thresholds]);
 
   useEffect(() => {
     let alive = true;
@@ -44,16 +84,28 @@ export const AutomationAnalytics = () => {
     return () => { alive = false; };
   }, []);
 
-  // 7d × 24h heatmap (Europe/Bucharest local hours)
+  // Available categories (always derived from full dataset, before filtering)
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    runs.forEach((r) => set.add(categoryOf(r.job_key)));
+    return Array.from(set).sort();
+  }, [runs]);
+
+  // Filtered runs by category
+  const filteredRuns = useMemo(
+    () => (category === "all" ? runs : runs.filter((r) => categoryOf(r.job_key) === category)),
+    [runs, category],
+  );
+
+  // 7d × 24h heatmap (local hours)
   const heatmap = useMemo(() => {
-    // grid[dayOffset 0..6][hour 0..23] = { total, ok, failed }
     const days: Array<Array<{ total: number; ok: number; failed: number }>> = [];
     for (let d = 0; d < 7; d++) {
       days.push(Array.from({ length: 24 }, () => ({ total: 0, ok: 0, failed: 0 })));
     }
     const now = new Date();
     const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    runs.forEach((r) => {
+    filteredRuns.forEach((r) => {
       const t = new Date(r.started_at);
       const dayStart = new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime();
       const offset = Math.round((todayMidnight - dayStart) / (24 * 60 * 60 * 1000));
@@ -64,8 +116,8 @@ export const AutomationAnalytics = () => {
       if (r.status === "success") cell.ok++;
       else if (r.status === "failed" || r.status === "timeout") cell.failed++;
     });
-    return days; // index 0 = today, 6 = 6 zile în urmă
-  }, [runs]);
+    return days;
+  }, [filteredRuns]);
 
   const dayLabels = useMemo(() => {
     const out: string[] = [];
@@ -81,7 +133,7 @@ export const AutomationAnalytics = () => {
   // Per-job latency + cost
   const perJob = useMemo(() => {
     const map = new Map<string, { count: number; ok: number; failed: number; totalMs: number; maxMs: number }>();
-    runs.forEach((r) => {
+    filteredRuns.forEach((r) => {
       const cur = map.get(r.job_key) ?? { count: 0, ok: 0, failed: 0, totalMs: 0, maxMs: 0 };
       cur.count++;
       if (r.status === "success") cur.ok++;
@@ -103,13 +155,27 @@ export const AutomationAnalytics = () => {
         est_cost_usd: isAiJob(job_key) ? +(v.count * GEMINI_AVG_COST).toFixed(4) : 0,
       }))
       .sort((a, b) => b.avg_ms - a.avg_ms);
-  }, [runs]);
+  }, [filteredRuns]);
 
-  const totalRuns = runs.length;
-  const totalFailed = runs.filter((r) => r.status === "failed" || r.status === "timeout").length;
+  const totalRuns = filteredRuns.length;
+  const totalFailed = filteredRuns.filter((r) => r.status === "failed" || r.status === "timeout").length;
   const successRate = totalRuns > 0 ? Math.round(((totalRuns - totalFailed) / totalRuns) * 100) : 100;
-  const aiCalls = runs.filter((r) => isAiJob(r.job_key) && r.status === "success").length;
+  const aiCalls = filteredRuns.filter((r) => isAiJob(r.job_key) && r.status === "success").length;
   const estCost = +(aiCalls * GEMINI_AVG_COST).toFixed(3);
+
+  // Threshold helpers
+  const successTone = (rate: number): "ok" | "warn" | "bad" =>
+    rate < thresholds.successBad ? "bad" : rate < thresholds.successWarn ? "warn" : "ok";
+  const costTone = (usd: number): "ok" | "warn" | "bad" =>
+    usd >= thresholds.costBad ? "bad" : usd >= thresholds.costWarn ? "warn" : "ok";
+  const toneBadgeVariant = (tone: "ok" | "warn" | "bad") =>
+    tone === "ok" ? "default" : tone === "warn" ? "secondary" : "destructive";
+  const toneCostClass = (tone: "ok" | "warn" | "bad") =>
+    tone === "ok"
+      ? "text-foreground"
+      : tone === "warn"
+        ? "text-amber-600 dark:text-amber-400 font-semibold"
+        : "text-destructive font-semibold";
 
   if (loading) {
     return <Skeleton className="h-96 w-full" />;
@@ -122,6 +188,78 @@ export const AutomationAnalytics = () => {
 
   return (
     <div className="space-y-4">
+      {/* Filters & Thresholds */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4" /> Filtre & Praguri alertă
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Segmentează datele pe categorii și ajustează pragurile vizuale pentru success rate și cost AI.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1 min-w-[180px]">
+              <Label className="text-[11px] flex items-center gap-1">
+                <Filter className="w-3 h-3" /> Categorie joburi
+              </Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toate categoriile</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-[11px]">Success rate · warn &lt; %</Label>
+              <Input
+                type="number" min={0} max={100} className="h-9 w-24"
+                value={thresholds.successWarn}
+                onChange={(e) => setThresholds((t) => ({ ...t, successWarn: Number(e.target.value) || 0 }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px]">Success rate · critic &lt; %</Label>
+              <Input
+                type="number" min={0} max={100} className="h-9 w-24"
+                value={thresholds.successBad}
+                onChange={(e) => setThresholds((t) => ({ ...t, successBad: Number(e.target.value) || 0 }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px]">Cost AI/job · warn &gt; $</Label>
+              <Input
+                type="number" step="0.01" min={0} className="h-9 w-24"
+                value={thresholds.costWarn}
+                onChange={(e) => setThresholds((t) => ({ ...t, costWarn: Number(e.target.value) || 0 }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px]">Cost AI/job · critic &gt; $</Label>
+              <Input
+                type="number" step="0.01" min={0} className="h-9 w-24"
+                value={thresholds.costBad}
+                onChange={(e) => setThresholds((t) => ({ ...t, costBad: Number(e.target.value) || 0 }))}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setThresholds(DEFAULT_THRESHOLDS)}
+              className="h-9 px-3 text-[11px] text-muted-foreground hover:text-foreground underline self-end"
+            >
+              Reset
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Top stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <MetricCard icon={<Activity className="w-3.5 h-3.5" />} label="Rulaje 7z" value={totalRuns} />
@@ -129,7 +267,7 @@ export const AutomationAnalytics = () => {
           icon={<TrendingUp className="w-3.5 h-3.5" />}
           label="Success rate"
           value={`${successRate}%`}
-          tone={successRate >= 95 ? "ok" : successRate >= 80 ? "warn" : "bad"}
+          tone={successTone(successRate)}
         />
         <MetricCard
           icon={<AlertTriangle className="w-3.5 h-3.5" />}
@@ -141,6 +279,7 @@ export const AutomationAnalytics = () => {
           icon={<Flame className="w-3.5 h-3.5" />}
           label="Cost AI estimat"
           value={`$${estCost.toFixed(3)}`}
+          tone={costTone(estCost)}
         />
       </div>
 
@@ -149,6 +288,9 @@ export const AutomationAnalytics = () => {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Flame className="w-4 h-4" /> Heatmap rulaje · ultimele 7 zile × 24h
+            {category !== "all" && (
+              <Badge variant="outline" className="text-[10px] ml-1">categorie: {category}</Badge>
+            )}
           </CardTitle>
           <CardDescription>
             Intensitatea = număr rulaje pe oră. Roșu = ore cu eșecuri/timeout. Identifici instant ferestrele problematice.
@@ -212,6 +354,9 @@ export const AutomationAnalytics = () => {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Clock className="w-4 h-4" /> Latență medie · top 10 joburi
+            {category !== "all" && (
+              <Badge variant="outline" className="text-[10px] ml-1">categorie: {category}</Badge>
+            )}
           </CardTitle>
           <CardDescription>
             Joburi cu durată mare → candidate la optimizare sau spargere în pași. Pragul intern de timeout este 50.000 ms.
@@ -252,7 +397,9 @@ export const AutomationAnalytics = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Statistici per job (7 zile)</CardTitle>
-          <CardDescription>Success rate, latență, cost AI estimat (joburi care invocă Gemini).</CardDescription>
+          <CardDescription>
+            Success rate și cost AI sunt colorate conform pragurilor setate mai sus.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {perJob.length === 0 ? (
@@ -271,25 +418,26 @@ export const AutomationAnalytics = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {perJob.map((j) => (
-                    <tr key={j.job_key} className="border-b border-border/50 hover:bg-muted/30">
-                      <td className="py-1.5 pr-3 font-mono text-[11px]">{j.job_key}</td>
-                      <td className="py-1.5 px-2 text-right tabular-nums">{j.count}</td>
-                      <td className="py-1.5 px-2 text-right tabular-nums">
-                        <Badge
-                          variant={j.success_rate >= 95 ? "default" : j.success_rate >= 80 ? "secondary" : "destructive"}
-                          className="text-[10px]"
-                        >
-                          {j.success_rate}%
-                        </Badge>
-                      </td>
-                      <td className="py-1.5 px-2 text-right tabular-nums">{j.avg_ms.toLocaleString("ro-RO")}</td>
-                      <td className="py-1.5 px-2 text-right tabular-nums">{j.max_ms.toLocaleString("ro-RO")}</td>
-                      <td className="py-1.5 pl-2 text-right tabular-nums">
-                        {j.est_cost_usd > 0 ? `$${j.est_cost_usd.toFixed(4)}` : "—"}
-                      </td>
-                    </tr>
-                  ))}
+                  {perJob.map((j) => {
+                    const sTone = successTone(j.success_rate);
+                    const cTone = costTone(j.est_cost_usd);
+                    return (
+                      <tr key={j.job_key} className="border-b border-border/50 hover:bg-muted/30">
+                        <td className="py-1.5 pr-3 font-mono text-[11px]">{j.job_key}</td>
+                        <td className="py-1.5 px-2 text-right tabular-nums">{j.count}</td>
+                        <td className="py-1.5 px-2 text-right tabular-nums">
+                          <Badge variant={toneBadgeVariant(sTone)} className="text-[10px]">
+                            {j.success_rate}%
+                          </Badge>
+                        </td>
+                        <td className="py-1.5 px-2 text-right tabular-nums">{j.avg_ms.toLocaleString("ro-RO")}</td>
+                        <td className="py-1.5 px-2 text-right tabular-nums">{j.max_ms.toLocaleString("ro-RO")}</td>
+                        <td className={`py-1.5 pl-2 text-right tabular-nums ${j.est_cost_usd > 0 ? toneCostClass(cTone) : ""}`}>
+                          {j.est_cost_usd > 0 ? `$${j.est_cost_usd.toFixed(4)}` : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
