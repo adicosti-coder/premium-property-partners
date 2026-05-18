@@ -3,7 +3,10 @@ import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSeoOverride } from "@/hooks/useSeoOverride";
 
-const BASE_URL = "https://www.realtrust.ro";
+// Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
+// Mismatching www/non-www between og:url, canonical and hreflang triggers
+// Lighthouse "Document does not have a valid rel=canonical".
+const BASE_URL = "https://realtrust.ro";
 
 interface SEOHeadProps {
   title?: string;
