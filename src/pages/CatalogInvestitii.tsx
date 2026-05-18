@@ -788,7 +788,7 @@ const CatalogInvestitii = () => {
                       <Mail className="w-4 h-4" /> info@realtrust.ro
                     </span>
                     <span className="flex items-center gap-2">
-                      <span>📞</span> +40 723 154 520
+                      <span>📞</span> +40 799 069 256
                     </span>
                   </div>
                 </div>

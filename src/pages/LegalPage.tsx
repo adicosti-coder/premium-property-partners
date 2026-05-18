@@ -50,7 +50,7 @@ The content of this website (texts, images, design, logos) is protected by copyr
 RealTrust does not guarantee the absolute accuracy of information presented on the site. Investment decisions should be made after consulting with specialists.
 
 ## 6. Contact
-For any questions regarding these terms, you can contact us at info@realtrust.ro or by phone at +40 723 154 520.
+For any questions regarding these terms, you can contact us at info@realtrust.ro or by phone at +40 799 069 256.
 
 *Last updated: March 2026*
       `,
@@ -130,7 +130,7 @@ We use essential cookies for site functionality and analytical cookies (Google A
 We implement appropriate technical and organizational measures: SSL/TLS encryption, IP anonymization, restricted data access.
 
 ## 9. DPO Contact
-For data protection inquiries: info@realtrust.ro, phone +40 723 154 520.
+For data protection inquiries: info@realtrust.ro, phone +40 799 069 256.
 
 *Last updated: March 2026*
       `,
