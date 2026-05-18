@@ -710,6 +710,9 @@ const BlogArticlePage = () => {
                 to={`/blog/locatie/${slugifyLocation(geoLocation)}`}
                 className="mt-8 flex items-center justify-between gap-4 p-5 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40 transition-colors group"
                 aria-label={`Vezi mai multe articole despre ${geoLocation}`}
+                onMouseEnter={() => prefetchHub(slugifyLocation(geoLocation))}
+                onFocus={() => prefetchHub(slugifyLocation(geoLocation))}
+                onClick={() => trackHubClick(geoLocation, "card")}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
