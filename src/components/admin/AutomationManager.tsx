@@ -25,14 +25,14 @@ type Settings = {
 type Job = {
   id: string;
   job_key: string;
-  category: "lead" | "seo" | "system";
+  category: "lead" | "seo" | "system" | "blog" | "ai";
   label: string;
   description: string | null;
   enabled: boolean;
   schedule: string | null;
   trigger_type: "cron" | "event" | "manual";
   last_run_at: string | null;
-  last_status: "success" | "failed" | "disabled" | "running" | null;
+  last_status: "success" | "failed" | "disabled" | "running" | "timeout" | "skipped" | null;
   last_error: string | null;
   consecutive_failures: number;
   total_runs: number;
@@ -57,12 +57,16 @@ const CATEGORY_LABEL: Record<Job["category"], string> = {
   lead: "Lead Pipeline",
   seo: "SEO & Indexare",
   system: "System & Digest",
+  blog: "Blog & Analytics",
+  ai: "AI & Intelligence",
 };
 
 const CATEGORY_ICON: Record<Job["category"], React.ComponentType<{ className?: string }>> = {
   lead: Phone,
   seo: Sparkles,
   system: Activity,
+  blog: Newspaper,
+  ai: Brain,
 };
 
 const StatusBadge = ({ status }: { status: Job["last_status"] }) => {
