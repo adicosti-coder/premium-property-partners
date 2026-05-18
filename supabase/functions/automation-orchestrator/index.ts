@@ -7,10 +7,26 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 // job_key -> edge function name to invoke
 const JOB_FN: Record<string, string> = {
+  // Lead automations
   "lead.auto_classify_agency": "lead-auto-classify-agency",
   "lead.auto_dedup": "lead-auto-dedup",
+  // SEO automations
   "seo.auto_fill_meta": "seo-auto-fill-meta",
   "seo.anomaly_detector": "seo-anomaly-detector",
+  "seo.weekly_report": "seo-weekly-report",
+  "seo.competitor_tracker": "seo-competitor-cron",
+  "seo.opportunity_detector": "seo-opportunity-detector",
+  "seo.page_audit": "seo-page-audit-cron",
+  "seo.indexing_alerts": "seo-indexing-alerts",
+  "seo.monthly_snapshot": "seo-monthly-snapshot",
+  "seo.ai_optimizer_audit": "seo-ai-optimizer",
+  // Blog / analytics
+  "blog.hub_clicks_weekly_digest": "blog-hub-weekly-digest",
+  "blog.sitemap_refresh": "generate-blog-sitemap",
+  // AI / prospect intelligence
+  "ai.bulk_cache_refresh": "bulk-generate-ai-cache",
+  "prospect.predictive_rescore": "scraper-lead-predictive",
+  // System
   "system.daily_digest": "automation-daily-digest",
 };
 
