@@ -1,30 +1,30 @@
 /**
  * Schema.org JSON-LD Generators for SEO
- * Centralized utilities for generating structured data
+ * Centralized utilities for generating structured data.
+ *
+ * Brand identity (name, phone, email, logo, address, sameAs) lives in
+ * src/lib/orgIdentity.ts — the single source of truth that this module
+ * (and every other JSON-LD emitter) imports. Do NOT inline organization
+ * fields here; reference ORGANIZATION_REF / REAL_ESTATE_AGENT_REF by @id
+ * so Google merges all per-page schemas into one Knowledge Graph entity.
  */
 
-const BASE_URL = "https://realtrust.ro";
-const ORGANIZATION = {
-  "@type": "Organization",
-  "name": "RealTrust & ApArt Hotel Timișoara",
-  "url": BASE_URL,
-  "logo": {
-    "@type": "ImageObject",
-    "url": `${BASE_URL}/images/hero-optimized-800w.webp`,
-    "width": 800,
-    "height": 450,
-  },
-  "sameAs": [
-    "https://www.facebook.com/realtrust.ro",
-    "https://www.instagram.com/realtrust_timisoara",
-  ],
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "telephone": "+40723154520",
-    "contactType": "customer service",
-    "availableLanguage": ["Romanian", "English"],
-  },
-};
+import {
+  BRAND,
+  ORG_ID,
+  ORGANIZATION_REF,
+  REAL_ESTATE_AGENT_ID,
+  REAL_ESTATE_AGENT_SCHEMA,
+  ORGANIZATION_SCHEMA,
+  LODGING_BUSINESS_ID,
+  SITE_ORIGIN,
+} from "@/lib/orgIdentity";
+
+const BASE_URL = SITE_ORIGIN;
+// Internal alias kept for back-compat with the rest of this file. New code
+// should import ORGANIZATION_REF directly from "@/lib/orgIdentity".
+const ORGANIZATION = ORGANIZATION_REF;
+
 
 // LocalBusiness Schema for homepage - enhanced for AI/GEO visibility
 export const generateLocalBusinessSchema = () => ({
