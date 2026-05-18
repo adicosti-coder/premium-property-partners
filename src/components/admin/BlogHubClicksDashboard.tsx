@@ -179,6 +179,31 @@ const BlogHubClicksDashboard = () => {
     };
   }, [clicks, impressions]);
 
+  const dailyTrend = useMemo(() => {
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
+    const byDay = new Map<string, { date: string; total: number; uniqKeys: Set<string> }>();
+    days.forEach((d) => {
+      const key = format(d, "yyyy-MM-dd");
+      byDay.set(key, { date: format(d, "dd.MM"), total: 0, uniqKeys: new Set() });
+    });
+    (clicks ?? []).forEach((r) => {
+      const meta = (r.metadata ?? {}) as Record<string, unknown>;
+      const slug = String(meta.location_slug ?? slugifyLocation(String(meta.location ?? "")));
+      if (trendLocation !== "all" && slug !== trendLocation) return;
+      const key = format(new Date(r.created_at), "yyyy-MM-dd");
+      const entry = byDay.get(key);
+      if (!entry) return;
+      entry.total += 1;
+      const source = String(meta.source ?? "inline");
+      if (r.session_id) entry.uniqKeys.add(`${r.session_id}|${source}`);
+    });
+    return Array.from(byDay.values()).map((d) => ({
+      date: d.date,
+      total: d.total,
+      unique: d.uniqKeys.size,
+    }));
+  }, [clicks, startDate, endDate, trendLocation]);
+
   const handleExportSummary = useCallback(() => {
     const headers = ["Locatie", "Afisari", "Click-uri Inline", "Click-uri Card", "Total Click-uri", "Click-uri Unice", "CTR %"];
     const csvRows = rows.map((r) => [
