@@ -367,11 +367,7 @@ const PentruProprietari = () => {
         "name": "Consultanță Fiscală Regim Hotelier Timișoara — PFA vs SRL",
         "alternateName": "Tax Advisory for Short-Term Rentals (Romania)",
         "provider": {
-          "@type": "RealEstateAgent",
-          "@id": "https://realtrust.ro/#realestateagent",
-          "name": "RealTrust Aparthotel",
-          "url": "https://realtrust.ro",
-          "areaServed": { "@type": "City", "name": "Timișoara" },
+          ...REAL_ESTATE_AGENT_REF,
           "knowsAbout": [
             "PFA Cazare Turistică",
             "SRL Microîntreprindere",
