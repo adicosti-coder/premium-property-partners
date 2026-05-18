@@ -410,11 +410,17 @@ const BlogArticlePage = () => {
   );
   }
   
+  // SEO-dedicated overrides (DB fields), with safe fallbacks
+  const seoTitle = (article as any).meta_title?.trim() || displayTitle;
+  const seoDescription = (article as any).meta_description?.trim() || displayExcerpt;
+  const seoImage = (article as any).main_image_url?.trim() || coverImage || undefined;
+  const geoLocation: string | undefined = (article as any).geo_location?.trim() || undefined;
+
   // Generate enhanced Schema.org structured data
   const articleSchemaData = generateArticleSchema({
-    headline: displayTitle,
-    description: displayExcerpt,
-    image: coverImage || undefined,
+    headline: seoTitle,
+    description: seoDescription,
+    image: seoImage,
     datePublished: article.published_at || article.created_at,
     dateModified: article.published_at || article.created_at,
     author: article.author_name,
@@ -425,32 +431,24 @@ const BlogArticlePage = () => {
     isAccessibleForFree: !article.is_premium,
   });
 
+  // Inject GEO targeting into the BlogPosting schema
+  if (geoLocation) {
+    (articleSchemaData as Record<string, unknown>).contentLocation = {
+      "@type": "Place",
+      name: geoLocation,
+    };
+    (articleSchemaData as Record<string, unknown>).spatialCoverage = {
+      "@type": "Place",
+      name: geoLocation,
+    };
+  }
+
   const breadcrumbSchemaData = generateBreadcrumbSchema([
     { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
     { name: "Blog", url: "https://realtrust.ro/blog" },
     { name: displayTitle, url: articleUrl },
   ]);
-
-  // Add HowTo schema for guide/how-to articles
-  const isGuideArticle = article.category?.toLowerCase().includes("ghid") || 
-    article.tags?.some(t => t.toLowerCase().includes("ghid") || t.toLowerCase().includes("how-to") || t.toLowerCase().includes("cum să"));
-  
-  const combinedJsonLd: Record<string, unknown>[] = [articleSchemaData, breadcrumbSchemaData];
-  
-  if (isGuideArticle) {
-    // Extract H2 headings as HowTo steps
-    const h2Regex = /<h2[^>]*>(.*?)<\/h2>/gi;
-    const steps: { name: string; text: string }[] = [];
-    let match;
-    while ((match = h2Regex.exec(displayContent)) !== null) {
-      const name = match[1].replace(/<[^>]*>/g, '').trim();
-      if (name) steps.push({ name, text: name });
-    }
-    if (steps.length >= 2) {
-      combinedJsonLd.push(generateHowToSchema(displayTitle, displayExcerpt, steps));
-    }
-  }
-
+...
   const breadcrumbItems = [
     { label: "Blog", href: "/blog" },
     { label: displayTitle }
@@ -459,15 +457,16 @@ const BlogArticlePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title={displayTitle}
-        description={displayExcerpt}
+        title={seoTitle}
+        description={seoDescription}
         type="article"
-        image={coverImage || undefined}
+        image={seoImage}
         jsonLd={combinedJsonLd}
         publishedTime={article.published_at || article.created_at}
         author={article.author_name}
         articleTags={article.tags}
         articleCategory={article.category}
+        geoRegion={geoLocation}
       />
       <Header />
       <Suspense fallback={null}>
