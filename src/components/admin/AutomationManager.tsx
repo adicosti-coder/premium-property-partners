@@ -13,8 +13,9 @@ import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
   Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
-  FlaskConical, Copy, XCircle, Newspaper, Brain, ListTree, Radio,
+  FlaskConical, Copy, XCircle, Newspaper, Brain, ListTree, Radio, BarChart3,
 } from "lucide-react";
+import { AutomationAnalytics } from "./AutomationAnalytics";
 
 type Settings = {
   enabled: boolean;
@@ -507,6 +508,9 @@ const AutomationManager = () => {
           <TabsTrigger value="approvals">
             <Inbox className="w-4 h-4 mr-2" /> Aprobări ({approvals.length})
           </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="w-4 h-4 mr-2" /> Analytics
+          </TabsTrigger>
           <TabsTrigger value="test">
             <FlaskConical className="w-4 h-4 mr-2" /> Mod test
           </TabsTrigger>
@@ -514,6 +518,10 @@ const AutomationManager = () => {
             <History className="w-4 h-4 mr-2" /> Audit
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="analytics">
+          <AutomationAnalytics />
+        </TabsContent>
 
         <TabsContent value="jobs" className="space-y-6">
           {(Object.keys(grouped) as Job["category"][]).map((cat) => {
