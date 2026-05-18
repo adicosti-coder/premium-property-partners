@@ -289,6 +289,53 @@ const AutomationManager = () => {
     }
   };
 
+  const sendReport = async () => {
+    if (!reportEmail || !/.+@.+\..+/.test(reportEmail)) {
+      toast({ title: "Email invalid", description: "Introdu o adresă validă.", variant: "destructive" });
+      return;
+    }
+    setSendingReport(true);
+    try {
+      const recent = runs.slice(0, 30).map((r) => ({
+        job_key: r.job_key,
+        status: r.status,
+        duration_ms: r.duration_ms ?? 0,
+        error: r.error,
+        started_at: r.started_at,
+      }));
+      const ok = recent.filter((r) => r.status === "success").length;
+      const failed = recent.filter((r) => r.status === "failed" || r.status === "timeout").length;
+      const { data, error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "automation-run-report",
+          recipientEmail: reportEmail,
+          idempotencyKey: `manual-report-${Date.now()}`,
+          templateData: {
+            summary: `Raport manual: ${ok} OK / ${failed} eșuate din ultimele ${recent.length}`,
+            results: recent,
+            generated_at: new Date().toISOString(),
+          },
+        },
+      });
+      if (error) throw error;
+      const provider = (data as { provider?: string })?.provider ?? "queue";
+      setLastReportAt(new Date().toISOString());
+      toast({
+        title: "Raport trimis",
+        description: `Livrat prin ${provider} către ${reportEmail}.`,
+      });
+    } catch (e) {
+      toast({
+        title: "Eroare trimitere email",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
+
   const applyApproval = async (a: Approval) => {
     setRunningJob(`approval:${a.id}`);
     try {
