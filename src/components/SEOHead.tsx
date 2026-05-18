@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSeoOverride } from "@/hooks/useSeoOverride";
 import { BRAND, ORG_ID, SITE_ORIGIN } from "@/lib/orgIdentity";
+import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
 // Mismatching www/non-www between og:url, canonical and hreflang triggers
