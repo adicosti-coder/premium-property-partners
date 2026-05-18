@@ -4,34 +4,41 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, MapPin, MousePointerClick, LayoutGrid } from "lucide-react";
+import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent } from "lucide-react";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { slugifyLocation } from "@/lib/blogLocations";
 
 interface HubRow {
   id: string;
   created_at: string;
+  session_id: string | null;
   metadata: Record<string, unknown> | null;
 }
 
 interface AggRow {
   location: string;
+  locationSlug: string;
   inline: number;
   card: number;
   total: number;
+  uniqueTotal: number;
+  impressions: number;
+  ctr: number; // %
 }
 
 const BlogHubClicksDashboard = () => {
   const [dateRange, setDateRange] = useState("30");
+  const days = parseInt(dateRange);
 
-  const { data, isLoading } = useQuery({
+  const { data: clicks, isLoading } = useQuery({
     queryKey: ["blog-hub-clicks", dateRange],
     queryFn: async () => {
-      const startDate = startOfDay(subDays(new Date(), parseInt(dateRange)));
+      const startDate = startOfDay(subDays(new Date(), days));
       const endDate = endOfDay(new Date());
       const { data, error } = await supabase
         .from("cta_analytics")
-        .select("id, created_at, metadata")
+        .select("id, created_at, session_id, metadata")
         .gte("created_at", startDate.toISOString())
         .lte("created_at", endDate.toISOString())
         .eq("cta_type", "form_submit")
@@ -43,16 +50,43 @@ const BlogHubClicksDashboard = () => {
     },
   });
 
+  const { data: impressions } = useQuery({
+    queryKey: ["blog-hub-impressions", dateRange],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_blog_hub_impressions", { p_days: days });
+      if (error) throw error;
+      return (data ?? []) as Array<{ geo_location: string; impressions: number }>;
+    },
+  });
+
   const { rows, totals } = useMemo(() => {
-    const map = new Map<string, AggRow>();
+    const impMap = new Map<string, number>();
+    (impressions ?? []).forEach((r) => {
+      if (r.geo_location) impMap.set(slugifyLocation(r.geo_location), Number(r.impressions) || 0);
+    });
+
+    const map = new Map<string, AggRow & { uniqKeys: Set<string> }>();
     let inlineTotal = 0;
     let cardTotal = 0;
-    (data ?? []).forEach((r) => {
-      const meta = r.metadata ?? {};
-      const location = String((meta as any).location ?? "—");
-      const source = String((meta as any).source ?? "inline");
-      if (!map.has(location)) map.set(location, { location, inline: 0, card: 0, total: 0 });
-      const row = map.get(location)!;
+    (clicks ?? []).forEach((r) => {
+      const meta = (r.metadata ?? {}) as Record<string, unknown>;
+      const location = String(meta.location ?? "—");
+      const locationSlug = String(meta.location_slug ?? slugifyLocation(location));
+      const source = String(meta.source ?? "inline");
+      if (!map.has(locationSlug)) {
+        map.set(locationSlug, {
+          location,
+          locationSlug,
+          inline: 0,
+          card: 0,
+          total: 0,
+          uniqueTotal: 0,
+          impressions: impMap.get(locationSlug) ?? 0,
+          ctr: 0,
+          uniqKeys: new Set<string>(),
+        });
+      }
+      const row = map.get(locationSlug)!;
       if (source === "card") {
         row.card += 1;
         cardTotal += 1;
@@ -61,12 +95,44 @@ const BlogHubClicksDashboard = () => {
         inlineTotal += 1;
       }
       row.total += 1;
+      if (r.session_id) row.uniqKeys.add(`${r.session_id}|${source}`);
     });
-    const rows = Array.from(map.values()).sort((a, b) => b.total - a.total);
-    return { rows, totals: { inline: inlineTotal, card: cardTotal, total: inlineTotal + cardTotal, locations: rows.length } };
-  }, [data]);
+
+    const rows: AggRow[] = Array.from(map.values())
+      .map((r) => {
+        const uniqueTotal = r.uniqKeys.size || r.total;
+        const ctr = r.impressions > 0 ? (uniqueTotal / r.impressions) * 100 : 0;
+        return {
+          location: r.location,
+          locationSlug: r.locationSlug,
+          inline: r.inline,
+          card: r.card,
+          total: r.total,
+          uniqueTotal,
+          impressions: r.impressions,
+          ctr,
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+
+    const totalImpressions = Array.from(impMap.values()).reduce((a, b) => a + b, 0);
+    const totalUnique = rows.reduce((a, b) => a + b.uniqueTotal, 0);
+    return {
+      rows,
+      totals: {
+        inline: inlineTotal,
+        card: cardTotal,
+        total: inlineTotal + cardTotal,
+        locations: rows.length,
+        impressions: totalImpressions,
+        avgCtr: totalImpressions > 0 ? (totalUnique / totalImpressions) * 100 : 0,
+      },
+    };
+  }, [clicks, impressions]);
 
   if (isLoading) return <Skeleton className="h-96 w-full" />;
+
+  const fmtCtr = (v: number) => (v > 0 ? `${v.toFixed(2)}%` : "—");
 
   return (
     <div className="space-y-6">
@@ -75,7 +141,9 @@ const BlogHubClicksDashboard = () => {
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <MapPin className="w-6 h-6 text-primary" /> Hub Clicks – Locații Blog
           </h2>
-          <p className="text-sm text-muted-foreground">Click-uri pe linkurile către hub-urile de locație din articole.</p>
+          <p className="text-sm text-muted-foreground">
+            Click-uri pe linkurile către hub-urile de locație din articole + CTR vs. afișările articolelor.
+          </p>
         </div>
         <Select value={dateRange} onValueChange={setDateRange}>
           <SelectTrigger className="w-40">
@@ -90,11 +158,12 @@ const BlogHubClicksDashboard = () => {
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<MousePointerClick className="w-4 h-4" />} label="Total click-uri" value={totals.total} />
-        <StatCard icon={<BarChart3 className="w-4 h-4" />} label="Link inline" value={totals.inline} />
-        <StatCard icon={<LayoutGrid className="w-4 h-4" />} label="Card final" value={totals.card} />
-        <StatCard icon={<MapPin className="w-4 h-4" />} label="Locații active" value={totals.locations} />
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <StatCard icon={<MousePointerClick className="w-4 h-4" />} label="Total click-uri" value={totals.total.toLocaleString("ro-RO")} />
+        <StatCard icon={<BarChart3 className="w-4 h-4" />} label="Link inline" value={totals.inline.toLocaleString("ro-RO")} />
+        <StatCard icon={<LayoutGrid className="w-4 h-4" />} label="Card final" value={totals.card.toLocaleString("ro-RO")} />
+        <StatCard icon={<MapPin className="w-4 h-4" />} label="Afișări articole" value={totals.impressions.toLocaleString("ro-RO")} />
+        <StatCard icon={<Percent className="w-4 h-4" />} label="CTR mediu" value={fmtCtr(totals.avgCtr)} />
       </div>
 
       <Card>
@@ -122,7 +191,7 @@ const BlogHubClicksDashboard = () => {
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="inline" name="Inline" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="inline" name="Inline" stackId="a" fill="hsl(var(--primary))" />
                   <Bar dataKey="card" name="Card" stackId="a" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -133,7 +202,7 @@ const BlogHubClicksDashboard = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Detalii</CardTitle>
+          <CardTitle>Detalii per locație</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -144,20 +213,26 @@ const BlogHubClicksDashboard = () => {
                   <th className="text-right px-4 py-2">Inline</th>
                   <th className="text-right px-4 py-2">Card</th>
                   <th className="text-right px-4 py-2">Total</th>
+                  <th className="text-right px-4 py-2">Unice</th>
+                  <th className="text-right px-4 py-2">Afișări</th>
+                  <th className="text-right px-4 py-2">CTR</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.location} className="border-t border-border hover:bg-muted/20">
+                  <tr key={r.locationSlug} className="border-t border-border hover:bg-muted/20">
                     <td className="px-4 py-2 font-medium text-foreground">{r.location}</td>
                     <td className="px-4 py-2 text-right tabular-nums">{r.inline}</td>
                     <td className="px-4 py-2 text-right tabular-nums">{r.card}</td>
                     <td className="px-4 py-2 text-right tabular-nums font-semibold">{r.total}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{r.uniqueTotal}</td>
+                    <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">{r.impressions || "—"}</td>
+                    <td className="px-4 py-2 text-right tabular-nums font-semibold text-primary">{fmtCtr(r.ctr)}</td>
                   </tr>
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                       Niciun click înregistrat încă.
                     </td>
                   </tr>
@@ -165,20 +240,23 @@ const BlogHubClicksDashboard = () => {
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-muted-foreground px-4 py-3 border-t border-border">
+            CTR = click-uri unice (per sesiune + sursă) / afișări articole din locație × 100.
+          </p>
         </CardContent>
       </Card>
     </div>
   );
 };
 
-const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) => (
+const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) => (
   <Card>
     <CardContent className="p-4">
       <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
         {icon}
         <span>{label}</span>
       </div>
-      <div className="text-2xl font-bold text-foreground tabular-nums">{value.toLocaleString("ro-RO")}</div>
+      <div className="text-2xl font-bold text-foreground tabular-nums">{value}</div>
     </CardContent>
   </Card>
 );
