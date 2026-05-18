@@ -26,20 +26,22 @@ const BASE_URL = SITE_ORIGIN;
 const ORGANIZATION = ORGANIZATION_REF;
 
 
-// LocalBusiness Schema for homepage - enhanced for AI/GEO visibility
+// LodgingBusiness Schema for homepage — uses canonical brand identity.
 export const generateLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LodgingBusiness",
-  "@id": `${BASE_URL}/#organization`,
-  "name": "RealTrust & ApArt Hotel Timișoara",
-  "alternateName": ["ApArt Hotel Timișoara", "RealTrust Imobiliare"],
+  "@id": LODGING_BUSINESS_ID,
+  "name": `${BRAND.name} Timișoara`,
+  "alternateName": [...BRAND.alternateNames],
   "description": "Apartamente regim hotelier, închirieri pe termen scurt și investiții imobiliare în Timișoara, aproape de Aeroport Timișoara, Iulius Town, Openville, Gara de Nord și Spitalul Județean.",
-  "url": BASE_URL,
-  "telephone": "+40723154520",
-  "email": "info@realtrust.ro",
-  "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
-  "logo": `${BASE_URL}/images/hero-optimized-800w.webp`,
-  "foundingDate": "2001",
+  "url": BRAND.url,
+  "telephone": BRAND.telephone,
+  "email": BRAND.email,
+  "image": BRAND.image,
+  "logo": BRAND.logo,
+  "foundingDate": BRAND.foundingDate,
+  "parentOrganization": { "@id": ORG_ID },
+
   "numberOfEmployees": {
     "@type": "QuantitativeValue",
     "minValue": 10,
