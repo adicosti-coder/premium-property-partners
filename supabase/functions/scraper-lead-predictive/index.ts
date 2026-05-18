@@ -43,10 +43,19 @@ serve(async (req) => {
     }
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const admin = await requireAdmin(req, sb);
-    if (admin.error) return admin.error;
 
-    const body: RequestBody = await req.json();
+    const rawBody = await req.json().catch(() => ({} as any));
+
+    // Orchestrator/cron trigger: bypass admin (service-role JWT is already validated by gateway)
+    const isCron = typeof rawBody?.triggered_by === "string" && rawBody.triggered_by.length > 0;
+    if (!isCron) {
+      const admin = await requireAdmin(req, sb);
+      if (admin.error) return admin.error;
+    }
+
+    const body: RequestBody = isCron
+      ? { mode: "batch", limit: Number(rawBody?.limit) > 0 ? Number(rawBody.limit) : 20, forceRefresh: false }
+      : (rawBody as RequestBody);
 
     // Build market context from existing leads (median price per neighborhood + listing_type)
     const { data: marketLeads } = await sb
