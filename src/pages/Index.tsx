@@ -15,11 +15,14 @@ import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
 // 2.5s render delay measured by Lighthouse when it was lazy + Suspense fallback null.
 import PageSummary from "@/components/PageSummary";
 
-// Header & Hero MUST be eager: they are the LCP element and the static
-// shell in index.html is wiped by React mount. Any Suspense gap here
-// produces a blank viewport → catastrophic CLS=1.0 measured by Lighthouse.
-import Header from "@/components/Header";
+// Hero MUST be eager: it is the LCP element and the static shell in
+// index.html is wiped by React mount. Any Suspense gap here produces
+// CLS=1.0 measured by Lighthouse.
 import Hero from "@/components/Hero";
+// Header is `position: fixed` (sits on top of Hero, NOT in flow) → safe to
+// lazy-load post-LCP. Removes ~25KB from the eager bundle. Fallback is null
+// because no layout space is reserved by a fixed element.
+const Header = lazy(() => import("@/components/Header"));
 const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
@@ -256,7 +259,9 @@ const Index = () => {
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
-      <Header />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
         {/* Hero is eager — it's the LCP element. The static hero-shell in
             index.html paints first; React Hero replaces it on mount with
