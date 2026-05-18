@@ -60,10 +60,11 @@ const generateArticleJsonLd = (
   },
   "publisher": {
     "@type": "Organization",
-    "name": "RealTrust & ApArt Hotel",
+    "@id": ORG_ID,
+    "name": BRAND.name,
     "logo": {
       "@type": "ImageObject",
-      "url": `${BASE_URL}/images/hero-optimized-800w.webp`,
+      "url": BRAND.logo,
       "width": 800,
       "height": 450,
     },
