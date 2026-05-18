@@ -326,15 +326,19 @@ const SEOHead = ({
       {overrideKeywords.length > 0 && (
         <meta name="keywords" content={overrideKeywords.join(", ")} />
       )}
-      <link rel="canonical" href={finalUrl} />
+      {/*
+        Canonical + hreflang are emitted globally by
+        <CanonicalHreflang /> (mounted once in the router) to guarantee a
+        single, consistent canonical per route. Do NOT re-emit them here,
+        otherwise Lighthouse reports "Document does not have a valid
+        rel=canonical" because hreflang and canonical disagree.
+        Admin SEO override (override?.canonical_url) is intentionally not
+        emitted as a second <link rel="canonical">; if per-route overrides
+        are needed, extend CanonicalHreflang to consume the override.
+      */}
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       <html lang={language} />
-      
-      {/* Hreflang for multilingual support */}
-      <link rel="alternate" hrefLang="ro" href={getAlternateUrl("ro")} />
-      <link rel="alternate" hrefLang="en" href={getAlternateUrl("en")} />
-      <link rel="alternate" hrefLang="x-default" href={getAlternateUrl("ro")} />
-      
+
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
       <meta property="og:url" content={finalUrl} />
