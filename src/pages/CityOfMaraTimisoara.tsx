@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabaseClient";
 import { formatPhoneInput, isValidWhatsAppNumber, trackConversion } from "@/lib/conversionTracking";
 import cityHero from "@/assets/apt-03.webp";
+import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 
 const Footer = lazy(() => import("@/components/Footer"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -246,10 +247,8 @@ const CityOfMaraTimisoara = () => {
         ],
       },
       {
-        "@type": "RealEstateAgent",
-        name: "RealTrust",
+        ...REAL_ESTATE_AGENT_REF,
         url: "https://realtrust.ro",
-        telephone: "+40799069256",
         areaServed: "Timișoara",
       },
       {

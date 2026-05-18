@@ -28,6 +28,7 @@ import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
+import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 import PageSummary from "@/components/PageSummary";
 import SEOAboutAdditionsStrip from "@/components/SEOAboutAdditionsStrip";
 
@@ -157,7 +158,7 @@ const AboutUs = () => {
         name: "Imo Business Centrum SRL",
         items: [
           { icon: MapPin, label: "Sediu", value: "Timișoara, România" },
-          { icon: Phone, label: "Telefon", value: "+40 723 154 520" },
+          { icon: Phone, label: "Telefon", value: "+40 799 069 256" },
           { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
@@ -299,7 +300,7 @@ const AboutUs = () => {
         name: "Imo Business Centrum SRL",
         items: [
           { icon: MapPin, label: "Office", value: "Timișoara, Romania" },
-          { icon: Phone, label: "Phone", value: "+40 723 154 520" },
+          { icon: Phone, label: "Phone", value: "+40 799 069 256" },
           { icon: Mail, label: "Email", value: "info@realtrust.ro" }
         ]
       },
@@ -337,52 +338,18 @@ const AboutUs = () => {
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
-  // Organization JSON-LD schema
+  // Organization JSON-LD schema — canonical identity + page-specific extras
   const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    "name": "RealTrust & ApArt Hotel",
+    ...REAL_ESTATE_AGENT_SCHEMA,
     "legalName": "Imo Business Centrum SRL",
-    "url": "https://realtrust.ro",
-    "logo": "https://realtrust.ro/favicon.ico",
-    "image": "https://realtrust.ro/og-image.jpg",
     "description": seo.description,
     "foundingDate": "1999",
-    "priceRange": "€€",
-    "areaServed": [
-      { "@type": "City", "name": "Timișoara" },
-      { "@type": "AdministrativeArea", "name": "Timiș" },
-      { "@type": "Place", "name": "Dumbrăvița" },
-      { "@type": "Place", "name": "Giroc" }
-    ],
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Timișoara",
-      "addressRegion": "Timiș",
-      "addressCountry": "RO"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 45.7489,
-      "longitude": 21.2087
-    },
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+40799069256",
-      "contactType": "customer service",
-      "email": "info@realtrust.ro",
-      "availableLanguage": ["Romanian", "English"]
-    },
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "9.7",
       "bestRating": "10",
       "ratingCount": "180"
     },
-    "sameAs": [
-      "https://www.facebook.com/realtrust",
-      "https://www.instagram.com/realtrust"
-    ]
   };
 
   // Person schema for the founder (E-E-A-T)
@@ -391,7 +358,7 @@ const AboutUs = () => {
     "@type": "Person",
     "name": "Adrian Costi",
     "jobTitle": language === "ro" ? "Fondator & CEO" : "Founder & CEO",
-    "worksFor": { "@type": "RealEstateAgent", "name": "RealTrust & ApArt Hotel" },
+    "worksFor": REAL_ESTATE_AGENT_REF,
     "knowsAbout": [
       "Real Estate Timișoara",
       "Short-term rental management",

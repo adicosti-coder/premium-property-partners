@@ -11,6 +11,7 @@ import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { REAL_ESTATE_AGENT_SCHEMA } from "@/lib/orgIdentity";
 
 
 const packages = {
@@ -270,35 +271,21 @@ const Preturi = () => {
   const BASE_URL = "https://realtrust.ro";
 
   const realEstateAgentSchema = {
-    "@context": "https://schema.org",
+    ...REAL_ESTATE_AGENT_SCHEMA,
     "@type": ["RealEstateAgent", "LocalBusiness"],
-    "@id": `${BASE_URL}/preturi#org`,
-    "name": "RealTrust Property Management Timișoara",
     "url": `${BASE_URL}/preturi`,
-    "telephone": "+40799069256",
-    "email": "info@realtrust.ro",
-    "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Strada Samuil Micu Nr.14",
-      "addressLocality": "Timișoara",
-      "addressRegion": "Timiș",
-      "postalCode": "300125",
-      "addressCountry": "RO",
-    },
-    "areaServed": [
-      { "@type": "City", "name": "Timișoara" },
-      { "@type": "AdministrativeArea", "name": "Județul Timiș" },
-    ],
     "priceRange": "15%-25%",
   };
+
+  // alias used by servicePriceSchema.provider below
+  const PRETURI_ORG_ID = REAL_ESTATE_AGENT_SCHEMA["@id"];
 
   const servicePriceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
     "serviceType": lang === "ro" ? "Administrare apartamente regim hotelier" : "Short-term rental property management",
     "name": lang === "ro" ? "Tarife administrare imobiliare Timișoara" : "Property management pricing Timișoara",
-    "provider": { "@id": `${BASE_URL}/preturi#org` },
+    "provider": { "@id": PRETURI_ORG_ID },
     "areaServed": { "@type": "City", "name": "Timișoara" },
     "offers": pkgs.map((p) => ({
       "@type": "Offer",

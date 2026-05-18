@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSeoOverride } from "@/hooks/useSeoOverride";
 import { BRAND, ORG_ID, SITE_ORIGIN } from "@/lib/orgIdentity";
+import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
 // Mismatching www/non-www between og:url, canonical and hreflang triggers
@@ -296,6 +297,12 @@ const SEOHead = ({
     }
     
     finalJsonLd = schemas.length === 1 ? schemas[0] : schemas;
+  }
+
+  // Dev-only: warn if any node in the assembled JSON-LD conflicts with the
+  // canonical brand identity (phone / email / city). Production no-op.
+  if (import.meta.env?.DEV) {
+    validateJsonLdConsistency(finalJsonLd, `SEOHead(${finalUrl})`);
   }
 
   // Keep static shell meta tags in sync after hydration. The original index.html

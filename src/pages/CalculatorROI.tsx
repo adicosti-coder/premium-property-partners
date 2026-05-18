@@ -6,6 +6,7 @@ import BackToTop from "@/components/BackToTop";
 import ROICalculatorWidget from "@/components/ROICalculatorWidget";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 import { Link } from "react-router-dom";
 import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle } from "lucide-react";
 import { lazy, Suspense } from "react";
@@ -68,8 +69,7 @@ const CalculatorROI = () => {
           description: "Calculator gratuit de randament imobiliar: compară venitul lunar și ROI-ul anual între regim hotelier și chirie clasică. Include cash flow și amortizarea investiției.",
           url: "https://realtrust.ro/calculator-roi",
           provider: {
-            "@type": "RealEstateAgent",
-            name: "RealTrust",
+            ...REAL_ESTATE_AGENT_REF,
             areaServed: ["Timișoara", "Dumbrăvița", "Ghiroda", "Moșnița Nouă", "Giroc"],
           },
           feesAndCommissionsSpecification: "Comision de administrare 15-25% din venit brut",

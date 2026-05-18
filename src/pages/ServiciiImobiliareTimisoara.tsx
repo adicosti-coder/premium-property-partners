@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
@@ -47,8 +48,7 @@ const ServiciiImobiliareTimisoara = () => {
       "@id": `${BASE_URL}/servicii-imobiliare-timisoara#service`,
       "name": isRo ? "Servicii Imobiliare Timișoara" : "Real Estate Services Timișoara",
       "provider": {
-        "@type": "RealEstateAgent",
-        "name": "RealTrust",
+        ...REAL_ESTATE_AGENT_REF,
         "url": BASE_URL,
         "founder": {
           "@type": "Person",

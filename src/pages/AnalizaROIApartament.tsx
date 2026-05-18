@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 
 const Footer = lazy(() => import("@/components/Footer"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -171,7 +172,7 @@ const AnalizaROIApartament = () => {
               name: "Analiza ROI Apartament România",
               description: "Calculator interactiv pentru randament investiții imobiliare, profit apartament și proiecții de apreciere a prețurilor în România.",
               url: "https://realtrust.ro/analiza-roi-apartament",
-              provider: { "@type": "RealEstateAgent", name: "RealTrust & ApArt Hotel", areaServed: "România" },
+              provider: { ...REAL_ESTATE_AGENT_REF, areaServed: "România" },
             },
             {
               "@type": "HowTo",

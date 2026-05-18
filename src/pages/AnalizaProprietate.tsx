@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { lazy, Suspense } from "react";
 import HostScanUploader from "@/components/hostscan/HostScanUploader";
+import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 
 const HostScanMiniMap = lazy(() => import("@/components/HostScanMiniMap"));
 
@@ -297,22 +298,9 @@ const AnalizaProprietate = () => {
 
   const jsonLdSchemas = [
     {
-      "@context": "https://schema.org",
+      ...REAL_ESTATE_AGENT_SCHEMA,
       "@type": ["RealEstateAgent", "LocalBusiness"],
-      "name": "RealTrust Timișoara",
       "url": "https://realtrust.ro/analiza-proprietate",
-      "telephone": "+40799069256",
-      "email": "info@realtrust.ro",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
-        "addressLocality": "Timișoara",
-        "addressRegion": "Timiș",
-        "postalCode": "300125",
-        "addressCountry": "RO",
-      },
-      "geo": { "@type": "GeoCoordinates", "latitude": 45.7672, "longitude": 21.2495 },
-      "areaServed": { "@type": "City", "name": "Timișoara" },
       "makesOffer": [
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Evaluare apartament Timișoara (AI)" : "Apartment valuation Timișoara (AI)" } },
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Consultanță imobiliară Timișoara" : "Real estate consulting Timișoara" } },
@@ -326,7 +314,7 @@ const AnalizaProprietate = () => {
       "@type": "Service",
       "name": language === "ro" ? "Analiză AI Proprietate (HostScan)" : "AI Property Analysis (HostScan)",
       "serviceType": language === "ro" ? "Evaluare apartament Timișoara" : "Apartment valuation Timișoara",
-      "provider": { "@type": "RealEstateAgent", "name": "RealTrust Timișoara" },
+      "provider": REAL_ESTATE_AGENT_REF,
       "areaServed": { "@type": "City", "name": "Timișoara" },
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock" },
     },
