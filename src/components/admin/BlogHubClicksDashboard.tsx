@@ -4,9 +4,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent, Download } from "lucide-react";
+import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent, Download, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { subDays, startOfDay, endOfDay } from "date-fns";
+import { startOfDay, endOfDay, format, subDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { slugifyLocation } from "@/lib/blogLocations";
 
@@ -28,20 +28,41 @@ interface AggRow {
   ctr: number; // %
 }
 
+const PRESET_RANGES = ["7", "30", "90", "365"] as const;
+type PresetRange = (typeof PRESET_RANGES)[number];
+
 const BlogHubClicksDashboard = () => {
-  const [dateRange, setDateRange] = useState("30");
-  const days = parseInt(dateRange);
+  const [dateRange, setDateRange] = useState< PresetRange | "custom">("30");
+  const [customStart, setCustomStart] = useState<string>(format(subDays(new Date(), 30), "yyyy-MM-dd"));
+  const [customEnd, setCustomEnd] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+
+  const isCustom = dateRange === "custom";
+  const days = isCustom ? 0 : parseInt(dateRange);
+
+  const startDate = useMemo(() => {
+    if (isCustom) return startOfDay(new Date(customStart));
+    return startOfDay(subDays(new Date(), days));
+  }, [isCustom, customStart, days]);
+
+  const endDate = useMemo(() => {
+    if (isCustom) return endOfDay(new Date(customEnd));
+    return endOfDay(new Date());
+  }, [isCustom, customEnd]);
+
+  const startIso = startDate.toISOString();
+  const endIso = endDate.toISOString();
+  const dateLabel = isCustom
+    ? `${format(startDate, "dd.MM.yyyy")} – ${format(endDate, "dd.MM.yyyy")}`
+    : `Ultimele ${days} zile`;
 
   const { data: clicks, isLoading } = useQuery({
-    queryKey: ["blog-hub-clicks", dateRange],
+    queryKey: ["blog-hub-clicks", dateRange, customStart, customEnd],
     queryFn: async () => {
-      const startDate = startOfDay(subDays(new Date(), days));
-      const endDate = endOfDay(new Date());
       const { data, error } = await supabase
         .from("cta_analytics")
         .select("id, created_at, session_id, metadata")
-        .gte("created_at", startDate.toISOString())
-        .lte("created_at", endDate.toISOString())
+        .gte("created_at", startIso)
+        .lte("created_at", endIso)
         .eq("cta_type", "form_submit")
         .filter("metadata->>event", "eq", "blog_location_hub_click")
         .order("created_at", { ascending: false })
@@ -52,8 +73,16 @@ const BlogHubClicksDashboard = () => {
   });
 
   const { data: impressions } = useQuery({
-    queryKey: ["blog-hub-impressions", dateRange],
+    queryKey: ["blog-hub-impressions", dateRange, customStart, customEnd],
     queryFn: async () => {
+      if (isCustom) {
+        const { data, error } = await supabase.rpc("get_blog_hub_impressions_range", {
+          p_start_date: startIso,
+          p_end_date: endIso,
+        });
+        if (error) throw error;
+        return (data ?? []) as Array<{ geo_location: string; impressions: number }>;
+      }
       const { data, error } = await supabase.rpc("get_blog_hub_impressions", { p_days: days });
       if (error) throw error;
       return (data ?? []) as Array<{ geo_location: string; impressions: number }>;
@@ -131,10 +160,8 @@ const BlogHubClicksDashboard = () => {
     };
   }, [clicks, impressions]);
 
-  if (isLoading) return <Skeleton className="h-96 w-full" />;
-
-  const handleExportCsv = useCallback(() => {
-    const headers = ["Locatie", "Afișări", "Click-uri Inline", "Click-uri Card", "Total Click-uri", "Click-uri Unice", "CTR %"];
+  const handleExportSummary = useCallback(() => {
+    const headers = ["Locatie", "Afisari", "Click-uri Inline", "Click-uri Card", "Total Click-uri", "Click-uri Unice", "CTR %"];
     const csvRows = rows.map((r) => [
       r.location,
       r.impressions,
@@ -149,16 +176,41 @@ const BlogHubClicksDashboard = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `hub-clicks-${dateRange}zile-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `hub-clicks-rezumat-${dateRange === "custom" ? "custom" : dateRange + "zile"}-${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }, [rows, dateRange]);
 
+  const handleExportDetails = useCallback(() => {
+    const headers = ["Data", "Locatie", "Location Slug", "Sursa", "Article Slug", "Session ID"];
+    const csvRows = (clicks ?? []).map((r) => {
+      const meta = (r.metadata ?? {}) as Record<string, unknown>;
+      return [
+        format(new Date(r.created_at), "dd.MM.yyyy HH:mm"),
+        String(meta.location ?? ""),
+        String(meta.location_slug ?? ""),
+        String(meta.source ?? "inline"),
+        String(meta.article_slug ?? ""),
+        r.session_id ?? "",
+      ];
+    });
+    const csv = [headers.join(";"), ...csvRows.map((r) => r.join(";"))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hub-clicks-detalii-${dateRange === "custom" ? "custom" : dateRange + "zile"}-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [clicks, dateRange]);
+
   const fmtCtr = (v: number) => (v > 0 ? `${v.toFixed(2)}%` : "—");
+
+  if (isLoading) return <Skeleton className="h-96 w-full" />;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <MapPin className="w-6 h-6 text-primary" /> Hub Clicks – Locații Blog
@@ -167,23 +219,53 @@ const BlogHubClicksDashboard = () => {
             Click-uri pe linkurile către hub-urile de locație din articole + CTR vs. afișările articolelor.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-1.5">
-            <Download className="w-4 h-4" /> Export CSV
-          </Button>
-          <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Ultimele 7 zile</SelectItem>
-              <SelectItem value="30">Ultimele 30 zile</SelectItem>
-              <SelectItem value="90">Ultimele 90 zile</SelectItem>
-              <SelectItem value="365">Ultimul an</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={handleExportSummary} className="gap-1.5">
+              <Download className="w-4 h-4" /> Export rezumat
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportDetails} className="gap-1.5">
+              <FileText className="w-4 h-4" /> Export detalii evenimente
+            </Button>
+            <Select
+              value={dateRange}
+              onValueChange={(v) => setDateRange(v as PresetRange | "custom")}
+            >
+              <SelectTrigger className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Ultimele 7 zile</SelectItem>
+                <SelectItem value="30">Ultimele 30 zile</SelectItem>
+                <SelectItem value="90">Ultimele 90 zile</SelectItem>
+                <SelectItem value="365">Ultimul an</SelectItem>
+                <SelectItem value="custom">Personalizat</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {isCustom && (
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={customStart}
+                max={customEnd}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="h-9 px-2 rounded-md border border-input bg-background text-sm"
+              />
+              <span className="text-muted-foreground text-sm">–</span>
+              <input
+                type="date"
+                value={customEnd}
+                min={customStart}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="h-9 px-2 rounded-md border border-input bg-background text-sm"
+              />
+            </div>
+          )}
         </div>
       </div>
+
+      <div className="text-xs text-muted-foreground">Perioada selectată: {dateLabel}</div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard icon={<MousePointerClick className="w-4 h-4" />} label="Total click-uri" value={totals.total.toLocaleString("ro-RO")} />
