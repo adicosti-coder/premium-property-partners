@@ -29,7 +29,8 @@ serve(async (req) => {
   }
 
   try {
-    // Cron mode: pick 2 stale URLs (no audit in last 7 days) and audit them sequentially.
+    // Cron mode: schedule audits for stale URLs without waiting (fire-and-forget)
+    // to avoid hitting the orchestrator's 50s timeout (one audit alone can take 20–40s).
     if (isCron) {
       const sbCron = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
@@ -40,26 +41,22 @@ serve(async (req) => {
         .order("created_at", { ascending: true })
         .limit(2);
       const urls = (stale ?? []).map((r: any) => ({ url: r.url, language: r.language || "ro" }));
-      const results: Array<{ url: string; ok: boolean; error?: string }> = [];
+      const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/seo-ai-optimizer`;
       for (const item of urls) {
-        try {
-          const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/seo-ai-optimizer`;
-          const res = await fetch(fnUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-              "x-internal-cron": "1",
-            },
-            body: JSON.stringify({ url: item.url, language: item.language, forceRefresh: true }),
-          });
-          results.push({ url: item.url, ok: res.ok, error: res.ok ? undefined : `HTTP ${res.status}` });
-        } catch (e: any) {
-          results.push({ url: item.url, ok: false, error: e?.message || "unknown" });
-        }
+        // Fire-and-forget: do NOT await. Each audit runs in its own invocation.
+        fetch(fnUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            "x-internal-cron": "1",
+          },
+          body: JSON.stringify({ url: item.url, language: item.language, forceRefresh: true }),
+        }).catch((e) => console.error("seo-ai-optimizer cron dispatch failed:", item.url, e?.message));
       }
-      return json({ cron: true, audited: results.length, results });
+      return json({ cron: true, scheduled: urls.length, urls: urls.map((u) => u.url) });
     }
+
 
     const { url, language = "ro", forceRefresh = false }: RequestBody = rawBody;
     if (!url || !/^https?:\/\//.test(url)) {
