@@ -21,8 +21,9 @@ serve(async (req) => {
   // Read body early to detect orchestrator/cron trigger
   const rawBody = await req.json().catch(() => ({} as any));
   const isCron = typeof rawBody?.triggered_by === "string" && rawBody.triggered_by.length > 0;
+  const isInternal = req.headers.get("x-internal-cron") === "1";
 
-  if (!isCron) {
+  if (!isCron && !isInternal) {
     const auth = await requireAdmin(req, corsHeaders);
     if (!auth.ok) return auth.response!;
   }
