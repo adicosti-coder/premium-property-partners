@@ -551,6 +551,23 @@ const BlogArticlePage = () => {
               title={displayTitle} 
               description={displayExcerpt}
             />
+
+            {/* Discrete location hub cross-link */}
+            {geoLocation && (
+              <div className="mt-4">
+                <Link
+                  to={`/blog/locatie/${slugifyLocation(geoLocation)}`}
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                  aria-label={`Vezi mai multe articole despre ${geoLocation}`}
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>
+                    {language === "ro" ? "Articole din zona" : "Articles from"}{" "}
+                    <span className="underline underline-offset-2 font-medium">{geoLocation}</span>
+                  </span>
+                </Link>
+              </div>
+            )}
           </header>
 
           {/* Cover Image */}
