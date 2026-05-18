@@ -485,7 +485,6 @@ const BlogArticlePage = () => {
         author={article.author_name}
         articleTags={article.tags}
         articleCategory={article.category}
-        geoRegion={geoLocation}
       />
       <Header />
       <Suspense fallback={null}>
