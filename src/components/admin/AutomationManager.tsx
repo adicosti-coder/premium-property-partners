@@ -560,8 +560,68 @@ const AutomationManager = () => {
       {/* REALTIME INDICATOR */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Radio className={`w-3 h-3 ${realtimeOn ? "text-primary animate-pulse" : "text-muted-foreground"}`} />
-        {realtimeOn ? "Live · actualizări realtime active" : "Conectare realtime..."}
+        {realtimeOn ? "Live · actualizări realtime active · notificări la eșec ACTIVE" : "Conectare realtime..."}
       </div>
+
+      {/* FAILURE BANNER (ultimele 24h) */}
+      {(() => {
+        const since = Date.now() - 24 * 3600_000;
+        const fails = runs.filter(
+          (r) => (r.status === "failed" || r.status === "timeout") && new Date(r.started_at).getTime() > since,
+        );
+        if (fails.length === 0) return null;
+        return (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>{fails.length} eșuări în ultimele 24h</AlertTitle>
+            <AlertDescription className="space-y-1 text-xs">
+              {fails.slice(0, 5).map((f) => (
+                <div key={f.id} className="font-mono">
+                  <span className="font-semibold">{f.job_key}</span> · {f.status} · {(f.error || "—").slice(0, 140)}
+                </div>
+              ))}
+              {fails.length > 5 && <div className="opacity-70">+{fails.length - 5} altele în tab-ul Istoric rulaje</div>}
+            </AlertDescription>
+          </Alert>
+        );
+      })()}
+
+      {/* EMAIL REPORT PANEL */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="w-4 h-4" /> Raport email manual
+          </CardTitle>
+          <CardDescription>
+            Forțează trimiterea unui raport cu ultimele 30 de rulaje. Folosit ca fallback când digest-ul zilnic nu sosește.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <Label htmlFor="report-email" className="text-xs">Email destinatar</Label>
+              <input
+                id="report-email"
+                type="email"
+                value={reportEmail}
+                onChange={(e) => setReportEmail(e.target.value)}
+                className="mt-1 w-full px-3 py-2 text-sm border rounded-md bg-background"
+                placeholder="email@exemplu.ro"
+              />
+            </div>
+            <Button onClick={sendReport} disabled={sendingReport} className="gap-2">
+              {sendingReport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {sendingReport ? "Se trimite..." : "Re-trimite raport acum"}
+            </Button>
+            {lastReportAt && (
+              <span className="text-xs text-muted-foreground">
+                Ultimul trimis: {new Date(lastReportAt).toLocaleTimeString("ro-RO")}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* TABS */}
       <Tabs defaultValue="jobs" className="space-y-4">
