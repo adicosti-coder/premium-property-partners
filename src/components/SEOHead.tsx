@@ -3,7 +3,10 @@ import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSeoOverride } from "@/hooks/useSeoOverride";
 
-const BASE_URL = "https://www.realtrust.ro";
+// Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
+// Mismatching www/non-www between og:url, canonical and hreflang triggers
+// Lighthouse "Document does not have a valid rel=canonical".
+const BASE_URL = "https://realtrust.ro";
 
 interface SEOHeadProps {
   title?: string;
@@ -323,15 +326,19 @@ const SEOHead = ({
       {overrideKeywords.length > 0 && (
         <meta name="keywords" content={overrideKeywords.join(", ")} />
       )}
-      <link rel="canonical" href={finalUrl} />
+      {/*
+        Canonical + hreflang are emitted globally by
+        <CanonicalHreflang /> (mounted once in the router) to guarantee a
+        single, consistent canonical per route. Do NOT re-emit them here,
+        otherwise Lighthouse reports "Document does not have a valid
+        rel=canonical" because hreflang and canonical disagree.
+        Admin SEO override (override?.canonical_url) is intentionally not
+        emitted as a second <link rel="canonical">; if per-route overrides
+        are needed, extend CanonicalHreflang to consume the override.
+      */}
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       <html lang={language} />
-      
-      {/* Hreflang for multilingual support */}
-      <link rel="alternate" hrefLang="ro" href={getAlternateUrl("ro")} />
-      <link rel="alternate" hrefLang="en" href={getAlternateUrl("en")} />
-      <link rel="alternate" hrefLang="x-default" href={getAlternateUrl("ro")} />
-      
+
       {/* Open Graph / Facebook */}
       <meta property="og:type" content={type} />
       <meta property="og:url" content={finalUrl} />
