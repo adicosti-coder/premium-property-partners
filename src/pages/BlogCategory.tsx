@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useEffect, useMemo } from "react";
+import { useParams, Link, Navigate, useSearchParams } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,12 +48,13 @@ const BlogCategory = () => {
   const { language } = useLanguage();
   const dateLocale = language === "ro" ? ro : enUS;
   const meta = findBlogCategoryBySlug(slug);
-  const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
+  const page = Number.isFinite(pageParam) && pageParam >= 1 ? pageParam : 1;
 
   useEffect(() => {
-    setPage(1);
     window.scrollTo({ top: 0 });
-  }, [slug]);
+  }, [slug, page]);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["blog-category", slug],
