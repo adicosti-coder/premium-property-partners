@@ -180,7 +180,7 @@ const SEOHead = ({
   const finalDescription = override?.meta_description || baseDescription;
   const overrideKeywords = override?.extra_keywords?.map((k) => k.keyword).filter(Boolean) || [];
   
-  // Canonical URL: ALWAYS absolute on www.realtrust.ro, pathname only (NO query params, NO hash, NO trailing slash except root).
+  // Canonical URL: ALWAYS absolute on realtrust.ro (non-www, matches global canonical), pathname only (NO query params, NO hash, NO trailing slash except root).
   // This ensures Google indexes one version per page regardless of ?lang, ?utm_*, ?id, filters, etc.
   const buildCanonical = (): string => {
     let pathname: string;
