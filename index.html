@@ -23,8 +23,9 @@
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-    <!-- DNS prefetch only — preconnect was unused per Lighthouse (Supabase not used pre-LCP) -->
-    <link rel="dns-prefetch" href="https://mvzssjyzbwccioqvhjpo.supabase.co" />
+    <!-- Preconnect to backend used immediately after LCP (SEO data, schema enrichment). -->
+    <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
+    <!-- DNS prefetch only — domains used lazily, after first user interaction. -->
     <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
