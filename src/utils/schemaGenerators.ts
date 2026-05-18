@@ -456,115 +456,44 @@ export const generateWebSiteSchema = () => ({
   },
 });
 
-// RealEstateAgent Schema for Imobiliare page
+// RealEstateAgent Schema — derived from the canonical brand identity,
+// extended here with hasOfferCatalog + openingHoursSpecification specific
+// to the imobiliare service line. Stable @id (#realestateagent) ensures
+// Google merges this with every other RealEstateAgent reference on the site.
 export const generateRealEstateAgentSchema = (rating?: AggregateRatingData) => {
   const baseSchema: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    "@id": `${BASE_URL}/imobiliare`,
-    "name": "RealTrust Imobiliare",
-    "alternateName": "RealTrust - Servicii Imobiliare Timișoara",
-    "description": "Servicii imobiliare complete în Timișoara: vânzări, achiziții, închirieri și consultanță. Experiență de peste 25 ani în piața imobiliară.",
-    "url": `${BASE_URL}/imobiliare`,
-    "telephone": "+40723154520",
-    "email": "imobiliare@realtrust.ro",
-    "image": `${BASE_URL}/og-image.jpg`,
-    "logo": `${BASE_URL}/favicon.ico`,
-    "priceRange": "€€-€€€",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
-      "addressLocality": "Timișoara",
-      "addressRegion": "Timiș",
-      "postalCode": "300125",
-      "addressCountry": "RO",
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 45.7489,
-      "longitude": 21.2087,
-    },
-    "areaServed": [
-      {
-        "@type": "City",
-        "name": "Timișoara",
-      },
-      {
-        "@type": "AdministrativeArea",
-        "name": "Județul Timiș",
-      },
-    ],
-    "hasOfferCatalog": {
+    ...REAL_ESTATE_AGENT_SCHEMA,
+    hasOfferCatalog: {
       "@type": "OfferCatalog",
-      "name": "Servicii Imobiliare",
-      "itemListElement": [
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Vânzare Proprietăți",
-            "description": "Servicii complete de vânzare imobiliară cu evaluare, marketing și negociere",
-          },
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Achiziție Proprietăți",
-            "description": "Asistență în identificarea și achiziționarea proprietății ideale",
-          },
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Închiriere & Administrare",
-            "description": "Servicii de închiriere pe termen lung și scurt cu administrare completă",
-          },
-        },
-        {
-          "@type": "Offer",
-          "itemOffered": {
-            "@type": "Service",
-            "name": "Consultanță Imobiliară",
-            "description": "Analiză de piață, evaluare proprietăți și consiliere investiții",
-          },
-        },
+      name: "Servicii Imobiliare",
+      itemListElement: [
+        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Vânzare Proprietăți", description: "Servicii complete de vânzare imobiliară cu evaluare, marketing și negociere" } },
+        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Achiziție Proprietăți", description: "Asistență în identificarea și achiziționarea proprietății ideale" } },
+        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Închiriere & Administrare", description: "Servicii de închiriere pe termen lung și scurt cu administrare completă" } },
+        { "@type": "Offer", itemOffered: { "@type": "Service", name: "Consultanță Imobiliară", description: "Analiză de piață, evaluare proprietăți și consiliere investiții" } },
       ],
     },
-    "openingHoursSpecification": [
-      {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        "opens": "09:00",
-        "closes": "18:00",
-      },
-      {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": "Saturday",
-        "opens": "10:00",
-        "closes": "14:00",
-      },
-    ],
-    "sameAs": [
-      "https://www.facebook.com/realtrust.ro",
-      "https://www.instagram.com/realtrust_timisoara",
+    openingHoursSpecification: [
+      { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "10:00", closes: "18:00" },
     ],
   };
 
-  // Add aggregate rating if available
   if (rating && rating.reviewCount > 0 && rating.ratingValue >= 1) {
     baseSchema["aggregateRating"] = {
       "@type": "AggregateRating",
-      "ratingValue": Math.max(1, Math.min(5, rating.ratingValue)).toFixed(1),
-      "reviewCount": String(rating.reviewCount),
-      "bestRating": "5",
-      "worstRating": "1",
+      ratingValue: Math.max(1, Math.min(5, rating.ratingValue)).toFixed(1),
+      reviewCount: String(rating.reviewCount),
+      bestRating: "5",
+      worstRating: "1",
     };
   }
 
   return baseSchema;
 };
+
+/** Re-export the canonical identity so consumers can import from one place. */
+export { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA, ORG_ID, REAL_ESTATE_AGENT_ID } from "@/lib/orgIdentity";
+
 
 // Generate reviews schema from database reviews
 export interface DatabaseReview {
