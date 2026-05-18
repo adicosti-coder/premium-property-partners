@@ -98,8 +98,16 @@ const BlogArticlePage = () => {
     });
   };
 
+  const hubClickDebounceRef = useRef<Map<string, number>>(new Map());
   const trackHubClick = (loc: string, source: "inline" | "card") => {
     const locSlug = slugifyLocation(loc);
+    const key = `${locSlug}|${source}`;
+    const now = Date.now();
+    const last = hubClickDebounceRef.current.get(key) ?? 0;
+    // Debounce: ignore repeat clicks within 1.5s for same location+source
+    if (now - last < 1500) return;
+    hubClickDebounceRef.current.set(key, now);
+
     if (typeof window !== "undefined" && typeof window.gtag === "function") {
       window.gtag("event", "blog_location_hub_click", {
         location: loc,
