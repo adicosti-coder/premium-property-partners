@@ -18,11 +18,49 @@ interface RequestBody {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  // Read body early to detect orchestrator/cron trigger
+  const rawBody = await req.json().catch(() => ({} as any));
+  const isCron = typeof rawBody?.triggered_by === "string" && rawBody.triggered_by.length > 0;
+
+  if (!isCron) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
 
   try {
-    const { url, language = "ro", forceRefresh = false }: RequestBody = await req.json();
+    // Cron mode: pick 2 stale URLs (no audit in last 7 days) and audit them sequentially.
+    if (isCron) {
+      const sbCron = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
+      const { data: stale } = await sbCron
+        .from("seo_audits")
+        .select("url, language, created_at")
+        .lt("created_at", sevenDaysAgo)
+        .order("created_at", { ascending: true })
+        .limit(2);
+      const urls = (stale ?? []).map((r: any) => ({ url: r.url, language: r.language || "ro" }));
+      const results: Array<{ url: string; ok: boolean; error?: string }> = [];
+      for (const item of urls) {
+        try {
+          const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/seo-ai-optimizer`;
+          const res = await fetch(fnUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              "x-internal-cron": "1",
+            },
+            body: JSON.stringify({ url: item.url, language: item.language, forceRefresh: true }),
+          });
+          results.push({ url: item.url, ok: res.ok, error: res.ok ? undefined : `HTTP ${res.status}` });
+        } catch (e: any) {
+          results.push({ url: item.url, ok: false, error: e?.message || "unknown" });
+        }
+      }
+      return json({ cron: true, audited: results.length, results });
+    }
+
+    const { url, language = "ro", forceRefresh = false }: RequestBody = rawBody;
     if (!url || !/^https?:\/\//.test(url)) {
       return json({ error: "URL invalid" }, 400);
     }
