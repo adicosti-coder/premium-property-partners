@@ -14,7 +14,9 @@ import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
   Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
   FlaskConical, Copy, XCircle, Newspaper, Brain, ListTree, Radio, BarChart3,
+  Mail, Send,
 } from "lucide-react";
+
 import { AutomationAnalytics } from "./AutomationAnalytics";
 
 type Settings = {
@@ -137,6 +139,9 @@ const AutomationManager = () => {
   const [runs, setRuns] = useState<Run[]>([]);
   const [runsFilter, setRunsFilter] = useState<string>("__all__");
   const [realtimeOn, setRealtimeOn] = useState(false);
+  const [sendingReport, setSendingReport] = useState(false);
+  const [lastReportAt, setLastReportAt] = useState<string | null>(null);
+  const [reportEmail, setReportEmail] = useState<string>("adicosti@gmail.com");
 
   const load = async () => {
     setLoading(true);
@@ -178,10 +183,25 @@ const AutomationManager = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "automation_runs" }, (payload) => {
         const row = payload.new as Run;
         setRuns((prev) => [row, ...prev].slice(0, 100));
+        if (row.status === "failed" || row.status === "timeout") {
+          toast({
+            title: `⚠️ ${row.job_key} → ${row.status}`,
+            description: (row.error || "Eroare nedetaliată").slice(0, 240),
+            variant: "destructive",
+          });
+        }
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "automation_runs" }, (payload) => {
         const row = payload.new as Run;
+        const prevRow = payload.old as Run | null;
         setRuns((prev) => prev.map((r) => (r.id === row.id ? row : r)));
+        if ((row.status === "failed" || row.status === "timeout") && prevRow?.status !== row.status) {
+          toast({
+            title: `⚠️ ${row.job_key} → ${row.status}`,
+            description: (row.error || "Eroare nedetaliată").slice(0, 240),
+            variant: "destructive",
+          });
+        }
       })
       .subscribe((status) => {
         setRealtimeOn(status === "SUBSCRIBED");
@@ -268,6 +288,53 @@ const AutomationManager = () => {
       setRunningJob(null);
     }
   };
+
+  const sendReport = async () => {
+    if (!reportEmail || !/.+@.+\..+/.test(reportEmail)) {
+      toast({ title: "Email invalid", description: "Introdu o adresă validă.", variant: "destructive" });
+      return;
+    }
+    setSendingReport(true);
+    try {
+      const recent = runs.slice(0, 30).map((r) => ({
+        job_key: r.job_key,
+        status: r.status,
+        duration_ms: r.duration_ms ?? 0,
+        error: r.error,
+        started_at: r.started_at,
+      }));
+      const ok = recent.filter((r) => r.status === "success").length;
+      const failed = recent.filter((r) => r.status === "failed" || r.status === "timeout").length;
+      const { data, error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "automation-run-report",
+          recipientEmail: reportEmail,
+          idempotencyKey: `manual-report-${Date.now()}`,
+          templateData: {
+            summary: `Raport manual: ${ok} OK / ${failed} eșuate din ultimele ${recent.length}`,
+            results: recent,
+            generated_at: new Date().toISOString(),
+          },
+        },
+      });
+      if (error) throw error;
+      const provider = (data as { provider?: string })?.provider ?? "queue";
+      setLastReportAt(new Date().toISOString());
+      toast({
+        title: "Raport trimis",
+        description: `Livrat prin ${provider} către ${reportEmail}.`,
+      });
+    } catch (e) {
+      toast({
+        title: "Eroare trimitere email",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
 
   const applyApproval = async (a: Approval) => {
     setRunningJob(`approval:${a.id}`);
@@ -493,8 +560,68 @@ const AutomationManager = () => {
       {/* REALTIME INDICATOR */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Radio className={`w-3 h-3 ${realtimeOn ? "text-primary animate-pulse" : "text-muted-foreground"}`} />
-        {realtimeOn ? "Live · actualizări realtime active" : "Conectare realtime..."}
+        {realtimeOn ? "Live · actualizări realtime active · notificări la eșec ACTIVE" : "Conectare realtime..."}
       </div>
+
+      {/* FAILURE BANNER (ultimele 24h) */}
+      {(() => {
+        const since = Date.now() - 24 * 3600_000;
+        const fails = runs.filter(
+          (r) => (r.status === "failed" || r.status === "timeout") && new Date(r.started_at).getTime() > since,
+        );
+        if (fails.length === 0) return null;
+        return (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>{fails.length} eșuări în ultimele 24h</AlertTitle>
+            <AlertDescription className="space-y-1 text-xs">
+              {fails.slice(0, 5).map((f) => (
+                <div key={f.id} className="font-mono">
+                  <span className="font-semibold">{f.job_key}</span> · {f.status} · {(f.error || "—").slice(0, 140)}
+                </div>
+              ))}
+              {fails.length > 5 && <div className="opacity-70">+{fails.length - 5} altele în tab-ul Istoric rulaje</div>}
+            </AlertDescription>
+          </Alert>
+        );
+      })()}
+
+      {/* EMAIL REPORT PANEL */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="w-4 h-4" /> Raport email manual
+          </CardTitle>
+          <CardDescription>
+            Forțează trimiterea unui raport cu ultimele 30 de rulaje. Folosit ca fallback când digest-ul zilnic nu sosește.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <Label htmlFor="report-email" className="text-xs">Email destinatar</Label>
+              <input
+                id="report-email"
+                type="email"
+                value={reportEmail}
+                onChange={(e) => setReportEmail(e.target.value)}
+                className="mt-1 w-full px-3 py-2 text-sm border rounded-md bg-background"
+                placeholder="email@exemplu.ro"
+              />
+            </div>
+            <Button onClick={sendReport} disabled={sendingReport} className="gap-2">
+              {sendingReport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {sendingReport ? "Se trimite..." : "Re-trimite raport acum"}
+            </Button>
+            {lastReportAt && (
+              <span className="text-xs text-muted-foreground">
+                Ultimul trimis: {new Date(lastReportAt).toLocaleTimeString("ro-RO")}
+              </span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* TABS */}
       <Tabs defaultValue="jobs" className="space-y-4">
