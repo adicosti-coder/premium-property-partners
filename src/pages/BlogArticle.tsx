@@ -37,6 +37,8 @@ import { Calendar, Clock, ArrowLeft, User, Tag, Lock, Crown, LogIn, Eye, Trophy,
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { getBlogCoverImage } from "@/utils/blogImageMap";
+import { slugifyLocation } from "@/lib/blogLocations";
+import { MapPin } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { markInvestmentArticleVisit, INVESTMENT_ARTICLE_SLUG } from "@/lib/investmentReferralTracking";
 import {
@@ -549,6 +551,23 @@ const BlogArticlePage = () => {
               title={displayTitle} 
               description={displayExcerpt}
             />
+
+            {/* Discrete location hub cross-link */}
+            {geoLocation && (
+              <div className="mt-4">
+                <Link
+                  to={`/blog/locatie/${slugifyLocation(geoLocation)}`}
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                  aria-label={`Vezi mai multe articole despre ${geoLocation}`}
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>
+                    {language === "ro" ? "Articole din zona" : "Articles from"}{" "}
+                    <span className="underline underline-offset-2 font-medium">{geoLocation}</span>
+                  </span>
+                </Link>
+              </div>
+            )}
           </header>
 
           {/* Cover Image */}
@@ -634,6 +653,34 @@ const BlogArticlePage = () => {
 
             {/* Auto-generated FAQ per article */}
             <ArticleFAQ category={article.category} articleTitle={displayTitle} />
+
+            {/* Location hub cross-link card */}
+            {geoLocation && (
+              <Link
+                to={`/blog/locatie/${slugifyLocation(geoLocation)}`}
+                className="mt-8 flex items-center justify-between gap-4 p-5 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40 transition-colors group"
+                aria-label={`Vezi mai multe articole despre ${geoLocation}`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {language === "ro" ? "Hub locație" : "Location hub"}
+                    </div>
+                    <div className="font-semibold text-foreground truncate">
+                      {language === "ro"
+                        ? `Vezi mai multe articole despre ${geoLocation}`
+                        : `See more articles about ${geoLocation}`}
+                    </div>
+                  </div>
+                </div>
+                <span className="shrink-0 text-sm text-primary font-medium group-hover:translate-x-0.5 transition-transform">
+                  →
+                </span>
+              </Link>
+            )}
 
           {/* Investor Guide CTA - only for investment-related articles */}
           {(article.category === "Investiții" || article.tags.some(tag => 
