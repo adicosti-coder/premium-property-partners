@@ -74,6 +74,52 @@ const BlogArticlePage = () => {
   const dateLocale = language === "ro" ? ro : enUS;
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const queryClient = useQueryClient();
+  const { trackCta } = useCtaAnalytics();
+
+  const prefetchHub = (locSlug: string) => {
+    queryClient.prefetchQuery({
+      queryKey: ["blog-location", locSlug],
+      queryFn: async () => {
+        const { data } = await supabase
+          .from("blog_articles")
+          .select(
+            "id, slug, title, excerpt, cover_image, main_image_url, category, geo_location, published_at, created_at, view_count"
+          )
+          .eq("is_published", true)
+          .not("geo_location", "is", null)
+          .order("published_at", { ascending: false });
+        return (data ?? []).filter(
+          (a: { geo_location: string | null }) =>
+            a.geo_location && slugifyLocation(a.geo_location) === locSlug
+        );
+      },
+      staleTime: 5 * 60 * 1000,
+    });
+  };
+
+  const trackHubClick = (loc: string, source: "inline" | "card") => {
+    const locSlug = slugifyLocation(loc);
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", "blog_location_hub_click", {
+        location: loc,
+        location_slug: locSlug,
+        source,
+        article_slug: slug,
+      });
+    }
+    void trackCta({
+      ctaType: "form_submit",
+      metadata: {
+        event: "blog_location_hub_click",
+        location: loc,
+        location_slug: locSlug,
+        source,
+        article_slug: slug,
+      },
+    });
+  };
+
 
   const { data: article, isLoading, error } = useQuery({
     queryKey: ["blog-article", slug],
