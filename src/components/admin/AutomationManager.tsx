@@ -183,10 +183,25 @@ const AutomationManager = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "automation_runs" }, (payload) => {
         const row = payload.new as Run;
         setRuns((prev) => [row, ...prev].slice(0, 100));
+        if (row.status === "failed" || row.status === "timeout") {
+          toast({
+            title: `⚠️ ${row.job_key} → ${row.status}`,
+            description: (row.error || "Eroare nedetaliată").slice(0, 240),
+            variant: "destructive",
+          });
+        }
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "automation_runs" }, (payload) => {
         const row = payload.new as Run;
+        const prevRow = payload.old as Run | null;
         setRuns((prev) => prev.map((r) => (r.id === row.id ? row : r)));
+        if ((row.status === "failed" || row.status === "timeout") && prevRow?.status !== row.status) {
+          toast({
+            title: `⚠️ ${row.job_key} → ${row.status}`,
+            description: (row.error || "Eroare nedetaliată").slice(0, 240),
+            variant: "destructive",
+          });
+        }
       })
       .subscribe((status) => {
         setRealtimeOn(status === "SUBSCRIBED");
