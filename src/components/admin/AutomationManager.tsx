@@ -380,10 +380,17 @@ const AutomationManager = () => {
 
       toast({ title: "Aprobat", description: "Acțiunea a fost aplicată." });
       load();
-    } catch (e) {
+    } catch (e: any) {
+      console.error("Approval error:", e);
+      const desc =
+        e?.message ||
+        e?.error_description ||
+        e?.details ||
+        e?.hint ||
+        (typeof e === "object" ? JSON.stringify(e) : String(e));
       toast({
         title: "Eroare aprobare",
-        description: e instanceof Error ? e.message : String(e),
+        description: desc,
         variant: "destructive",
       });
     } finally {
