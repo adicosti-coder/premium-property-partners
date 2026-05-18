@@ -1,7 +1,6 @@
 import { Helmet } from "react-helmet-async";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useSeoOverride } from "@/hooks/useSeoOverride";
 import { BRAND, ORG_ID, SITE_ORIGIN } from "@/lib/orgIdentity";
 import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
 
@@ -162,6 +161,7 @@ const SEOHead = ({
   includeWebSiteSchema = false,
 }: SEOHeadProps) => {
   const { language } = useLanguage();
+  const [override, setOverride] = useState<import("@/hooks/useSeoOverride").SeoOverride | null>(null);
   
   const defaultTitles = {
     ro: "RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI",
@@ -173,7 +173,30 @@ const SEOHead = ({
     en: "Short-term rental apartments Timișoara — Old Town, Iosefin, Elisabetin, Student Complex, near UVT and Iulius Town. 9.4% net ROI. Free calculator!"
   };
   
-  const override = useSeoOverride();
+  useEffect(() => {
+    let cancelled = false;
+    const events = ["click", "touchstart", "keydown", "scroll"] as const;
+    const loadOverride = () => {
+      events.forEach((event) => document.removeEventListener(event, loadOverride as EventListener));
+      const pathname = typeof window !== "undefined" ? window.location.pathname : undefined;
+      window.requestIdleCallback?.(() => {
+        import("@/hooks/useSeoOverride")
+          .then(({ readSeoOverride }) => readSeoOverride(pathname))
+          .then((value) => { if (!cancelled) setOverride(value); })
+          .catch(() => { if (!cancelled) setOverride(null); });
+      }) ?? window.setTimeout(() => {
+        import("@/hooks/useSeoOverride")
+          .then(({ readSeoOverride }) => readSeoOverride(pathname))
+          .then((value) => { if (!cancelled) setOverride(value); })
+          .catch(() => { if (!cancelled) setOverride(null); });
+      }, 1);
+    };
+    events.forEach((event) => document.addEventListener(event, loadOverride as EventListener, { once: true, passive: true }));
+    return () => {
+      cancelled = true;
+      events.forEach((event) => document.removeEventListener(event, loadOverride as EventListener));
+    };
+  }, []);
   const baseTitle = title || defaultTitles[language as keyof typeof defaultTitles] || defaultTitles.ro;
   const baseDescription = description || defaultDescriptions[language as keyof typeof defaultDescriptions] || defaultDescriptions.ro;
   // SEO override (from admin SEO AI Optimizer) takes precedence over all runtime defaults,
