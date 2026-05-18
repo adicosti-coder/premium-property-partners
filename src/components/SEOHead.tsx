@@ -34,6 +34,14 @@ interface SEOHeadProps {
   breadcrumbItems?: Array<{ name: string; url: string }>;
   // Enable WebSite schema with SearchAction (for homepage)
   includeWebSiteSchema?: boolean;
+  /**
+   * Optional query string (e.g. "?page=2") appended to the self-referential
+   * canonical for paginated archives. When set, the canonical becomes
+   * self-referential per page, which is Google's current recommendation for
+   * paginated lists (rel=prev/next deprecated). Leave undefined for page 1
+   * so it canonicalizes to the clean URL.
+   */
+  canonicalQuery?: string;
 }
 
 // Helper to generate Article JSON-LD
@@ -159,6 +167,7 @@ const SEOHead = ({
   faqItems,
   breadcrumbItems,
   includeWebSiteSchema = false,
+  canonicalQuery,
 }: SEOHeadProps) => {
   const { language } = useLanguage();
   const [override, setOverride] = useState<import("@/hooks/useSeoOverride").SeoOverride | null>(null);
@@ -226,7 +235,11 @@ const SEOHead = ({
     // Normalize: collapse duplicate slashes, strip trailing slash (except root)
     pathname = pathname.replace(/\/{2,}/g, "/");
     if (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
-    return `${BASE_URL}${pathname}`;
+    let canonical = `${BASE_URL}${pathname}`;
+    if (canonicalQuery && canonicalQuery.startsWith("?") && canonicalQuery.length > 1) {
+      canonical += canonicalQuery;
+    }
+    return canonical;
   };
   const finalUrl = override?.canonical_url || buildCanonical();
 
