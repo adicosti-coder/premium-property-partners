@@ -28,8 +28,48 @@ const TARGET_LABEL: Record<BlogCtaTarget, string> = {
   contact: "Contact",
 };
 
+const ALL = "__all__";
+
+// ---------------------------------------------------------------------------
+// Statistical significance — two-proportion z-test vs control (95% confidence)
+// Returns { z, pValue, significant } where significant === pValue < 0.05.
+// ---------------------------------------------------------------------------
+const normalCdf = (z: number): number => {
+  // Abramowitz & Stegun 7.1.26 approximation of erf
+  const sign = z < 0 ? -1 : 1;
+  const x = Math.abs(z) / Math.sqrt(2);
+  const a1 = 0.254829592,
+    a2 = -0.284496736,
+    a3 = 1.421413741,
+    a4 = -1.453152027,
+    a5 = 1.061405429,
+    p = 0.3275911;
+  const t = 1 / (1 + p * x);
+  const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return 0.5 * (1 + sign * y);
+};
+
+const twoProportionZTest = (
+  clicksA: number,
+  nA: number,
+  clicksB: number,
+  nB: number
+): { z: number; pValue: number; significant: boolean } => {
+  if (nA < 1 || nB < 1) return { z: 0, pValue: 1, significant: false };
+  const pA = clicksA / nA;
+  const pB = clicksB / nB;
+  const pPool = (clicksA + clicksB) / (nA + nB);
+  const se = Math.sqrt(pPool * (1 - pPool) * (1 / nA + 1 / nB));
+  if (se === 0) return { z: 0, pValue: 1, significant: false };
+  const z = (pB - pA) / se;
+  const pValue = 2 * (1 - normalCdf(Math.abs(z)));
+  return { z, pValue, significant: pValue < 0.05 };
+};
+
 const BlogCtaABDashboard = () => {
   const [dateRange, setDateRange] = useState("30");
+  const [articleFilter, setArticleFilter] = useState(ALL);
+  const [categoryFilter, setCategoryFilter] = useState(ALL);
 
   const { data, isLoading } = useQuery({
     queryKey: ["blog-cta-ab", dateRange],
@@ -48,6 +88,36 @@ const BlogCtaABDashboard = () => {
     },
   });
 
+  // Distinct articles/categories present in the dataset (for filter dropdowns)
+  const { articles, categories } = useMemo(() => {
+    const arts = new Map<string, string>(); // slug -> title
+    const cats = new Set<string>();
+    (data || []).forEach((row) => {
+      const m = (row.metadata || {}) as Record<string, unknown>;
+      const slug = m.article_slug ? String(m.article_slug) : "";
+      const title = m.article_title ? String(m.article_title) : slug;
+      const cat = m.article_category ? String(m.article_category) : "";
+      if (slug) arts.set(slug, title);
+      if (cat) cats.add(cat);
+    });
+    return {
+      articles: Array.from(arts.entries())
+        .map(([slug, title]) => ({ slug, title }))
+        .sort((a, b) => a.title.localeCompare(b.title)),
+      categories: Array.from(cats).sort(),
+    };
+  }, [data]);
+
+  // Apply filters (article + category)
+  const filteredData = useMemo(() => {
+    return (data || []).filter((row) => {
+      const m = (row.metadata || {}) as Record<string, unknown>;
+      if (articleFilter !== ALL && String(m.article_slug || "") !== articleFilter) return false;
+      if (categoryFilter !== ALL && String(m.article_category || "") !== categoryFilter) return false;
+      return true;
+    });
+  }, [data, articleFilter, categoryFilter]);
+
   const statsByTarget = useMemo(() => {
     const result: Record<BlogCtaTarget, VariantStat[]> = {
       "evaluare-gratuita": [],
@@ -61,7 +131,7 @@ const BlogCtaABDashboard = () => {
         stats[v.id] = { impressions: 0, clicks: 0 };
       });
 
-      (data || []).forEach((row) => {
+      filteredData.forEach((row) => {
         const m = (row.metadata || {}) as Record<string, unknown>;
         if (m.cta_target !== target) return;
         const vid = String(m.cta_variant_id || "unassigned");
@@ -83,15 +153,15 @@ const BlogCtaABDashboard = () => {
     });
 
     return result;
-  }, [data]);
+  }, [filteredData]);
 
   const totalClicks = useMemo(
-    () => (data || []).filter((r) => (r.metadata as { source?: string } | null)?.source === "blog_cta_click").length,
-    [data]
+    () => filteredData.filter((r) => (r.metadata as { source?: string } | null)?.source === "blog_cta_click").length,
+    [filteredData]
   );
   const totalImpressions = useMemo(
-    () => (data || []).filter((r) => (r.metadata as { source?: string } | null)?.source === "blog_cta_impression").length,
-    [data]
+    () => filteredData.filter((r) => (r.metadata as { source?: string } | null)?.source === "blog_cta_impression").length,
+    [filteredData]
   );
   const overallRate = totalImpressions > 0 ? totalClicks / totalImpressions : 0;
 
@@ -107,7 +177,7 @@ const BlogCtaABDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <FlaskConical className="w-6 h-6 text-primary" />
@@ -117,18 +187,69 @@ const BlogCtaABDashboard = () => {
             Performanța variantelor de text pentru CTA-urile din articolele de blog
           </p>
         </div>
-        <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Ultimele 7 zile</SelectItem>
-            <SelectItem value="14">Ultimele 14 zile</SelectItem>
-            <SelectItem value="30">Ultimele 30 zile</SelectItem>
-            <SelectItem value="90">Ultimele 90 zile</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap gap-2">
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder="Toate categoriile" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Toate categoriile</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={articleFilter} onValueChange={setArticleFilter}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Toate articolele" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Toate articolele</SelectItem>
+              {articles.map((a) => (
+                <SelectItem key={a.slug} value={a.slug}>
+                  {a.title.length > 50 ? `${a.title.slice(0, 50)}…` : a.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Ultimele 7 zile</SelectItem>
+              <SelectItem value="14">Ultimele 14 zile</SelectItem>
+              <SelectItem value="30">Ultimele 30 zile</SelectItem>
+              <SelectItem value="90">Ultimele 90 zile</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {(articleFilter !== ALL || categoryFilter !== ALL) && (
+        <div className="flex items-center gap-2 text-xs">
+          <Badge variant="outline">
+            Filtru activ:{" "}
+            {[
+              categoryFilter !== ALL ? `categorie=${categoryFilter}` : null,
+              articleFilter !== ALL ? `articol=${articleFilter}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </Badge>
+          <button
+            className="text-primary hover:underline"
+            onClick={() => {
+              setArticleFilter(ALL);
+              setCategoryFilter(ALL);
+            }}
+          >
+            Resetează filtrele
+          </button>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -170,7 +291,38 @@ const BlogCtaABDashboard = () => {
       {/* Per-target tables */}
       {(Object.keys(statsByTarget) as BlogCtaTarget[]).map((target) => {
         const rows = [...statsByTarget[target]].sort((a, b) => b.conversionRate - a.conversionRate);
-        const winner = rows.find((r) => r.impressions >= 20 && r.clicks > 0);
+        const control = statsByTarget[target].find((r) => r.variantId === "control");
+
+        // Compute significance per variant vs control
+        const sigByVariant: Record<string, { pValue: number; significant: boolean; lift: number }> = {};
+        if (control) {
+          statsByTarget[target].forEach((r) => {
+            if (r.variantId === "control") {
+              sigByVariant[r.variantId] = { pValue: 1, significant: false, lift: 0 };
+              return;
+            }
+            const t = twoProportionZTest(control.clicks, control.impressions, r.clicks, r.impressions);
+            const lift = control.conversionRate > 0 ? (r.conversionRate - control.conversionRate) / control.conversionRate : 0;
+            sigByVariant[r.variantId] = { pValue: t.pValue, significant: t.significant, lift };
+          });
+        }
+
+        // Winner = best conversion rate among variants that are:
+        //  - statistically significant vs control (p<0.05)
+        //  - better than control
+        //  - have a minimum sample size (>= 100 impressions per variant for stability)
+        const MIN_N = 100;
+        const winner = rows.find((r) => {
+          if (r.variantId === "control") return false;
+          const sig = sigByVariant[r.variantId];
+          return (
+            sig?.significant &&
+            r.impressions >= MIN_N &&
+            (control?.impressions || 0) >= MIN_N &&
+            r.conversionRate > (control?.conversionRate || 0)
+          );
+        });
+
         return (
           <Card key={target}>
             <CardHeader>
@@ -188,6 +340,8 @@ const BlogCtaABDashboard = () => {
                     <TableHead className="text-right">Afișări</TableHead>
                     <TableHead className="text-right">Click-uri</TableHead>
                     <TableHead className="text-right">Rată conversie</TableHead>
+                    <TableHead className="text-right">Lift vs control</TableHead>
+                    <TableHead className="text-right">p-value</TableHead>
                     <TableHead className="text-right">Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -195,9 +349,16 @@ const BlogCtaABDashboard = () => {
                   {rows.map((r) => {
                     const isWinner = winner?.variantId === r.variantId;
                     const ratePct = (r.conversionRate * 100).toFixed(2);
+                    const sig = sigByVariant[r.variantId];
+                    const isControl = r.variantId === "control";
+                    const liftPct = sig ? (sig.lift * 100).toFixed(1) : "—";
+                    const pVal = sig ? sig.pValue.toFixed(3) : "—";
                     return (
                       <TableRow key={r.variantId} className={isWinner ? "bg-primary/5" : ""}>
-                        <TableCell className="font-mono text-xs">{r.variantId}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {r.variantId}
+                          {isControl && <span className="ml-1 text-muted-foreground">(control)</span>}
+                        </TableCell>
                         <TableCell className="max-w-xs truncate">{r.label}</TableCell>
                         <TableCell className="text-right tabular-nums">{r.impressions}</TableCell>
                         <TableCell className="text-right tabular-nums font-semibold">{r.clicks}</TableCell>
@@ -206,15 +367,34 @@ const BlogCtaABDashboard = () => {
                             {ratePct}%
                           </span>
                         </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {isControl ? (
+                            <span className="text-muted-foreground">—</span>
+                          ) : (
+                            <span className={sig && sig.lift > 0 ? "text-green-600" : sig && sig.lift < 0 ? "text-red-600" : ""}>
+                              {sig && sig.lift > 0 ? "+" : ""}
+                              {liftPct}%
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums text-xs">
+                          {isControl ? <span className="text-muted-foreground">—</span> : pVal}
+                        </TableCell>
                         <TableCell className="text-right">
                           {isWinner ? (
                             <Badge className="gap-1">
-                              <Trophy className="w-3 h-3" /> Winner
+                              <Trophy className="w-3 h-3" /> Winner (95%)
                             </Badge>
-                          ) : r.impressions < 20 ? (
+                          ) : isControl ? (
+                            <Badge variant="outline" className="text-xs">Control</Badge>
+                          ) : r.impressions < MIN_N || (control?.impressions || 0) < MIN_N ? (
                             <Badge variant="outline" className="text-xs">Date insuficiente</Badge>
+                          ) : sig?.significant ? (
+                            <Badge variant="secondary" className="text-xs">
+                              Semnificativ {sig.lift < 0 ? "(mai slab)" : ""}
+                            </Badge>
                           ) : (
-                            <Badge variant="secondary" className="text-xs">Activ</Badge>
+                            <Badge variant="secondary" className="text-xs">Nesemnificativ</Badge>
                           )}
                         </TableCell>
                       </TableRow>
@@ -223,7 +403,7 @@ const BlogCtaABDashboard = () => {
                 </TableBody>
               </Table>
               <p className="text-xs text-muted-foreground mt-3">
-                * "Winner" este marcat doar pentru variante cu min. 20 afișări și click-uri &gt; 0. Conversia se calculează ca click-uri / afișări unice per sesiune.
+                * "Winner" se marchează doar când varianta are min. {MIN_N} afișări (la fel și controlul), rată mai bună decât controlul și semnificație statistică &lt; 0.05 (test z pentru două proporții, încredere 95%).
               </p>
             </CardContent>
           </Card>
