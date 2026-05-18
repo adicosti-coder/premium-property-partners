@@ -540,6 +540,7 @@ export type Database = {
           id: string
           job_key: string
           output_summary: Json
+          retry_count: number
           started_at: string
           status: string
           triggered_by: string | null
@@ -551,6 +552,7 @@ export type Database = {
           id?: string
           job_key: string
           output_summary?: Json
+          retry_count?: number
           started_at?: string
           status: string
           triggered_by?: string | null
@@ -562,6 +564,7 @@ export type Database = {
           id?: string
           job_key?: string
           output_summary?: Json
+          retry_count?: number
           started_at?: string
           status?: string
           triggered_by?: string | null

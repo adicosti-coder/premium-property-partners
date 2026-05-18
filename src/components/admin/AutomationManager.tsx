@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
   Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
-  FlaskConical, Copy, XCircle, Newspaper, Brain,
+  FlaskConical, Copy, XCircle, Newspaper, Brain, ListTree, Radio,
 } from "lucide-react";
 
 type Settings = {
@@ -51,6 +51,19 @@ type Approval = {
   status: string;
   created_at: string;
   expires_at: string;
+};
+
+type Run = {
+  id: string;
+  job_key: string;
+  started_at: string;
+  finished_at: string | null;
+  duration_ms: number | null;
+  status: "success" | "failed" | "timeout" | "skipped" | "running";
+  error: string | null;
+  triggered_by: string | null;
+  retry_count: number;
+  output_summary: Record<string, unknown>;
 };
 
 const CATEGORY_LABEL: Record<Job["category"], string> = {
@@ -119,10 +132,14 @@ const AutomationManager = () => {
   const [testTarget, setTestTarget] = useState<string>(TESTABLE_FUNCTIONS[0].key);
   const [testing, setTesting] = useState(false);
   const [testHistory, setTestHistory] = useState<TestResult[]>([]);
+  // Istoric rulaje + realtime
+  const [runs, setRuns] = useState<Run[]>([]);
+  const [runsFilter, setRunsFilter] = useState<string>("__all__");
+  const [realtimeOn, setRealtimeOn] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const [s, j, a] = await Promise.all([
+    const [s, j, a, r] = await Promise.all([
       supabase.from("automation_settings").select("*").eq("id", true).maybeSingle(),
       supabase.from("automation_jobs").select("*").order("category").order("label"),
       supabase
@@ -131,15 +148,46 @@ const AutomationManager = () => {
         .eq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(50),
+      supabase
+        .from("automation_runs")
+        .select("*")
+        .order("started_at", { ascending: false })
+        .limit(100),
     ]);
     setSettings(s.data as Settings | null);
     setJobs((j.data ?? []) as Job[]);
     setApprovals((a.data ?? []) as Approval[]);
+    setRuns((r.data ?? []) as Run[]);
     setLoading(false);
   };
 
   useEffect(() => {
     load();
+  }, []);
+
+  // Realtime: actualizează jobs + runs pe loc
+  useEffect(() => {
+    const channel = supabase
+      .channel("automation-control-center")
+      .on("postgres_changes", { event: "*", schema: "public", table: "automation_jobs" }, (payload) => {
+        const next = payload.new as Job;
+        if (!next?.id) return;
+        setJobs((prev) => prev.map((j) => (j.id === next.id ? { ...j, ...next } : j)));
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "automation_runs" }, (payload) => {
+        const row = payload.new as Run;
+        setRuns((prev) => [row, ...prev].slice(0, 100));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "automation_runs" }, (payload) => {
+        const row = payload.new as Run;
+        setRuns((prev) => prev.map((r) => (r.id === row.id ? row : r)));
+      })
+      .subscribe((status) => {
+        setRealtimeOn(status === "SUBSCRIBED");
+      });
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const toggleGlobal = async (next: boolean) => {
@@ -441,11 +489,20 @@ const AutomationManager = () => {
         />
       </div>
 
+      {/* REALTIME INDICATOR */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Radio className={`w-3 h-3 ${realtimeOn ? "text-primary animate-pulse" : "text-muted-foreground"}`} />
+        {realtimeOn ? "Live · actualizări realtime active" : "Conectare realtime..."}
+      </div>
+
       {/* TABS */}
       <Tabs defaultValue="jobs" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="jobs">
             <Activity className="w-4 h-4 mr-2" /> Joburi ({jobs.length})
+          </TabsTrigger>
+          <TabsTrigger value="runs">
+            <ListTree className="w-4 h-4 mr-2" /> Istoric rulaje ({runs.length})
           </TabsTrigger>
           <TabsTrigger value="approvals">
             <Inbox className="w-4 h-4 mr-2" /> Aprobări ({approvals.length})
@@ -532,6 +589,89 @@ const AutomationManager = () => {
               </Card>
             );
           })}
+        </TabsContent>
+
+        <TabsContent value="runs" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <ListTree className="w-4 h-4" /> Istoric rulaje (ultimele 100)
+                  </CardTitle>
+                  <CardDescription>
+                    Toate execuțiile orchestratorului — succese, eșecuri, timeout-uri, retry-uri. Se actualizează în timp real.
+                  </CardDescription>
+                </div>
+                <Select value={runsFilter} onValueChange={setRunsFilter}>
+                  <SelectTrigger className="w-[260px]">
+                    <SelectValue placeholder="Filtru job" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">Toate joburile</SelectItem>
+                    {Array.from(new Set(runs.map((r) => r.job_key))).sort().map((k) => (
+                      <SelectItem key={k} value={k}>{k}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {runs.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <ListTree className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>Nicio rulare înregistrată încă.</p>
+                  <p className="text-xs mt-1">Apare aici la primul tick orchestrator sau Run manual.</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5 max-h-[600px] overflow-y-auto">
+                  {runs
+                    .filter((r) => runsFilter === "__all__" || r.job_key === runsFilter)
+                    .map((r) => {
+                      const statusColor =
+                        r.status === "success" ? "bg-primary/5 border-primary/30" :
+                        r.status === "timeout" ? "bg-amber-500/10 border-amber-500/40" :
+                        r.status === "failed" ? "bg-destructive/5 border-destructive/30" :
+                        "bg-muted/30";
+                      const StatusIcon =
+                        r.status === "success" ? CheckCircle2 :
+                        r.status === "timeout" ? AlertTriangle :
+                        r.status === "failed" ? XCircle : Activity;
+                      const iconColor =
+                        r.status === "success" ? "text-primary" :
+                        r.status === "timeout" ? "text-amber-600" :
+                        r.status === "failed" ? "text-destructive" : "text-muted-foreground";
+                      return (
+                        <div key={r.id} className={`p-2.5 border rounded-md ${statusColor}`}>
+                          <div className="flex items-center gap-2 flex-wrap text-xs">
+                            <StatusIcon className={`w-3.5 h-3.5 ${iconColor}`} />
+                            <span className="font-mono font-medium">{r.job_key}</span>
+                            <Badge variant="outline" className="text-[10px] uppercase">{r.status}</Badge>
+                            {r.duration_ms != null && (
+                              <Badge variant="secondary" className="text-[10px]">{r.duration_ms}ms</Badge>
+                            )}
+                            {r.retry_count > 0 && (
+                              <Badge variant="outline" className="text-[10px]">
+                                ↻ {r.retry_count} retry
+                              </Badge>
+                            )}
+                            {r.triggered_by && (
+                              <Badge variant="outline" className="text-[10px]">{r.triggered_by}</Badge>
+                            )}
+                            <span className="ml-auto text-[10px] text-muted-foreground">
+                              {new Date(r.started_at).toLocaleString("ro-RO")}
+                            </span>
+                          </div>
+                          {r.error && (
+                            <p className="text-[11px] text-destructive font-mono mt-1.5 break-all">⚠ {r.error}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="approvals">
