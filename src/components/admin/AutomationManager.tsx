@@ -13,7 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
   Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
-  FlaskConical, Copy, XCircle, Newspaper, Brain,
+  FlaskConical, Copy, XCircle, Newspaper, Brain, ListTree, Radio,
 } from "lucide-react";
 
 type Settings = {
