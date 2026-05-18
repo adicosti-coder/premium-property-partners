@@ -299,6 +299,12 @@ const SEOHead = ({
     finalJsonLd = schemas.length === 1 ? schemas[0] : schemas;
   }
 
+  // Dev-only: warn if any node in the assembled JSON-LD conflicts with the
+  // canonical brand identity (phone / email / city). Production no-op.
+  if (import.meta.env?.DEV) {
+    validateJsonLdConsistency(finalJsonLd, `SEOHead(${finalUrl})`);
+  }
+
   // Keep static shell meta tags in sync after hydration. The original index.html
   // meta tags remain in <head>; if we only add Helmet tags, crawlers can read the
   // stale homepage description first and the SEO audit appears "stuck".
