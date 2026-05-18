@@ -53,6 +53,19 @@ type Approval = {
   expires_at: string;
 };
 
+type Run = {
+  id: string;
+  job_key: string;
+  started_at: string;
+  finished_at: string | null;
+  duration_ms: number | null;
+  status: "success" | "failed" | "timeout" | "skipped" | "running";
+  error: string | null;
+  triggered_by: string | null;
+  retry_count: number;
+  output_summary: Record<string, unknown>;
+};
+
 const CATEGORY_LABEL: Record<Job["category"], string> = {
   lead: "Lead Pipeline",
   seo: "SEO & Indexare",
