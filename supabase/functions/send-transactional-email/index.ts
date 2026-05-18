@@ -183,6 +183,7 @@ Deno.serve(async (req) => {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
+      idempotency_key: idempotencyKey,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
     })
@@ -216,6 +217,7 @@ Deno.serve(async (req) => {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
+      idempotency_key: idempotencyKey,
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to look up unsubscribe token',
@@ -249,6 +251,7 @@ Deno.serve(async (req) => {
       await supabase.from('email_send_log').insert({
         message_id: messageId,
         template_name: templateName,
+      idempotency_key: idempotencyKey,
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to create unsubscribe token',
@@ -278,6 +281,7 @@ Deno.serve(async (req) => {
       await supabase.from('email_send_log').insert({
         message_id: messageId,
         template_name: templateName,
+      idempotency_key: idempotencyKey,
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to confirm unsubscribe token storage',
@@ -300,6 +304,7 @@ Deno.serve(async (req) => {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
+      idempotency_key: idempotencyKey,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
       error_message:
@@ -358,6 +363,7 @@ Deno.serve(async (req) => {
         await supabase.from('email_send_log').insert({
           message_id: messageId,
           template_name: templateName,
+      idempotency_key: idempotencyKey,
           recipient_email: effectiveRecipient,
           status: 'sent',
         })
@@ -372,6 +378,7 @@ Deno.serve(async (req) => {
       await supabase.from('email_send_log').insert({
         message_id: messageId,
         template_name: templateName,
+      idempotency_key: idempotencyKey,
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: errMsg.slice(0, 500),
@@ -386,6 +393,7 @@ Deno.serve(async (req) => {
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: templateName,
+      idempotency_key: idempotencyKey,
     recipient_email: effectiveRecipient,
     status: 'pending',
   })
@@ -413,6 +421,7 @@ Deno.serve(async (req) => {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
+      idempotency_key: idempotencyKey,
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to enqueue email',
