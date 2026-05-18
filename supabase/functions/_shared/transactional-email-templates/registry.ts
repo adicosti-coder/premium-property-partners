@@ -32,4 +32,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'e2e-recovery': e2eRecovery,
   'automation-daily-digest': automationDailyDigest,
   'automation-run-report': automationRunReport,
+  'seo-weekly-report': seoWeeklyReport,
 }
