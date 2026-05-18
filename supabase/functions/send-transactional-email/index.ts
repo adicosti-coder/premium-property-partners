@@ -125,6 +125,38 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // 1.5 IDEMPOTENCY GUARD — if this idempotency_key has already been sent
+  // successfully, return the previous result without re-sending.
+  // Only run when caller explicitly provided a key (not auto-generated messageId).
+  const callerProvidedKey = idempotencyKey && idempotencyKey !== messageId
+  if (callerProvidedKey) {
+    const { data: prior } = await supabase
+      .from('email_send_log')
+      .select('message_id, created_at')
+      .eq('idempotency_key', idempotencyKey)
+      .eq('status', 'sent')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (prior) {
+      console.log('Idempotent replay — skipping duplicate send', {
+        idempotencyKey,
+        original_message_id: prior.message_id,
+      })
+      return new Response(
+        JSON.stringify({
+          success: true,
+          idempotent_replay: true,
+          original_message_id: prior.message_id,
+          original_sent_at: prior.created_at,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+  }
+
+
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
     .from('suppressed_emails')
@@ -151,6 +183,7 @@ Deno.serve(async (req) => {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
+      idempotency_key: idempotencyKey,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
     })
@@ -184,6 +217,7 @@ Deno.serve(async (req) => {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
+      idempotency_key: idempotencyKey,
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to look up unsubscribe token',
@@ -217,6 +251,7 @@ Deno.serve(async (req) => {
       await supabase.from('email_send_log').insert({
         message_id: messageId,
         template_name: templateName,
+      idempotency_key: idempotencyKey,
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to create unsubscribe token',
@@ -246,6 +281,7 @@ Deno.serve(async (req) => {
       await supabase.from('email_send_log').insert({
         message_id: messageId,
         template_name: templateName,
+      idempotency_key: idempotencyKey,
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to confirm unsubscribe token storage',
@@ -268,6 +304,7 @@ Deno.serve(async (req) => {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
+      idempotency_key: idempotencyKey,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
       error_message:
@@ -326,6 +363,7 @@ Deno.serve(async (req) => {
         await supabase.from('email_send_log').insert({
           message_id: messageId,
           template_name: templateName,
+      idempotency_key: idempotencyKey,
           recipient_email: effectiveRecipient,
           status: 'sent',
         })
@@ -340,6 +378,7 @@ Deno.serve(async (req) => {
       await supabase.from('email_send_log').insert({
         message_id: messageId,
         template_name: templateName,
+      idempotency_key: idempotencyKey,
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: errMsg.slice(0, 500),
@@ -354,6 +393,7 @@ Deno.serve(async (req) => {
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: templateName,
+      idempotency_key: idempotencyKey,
     recipient_email: effectiveRecipient,
     status: 'pending',
   })
@@ -381,6 +421,7 @@ Deno.serve(async (req) => {
     await supabase.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
+      idempotency_key: idempotencyKey,
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to enqueue email',
