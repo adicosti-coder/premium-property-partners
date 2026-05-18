@@ -18,6 +18,7 @@ import { template as adminOtp } from './admin-otp.tsx'
 import { template as systemHealthReport } from './system-health-report.tsx'
 import { template as e2eRecovery } from './e2e-recovery.tsx'
 import { template as automationDailyDigest } from './automation-daily-digest.tsx'
+import { template as automationRunReport } from './automation-run-report.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcomeEmail,
@@ -29,4 +30,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'system-health-report': systemHealthReport,
   'e2e-recovery': e2eRecovery,
   'automation-daily-digest': automationDailyDigest,
+  'automation-run-report': automationRunReport,
 }
