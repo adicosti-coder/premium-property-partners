@@ -162,7 +162,21 @@ export default function SystemHealthDashboard() {
   }
 
   const invalidKeys = keyHealth.filter((k) => !k.is_valid);
-  const failedRecent = recentE2E.find((r) => r.status !== "passed");
+  // Only consider E2E failures from the last 24h — older failures that have
+  // since recovered should not keep the banner red.
+  const cutoff24 = Date.now() - 24 * 3600_000;
+  const failedRecent = recentE2E.find((r) => {
+    if (r.status === "passed") return false;
+    const t = new Date(r.run_at).getTime();
+    if (!Number.isFinite(t) || t < cutoff24) return false;
+    // If a later run of the same test_type passed, treat as recovered.
+    const laterPass = recentE2E.find((x) =>
+      x.test_type === r.test_type &&
+      x.status === "passed" &&
+      new Date(x.run_at).getTime() > t,
+    );
+    return !laterPass;
+  });
   const allOk = invalidKeys.length === 0 && !failedRecent && recentLatencyAlerts.length === 0;
 
   const incident = analyzeIncidents({
