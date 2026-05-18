@@ -71,13 +71,13 @@ const ContactPage = () => {
         {
           "@type": "RealEstateAgent",
           "name": isRo ? "Departament Vânzări" : "Sales Department",
-          "telephone": "+40723154520",
+          "telephone": "+40799069256",
           "email": "info@realtrust.ro",
         },
         {
           "@type": "RealEstateAgent",
           "name": isRo ? "Departament Închirieri" : "Rentals Department",
-          "telephone": "+40723154520",
+          "telephone": "+40799069256",
           "email": "info@realtrust.ro",
         },
         {
@@ -192,12 +192,12 @@ const ContactPage = () => {
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="p-5 bg-card border rounded-2xl">
                 <h3 className="font-semibold mb-2 flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" />{isRo ? "Vânzări" : "Sales"}</h3>
-                <a href="tel:+40723154520" className="text-sm text-primary hover:underline block">+40 723 154 520</a>
+                <a href="tel:+40799069256" className="text-sm text-primary hover:underline block">+40 799 069 256</a>
                 <a href="mailto:info@realtrust.ro" className="text-sm text-primary hover:underline">info@realtrust.ro</a>
               </div>
               <div className="p-5 bg-card border rounded-2xl">
                 <h3 className="font-semibold mb-2 flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />{isRo ? "Închirieri" : "Rentals"}</h3>
-                <a href="tel:+40723154520" className="text-sm text-primary hover:underline block">+40 723 154 520</a>
+                <a href="tel:+40799069256" className="text-sm text-primary hover:underline block">+40 799 069 256</a>
                 <a href="mailto:info@realtrust.ro" className="text-sm text-primary hover:underline">info@realtrust.ro</a>
               </div>
               <div className="p-5 bg-card border rounded-2xl">

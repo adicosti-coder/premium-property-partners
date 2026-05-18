@@ -325,7 +325,7 @@ const PentruOaspeti = () => {
     "url": "https://realtrust.ro/pentru-oaspeti",
     "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
     "priceRange": "€45 – €120 / noapte",
-    "telephone": "+40723154520",
+    "telephone": "+40799069256",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
@@ -801,9 +801,9 @@ const PentruOaspeti = () => {
                     <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <a href="tel:+40723154520" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+                <a href="tel:+40799069256" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
                   <Phone className="w-4 h-4" />
-                  <span>{t.ctaPhone}: +40 723 154 520</span>
+                  <span>{t.ctaPhone}: +40 799 069 256</span>
                 </a>
               </div>
             </motion.div>

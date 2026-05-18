@@ -910,7 +910,7 @@ export const generateOrganizationSchema = () => ({
   "contactPoint": [
     {
       "@type": "ContactPoint",
-      "telephone": "+40723154520",
+      "telephone": "+40799069256",
       "contactType": "customer service",
       "availableLanguage": ["Romanian", "English"],
       "areaServed": "RO",
@@ -978,7 +978,7 @@ export const generateHomepageRealEstateAgentSchema = () => ({
   "alternateName": ["Agenție imobiliară Timișoara RealTrust", "RealTrust Real Estate"],
   "description": "Agenție imobiliară Timișoara: apartamente de vânzare, apartamente noi de vânzare, închirieri pentru studenți, investiții imobiliare cu randament și administrare apartamente Timișoara cu ROI 9.4% net verificat.",
   "url": BASE_URL,
-  "telephone": "+40723154520",
+  "telephone": "+40799069256",
   "email": "info@realtrust.ro",
   "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
   "logo": `${BASE_URL}/images/hero-optimized-800w.webp`,

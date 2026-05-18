@@ -24,7 +24,7 @@ const ContactSection = () => {
   const handleWhatsApp = () => {
     trackWhatsApp();
     const message = encodeURIComponent(t.contactSection.whatsappMessage);
-    window.open(`https://wa.me/40723154520?text=${message}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleEmail = () => {
@@ -36,7 +36,7 @@ const ContactSection = () => {
 
   const handleCall = () => {
     trackCall();
-    window.location.href = "tel:+40723154520";
+    window.location.href = "tel:+40799069256";
   };
 
   return (
@@ -65,7 +65,7 @@ const ContactSection = () => {
               
               <div className="space-y-6">
                 <a
-                  href="tel:+40723154520"
+                  href="tel:+40799069256"
                   onClick={handleCall}
                   className="flex items-center gap-4 group"
                 >

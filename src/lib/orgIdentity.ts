@@ -28,7 +28,7 @@ export const BRAND = {
   name: "RealTrust & ApArt Hotel",
   legalName: "RealTrust Imobiliare SRL",
   alternateNames: ["ApArt Hotel Timișoara", "RealTrust Imobiliare"],
-  telephone: "+40723154520",
+  telephone: "+40799069256",
   email: "info@realtrust.ro",
   logo: `${SITE_ORIGIN}/images/hero-optimized-800w.webp`,
   image: `${SITE_ORIGIN}/images/hero-optimized-1920w.webp`,
