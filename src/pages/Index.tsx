@@ -259,7 +259,9 @@ const Index = () => {
           <DeferredHomeSEO language={language} />
         </Suspense>
       )}
-      <Header />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
         {/* Hero is eager — it's the LCP element. The static hero-shell in
             index.html paints first; React Hero replaces it on mount with
