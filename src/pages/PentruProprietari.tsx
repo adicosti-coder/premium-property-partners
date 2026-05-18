@@ -21,6 +21,7 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
+import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 
 const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
 const OwnerBenefits = lazy(() => import("@/components/OwnerBenefits"));
@@ -257,100 +258,40 @@ const PentruProprietari = () => {
           "description": "ROI 9.4% net anual verificat. Pachete: Starter 15%, Esențial 18%, Standard 20%, Premium 25%."
         }
       };
-      // RealEstateAgent schema with full property management service catalog
-      // E-E-A-T: explicit founder, valid logo (real asset), sameAs social links
+      // RealEstateAgent schema — canonical identity + page-specific extensions.
+      // Source of truth: src/lib/orgIdentity.ts (telephone, email, address,
+      // logo, image, sameAs, areaServed). We only extend with E-E-A-T extras.
       const realEstateAgentSchema = {
-        "@context": "https://schema.org",
-        "@type": "RealEstateAgent",
-        "@id": "https://realtrust.ro/#realestateagent",
-        "name": "RealTrust & ApArt Hotel Timișoara",
-        "alternateName": "RealTrust",
-        "url": "https://realtrust.ro/pentru-proprietari",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://realtrust.ro/images/hero-optimized-800w.webp",
-          "width": 800,
-          "height": 450,
-        },
-        "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
-        "telephone": "+40799069256",
-        "email": "info@realtrust.ro",
-        "foundingDate": "2001",
-        "founder": {
+        ...REAL_ESTATE_AGENT_SCHEMA,
+        url: "https://realtrust.ro/pentru-proprietari",
+        founder: {
           "@type": "Person",
           "@id": "https://realtrust.ro/despre-noi#adrian-costi",
           "name": "Adrian Costi",
           "jobTitle": "Founder & CEO",
           "url": "https://realtrust.ro/despre-noi",
-          "worksFor": { "@type": "Organization", "name": "RealTrust" },
         },
-        "employee": {
+        employee: {
           "@type": "Person",
           "@id": "https://realtrust.ro/despre-noi#adrian-costi",
         },
-        "sameAs": [
-          "https://www.facebook.com/realtrust.ro",
-          "https://www.instagram.com/realtrust_timisoara",
-        ],
-        "areaServed": {
-          "@type": "City",
-          "name": "Timișoara",
-          "containedInPlace": { "@type": "Country", "name": "România" }
-        },
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "Timișoara",
-          "addressRegion": "Timiș",
-          "addressCountry": "RO"
-        },
-        "aggregateRating": {
+        aggregateRating: {
           "@type": "AggregateRating",
           "ratingValue": "9.7",
           "bestRating": "10",
-          "ratingCount": "180"
+          "ratingCount": "180",
         },
-        "hasOfferCatalog": {
+        hasOfferCatalog: {
           "@type": "OfferCatalog",
           "name": "Servicii pentru Proprietari",
           "itemListElement": [
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "serviceType": "PropertyManagement",
-                "name": "Administrare regim hotelier"
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Fotografii profesionale imobiliare Timișoara"
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Tur virtual 360 apartament"
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Consultanță fiscală imobiliare Timișoara"
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Evaluare gratuită proprietate"
-              }
-            }
-          ]
-        }
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "serviceType": "PropertyManagement", "name": "Administrare regim hotelier" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fotografii profesionale imobiliare Timișoara" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Tur virtual 360 apartament" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Consultanță fiscală imobiliare Timișoara" } },
+            { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Evaluare gratuită proprietate" } },
+          ],
+        },
       };
       // FAQPage schema — rich snippets pentru întrebările proprietarilor
       const faqPageSchema = {
