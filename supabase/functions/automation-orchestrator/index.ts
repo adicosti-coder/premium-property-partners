@@ -36,6 +36,7 @@ const JOB_FN: Record<string, string> = {
   // System
   "system.daily_digest": "automation-daily-digest",
   "system.self_healing": "automation-self-healing",
+  "system.anomaly_notifier": "automation-anomaly-notifier",
 };
 
 type Job = {
