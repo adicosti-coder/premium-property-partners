@@ -167,17 +167,22 @@ const BlogHubClicksDashboard = () => {
             Click-uri pe linkurile către hub-urile de locație din articole + CTR vs. afișările articolelor.
           </p>
         </div>
-        <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Ultimele 7 zile</SelectItem>
-            <SelectItem value="30">Ultimele 30 zile</SelectItem>
-            <SelectItem value="90">Ultimele 90 zile</SelectItem>
-            <SelectItem value="365">Ultimul an</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-1.5">
+            <Download className="w-4 h-4" /> Export CSV
+          </Button>
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Ultimele 7 zile</SelectItem>
+              <SelectItem value="30">Ultimele 30 zile</SelectItem>
+              <SelectItem value="90">Ultimele 90 zile</SelectItem>
+              <SelectItem value="365">Ultimul an</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
