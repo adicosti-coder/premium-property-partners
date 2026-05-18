@@ -1,13 +1,14 @@
 import { useState, useMemo, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent, Download, FileText } from "lucide-react";
+import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent, Download, FileText, RefreshCw, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { startOfDay, endOfDay, format, subDays } from "date-fns";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { toast } from "sonner";
+import { startOfDay, endOfDay, format, subDays, eachDayOfInterval } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from "recharts";
 import { slugifyLocation } from "@/lib/blogLocations";
 
 interface HubRow {
@@ -32,9 +33,12 @@ const PRESET_RANGES = ["7", "30", "90", "365"] as const;
 type PresetRange = (typeof PRESET_RANGES)[number];
 
 const BlogHubClicksDashboard = () => {
+  const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState< PresetRange | "custom">("30");
   const [customStart, setCustomStart] = useState<string>(format(subDays(new Date(), 30), "yyyy-MM-dd"));
   const [customEnd, setCustomEnd] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+  const [trendLocation, setTrendLocation] = useState<string>("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isCustom = dateRange === "custom";
   const days = isCustom ? 0 : parseInt(dateRange);
@@ -54,6 +58,21 @@ const BlogHubClicksDashboard = () => {
   const dateLabel = isCustom
     ? `${format(startDate, "dd.MM.yyyy")} – ${format(endDate, "dd.MM.yyyy")}`
     : `Ultimele ${days} zile`;
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["blog-hub-clicks"] });
+      await queryClient.invalidateQueries({ queryKey: ["blog-hub-impressions"] });
+      await queryClient.refetchQueries({ queryKey: ["blog-hub-clicks"] });
+      await queryClient.refetchQueries({ queryKey: ["blog-hub-impressions"] });
+      toast.success("Date reîmprospătate din baza de date.");
+    } catch (e) {
+      toast.error("Refresh eșuat. Încearcă din nou.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [queryClient]);
 
   const { data: clicks, isLoading } = useQuery({
     queryKey: ["blog-hub-clicks", dateRange, customStart, customEnd],
@@ -160,6 +179,31 @@ const BlogHubClicksDashboard = () => {
     };
   }, [clicks, impressions]);
 
+  const dailyTrend = useMemo(() => {
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
+    const byDay = new Map<string, { date: string; total: number; uniqKeys: Set<string> }>();
+    days.forEach((d) => {
+      const key = format(d, "yyyy-MM-dd");
+      byDay.set(key, { date: format(d, "dd.MM"), total: 0, uniqKeys: new Set() });
+    });
+    (clicks ?? []).forEach((r) => {
+      const meta = (r.metadata ?? {}) as Record<string, unknown>;
+      const slug = String(meta.location_slug ?? slugifyLocation(String(meta.location ?? "")));
+      if (trendLocation !== "all" && slug !== trendLocation) return;
+      const key = format(new Date(r.created_at), "yyyy-MM-dd");
+      const entry = byDay.get(key);
+      if (!entry) return;
+      entry.total += 1;
+      const source = String(meta.source ?? "inline");
+      if (r.session_id) entry.uniqKeys.add(`${r.session_id}|${source}`);
+    });
+    return Array.from(byDay.values()).map((d) => ({
+      date: d.date,
+      total: d.total,
+      unique: d.uniqKeys.size,
+    }));
+  }, [clicks, startDate, endDate, trendLocation]);
+
   const handleExportSummary = useCallback(() => {
     const headers = ["Locatie", "Afisari", "Click-uri Inline", "Click-uri Card", "Total Click-uri", "Click-uri Unice", "CTR %"];
     const csvRows = rows.map((r) => [
@@ -221,6 +265,9 @@ const BlogHubClicksDashboard = () => {
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="default" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="gap-1.5">
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} /> {isRefreshing ? "Se reîncarcă..." : "Run Now"}
+            </Button>
             <Button variant="outline" size="sm" onClick={handleExportSummary} className="gap-1.5">
               <Download className="w-4 h-4" /> Export rezumat
             </Button>
@@ -274,6 +321,52 @@ const BlogHubClicksDashboard = () => {
         <StatCard icon={<MapPin className="w-4 h-4" />} label="Afișări articole" value={totals.impressions.toLocaleString("ro-RO")} />
         <StatCard icon={<Percent className="w-4 h-4" />} label="CTR mediu" value={fmtCtr(totals.avgCtr)} />
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" /> Evoluție zilnică
+          </CardTitle>
+          <Select value={trendLocation} onValueChange={setTrendLocation}>
+            <SelectTrigger className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Total site (toate locațiile)</SelectItem>
+              {rows.map((r) => (
+                <SelectItem key={r.locationSlug} value={r.locationSlug}>
+                  {r.location}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dailyTrend} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" className="text-xs" />
+                <YAxis allowDecimals={false} className="text-xs" />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Line type="monotone" dataKey="total" name="Total click-uri" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="unique" name="Click-uri unice" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Filtrare: {trendLocation === "all" ? "tot site-ul" : rows.find((r) => r.locationSlug === trendLocation)?.location ?? trendLocation}.
+          </p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
