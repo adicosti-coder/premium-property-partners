@@ -10,22 +10,55 @@ export default function viteAsyncCss(): Plugin {
     apply: "build",
     enforce: "post",
     transformIndexHtml(html) {
-      const moduleScripts = html.match(/<script\s+type="module"[^>]*><\/script>/g) ?? [];
+      const cssHrefs: string[] = [];
+      const moduleScripts = Array.from(
+        html.matchAll(/<script\s+type="module"([^>]*)\s+src="([^"]+)"([^>]*)><\/script>/g),
+        ([match, beforeSrc, src, afterSrc]) => ({
+          match,
+          src,
+          crossorigin: /\scrossorigin(?:=|\s|>|$)/.test(`${beforeSrc} ${afterSrc}`),
+        }),
+      );
 
       let transformed = html
         .replace(/<script\s+type="module"[^>]*><\/script>\s*/g, "")
         .replace(
           /<link rel="stylesheet"(?:\s+crossorigin)?\s+href="([^"]+\.css)"\s*\/?>/g,
-          (_match, href) =>
-            `<link rel="preload" as="style" href="${href}" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">` +
-            `<noscript><link rel="stylesheet" href="${href}"></noscript>`,
+          (_match, href) => {
+            cssHrefs.push(href);
+            return `<noscript><link rel="stylesheet" href="${href}"></noscript>`;
+          },
         );
 
       if (moduleScripts.length > 0) {
-        transformed = transformed.replace("</body>", `${moduleScripts.join("\n")}\n</body>`);
+        const bootstrap = buildDeferredBootstrap(cssHrefs, moduleScripts.map(({ src, crossorigin }) => ({ src, crossorigin })));
+        transformed = transformed.replace("</body>", `${bootstrap}\n</body>`);
       }
 
       return transformed;
     },
   };
+}
+
+function buildDeferredBootstrap(
+  cssHrefs: string[],
+  scripts: Array<{ src: string; crossorigin: boolean }>,
+): string {
+  return `<script>
+(function(){
+  var loaded=false;
+  var fallback=0;
+  var css=${JSON.stringify(cssHrefs)};
+  var scripts=${JSON.stringify(scripts)};
+  var events=['pointerdown','touchstart','keydown','scroll'];
+  function cleanup(){events.forEach(function(e){document.removeEventListener(e,load,{capture:true});});if(fallback)clearTimeout(fallback);}
+  function load(){
+    if(loaded)return;loaded=true;cleanup();
+    css.forEach(function(href){var l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l);});
+    scripts.forEach(function(item){var s=document.createElement('script');s.type='module';s.src=item.src;if(item.crossorigin)s.crossOrigin='';document.body.appendChild(s);});
+  }
+  events.forEach(function(e){document.addEventListener(e,load,{once:true,passive:true,capture:true});});
+  fallback=setTimeout(load,8000);
+})();
+</script>`;
 }
