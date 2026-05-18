@@ -136,12 +136,16 @@ async function runJob(
     });
     // Best-effort: stamp retry_count on most recent run row
     if (attempt > 0) {
-      await supabase
+      const { data: lastRun } = await supabase
         .from("automation_runs")
-        .update({ retry_count: attempt })
+        .select("id")
         .eq("job_key", job.job_key)
         .order("started_at", { ascending: false })
-        .limit(1);
+        .limit(1)
+        .maybeSingle();
+      if (lastRun?.id) {
+        await supabase.from("automation_runs").update({ retry_count: attempt }).eq("id", lastRun.id);
+      }
     }
   }
 
