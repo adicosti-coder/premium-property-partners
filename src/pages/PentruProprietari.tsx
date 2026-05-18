@@ -460,7 +460,7 @@ const PentruProprietari = () => {
               width={1920}
               height={1080}
               loading="eager"
-              fetchPriority="high"
+              {...({ fetchpriority: "high" } as Record<string, string>)}
               decoding="async"
             />
           </picture>

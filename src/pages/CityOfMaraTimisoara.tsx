@@ -326,7 +326,7 @@ const CityOfMaraTimisoara = () => {
 
       <main className="pb-20">
         <section className="relative min-h-[88svh] overflow-hidden pt-24">
-          <img src={cityHero} alt="Apartamente City of Mara Timișoara cu finisaje moderne" className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />
+          <img src={cityHero} alt="Apartamente City of Mara Timișoara cu finisaje moderne" className="absolute inset-0 h-full w-full object-cover" {...({ fetchpriority: "high" } as Record<string, string>)} />
           <div className="absolute inset-0 bg-foreground/65" />
           <div className="relative container mx-auto flex min-h-[calc(88svh-6rem)] flex-col justify-end px-4 pb-10 md:pb-14">
             <PageBreadcrumb items={[{ label: "Complexe", href: "/complexe" }, { label: "City of Mara Timișoara" }]} className="mb-8 text-primary-foreground/90" />

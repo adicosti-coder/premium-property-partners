@@ -148,7 +148,7 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
           height={height}
           loading={priority ? "eager" : "lazy"}
           decoding={priority ? "sync" : "async"}
-          fetchPriority={priority ? "high" : "auto"}
+          {...({ fetchpriority: priority ? "high" : "auto" } as Record<string, string>)}
           sizes={sizes}
           referrerPolicy="no-referrer"
           onLoad={handleLoad}
