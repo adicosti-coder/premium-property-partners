@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent } from "lucide-react";
+import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent, Download } from "lucide-react";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { slugifyLocation } from "@/lib/blogLocations";
