@@ -23,9 +23,10 @@
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-    <!-- Preconnect to backend used immediately after LCP (SEO data, schema enrichment). -->
-    <link rel="preconnect" href="https://mvzssjyzbwccioqvhjpo.supabase.co" crossorigin />
-    <!-- DNS prefetch only — domains used lazily, after first user interaction. -->
+    <!-- DNS prefetch only — backend + 3rd parties used after LCP/first interaction.
+         NOTE: preconnect intentionally removed — PageSpeed flagged it as unused
+         (no resource consumed within ~1s of preconnect), wasting ~300ms LCP. -->
+    <link rel="dns-prefetch" href="https://mvzssjyzbwccioqvhjpo.supabase.co" />
     <link rel="dns-prefetch" href="https://challenges.cloudflare.com" />
     <link rel="dns-prefetch" href="https://api.mapbox.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
