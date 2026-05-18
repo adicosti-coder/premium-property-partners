@@ -14,17 +14,22 @@ const RETRY_DELAY_MS = 10 * 60 * 1000; // 10 minutes
 async function runVoice(SUPABASE_URL: string, SERVICE_KEY: string) {
   const start = Date.now();
   let passed = false; let details: any = {}; let err: string | null = null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 90_000); // 90s hard cap (< 150s IDLE_TIMEOUT)
   try {
     const r = await fetch(`${SUPABASE_URL}/functions/v1/voice-agent-e2e-test`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE_KEY}`, "x-webhook-secret": SERVICE_KEY },
       body: JSON.stringify({ mode: "simulate" }),
+      signal: ctrl.signal,
     });
     details = await r.json().catch(() => ({}));
     passed = r.ok && (details?.success !== false) && (details?.checks?.every?.((c: any) => c.passed) ?? r.ok);
     if (!passed) err = details?.error || `HTTP ${r.status}: ${JSON.stringify(details).slice(0, 500)}`;
   } catch (e: any) {
-    err = `${e?.name || "Error"}: ${e?.message || String(e)}\n${e?.stack || ""}`.slice(0, 2000);
+    err = `${e?.name || "Error"}: ${e?.message || String(e)}`.slice(0, 1000);
+  } finally {
+    clearTimeout(timer);
   }
   return { passed, details, err, duration: Date.now() - start };
 }
