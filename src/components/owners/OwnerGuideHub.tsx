@@ -74,7 +74,7 @@ const OwnerGuideHub = () => {
 
   // Article schema (ItemList of BlogPosting) for the 4 owner-guide articles
   // E-E-A-T: explicit Person author + Organization publisher with valid logo
-  const baseUrl = "https://www.realtrust.ro";
+  const baseUrl = "https://realtrust.ro";
   const isoDate = new Date().toISOString().split("T")[0];
   const author = {
     "@type": "Person",

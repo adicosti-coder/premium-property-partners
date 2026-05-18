@@ -11,7 +11,7 @@ interface PinterestPinButtonProps {
  * Facilitates Pinterest indexing for interior design / investment images.
  */
 const PinterestPinButton = memo(({ imageUrl, description, pageUrl }: PinterestPinButtonProps) => {
-  const url = pageUrl || (typeof window !== "undefined" ? window.location.href : "https://www.realtrust.ro");
+  const url = pageUrl || (typeof window !== "undefined" ? window.location.href : "https://realtrust.ro");
   const pinUrl = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(description)}`;
 
   return (

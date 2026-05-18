@@ -69,7 +69,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   // Register FAQ items via centralized context instead of inline FAQPage schema
   useRegisterFAQs("homepage", homepageFaqItems);
 
-  const speakableSchema = generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://www.realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
+  const speakableSchema = generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
   const homepageSchemas = [...generateHomepageSchemas(reviews), speakableSchema];
 
   // Inject real AggregateRating into the first schema (LocalBusiness/LodgingBusiness)
@@ -103,8 +103,8 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     "@type": "Organization",
     "name": "RealTrust & ApArt Hotel",
     "legalName": "RealTrust Imobiliare SRL",
-    "url": "https://www.realtrust.ro",
-    "logo": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
+    "url": "https://realtrust.ro",
+    "logo": "https://realtrust.ro/images/hero-optimized-800w.webp",
     "email": "info@realtrust.ro",
     "telephone": "+40723154520",
     "address": {
@@ -137,12 +137,12 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   const realEstateAgentSchema = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
-    "@id": "https://www.realtrust.ro/#realestateagent",
+    "@id": "https://realtrust.ro/#realestateagent",
     "name": "RealTrust Imobiliare Timișoara",
     "description": "Agenție imobiliară în Timișoara specializată în vânzări apartamente, închirieri pe termen lung și administrare regim hotelier. Servicii pentru investitori și proprietari în Cetate, Iosefin, Complex Studențesc, ISHO, Girocului și toate cartierele Timișoarei.",
-    "url": "https://www.realtrust.ro",
-    "logo": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
-    "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
+    "url": "https://realtrust.ro",
+    "logo": "https://realtrust.ro/images/hero-optimized-800w.webp",
+    "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
     "telephone": "+40723154520",
     "email": "info@realtrust.ro",
     "priceRange": "€€",

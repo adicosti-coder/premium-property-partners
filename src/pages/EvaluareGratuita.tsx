@@ -178,7 +178,7 @@ const EvaluareGratuita = () => {
       <SEOHead
         title="Evaluare gratuită apartament și casă în Timișoara | RealTrust"
         description="Estimare de piață gratuită pentru apartamentul, casa, terenul sau spațiul tău comercial din Timișoara. Răspuns în 24 de ore lucrătoare, fără obligații."
-        url="https://www.realtrust.ro/evaluare-gratuita"
+        url="https://realtrust.ro/evaluare-gratuita"
       />
       <Header />
       <main className="min-h-[80vh] px-4 py-12">

@@ -237,7 +237,7 @@ const CityOfMaraTimisoara = () => {
       {
         "@type": "ApartmentComplex",
         name: "City of Mara Timișoara",
-        url: "https://www.realtrust.ro/complexe/city-of-mara",
+        url: "https://realtrust.ro/complexe/city-of-mara",
         address: { "@type": "PostalAddress", streetAddress: "Calea Circumvalațiunii", addressLocality: "Timișoara", addressRegion: "Timiș", addressCountry: "RO" },
         amenityFeature: [
           { "@type": "LocationFeatureSpecification", name: "Parcare subterană", value: true },
@@ -248,7 +248,7 @@ const CityOfMaraTimisoara = () => {
       {
         "@type": "RealEstateAgent",
         name: "RealTrust",
-        url: "https://www.realtrust.ro",
+        url: "https://realtrust.ro",
         telephone: "+40799069256",
         areaServed: "Timișoara",
       },
@@ -314,13 +314,13 @@ const CityOfMaraTimisoara = () => {
       <SEOHead
         title="Apartamente City of Mara Timișoara | Vânzare apartamente noi"
         description="Apartamente City of Mara Timișoara: investiții imobiliare Timișoara centru, randament estimat, tipuri de apartamente și listă actualizată de disponibilități."
-        url="https://www.realtrust.ro/complexe/city-of-mara"
-        image="https://www.realtrust.ro/assets/apt-03.webp"
+        url="https://realtrust.ro/complexe/city-of-mara"
+        image="https://realtrust.ro/assets/apt-03.webp"
         jsonLd={jsonLd}
         breadcrumbItems={[
-          { name: "Acasă", url: "https://www.realtrust.ro" },
-          { name: "Complexe", url: "https://www.realtrust.ro/complexe" },
-          { name: "City of Mara", url: "https://www.realtrust.ro/complexe/city-of-mara" },
+          { name: "Acasă", url: "https://realtrust.ro" },
+          { name: "Complexe", url: "https://realtrust.ro/complexe" },
+          { name: "City of Mara", url: "https://realtrust.ro/complexe/city-of-mara" },
         ]}
       />
       <Header />

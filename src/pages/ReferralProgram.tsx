@@ -273,7 +273,7 @@ const ReferralProgram = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://www.realtrust.ro/recomanda-proprietar"
+        url="https://realtrust.ro/recomanda-proprietar"
       />
       <Header />
       <PageSummary

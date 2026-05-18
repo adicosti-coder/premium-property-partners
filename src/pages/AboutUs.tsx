@@ -343,9 +343,9 @@ const AboutUs = () => {
     "@type": "RealEstateAgent",
     "name": "RealTrust & ApArt Hotel",
     "legalName": "Imo Business Centrum SRL",
-    "url": "https://www.realtrust.ro",
-    "logo": "https://www.realtrust.ro/favicon.ico",
-    "image": "https://www.realtrust.ro/og-image.jpg",
+    "url": "https://realtrust.ro",
+    "logo": "https://realtrust.ro/favicon.ico",
+    "image": "https://realtrust.ro/og-image.jpg",
     "description": seo.description,
     "foundingDate": "1999",
     "priceRange": "€€",
@@ -399,7 +399,7 @@ const AboutUs = () => {
       "Airbnb & Booking.com optimization",
       "Hotel-style property management"
     ],
-    "url": "https://www.realtrust.ro/despre-noi"
+    "url": "https://realtrust.ro/despre-noi"
   };
 
   // FAQPage schema
@@ -424,11 +424,11 @@ const AboutUs = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://www.realtrust.ro/despre-noi"
+        url="https://realtrust.ro/despre-noi"
         jsonLd={combinedSchema}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-          { name: language === "ro" ? "Despre Noi" : "About Us", url: "https://www.realtrust.ro/despre-noi" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: language === "ro" ? "Despre Noi" : "About Us", url: "https://realtrust.ro/despre-noi" },
         ]}
       />
       <Header />

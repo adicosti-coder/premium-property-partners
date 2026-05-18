@@ -159,18 +159,18 @@ const ProcesulNostru = () => {
     "inLanguage": lang === "ro" ? "ro-RO" : "en-US",
     "author": {
       "@type": "Person",
-      "@id": "https://www.realtrust.ro/despre-noi#adrian-costi",
+      "@id": "https://realtrust.ro/despre-noi#adrian-costi",
       "name": "Adrian Costi",
       "jobTitle": lang === "ro" ? "Fondator & CEO RealTrust" : "Founder & CEO RealTrust",
-      "url": "https://www.realtrust.ro/despre-noi",
+      "url": "https://realtrust.ro/despre-noi",
     },
     "publisher": {
       "@type": "Organization",
       "name": "RealTrust & ApArt Hotel Timișoara",
-      "url": "https://www.realtrust.ro",
+      "url": "https://realtrust.ro",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
+        "url": "https://realtrust.ro/images/hero-optimized-800w.webp",
         "width": 800,
         "height": 450,
       },
@@ -180,7 +180,7 @@ const ProcesulNostru = () => {
       "position": i + 1,
       "name": s.title,
       "text": s.desc,
-      "url": `https://www.realtrust.ro/procesul-nostru#step-${i + 1}`,
+      "url": `https://realtrust.ro/procesul-nostru#step-${i + 1}`,
     })),
   };
 
@@ -189,10 +189,10 @@ const ProcesulNostru = () => {
       <SEOHead
         title={t.seoTitle}
         description={t.seoDescription}
-        url="https://www.realtrust.ro/procesul-nostru"
+        url="https://realtrust.ro/procesul-nostru"
         breadcrumbItems={[
-          { name: lang === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-          { name: t.breadcrumb, url: "https://www.realtrust.ro/procesul-nostru" },
+          { name: lang === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: t.breadcrumb, url: "https://realtrust.ro/procesul-nostru" },
         ]}
       />
       <Helmet>

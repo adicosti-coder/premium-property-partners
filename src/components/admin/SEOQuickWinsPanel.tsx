@@ -559,7 +559,7 @@ export const SEOQuickWinsPanel = ({ history, overrides }: Props) => {
     let done = 0;
     for (const p of paths) {
       try {
-        const url = `https://www.realtrust.ro${p}`;
+        const url = `https://realtrust.ro${p}`;
         await supabase.functions.invoke("seo-ai-optimizer", {
           body: { url, language: "ro", forceRefresh: true },
         });

@@ -16,7 +16,7 @@ interface Props {
   overrides: OverrideRow[];
 }
 
-const SITEMAP_URL = "https://www.realtrust.ro/sitemap.xml";
+const SITEMAP_URL = "https://realtrust.ro/sitemap.xml";
 
 export const SEORedeployPanel = ({ overrides }: Props) => {
   const [running, setRunning] = useState(false);
@@ -24,7 +24,7 @@ export const SEORedeployPanel = ({ overrides }: Props) => {
 
   const activeUrls = overrides
     .filter((o) => o.is_active)
-    .map((o) => `https://www.realtrust.ro${o.url_path === "/" ? "" : o.url_path}`);
+    .map((o) => `https://realtrust.ro${o.url_path === "/" ? "" : o.url_path}`);
 
   const runRedeploy = async () => {
     setRunning(true);

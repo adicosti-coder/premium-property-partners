@@ -40,23 +40,23 @@ const NeighborhoodDetail = () => {
       <SEOHead
         title={neighborhood.metaTitle}
         description={neighborhood.metaDescription}
-        url={`https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`}
+        url={`https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`}
         jsonLd={[
           {
             "@context": "https://schema.org",
             "@type": "RealEstateListing",
             name: `Apartamente ${neighborhood.fullName} Timișoara`,
             description: neighborhood.metaDescription,
-            url: `https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
+            url: `https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
             address: { "@type": "PostalAddress", addressLocality: "Timișoara", addressRegion: "Timiș", addressCountry: "RO" },
           },
           {
             "@context": "https://schema.org",
             "@type": "LocalBusiness",
-            "@id": `https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}#localbusiness`,
+            "@id": `https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}#localbusiness`,
             name: `RealTrust & ApArt Hotel — ${neighborhood.fullName}, Timișoara`,
             description: neighborhood.description.slice(0, 300),
-            url: `https://www.realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
+            url: `https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
             telephone: "+40799069256",
             email: "info@realtrust.ro",
             priceRange: "€€",

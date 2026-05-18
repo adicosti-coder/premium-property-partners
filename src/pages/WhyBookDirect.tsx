@@ -215,12 +215,12 @@ const WhyBookDirect = () => {
         description={language === 'ro' 
           ? 'Economisește până la 15% rezervând direct pe site-ul ApArt Hotel. Beneficiază de prețuri mai bune decât pe Booking sau Airbnb, comunicare directă cu echipa noastră și flexibilitate maximă.'
           : 'Save up to 15% by booking direct on ApArt Hotel site. Get better prices than Booking or Airbnb, direct communication with our team and maximum flexibility.'}
-        url="https://www.realtrust.ro/rezerva-direct"
+        url="https://realtrust.ro/rezerva-direct"
         
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-          { name: language === "ro" ? "Oaspeți" : "Guests", url: "https://www.realtrust.ro/oaspeti" },
-          { name: language === "ro" ? "Rezervă Direct" : "Book Direct", url: "https://www.realtrust.ro/rezerva-direct" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: language === "ro" ? "Oaspeți" : "Guests", url: "https://realtrust.ro/oaspeti" },
+          { name: language === "ro" ? "Rezervă Direct" : "Book Direct", url: "https://realtrust.ro/rezerva-direct" },
         ]}
       />
       <Header />

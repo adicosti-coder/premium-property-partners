@@ -1449,7 +1449,7 @@ const SchemaCodeBlock = ({
 type ApplyMode = null | "schema" | "local_links" | "h2_briefs";
 
 const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
-  const [ourUrl, setOurUrl] = useState(defaultOurUrl || "https://www.realtrust.ro");
+  const [ourUrl, setOurUrl] = useState(defaultOurUrl || "https://realtrust.ro");
   const [compUrl, setCompUrl] = useState("");
   const [result, setResult] = useState<any>(null);
   const [applyMode, setApplyMode] = useState<ApplyMode>(null);
@@ -1613,7 +1613,7 @@ const BenchmarkTab = ({ defaultOurUrl }: { defaultOurUrl: string }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
           <label className="text-xs text-muted-foreground">URL RealTrust</label>
-          <Input value={ourUrl} onChange={(e) => setOurUrl(e.target.value)} className="h-9 mt-0.5" placeholder="https://www.realtrust.ro/..." />
+          <Input value={ourUrl} onChange={(e) => setOurUrl(e.target.value)} className="h-9 mt-0.5" placeholder="https://realtrust.ro/..." />
         </div>
         <div>
           <label className="text-xs text-muted-foreground">URL competitor</label>

@@ -531,7 +531,7 @@ const PropertyDetail = () => {
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
       "name": displayName,
-      "url": `https://www.realtrust.ro/proprietate/${slug}`,
+      "url": `https://realtrust.ro/proprietate/${slug}`,
       "image": galleryImages[0] || "",
       "aggregateRating": {
         "@type": "AggregateRating",
@@ -611,7 +611,7 @@ const PropertyDetail = () => {
             ? `${displayName} în ${property.location}, Timișoara — ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervare directă, fără comisioane suplimentare.`
             : `${displayName} in ${property.location}, Timișoara — ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct, no extra booking fees.`;
         })()}
-        url={`https://www.realtrust.ro/proprietate/${slug}`}
+        url={`https://realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
         imageAlt={(() => {
           const roi = displayRoi;

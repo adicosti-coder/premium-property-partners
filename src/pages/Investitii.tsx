@@ -212,7 +212,7 @@ const Investitii = () => {
 
   const speakableSchema = generateSpeakableSchema(
     t.title,
-    "https://www.realtrust.ro/investitii",
+    "https://realtrust.ro/investitii",
     [".page-summary", "h1", "h2"],
   );
 
@@ -221,11 +221,11 @@ const Investitii = () => {
       <SEOHead 
         title={language === "ro" ? "Investiții imobiliare în Timișoara | Randament 9,4% net țintă | RealTrust" : "Real estate investments in Timișoara | 9.4% target net yield | RealTrust"}
         description={t.metaDescription}
-        url="https://www.realtrust.ro/investitii"
+        url="https://realtrust.ro/investitii"
         jsonLd={speakableSchema}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-          { name: t.title, url: "https://www.realtrust.ro/investitii" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: t.title, url: "https://realtrust.ro/investitii" },
         ]}
       />
       <Header />

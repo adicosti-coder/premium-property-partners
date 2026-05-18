@@ -22,7 +22,7 @@ const PiataImobiliara = () => {
       <SEOHead
         title="Piața Imobiliară Timișoara 2026 — Prețuri și Tendințe | RealTrust"
         description="Prețuri medii pe metru pătrat în Timișoara, tendințe piață imobiliară 2026. Cele mai scumpe și accesibile cartiere. Date actualizate lunar."
-        url="https://www.realtrust.ro/piata-imobiliara-timisoara"
+        url="https://realtrust.ro/piata-imobiliara-timisoara"
       />
       <Header />
 
