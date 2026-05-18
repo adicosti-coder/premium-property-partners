@@ -132,10 +132,14 @@ const AutomationManager = () => {
   const [testTarget, setTestTarget] = useState<string>(TESTABLE_FUNCTIONS[0].key);
   const [testing, setTesting] = useState(false);
   const [testHistory, setTestHistory] = useState<TestResult[]>([]);
+  // Istoric rulaje + realtime
+  const [runs, setRuns] = useState<Run[]>([]);
+  const [runsFilter, setRunsFilter] = useState<string>("__all__");
+  const [realtimeOn, setRealtimeOn] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const [s, j, a] = await Promise.all([
+    const [s, j, a, r] = await Promise.all([
       supabase.from("automation_settings").select("*").eq("id", true).maybeSingle(),
       supabase.from("automation_jobs").select("*").order("category").order("label"),
       supabase
@@ -144,15 +148,46 @@ const AutomationManager = () => {
         .eq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(50),
+      supabase
+        .from("automation_runs")
+        .select("*")
+        .order("started_at", { ascending: false })
+        .limit(100),
     ]);
     setSettings(s.data as Settings | null);
     setJobs((j.data ?? []) as Job[]);
     setApprovals((a.data ?? []) as Approval[]);
+    setRuns((r.data ?? []) as Run[]);
     setLoading(false);
   };
 
   useEffect(() => {
     load();
+  }, []);
+
+  // Realtime: actualizează jobs + runs pe loc
+  useEffect(() => {
+    const channel = supabase
+      .channel("automation-control-center")
+      .on("postgres_changes", { event: "*", schema: "public", table: "automation_jobs" }, (payload) => {
+        const next = payload.new as Job;
+        if (!next?.id) return;
+        setJobs((prev) => prev.map((j) => (j.id === next.id ? { ...j, ...next } : j)));
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "automation_runs" }, (payload) => {
+        const row = payload.new as Run;
+        setRuns((prev) => [row, ...prev].slice(0, 100));
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "automation_runs" }, (payload) => {
+        const row = payload.new as Run;
+        setRuns((prev) => prev.map((r) => (r.id === row.id ? row : r)));
+      })
+      .subscribe((status) => {
+        setRealtimeOn(status === "SUBSCRIBED");
+      });
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const toggleGlobal = async (next: boolean) => {
