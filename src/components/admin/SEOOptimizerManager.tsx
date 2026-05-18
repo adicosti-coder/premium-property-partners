@@ -38,34 +38,34 @@ import { SEOIssuesPanel } from "./SEOIssuesPanel";
 
 const QUICK_URLS = [
   // Principal
-  "https://www.realtrust.ro/",
-  "https://www.realtrust.ro/despre-noi",
-  "https://www.realtrust.ro/contact",
+  "https://realtrust.ro/",
+  "https://realtrust.ro/despre-noi",
+  "https://realtrust.ro/contact",
   // Proprietari
-  "https://www.realtrust.ro/pentru-proprietari",
-  "https://www.realtrust.ro/preturi",
-  "https://www.realtrust.ro/analiza-proprietate",
-  "https://www.realtrust.ro/evaluare-gratuita",
+  "https://realtrust.ro/pentru-proprietari",
+  "https://realtrust.ro/preturi",
+  "https://realtrust.ro/analiza-proprietate",
+  "https://realtrust.ro/evaluare-gratuita",
   // Oaspeți
-  "https://www.realtrust.ro/pentru-oaspeti",
-  "https://www.realtrust.ro/oaspeti",
-  "https://www.realtrust.ro/complexe",
+  "https://realtrust.ro/pentru-oaspeti",
+  "https://realtrust.ro/oaspeti",
+  "https://realtrust.ro/complexe",
   // Investiții & Imobiliare
-  "https://www.realtrust.ro/investitii",
-  "https://www.realtrust.ro/catalog-investitii",
-  "https://www.realtrust.ro/imobiliare",
-  "https://www.realtrust.ro/imobiliare-timisoara",
-  "https://www.realtrust.ro/calculator-roi",
-  "https://www.realtrust.ro/analiza-roi-apartament",
-  "https://www.realtrust.ro/piata-imobiliara-timisoara",
+  "https://realtrust.ro/investitii",
+  "https://realtrust.ro/catalog-investitii",
+  "https://realtrust.ro/imobiliare",
+  "https://realtrust.ro/imobiliare-timisoara",
+  "https://realtrust.ro/calculator-roi",
+  "https://realtrust.ro/analiza-roi-apartament",
+  "https://realtrust.ro/piata-imobiliara-timisoara",
   // Cartiere prioritare (NeighborhoodDetail)
-  "https://www.realtrust.ro/imobiliare-timisoara/isho",
-  "https://www.realtrust.ro/imobiliare-timisoara/iosefin",
-  "https://www.realtrust.ro/imobiliare-timisoara/dumbravita",
-  "https://www.realtrust.ro/imobiliare-timisoara/giroc",
-  "https://www.realtrust.ro/imobiliare-timisoara/complex-studentesc",
+  "https://realtrust.ro/imobiliare-timisoara/isho",
+  "https://realtrust.ro/imobiliare-timisoara/iosefin",
+  "https://realtrust.ro/imobiliare-timisoara/dumbravita",
+  "https://realtrust.ro/imobiliare-timisoara/giroc",
+  "https://realtrust.ro/imobiliare-timisoara/complex-studentesc",
   // Informații
-  "https://www.realtrust.ro/blog",
+  "https://realtrust.ro/blog",
 ];
 
 interface AuditRow {
@@ -94,7 +94,7 @@ interface AuditRow {
 
 const SEOOptimizerManager = () => {
   const qc = useQueryClient();
-  const [url, setUrl] = useState("https://www.realtrust.ro/");
+  const [url, setUrl] = useState("https://realtrust.ro/");
   const [language, setLanguage] = useState<"ro" | "en">("ro");
   const [selectedAudit, setSelectedAudit] = useState<AuditRow | null>(null);
   const [filter, setFilter] = useState("");
@@ -670,7 +670,7 @@ const SEOOptimizerManager = () => {
             <Input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://www.realtrust.ro/..."
+              placeholder="https://realtrust.ro/..."
               className="flex-1"
             />
             <select
@@ -740,7 +740,7 @@ const SEOOptimizerManager = () => {
           <div className="flex flex-wrap gap-2 items-center">
             {QUICK_URLS.map((u) => (
               <Button key={u} variant="outline" size="sm" onClick={() => setUrl(u)}>
-                {u.replace("https://www.realtrust.ro", "") || "/"}
+                {u.replace("https://realtrust.ro", "") || "/"}
               </Button>
             ))}
             <Button

@@ -35,7 +35,7 @@ const ExpertSignature = ({ authorName, className = "" }: ExpertSignatureProps) =
     "worksFor": {
       "@type": "Organization",
       "name": "RealTrust & ApArt Hotel Timișoara",
-      "url": "https://www.realtrust.ro",
+      "url": "https://realtrust.ro",
     },
     "sameAs": [expert.linkedin],
     "knowsAbout": [

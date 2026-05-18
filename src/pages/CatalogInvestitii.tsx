@@ -46,7 +46,7 @@ interface Property {
 }
 
 const PROPERTY_IMAGES_BUCKET = "property-images";
-const CATALOG_URL = "https://www.realtrust.ro/catalog-investitii";
+const CATALOG_URL = "https://realtrust.ro/catalog-investitii";
 
 const localAssetImageMap = Object.entries(
   import.meta.glob("../assets/*.{avif,gif,jpg,jpeg,png,svg,webp}", {

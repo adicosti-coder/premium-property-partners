@@ -267,7 +267,7 @@ const Preturi = () => {
 
   useRegisterFAQs("preturi-administrare", pricingFaqItems);
 
-  const BASE_URL = "https://www.realtrust.ro";
+  const BASE_URL = "https://realtrust.ro";
 
   const realEstateAgentSchema = {
     "@context": "https://schema.org",

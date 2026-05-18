@@ -91,16 +91,16 @@ const BlogCategory = () => {
 
   const schemas = [
     generateBreadcrumbSchema([
-      { name: "Acasă", url: "https://www.realtrust.ro" },
-      { name: "Blog", url: "https://www.realtrust.ro/blog" },
-      { name: meta.name, url: `https://www.realtrust.ro/blog/categorie/${meta.slug}` },
+      { name: "Acasă", url: "https://realtrust.ro" },
+      { name: "Blog", url: "https://realtrust.ro/blog" },
+      { name: meta.name, url: `https://realtrust.ro/blog/categorie/${meta.slug}` },
     ]),
     {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
       name: meta.title,
       description: meta.description,
-      url: `https://www.realtrust.ro/blog/categorie/${meta.slug}`,
+      url: `https://realtrust.ro/blog/categorie/${meta.slug}`,
     },
   ];
 
@@ -109,7 +109,7 @@ const BlogCategory = () => {
       <SEOHead
         title={meta.title}
         description={meta.description}
-        url={`https://www.realtrust.ro/blog/categorie/${meta.slug}`}
+        url={`https://realtrust.ro/blog/categorie/${meta.slug}`}
         jsonLd={schemas}
       />
       <Header />

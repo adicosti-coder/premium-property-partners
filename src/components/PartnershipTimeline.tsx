@@ -110,17 +110,17 @@ const PartnershipTimeline = () => {
     "inLanguage": language === "en" ? "en-US" : "ro-RO",
     "author": {
       "@type": "Person",
-      "@id": "https://www.realtrust.ro/despre-noi#adrian-costi",
+      "@id": "https://realtrust.ro/despre-noi#adrian-costi",
       "name": "Adrian Costi",
-      "url": "https://www.realtrust.ro/despre-noi",
+      "url": "https://realtrust.ro/despre-noi",
     },
     "publisher": {
       "@type": "Organization",
       "name": "RealTrust & ApArt Hotel Timișoara",
-      "url": "https://www.realtrust.ro",
+      "url": "https://realtrust.ro",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
+        "url": "https://realtrust.ro/images/hero-optimized-800w.webp",
         "width": 800,
         "height": 450,
       },
@@ -130,7 +130,7 @@ const PartnershipTimeline = () => {
       "position": i + 1,
       "name": s.title,
       "text": s.description,
-      "url": `https://www.realtrust.ro/pentru-proprietari#step-${i + 1}`,
+      "url": `https://realtrust.ro/pentru-proprietari#step-${i + 1}`,
     })),
   };
 

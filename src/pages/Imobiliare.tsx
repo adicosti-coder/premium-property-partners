@@ -161,8 +161,8 @@ const Imobiliare = () => {
   // Generate Schema.org structured data
   const realEstateAgentSchema = generateRealEstateAgentSchema();
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: "Acasă", url: "https://www.realtrust.ro" },
-    { name: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services", url: "https://www.realtrust.ro/imobiliare" }
+    { name: "Acasă", url: "https://realtrust.ro" },
+    { name: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services", url: "https://realtrust.ro/imobiliare" }
   ]);
 
   return (
@@ -170,7 +170,7 @@ const Imobiliare = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://www.realtrust.ro/imobiliare"
+        url="https://realtrust.ro/imobiliare"
         jsonLd={[realEstateAgentSchema, breadcrumbSchema]}
       />
       <Header />

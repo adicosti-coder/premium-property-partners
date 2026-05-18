@@ -179,8 +179,8 @@ const Complexe = () => {
   }, []);
 
   const breadcrumbItems = [
-    { name: "Acasă", url: "https://www.realtrust.ro" },
-    { name: "Complexe Rezidențiale", url: "https://www.realtrust.ro/complexe" },
+    { name: "Acasă", url: "https://realtrust.ro" },
+    { name: "Complexe Rezidențiale", url: "https://realtrust.ro/complexe" },
   ];
 
   const jsonLd = {
@@ -188,9 +188,9 @@ const Complexe = () => {
     "@graph": [
       {
         "@type": "RealEstateAgent",
-        "@id": "https://www.realtrust.ro/#organization",
+        "@id": "https://realtrust.ro/#organization",
         "name": "RealTrust & ApArt Hotel",
-        "url": "https://www.realtrust.ro",
+        "url": "https://realtrust.ro",
         "areaServed": {
           "@type": "City",
           "name": "Timișoara",
@@ -210,7 +210,7 @@ const Complexe = () => {
             "itemOffered": {
               "@type": "ApartmentComplex",
               "name": complex.name,
-              "url": `https://www.realtrust.ro/complex/${complex.slug}`,
+              "url": `https://realtrust.ro/complex/${complex.slug}`,
               "address": {
                 "@type": "PostalAddress",
                 "addressLocality": "Timișoara",
@@ -231,7 +231,7 @@ const Complexe = () => {
           "item": {
             "@type": "ApartmentComplex",
             "name": complex.name,
-            "url": `https://www.realtrust.ro/complex/${complex.slug}`,
+            "url": `https://realtrust.ro/complex/${complex.slug}`,
             "address": {
               "@type": "PostalAddress",
               "addressLocality": "Timișoara",
@@ -249,7 +249,7 @@ const Complexe = () => {
       <SEOHead
         title={t.title}
         description={t.metaDescription}
-        url="https://www.realtrust.ro/complexe"
+        url="https://realtrust.ro/complexe"
         jsonLd={jsonLd}
         breadcrumbItems={breadcrumbItems}
       />

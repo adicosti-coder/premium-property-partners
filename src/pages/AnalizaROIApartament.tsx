@@ -162,7 +162,7 @@ const AnalizaROIApartament = () => {
       <SEOHead
         title="Analiza ROI Apartament | Randament investiții imobiliare"
         description="Analiză profit apartament România: calculează randament investiții imobiliare, ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe."
-        url="https://www.realtrust.ro/analiza-roi-apartament"
+        url="https://realtrust.ro/analiza-roi-apartament"
         jsonLd={{
           "@context": "https://schema.org",
           "@graph": [
@@ -170,7 +170,7 @@ const AnalizaROIApartament = () => {
               "@type": "FinancialProduct",
               name: "Analiza ROI Apartament România",
               description: "Calculator interactiv pentru randament investiții imobiliare, profit apartament și proiecții de apreciere a prețurilor în România.",
-              url: "https://www.realtrust.ro/analiza-roi-apartament",
+              url: "https://realtrust.ro/analiza-roi-apartament",
               provider: { "@type": "RealEstateAgent", name: "RealTrust & ApArt Hotel", areaServed: "România" },
             },
             {

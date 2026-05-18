@@ -300,7 +300,7 @@ const AnalizaProprietate = () => {
       "@context": "https://schema.org",
       "@type": ["RealEstateAgent", "LocalBusiness"],
       "name": "RealTrust Timișoara",
-      "url": "https://www.realtrust.ro/analiza-proprietate",
+      "url": "https://realtrust.ro/analiza-proprietate",
       "telephone": "+40799069256",
       "email": "info@realtrust.ro",
       "address": {
@@ -337,12 +337,12 @@ const AnalizaProprietate = () => {
       <SEOHead
         title={text.pageTitle}
         description={text.pageDesc}
-        url="https://www.realtrust.ro/analiza-proprietate"
+        url="https://realtrust.ro/analiza-proprietate"
         jsonLd={jsonLdSchemas}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-          { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://www.realtrust.ro/pentru-proprietari" },
-          { name: language === "ro" ? "Analiză AI Proprietate" : "AI Property Analysis", url: "https://www.realtrust.ro/analiza-proprietate" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://realtrust.ro/pentru-proprietari" },
+          { name: language === "ro" ? "Analiză AI Proprietate" : "AI Property Analysis", url: "https://realtrust.ro/analiza-proprietate" },
         ]}
       />
       <Header />

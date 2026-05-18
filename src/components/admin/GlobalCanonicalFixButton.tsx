@@ -64,7 +64,7 @@ export const GlobalCanonicalFixButton = () => {
             <Zap className="h-5 w-5 text-primary" /> Bulk Canonical Fix — toate paginile
           </DialogTitle>
           <DialogDescription>
-            Generează canonical-ul normalizat (https://www.realtrust.ro + path lowercase, fără query/hash/trailing slash) pentru toate paginile auditate. Verifică automat conflictele cu robots.txt (cache 24h) și meta robots.
+            Generează canonical-ul normalizat (https://realtrust.ro + path lowercase, fără query/hash/trailing slash) pentru toate paginile auditate. Verifică automat conflictele cu robots.txt (cache 24h) și meta robots.
           </DialogDescription>
         </DialogHeader>
 

@@ -229,12 +229,12 @@ const ComplexLanding = () => {
       <SEOHead
         title={`Apartament în ${complex.name}, în regim hotelier — Timișoara | RealTrust`}
         description={`Apartamente în regim hotelier în ${complex.name}, Timișoara. ROI net țintă ${complex.roi} pe ipoteze publice (ocupare 75%, deducere 27%), venit lunar estimat ${complex.avgIncome}, ocupare ${complex.occupancy}. Administrare end-to-end.`}
-        url={`https://www.realtrust.ro/complexe/${complex.slug}`}
+        url={`https://realtrust.ro/complexe/${complex.slug}`}
         jsonLd={jsonLd}
         breadcrumbItems={[
-          { name: isRo ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-          { name: isRo ? "Complexe" : "Complexes", url: "https://www.realtrust.ro/complexe" },
-          { name: complex.name, url: `https://www.realtrust.ro/complexe/${complex.slug}` },
+          { name: isRo ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: isRo ? "Complexe" : "Complexes", url: "https://realtrust.ro/complexe" },
+          { name: complex.name, url: `https://realtrust.ro/complexe/${complex.slug}` },
         ]}
       />
 

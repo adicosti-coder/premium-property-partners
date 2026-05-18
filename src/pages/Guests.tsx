@@ -540,11 +540,11 @@ const hasActiveFilters = searchQuery || checkInParam || checkOutParam || request
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://www.realtrust.ro/oaspeti"
+        url="https://realtrust.ro/oaspeti"
         jsonLd={itemListSchema}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-          { name: language === "ro" ? "Apartamente" : "Apartments", url: "https://www.realtrust.ro/oaspeti" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: language === "ro" ? "Apartamente" : "Apartments", url: "https://realtrust.ro/oaspeti" },
         ]}
       />
       <Header />

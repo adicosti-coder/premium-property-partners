@@ -496,7 +496,7 @@ export const SEOSchemaGeneratorPanel = ({ history, overrides }: Props) => {
                   toast.success("Copiat");
                 }}>Copiază JSON</Button>
                 <Button size="sm" variant="outline" asChild>
-                  <a href={`https://search.google.com/test/rich-results?url=${encodeURIComponent("https://www.realtrust.ro" + previewRow.path)}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`https://search.google.com/test/rich-results?url=${encodeURIComponent("https://realtrust.ro" + previewRow.path)}`} target="_blank" rel="noopener noreferrer">
                     Test Google
                   </a>
                 </Button>

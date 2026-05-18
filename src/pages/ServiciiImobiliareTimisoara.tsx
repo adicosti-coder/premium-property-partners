@@ -13,7 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
-const BASE_URL = "https://www.realtrust.ro";
+const BASE_URL = "https://realtrust.ro";
 
 const ServiciiImobiliareTimisoara = () => {
   const { language } = useLanguage();

@@ -243,7 +243,7 @@ const NeighborhoodCluster = () => {
   const n = slug ? data[slug] : null;
   if (!n) return <Navigate to="/imobiliare-timisoara" replace />;
 
-  const url = `https://www.realtrust.ro/cartier/${n.slug}`;
+  const url = `https://realtrust.ro/cartier/${n.slug}`;
   const hero = isRo ? n.hero.ro : n.hero.en;
   const intro = isRo ? n.intro.ro : n.intro.en;
   const faqs = isRo ? n.faqs.ro : n.faqs.en;
@@ -274,9 +274,9 @@ const NeighborhoodCluster = () => {
     {
       "@context": "https://schema.org",
       "@type": "RealEstateAgent",
-      "@id": "https://www.realtrust.ro/#realestateagent",
+      "@id": "https://realtrust.ro/#realestateagent",
       name: "RealTrust & ApArt Hotel Timișoara",
-      url: "https://www.realtrust.ro",
+      url: "https://realtrust.ro",
       areaServed: {
         "@type": "Place",
         name: `${n.name}, Timișoara`,
@@ -323,10 +323,10 @@ const NeighborhoodCluster = () => {
         url={url}
         jsonLd={schemas}
         breadcrumbItems={[
-          { name: isRo ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
+          { name: isRo ? "Acasă" : "Home", url: "https://realtrust.ro" },
           {
             name: isRo ? "Imobiliare Timișoara" : "Timișoara Real Estate",
-            url: "https://www.realtrust.ro/imobiliare-timisoara",
+            url: "https://realtrust.ro/imobiliare-timisoara",
           },
           { name: n.name, url },
         ]}

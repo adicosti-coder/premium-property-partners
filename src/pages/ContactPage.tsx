@@ -12,7 +12,7 @@ import QuickContactForm from "@/components/contact/QuickContactForm";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
-const BASE_URL = "https://www.realtrust.ro";
+const BASE_URL = "https://realtrust.ro";
 const GOOGLE_BUSINESS_URL = "https://share.google/oNmn1ltr7L0OEiHet";
 const GOOGLE_MAPS_QUERY = encodeURIComponent("Strada Samuil Micu 14, Timișoara");
 const GOOGLE_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${GOOGLE_MAPS_QUERY}`;

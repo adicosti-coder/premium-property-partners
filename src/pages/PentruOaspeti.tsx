@@ -322,8 +322,8 @@ const PentruOaspeti = () => {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
     "name": "ApArt Hotel by RealTrust — Cazare Regim Hotelier Timișoara",
-    "url": "https://www.realtrust.ro/pentru-oaspeti",
-    "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
+    "url": "https://realtrust.ro/pentru-oaspeti",
+    "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
     "priceRange": "€45 – €120 / noapte",
     "telephone": "+40723154520",
     "address": {
@@ -364,7 +364,7 @@ const PentruOaspeti = () => {
         description={language === "ro" 
           ? "Apartamente în regim hotelier în Timișoara, lângă UVT, Iulius Town, aeroport și Centru. Parcare gratuită, self check-in non-stop, rezervare directă fără comision intermediar."
           : "Looking for short-term rental in Timișoara? Premium apartments near UVT, Iulius Town, Airport and Old Town. Free parking, 24/7 self check-in. Book direct!"}
-        url="https://www.realtrust.ro/pentru-oaspeti"
+        url="https://realtrust.ro/pentru-oaspeti"
         jsonLd={lodgingJsonLd}
       />
       <Header />

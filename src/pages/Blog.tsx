@@ -258,15 +258,15 @@ const Blog = () => {
   const blogSchemas = useMemo(() => {
     const schemas: Record<string, unknown>[] = [
       generateBreadcrumbSchema([
-        { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-        { name: "Blog", url: "https://www.realtrust.ro/blog" },
+        { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+        { name: "Blog", url: "https://realtrust.ro/blog" },
       ]),
       // Blog schema
       {
         "@context": "https://schema.org",
         "@type": "Blog",
         "name": "Blog RealTrust — Investiții Imobiliare Timișoara",
-        "url": "https://www.realtrust.ro/blog",
+        "url": "https://realtrust.ro/blog",
         "publisher": {
           "@type": "Organization",
           "name": "RealTrust & ApArt Hotel"
@@ -276,14 +276,14 @@ const Blog = () => {
       {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        "@id": "https://www.realtrust.ro/blog#webpage",
-        "url": "https://www.realtrust.ro/blog",
+        "@id": "https://realtrust.ro/blog#webpage",
+        "url": "https://realtrust.ro/blog",
         "name": "Ghid Imobiliar Timișoara — Investiții, Vânzări & Regim Hotelier",
         "description": "Hub editorial RealTrust: analiza pieței imobiliare Timișoara, evaluare apartament, randament chirie clasic vs regim hotelier și ghiduri pe cartiere.",
         "inLanguage": language === "ro" ? "ro-RO" : "en-US",
         "primaryImageOfPage": {
           "@type": "ImageObject",
-          "url": "https://www.realtrust.ro/images/hero-optimized-1920w.webp"
+          "url": "https://realtrust.ro/images/hero-optimized-1920w.webp"
         },
         "about": [
           { "@type": "Thing", "name": "Investiții imobiliare Timișoara" },
@@ -296,12 +296,12 @@ const Blog = () => {
       {
         "@context": "https://schema.org",
         "@type": "RealEstateAgent",
-        "@id": "https://www.realtrust.ro/#realestateagent",
+        "@id": "https://realtrust.ro/#realestateagent",
         "name": "RealTrust Imobiliare Timișoara",
-        "url": "https://www.realtrust.ro",
+        "url": "https://realtrust.ro",
         "telephone": "+40799069256",
         "email": "info@realtrust.ro",
-        "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
+        "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
         "priceRange": "€€",
         "areaServed": {
           "@type": "City",
@@ -336,7 +336,7 @@ const Blog = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://www.realtrust.ro/blog"
+        url="https://realtrust.ro/blog"
         jsonLd={blogSchemas}
       />
       <Header />

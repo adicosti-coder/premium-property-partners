@@ -242,7 +242,7 @@ const PentruProprietari = () => {
   useEffect(() => {
     import("@/utils/schemaGenerators").then(({ generatePropertyManagementServiceSchema, generateSpeakableSchema }) => {
       const serviceSchema = generatePropertyManagementServiceSchema();
-      const speakable = generateSpeakableSchema(seo.title, "https://www.realtrust.ro/pentru-proprietari");
+      const speakable = generateSpeakableSchema(seo.title, "https://realtrust.ro/pentru-proprietari");
       // Fix 3B - Service schema
       const serviceSchemaFix3B = {
         "@context": "https://schema.org",
@@ -262,31 +262,31 @@ const PentruProprietari = () => {
       const realEstateAgentSchema = {
         "@context": "https://schema.org",
         "@type": "RealEstateAgent",
-        "@id": "https://www.realtrust.ro/#realestateagent",
+        "@id": "https://realtrust.ro/#realestateagent",
         "name": "RealTrust & ApArt Hotel Timișoara",
         "alternateName": "RealTrust",
-        "url": "https://www.realtrust.ro/pentru-proprietari",
+        "url": "https://realtrust.ro/pentru-proprietari",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://www.realtrust.ro/images/hero-optimized-800w.webp",
+          "url": "https://realtrust.ro/images/hero-optimized-800w.webp",
           "width": 800,
           "height": 450,
         },
-        "image": "https://www.realtrust.ro/images/hero-optimized-1920w.webp",
+        "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
         "telephone": "+40799069256",
         "email": "info@realtrust.ro",
         "foundingDate": "2001",
         "founder": {
           "@type": "Person",
-          "@id": "https://www.realtrust.ro/despre-noi#adrian-costi",
+          "@id": "https://realtrust.ro/despre-noi#adrian-costi",
           "name": "Adrian Costi",
           "jobTitle": "Founder & CEO",
-          "url": "https://www.realtrust.ro/despre-noi",
+          "url": "https://realtrust.ro/despre-noi",
           "worksFor": { "@type": "Organization", "name": "RealTrust" },
         },
         "employee": {
           "@type": "Person",
-          "@id": "https://www.realtrust.ro/despre-noi#adrian-costi",
+          "@id": "https://realtrust.ro/despre-noi#adrian-costi",
         },
         "sameAs": [
           "https://www.facebook.com/realtrust.ro",
@@ -420,16 +420,16 @@ const PentruProprietari = () => {
       const taxAdvisorySchema = {
         "@context": "https://schema.org",
         "@type": ["Service", "FinancialProduct"],
-        "@id": "https://www.realtrust.ro/pentru-proprietari/#tax-advisory",
+        "@id": "https://realtrust.ro/pentru-proprietari/#tax-advisory",
         "serviceType": "TaxConsulting",
         "category": "Real Estate Tax Optimization",
         "name": "Consultanță Fiscală Regim Hotelier Timișoara — PFA vs SRL",
         "alternateName": "Tax Advisory for Short-Term Rentals (Romania)",
         "provider": {
           "@type": "RealEstateAgent",
-          "@id": "https://www.realtrust.ro/#realestateagent",
+          "@id": "https://realtrust.ro/#realestateagent",
           "name": "RealTrust Aparthotel",
-          "url": "https://www.realtrust.ro",
+          "url": "https://realtrust.ro",
           "areaServed": { "@type": "City", "name": "Timișoara" },
           "knowsAbout": [
             "PFA Cazare Turistică",
@@ -453,7 +453,7 @@ const PentruProprietari = () => {
           "priceCurrency": "EUR",
           "availability": "https://schema.org/InStock",
           "description": "Analiză fiscală gratuită — comparație PFA vs SRL personalizată pe portofoliu",
-          "url": "https://www.realtrust.ro/pentru-proprietari"
+          "url": "https://realtrust.ro/pentru-proprietari"
         },
         "hasOfferCatalog": {
           "@type": "OfferCatalog",
@@ -479,11 +479,11 @@ const PentruProprietari = () => {
       <SEOHead 
         title={seo.title}
         description={seo.description}
-        url="https://www.realtrust.ro/pentru-proprietari"
+        url="https://realtrust.ro/pentru-proprietari"
         jsonLd={schemas}
         breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://www.realtrust.ro" },
-          { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://www.realtrust.ro/pentru-proprietari" },
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://realtrust.ro/pentru-proprietari" },
         ]}
       />
       <Header />
