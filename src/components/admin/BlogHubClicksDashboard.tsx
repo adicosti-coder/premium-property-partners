@@ -39,6 +39,7 @@ const BlogHubClicksDashboard = () => {
   const [customStart, setCustomStart] = useState<string>(format(subDays(new Date(), 30), "yyyy-MM-dd"));
   const [customEnd, setCustomEnd] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [trendLocation, setTrendLocation] = useState<string>("all");
+  const [trendChartType, setTrendChartType] = useState<"line" | "bar">("line");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isCustom = dateRange === "custom";
