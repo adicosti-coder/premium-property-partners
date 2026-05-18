@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent } from "lucide-react";
+import { BarChart3, MapPin, MousePointerClick, LayoutGrid, Percent, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { slugifyLocation } from "@/lib/blogLocations";
@@ -132,6 +133,27 @@ const BlogHubClicksDashboard = () => {
 
   if (isLoading) return <Skeleton className="h-96 w-full" />;
 
+  const handleExportCsv = useCallback(() => {
+    const headers = ["Locatie", "Afișări", "Click-uri Inline", "Click-uri Card", "Total Click-uri", "Click-uri Unice", "CTR %"];
+    const csvRows = rows.map((r) => [
+      r.location,
+      r.impressions,
+      r.inline,
+      r.card,
+      r.total,
+      r.uniqueTotal,
+      r.ctr.toFixed(2),
+    ]);
+    const csv = [headers.join(";"), ...csvRows.map((r) => r.join(";"))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hub-clicks-${dateRange}zile-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [rows, dateRange]);
+
   const fmtCtr = (v: number) => (v > 0 ? `${v.toFixed(2)}%` : "—");
 
   return (
@@ -145,17 +167,22 @@ const BlogHubClicksDashboard = () => {
             Click-uri pe linkurile către hub-urile de locație din articole + CTR vs. afișările articolelor.
           </p>
         </div>
-        <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Ultimele 7 zile</SelectItem>
-            <SelectItem value="30">Ultimele 30 zile</SelectItem>
-            <SelectItem value="90">Ultimele 90 zile</SelectItem>
-            <SelectItem value="365">Ultimul an</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-1.5">
+            <Download className="w-4 h-4" /> Export CSV
+          </Button>
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Ultimele 7 zile</SelectItem>
+              <SelectItem value="30">Ultimele 30 zile</SelectItem>
+              <SelectItem value="90">Ultimele 90 zile</SelectItem>
+              <SelectItem value="365">Ultimul an</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
