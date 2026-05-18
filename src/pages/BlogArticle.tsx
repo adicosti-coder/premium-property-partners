@@ -654,6 +654,34 @@ const BlogArticlePage = () => {
             {/* Auto-generated FAQ per article */}
             <ArticleFAQ category={article.category} articleTitle={displayTitle} />
 
+            {/* Location hub cross-link card */}
+            {geoLocation && (
+              <Link
+                to={`/blog/locatie/${slugifyLocation(geoLocation)}`}
+                className="mt-8 flex items-center justify-between gap-4 p-5 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40 transition-colors group"
+                aria-label={`Vezi mai multe articole despre ${geoLocation}`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {language === "ro" ? "Hub locație" : "Location hub"}
+                    </div>
+                    <div className="font-semibold text-foreground truncate">
+                      {language === "ro"
+                        ? `Vezi mai multe articole despre ${geoLocation}`
+                        : `See more articles about ${geoLocation}`}
+                    </div>
+                  </div>
+                </div>
+                <span className="shrink-0 text-sm text-primary font-medium group-hover:translate-x-0.5 transition-transform">
+                  →
+                </span>
+              </Link>
+            )}
+
           {/* Investor Guide CTA - only for investment-related articles */}
           {(article.category === "Investiții" || article.tags.some(tag => 
             tag.toLowerCase().includes("investiț") || 
