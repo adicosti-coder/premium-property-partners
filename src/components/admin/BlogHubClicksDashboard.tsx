@@ -33,9 +33,12 @@ const PRESET_RANGES = ["7", "30", "90", "365"] as const;
 type PresetRange = (typeof PRESET_RANGES)[number];
 
 const BlogHubClicksDashboard = () => {
+  const queryClient = useQueryClient();
   const [dateRange, setDateRange] = useState< PresetRange | "custom">("30");
   const [customStart, setCustomStart] = useState<string>(format(subDays(new Date(), 30), "yyyy-MM-dd"));
   const [customEnd, setCustomEnd] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+  const [trendLocation, setTrendLocation] = useState<string>("all");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isCustom = dateRange === "custom";
   const days = isCustom ? 0 : parseInt(dateRange);
@@ -55,6 +58,21 @@ const BlogHubClicksDashboard = () => {
   const dateLabel = isCustom
     ? `${format(startDate, "dd.MM.yyyy")} – ${format(endDate, "dd.MM.yyyy")}`
     : `Ultimele ${days} zile`;
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["blog-hub-clicks"] });
+      await queryClient.invalidateQueries({ queryKey: ["blog-hub-impressions"] });
+      await queryClient.refetchQueries({ queryKey: ["blog-hub-clicks"] });
+      await queryClient.refetchQueries({ queryKey: ["blog-hub-impressions"] });
+      toast.success("Date reîmprospătate din baza de date.");
+    } catch (e) {
+      toast.error("Refresh eșuat. Încearcă din nou.");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [queryClient]);
 
   const { data: clicks, isLoading } = useQuery({
     queryKey: ["blog-hub-clicks", dateRange, customStart, customEnd],
