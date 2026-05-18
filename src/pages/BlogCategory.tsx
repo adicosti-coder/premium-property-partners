@@ -80,37 +80,57 @@ const BlogCategory = () => {
 
   const total = articles?.length ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
   const paged = useMemo(
-    () => (articles ?? []).slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [articles, page]
+    () => (articles ?? []).slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [articles, safePage]
   );
+
+  const goToPage = (n: number) => {
+    const next = new URLSearchParams(searchParams);
+    if (n <= 1) next.delete("page");
+    else next.set("page", String(n));
+    setSearchParams(next, { replace: false });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const setPage = (updater: number | ((p: number) => number)) => {
+    const n = typeof updater === "function" ? updater(safePage) : updater;
+    goToPage(n);
+  };
 
   const breadcrumbItems = [
     { label: "Blog", href: "/blog" },
     { label: meta.name },
   ];
 
+  const pathBase = `/blog/categorie/${meta.slug}`;
+  // Self-referential canonical per page (Google deprecated rel=prev/next).
+  const canonicalQuery = safePage > 1 ? `?page=${safePage}` : undefined;
+  const canonicalUrl = `https://realtrust.ro${pathBase}${canonicalQuery ?? ""}`;
+  const pageSuffix = safePage > 1 ? ` — Pagina ${safePage}` : "";
+
   const schemas = [
     generateBreadcrumbSchema([
       { name: "Acasă", url: "https://realtrust.ro" },
       { name: "Blog", url: "https://realtrust.ro/blog" },
-      { name: meta.name, url: `https://realtrust.ro/blog/categorie/${meta.slug}` },
+      { name: meta.name, url: `https://realtrust.ro${pathBase}` },
     ]),
     {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
-      name: meta.title,
+      name: `${meta.title}${pageSuffix}`,
       description: meta.description,
-      url: `https://realtrust.ro/blog/categorie/${meta.slug}`,
+      url: canonicalUrl,
     },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={meta.title}
+        title={`${meta.title}${pageSuffix}`}
         description={meta.description}
-        url={`https://realtrust.ro/blog/categorie/${meta.slug}`}
+        url={pathBase}
+        canonicalQuery={canonicalQuery}
         jsonLd={schemas}
       />
       <Header />
