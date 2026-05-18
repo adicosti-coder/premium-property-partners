@@ -121,7 +121,10 @@ const Hero = () => {
             className="w-full h-full object-cover hero-kenburns"
             width={1600}
             height={894}
-            fetchPriority="high"
+            // React <18.3 doesn't whitelist camelCase fetchPriority — emits a
+            // dev warning. Pass the DOM-spec attribute (lowercase) via spread
+            // so the warning is silenced while the browser still gets the hint.
+            {...({ fetchpriority: "high" } as Record<string, string>)}
             decoding="async"
             loading="eager"
           />
@@ -138,7 +141,7 @@ const Hero = () => {
               className="w-full h-full object-cover object-center hero-kenburns"
               width={800}
               height={447}
-              fetchPriority="high"
+              {...({ fetchpriority: "high" } as Record<string, string>)}
               decoding="async"
               loading="eager"
             />
