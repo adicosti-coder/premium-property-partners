@@ -23,12 +23,12 @@ Deno.serve(async (req) => {
   const weekAgo = new Date(now.getTime() - 7 * day).toISOString();
   const twoWeeksAgo = new Date(now.getTime() - 14 * day).toISOString();
 
-  // Pull audit snapshots from last 14 days
+  // Pull audit snapshots from last 14 days (schema: url, overall_score, created_at)
   const { data: snapshots, error } = await supabase
     .from("seo_audit_snapshots")
-    .select("page, health_score, captured_at")
-    .gte("captured_at", twoWeeksAgo)
-    .order("captured_at", { ascending: false })
+    .select("url, overall_score, created_at")
+    .gte("created_at", twoWeeksAgo)
+    .order("created_at", { ascending: false })
     .limit(2000);
 
   if (error) {
@@ -37,14 +37,13 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Fallback: if seo_audit_snapshots missing/empty, use current seo_page_audits vs seo_audits history
   const byPage = new Map<string, { recent: number[]; previous: number[] }>();
-  for (const s of snapshots ?? []) {
-    if (!s.page || s.health_score == null) continue;
-    const bucket = byPage.get(s.page) ?? { recent: [], previous: [] };
-    if (s.captured_at >= weekAgo) bucket.recent.push(s.health_score);
-    else bucket.previous.push(s.health_score);
-    byPage.set(s.page, bucket);
+  for (const s of (snapshots ?? []) as Array<{ url: string; overall_score: number; created_at: string }>) {
+    if (!s.url || s.overall_score == null) continue;
+    const bucket = byPage.get(s.url) ?? { recent: [], previous: [] };
+    if (s.created_at >= weekAgo) bucket.recent.push(s.overall_score);
+    else bucket.previous.push(s.overall_score);
+    byPage.set(s.url, bucket);
   }
 
   const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
