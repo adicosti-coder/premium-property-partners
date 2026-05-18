@@ -448,7 +448,26 @@ const BlogArticlePage = () => {
     { name: "Blog", url: "https://realtrust.ro/blog" },
     { name: displayTitle, url: articleUrl },
   ]);
-...
+
+  // Add HowTo schema for guide/how-to articles
+  const isGuideArticle = article.category?.toLowerCase().includes("ghid") || 
+    article.tags?.some(t => t.toLowerCase().includes("ghid") || t.toLowerCase().includes("how-to") || t.toLowerCase().includes("cum să"));
+  
+  const combinedJsonLd: Record<string, unknown>[] = [articleSchemaData, breadcrumbSchemaData];
+  
+  if (isGuideArticle) {
+    const h2Regex = /<h2[^>]*>(.*?)<\/h2>/gi;
+    const steps: { name: string; text: string }[] = [];
+    let match;
+    while ((match = h2Regex.exec(displayContent)) !== null) {
+      const stepName = match[1].replace(/<[^>]+>/g, "").trim();
+      if (stepName) steps.push({ name: stepName, text: stepName });
+    }
+    if (steps.length >= 2) {
+      combinedJsonLd.push(generateHowToSchema(displayTitle, displayExcerpt, steps));
+    }
+  }
+
   const breadcrumbItems = [
     { label: "Blog", href: "/blog" },
     { label: displayTitle }
