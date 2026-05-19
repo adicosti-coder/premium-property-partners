@@ -131,6 +131,7 @@ const AutomationManager = () => {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [pendingToggle, setPendingToggle] = useState<string | null>(null);
   const [runningJob, setRunningJob] = useState<string | null>(null);
+  const [runningAll, setRunningAll] = useState(false);
   // Mod test
   const [testTarget, setTestTarget] = useState<string>(TESTABLE_FUNCTIONS[0].key);
   const [testing, setTesting] = useState(false);
