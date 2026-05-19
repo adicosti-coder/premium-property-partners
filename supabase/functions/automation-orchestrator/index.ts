@@ -259,7 +259,7 @@ async function runCanonicalConflictScan(dryRun: boolean) {
     if (u.search) issues.push("query_in_sitemap_url");
     if (u.hash) issues.push("hash_in_sitemap_url");
     if (u.pathname !== "/" && u.pathname.endsWith("/")) issues.push("trailing_slash");
-    if (u.hostname !== "www.realtrust.ro") issues.push("non_www_host");
+    if (!["realtrust.ro", "www.realtrust.ro"].includes(u.hostname)) issues.push("unexpected_host");
     return issues.length ? [{ url, issues }] : [];
   });
 
