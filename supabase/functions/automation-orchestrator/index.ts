@@ -239,7 +239,20 @@ async function runCanonicalConflictScan(dryRun: boolean) {
   const res = await fetch(sitemapUrl, { headers: { "User-Agent": "RealTrust canonical scanner" } });
   if (!res.ok) throw new Error(`sitemap ${res.status}`);
   const xml = await res.text();
-  const urls = Array.from(xml.matchAll(/<url>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g)).map((m) => m[1]).slice(0, 500);
+  let urls = Array.from(xml.matchAll(/<url>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g)).map((m) => m[1]);
+  if (urls.length === 0) {
+    const childSitemaps = Array.from(xml.matchAll(/<sitemap>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<\/sitemap>/g)).map((m) => m[1]).slice(0, 5);
+    const childXml = await Promise.all(childSitemaps.map(async (childUrl) => {
+      try {
+        const child = await fetch(childUrl, { headers: { "User-Agent": "RealTrust canonical scanner" } });
+        return child.ok ? await child.text() : "";
+      } catch {
+        return "";
+      }
+    }));
+    urls = childXml.flatMap((doc) => Array.from(doc.matchAll(/<url>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g)).map((m) => m[1]));
+  }
+  urls = Array.from(new Set(urls)).slice(0, 500);
   const conflicts = urls.flatMap((url) => {
     const u = new URL(url);
     const issues: string[] = [];
