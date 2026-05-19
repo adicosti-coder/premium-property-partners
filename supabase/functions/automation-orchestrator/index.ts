@@ -303,6 +303,12 @@ Deno.serve(async (req) => {
 
   const triggeredBy = runAll ? "manual_run_all" : manualJobKey ? "manual" : dryRun ? "dry_run" : "cron";
 
+  const liveLog = async (level: "info" | "warning" | "error" | "success", message: string, details: Record<string, unknown> = {}, jobKey: string | null = null) => {
+    try {
+      await supabase.from("automation_live_logs").insert({ source: "orchestrator", level, message, details, job_key: jobKey });
+    } catch { /* never throw */ }
+  };
+
   // global kill switch (bypassed for manual + dry-run)
   const { data: settings } = await supabase
     .from("automation_settings").select("enabled, paused_reason").eq("id", true).maybeSingle();
