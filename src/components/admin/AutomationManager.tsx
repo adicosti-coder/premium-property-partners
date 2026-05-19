@@ -290,6 +290,44 @@ const AutomationManager = () => {
     }
   };
 
+  const runAllNow = async () => {
+    if (runningAll) return;
+    const enabledCount = jobs.filter((j) => j.enabled && j.trigger_type === "cron").length;
+    if (enabledCount === 0) {
+      toast({ title: "Niciun job activ", description: "Activează cel puțin un job cron înainte.", variant: "destructive" });
+      return;
+    }
+    const confirmed = window.confirm(
+      `Vei porni FORȚAT toate cele ${enabledCount} joburi cron active, ignorând schedule-ul. Continui?`,
+    );
+    if (!confirmed) return;
+    setRunningAll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("automation-orchestrator", {
+        body: { run_all: true },
+      });
+      if (error) throw error;
+      const ran = (data as { ran?: number })?.ran ?? 0;
+      const ok = (data as { ok?: number })?.ok ?? 0;
+      const failed = (data as { failed?: number })?.failed ?? 0;
+      toast({
+        title: `Run All → ${ran} joburi pornite`,
+        description: `${ok} OK · ${failed} eșuate. Verifică tab-ul Istoric rulaje.`,
+        variant: failed > 0 ? "destructive" : "default",
+      });
+      setTimeout(load, 3000);
+    } catch (e: any) {
+      toast({
+        title: "Eroare Run All",
+        description: e?.message || e?.error_description || JSON.stringify(e),
+        variant: "destructive",
+      });
+    } finally {
+      setRunningAll(false);
+    }
+  };
+
+
   const sendReport = async () => {
     if (!reportEmail || !/.+@.+\..+/.test(reportEmail)) {
       toast({ title: "Email invalid", description: "Introdu o adresă validă.", variant: "destructive" });
