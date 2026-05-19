@@ -333,6 +333,38 @@ const AutomationManager = () => {
     }
   };
 
+  const runHealingTest = async () => {
+    if (testingHealing) return;
+    const confirmed = window.confirm(
+      `Vei lansa un job DUMMY care simulează ${healingTestMode === "failures" ? "eșuări consecutive" : healingTestMode === "timeouts" ? "timeout-uri repetate" : "eșuări + timeout-uri mixte"} și apoi va declanșa self-healing-ul. Reacția va apărea în tab-ul Live Logs. Continui?`,
+    );
+    if (!confirmed) return;
+    setTestingHealing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("automation-self-healing-test", {
+        body: { mode: healingTestMode, consecutive_failures: 7 },
+      });
+      if (error) throw error;
+      const ok = (data as { ok?: boolean })?.ok;
+      const ms = (data as { ms?: number })?.ms ?? 0;
+      toast({
+        title: ok ? `🧪 Test self-healing → OK (${ms}ms)` : "🧪 Test self-healing → eșec",
+        description: "Deschide tab-ul Live Logs pentru a vedea reacția în timp real.",
+        variant: ok ? "default" : "destructive",
+      });
+      setTimeout(load, 1500);
+    } catch (e: any) {
+      toast({
+        title: "Eroare test self-healing",
+        description: e?.message || JSON.stringify(e),
+        variant: "destructive",
+      });
+    } finally {
+      setTestingHealing(false);
+    }
+  };
+
+
 
   const sendReport = async () => {
     if (!reportEmail || !/.+@.+\..+/.test(reportEmail)) {
