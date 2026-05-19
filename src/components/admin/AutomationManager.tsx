@@ -136,6 +136,8 @@ const AutomationManager = () => {
   const [pendingToggle, setPendingToggle] = useState<string | null>(null);
   const [runningJob, setRunningJob] = useState<string | null>(null);
   const [runningAll, setRunningAll] = useState(false);
+  const [testingHealing, setTestingHealing] = useState(false);
+  const [healingTestMode, setHealingTestMode] = useState<"failures" | "timeouts" | "mixed">("mixed");
   // Mod test
   const [testTarget, setTestTarget] = useState<string>(TESTABLE_FUNCTIONS[0].key);
   const [testing, setTesting] = useState(false);
