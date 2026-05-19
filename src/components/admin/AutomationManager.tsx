@@ -20,6 +20,7 @@ import {
 import { AutomationAnalytics } from "./AutomationAnalytics";
 import SelfHealingSettings from "./SelfHealingSettings";
 import AutomationLiveLogs from "./AutomationLiveLogs";
+import JobSelfHealingOverride from "./JobSelfHealingOverride";
 
 type Settings = {
   enabled: boolean;
