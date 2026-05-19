@@ -9,6 +9,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
+
 interface RequestBody {
   url: string;
   language?: "ro" | "en";
