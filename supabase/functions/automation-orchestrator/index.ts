@@ -174,6 +174,85 @@ async function runJob(
   };
 }
 
+async function completeRun(
+  supabase: ReturnType<typeof createClient>,
+  jobKey: string,
+  success: boolean,
+  error: string | null,
+  payload: Record<string, unknown>,
+  durationMs: number,
+  status: string,
+  triggeredBy: string,
+) {
+  await supabase.rpc("automation_complete_run", {
+    _job_key: jobKey,
+    _success: success,
+    _payload: payload,
+    _error: success ? null : (error ?? "").slice(0, 500),
+    _duration_ms: durationMs,
+    _status: status,
+    _triggered_by: triggeredBy,
+  });
+}
+
+function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === "object") {
+    const anyErr = e as Record<string, unknown>;
+    return String(anyErr.message || anyErr.error_description || anyErr.details || anyErr.hint || JSON.stringify(anyErr));
+  }
+  return String(e);
+}
+
+async function runArchiveStaleCallers(supabase: ReturnType<typeof createClient>, dryRun: boolean) {
+  const cutoff = new Date(Date.now() - 6 * 30 * 86400_000).toISOString();
+  const { data: candidates, error } = await supabase
+    .from("voice_caller_profiles")
+    .select("id, phone_normalized")
+    .is("archived_at", null)
+    .lt("last_call_at", cutoff)
+    .limit(100);
+  if (error) throw error;
+
+  const rows = candidates ?? [];
+  if (!dryRun && rows.length > 0) {
+    const ids = rows.map((r: any) => r.id);
+    const { error: updateError } = await supabase
+      .from("voice_caller_profiles")
+      .update({ archived_at: new Date().toISOString() })
+      .in("id", ids);
+    if (updateError) throw updateError;
+    await supabase.from("voice_caller_audit_log").insert(rows.map((r: any) => ({
+      profile_id: r.id,
+      phone_normalized: r.phone_normalized,
+      action: "auto_archive",
+      actor_label: "cron",
+      details: { reason: "inactive_6_months", source: "automation_orchestrator" },
+    })));
+  }
+
+  return { archived: dryRun ? 0 : rows.length, would_archive: dryRun ? rows.length : undefined, cutoff };
+}
+
+async function runCanonicalConflictScan(dryRun: boolean) {
+  const sitemapUrl = "https://www.realtrust.ro/sitemap.xml";
+  const res = await fetch(sitemapUrl, { headers: { "User-Agent": "RealTrust canonical scanner" } });
+  if (!res.ok) throw new Error(`sitemap ${res.status}`);
+  const xml = await res.text();
+  const urls = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]).slice(0, 500);
+  const conflicts = urls.flatMap((url) => {
+    const u = new URL(url);
+    const issues: string[] = [];
+    if (u.search) issues.push("query_in_sitemap_url");
+    if (u.hash) issues.push("hash_in_sitemap_url");
+    if (u.pathname !== "/" && u.pathname.endsWith("/")) issues.push("trailing_slash");
+    if (u.hostname !== "www.realtrust.ro") issues.push("non_www_host");
+    return issues.length ? [{ url, issues }] : [];
+  });
+
+  return { dry_run: dryRun, checked: urls.length, conflicts: conflicts.length, details: conflicts.slice(0, 25) };
+}
+
 /** Run promises with a concurrency cap. */
 async function pMap<T, R>(items: T[], cap: number, fn: (it: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
