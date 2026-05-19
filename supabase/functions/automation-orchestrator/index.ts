@@ -291,20 +291,22 @@ Deno.serve(async (req) => {
 
   let manualJobKey: string | null = null;
   let dryRun = false;
+  let runAll = false;
   try {
     if (req.method === "POST") {
       const body = await req.json().catch(() => ({}));
       if (typeof body?.job_key === "string") manualJobKey = body.job_key;
       if (body?.dry_run === true) dryRun = true;
+      if (body?.run_all === true) runAll = true;
     }
   } catch { /* ignore */ }
 
-  const triggeredBy = manualJobKey ? "manual" : dryRun ? "dry_run" : "cron";
+  const triggeredBy = runAll ? "manual_run_all" : manualJobKey ? "manual" : dryRun ? "dry_run" : "cron";
 
   // global kill switch (bypassed for manual + dry-run)
   const { data: settings } = await supabase
     .from("automation_settings").select("enabled, paused_reason").eq("id", true).maybeSingle();
-  if (!settings?.enabled && !manualJobKey && !dryRun) {
+  if (!settings?.enabled && !manualJobKey && !dryRun && !runAll) {
     return new Response(JSON.stringify({ skipped: "global_off", reason: settings?.paused_reason }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -319,7 +321,8 @@ Deno.serve(async (req) => {
     if (manualJobKey) return j.job_key === manualJobKey;
     if (!j.enabled) return false;
     if (j.trigger_type !== "cron") return false;
-    if (!JOB_FN[j.job_key]) return false;
+    if (!JOB_FN[j.job_key] && !INLINE_JOB.has(j.job_key)) return false;
+    if (runAll) return true; // forțează rularea tuturor joburilor active, ignorând schedule-ul
     return isDue(j.schedule, j.last_run_at, now);
   });
 
@@ -333,6 +336,7 @@ Deno.serve(async (req) => {
       failed: results.filter((r) => !r.ok).length,
       manual: manualJobKey,
       dry_run: dryRun,
+      run_all: runAll,
       results,
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },

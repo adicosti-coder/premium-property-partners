@@ -131,6 +131,7 @@ const AutomationManager = () => {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [pendingToggle, setPendingToggle] = useState<string | null>(null);
   const [runningJob, setRunningJob] = useState<string | null>(null);
+  const [runningAll, setRunningAll] = useState(false);
   // Mod test
   const [testTarget, setTestTarget] = useState<string>(TESTABLE_FUNCTIONS[0].key);
   const [testing, setTesting] = useState(false);
@@ -288,6 +289,44 @@ const AutomationManager = () => {
       setRunningJob(null);
     }
   };
+
+  const runAllNow = async () => {
+    if (runningAll) return;
+    const enabledCount = jobs.filter((j) => j.enabled && j.trigger_type === "cron").length;
+    if (enabledCount === 0) {
+      toast({ title: "Niciun job activ", description: "Activează cel puțin un job cron înainte.", variant: "destructive" });
+      return;
+    }
+    const confirmed = window.confirm(
+      `Vei porni FORȚAT toate cele ${enabledCount} joburi cron active, ignorând schedule-ul. Continui?`,
+    );
+    if (!confirmed) return;
+    setRunningAll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("automation-orchestrator", {
+        body: { run_all: true },
+      });
+      if (error) throw error;
+      const ran = (data as { ran?: number })?.ran ?? 0;
+      const ok = (data as { ok?: number })?.ok ?? 0;
+      const failed = (data as { failed?: number })?.failed ?? 0;
+      toast({
+        title: `Run All → ${ran} joburi pornite`,
+        description: `${ok} OK · ${failed} eșuate. Verifică tab-ul Istoric rulaje.`,
+        variant: failed > 0 ? "destructive" : "default",
+      });
+      setTimeout(load, 3000);
+    } catch (e: any) {
+      toast({
+        title: "Eroare Run All",
+        description: e?.message || e?.error_description || JSON.stringify(e),
+        variant: "destructive",
+      });
+    } finally {
+      setRunningAll(false);
+    }
+  };
+
 
   const sendReport = async () => {
     if (!reportEmail || !/.+@.+\..+/.test(reportEmail)) {
@@ -528,6 +567,38 @@ const AutomationManager = () => {
                 aria-label="Kill switch global automatizări"
               />
             </div>
+          </div>
+
+          {/* RUN ALL — buton mare, foarte vizibil */}
+          <div className="mt-4 flex flex-wrap items-center gap-3 p-4 rounded-lg border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+            <div className="flex-1 min-w-[200px]">
+              <div className="font-semibold text-base flex items-center gap-2">
+                <Zap className="w-5 h-5 text-primary" />
+                Pornește toate automatizările acum
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Forțează rularea imediată a tuturor joburilor cron active, ignorând schedule-ul.
+                Self-healing-ul rămâne activ și ajustează automat timeout-uri/retry-uri pe baza performanței.
+              </div>
+            </div>
+            <Button
+              size="xl"
+              variant="premium"
+              onClick={runAllNow}
+              disabled={runningAll || !globalOn}
+              aria-label="Pornește toate automatizările"
+              className="shrink-0"
+            >
+              {runningAll ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> Se pornesc...
+                </>
+              ) : (
+                <>
+                  <Play className="w-5 h-5" /> Run All Automations
+                </>
+              )}
+            </Button>
           </div>
         </CardHeader>
         {!globalOn && (
