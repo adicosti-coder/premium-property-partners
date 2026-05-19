@@ -336,6 +336,7 @@ Deno.serve(async (req) => {
       failed: results.filter((r) => !r.ok).length,
       manual: manualJobKey,
       dry_run: dryRun,
+      run_all: runAll,
       results,
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
