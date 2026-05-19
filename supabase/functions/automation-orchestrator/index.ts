@@ -239,7 +239,7 @@ async function runCanonicalConflictScan(dryRun: boolean) {
   const res = await fetch(sitemapUrl, { headers: { "User-Agent": "RealTrust canonical scanner" } });
   if (!res.ok) throw new Error(`sitemap ${res.status}`);
   const xml = await res.text();
-  const urls = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]).slice(0, 500);
+  const urls = Array.from(xml.matchAll(/<url>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g)).map((m) => m[1]).slice(0, 500);
   const conflicts = urls.flatMap((url) => {
     const u = new URL(url);
     const issues: string[] = [];
