@@ -76,7 +76,7 @@ const JobSelfHealingOverride = ({ jobKey, jobLabel, config, onChanged }: Props) 
 
     const { error } = await supabase
       .from("automation_jobs")
-      .update({ config: nextConfig })
+      .update({ config: nextConfig as never })
       .eq("job_key", jobKey);
     setSaving(false);
     if (error) {
@@ -99,7 +99,7 @@ const JobSelfHealingOverride = ({ jobKey, jobLabel, config, onChanged }: Props) 
     delete nextConfig.self_healing_override;
     const { error } = await supabase
       .from("automation_jobs")
-      .update({ config: nextConfig })
+      .update({ config: nextConfig as never })
       .eq("job_key", jobKey);
     setSaving(false);
     if (error) {
