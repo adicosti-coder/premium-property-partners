@@ -638,6 +638,49 @@ const AutomationManager = () => {
               )}
             </Button>
           </div>
+
+          {/* TEST SELF-HEALING — buton vizibil pentru a valida regulile de autovindecare */}
+          <div className="mt-3 flex flex-wrap items-center gap-3 p-4 rounded-lg border-2 border-amber-500/50 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent">
+            <div className="flex-1 min-w-[200px]">
+              <div className="font-semibold text-base flex items-center gap-2">
+                <FlaskConical className="w-5 h-5 text-amber-600" />
+                Test Self-Healing Config
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Lansează un job DUMMY (<code>system.self_healing_dummy</code>) cu rulaje simulate, apoi declanșează
+                self-healing-ul. Reacția (auto-disable, adaptive timeout, retry tuning) apare în tab-ul <strong>Live Logs</strong>.
+              </div>
+            </div>
+            <Select value={healingTestMode} onValueChange={(v) => setHealingTestMode(v as "failures" | "timeouts" | "mixed")}>
+              <SelectTrigger className="w-[160px] h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="failures">Doar eșuări</SelectItem>
+                <SelectItem value="timeouts">Doar timeout-uri</SelectItem>
+                <SelectItem value="mixed">Mixt (default)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={runHealingTest}
+              disabled={testingHealing}
+              aria-label="Testează self-healing"
+              className="shrink-0 border-amber-500/60 text-amber-700 hover:bg-amber-500/10"
+            >
+              {testingHealing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Se simulează...
+                </>
+              ) : (
+                <>
+                  <FlaskConical className="w-4 h-4" /> Test Self-Healing
+                </>
+              )}
+            </Button>
+          </div>
+
         </CardHeader>
         {!globalOn && (
           <CardContent>
