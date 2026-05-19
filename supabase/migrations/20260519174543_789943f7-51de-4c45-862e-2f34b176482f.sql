@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.check_cta_rate_limit(text) TO anon, authenticated;
