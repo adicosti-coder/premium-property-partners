@@ -332,8 +332,27 @@ Deno.serve(async (req) => {
     return isDue(j.schedule, j.last_run_at, now);
   });
 
+  if (runAll || manualJobKey) {
+    await liveLog("info", runAll ? `Run All start: ${candidates.length} joburi` : `Manual run: ${manualJobKey}`, { triggered_by: triggeredBy, candidates: candidates.map((c) => c.job_key) });
+  }
+
   // global concurrency cap (settings.config not yet wired → fixed default)
-  const results = await pMap(candidates, DEFAULT_CONCURRENCY, (j) => runJob(supabase, j, triggeredBy, dryRun));
+  const results = await pMap(candidates, DEFAULT_CONCURRENCY, async (j) => {
+    await liveLog("info", `▶ ${j.job_key}`, { triggered_by: triggeredBy }, j.job_key);
+    const res = await runJob(supabase, j, triggeredBy, dryRun);
+    await liveLog(
+      res.ok ? "success" : (res.status === "timeout" ? "warning" : "error"),
+      `${res.ok ? "✓" : "✗"} ${j.job_key} · ${res.status} · ${res.duration_ms}ms${res.retries ? ` · ↻${res.retries}` : ""}`,
+      { status: res.status, duration_ms: res.duration_ms, retries: res.retries, error: res.error },
+      j.job_key,
+    );
+    return res;
+  });
+
+  if (runAll || manualJobKey) {
+    const okN = results.filter((r) => r.ok).length;
+    await liveLog(results.length - okN > 0 ? "warning" : "success", `Run terminat: ${okN}/${results.length} OK`, { ok: okN, failed: results.length - okN });
+  }
 
   return new Response(
     JSON.stringify({
