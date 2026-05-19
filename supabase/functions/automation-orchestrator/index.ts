@@ -291,15 +291,17 @@ Deno.serve(async (req) => {
 
   let manualJobKey: string | null = null;
   let dryRun = false;
+  let runAll = false;
   try {
     if (req.method === "POST") {
       const body = await req.json().catch(() => ({}));
       if (typeof body?.job_key === "string") manualJobKey = body.job_key;
       if (body?.dry_run === true) dryRun = true;
+      if (body?.run_all === true) runAll = true;
     }
   } catch { /* ignore */ }
 
-  const triggeredBy = manualJobKey ? "manual" : dryRun ? "dry_run" : "cron";
+  const triggeredBy = runAll ? "manual_run_all" : manualJobKey ? "manual" : dryRun ? "dry_run" : "cron";
 
   // global kill switch (bypassed for manual + dry-run)
   const { data: settings } = await supabase
