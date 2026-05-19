@@ -43,6 +43,7 @@ type Job = {
   consecutive_failures: number;
   total_runs: number;
   total_successes: number;
+  config: Record<string, unknown> | null;
 };
 
 type Approval = {
