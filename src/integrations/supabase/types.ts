@@ -532,6 +532,36 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_live_logs: {
+        Row: {
+          created_at: string
+          details: Json
+          id: string
+          job_key: string | null
+          level: string
+          message: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          id?: string
+          job_key?: string | null
+          level?: string
+          message: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          id?: string
+          job_key?: string | null
+          level?: string
+          message?: string
+          source?: string
+        }
+        Relationships: []
+      }
       automation_runs: {
         Row: {
           duration_ms: number | null
@@ -584,6 +614,7 @@ export type Database = {
           enabled: boolean
           id: boolean
           paused_reason: string | null
+          self_healing_config: Json
           updated_at: string
           updated_by: string | null
         }
@@ -591,6 +622,7 @@ export type Database = {
           enabled?: boolean
           id?: boolean
           paused_reason?: string | null
+          self_healing_config?: Json
           updated_at?: string
           updated_by?: string | null
         }
@@ -598,6 +630,7 @@ export type Database = {
           enabled?: boolean
           id?: boolean
           paused_reason?: string | null
+          self_healing_config?: Json
           updated_at?: string
           updated_by?: string | null
         }
@@ -7553,6 +7586,10 @@ export type Database = {
           _triggered_by?: string
         }
         Returns: undefined
+      }
+      automation_live_logs_cleanup: {
+        Args: { _keep_hours?: number }
+        Returns: number
       }
       automation_runs_cleanup: {
         Args: { _retention_days?: number }
