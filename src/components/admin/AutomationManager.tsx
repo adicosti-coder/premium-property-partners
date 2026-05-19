@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 
 import { AutomationAnalytics } from "./AutomationAnalytics";
+import SelfHealingSettings from "./SelfHealingSettings";
+import AutomationLiveLogs from "./AutomationLiveLogs";
 
 type Settings = {
   enabled: boolean;
@@ -719,14 +721,29 @@ const AutomationManager = () => {
           <TabsTrigger value="test">
             <FlaskConical className="w-4 h-4 mr-2" /> Mod test
           </TabsTrigger>
+          <TabsTrigger value="live">
+            <Radio className="w-4 h-4 mr-2" /> Live Logs
+          </TabsTrigger>
+          <TabsTrigger value="healing">
+            <Shield className="w-4 h-4 mr-2" /> Self-Healing
+          </TabsTrigger>
           <TabsTrigger value="audit">
             <History className="w-4 h-4 mr-2" /> Audit
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="live">
+          <AutomationLiveLogs />
+        </TabsContent>
+
+        <TabsContent value="healing">
+          <SelfHealingSettings />
+        </TabsContent>
+
         <TabsContent value="analytics">
           <AutomationAnalytics />
         </TabsContent>
+
 
         <TabsContent value="jobs" className="space-y-6">
           {(Object.keys(grouped) as Job["category"][]).map((cat) => {
