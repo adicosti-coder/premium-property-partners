@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 
 import { AutomationAnalytics } from "./AutomationAnalytics";
+import SelfHealingSettings from "./SelfHealingSettings";
+import AutomationLiveLogs from "./AutomationLiveLogs";
 
 type Settings = {
   enabled: boolean;
