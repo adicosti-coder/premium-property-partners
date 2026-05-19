@@ -210,7 +210,7 @@ async function runArchiveStaleCallers(supabase: ReturnType<typeof createClient>,
     .from("voice_caller_profiles")
     .select("id, phone_normalized")
     .is("archived_at", null)
-    .lt("last_call_at", cutoff)
+    .or(`last_call_at.lt.${cutoff},and(last_call_at.is.null,created_at.lt.${cutoff})`)
     .limit(100);
   if (error) throw error;
 
