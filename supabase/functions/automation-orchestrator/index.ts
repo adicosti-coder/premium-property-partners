@@ -39,6 +39,11 @@ const JOB_FN: Record<string, string> = {
   "system.anomaly_notifier": "automation-anomaly-notifier",
 };
 
+const INLINE_JOB = new Set([
+  "lead.auto_archive_callers",
+  "seo.canonical_conflict_scan",
+]);
+
 type Job = {
   job_key: string;
   enabled: boolean;
@@ -81,6 +86,23 @@ async function runJob(
   triggeredBy: string,
   dryRun: boolean,
 ): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown; retries: number }> {
+  if (INLINE_JOB.has(job.job_key)) {
+    const startedAt = Date.now();
+    try {
+      const output = job.job_key === "lead.auto_archive_callers"
+        ? await runArchiveStaleCallers(supabase, dryRun)
+        : await runCanonicalConflictScan(dryRun);
+      const duration = Date.now() - startedAt;
+      if (!dryRun) await completeRun(supabase, job.job_key, true, null, output, duration, "success", triggeredBy);
+      return { job_key: job.job_key, ok: true, duration_ms: duration, status: "success", output, retries: 0 };
+    } catch (e) {
+      const duration = Date.now() - startedAt;
+      const msg = errorMessage(e);
+      if (!dryRun) await completeRun(supabase, job.job_key, false, msg, {}, duration, "failed", triggeredBy);
+      return { job_key: job.job_key, ok: false, error: msg, duration_ms: duration, status: "failed", retries: 0 };
+    }
+  }
+
   const fnName = JOB_FN[job.job_key];
   if (!fnName) {
     return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped", retries: 0 };
@@ -125,15 +147,7 @@ async function runJob(
   const ok = lastStatus === "success";
 
   if (!dryRun) {
-    await supabase.rpc("automation_complete_run", {
-      _job_key: job.job_key,
-      _success: ok,
-      _payload: ok ? ((lastData ?? {}) as Record<string, unknown>) : {},
-      _error: ok ? null : (lastErr ?? "").slice(0, 500),
-      _duration_ms: duration,
-      _status: lastStatus,
-      _triggered_by: triggeredBy,
-    });
+    await completeRun(supabase, job.job_key, ok, ok ? null : lastErr, ok ? ((lastData ?? {}) as Record<string, unknown>) : {}, duration, lastStatus, triggeredBy);
     // Best-effort: stamp retry_count on most recent run row
     if (attempt > 0) {
       const { data: lastRun } = await supabase
