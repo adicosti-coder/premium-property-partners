@@ -104,6 +104,18 @@ Deno.serve(async (req) => {
   const tuned: Array<{ job_key: string; field: string; from: number; to: number }> = [];
 
   for (const j of jobs ?? []) {
+    // Per-job override has priority over global self-healing config.
+    const jcfgEarly = (j.config ?? {}) as Record<string, unknown>;
+    const overrideRaw = jcfgEarly.self_healing_override;
+    const eff: Cfg = overrideRaw && typeof overrideRaw === "object"
+      ? { ...cfg, ...Object.fromEntries(
+          Object.entries(overrideRaw as Record<string, unknown>)
+            .filter(([k, v]) => k in cfg && Number(v) > 0)
+            .map(([k, v]) => [k, Number(v)]),
+        ) } as Cfg
+      : cfg;
+    const usingOverride = eff !== cfg;
+
     // -- (a) STALE detection (cron only)
     if (j.trigger_type === "cron" && j.schedule && j.schedule !== "event-driven") {
       try {
@@ -113,14 +125,14 @@ Deno.serve(async (req) => {
           const lastRun = j.last_run_at ? new Date(j.last_run_at) : null;
           if (!lastRun || lastRun.getTime() < prev.getTime()) {
             const missed = Math.round((now.getTime() - prev.getTime()) / 60000);
-            if (missed >= cfg.stale_threshold_minutes) stale.push({ job_key: j.job_key, missed_minutes: missed });
+            if (missed >= eff.stale_threshold_minutes) stale.push({ job_key: j.job_key, missed_minutes: missed });
           }
         }
       } catch { /* ignore parse */ }
     }
 
     // -- (b) AUTO-DISABLE on failure streak
-    if ((j.consecutive_failures ?? 0) >= cfg.failure_disable_threshold) {
+    if ((j.consecutive_failures ?? 0) >= eff.failure_disable_threshold) {
       const { error: updErr } = await supabase
         .from("automation_jobs")
         .update({ enabled: false, last_status: "disabled" })
@@ -130,10 +142,10 @@ Deno.serve(async (req) => {
         await supabase.from("automation_anomalies").insert({
           job_key: j.job_key,
           severity: "critical",
-          message: `Job auto-dezactivat după ${j.consecutive_failures} eșuări consecutive (self-healing).`,
-          details: { consecutive_failures: j.consecutive_failures, action: "auto_disable", threshold: cfg.failure_disable_threshold },
+          message: `Job auto-dezactivat după ${j.consecutive_failures} eșuări consecutive (self-healing${usingOverride ? ", override" : ""}).`,
+          details: { consecutive_failures: j.consecutive_failures, action: "auto_disable", threshold: eff.failure_disable_threshold, override: usingOverride },
         });
-        await liveLog(supabase, "error", `Auto-disabled ${j.job_key} după ${j.consecutive_failures} eșuări`, { threshold: cfg.failure_disable_threshold }, j.job_key);
+        await liveLog(supabase, "error", `Auto-disabled ${j.job_key} după ${j.consecutive_failures} eșuări${usingOverride ? " [override]" : ""}`, { threshold: eff.failure_disable_threshold, override: usingOverride }, j.job_key);
       }
       continue;
     }
@@ -144,11 +156,11 @@ Deno.serve(async (req) => {
       .select("status, duration_ms")
       .eq("job_key", j.job_key)
       .order("started_at", { ascending: false })
-      .limit(cfg.recent_runs_window);
+      .limit(eff.recent_runs_window);
     if (!recent || recent.length < 5) continue;
 
     const jcfg = (j.config ?? {}) as Record<string, unknown>;
-    const currentTimeout = Number(jcfg.timeout_ms) > 0 ? Number(jcfg.timeout_ms) : cfg.default_timeout_ms;
+    const currentTimeout = Number(jcfg.timeout_ms) > 0 ? Number(jcfg.timeout_ms) : eff.default_timeout_ms;
     const successCount = recent.filter((r) => r.status === "success").length;
     const successRate = successCount / recent.length;
     const validDurations = recent.map((r) => Number(r.duration_ms || 0)).filter((d) => d > 0);
@@ -162,29 +174,30 @@ Deno.serve(async (req) => {
 
     if (
       (timeoutCount >= 2 || (avgDuration > 0 && avgDuration > currentTimeout * 0.8)) &&
-      currentTimeout < cfg.timeout_ceiling_ms
+      currentTimeout < eff.timeout_ceiling_ms
     ) {
-      const next = Math.min(cfg.timeout_ceiling_ms, Math.round(currentTimeout * cfg.timeout_bump_ratio));
+      const next = Math.min(eff.timeout_ceiling_ms, Math.round(currentTimeout * eff.timeout_bump_ratio));
       if (next !== currentTimeout) {
         newCfg.timeout_ms = next;
         tuned.push({ job_key: j.job_key, field: "timeout_ms", from: currentTimeout, to: next });
         changed = true;
-        await liveLog(supabase, "info", `Adaptive timeout ${j.job_key}: ${currentTimeout}→${next}ms`, { avg_duration_ms: Math.round(avgDuration), timeouts: timeoutCount }, j.job_key);
+        await liveLog(supabase, "info", `Adaptive timeout ${j.job_key}: ${currentTimeout}→${next}ms${usingOverride ? " [override]" : ""}`, { avg_duration_ms: Math.round(avgDuration), timeouts: timeoutCount, override: usingOverride }, j.job_key);
       }
     }
 
     const currentRetries = Number(jcfg.max_retries ?? 1);
-    if (successRate < cfg.success_rate_low && currentRetries > 0) {
+    if (successRate < eff.success_rate_low && currentRetries > 0) {
       newCfg.max_retries = 0;
       tuned.push({ job_key: j.job_key, field: "max_retries", from: currentRetries, to: 0 });
       changed = true;
-      await liveLog(supabase, "warning", `Retry off ${j.job_key} (success ${(successRate * 100).toFixed(0)}%)`, { success_rate: successRate }, j.job_key);
-    } else if (successRate > cfg.success_rate_high && currentRetries < 1) {
+      await liveLog(supabase, "warning", `Retry off ${j.job_key} (success ${(successRate * 100).toFixed(0)}%)${usingOverride ? " [override]" : ""}`, { success_rate: successRate, override: usingOverride }, j.job_key);
+    } else if (successRate > eff.success_rate_high && currentRetries < 1) {
       newCfg.max_retries = 1;
       tuned.push({ job_key: j.job_key, field: "max_retries", from: currentRetries, to: 1 });
       changed = true;
-      await liveLog(supabase, "success", `Retry restored ${j.job_key} (success ${(successRate * 100).toFixed(0)}%)`, { success_rate: successRate }, j.job_key);
+      await liveLog(supabase, "success", `Retry restored ${j.job_key} (success ${(successRate * 100).toFixed(0)}%)${usingOverride ? " [override]" : ""}`, { success_rate: successRate, override: usingOverride }, j.job_key);
     }
+
 
     if (changed) {
       await supabase.from("automation_jobs").update({ config: newCfg }).eq("job_key", j.job_key);

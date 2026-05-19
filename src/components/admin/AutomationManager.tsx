@@ -20,6 +20,7 @@ import {
 import { AutomationAnalytics } from "./AutomationAnalytics";
 import SelfHealingSettings from "./SelfHealingSettings";
 import AutomationLiveLogs from "./AutomationLiveLogs";
+import JobSelfHealingOverride from "./JobSelfHealingOverride";
 
 type Settings = {
   enabled: boolean;
@@ -42,6 +43,7 @@ type Job = {
   consecutive_failures: number;
   total_runs: number;
   total_successes: number;
+  config: Record<string, unknown> | null;
 };
 
 type Approval = {
@@ -134,6 +136,8 @@ const AutomationManager = () => {
   const [pendingToggle, setPendingToggle] = useState<string | null>(null);
   const [runningJob, setRunningJob] = useState<string | null>(null);
   const [runningAll, setRunningAll] = useState(false);
+  const [testingHealing, setTestingHealing] = useState(false);
+  const [healingTestMode, setHealingTestMode] = useState<"failures" | "timeouts" | "mixed">("mixed");
   // Mod test
   const [testTarget, setTestTarget] = useState<string>(TESTABLE_FUNCTIONS[0].key);
   const [testing, setTesting] = useState(false);
@@ -328,6 +332,38 @@ const AutomationManager = () => {
       setRunningAll(false);
     }
   };
+
+  const runHealingTest = async () => {
+    if (testingHealing) return;
+    const confirmed = window.confirm(
+      `Vei lansa un job DUMMY care simulează ${healingTestMode === "failures" ? "eșuări consecutive" : healingTestMode === "timeouts" ? "timeout-uri repetate" : "eșuări + timeout-uri mixte"} și apoi va declanșa self-healing-ul. Reacția va apărea în tab-ul Live Logs. Continui?`,
+    );
+    if (!confirmed) return;
+    setTestingHealing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("automation-self-healing-test", {
+        body: { mode: healingTestMode, consecutive_failures: 7 },
+      });
+      if (error) throw error;
+      const ok = (data as { ok?: boolean })?.ok;
+      const ms = (data as { ms?: number })?.ms ?? 0;
+      toast({
+        title: ok ? `🧪 Test self-healing → OK (${ms}ms)` : "🧪 Test self-healing → eșec",
+        description: "Deschide tab-ul Live Logs pentru a vedea reacția în timp real.",
+        variant: ok ? "default" : "destructive",
+      });
+      setTimeout(load, 1500);
+    } catch (e: any) {
+      toast({
+        title: "Eroare test self-healing",
+        description: e?.message || JSON.stringify(e),
+        variant: "destructive",
+      });
+    } finally {
+      setTestingHealing(false);
+    }
+  };
+
 
 
   const sendReport = async () => {
@@ -602,6 +638,49 @@ const AutomationManager = () => {
               )}
             </Button>
           </div>
+
+          {/* TEST SELF-HEALING — buton vizibil pentru a valida regulile de autovindecare */}
+          <div className="mt-3 flex flex-wrap items-center gap-3 p-4 rounded-lg border-2 border-amber-500/50 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent">
+            <div className="flex-1 min-w-[200px]">
+              <div className="font-semibold text-base flex items-center gap-2">
+                <FlaskConical className="w-5 h-5 text-amber-600" />
+                Test Self-Healing Config
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Lansează un job DUMMY (<code>system.self_healing_dummy</code>) cu rulaje simulate, apoi declanșează
+                self-healing-ul. Reacția (auto-disable, adaptive timeout, retry tuning) apare în tab-ul <strong>Live Logs</strong>.
+              </div>
+            </div>
+            <Select value={healingTestMode} onValueChange={(v) => setHealingTestMode(v as "failures" | "timeouts" | "mixed")}>
+              <SelectTrigger className="w-[160px] h-10">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="failures">Doar eșuări</SelectItem>
+                <SelectItem value="timeouts">Doar timeout-uri</SelectItem>
+                <SelectItem value="mixed">Mixt (default)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={runHealingTest}
+              disabled={testingHealing}
+              aria-label="Testează self-healing"
+              className="shrink-0 border-amber-500/60 text-amber-700 hover:bg-amber-500/10"
+            >
+              {testingHealing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Se simulează...
+                </>
+              ) : (
+                <>
+                  <FlaskConical className="w-4 h-4" /> Test Self-Healing
+                </>
+              )}
+            </Button>
+          </div>
+
         </CardHeader>
         {!globalOn && (
           <CardContent>
@@ -806,6 +885,12 @@ const AutomationManager = () => {
                           )}
                           <span className="hidden md:inline ml-1">Run</span>
                         </Button>
+                        <JobSelfHealingOverride
+                          jobKey={job.job_key}
+                          jobLabel={job.label}
+                          config={job.config}
+                          onChanged={load}
+                        />
                         <Switch
                           checked={job.enabled && globalOn}
                           disabled={!globalOn || pendingToggle === job.id}
