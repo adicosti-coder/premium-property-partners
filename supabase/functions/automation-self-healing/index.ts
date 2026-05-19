@@ -104,6 +104,18 @@ Deno.serve(async (req) => {
   const tuned: Array<{ job_key: string; field: string; from: number; to: number }> = [];
 
   for (const j of jobs ?? []) {
+    // Per-job override has priority over global self-healing config.
+    const jcfgEarly = (j.config ?? {}) as Record<string, unknown>;
+    const overrideRaw = jcfgEarly.self_healing_override;
+    const eff: Cfg = overrideRaw && typeof overrideRaw === "object"
+      ? { ...cfg, ...Object.fromEntries(
+          Object.entries(overrideRaw as Record<string, unknown>)
+            .filter(([k, v]) => k in cfg && Number(v) > 0)
+            .map(([k, v]) => [k, Number(v)]),
+        ) } as Cfg
+      : cfg;
+    const usingOverride = eff !== cfg;
+
     // -- (a) STALE detection (cron only)
     if (j.trigger_type === "cron" && j.schedule && j.schedule !== "event-driven") {
       try {
