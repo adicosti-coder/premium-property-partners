@@ -9,6 +9,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
+
 interface RequestBody {
   url: string;
   language?: "ro" | "en";
@@ -39,12 +41,19 @@ serve(async (req) => {
         .select("url, language, created_at")
         .lt("created_at", sevenDaysAgo)
         .order("created_at", { ascending: true })
-        .limit(2);
-      const urls = (stale ?? []).map((r: any) => ({ url: r.url, language: r.language || "ro" }));
+        .limit(20);
+      const urls = Array.from(
+        new Map(
+          (stale ?? [])
+            .filter((r: any) => typeof r?.url === "string" && /^https?:\/\//.test(r.url))
+            .map((r: any) => [r.url, { url: r.url, language: r.language || "ro" }]),
+        ).values(),
+      ).slice(0, 2);
       const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/seo-ai-optimizer`;
-      for (const item of urls) {
-        // Fire-and-forget: do NOT await. Each audit runs in its own invocation.
-        fetch(fnUrl, {
+      const dispatches = urls.map((item) => {
+        // Background dispatch: return immediately to orchestrator, but keep the
+        // edge runtime alive long enough to actually start each child audit.
+        return fetch(fnUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -53,7 +62,8 @@ serve(async (req) => {
           },
           body: JSON.stringify({ url: item.url, language: item.language, forceRefresh: true }),
         }).catch((e) => console.error("seo-ai-optimizer cron dispatch failed:", item.url, e?.message));
-      }
+      });
+      EdgeRuntime.waitUntil(Promise.allSettled(dispatches));
       return json({ cron: true, scheduled: urls.length, urls: urls.map((u) => u.url) });
     }
 

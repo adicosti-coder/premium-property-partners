@@ -39,6 +39,11 @@ const JOB_FN: Record<string, string> = {
   "system.anomaly_notifier": "automation-anomaly-notifier",
 };
 
+const INLINE_JOB = new Set([
+  "lead.auto_archive_callers",
+  "seo.canonical_conflict_scan",
+]);
+
 type Job = {
   job_key: string;
   enabled: boolean;
@@ -81,6 +86,23 @@ async function runJob(
   triggeredBy: string,
   dryRun: boolean,
 ): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown; retries: number }> {
+  if (INLINE_JOB.has(job.job_key)) {
+    const startedAt = Date.now();
+    try {
+      const output = job.job_key === "lead.auto_archive_callers"
+        ? await runArchiveStaleCallers(supabase, dryRun)
+        : await runCanonicalConflictScan(dryRun);
+      const duration = Date.now() - startedAt;
+      if (!dryRun) await completeRun(supabase, job.job_key, true, null, output, duration, "success", triggeredBy);
+      return { job_key: job.job_key, ok: true, duration_ms: duration, status: "success", output, retries: 0 };
+    } catch (e) {
+      const duration = Date.now() - startedAt;
+      const msg = errorMessage(e);
+      if (!dryRun) await completeRun(supabase, job.job_key, false, msg, {}, duration, "failed", triggeredBy);
+      return { job_key: job.job_key, ok: false, error: msg, duration_ms: duration, status: "failed", retries: 0 };
+    }
+  }
+
   const fnName = JOB_FN[job.job_key];
   if (!fnName) {
     return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped", retries: 0 };
@@ -125,15 +147,7 @@ async function runJob(
   const ok = lastStatus === "success";
 
   if (!dryRun) {
-    await supabase.rpc("automation_complete_run", {
-      _job_key: job.job_key,
-      _success: ok,
-      _payload: ok ? ((lastData ?? {}) as Record<string, unknown>) : {},
-      _error: ok ? null : (lastErr ?? "").slice(0, 500),
-      _duration_ms: duration,
-      _status: lastStatus,
-      _triggered_by: triggeredBy,
-    });
+    await completeRun(supabase, job.job_key, ok, ok ? null : lastErr, ok ? ((lastData ?? {}) as Record<string, unknown>) : {}, duration, lastStatus, triggeredBy);
     // Best-effort: stamp retry_count on most recent run row
     if (attempt > 0) {
       const { data: lastRun } = await supabase
@@ -158,6 +172,98 @@ async function runJob(
     output: lastData,
     retries: attempt,
   };
+}
+
+async function completeRun(
+  supabase: ReturnType<typeof createClient>,
+  jobKey: string,
+  success: boolean,
+  error: string | null,
+  payload: Record<string, unknown>,
+  durationMs: number,
+  status: string,
+  triggeredBy: string,
+) {
+  await supabase.rpc("automation_complete_run", {
+    _job_key: jobKey,
+    _success: success,
+    _payload: payload,
+    _error: success ? null : (error ?? "").slice(0, 500),
+    _duration_ms: durationMs,
+    _status: status,
+    _triggered_by: triggeredBy,
+  });
+}
+
+function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === "object") {
+    const anyErr = e as Record<string, unknown>;
+    return String(anyErr.message || anyErr.error_description || anyErr.details || anyErr.hint || JSON.stringify(anyErr));
+  }
+  return String(e);
+}
+
+async function runArchiveStaleCallers(supabase: ReturnType<typeof createClient>, dryRun: boolean) {
+  const cutoff = new Date(Date.now() - 6 * 30 * 86400_000).toISOString();
+  const { data: candidates, error } = await supabase
+    .from("voice_caller_profiles")
+    .select("id, phone_normalized")
+    .is("archived_at", null)
+    .or(`last_call_at.lt.${cutoff},and(last_call_at.is.null,created_at.lt.${cutoff})`)
+    .limit(100);
+  if (error) throw error;
+
+  const rows = candidates ?? [];
+  if (!dryRun && rows.length > 0) {
+    const ids = rows.map((r: any) => r.id);
+    const { error: updateError } = await supabase
+      .from("voice_caller_profiles")
+      .update({ archived_at: new Date().toISOString() })
+      .in("id", ids);
+    if (updateError) throw updateError;
+    await supabase.from("voice_caller_audit_log").insert(rows.map((r: any) => ({
+      profile_id: r.id,
+      phone_normalized: r.phone_normalized,
+      action: "auto_archive",
+      actor_label: "cron",
+      details: { reason: "inactive_6_months", source: "automation_orchestrator" },
+    })));
+  }
+
+  return { archived: dryRun ? 0 : rows.length, would_archive: dryRun ? rows.length : undefined, cutoff };
+}
+
+async function runCanonicalConflictScan(dryRun: boolean) {
+  const sitemapUrl = "https://www.realtrust.ro/sitemap.xml";
+  const res = await fetch(sitemapUrl, { headers: { "User-Agent": "RealTrust canonical scanner" } });
+  if (!res.ok) throw new Error(`sitemap ${res.status}`);
+  const xml = await res.text();
+  let urls = Array.from(xml.matchAll(/<url>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g)).map((m) => m[1]);
+  if (urls.length === 0) {
+    const childSitemaps = Array.from(xml.matchAll(/<sitemap>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<\/sitemap>/g)).map((m) => m[1]).slice(0, 5);
+    const childXml = await Promise.all(childSitemaps.map(async (childUrl) => {
+      try {
+        const child = await fetch(childUrl, { headers: { "User-Agent": "RealTrust canonical scanner" } });
+        return child.ok ? await child.text() : "";
+      } catch {
+        return "";
+      }
+    }));
+    urls = childXml.flatMap((doc) => Array.from(doc.matchAll(/<url>[\s\S]*?<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g)).map((m) => m[1]));
+  }
+  urls = Array.from(new Set(urls)).slice(0, 500);
+  const conflicts = urls.flatMap((url) => {
+    const u = new URL(url);
+    const issues: string[] = [];
+    if (u.search) issues.push("query_in_sitemap_url");
+    if (u.hash) issues.push("hash_in_sitemap_url");
+    if (u.pathname !== "/" && u.pathname.endsWith("/")) issues.push("trailing_slash");
+    if (!["realtrust.ro", "www.realtrust.ro"].includes(u.hostname)) issues.push("unexpected_host");
+    return issues.length ? [{ url, issues }] : [];
+  });
+
+  return { dry_run: dryRun, checked: urls.length, conflicts: conflicts.length, details: conflicts.slice(0, 25) };
 }
 
 /** Run promises with a concurrency cap. */
