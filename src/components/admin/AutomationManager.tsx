@@ -568,6 +568,38 @@ const AutomationManager = () => {
               />
             </div>
           </div>
+
+          {/* RUN ALL — buton mare, foarte vizibil */}
+          <div className="mt-4 flex flex-wrap items-center gap-3 p-4 rounded-lg border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+            <div className="flex-1 min-w-[200px]">
+              <div className="font-semibold text-base flex items-center gap-2">
+                <Zap className="w-5 h-5 text-primary" />
+                Pornește toate automatizările acum
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Forțează rularea imediată a tuturor joburilor cron active, ignorând schedule-ul.
+                Self-healing-ul rămâne activ și ajustează automat timeout-uri/retry-uri pe baza performanței.
+              </div>
+            </div>
+            <Button
+              size="xl"
+              variant="premium"
+              onClick={runAllNow}
+              disabled={runningAll || !globalOn}
+              aria-label="Pornește toate automatizările"
+              className="shrink-0"
+            >
+              {runningAll ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> Se pornesc...
+                </>
+              ) : (
+                <>
+                  <Play className="w-5 h-5" /> Run All Automations
+                </>
+              )}
+            </Button>
+          </div>
         </CardHeader>
         {!globalOn && (
           <CardContent>
