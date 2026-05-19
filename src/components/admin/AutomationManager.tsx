@@ -885,6 +885,12 @@ const AutomationManager = () => {
                           )}
                           <span className="hidden md:inline ml-1">Run</span>
                         </Button>
+                        <JobSelfHealingOverride
+                          jobKey={job.job_key}
+                          jobLabel={job.label}
+                          config={job.config}
+                          onChanged={load}
+                        />
                         <Switch
                           checked={job.enabled && globalOn}
                           disabled={!globalOn || pendingToggle === job.id}
