@@ -139,3 +139,53 @@ project_id = "mvzssjyzbwccioqvhjpo"
     verify_jwt = false
   [functions.gsc-submit-sitemap]
     verify_jwt = false
+
+  # ── Automation jobs (orchestrator-managed) ──
+  # Toate cele 29 de joburi rulează cu `verify_jwt = false` uniform.
+  # Sunt invocate server-to-server de `automation-orchestrator` cu service-role,
+  # iar validarea se face în cod (Authorization Bearer + claims sau secret).
+  # Webhook-urile externe semnate (Twilio etc.) rămân `verify_jwt = false`
+  # și își validează în cod semnătura specifică (X-Twilio-Signature).
+  [functions.automation-orchestrator]
+    verify_jwt = false
+  [functions.automation-daily-digest]
+    verify_jwt = false
+  [functions.automation-self-healing]
+    verify_jwt = false
+  [functions.automation-self-healing-test]
+    verify_jwt = false
+  [functions.automation-anomaly-notifier]
+    verify_jwt = false
+  [functions.lead-auto-classify-agency]
+    verify_jwt = false
+  [functions.lead-auto-dedup]
+    verify_jwt = false
+  [functions.voice-caller-archive-stale]
+    verify_jwt = false
+  [functions.phone-lookup-enrich]
+    verify_jwt = false
+  [functions.seo-auto-fill-meta]
+    verify_jwt = false
+  [functions.seo-anomaly-detector]
+    verify_jwt = false
+  [functions.seo-competitor-cron]
+    verify_jwt = false
+  [functions.seo-opportunity-detector]
+    verify_jwt = false
+  [functions.seo-page-audit-cron]
+    verify_jwt = false
+  [functions.seo-monthly-snapshot]
+    verify_jwt = false
+  [functions.seo-ai-optimizer]
+    verify_jwt = false
+  [functions.seo-canonical-conflict-scan]
+    verify_jwt = false
+  [functions.blog-hub-weekly-digest]
+    verify_jwt = false
+  [functions.generate-blog-sitemap]
+    verify_jwt = false
+  [functions.bulk-generate-ai-cache]
+    verify_jwt = false
+  [functions.scraper-lead-predictive]
+    verify_jwt = false
+
