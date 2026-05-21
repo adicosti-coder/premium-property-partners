@@ -16,6 +16,7 @@ const JOB_FN: Record<string, string> = {
   "lead.auto_classify_agency": "lead-auto-classify-agency",
   "lead.auto_dedup": "lead-auto-dedup",
   "lead.auto_archive_callers": "voice-caller-archive-stale",
+  "lead.auto_twilio_lookup": "phone-lookup-enrich",
   // SEO automations
   "seo.auto_fill_meta": "seo-auto-fill-meta",
   "seo.anomaly_detector": "seo-anomaly-detector",
@@ -38,6 +39,25 @@ const JOB_FN: Record<string, string> = {
   "system.self_healing": "automation-self-healing",
   "system.anomaly_notifier": "automation-anomaly-notifier",
 };
+
+// Per-job body overrides for manual Run (event-driven jobs that need params).
+const JOB_BODY: Record<string, Record<string, unknown>> = {
+  "lead.auto_twilio_lookup": { mode: "batch", limit: 50 },
+};
+
+// Event-driven jobs declanșate automat de triggere DB / cod aplicație.
+// Manual "Run" devine no-op (returnează success cu notă informativă),
+// pentru a evita eroarea "no_handler" în UI.
+const NOOP_JOB = new Set([
+  "system.orchestrator",                  // chiar acesta este orchestratorul
+  "lead.auto_recall_no_answer",           // declanșat de voice-agent reconcile
+  "lead.auto_call_rate_limit",            // aplicat inline la dial
+  "seo.auto_audit_on_update",             // trigger DB pe properties/blog/complex
+  "seo.auto_indexnow_push",               // emis inline la publicare conținut
+  "blog.cta_dedup_server",                // trigger Postgres pe cta_analytics
+  "ai.memory_cross_function",             // agregat inline de visitor-memory
+  "prospect.predictive_score_on_insert",  // trigger DB la inserare prospect
+]);
 
 const INLINE_JOB = new Set([
   "lead.auto_archive_callers",
@@ -103,6 +123,14 @@ async function runJob(
     }
   }
 
+  if (NOOP_JOB.has(job.job_key)) {
+    const startedAt = Date.now();
+    const output = { noop: true, reason: "event-driven; declanșat automat de triggere DB / cod aplicație" };
+    const duration = Date.now() - startedAt;
+    if (!dryRun) await completeRun(supabase, job.job_key, true, null, output, duration, "success", triggeredBy);
+    return { job_key: job.job_key, ok: true, duration_ms: duration, status: "success", output, retries: 0 };
+  }
+
   const fnName = JOB_FN[job.job_key];
   if (!fnName) {
     return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped", retries: 0 };
@@ -117,11 +145,13 @@ async function runJob(
   let lastStatus: string = "failed";
   let lastData: unknown = null;
 
+  const extraBody = JOB_BODY[job.job_key] ?? {};
+
   while (attempt <= maxRetries) {
     try {
       const { data, error } = await runWithTimeout(
         supabase.functions.invoke(fnName, {
-          body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt },
+          body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt, ...extraBody },
         }),
         timeoutMs,
       );
@@ -327,7 +357,7 @@ Deno.serve(async (req) => {
     if (manualJobKey) return j.job_key === manualJobKey;
     if (!j.enabled) return false;
     if (j.trigger_type !== "cron") return false;
-    if (!JOB_FN[j.job_key] && !INLINE_JOB.has(j.job_key)) return false;
+    if (!JOB_FN[j.job_key] && !INLINE_JOB.has(j.job_key) && !NOOP_JOB.has(j.job_key)) return false;
     if (runAll) return true; // forțează rularea tuturor joburilor active, ignorând schedule-ul
     return isDue(j.schedule, j.last_run_at, now);
   });
