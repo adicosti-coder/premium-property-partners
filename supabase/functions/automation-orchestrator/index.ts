@@ -16,6 +16,7 @@ const JOB_FN: Record<string, string> = {
   "lead.auto_classify_agency": "lead-auto-classify-agency",
   "lead.auto_dedup": "lead-auto-dedup",
   "lead.auto_archive_callers": "voice-caller-archive-stale",
+  "lead.auto_twilio_lookup": "phone-lookup-enrich",
   // SEO automations
   "seo.auto_fill_meta": "seo-auto-fill-meta",
   "seo.anomaly_detector": "seo-anomaly-detector",
@@ -38,6 +39,25 @@ const JOB_FN: Record<string, string> = {
   "system.self_healing": "automation-self-healing",
   "system.anomaly_notifier": "automation-anomaly-notifier",
 };
+
+// Per-job body overrides for manual Run (event-driven jobs that need params).
+const JOB_BODY: Record<string, Record<string, unknown>> = {
+  "lead.auto_twilio_lookup": { mode: "batch", limit: 50 },
+};
+
+// Event-driven jobs declanșate automat de triggere DB / cod aplicație.
+// Manual "Run" devine no-op (returnează success cu notă informativă),
+// pentru a evita eroarea "no_handler" în UI.
+const NOOP_JOB = new Set([
+  "system.orchestrator",                  // chiar acesta este orchestratorul
+  "lead.auto_recall_no_answer",           // declanșat de voice-agent reconcile
+  "lead.auto_call_rate_limit",            // aplicat inline la dial
+  "seo.auto_audit_on_update",             // trigger DB pe properties/blog/complex
+  "seo.auto_indexnow_push",               // emis inline la publicare conținut
+  "blog.cta_dedup_server",                // trigger Postgres pe cta_analytics
+  "ai.memory_cross_function",             // agregat inline de visitor-memory
+  "prospect.predictive_score_on_insert",  // trigger DB la inserare prospect
+]);
 
 const INLINE_JOB = new Set([
   "lead.auto_archive_callers",
