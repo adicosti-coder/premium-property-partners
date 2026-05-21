@@ -726,7 +726,9 @@ const AutomationManager = () => {
       {(() => {
         const since = Date.now() - 24 * 3600_000;
         const fails = runs.filter(
-          (r) => (r.status === "failed" || r.status === "timeout") && new Date(r.started_at).getTime() > since,
+          (r) => (r.status === "failed" || r.status === "timeout")
+            && r.job_key !== "system.self_healing_dummy"
+            && new Date(r.started_at).getTime() > since,
         );
         if (fails.length === 0) return null;
         return (
