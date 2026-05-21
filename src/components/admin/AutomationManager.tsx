@@ -711,8 +711,8 @@ const AutomationManager = () => {
         />
         <StatCard
           label="Eșuări consecutive"
-          value={jobs.reduce((s, j) => s + j.consecutive_failures, 0)}
-          warn={jobs.some((j) => j.consecutive_failures >= 3)}
+          value={jobs.filter((j) => j.job_key !== "system.self_healing_dummy").reduce((s, j) => s + j.consecutive_failures, 0)}
+          warn={jobs.some((j) => j.job_key !== "system.self_healing_dummy" && j.consecutive_failures >= 3)}
         />
       </div>
 
@@ -726,7 +726,9 @@ const AutomationManager = () => {
       {(() => {
         const since = Date.now() - 24 * 3600_000;
         const fails = runs.filter(
-          (r) => (r.status === "failed" || r.status === "timeout") && new Date(r.started_at).getTime() > since,
+          (r) => (r.status === "failed" || r.status === "timeout")
+            && r.job_key !== "system.self_healing_dummy"
+            && new Date(r.started_at).getTime() > since,
         );
         if (fails.length === 0) return null;
         return (
