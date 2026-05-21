@@ -160,18 +160,30 @@ async function loadMetrics(p: Period, realThreshold: number): Promise<{ metrics:
 }
 
 async function loadRoiAlert(): Promise<RoiAlert> {
-  // Last 20 outbound calls — compute real-conversation rate
+  // Last 20 outbound calls — real-conversation rate calculat pe DENOMINATOR CALIFICAT.
+  // Excludem infra-failures (status=failed cu error_message sau durata 0) și voicemails —
+  // nu sunt vina agentului și ar distorsiona rata reală.
   const { data } = await supabase
     .from("voice_call_sessions")
-    .select("call_duration_seconds, is_voicemail")
+    .select("call_duration_seconds, is_voicemail, status, error_message")
     .eq("direction", "outbound")
     .order("created_at", { ascending: false })
     .limit(20);
   const rows = (data || []) as any[];
   if (rows.length < 20) return { triggered: false, realRatePct: 0, sampleSize: rows.length };
-  const real = rows.filter((r) => Number(r.call_duration_seconds || 0) > 30 && !r.is_voicemail).length;
-  const ratePct = Math.round((real / rows.length) * 100);
-  return { triggered: ratePct < 10, realRatePct: ratePct, sampleSize: rows.length };
+
+  const qualified = rows.filter((r) => {
+    if (r.is_voicemail) return false;
+    const dur = Number(r.call_duration_seconds || 0);
+    const isInfraFail = r.status === "failed" && (!!r.error_message || dur === 0);
+    return !isInfraFail;
+  });
+  // Nu declanșa alerta dacă eșantionul "real" e prea mic ca să fie relevant statistic.
+  if (qualified.length < 10) return { triggered: false, realRatePct: 0, sampleSize: qualified.length };
+
+  const real = qualified.filter((r) => Number(r.call_duration_seconds || 0) > 30).length;
+  const ratePct = Math.round((real / qualified.length) * 100);
+  return { triggered: ratePct < 10, realRatePct: ratePct, sampleSize: qualified.length };
 }
 
 function pct(n: number, d: number): string {
