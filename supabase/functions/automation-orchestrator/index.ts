@@ -357,7 +357,7 @@ Deno.serve(async (req) => {
     if (manualJobKey) return j.job_key === manualJobKey;
     if (!j.enabled) return false;
     if (j.trigger_type !== "cron") return false;
-    if (!JOB_FN[j.job_key] && !INLINE_JOB.has(j.job_key)) return false;
+    if (!JOB_FN[j.job_key] && !INLINE_JOB.has(j.job_key) && !NOOP_JOB.has(j.job_key)) return false;
     if (runAll) return true; // forțează rularea tuturor joburilor active, ignorând schedule-ul
     return isDue(j.schedule, j.last_run_at, now);
   });
