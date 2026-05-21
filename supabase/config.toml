@@ -92,7 +92,7 @@ project_id = "mvzssjyzbwccioqvhjpo"
   [functions.send-simulation-reminder]
     verify_jwt = false
   [functions.send-transactional-email]
-    verify_jwt = true
+    verify_jwt = false
   [functions.send-weekly-followup-report]
     verify_jwt = false
   [functions.send-welcome-email]
