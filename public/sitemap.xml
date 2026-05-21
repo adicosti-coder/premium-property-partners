@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Sitemap Index — references dynamic edge-function sitemaps + static fallback -->
+<!-- Sitemap Index — dynamic sitemaps served direct from Supabase Edge Functions
+     (realtrust.ro/functions/v1/* is intercepted by the SPA fallback and returns HTML,
+     so we point Google straight at the function host where they return XML). -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>https://realtrust.ro/sitemap-static.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://realtrust.ro/functions/v1/generate-sitemap</loc>
+    <loc>https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap</loc>
   </sitemap>
   <sitemap>
-    <loc>https://realtrust.ro/functions/v1/generate-blog-sitemap</loc>
+    <loc>https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-blog-sitemap</loc>
   </sitemap>
 </sitemapindex>
