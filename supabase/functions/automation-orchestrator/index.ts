@@ -366,10 +366,36 @@ Deno.serve(async (req) => {
     await liveLog("info", runAll ? `Run All start: ${candidates.length} joburi` : `Manual run: ${manualJobKey}`, { triggered_by: triggeredBy, candidates: candidates.map((c) => c.job_key) });
   }
 
+  // granular 401 logger – captures auth failures from invoked job functions
+  const log401 = async (jobKey: string, fnName: string | undefined, errMsg: string) => {
+    const ua = req.headers.get("user-agent") ?? "unknown";
+    const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("cf-connecting-ip") ?? "unknown";
+    const url = fnName ? `${Deno.env.get("SUPABASE_URL")}/functions/v1/${fnName}` : "(inline)";
+    await liveLog(
+      "error",
+      `401 Unauthorized · ${jobKey}`,
+      {
+        kind: "auth_failure",
+        url,
+        function: fnName ?? null,
+        triggered_by: triggeredBy,
+        origin_ip: ip,
+        user_agent: ua,
+        reason: errMsg,
+        hint: "Verifică verify_jwt în config.toml și validarea token-ului în funcția target.",
+      },
+      jobKey,
+    );
+  };
+
   // global concurrency cap (settings.config not yet wired → fixed default)
   const results = await pMap(candidates, DEFAULT_CONCURRENCY, async (j) => {
     await liveLog("info", `▶ ${j.job_key}`, { triggered_by: triggeredBy }, j.job_key);
     const res = await runJob(supabase, j, triggeredBy, dryRun);
+    // Detect 401 / Unauthorized in error message and log granular auth-failure entry
+    if (!res.ok && res.error && /\b401\b|unauthor|invalid[_\s-]*jwt|missing[_\s-]*token|forbidden/i.test(res.error)) {
+      await log401(j.job_key, JOB_FN[j.job_key], res.error);
+    }
     await liveLog(
       res.ok ? "success" : (res.status === "timeout" ? "warning" : "error"),
       `${res.ok ? "✓" : "✗"} ${j.job_key} · ${res.status} · ${res.duration_ms}ms${res.retries ? ` · ↻${res.retries}` : ""}`,
