@@ -379,10 +379,10 @@ const VoiceAgentResultsDashboard = () => {
             <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div>
               <div className="font-bold text-red-700 dark:text-red-400">
-                🚨 ROI critic — doar {roiAlert.realRatePct}% conversații reale în ultimele {roiAlert.sampleSize} apeluri
+                🚨 ROI critic — doar {roiAlert.realRatePct}% conversații reale în ultimele {roiAlert.sampleSize} apeluri valide
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">
-                Pragul de siguranță este 10%. Verifică numărul Twilio (poate apare ca SPAM), calitatea numerelor scrapate sau pune autopilot-ul pe pauză până când rezolvi cauza.
+                Eșantionul exclude voicemails și erori de infrastructură. Pragul de siguranță este 10%. Verifică numărul Twilio (poate apărea ca SPAM), calitatea numerelor scrapate sau pune autopilot-ul pe pauză până rezolvi cauza.
               </div>
             </div>
           </div>
