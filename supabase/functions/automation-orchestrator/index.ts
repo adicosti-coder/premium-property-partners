@@ -50,6 +50,7 @@ const JOB_BODY: Record<string, Record<string, unknown>> = {
 // pentru a evita eroarea "no_handler" în UI.
 const NOOP_JOB = new Set([
   "system.orchestrator",                  // chiar acesta este orchestratorul
+  "system.self_healing_dummy",            // job virtual de test self-healing
   "lead.auto_recall_no_answer",           // declanșat de voice-agent reconcile
   "lead.auto_call_rate_limit",            // aplicat inline la dial
   "seo.auto_audit_on_update",             // trigger DB pe properties/blog/complex
