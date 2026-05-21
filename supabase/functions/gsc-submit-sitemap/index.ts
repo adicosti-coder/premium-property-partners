@@ -13,8 +13,8 @@ const SITE_ENC = encodeURIComponent(SITE);
 const SITEMAPS = [
   "https://realtrust.ro/sitemap.xml",
   "https://realtrust.ro/sitemap-static.xml",
-  "https://realtrust.ro/functions/v1/generate-sitemap",
-  "https://realtrust.ro/functions/v1/generate-blog-sitemap",
+  "https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap",
+  "https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-blog-sitemap",
 ];
 
 serve(async (req) => {
