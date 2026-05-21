@@ -123,6 +123,14 @@ async function runJob(
     }
   }
 
+  if (NOOP_JOB.has(job.job_key)) {
+    const startedAt = Date.now();
+    const output = { noop: true, reason: "event-driven; declanșat automat de triggere DB / cod aplicație" };
+    const duration = Date.now() - startedAt;
+    if (!dryRun) await completeRun(supabase, job.job_key, true, null, output, duration, "success", triggeredBy);
+    return { job_key: job.job_key, ok: true, duration_ms: duration, status: "success", output, retries: 0 };
+  }
+
   const fnName = JOB_FN[job.job_key];
   if (!fnName) {
     return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped", retries: 0 };
@@ -137,11 +145,13 @@ async function runJob(
   let lastStatus: string = "failed";
   let lastData: unknown = null;
 
+  const extraBody = JOB_BODY[job.job_key] ?? {};
+
   while (attempt <= maxRetries) {
     try {
       const { data, error } = await runWithTimeout(
         supabase.functions.invoke(fnName, {
-          body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt },
+          body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt, ...extraBody },
         }),
         timeoutMs,
       );
