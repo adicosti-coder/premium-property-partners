@@ -1,0 +1,2 @@
+DELETE FROM public.automation_runs WHERE job_key = 'system.self_healing_dummy';
+UPDATE public.automation_jobs SET consecutive_failures = 0, last_status = NULL, last_error = NULL WHERE job_key = 'system.self_healing_dummy';
