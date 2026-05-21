@@ -711,8 +711,8 @@ const AutomationManager = () => {
         />
         <StatCard
           label="Eșuări consecutive"
-          value={jobs.reduce((s, j) => s + j.consecutive_failures, 0)}
-          warn={jobs.some((j) => j.consecutive_failures >= 3)}
+          value={jobs.filter((j) => j.job_key !== "system.self_healing_dummy").reduce((s, j) => s + j.consecutive_failures, 0)}
+          warn={jobs.some((j) => j.job_key !== "system.self_healing_dummy" && j.consecutive_failures >= 3)}
         />
       </div>
 
