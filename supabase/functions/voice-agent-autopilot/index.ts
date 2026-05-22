@@ -153,7 +153,8 @@ serve(async (req) => {
 
     // 2. INGESTIE prospect_listings — proprietari întâi, scor ≥ prag, telefon valid.
     //    Sortare: proprietar > agentie, apoi lead_score DESC.
-    const minScore = Math.max(70, s.min_lead_score ?? 70);
+    //    Respectăm setarea din admin (min_lead_score) — fără prag hardcodat.
+    const minScore = Math.max(30, Number(s.min_lead_score ?? 50));
     const nowIso = new Date().toISOString();
     const { data: prospects } = await supabase
       .from("prospect_listings")

@@ -306,17 +306,60 @@ const GENERIC_LISTING_TITLE_SIGNALS = [
   'apartamente noi de vanzare', 'apartamente noi de vânzare', 'apartamente de inchiriat',
   'apartamente de închiriat', 'garsoniere de vanzare', 'garsoniere de vânzare',
   'proprietati noi', 'proprietăți noi', 'pagina ', 'rezultate vanzare', 'rezultate vânzare',
+  'wikipedia', 'archives', 'tag:', '- forum', 'pdf', '[pdf]', 'hotararea', 'hcl ',
+  'lista de', 'arhiva', 'top ', 'guide', 'ghid ', 'știri', 'stiri ', 'news',
+];
+
+// Domains that NEVER contain individual real-estate offers — instant reject.
+const FORBIDDEN_DOMAINS = [
+  'wikipedia.org', 'wikimedia.org',
+  // News / blogs / portals (no individual ads)
+  'tion.ro', 'libertatea.ro', 'opiniatimisoarei.ro', 'ziuadevest.ro',
+  'stiridetimisoara.ro', 'tucamaria.ro', 'pressalert.ro', 'renasterea.ro',
+  'banatulazi.ro', 'expressdebanat.ro', 'timisplus.ro', 'expressdetimisoara.ro',
+  'agerpres.ro', 'digi24.ro', 'adevarul.ro', 'gandul.ro', 'hotnews.ro',
+  'g4media.ro', 'mediafax.ro', 'prahova-online.ro', 'monitorulexpres.ro',
+  // Official / institutional
+  'hcl.civicul.ro', 'civicul.ro', 'gov.ro', 'just.ro', 'monitoruloficial.ro',
+  'primariatm.ro', 'cjtimis.ro',
+  // Generic aggregators / SEO spam / dating spam
+  'casaldaritanatura.pt', 'flatspotter.com', 'timisoreni.ro',
+  'saint-gobain.ro', 'infinity-skyline.ro', 'ateneo.ro',
+  // Facebook group / marketplace INDEX pages (individual posts have /posts/ or /permalink/)
+  // We allow /marketplace/item/ and /groups/*/posts/ but block index/landing pages
 ];
 
 function isGenericSearchPage(url: string | null | undefined, title: string | null | undefined): boolean {
-  const u = String(url || '').toLowerCase().split('?')[0];
+  const rawUrl = String(url || '');
+  const u = rawUrl.toLowerCase().split('?')[0];
   const t = removeDiacritics(String(title || '').toLowerCase());
+
+  // 0. Reject by file extension (PDFs, docs, archives are never live ads)
+  if (/\.(pdf|docx?|xlsx?|zip|rar)(\?|$)/i.test(u)) return true;
+
+  // 1. Reject forbidden domains outright
+  const host = extractUrlDomain(rawUrl) || '';
+  if (FORBIDDEN_DOMAINS.some((d) => host === d || host.endsWith('.' + d))) return true;
+
+  // 2. Facebook group/marketplace INDEX (no specific post/item ID) → reject
+  if (/facebook\.com\/(groups\/\d+\/?$|marketplace\/\d+\/?$|marketplace\/[a-z]+\/?$)/i.test(u)) return true;
+  if (/facebook\.com\/groups\/[^/]+\/?$/i.test(u)) return true;
+  if (/facebook\.com\/marketplace\/[^/]+\/(propertyforsale|propertyforrent)\/?$/i.test(u)) return true;
+
+  // 3. Allow recognized individual-ad URL patterns
   const isIndividualAd =
     u.includes('/d/oferta/') ||
     /storia\.ro\/ro\/oferta\//.test(u) ||
     /imobiliare\.ro\/oferta-/.test(u) ||
-    /imobiliare\.ro\/[^/]+\/[^/]+\/[a-z0-9]{6,}/i.test(String(url || ''));
+    /imobiliare\.ro\/[^/]+\/[^/]+\/[a-z0-9]{6,}/i.test(rawUrl) ||
+    /publi24\.ro\/anunturi\//.test(u) ||
+    /bursaimobiliara\.ro\/.+\/[a-z0-9-]+-\d+\.html/.test(u) ||
+    /lajumate\.ro\/ad\//.test(u) ||
+    /facebook\.com\/marketplace\/item\/\d+/i.test(u) ||
+    /facebook\.com\/groups\/[^/]+\/(posts|permalink)\/\d+/i.test(u);
   if (isIndividualAd) return false;
+
+  // 4. Anything else with listing-search shape → reject
   return u.includes('/q-') || /\/q-[^/]+\/?$/.test(u) ||
     /olx\.ro\/imobiliare(\/|$)/.test(u) ||
     /imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/.test(u) ||
@@ -327,7 +370,9 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
     GENERIC_LISTING_TITLE_SIGNALS.some((signal) => t.includes(removeDiacritics(signal.toLowerCase()))) ||
     t.endsWith('- olx.ro') ||
     t.endsWith('• olx.ro') ||
-    t.endsWith(' storia.ro');
+    t.endsWith(' storia.ro') ||
+    // Default-reject: unknown domain + no individual-ad URL shape → not callable
+    true;
 }
 
 function hasExplicitOwnerSignal(title: string | null | undefined, url: string | null | undefined, markdown: string | null | undefined): boolean {
