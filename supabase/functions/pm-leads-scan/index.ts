@@ -1,0 +1,181 @@
+// PM Leads Scan — discovers Booking/Airbnb hosts in Timișoara for Property
+// Management outreach. These leads are NEVER published on realtrust.ro —
+// they go to `pm_collaboration_leads` for Andrei's outreach pipeline.
+//
+// Uses Lovable AI Gateway (Gemini 2.5 Flash with google_search grounding)
+// to find listings + extract host info in a single call.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+interface ScanRequest {
+  keyword?: string;
+  platform?: "booking" | "airbnb" | "both";
+  keyword_id?: string;
+  max_results?: number;
+  triggered_by?: string;
+}
+
+const LOVABLE_API = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+async function discoverViaGemini(query: string, platform: string, maxResults: number) {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+
+  const platformDomain = platform === "airbnb" ? "airbnb.com" : "booking.com";
+  const prompt = `Caută pe ${platformDomain} maxim ${maxResults} anunțuri de cazare în Timișoara, România care se potrivesc cu: "${query}".
+
+Pentru fiecare anunț găsit, returnează JSON strict cu această structură (fără markdown, fără text adițional):
+
+{
+  "leads": [
+    {
+      "source_url": "URL complet către anunț",
+      "property_name": "nume proprietate",
+      "host_name": "nume gazdă (dacă vizibil)",
+      "zone": "zonă Timișoara (ex: Centru, Iosefin, Fabric, Dumbrăvița)",
+      "rating": 8.5,
+      "reviews_count": 120,
+      "price_per_night": 45,
+      "currency": "EUR",
+      "property_type": "apartament/studio/casă",
+      "rooms": 2,
+      "capacity": 4,
+      "description": "scurtă descriere"
+    }
+  ]
+}
+
+Reguli:
+- DOAR proprietari persoane fizice / gazde individuale (NU lanțuri hoteliere, NU hoteluri mari)
+- DOAR Timișoara (jud. Timiș) — exclude București/alte orașe
+- Dacă nu găsești date sigure pentru un câmp, folosește null
+- Răspunsul TREBUIE să fie JSON valid, fără text înainte sau după`;
+
+  const resp = await fetch(LOVABLE_API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "Ești un asistent care găsește anunțuri reale de cazare și returnează doar JSON valid." },
+        { role: "user", content: prompt },
+      ],
+      tools: [{ type: "google_search_retrieval" }],
+    }),
+  });
+
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`Gemini ${resp.status}: ${txt.slice(0, 300)}`);
+  }
+  const j = await resp.json();
+  const content = j?.choices?.[0]?.message?.content || "";
+  const match = content.match(/\{[\s\S]*\}/);
+  if (!match) return [];
+  try {
+    const parsed = JSON.parse(match[0]);
+    return Array.isArray(parsed?.leads) ? parsed.leads : [];
+  } catch {
+    return [];
+  }
+}
+
+function scorePmPotential(lead: any): number {
+  let s = 0;
+  const rating = Number(lead.rating) || 0;
+  const reviews = Number(lead.reviews_count) || 0;
+  const price = Number(lead.price_per_night) || 0;
+  const premiumZones = ["Centru", "Cetate", "Iosefin", "Fabric"];
+  if (rating >= 9) s += 30; else if (rating >= 8) s += 20; else if (rating >= 7) s += 10;
+  if (reviews >= 100) s += 25; else if (reviews >= 30) s += 15; else if (reviews >= 5) s += 5;
+  if (premiumZones.includes(lead.zone)) s += 25; else if (lead.zone) s += 10;
+  if (price >= 60) s += 20; else if (price >= 35) s += 10;
+  return Math.min(100, s);
+}
+
+function buildPitch(lead: any): string {
+  const z = lead.zone || "Timișoara";
+  const r = lead.rating ? `${lead.rating}/10` : "rating necunoscut";
+  const rev = lead.reviews_count ? `${lead.reviews_count} recenzii` : "fără recenzii";
+  return `Salut! Am observat anunțul "${lead.property_name || 'proprietatea ta'}" în ${z} (${r}, ${rev}). ` +
+    `La RealTrust gestionăm regim hotelier pentru investitori în Timișoara cu ocupare 75%+ și ROI net ~9.4%. ` +
+    `Te-ar interesa să preluăm noi managementul (curățenie, check-in, prețuri dinamice, multi-platform) pe comision?`;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  let body: ScanRequest = {};
+  try { body = await req.json(); } catch { /* empty */ }
+  const keyword = body.keyword?.trim() || "apartament cazare regim hotelier Timișoara";
+  const platform = body.platform || "both";
+  const maxResults = Math.min(Math.max(body.max_results || 8, 1), 15);
+
+  const platforms = platform === "both" ? ["booking", "airbnb"] : [platform];
+  const allInserted: any[] = [];
+  const errors: string[] = [];
+
+  for (const p of platforms) {
+    try {
+      const leads = await discoverViaGemini(keyword, p, maxResults);
+      for (const lead of leads) {
+        if (!lead?.source_url) continue;
+        const row = {
+          platform: p,
+          source_url: String(lead.source_url).trim(),
+          property_name: lead.property_name || null,
+          host_name: lead.host_name || null,
+          zone: lead.zone || null,
+          rating: lead.rating ? Number(lead.rating) : null,
+          reviews_count: lead.reviews_count ? Number(lead.reviews_count) : null,
+          price_per_night: lead.price_per_night ? Number(lead.price_per_night) : null,
+          currency: lead.currency || "EUR",
+          property_type: lead.property_type || null,
+          rooms: lead.rooms ? Number(lead.rooms) : null,
+          capacity: lead.capacity ? Number(lead.capacity) : null,
+          description: lead.description || null,
+          pm_potential_score: scorePmPotential(lead),
+          ai_pitch: buildPitch(lead),
+          discovered_via: body.keyword_id || keyword,
+          raw_data: lead,
+          status: "new",
+        };
+        const { data, error } = await supabase
+          .from("pm_collaboration_leads")
+          .upsert(row, { onConflict: "source_url", ignoreDuplicates: false })
+          .select("id, source_url")
+          .maybeSingle();
+        if (error) {
+          errors.push(`${p}/${row.source_url}: ${error.message}`);
+        } else if (data) {
+          allInserted.push(data);
+        }
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      errors.push(`${p}: ${msg}`);
+    }
+  }
+
+  return new Response(JSON.stringify({
+    success: true,
+    inserted: allInserted.length,
+    leads: allInserted,
+    errors,
+  }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+});

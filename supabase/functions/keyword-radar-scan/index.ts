@@ -21,11 +21,17 @@ function platformDomain(p: string): string | null {
     "OLX": "olx.ro",
     "Storia.ro": "storia.ro",
     "imobiliare.ro": "imobiliare.ro",
-    "Booking.com": "booking.com",
-    "Airbnb": "airbnb.com",
   };
   return m[p] || null;
 }
+
+// Hospitality platforms are NOT scraped into prospect_listings (they would
+// never be published on realtrust.ro). Instead they feed `pm_collaboration_leads`
+// via the dedicated `pm-leads-scan` function — for Andrei's PM outreach.
+const PM_LEAD_PLATFORMS: Record<string, "booking" | "airbnb"> = {
+  "Booking.com": "booking",
+  "Airbnb": "airbnb",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -86,30 +92,55 @@ Deno.serve(async (req) => {
       const kwDetail: any = { id: kw.id, keyword: kw.keyword, platforms: {} };
 
       for (const platform of (kw.platforms as string[])) {
+        const pmPlatform = PM_LEAD_PLATFORMS[platform];
         const domain = platformDomain(platform);
-        if (!domain) continue;
+        if (!pmPlatform && !domain) continue;
         stats.platforms_called++;
 
-        const customQuery = `${kw.keyword} site:${domain}`;
         try {
-          const resp = await fetch(`${PROJECT_URL}/functions/v1/scrape-prospects`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${SERVICE_KEY}`,
-              "apikey": SERVICE_KEY,
-            },
-            body: JSON.stringify({
-              custom_query: customQuery,
-              only_new_sources: true,
-              preserve_agency_filter: true,
-              source_label: `keyword-radar:${kw.id}`,
-            }),
-          });
+          let resp: Response;
+          if (pmPlatform) {
+            // Route Booking/Airbnb → PM collaboration leads (NOT published on site)
+            resp = await fetch(`${PROJECT_URL}/functions/v1/pm-leads-scan`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${SERVICE_KEY}`,
+                "apikey": SERVICE_KEY,
+              },
+              body: JSON.stringify({
+                keyword: kw.keyword,
+                platform: pmPlatform,
+                keyword_id: kw.id,
+                max_results: 8,
+                triggered_by: "keyword-radar",
+              }),
+            });
+          } else {
+            const customQuery = `${kw.keyword} site:${domain}`;
+            resp = await fetch(`${PROJECT_URL}/functions/v1/scrape-prospects`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${SERVICE_KEY}`,
+                "apikey": SERVICE_KEY,
+              },
+              body: JSON.stringify({
+                custom_query: customQuery,
+                only_new_sources: true,
+                preserve_agency_filter: true,
+                source_label: `keyword-radar:${kw.id}`,
+              }),
+            });
+          }
           const j = await resp.json().catch(() => ({}));
           const cnt = Number(j?.inserted || j?.results?.length || 0);
           kwResults += cnt;
-          kwDetail.platforms[platform] = { ok: resp.ok, inserted: cnt };
+          kwDetail.platforms[platform] = {
+            ok: resp.ok,
+            inserted: cnt,
+            route: pmPlatform ? "pm-leads" : "prospects",
+          };
           if (!resp.ok) stats.errors++;
         } catch (e) {
           stats.errors++;
