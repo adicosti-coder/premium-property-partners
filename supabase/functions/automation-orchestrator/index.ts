@@ -39,9 +39,10 @@ const JOB_FN: Record<string, string> = {
   "system.self_healing": "automation-self-healing",
   "system.anomaly_notifier": "automation-anomaly-notifier",
   // Listing import pipeline (auto-publish + self-heal + continuous learning)
-  "listing.auto_publish": "auto-publish-listings",
-  "listing.self_heal": "listing-import-self-heal",
+  "auto-publish-listings": "auto-publish-listings",
+  "listing-import-self-heal": "listing-import-self-heal",
   "listing.compile_prompt": "listing-import-compile-prompt",
+  "listing.learn": "listing-import-learn",
 };
 
 // Per-job body overrides for manual Run (event-driven jobs that need params).
