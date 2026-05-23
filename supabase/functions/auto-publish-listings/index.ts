@@ -140,19 +140,37 @@ function computeQualityScore(opts: {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
-async function loadActiveLearnings(supabase: any): Promise<{ forbidden: string[]; hints: string[] }> {
+async function loadActiveLearnings(supabase: any): Promise<{ forbidden: string[]; hints: string[]; semantic_count: number }> {
   const { data } = await supabase
     .from('listing_import_learnings')
-    .select('pattern_type, pattern')
+    .select('pattern_type, pattern, metadata')
     .eq('is_active', true)
-    .limit(200);
+    .limit(300);
   const forbidden: string[] = [];
   const hints: string[] = [];
-  for (const r of (data || []) as Array<{ pattern_type: string; pattern: string }>) {
+  let semantic_count = 0;
+  for (const r of (data || []) as Array<{ pattern_type: string; pattern: string; metadata?: any }>) {
     if (r.pattern_type === 'phrase') forbidden.push(r.pattern);
     else if (r.pattern_type === 'title_hint' || r.pattern_type === 'description_hint') hints.push(r.pattern);
+    else if (r.pattern_type === 'semantic_concept') {
+      semantic_count++;
+      const variants: string[] = Array.isArray(r.metadata?.variants) ? r.metadata.variants : [];
+      for (const v of variants) forbidden.push(v);
+      if (r.metadata?.description_hint) hints.push(r.metadata.description_hint);
+    }
   }
-  return { forbidden, hints };
+  return { forbidden, hints, semantic_count };
+}
+
+async function loadCompiledPrompt(supabase: any): Promise<string | null> {
+  const { data } = await supabase
+    .from('listing_import_system_prompts')
+    .select('compiled_prompt')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { compiled_prompt?: string } | null)?.compiled_prompt || null;
 }
 
 async function loadDisabledSources(supabase: any): Promise<Set<string>> {
