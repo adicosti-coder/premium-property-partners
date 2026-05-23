@@ -148,6 +148,56 @@ export default function FastReview() {
 
   useEffect(() => { if (isAdmin) load(); }, [isAdmin, load]);
 
+  // Derived: known zones + property subtypes from current rows
+  const knownZones = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => { if (r.location) set.add(r.location.trim()); });
+    return Array.from(set).sort();
+  }, [rows]);
+  const knownSubtypes = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => { if (r.property_subtype) set.add(r.property_subtype); });
+    return Array.from(set).sort();
+  }, [rows]);
+  const knownListingTypes = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => { if (r.listing_type) set.add(r.listing_type); });
+    return Array.from(set).sort();
+  }, [rows]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const min = priceMin ? Number(priceMin) : null;
+    const max = priceMax ? Number(priceMax) : null;
+    return rows.filter((r) => {
+      if (filterPropType !== "all" && r.property_subtype !== filterPropType) return false;
+      if (filterListingType !== "all" && r.listing_type !== filterListingType) return false;
+      if (filterZone !== "all" && (r.location || "").trim() !== filterZone) return false;
+      const price = r.listing_type === "vanzare" ? r.capital_necesar : r.base_price_per_night;
+      if (min !== null && (price ?? 0) < min) return false;
+      if (max !== null && (price ?? Number.POSITIVE_INFINITY) > max) return false;
+      if (q) {
+        const hay = `${r.name ?? ""} ${r.description_ro ?? ""} ${r.long_description_ro ?? ""} ${r.location ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [rows, search, filterPropType, filterListingType, filterZone, priceMin, priceMax]);
+
+  const visibleIds = useMemo(() => new Set(filtered.map((r) => r.id)), [filtered]);
+  const visibleSelectedCount = useMemo(
+    () => Array.from(selected).filter((id) => visibleIds.has(id)).length,
+    [selected, visibleIds],
+  );
+
+  const clearFilters = () => {
+    setSearch(""); setFilterPropType("all"); setFilterListingType("all");
+    setFilterZone("all"); setPriceMin(""); setPriceMax("");
+  };
+  const hasActiveFilters = !!search || filterPropType !== "all" || filterListingType !== "all"
+    || filterZone !== "all" || !!priceMin || !!priceMax;
+
+
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
       const n = new Set(prev);
