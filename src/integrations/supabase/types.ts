@@ -8076,6 +8076,12 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_shared_comparison: {
+        Args: { p_share_code: string }
+        Returns: {
+          items: Json
+        }[]
+      }
       get_shared_poi_link: {
         Args: { p_share_code: string }
         Returns: {
