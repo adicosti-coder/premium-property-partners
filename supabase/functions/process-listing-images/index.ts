@@ -68,8 +68,35 @@ async function bottomCrop(bytes: Uint8Array, cropRatio = 0.10): Promise<Uint8Arr
 
 type AiResult = { bytes: Uint8Array | null; error: string | null };
 
-async function dewatermarkClean(bytes: Uint8Array): Promise<AiResult> {
-  // Dewatermark.ai auto-detects the watermark — no mask required.
+// Retry policy: 3 attempts total, progressive backoff (2s → 5s → 10s)
+const RETRY_DELAYS_MS = [2000, 5000, 10000];
+const RETRYABLE = /timeout|network|fetch|abort|api_http_(408|429|5\d\d)|ECONN|ETIMEDOUT/i;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function withRetry<T extends { error: string | null }>(
+  label: string,
+  fn: () => Promise<T>,
+): Promise<T & { retries_attempted: number }> {
+  let last: T | null = null;
+  for (let attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt++) {
+    if (attempt > 0) {
+      console.log(`[retry] ${label} attempt ${attempt + 1} after ${RETRY_DELAYS_MS[attempt - 1]}ms`);
+      await sleep(RETRY_DELAYS_MS[attempt - 1]);
+    }
+    const res = await fn();
+    last = res;
+    if (!res.error) return { ...res, retries_attempted: attempt };
+    if (!RETRYABLE.test(res.error)) {
+      // Non-retryable error → give up immediately
+      return { ...res, retries_attempted: attempt };
+    }
+    console.warn(`[retry] ${label} failed attempt ${attempt + 1}: ${res.error}`);
+  }
+  return { ...(last as T), retries_attempted: RETRY_DELAYS_MS.length - 1 };
+}
+
+async function dewatermarkCleanOnce(bytes: Uint8Array): Promise<AiResult> {
   const ctl = new AbortController();
   const timeout = setTimeout(() => ctl.abort(), 30000);
   try {
@@ -87,9 +114,7 @@ async function dewatermarkClean(bytes: Uint8Array): Promise<AiResult> {
     clearTimeout(timeout);
     if (!res.ok) {
       const txt = (await res.text()).slice(0, 300);
-      const err = `api_http_${res.status}: ${txt}`;
-      console.error("Dewatermark error", err);
-      return { bytes: null, error: err };
+      return { bytes: null, error: `api_http_${res.status}: ${txt}` };
     }
     const data = await res.json();
     const b64 = data?.edited_image?.image;
@@ -101,25 +126,28 @@ async function dewatermarkClean(bytes: Uint8Array): Promise<AiResult> {
   } catch (e: any) {
     clearTimeout(timeout);
     const reason = e?.name === "AbortError" ? "api_timeout" : `api_exception: ${String(e?.message || e)}`;
-    console.error("Dewatermark exception", reason);
     return { bytes: null, error: reason };
   }
 }
 
+async function dewatermarkClean(bytes: Uint8Array) {
+  return withRetry("dewatermark", () => dewatermarkCleanOnce(bytes));
+}
+
 type ProcessResult =
-  | { kind: "processed"; out: Uint8Array; method: string }
-  | { kind: "ai_failed"; error: string };
+  | { kind: "processed"; out: Uint8Array; method: string; retries_attempted: number }
+  | { kind: "ai_failed"; error: string; retries_attempted: number };
 
 async function processOne(bytes: Uint8Array, mode: Mode): Promise<ProcessResult> {
   if (mode === "ai_inpaint") {
     const r = await dewatermarkClean(bytes);
-    if (r.bytes) return { kind: "processed", out: r.bytes, method: "ai_inpaint_dewatermark" };
-    return { kind: "ai_failed", error: r.error || "unknown_ai_error" };
+    if (r.bytes) return { kind: "processed", out: r.bytes, method: "ai_inpaint_dewatermark", retries_attempted: r.retries_attempted };
+    return { kind: "ai_failed", error: r.error || "unknown_ai_error", retries_attempted: r.retries_attempted };
   }
   if (mode === "bottom_crop") {
-    return { kind: "processed", out: await bottomCrop(bytes, 0.10), method: "bottom_crop" };
+    return { kind: "processed", out: await bottomCrop(bytes, 0.10), method: "bottom_crop", retries_attempted: 0 };
   }
-  return { kind: "processed", out: bytes, method: "passthrough" };
+  return { kind: "processed", out: bytes, method: "passthrough", retries_attempted: 0 };
 }
 
 
