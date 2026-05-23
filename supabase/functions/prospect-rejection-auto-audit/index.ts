@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // Auto-Audit pentru respingeri prospect_listings
 // Agregă datele de drill-down și cere LLM (Lovable AI / Gemini) un rezumat
 // + recomandări acționabile (tipare per platformă, trend, soluții).
@@ -11,6 +12,9 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
 
   try {
     if (!LOVABLE_API_KEY) {

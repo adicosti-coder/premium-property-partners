@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // SEO Audit Cron — runs every Monday 08:00 (Europe/Bucharest)
 // 1. Audits 5 critical URLs via seo-ai-optimizer
 // 2. Compares scores vs last snapshot
@@ -23,6 +24,9 @@ const ALERT_THRESHOLD = 5; // points drop triggers alert
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

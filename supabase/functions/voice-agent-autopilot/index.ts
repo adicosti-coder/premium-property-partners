@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // ──────────────────────────────────────────────────────────────
 // Voice Agent Autopilot — orchestrator pentru ciclul autonom complet.
 //
@@ -96,6 +97,9 @@ function isGenericUncallableProspect(prospect: any): boolean {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
   const startedAt = new Date().toISOString();
