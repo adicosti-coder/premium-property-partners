@@ -33,7 +33,7 @@ type Settings = {
 type Job = {
   id: string;
   job_key: string;
-  category: "lead" | "seo" | "system" | "blog" | "ai";
+  category: "lead" | "seo" | "system" | "blog" | "ai" | "listing";
   label: string;
   description: string | null;
   enabled: boolean;
