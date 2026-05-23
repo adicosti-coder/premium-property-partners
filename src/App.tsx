@@ -255,6 +255,7 @@ const App = () => (
                     <Route path="/admin/scraper-preview" element={<ScraperPreview />} />
                     <Route path="/admin/prospect-listings" element={<ProspectListings />} />
                     <Route path="/admin/call-dashboard" element={<CallDashboard />} />
+                    <Route path="/admin/properties/fast-review" element={<FastReview />} />
                     <Route path="/prospect-listings" element={<Navigate to="/admin/prospect-listings" replace />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
