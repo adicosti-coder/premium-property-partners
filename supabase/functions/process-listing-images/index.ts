@@ -200,6 +200,7 @@ Deno.serve(async (req) => {
   const perImage: any[] = [];
   let okCount = 0;
   let aiFailures = 0;
+  let totalRetries = 0;
   const aiErrors: string[] = [];
 
   for (let i = 0; i < sources.length; i++) {
@@ -208,17 +209,23 @@ Deno.serve(async (req) => {
       const raw = await fetchImageBytes(src);
       if (!raw) {
         finalUrls.push(src);
-        perImage.push({ i, src, status: "fetch_failed", fallback: "kept_original" });
+        perImage.push({ i, src, status: "fetch_failed", fallback: "kept_original", retries_attempted: 0 });
         continue;
       }
       const result = await processOne(raw, mode);
+      totalRetries += result.retries_attempted;
 
-      // Hard fallback: AI failed → keep ORIGINAL url, do not silently bottom-crop
+      // Hard fallback: AI failed after all retries → keep ORIGINAL url
       if (result.kind === "ai_failed") {
         aiFailures++;
         aiErrors.push(result.error);
         finalUrls.push(src);
-        perImage.push({ i, src, status: "ai_failed", error: result.error, fallback: "kept_original" });
+        perImage.push({
+          i, src, status: "ai_failed",
+          error: result.error,
+          retries_attempted: result.retries_attempted,
+          fallback: "kept_original",
+        });
         continue;
       }
 
@@ -230,22 +237,28 @@ Deno.serve(async (req) => {
       });
       if (upErr) {
         finalUrls.push(src);
-        perImage.push({ i, src, status: "upload_failed", error: upErr.message, fallback: "kept_original" });
+        perImage.push({ i, src, status: "upload_failed", error: upErr.message, fallback: "kept_original", retries_attempted: result.retries_attempted });
         continue;
       }
 
       const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
       finalUrls.push(pub.publicUrl);
-      perImage.push({ i, status: "ok", method: result.method, bytes_in: raw.byteLength, bytes_out: result.out.byteLength });
+      perImage.push({
+        i, status: "ok",
+        method: result.method,
+        retries_attempted: result.retries_attempted,
+        bytes_in: raw.byteLength,
+        bytes_out: result.out.byteLength,
+      });
       okCount++;
     } catch (err: any) {
       finalUrls.push(src);
-      perImage.push({ i, src, status: "error", error: String(err?.message || err), fallback: "kept_original" });
+      perImage.push({ i, src, status: "error", error: String(err?.message || err), fallback: "kept_original", retries_attempted: 0 });
     }
   }
 
   // Status decision matrix:
-  // - any AI failure (timeout/http/error) on an ai_inpaint source → fallback_failed
+  // - any AI failure (timeout/http/error after all retries) on an ai_inpaint source → fallback_failed
   // - otherwise some succeeded → completed
   // - otherwise nothing succeeded → failed
   let status: "completed" | "fallback_failed" | "failed";
@@ -264,12 +277,15 @@ Deno.serve(async (req) => {
       ok: okCount,
       ai_failures: aiFailures,
       ai_errors: aiErrors.slice(0, 5),
+      retry_policy: { max_attempts: RETRY_DELAYS_MS.length, backoff_ms: RETRY_DELAYS_MS },
+      total_retries: totalRetries,
       details: perImage,
     },
   }).eq("id", propertyId);
 
   return new Response(JSON.stringify({
     ok: true, property_id: propertyId, mode, processed: okCount,
-    ai_failures: aiFailures, total: sources.length, status,
+    ai_failures: aiFailures, total_retries: totalRetries,
+    total: sources.length, status,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
