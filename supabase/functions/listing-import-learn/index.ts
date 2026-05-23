@@ -27,6 +27,60 @@ const PROMOTE_THRESHOLD = 3; // evidence count to flip is_active=true
 const AUTODISABLE_AFTER = 8;
 const AUTODISABLE_HOURS = 12;
 
+async function generateSemanticRule(removedPhrases: string[], reason?: string): Promise<{
+  concept: string;
+  variants: string[];
+  description_hint: string;
+} | null> {
+  const key = Deno.env.get('LOVABLE_API_KEY');
+  if (!key || removedPhrases.length === 0) return null;
+  try {
+    const prompt = `Adminul unei agenții imobiliare a șters din descrierea AI a unui anunț următoarele fragmente:
+${removedPhrases.slice(0, 12).map((p) => `- "${p}"`).join('\n')}
+${reason ? `Motiv adițional menționat: "${reason}"` : ''}
+
+Generalizează aceste ștergeri într-o REGULĂ CONCEPTUALĂ unică. Exemplu: dacă fragmentele sunt "exclus intermediari", "fara agentii", "doar persoane fizice" → conceptul este "refuz colaborare cu agenții imobiliare".
+
+Răspunde STRICT JSON, fără markdown:
+{
+  "concept": "etichetă scurtă a conceptului (max 60 caractere, română)",
+  "variants": ["variantă 1", "variantă 2", "..."],
+  "description_hint": "instrucțiune scurtă (max 120 caractere) pentru AI: ce să evite pe viitor"
+}`;
+    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+      }),
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const text: string = data?.choices?.[0]?.message?.content || '';
+    const cleaned = text.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    if (!parsed?.concept || !Array.isArray(parsed?.variants)) return null;
+    const variants = parsed.variants
+      .filter((v: unknown): v is string => typeof v === 'string' && v.length >= 3 && v.length <= 80)
+      .map((v: string) => v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim())
+      .filter((v: string, i: number, a: string[]) => a.indexOf(v) === i)
+      .slice(0, 12);
+    if (variants.length === 0) return null;
+    return {
+      concept: String(parsed.concept).substring(0, 80),
+      variants,
+      description_hint: typeof parsed.description_hint === 'string'
+        ? parsed.description_hint.substring(0, 160)
+        : `Evită formulări precum: ${variants.slice(0, 3).join(', ')}`,
+    };
+  } catch (err) {
+    console.error('generateSemanticRule error:', err);
+    return null;
+  }
+}
+
 interface LearnRequest {
   property_id: string;
   action: 'approve' | 'edit' | 'reject';
