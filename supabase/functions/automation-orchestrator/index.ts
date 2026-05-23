@@ -63,6 +63,7 @@ const NOOP_JOB = new Set([
   "blog.cta_dedup_server",                // trigger Postgres pe cta_analytics
   "ai.memory_cross_function",             // agregat inline de visitor-memory
   "prospect.predictive_score_on_insert",  // trigger DB la inserare prospect
+  "listing.learn",                        // declanșat inline din FastReview după aprobare/respingere
 ]);
 
 const INLINE_JOB = new Set([
