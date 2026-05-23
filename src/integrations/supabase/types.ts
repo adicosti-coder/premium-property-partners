@@ -3011,7 +3011,7 @@ export type Database = {
           bedrooms: number | null
           booking_rating: number | null
           booking_review_count: number | null
-          booking_url: string
+          booking_url: string | null
           built_area: number | null
           capacity: number | null
           capital_necesar: number | null
@@ -3102,7 +3102,7 @@ export type Database = {
           bedrooms?: number | null
           booking_rating?: number | null
           booking_review_count?: number | null
-          booking_url: string
+          booking_url?: string | null
           built_area?: number | null
           capacity?: number | null
           capital_necesar?: number | null
@@ -3193,7 +3193,7 @@ export type Database = {
           bedrooms?: number | null
           booking_rating?: number | null
           booking_review_count?: number | null
-          booking_url?: string
+          booking_url?: string | null
           built_area?: number | null
           capacity?: number | null
           capital_necesar?: number | null
