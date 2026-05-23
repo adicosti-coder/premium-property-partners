@@ -38,6 +38,8 @@ type DraftProperty = {
   capital_necesar: number | null;
   size: number | null;
   rooms: number | null;
+  images_processing_status: string | null;
+  images_processed_at: string | null;
 };
 
 const PHONE_RE = /(?:\+?40[\s.\-]?|0)(?:7\d{2}|2\d{2}|3\d{2})[\s.\-]?\d{3}[\s.\-]?\d{3}/g;
