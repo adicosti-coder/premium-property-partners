@@ -136,6 +136,11 @@ serve(async (req) => {
       await finalize(supabase, runId, "skipped", summary);
       return jsonResp({ ok: true, skipped: "disabled", summary });
     }
+    if (!bypassSchedule && s.weekend_standby_enabled && isWeekendBucharest()) {
+      summary.notes.push("weekend standby mode active");
+      await finalize(supabase, runId, "skipped", summary);
+      return jsonResp({ ok: true, skipped: "weekend_standby", summary });
+    }
     if (!bypassSchedule && !isWithinHours(s)) {
       summary.notes.push(`outside hours ${s.allowed_hours_start}-${s.allowed_hours_end}`);
       await finalize(supabase, runId, "skipped", summary);
