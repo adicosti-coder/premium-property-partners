@@ -47,7 +47,13 @@ type AutonomySettings = {
   min_lead_score: number;
   allowed_hours_start: number;
   allowed_hours_end: number;
+  weekend_standby_enabled?: boolean;
 };
+
+function isWeekendBucharest(): boolean {
+  const wd = new Date().toLocaleString("en-US", { timeZone: "Europe/Bucharest", weekday: "short" });
+  return wd === "Sat" || wd === "Sun";
+}
 
 type RunSource = "cron" | "manual";
 
