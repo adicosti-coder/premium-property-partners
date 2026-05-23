@@ -136,6 +136,11 @@ export const template = {
     duplicates_marked_24h: 12,
     seo_drafts_pending: 5,
     seo_anomalies_24h: 1,
+    pm_leads_24h: 6,
+    pm_leads_airbnb_24h: 4,
+    pm_leads_booking_24h: 2,
+    pm_leads_avg_score: 72,
+    pm_leads_admin_url: 'https://realtrust.ro/admin?tab=listing-import',
     top_failures: [
       { job_key: 'lead.auto_classify_agency', error: 'Gateway 429: rate limited', consecutive_failures: 2 },
     ],
