@@ -783,6 +783,70 @@ const AutomationManager = () => {
         />
       </div>
 
+      {/* VOICE AGENT QUEUE STATUS — vizibilitate clară standby/weekend */}
+      <Card className={queueStatus.callable_now > 0 ? "border-primary/40" : "border-muted"}>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Phone className="w-4 h-4" /> Coadă Voice Agent (Andrei)
+                {queueStatus.loading ? (
+                  <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                ) : queueStatus.callable_now > 0 ? (
+                  <Badge variant="default">Activ</Badge>
+                ) : (
+                  <Badge variant="secondary">Standby</Badge>
+                )}
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Snapshot live: lead-uri eligibile structural vs. filtrate prin dedupe anti-spam (7 zile).
+                Autopilot {queueStatus.autopilot_on ? "ACTIV" : "OPRIT"} · prag scor ≥ {queueStatus.min_score} · fereastră 10–18 Europe/Bucharest.
+              </CardDescription>
+            </div>
+            <Button size="sm" variant="outline" onClick={loadQueueStatus} disabled={queueStatus.loading} className="shrink-0">
+              {queueStatus.loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
+              Refresh
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatCard
+              label="Apelabile acum"
+              value={queueStatus.callable_now}
+              highlight={queueStatus.callable_now > 0}
+            />
+            <StatCard
+              label="În dedupe (7z)"
+              value={queueStatus.in_dedupe_7d}
+              icon={<Shield className="w-3 h-3" />}
+            />
+            <StatCard
+              label="Eligibile structural"
+              value={queueStatus.structurally_eligible}
+            />
+            <StatCard
+              label="Următorul eligibil"
+              value={queueStatus.next_eligible_at
+                ? new Date(queueStatus.next_eligible_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short" })
+                : "—"}
+            />
+          </div>
+          {queueStatus.callable_now === 0 && queueStatus.in_dedupe_7d > 0 && !queueStatus.loading && (
+            <Alert className="mt-3">
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertTitle>Standby controlat — filtrele anti-spam își fac treaba</AlertTitle>
+              <AlertDescription className="text-xs">
+                Toate cele {queueStatus.in_dedupe_7d} lead-uri eligibile au fost deja contactate în ultimele 7 zile și sunt în carantină anti-spam.
+                Coada se va re-popula automat la următorul scrape (luni dimineață) sau la expirarea ferestrei de dedupe
+                {queueStatus.next_eligible_at ? ` (${new Date(queueStatus.next_eligible_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "long" })})` : ""}.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+
       {/* REALTIME INDICATOR */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Radio className={`w-3 h-3 ${realtimeOn ? "text-primary animate-pulse" : "text-muted-foreground"}`} />
