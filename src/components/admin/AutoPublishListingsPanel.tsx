@@ -96,6 +96,8 @@ export function AutoPublishListingsPanel() {
               {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Reîmprospătează"}
             </Button>
           </div>
+        </div>
+      </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <div className="border rounded-lg p-3">
