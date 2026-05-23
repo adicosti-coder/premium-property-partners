@@ -2250,6 +2250,42 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_import_config: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          is_regex: boolean
+          kind: string
+          notes: string | null
+          pattern: string
+          replacement: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          is_regex?: boolean
+          kind: string
+          notes?: string | null
+          pattern: string
+          replacement?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          is_regex?: boolean
+          kind?: string
+          notes?: string | null
+          pattern?: string
+          replacement?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       local_tips: {
         Row: {
           created_at: string
@@ -2738,6 +2774,8 @@ export type Database = {
           id: string
           image_path: string | null
           images: string[] | null
+          import_source: string | null
+          imported_at: string | null
           intercom_type: string | null
           is_active: boolean
           kitchens: number | null
@@ -2748,9 +2786,13 @@ export type Database = {
           long_description_en: string | null
           long_description_ro: string | null
           longitude: number | null
+          migrated_from_prospect_id: string | null
           monthly_maintenance: number | null
           name: string
+          needs_review: boolean
           orientation: string | null
+          original_description_raw: string | null
+          original_source_url: string | null
           parking: string | null
           price_per_sqm: number | null
           property_code: string | null
@@ -2759,6 +2801,7 @@ export type Database = {
           renovation_year: number | null
           roi_percentage: string | null
           rooms: number | null
+          sanitization_log: Json | null
           size: number | null
           slug: string | null
           source_platform: string | null
@@ -2816,6 +2859,8 @@ export type Database = {
           id?: string
           image_path?: string | null
           images?: string[] | null
+          import_source?: string | null
+          imported_at?: string | null
           intercom_type?: string | null
           is_active?: boolean
           kitchens?: number | null
@@ -2826,9 +2871,13 @@ export type Database = {
           long_description_en?: string | null
           long_description_ro?: string | null
           longitude?: number | null
+          migrated_from_prospect_id?: string | null
           monthly_maintenance?: number | null
           name: string
+          needs_review?: boolean
           orientation?: string | null
+          original_description_raw?: string | null
+          original_source_url?: string | null
           parking?: string | null
           price_per_sqm?: number | null
           property_code?: string | null
@@ -2837,6 +2886,7 @@ export type Database = {
           renovation_year?: number | null
           roi_percentage?: string | null
           rooms?: number | null
+          sanitization_log?: Json | null
           size?: number | null
           slug?: string | null
           source_platform?: string | null
@@ -2894,6 +2944,8 @@ export type Database = {
           id?: string
           image_path?: string | null
           images?: string[] | null
+          import_source?: string | null
+          imported_at?: string | null
           intercom_type?: string | null
           is_active?: boolean
           kitchens?: number | null
@@ -2904,9 +2956,13 @@ export type Database = {
           long_description_en?: string | null
           long_description_ro?: string | null
           longitude?: number | null
+          migrated_from_prospect_id?: string | null
           monthly_maintenance?: number | null
           name?: string
+          needs_review?: boolean
           orientation?: string | null
+          original_description_raw?: string | null
+          original_source_url?: string | null
           parking?: string | null
           price_per_sqm?: number | null
           property_code?: string | null
@@ -2915,6 +2971,7 @@ export type Database = {
           renovation_year?: number | null
           roi_percentage?: string | null
           rooms?: number | null
+          sanitization_log?: Json | null
           size?: number | null
           slug?: string | null
           source_platform?: string | null
