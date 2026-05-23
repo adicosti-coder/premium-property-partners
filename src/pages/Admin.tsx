@@ -50,7 +50,7 @@ import PropertyViewsManager from "@/components/admin/PropertyViewsManager";
 import CazareManager from "@/components/admin/CazareManager";
 import InvestitiiPremiumManager from "@/components/admin/InvestitiiPremiumManager";
 import ICalManager from "@/components/admin/ICalManager";
-import ListingImporter from "@/components/admin/ListingImporter";
+import ListingImportTabs from "@/components/admin/ListingImportTabs";
 import ProspectManager from "@/components/admin/ProspectManager";
 import CatalogManager from "@/components/admin/CatalogManager";
 import GuestGuideManager from "@/components/admin/GuestGuideManager";
@@ -331,7 +331,7 @@ const Admin = () => {
                   <TabsContent value="property-views"><PropertyViewsManager /></TabsContent>
                   <TabsContent value="ical-sync"><ICalManager /></TabsContent>
                   <TabsContent value="prospects"><ProspectManager /></TabsContent>
-                  <TabsContent value="listing-import"><ListingImporter /></TabsContent>
+                  <TabsContent value="listing-import"><ListingImportTabs /></TabsContent>
                   <TabsContent value="guest-guides"><GuestGuideManager /></TabsContent>
                   <TabsContent value="catalogs"><CatalogManager /></TabsContent>
                   <TabsContent value="scraper-status"><ScraperStatusDashboard /></TabsContent>
