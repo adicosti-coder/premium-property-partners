@@ -113,6 +113,16 @@ export default function FastReview() {
   const [editName, setEditName] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
+  // Filters
+  const [search, setSearch] = useState("");
+  const [filterPropType, setFilterPropType] = useState<string>("all");
+  const [filterListingType, setFilterListingType] = useState<string>("all");
+  const [filterZone, setFilterZone] = useState<string>("all");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+
+
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
