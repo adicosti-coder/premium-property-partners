@@ -1,0 +1,272 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { Loader2, Send, ExternalLink, RefreshCw, Mail, Copy, Search } from "lucide-react";
+
+interface PmLead {
+  id: string;
+  platform: string;
+  source_url: string;
+  property_name: string | null;
+  host_name: string | null;
+  zone: string | null;
+  rating: number | null;
+  reviews_count: number | null;
+  price_per_night: number | null;
+  currency: string | null;
+  property_type: string | null;
+  rooms: number | null;
+  capacity: number | null;
+  pm_potential_score: number;
+  ai_pitch: string | null;
+  status: string;
+  sent_to_andrei_at: string | null;
+  contacted_at?: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+const ANDREI_EMAIL_KEY = "pm_leads_andrei_email";
+
+const PmLeadsPanel = () => {
+  const [leads, setLeads] = useState<PmLead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [scanning, setScanning] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("new");
+  const [searchKeyword, setSearchKeyword] = useState("apartament regim hotelier Timișoara");
+  const [andreiEmail, setAndreiEmail] = useState<string>(() => localStorage.getItem(ANDREI_EMAIL_KEY) || "");
+
+  const loadLeads = async () => {
+    setLoading(true);
+    let q = supabase
+      .from("pm_collaboration_leads")
+      .select("*")
+      .order("pm_potential_score", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (statusFilter !== "all") q = q.eq("status", statusFilter);
+    const { data, error } = await q;
+    if (error) toast.error(error.message);
+    else setLeads((data as PmLead[]) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { loadLeads(); }, [statusFilter]);
+
+  const triggerScan = async () => {
+    setScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("pm-leads-scan", {
+        body: { keyword: searchKeyword, platform: "both", max_results: 10 },
+      });
+      if (error) throw error;
+      toast.success(`Scan complet: ${data?.inserted || 0} leaduri noi/actualizate`);
+      await loadLeads();
+    } catch (e: any) {
+      toast.error(e.message || "Scan eșuat");
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const updateStatus = async (id: string, status: string, extra: Partial<PmLead> = {}) => {
+    const { error } = await supabase
+      .from("pm_collaboration_leads")
+      .update({ status, ...extra })
+      .eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Status actualizat"); loadLeads(); }
+  };
+
+  const sendToAndrei = (lead: PmLead) => {
+    if (!andreiEmail) {
+      toast.error("Setează emailul lui Andrei mai întâi");
+      return;
+    }
+    const subject = `[PM Lead] ${lead.property_name || lead.platform} — ${lead.zone || "Timișoara"} (score ${lead.pm_potential_score})`;
+    const body =
+`Salut Andrei,
+
+Lead nou pentru Property Management de regim hotelier:
+
+Proprietate: ${lead.property_name || "n/a"}
+Gazdă: ${lead.host_name || "n/a"}
+Platformă: ${lead.platform}
+Zonă: ${lead.zone || "n/a"}
+Rating: ${lead.rating || "n/a"} (${lead.reviews_count || 0} recenzii)
+Preț/noapte: ${lead.price_per_night ? `${lead.price_per_night} ${lead.currency}` : "n/a"}
+Tip: ${lead.property_type || "n/a"} | Camere: ${lead.rooms || "?"} | Capacitate: ${lead.capacity || "?"}
+Score PM: ${lead.pm_potential_score}/100
+
+URL anunț: ${lead.source_url}
+
+Pitch sugerat:
+${lead.ai_pitch || "—"}
+
+— RealTrust Radar
+`;
+    const mailto = `mailto:${andreiEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailto, "_blank");
+    updateStatus(lead.id, "sent_to_andrei", { sent_to_andrei_at: new Date().toISOString() as any });
+  };
+
+  const copyPitch = async (lead: PmLead) => {
+    if (!lead.ai_pitch) return;
+    await navigator.clipboard.writeText(lead.ai_pitch);
+    toast.success("Pitch copiat în clipboard");
+  };
+
+  const saveAndreiEmail = (val: string) => {
+    setAndreiEmail(val);
+    localStorage.setItem(ANDREI_EMAIL_KEY, val);
+  };
+
+  const statusBadge = (s: string) => {
+    const map: Record<string, string> = {
+      new: "bg-blue-100 text-blue-800",
+      reviewed: "bg-slate-100 text-slate-800",
+      sent_to_andrei: "bg-amber-100 text-amber-800",
+      contacted: "bg-purple-100 text-purple-800",
+      onboarded: "bg-green-100 text-green-800",
+      declined: "bg-rose-100 text-rose-800",
+      blacklisted: "bg-gray-200 text-gray-700",
+    };
+    return <Badge className={map[s] || ""}>{s}</Badge>;
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="w-5 h-5" /> PM Collaboration Leads (Booking/Airbnb → Andrei)
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Gazde persoane fizice din Timișoara identificate pe Booking/Airbnb.
+            <strong> Aceste anunțuri NU se publică pe realtrust.ro</strong> — sunt propuneri
+            pentru Andrei să le abordeze cu oferta de Property Management de regim hotelier.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium">Email Andrei</label>
+              <Input
+                type="email"
+                placeholder="andrei@realtrust.ro"
+                value={andreiEmail}
+                onChange={(e) => saveAndreiEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium">Keyword scan</label>
+              <div className="flex gap-2">
+                <Input value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} />
+                <Button onClick={triggerScan} disabled={scanning}>
+                  {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate</SelectItem>
+                <SelectItem value="new">Noi</SelectItem>
+                <SelectItem value="reviewed">Revizuite</SelectItem>
+                <SelectItem value="sent_to_andrei">Trimise lui Andrei</SelectItem>
+                <SelectItem value="contacted">Contactate</SelectItem>
+                <SelectItem value="onboarded">Onboarded</SelectItem>
+                <SelectItem value="declined">Refuzate</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={loadLeads}>
+              <RefreshCw className="w-4 h-4 mr-1" /> Refresh
+            </Button>
+            <span className="text-sm text-muted-foreground ml-auto">{leads.length} leaduri</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {loading ? (
+        <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+      ) : leads.length === 0 ? (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">
+          Niciun lead. Rulează un scan pentru a descoperi gazde Booking/Airbnb.
+        </CardContent></Card>
+      ) : (
+        <div className="space-y-3">
+          {leads.map((lead) => (
+            <Card key={lead.id}>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="uppercase">{lead.platform}</Badge>
+                      {statusBadge(lead.status)}
+                      <Badge className="bg-emerald-100 text-emerald-800">Score {lead.pm_potential_score}</Badge>
+                      {lead.zone && <Badge variant="secondary">{lead.zone}</Badge>}
+                    </div>
+                    <h3 className="font-semibold mt-1">{lead.property_name || "(fără nume)"}</h3>
+                    <div className="text-sm text-muted-foreground">
+                      {lead.host_name && <span>Gazdă: {lead.host_name} · </span>}
+                      {lead.rating && <span>{lead.rating}/10 ({lead.reviews_count || 0} rec.) · </span>}
+                      {lead.price_per_night && <span>{lead.price_per_night} {lead.currency}/noapte · </span>}
+                      {lead.rooms && <span>{lead.rooms} cam · </span>}
+                      {lead.capacity && <span>{lead.capacity} pers</span>}
+                    </div>
+                  </div>
+                  <a href={lead.source_url} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm"><ExternalLink className="w-4 h-4" /></Button>
+                  </a>
+                </div>
+
+                {lead.ai_pitch && (
+                  <div className="bg-muted/50 p-3 rounded text-sm">
+                    <div className="text-xs font-medium mb-1 flex items-center justify-between">
+                      <span>Pitch sugerat pentru Andrei</span>
+                      <Button variant="ghost" size="sm" onClick={() => copyPitch(lead)}>
+                        <Copy className="w-3 h-3 mr-1" /> Copy
+                      </Button>
+                    </div>
+                    <p className="whitespace-pre-wrap">{lead.ai_pitch}</p>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => sendToAndrei(lead)} disabled={!andreiEmail}>
+                    <Send className="w-4 h-4 mr-1" /> Trimite lui Andrei
+                  </Button>
+                  {lead.status !== "contacted" && (
+                    <Button size="sm" variant="outline" onClick={() => updateStatus(lead.id, "contacted", { contacted_at: new Date().toISOString() as any })}>
+                      Marchează contactat
+                    </Button>
+                  )}
+                  {lead.status !== "onboarded" && (
+                    <Button size="sm" variant="outline" onClick={() => updateStatus(lead.id, "onboarded")}>
+                      Onboarded
+                    </Button>
+                  )}
+                  {lead.status !== "declined" && (
+                    <Button size="sm" variant="outline" onClick={() => updateStatus(lead.id, "declined")}>
+                      Refuzat
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PmLeadsPanel;

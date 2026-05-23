@@ -2932,6 +2932,102 @@ export type Database = {
         }
         Relationships: []
       }
+      pm_collaboration_leads: {
+        Row: {
+          ai_pitch: string | null
+          ai_summary: string | null
+          amenities: string[] | null
+          capacity: number | null
+          city: string | null
+          contacted_at: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          discovered_via: string | null
+          host_name: string | null
+          host_profile_url: string | null
+          id: string
+          images: string[] | null
+          notes: string | null
+          platform: string
+          pm_potential_score: number | null
+          price_per_night: number | null
+          property_name: string | null
+          property_type: string | null
+          rating: number | null
+          raw_data: Json | null
+          reviews_count: number | null
+          rooms: number | null
+          sent_to_andrei_at: string | null
+          source_url: string
+          status: string
+          updated_at: string
+          zone: string | null
+        }
+        Insert: {
+          ai_pitch?: string | null
+          ai_summary?: string | null
+          amenities?: string[] | null
+          capacity?: number | null
+          city?: string | null
+          contacted_at?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          discovered_via?: string | null
+          host_name?: string | null
+          host_profile_url?: string | null
+          id?: string
+          images?: string[] | null
+          notes?: string | null
+          platform: string
+          pm_potential_score?: number | null
+          price_per_night?: number | null
+          property_name?: string | null
+          property_type?: string | null
+          rating?: number | null
+          raw_data?: Json | null
+          reviews_count?: number | null
+          rooms?: number | null
+          sent_to_andrei_at?: string | null
+          source_url: string
+          status?: string
+          updated_at?: string
+          zone?: string | null
+        }
+        Update: {
+          ai_pitch?: string | null
+          ai_summary?: string | null
+          amenities?: string[] | null
+          capacity?: number | null
+          city?: string | null
+          contacted_at?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          discovered_via?: string | null
+          host_name?: string | null
+          host_profile_url?: string | null
+          id?: string
+          images?: string[] | null
+          notes?: string | null
+          platform?: string
+          pm_potential_score?: number | null
+          price_per_night?: number | null
+          property_name?: string | null
+          property_type?: string | null
+          rating?: number | null
+          raw_data?: Json | null
+          reviews_count?: number | null
+          rooms?: number | null
+          sent_to_andrei_at?: string | null
+          source_url?: string
+          status?: string
+          updated_at?: string
+          zone?: string | null
+        }
+        Relationships: []
+      }
       poi_favorites: {
         Row: {
           created_at: string
