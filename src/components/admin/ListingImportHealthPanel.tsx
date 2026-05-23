@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Activity, Beaker, Brain, FlaskConical, Loader2, RefreshCw, ShieldAlert, Sparkles, TrendingUp, Wand2, Zap } from "lucide-react";
+import { Activity, AlertTriangle, Beaker, Brain, FlaskConical, Loader2, RefreshCw, Search, ShieldAlert, Sparkles, TrendingUp, Wand2, Zap } from "lucide-react";
 
 type Metric = {
   id: string;
@@ -160,8 +160,9 @@ export function ListingImportHealthPanel() {
     await load();
   };
 
-  const runSandbox = async () => {
-    if (sbText.trim().length < 30) {
+  const runSandbox = async (overrideText?: string) => {
+    const text = overrideText ?? sbText;
+    if (text.trim().length < 30) {
       toast({ title: "Text prea scurt", description: "Lipește minim 30 caractere din anunțul original.", variant: "destructive" });
       return;
     }
@@ -170,7 +171,7 @@ export function ListingImportHealthPanel() {
     try {
       const { data, error } = await supabase.functions.invoke("listing-import-sandbox", {
         body: {
-          raw_text: sbText,
+          raw_text: text,
           raw_title: sbTitle || undefined,
           listing_type: sbType,
           use_ai_rewrite: sbUseAi,
@@ -188,6 +189,15 @@ export function ListingImportHealthPanel() {
     } finally {
       setSbRunning(false);
     }
+  };
+
+  const PRESET_OWNER = "Proprietar, ofer spre vanzare apartament de lux cu 2 camere in complexul ISHO Timisoara, cladirea Riverside. Locuinta are o suprafata utila de 56 mp, etaj 4, complet mobilat modern. Pret 142.000 EUR usor discutabil. NU COLABOREZ CU AGENTII IMOBILIARE! Sunati la 0723.112.233 sau lasati mesaj pe ion_proprietar_isho@yahoo.com";
+
+  const PRESET_AGENCY = "Proprietar, vand apartament in zona Paltim. Finisaje de inalta calitate, decomandat. Pentru vizionari si detalii suplimentare, programarile se fac prin brokerul nostru exclusiv. Se percepe un onorariu servicii imobiliare de doar 2% la semnarea contractului.";
+
+  const handlePresetLoad = (text: string) => {
+    setSbText(text);
+    runSandbox(text);
   };
 
   const compilePrompt = async () => {
@@ -395,6 +405,29 @@ export function ListingImportHealthPanel() {
                 Lipește textul brut copiat de pe OLX / Storia / OLX-Imobiliare etc. Sistemul rulează EXACT același pipeline (sanitizare + refusal detection + quality score + rescriere Gemini cu promptul compilat activ) și îți arată ce s-ar întâmpla. Nimic nu se salvează în DB.
               </AlertDescription>
             </Alert>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePresetLoad(PRESET_OWNER)}
+                disabled={sbRunning}
+                className="gap-1.5 text-xs border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+              >
+                <Search className="w-3.5 h-3.5" />
+                Încarcă Exemplu Proprietar (FSBO)
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePresetLoad(PRESET_AGENCY)}
+                disabled={sbRunning}
+                className="gap-1.5 text-xs border-amber-200 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Încarcă Exemplu Agenție Deghizată
+              </Button>
+            </div>
 
             <div className="grid md:grid-cols-3 gap-3">
               <div className="md:col-span-2 space-y-2">
