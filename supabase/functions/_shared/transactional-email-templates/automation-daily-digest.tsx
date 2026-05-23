@@ -59,6 +59,21 @@ const AutomationDailyDigest: React.FC<Props> = (p) => {
           <Stat label="Duplicate marcate" value={p.duplicates_marked_24h} />
 
           <Heading as="h2" style={{ fontSize: 14, color: '#374151', margin: '24px 0 8px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            💼 Prospectare B2B (Short-Term Leads)
+          </Heading>
+          <Text style={{ fontSize: 13, color: '#374151', margin: '0 0 8px' }}>
+            Gazde noi descoperite: <strong>{p.pm_leads_24h ?? 0}</strong>
+            {' '}(Airbnb: <strong>{p.pm_leads_airbnb_24h ?? 0}</strong>
+            {' '}| Booking: <strong>{p.pm_leads_booking_24h ?? 0}</strong>)
+            {' '}| Scor mediu PM: <strong>{p.pm_leads_avg_score ?? 0}%</strong>
+          </Text>
+          <Text style={{ fontSize: 12, margin: '0 0 4px' }}>
+            <a href={p.pm_leads_admin_url || 'https://realtrust.ro/admin?tab=listing-import'} style={{ color: '#0f1b3d', fontWeight: 600 }}>
+              → Gestionează PM Leads
+            </a>
+          </Text>
+
+          <Heading as="h2" style={{ fontSize: 14, color: '#374151', margin: '24px 0 8px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
             SEO (24h)
           </Heading>
           <Stat label="Meta drafts" value={p.seo_drafts_pending} />
