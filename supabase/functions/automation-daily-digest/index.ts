@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
     seoDraftsRes,
     seoAnomaliesRes,
     recentApprovalsRes,
+    pmLeadsRes,
   ] = await Promise.all([
     supabase.from("automation_approvals").select("id, severity", { count: "exact" }).eq("status", "pending"),
     supabase.from("automation_jobs").select("job_key, last_status, last_error, consecutive_failures, enabled"),
@@ -48,6 +49,8 @@ Deno.serve(async (req) => {
       .gte("sent_at", since),
     supabase.from("automation_approvals").select("action_type, severity, created_at")
       .eq("status", "pending").order("created_at", { ascending: false }).limit(5),
+    supabase.from("pm_collaboration_leads").select("platform, pm_potential_score, created_at")
+      .gte("created_at", since),
   ]);
 
   const jobs = jobsRes.data ?? [];
@@ -62,6 +65,16 @@ Deno.serve(async (req) => {
       consecutive_failures: j.consecutive_failures ?? 0,
     }));
 
+  // PM Leads B2B (Short-Term Hosts — Booking/Airbnb) — last 24h
+  const pmLeads = (pmLeadsRes.data ?? []) as Array<{ platform: string | null; pm_potential_score: number | null }>;
+  const pmAirbnb = pmLeads.filter((l) => (l.platform || "").toLowerCase() === "airbnb").length;
+  const pmBooking = pmLeads.filter((l) => (l.platform || "").toLowerCase() === "booking").length;
+  const pmTotal = pmLeads.length;
+  const pmScores = pmLeads.map((l) => Number(l.pm_potential_score) || 0).filter((n) => n > 0);
+  const pmAvgScore = pmScores.length
+    ? Math.round(pmScores.reduce((s, n) => s + n, 0) / pmScores.length)
+    : 0;
+
   const data = {
     date: today,
     pending_approvals: pendingApprovalsRes.count ?? 0,
@@ -72,6 +85,11 @@ Deno.serve(async (req) => {
     duplicates_marked_24h: duplicatesRes.count ?? 0,
     seo_drafts_pending: seoDraftsRes.count ?? 0,
     seo_anomalies_24h: seoAnomaliesRes.count ?? 0,
+    pm_leads_24h: pmTotal,
+    pm_leads_airbnb_24h: pmAirbnb,
+    pm_leads_booking_24h: pmBooking,
+    pm_leads_avg_score: pmAvgScore,
+    pm_leads_admin_url: "https://realtrust.ro/admin?tab=listing-import",
     top_failures: topFailures,
     top_approvals: recentApprovalsRes.data ?? [],
   };
