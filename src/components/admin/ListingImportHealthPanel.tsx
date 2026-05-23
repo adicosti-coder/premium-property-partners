@@ -406,6 +406,29 @@ export function ListingImportHealthPanel() {
               </AlertDescription>
             </Alert>
 
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePresetLoad(PRESET_OWNER)}
+                disabled={sbRunning}
+                className="gap-1.5 text-xs border-blue-200 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+              >
+                <Search className="w-3.5 h-3.5" />
+                Încarcă Exemplu Proprietar (FSBO)
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePresetLoad(PRESET_AGENCY)}
+                disabled={sbRunning}
+                className="gap-1.5 text-xs border-amber-200 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Încarcă Exemplu Agenție Deghizată
+              </Button>
+            </div>
+
             <div className="grid md:grid-cols-3 gap-3">
               <div className="md:col-span-2 space-y-2">
                 <Label className="text-xs">Text brut anunț (paste din sursă)</Label>
