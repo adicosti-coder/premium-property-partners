@@ -356,6 +356,7 @@ Deno.serve(async (req) => {
     success: true,
     diff_tokens: diffTokens.length,
     promoted_learnings: promoted,
+    semantic_promoted: semanticPromoted,
     source_auto_disabled: sourceDisabled,
   }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 });
