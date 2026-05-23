@@ -2318,6 +2318,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           last_seen: string
+          metadata: Json | null
           notes: string | null
           pattern: string
           pattern_type: string
@@ -2330,6 +2331,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_seen?: string
+          metadata?: Json | null
           notes?: string | null
           pattern: string
           pattern_type: string
@@ -2342,6 +2344,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_seen?: string
+          metadata?: Json | null
           notes?: string | null
           pattern?: string
           pattern_type?: string
@@ -2513,6 +2516,42 @@ export type Database = {
           total_rejected?: number | null
           total_user_rejected?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      listing_import_system_prompts: {
+        Row: {
+          compiled_prompt: string
+          created_at: string
+          forbidden_count: number
+          generated_by: string | null
+          hints_count: number
+          id: string
+          is_active: boolean
+          notes: string | null
+          semantic_count: number
+        }
+        Insert: {
+          compiled_prompt: string
+          created_at?: string
+          forbidden_count?: number
+          generated_by?: string | null
+          hints_count?: number
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          semantic_count?: number
+        }
+        Update: {
+          compiled_prompt?: string
+          created_at?: string
+          forbidden_count?: number
+          generated_by?: string | null
+          hints_count?: number
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          semantic_count?: number
         }
         Relationships: []
       }

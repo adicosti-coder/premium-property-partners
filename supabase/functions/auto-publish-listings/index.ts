@@ -140,19 +140,37 @@ function computeQualityScore(opts: {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
-async function loadActiveLearnings(supabase: any): Promise<{ forbidden: string[]; hints: string[] }> {
+async function loadActiveLearnings(supabase: any): Promise<{ forbidden: string[]; hints: string[]; semantic_count: number }> {
   const { data } = await supabase
     .from('listing_import_learnings')
-    .select('pattern_type, pattern')
+    .select('pattern_type, pattern, metadata')
     .eq('is_active', true)
-    .limit(200);
+    .limit(300);
   const forbidden: string[] = [];
   const hints: string[] = [];
-  for (const r of (data || []) as Array<{ pattern_type: string; pattern: string }>) {
+  let semantic_count = 0;
+  for (const r of (data || []) as Array<{ pattern_type: string; pattern: string; metadata?: any }>) {
     if (r.pattern_type === 'phrase') forbidden.push(r.pattern);
     else if (r.pattern_type === 'title_hint' || r.pattern_type === 'description_hint') hints.push(r.pattern);
+    else if (r.pattern_type === 'semantic_concept') {
+      semantic_count++;
+      const variants: string[] = Array.isArray(r.metadata?.variants) ? r.metadata.variants : [];
+      for (const v of variants) forbidden.push(v);
+      if (r.metadata?.description_hint) hints.push(r.metadata.description_hint);
+    }
   }
-  return { forbidden, hints };
+  return { forbidden, hints, semantic_count };
+}
+
+async function loadCompiledPrompt(supabase: any): Promise<string | null> {
+  const { data } = await supabase
+    .from('listing_import_system_prompts')
+    .select('compiled_prompt')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { compiled_prompt?: string } | null)?.compiled_prompt || null;
 }
 
 async function loadDisabledSources(supabase: any): Promise<Set<string>> {
@@ -175,20 +193,21 @@ async function rewriteWithAI(
   sanitized: string,
   listingType: string,
   hints: string[],
+  compiledPrompt: string | null,
 ): Promise<{ title?: string; short?: string; full?: string } | null> {
   const key = Deno.env.get('LOVABLE_API_KEY');
   if (!key || !sanitized || sanitized.length < 80) return null;
   try {
     const hintBlock = hints.length > 0
-      ? `\nLECȚII ÎNVĂȚATE DIN CORECȚIILE ADMINULUI (aplică automat):\n- ${hints.slice(0, 8).join('\n- ')}\n`
+      ? `\nLECȚII ÎNVĂȚATE DIN CORECȚIILE ADMINULUI (aplică automat):\n- ${hints.slice(0, 12).join('\n- ')}\n`
       : '';
-    const prompt = `Ești copywriter imobiliar premium pentru RealTrust (agenție din Timișoara).
-Rescrie descrierea pentru un anunț de ${listingType === 'inchiriere' ? 'închiriere' : 'vânzare'}.
+    const systemPrompt = compiledPrompt || `Ești copywriter imobiliar premium pentru RealTrust (agenție din Timișoara).
 REGULI STRICTE:
 - NU include numere de telefon, emailuri, adrese exacte cu număr stradal.
 - NU folosi: "proprietar", "persoană fizică", "fără comision", "comision 0", "direct proprietar".
-- Limbaj profesional de agenție, accent pe avantaje și potențial de investiție.
-- Răspunde STRICT în formatul: ---TITLU---\\n[titlu]\\n---SCURT---\\n[descriere scurtă <200 char]\\n---COMPLET---\\n[descriere completă markdown]
+- Limbaj profesional de agenție, accent pe avantaje și potențial de investiție.`;
+    const userPrompt = `Rescrie descrierea pentru un anunț de ${listingType === 'inchiriere' ? 'închiriere' : 'vânzare'}.
+Răspunde STRICT în formatul: ---TITLU---\\n[titlu]\\n---SCURT---\\n[descriere scurtă <200 char]\\n---COMPLET---\\n[descriere completă markdown]
 ${hintBlock}
 TITLU ORIGINAL: ${title}
 DESCRIERE: ${sanitized.substring(0, 3000)}`;
@@ -198,7 +217,10 @@ DESCRIERE: ${sanitized.substring(0, 3000)}`;
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
       }),
     });
     if (!resp.ok) return null;
@@ -258,6 +280,7 @@ Deno.serve(async (req) => {
   // Load config + learnings + disabled sources
   const baseConfig = await loadImportConfig(supabase);
   const learnings = await loadActiveLearnings(supabase);
+  const compiledPrompt = await loadCompiledPrompt(supabase);
   const disabledSources = await loadDisabledSources(supabase);
 
   // Merge learned forbidden phrases on top of config (without DB write)
@@ -354,7 +377,7 @@ Deno.serve(async (req) => {
       let finalFull = cleanDesc.sanitized;
 
       if (useAiRewrite) {
-        const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare', learnings.hints);
+        const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare', learnings.hints, compiledPrompt);
         if (ai?.title) finalTitle = sanitizeListingText(ai.title, mergedConfig).sanitized || finalTitle;
         if (ai?.short) finalShort = sanitizeListingText(ai.short, mergedConfig).sanitized || finalShort;
         if (ai?.full)  finalFull  = sanitizeListingText(ai.full,  mergedConfig).sanitized || finalFull;
