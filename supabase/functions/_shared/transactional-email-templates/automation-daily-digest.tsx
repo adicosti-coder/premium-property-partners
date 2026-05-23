@@ -15,6 +15,11 @@ interface Props {
   duplicates_marked_24h: number
   seo_drafts_pending: number
   seo_anomalies_24h: number
+  pm_leads_24h?: number
+  pm_leads_airbnb_24h?: number
+  pm_leads_booking_24h?: number
+  pm_leads_avg_score?: number
+  pm_leads_admin_url?: string
   top_failures: Array<{ job_key: string; error: string; consecutive_failures: number }>
   top_approvals: Array<{ action_type: string; severity: string; created_at: string }>
 }
