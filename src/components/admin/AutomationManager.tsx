@@ -1304,7 +1304,7 @@ const StatCard = ({
   icon,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   highlight?: boolean;
   warn?: boolean;
   icon?: React.ReactNode;
