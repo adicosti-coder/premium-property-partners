@@ -150,6 +150,70 @@ const AutomationManager = () => {
   const [lastReportAt, setLastReportAt] = useState<string | null>(null);
   const [reportEmail, setReportEmail] = useState<string>("adicosti@gmail.com");
 
+  // Voice Agent queue snapshot (callable now vs în dedupe 7d) — pentru standby visibility
+  const [queueStatus, setQueueStatus] = useState<{
+    callable_now: number;
+    in_dedupe_7d: number;
+    structurally_eligible: number;
+    autopilot_on: boolean;
+    min_score: number;
+    next_eligible_at: string | null;
+    loading: boolean;
+  }>({ callable_now: 0, in_dedupe_7d: 0, structurally_eligible: 0, autopilot_on: false, min_score: 50, next_eligible_at: null, loading: true });
+
+  const loadQueueStatus = async () => {
+    try {
+      const nowIso = new Date().toISOString();
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
+      const [vs, prospectsRes, recentRes] = await Promise.all([
+        supabase.from("voice_agent_settings").select("autopilot_enabled, min_lead_score").eq("id", 1).maybeSingle(),
+        supabase.from("prospect_listings")
+          .select("phone_normalized")
+          .gte("lead_score", 50)
+          .in("lifecycle_status", ["new", "callback"])
+          .not("phone_normalized", "is", null)
+          .is("auto_call_triggered_at", null)
+          .is("marked_invalid_at", null)
+          .eq("do_not_call", false)
+          .or(`next_callback_at.is.null,next_callback_at.lte.${nowIso}`),
+        supabase.from("voice_call_sessions")
+          .select("to_number, created_at")
+          .gte("created_at", sevenDaysAgo)
+          .eq("direction", "outbound"),
+      ]);
+      const minScore = Number((vs.data as any)?.min_lead_score ?? 50);
+      const eligiblePhones = new Set<string>((prospectsRes.data ?? []).map((p: any) => p.phone_normalized).filter(Boolean));
+      const recent = (recentRes.data ?? []) as Array<{ to_number: string | null; created_at: string }>;
+      const recentPhoneFirstCall = new Map<string, string>();
+      for (const r of recent) {
+        if (!r.to_number) continue;
+        const cur = recentPhoneFirstCall.get(r.to_number);
+        if (!cur || r.created_at < cur) recentPhoneFirstCall.set(r.to_number, r.created_at);
+      }
+      let inDedupe = 0;
+      let earliestRelease: number | null = null;
+      for (const phone of eligiblePhones) {
+        const firstCall = recentPhoneFirstCall.get(phone);
+        if (firstCall) {
+          inDedupe++;
+          const release = new Date(firstCall).getTime() + 7 * 86400 * 1000;
+          if (earliestRelease === null || release < earliestRelease) earliestRelease = release;
+        }
+      }
+      setQueueStatus({
+        callable_now: eligiblePhones.size - inDedupe,
+        in_dedupe_7d: inDedupe,
+        structurally_eligible: eligiblePhones.size,
+        autopilot_on: !!(vs.data as any)?.autopilot_enabled,
+        min_score: minScore,
+        next_eligible_at: earliestRelease ? new Date(earliestRelease).toISOString() : null,
+        loading: false,
+      });
+    } catch (e) {
+      setQueueStatus((q) => ({ ...q, loading: false }));
+    }
+  };
+
   const load = async () => {
     setLoading(true);
     const [s, j, a, r] = await Promise.all([
