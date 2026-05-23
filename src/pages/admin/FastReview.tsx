@@ -266,18 +266,20 @@ export default function FastReview() {
   };
 
   const approveBatch = async () => {
-    if (selected.size === 0) return;
+    // Only act on rows that are BOTH selected AND visible under current filters
+    const ids = Array.from(selected).filter((id) => visibleIds.has(id));
+    if (ids.length === 0) return;
     setBatchRunning(true);
-    const ids = Array.from(selected);
     const { error } = await supabase
       .from("properties")
       .update({ is_active: true, needs_review: false })
       .in("id", ids);
     setBatchRunning(false);
     if (error) return toast({ title: "Eroare batch", description: error.message, variant: "destructive" });
-    toast({ title: `${ids.length} anunțuri publicate`, description: "Toate selectate sunt acum active." });
-    setRows((p) => p.filter((r) => !selected.has(r.id)));
-    setSelected(new Set());
+    toast({ title: `${ids.length} anunțuri publicate`, description: "Toate cele vizibile selectate sunt acum active." });
+    const idSet = new Set(ids);
+    setRows((p) => p.filter((r) => !idSet.has(r.id)));
+    setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n; });
   };
 
   if (!authChecked || roleLoading) {
