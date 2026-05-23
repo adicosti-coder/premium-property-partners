@@ -66,8 +66,12 @@ async function bottomCrop(bytes: Uint8Array, cropRatio = 0.10): Promise<Uint8Arr
   return await cropped.encodeJPEG(85);
 }
 
-async function dewatermarkClean(bytes: Uint8Array): Promise<Uint8Array | null> {
+type AiResult = { bytes: Uint8Array | null; error: string | null };
+
+async function dewatermarkClean(bytes: Uint8Array): Promise<AiResult> {
   // Dewatermark.ai auto-detects the watermark — no mask required.
+  const ctl = new AbortController();
+  const timeout = setTimeout(() => ctl.abort(), 30000);
   try {
     const form = new FormData();
     form.append("original_preview_image", new Blob([bytes], { type: "image/jpeg" }), "image.jpeg");
@@ -78,38 +82,46 @@ async function dewatermarkClean(bytes: Uint8Array): Promise<Uint8Array | null> {
       method: "POST",
       headers: { "X-API-KEY": DEWATERMARK_KEY },
       body: form,
+      signal: ctl.signal,
     });
+    clearTimeout(timeout);
     if (!res.ok) {
-      console.error("Dewatermark error", res.status, (await res.text()).slice(0, 300));
-      return null;
+      const txt = (await res.text()).slice(0, 300);
+      const err = `api_http_${res.status}: ${txt}`;
+      console.error("Dewatermark error", err);
+      return { bytes: null, error: err };
     }
     const data = await res.json();
     const b64 = data?.edited_image?.image;
-    if (!b64) return null;
+    if (!b64) return { bytes: null, error: "api_empty_response" };
     const bin = atob(b64);
     const out = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-    return out;
-  } catch (e) {
-    console.error("Dewatermark exception", e);
-    return null;
+    return { bytes: out, error: null };
+  } catch (e: any) {
+    clearTimeout(timeout);
+    const reason = e?.name === "AbortError" ? "api_timeout" : `api_exception: ${String(e?.message || e)}`;
+    console.error("Dewatermark exception", reason);
+    return { bytes: null, error: reason };
   }
 }
 
-async function processOne(
-  bytes: Uint8Array,
-  mode: Mode,
-): Promise<{ out: Uint8Array; method: string }> {
+type ProcessResult =
+  | { kind: "processed"; out: Uint8Array; method: string }
+  | { kind: "ai_failed"; error: string };
+
+async function processOne(bytes: Uint8Array, mode: Mode): Promise<ProcessResult> {
   if (mode === "ai_inpaint") {
-    const cleaned = await dewatermarkClean(bytes);
-    if (cleaned) return { out: cleaned, method: "ai_inpaint_dewatermark" };
-    return { out: await bottomCrop(bytes, 0.12), method: "bottom_crop_fallback" };
+    const r = await dewatermarkClean(bytes);
+    if (r.bytes) return { kind: "processed", out: r.bytes, method: "ai_inpaint_dewatermark" };
+    return { kind: "ai_failed", error: r.error || "unknown_ai_error" };
   }
   if (mode === "bottom_crop") {
-    return { out: await bottomCrop(bytes, 0.10), method: "bottom_crop" };
+    return { kind: "processed", out: await bottomCrop(bytes, 0.10), method: "bottom_crop" };
   }
-  return { out: bytes, method: "passthrough" };
+  return { kind: "processed", out: bytes, method: "passthrough" };
 }
+
 
 
 Deno.serve(async (req) => {
