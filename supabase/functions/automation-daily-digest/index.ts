@@ -135,6 +135,10 @@ Deno.serve(async (req) => {
         disabled.length > 0 ? `• ${disabled.length} joburi auto-dezactivate (3+ eșuări consecutive):` : null,
         ...disabled.slice(0, 5).map((d) => `   ↳ ${d.job_key}`),
         ``,
+        `💼 *Prospectare B2B (Short-Term Leads)*`,
+        `Gazde noi descoperite: ${pmTotal} (Airbnb: ${pmAirbnb} | Booking: ${pmBooking}) | Scor mediu PM: ${pmAvgScore}%`,
+        `→ ${data.pm_leads_admin_url}`,
+        ``,
         `Acțiune: realtrust.ro/admin/automation`,
       ].filter(Boolean).join("\n");
 
