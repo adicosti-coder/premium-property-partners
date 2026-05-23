@@ -485,6 +485,23 @@ Deno.serve(async (req) => {
           tags: ['scrape-prospects', 'auto-import', 'site-published'],
           admin_notes: `[auto-publish] Publicat ca proprietate ${inserted.id} (draft, q=${quality}).`,
         }).eq('id', prospect.id);
+
+      // Fire-and-forget image processing pipeline (crop / inpaint + rehost)
+      if (Array.isArray(rawImages) && rawImages.length > 0) {
+        const proc = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-listing-images`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          },
+          body: JSON.stringify({ property_id: inserted.id }),
+        }).catch((e) => console.warn('process-listing-images dispatch failed', e?.message));
+        // @ts-ignore EdgeRuntime is provided in Deno deploy
+        if (typeof EdgeRuntime !== 'undefined' && (EdgeRuntime as any).waitUntil) {
+          // @ts-ignore
+          EdgeRuntime.waitUntil(proc);
+        }
+      }
     } catch (err: any) {
       summary.rejected_error++;
       bumpSource(platform, 'rejected');

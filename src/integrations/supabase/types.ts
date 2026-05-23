@@ -3043,6 +3043,9 @@ export type Database = {
           id: string
           image_path: string | null
           images: string[] | null
+          images_processed_at: string | null
+          images_processing_log: Json | null
+          images_processing_status: string | null
           import_source: string | null
           imported_at: string | null
           intercom_type: string | null
@@ -3131,6 +3134,9 @@ export type Database = {
           id?: string
           image_path?: string | null
           images?: string[] | null
+          images_processed_at?: string | null
+          images_processing_log?: Json | null
+          images_processing_status?: string | null
           import_source?: string | null
           imported_at?: string | null
           intercom_type?: string | null
@@ -3219,6 +3225,9 @@ export type Database = {
           id?: string
           image_path?: string | null
           images?: string[] | null
+          images_processed_at?: string | null
+          images_processing_log?: Json | null
+          images_processing_status?: string | null
           import_source?: string | null
           imported_at?: string | null
           intercom_type?: string | null

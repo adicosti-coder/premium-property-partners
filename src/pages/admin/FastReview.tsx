@@ -38,6 +38,8 @@ type DraftProperty = {
   capital_necesar: number | null;
   size: number | null;
   rooms: number | null;
+  images_processing_status: string | null;
+  images_processed_at: string | null;
 };
 
 const PHONE_RE = /(?:\+?40[\s.\-]?|0)(?:7\d{2}|2\d{2}|3\d{2})[\s.\-]?\d{3}[\s.\-]?\d{3}/g;
@@ -134,7 +136,7 @@ export default function FastReview() {
     setLoading(true);
     const { data, error } = await supabase
       .from("properties")
-      .select("id,name,slug,location,description_ro,long_description_ro,images,original_description_raw,original_source_url,sanitization_log,imported_at,import_source,listing_type,property_subtype,base_price_per_night,capital_necesar,size,rooms")
+      .select("id,name,slug,location,description_ro,long_description_ro,images,original_description_raw,original_source_url,sanitization_log,imported_at,import_source,listing_type,property_subtype,base_price_per_night,capital_necesar,size,rooms,images_processing_status,images_processed_at")
       .eq("needs_review", true)
       .order("imported_at", { ascending: false })
       .limit(200);
@@ -568,6 +570,15 @@ function ReviewCard({
                 )}
                 {log.ai_rewritten && (
                   <Badge className="text-xs bg-emerald-600 text-white"><Sparkles className="h-3 w-3 mr-1" />AI rescris</Badge>
+                )}
+                {row.images_processing_status === "completed" && (
+                  <Badge className="text-xs bg-indigo-600 text-white">🖼️ Imagini Sanitizate AI</Badge>
+                )}
+                {row.images_processing_status === "processing" && (
+                  <Badge variant="outline" className="text-xs">⏳ Procesare imagini…</Badge>
+                )}
+                {row.images_processing_status === "failed" && (
+                  <Badge variant="destructive" className="text-xs">⚠️ Imagini neprocesate</Badge>
                 )}
               </div>
             </div>
