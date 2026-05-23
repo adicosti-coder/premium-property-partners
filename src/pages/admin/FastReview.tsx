@@ -580,6 +580,7 @@ function ReviewCard({
                 {row.images_processing_status === "failed" && (
                   <Badge variant="destructive" className="text-xs">⚠️ Imagini neprocesate</Badge>
                 )}
+              </div>
             </div>
           </div>
           {row.original_source_url && (
