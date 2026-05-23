@@ -16,6 +16,7 @@ import {
   ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import type { User } from "@supabase/supabase-js";
 
@@ -602,6 +603,8 @@ function ReviewCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
+        <OriginalContactReveal sourceUrl={row.original_source_url} />
+
         {/* Split-screen diff */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="rounded-lg border bg-muted/30 p-3">
