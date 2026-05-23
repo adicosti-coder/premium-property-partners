@@ -3,7 +3,7 @@
 //  - Predictable-watermark sources (olx, storia, imobiliare.ro, anuntul, publi24)
 //    -> bottom strip crop (~10%) to remove footer watermark
 //  - Central / unknown watermark sources
-//    -> optional AI inpaint via Clipdrop (if CLIPDROP_API_KEY is set),
+//    -> AI inpaint via Dewatermark.ai (auto-detects watermark, no mask needed),
 //       otherwise falls back to bottom crop.
 // Uploads results to public `property-images` bucket under properties/{property_id}/.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -16,7 +16,8 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const CLIPDROP_KEY = Deno.env.get("CLIPDROP_API_KEY") || "";
+const DEWATERMARK_KEY = Deno.env.get("DEWATERMARK_API_KEY") || "";
+const DEWATERMARK_URL = "https://platform.dewatermark.ai/api/object_removal/v2/erase_watermark";
 
 const BUCKET = "property-images";
 const MAX_IMAGES = 12;
@@ -39,8 +40,8 @@ type Mode = "bottom_crop" | "ai_inpaint" | "passthrough";
 function pickMode(platform: string): Mode {
   const p = (platform || "").toLowerCase();
   if (BOTTOM_CROP_SOURCES.has(p)) return "bottom_crop";
-  if (CENTRAL_WM_SOURCES.has(p)) return CLIPDROP_KEY ? "ai_inpaint" : "bottom_crop";
-  return CLIPDROP_KEY ? "ai_inpaint" : "bottom_crop";
+  if (CENTRAL_WM_SOURCES.has(p)) return DEWATERMARK_KEY ? "ai_inpaint" : "bottom_crop";
+  return DEWATERMARK_KEY ? "ai_inpaint" : "bottom_crop";
 }
 
 async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
@@ -65,39 +66,32 @@ async function bottomCrop(bytes: Uint8Array, cropRatio = 0.10): Promise<Uint8Arr
   return await cropped.encodeJPEG(85);
 }
 
-async function clipdropCleanup(bytes: Uint8Array): Promise<Uint8Array | null> {
-  // Clipdrop /cleanup needs (image_file, mask_file). We don't have a mask here,
-  // so we generate a center mask covering ~30% of the image where central
-  // watermarks typically sit. Cheap, no AI cost on our side.
+async function dewatermarkClean(bytes: Uint8Array): Promise<Uint8Array | null> {
+  // Dewatermark.ai auto-detects the watermark — no mask required.
   try {
-    const img = await Image.decode(bytes);
-    const w = img.width, h = img.height;
-    const mask = new Image(w, h);
-    // Fill black
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) mask.setPixelAt(x + 1, y + 1, 0xff);
-    // White rectangle in the center (~30% wide, ~15% tall) — the area to inpaint
-    const rw = Math.floor(w * 0.30);
-    const rh = Math.floor(h * 0.15);
-    const x0 = Math.floor((w - rw) / 2);
-    const y0 = Math.floor((h - rh) / 2);
-    for (let y = y0; y < y0 + rh; y++)
-      for (let x = x0; x < x0 + rw; x++)
-        mask.setPixelAt(x + 1, y + 1, 0xffffffff);
-
-    const maskBytes = await mask.encodePNG();
-
     const form = new FormData();
-    form.append("image_file", new Blob([bytes], { type: "image/jpeg" }), "image.jpg");
-    form.append("mask_file", new Blob([maskBytes], { type: "image/png" }), "mask.png");
+    form.append("original_preview_image", new Blob([bytes], { type: "image/jpeg" }), "image.jpeg");
+    form.append("remove_text", "true");
+    form.append("predict_mode", "3.0");
 
-    const res = await fetch("https://clipdrop-api.co/cleanup/v1", {
+    const res = await fetch(DEWATERMARK_URL, {
       method: "POST",
-      headers: { "x-api-key": CLIPDROP_KEY },
+      headers: { "X-API-KEY": DEWATERMARK_KEY },
       body: form,
     });
-    if (!res.ok) return null;
-    return new Uint8Array(await res.arrayBuffer());
-  } catch {
+    if (!res.ok) {
+      console.error("Dewatermark error", res.status, (await res.text()).slice(0, 300));
+      return null;
+    }
+    const data = await res.json();
+    const b64 = data?.edited_image?.image;
+    if (!b64) return null;
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  } catch (e) {
+    console.error("Dewatermark exception", e);
     return null;
   }
 }
@@ -107,9 +101,8 @@ async function processOne(
   mode: Mode,
 ): Promise<{ out: Uint8Array; method: string }> {
   if (mode === "ai_inpaint") {
-    const cleaned = await clipdropCleanup(bytes);
-    if (cleaned) return { out: cleaned, method: "ai_inpaint_clipdrop" };
-    // fallback
+    const cleaned = await dewatermarkClean(bytes);
+    if (cleaned) return { out: cleaned, method: "ai_inpaint_dewatermark" };
     return { out: await bottomCrop(bytes, 0.12), method: "bottom_crop_fallback" };
   }
   if (mode === "bottom_crop") {
@@ -117,6 +110,7 @@ async function processOne(
   }
   return { out: bytes, method: "passthrough" };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
