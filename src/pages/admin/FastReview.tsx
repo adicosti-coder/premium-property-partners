@@ -206,8 +206,14 @@ export default function FastReview() {
     });
   };
   const toggleAll = () => {
-    if (selected.size === rows.length) setSelected(new Set());
-    else setSelected(new Set(rows.map((r) => r.id)));
+    // Toggle only currently visible (filtered) rows
+    const allVisibleSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (allVisibleSelected) filtered.forEach((r) => n.delete(r.id));
+      else filtered.forEach((r) => n.add(r.id));
+      return n;
+    });
   };
 
   const approve = async (id: string) => {
