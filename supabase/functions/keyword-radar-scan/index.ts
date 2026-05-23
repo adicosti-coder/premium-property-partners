@@ -35,8 +35,6 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  const adminCheck = await requireAdmin(req, supabase);
-  if (adminCheck) return adminCheck;
 
   let body: any = {};
   try { body = await req.json(); } catch (_) { /* empty body ok */ }
