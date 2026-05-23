@@ -144,7 +144,7 @@ Cerințe pentru output:
     hints_count: hints.length,
     forbidden_count: phrases.length,
     semantic_count: semantic.length,
-    generated_by: u.user.id,
+    generated_by: generatedBy,
     is_active: true,
     notes: `Force re-sync (${phrases.length} fraze, ${hints.length} hints, ${semantic.length} concepte semantice)`,
   }).select('id, created_at').single();
