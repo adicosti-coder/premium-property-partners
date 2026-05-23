@@ -894,6 +894,11 @@ const AutomationManager = () => {
         </CardContent>
       </Card>
 
+      {/* AUTO-PUBLISH LISTINGS */}
+      <AutoPublishListingsPanel />
+
+
+
 
       {/* REALTIME INDICATOR */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
