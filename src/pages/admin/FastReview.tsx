@@ -315,26 +315,96 @@ export default function FastReview() {
                 Vedere Rapidă Revizuire
               </h1>
               <p className="text-xs text-muted-foreground">
-                {rows.length} anunț(uri) în așteptare · {selected.size} selectat(e)
+                {filtered.length}/{rows.length} vizibile · {visibleSelectedCount} selectate (din {selected.size} total)
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={toggleAll} disabled={rows.length === 0}>
-              {selected.size === rows.length && rows.length > 0 ? "Deselectează tot" : "Selectează tot"}
+            <Button variant="outline" size="sm" onClick={toggleAll} disabled={filtered.length === 0}>
+              {filtered.length > 0 && filtered.every((r) => selected.has(r.id))
+                ? "Deselectează vizibile"
+                : "Selectează vizibile"}
             </Button>
             <Button
               size="sm"
               onClick={approveBatch}
-              disabled={selected.size === 0 || batchRunning}
+              disabled={visibleSelectedCount === 0 || batchRunning}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {batchRunning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
-              Aprobă {selected.size > 0 ? `(${selected.size})` : "în masă"}
+              Aprobă {visibleSelectedCount > 0 ? `(${visibleSelectedCount} vizibile)` : "în masă"}
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Global filter panel */}
+      <div className="border-b bg-muted/30">
+        <div className="container mx-auto py-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Căutare full-text în titlu, descriere, zonă…"
+                className="pl-8 h-9"
+              />
+            </div>
+
+            <Select value={filterPropType} onValueChange={setFilterPropType}>
+              <SelectTrigger className="h-9 w-[160px]"><SelectValue placeholder="Tip proprietate" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate tipurile</SelectItem>
+                {knownSubtypes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterListingType} onValueChange={setFilterListingType}>
+              <SelectTrigger className="h-9 w-[140px]"><SelectValue placeholder="Tranzacție" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate</SelectItem>
+                {knownListingTypes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterZone} onValueChange={setFilterZone}>
+              <SelectTrigger className="h-9 w-[180px]"><SelectValue placeholder="Zonă" /></SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                <SelectItem value="all">Toate zonele</SelectItem>
+                {knownZones.map((z) => <SelectItem key={z} value={z}>{z}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-1">
+              <Input
+                type="number" inputMode="numeric" placeholder="Preț min €"
+                value={priceMin} onChange={(e) => setPriceMin(e.target.value)}
+                className="h-9 w-[110px]"
+              />
+              <span className="text-muted-foreground text-xs">–</span>
+              <Input
+                type="number" inputMode="numeric" placeholder="Preț max €"
+                value={priceMax} onChange={(e) => setPriceMax(e.target.value)}
+                className="h-9 w-[110px]"
+              />
+            </div>
+
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9">
+                <X className="h-4 w-4 mr-1" />Resetează
+              </Button>
+            )}
+          </div>
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Filter className="h-3 w-3" />
+              Filtre active · acțiunile batch operează doar asupra celor {filtered.length} anunțuri vizibile.
+            </div>
+          )}
+        </div>
+      </div>
+
 
       <div className="container mx-auto py-6 space-y-6">
         {loading ? (
