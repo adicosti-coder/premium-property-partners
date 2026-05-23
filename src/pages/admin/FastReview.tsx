@@ -9,10 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, CheckCircle2, XCircle, Pencil, Loader2, Sparkles,
-  ShieldCheck, ExternalLink, FileText, Eye,
+  ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { useAdminRole } from "@/hooks/useAdminRole";
