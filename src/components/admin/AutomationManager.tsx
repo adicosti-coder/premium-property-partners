@@ -240,6 +240,9 @@ const AutomationManager = () => {
 
   useEffect(() => {
     load();
+    loadQueueStatus();
+    const t = setInterval(loadQueueStatus, 60_000);
+    return () => clearInterval(t);
   }, []);
 
   // Realtime: actualizează jobs + runs pe loc
