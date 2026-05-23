@@ -571,7 +571,15 @@ function ReviewCard({
                 {log.ai_rewritten && (
                   <Badge className="text-xs bg-emerald-600 text-white"><Sparkles className="h-3 w-3 mr-1" />AI rescris</Badge>
                 )}
-              </div>
+                {row.images_processing_status === "completed" && (
+                  <Badge className="text-xs bg-indigo-600 text-white">🖼️ Imagini Sanitizate AI</Badge>
+                )}
+                {row.images_processing_status === "processing" && (
+                  <Badge variant="outline" className="text-xs">⏳ Procesare imagini…</Badge>
+                )}
+                {row.images_processing_status === "failed" && (
+                  <Badge variant="destructive" className="text-xs">⚠️ Imagini neprocesate</Badge>
+                )}
             </div>
           </div>
           {row.original_source_url && (
