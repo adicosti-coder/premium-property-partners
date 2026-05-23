@@ -214,18 +214,47 @@ ${hintBlock}
 TITLU ORIGINAL: ${title}
 DESCRIERE: ${sanitized.substring(0, 3000)}`;
 
-    const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-      }),
-    });
-    if (!resp.ok) return null;
+    // Retry with exponential backoff: 3 attempts (2s, 5s, 10s)
+    const RETRY_DELAYS = [2000, 5000, 10000];
+    let resp: Response | null = null;
+    let lastErr = '';
+    for (let attempt = 0; attempt < RETRY_DELAYS.length; attempt++) {
+      if (attempt > 0) {
+        console.log(`[gemini-retry] attempt ${attempt + 1} after ${RETRY_DELAYS[attempt - 1]}ms (prev: ${lastErr})`);
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt - 1]));
+      }
+      try {
+        const ctl = new AbortController();
+        const to = setTimeout(() => ctl.abort(), 25000);
+        resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+          }),
+          signal: ctl.signal,
+        });
+        clearTimeout(to);
+        if (resp.ok) break;
+        // Retry only on transient errors (429/5xx); bail on 4xx auth/validation
+        if (resp.status !== 429 && resp.status < 500) {
+          lastErr = `http_${resp.status}`;
+          break;
+        }
+        lastErr = `http_${resp.status}`;
+      } catch (e: any) {
+        lastErr = e?.name === 'AbortError' ? 'timeout' : String(e?.message || e);
+      }
+    }
+    if (!resp || !resp.ok) {
+      console.warn(`[gemini-retry] gave up: ${lastErr}`);
+      return null;
+    }
+
     const data = await resp.json();
     const text: string = data?.choices?.[0]?.message?.content || '';
     const t = text.match(/---TITLU---\s*([\s\S]*?)\s*---SCURT---/)?.[1]?.trim();
