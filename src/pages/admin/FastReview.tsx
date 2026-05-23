@@ -577,6 +577,14 @@ function ReviewCard({
                 {row.images_processing_status === "processing" && (
                   <Badge variant="outline" className="text-xs">⏳ Procesare imagini…</Badge>
                 )}
+                {row.images_processing_status === "fallback_failed" && (
+                  <Badge
+                    className="text-xs bg-orange-600 text-white animate-pulse"
+                    title="Inpainting AI a eșuat (timeout / eroare API). Imaginile afișate sunt originalele și conțin watermark-ul portalului sursă."
+                  >
+                    ⚠️ Alertă: Watermark Neprocesat - API Timeout
+                  </Badge>
+                )}
                 {row.images_processing_status === "failed" && (
                   <Badge variant="destructive" className="text-xs">⚠️ Imagini neprocesate</Badge>
                 )}

@@ -66,8 +66,12 @@ async function bottomCrop(bytes: Uint8Array, cropRatio = 0.10): Promise<Uint8Arr
   return await cropped.encodeJPEG(85);
 }
 
-async function dewatermarkClean(bytes: Uint8Array): Promise<Uint8Array | null> {
+type AiResult = { bytes: Uint8Array | null; error: string | null };
+
+async function dewatermarkClean(bytes: Uint8Array): Promise<AiResult> {
   // Dewatermark.ai auto-detects the watermark — no mask required.
+  const ctl = new AbortController();
+  const timeout = setTimeout(() => ctl.abort(), 30000);
   try {
     const form = new FormData();
     form.append("original_preview_image", new Blob([bytes], { type: "image/jpeg" }), "image.jpeg");
@@ -78,38 +82,46 @@ async function dewatermarkClean(bytes: Uint8Array): Promise<Uint8Array | null> {
       method: "POST",
       headers: { "X-API-KEY": DEWATERMARK_KEY },
       body: form,
+      signal: ctl.signal,
     });
+    clearTimeout(timeout);
     if (!res.ok) {
-      console.error("Dewatermark error", res.status, (await res.text()).slice(0, 300));
-      return null;
+      const txt = (await res.text()).slice(0, 300);
+      const err = `api_http_${res.status}: ${txt}`;
+      console.error("Dewatermark error", err);
+      return { bytes: null, error: err };
     }
     const data = await res.json();
     const b64 = data?.edited_image?.image;
-    if (!b64) return null;
+    if (!b64) return { bytes: null, error: "api_empty_response" };
     const bin = atob(b64);
     const out = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-    return out;
-  } catch (e) {
-    console.error("Dewatermark exception", e);
-    return null;
+    return { bytes: out, error: null };
+  } catch (e: any) {
+    clearTimeout(timeout);
+    const reason = e?.name === "AbortError" ? "api_timeout" : `api_exception: ${String(e?.message || e)}`;
+    console.error("Dewatermark exception", reason);
+    return { bytes: null, error: reason };
   }
 }
 
-async function processOne(
-  bytes: Uint8Array,
-  mode: Mode,
-): Promise<{ out: Uint8Array; method: string }> {
+type ProcessResult =
+  | { kind: "processed"; out: Uint8Array; method: string }
+  | { kind: "ai_failed"; error: string };
+
+async function processOne(bytes: Uint8Array, mode: Mode): Promise<ProcessResult> {
   if (mode === "ai_inpaint") {
-    const cleaned = await dewatermarkClean(bytes);
-    if (cleaned) return { out: cleaned, method: "ai_inpaint_dewatermark" };
-    return { out: await bottomCrop(bytes, 0.12), method: "bottom_crop_fallback" };
+    const r = await dewatermarkClean(bytes);
+    if (r.bytes) return { kind: "processed", out: r.bytes, method: "ai_inpaint_dewatermark" };
+    return { kind: "ai_failed", error: r.error || "unknown_ai_error" };
   }
   if (mode === "bottom_crop") {
-    return { out: await bottomCrop(bytes, 0.10), method: "bottom_crop" };
+    return { kind: "processed", out: await bottomCrop(bytes, 0.10), method: "bottom_crop" };
   }
-  return { out: bytes, method: "passthrough" };
+  return { kind: "processed", out: bytes, method: "passthrough" };
 }
+
 
 
 Deno.serve(async (req) => {
@@ -156,37 +168,65 @@ Deno.serve(async (req) => {
   }).eq("id", propertyId);
 
   const mode = pickMode(prop.source_platform || "");
-  const newUrls: string[] = [];
+  const finalUrls: string[] = [];
   const perImage: any[] = [];
   let okCount = 0;
+  let aiFailures = 0;
+  const aiErrors: string[] = [];
 
   for (let i = 0; i < sources.length; i++) {
     const src = sources[i];
     try {
       const raw = await fetchImageBytes(src);
-      if (!raw) { perImage.push({ i, src, status: "fetch_failed" }); continue; }
-      const { out, method } = await processOne(raw, mode);
+      if (!raw) {
+        finalUrls.push(src);
+        perImage.push({ i, src, status: "fetch_failed", fallback: "kept_original" });
+        continue;
+      }
+      const result = await processOne(raw, mode);
+
+      // Hard fallback: AI failed → keep ORIGINAL url, do not silently bottom-crop
+      if (result.kind === "ai_failed") {
+        aiFailures++;
+        aiErrors.push(result.error);
+        finalUrls.push(src);
+        perImage.push({ i, src, status: "ai_failed", error: result.error, fallback: "kept_original" });
+        continue;
+      }
 
       const path = `properties/${propertyId}/${Date.now()}-${i}.jpg`;
-      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, out, {
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, result.out, {
         contentType: "image/jpeg",
         upsert: true,
         cacheControl: "31536000",
       });
-      if (upErr) { perImage.push({ i, src, status: "upload_failed", error: upErr.message }); continue; }
+      if (upErr) {
+        finalUrls.push(src);
+        perImage.push({ i, src, status: "upload_failed", error: upErr.message, fallback: "kept_original" });
+        continue;
+      }
 
       const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      newUrls.push(pub.publicUrl);
-      perImage.push({ i, status: "ok", method, bytes_in: raw.byteLength, bytes_out: out.byteLength });
+      finalUrls.push(pub.publicUrl);
+      perImage.push({ i, status: "ok", method: result.method, bytes_in: raw.byteLength, bytes_out: result.out.byteLength });
       okCount++;
     } catch (err: any) {
-      perImage.push({ i, src, status: "error", error: String(err?.message || err) });
+      finalUrls.push(src);
+      perImage.push({ i, src, status: "error", error: String(err?.message || err), fallback: "kept_original" });
     }
   }
 
-  const status = newUrls.length > 0 ? "completed" : "failed";
+  // Status decision matrix:
+  // - any AI failure (timeout/http/error) on an ai_inpaint source → fallback_failed
+  // - otherwise some succeeded → completed
+  // - otherwise nothing succeeded → failed
+  let status: "completed" | "fallback_failed" | "failed";
+  if (aiFailures > 0) status = "fallback_failed";
+  else if (okCount > 0) status = "completed";
+  else status = "failed";
+
   await supabase.from("properties").update({
-    images: newUrls.length > 0 ? newUrls : prop.images,
+    images: finalUrls,
     images_processing_status: status,
     images_processed_at: new Date().toISOString(),
     images_processing_log: {
@@ -194,11 +234,14 @@ Deno.serve(async (req) => {
       source_platform: prop.source_platform,
       total: sources.length,
       ok: okCount,
+      ai_failures: aiFailures,
+      ai_errors: aiErrors.slice(0, 5),
       details: perImage,
     },
   }).eq("id", propertyId);
 
   return new Response(JSON.stringify({
-    ok: true, property_id: propertyId, mode, processed: okCount, total: sources.length, status,
+    ok: true, property_id: propertyId, mode, processed: okCount,
+    ai_failures: aiFailures, total: sources.length, status,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
