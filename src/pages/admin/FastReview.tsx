@@ -216,15 +216,33 @@ export default function FastReview() {
     });
   };
 
+  // Fire-and-forget: feed the learning loop (never blocks UI)
+  const recordLearn = useCallback(async (payload: {
+    property_id: string;
+    action: "approve" | "edit" | "reject";
+    ai_title?: string;
+    ai_description?: string;
+    final_title?: string;
+    final_description?: string;
+    reason?: string;
+  }) => {
+    try {
+      await supabase.functions.invoke("listing-import-learn", { body: payload });
+    } catch (err) {
+      console.warn("learn call failed (non-fatal):", err);
+    }
+  }, []);
+
   const approve = async (id: string) => {
     setActingId(id);
     const { error } = await supabase
       .from("properties")
-      .update({ is_active: true, needs_review: false })
+      .update({ is_active: true, needs_review: false, review_action: "approve", reviewed_at: new Date().toISOString() })
       .eq("id", id);
     setActingId(null);
     if (error) return toast({ title: "Eroare", description: error.message, variant: "destructive" });
     toast({ title: "Publicat", description: "Anunțul este acum activ pe site." });
+    void recordLearn({ property_id: id, action: "approve" });
     setRows((p) => p.filter((r) => r.id !== id));
     setSelected((p) => { const n = new Set(p); n.delete(id); return n; });
   };
@@ -234,11 +252,18 @@ export default function FastReview() {
     const log = { ...(row.sanitization_log || {}), review_status: "rejected", rejected_at: new Date().toISOString() };
     const { error } = await supabase
       .from("properties")
-      .update({ is_active: false, needs_review: false, sanitization_log: log })
+      .update({ is_active: false, needs_review: false, review_action: "reject", reviewed_at: new Date().toISOString(), sanitization_log: log })
       .eq("id", row.id);
     setActingId(null);
     if (error) return toast({ title: "Eroare", description: error.message, variant: "destructive" });
     toast({ title: "Respins", description: "Anunțul a fost marcat ca invalid (istoric păstrat)." });
+    void recordLearn({
+      property_id: row.id,
+      action: "reject",
+      ai_title: row.name || "",
+      ai_description: row.long_description_ro || row.description_ro || "",
+      reason: "Respins manual din FastReview",
+    });
     setRows((p) => p.filter((r) => r.id !== row.id));
     setSelected((p) => { const n = new Set(p); n.delete(row.id); return n; });
   };
@@ -252,6 +277,8 @@ export default function FastReview() {
   const saveEdit = async () => {
     if (!editTarget) return;
     setSavingEdit(true);
+    const originalName = editTarget.name || "";
+    const originalLong = editTarget.long_description_ro || "";
     const { error } = await supabase
       .from("properties")
       .update({ name: editName, description_ro: editShort, long_description_ro: editLong })
@@ -259,6 +286,14 @@ export default function FastReview() {
     setSavingEdit(false);
     if (error) return toast({ title: "Eroare", description: error.message, variant: "destructive" });
     toast({ title: "Salvat", description: "Modificările sunt aplicate. Poți acum aproba." });
+    void recordLearn({
+      property_id: editTarget.id,
+      action: "edit",
+      ai_title: originalName,
+      ai_description: originalLong,
+      final_title: editName,
+      final_description: editLong,
+    });
     setRows((p) => p.map((r) => r.id === editTarget.id
       ? { ...r, name: editName, description_ro: editShort, long_description_ro: editLong }
       : r));
@@ -266,21 +301,22 @@ export default function FastReview() {
   };
 
   const approveBatch = async () => {
-    // Only act on rows that are BOTH selected AND visible under current filters
     const ids = Array.from(selected).filter((id) => visibleIds.has(id));
     if (ids.length === 0) return;
     setBatchRunning(true);
     const { error } = await supabase
       .from("properties")
-      .update({ is_active: true, needs_review: false })
+      .update({ is_active: true, needs_review: false, review_action: "approve", reviewed_at: new Date().toISOString() })
       .in("id", ids);
     setBatchRunning(false);
     if (error) return toast({ title: "Eroare batch", description: error.message, variant: "destructive" });
     toast({ title: `${ids.length} anunțuri publicate`, description: "Toate cele vizibile selectate sunt acum active." });
+    ids.forEach((id) => void recordLearn({ property_id: id, action: "approve" }));
     const idSet = new Set(ids);
     setRows((p) => p.filter((r) => !idSet.has(r.id)));
     setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n; });
   };
+
 
   if (!authChecked || roleLoading) {
     return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-6 w-6 animate-spin" /></div>;

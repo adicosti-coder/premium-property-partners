@@ -2286,6 +2286,236 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_import_heal_log: {
+        Row: {
+          decided_at: string
+          decision: string
+          id: string
+          payload: Json | null
+          rationale: string | null
+        }
+        Insert: {
+          decided_at?: string
+          decision: string
+          id?: string
+          payload?: Json | null
+          rationale?: string | null
+        }
+        Update: {
+          decided_at?: string
+          decision?: string
+          id?: string
+          payload?: Json | null
+          rationale?: string | null
+        }
+        Relationships: []
+      }
+      listing_import_learnings: {
+        Row: {
+          confidence: number | null
+          evidence_count: number | null
+          first_seen: string
+          id: string
+          is_active: boolean | null
+          last_seen: string
+          notes: string | null
+          pattern: string
+          pattern_type: string
+          promoted_at: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          evidence_count?: number | null
+          first_seen?: string
+          id?: string
+          is_active?: boolean | null
+          last_seen?: string
+          notes?: string | null
+          pattern: string
+          pattern_type: string
+          promoted_at?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          evidence_count?: number | null
+          first_seen?: string
+          id?: string
+          is_active?: boolean | null
+          last_seen?: string
+          notes?: string | null
+          pattern?: string
+          pattern_type?: string
+          promoted_at?: string | null
+        }
+        Relationships: []
+      }
+      listing_import_metrics: {
+        Row: {
+          ai_rewrite_used: boolean | null
+          avg_quality_score: number | null
+          batch_size: number | null
+          candidates: number | null
+          duration_ms: number | null
+          errors_sample: Json | null
+          id: string
+          per_source: Json | null
+          published: number | null
+          rejected_duplicate: number | null
+          rejected_error: number | null
+          rejected_low_quality: number | null
+          rejected_no_content: number | null
+          rejected_refusal: number | null
+          rejected_source_disabled: number | null
+          run_at: string
+          scraped: number | null
+          triggered_by: string | null
+        }
+        Insert: {
+          ai_rewrite_used?: boolean | null
+          avg_quality_score?: number | null
+          batch_size?: number | null
+          candidates?: number | null
+          duration_ms?: number | null
+          errors_sample?: Json | null
+          id?: string
+          per_source?: Json | null
+          published?: number | null
+          rejected_duplicate?: number | null
+          rejected_error?: number | null
+          rejected_low_quality?: number | null
+          rejected_no_content?: number | null
+          rejected_refusal?: number | null
+          rejected_source_disabled?: number | null
+          run_at?: string
+          scraped?: number | null
+          triggered_by?: string | null
+        }
+        Update: {
+          ai_rewrite_used?: boolean | null
+          avg_quality_score?: number | null
+          batch_size?: number | null
+          candidates?: number | null
+          duration_ms?: number | null
+          errors_sample?: Json | null
+          id?: string
+          per_source?: Json | null
+          published?: number | null
+          rejected_duplicate?: number | null
+          rejected_error?: number | null
+          rejected_low_quality?: number | null
+          rejected_no_content?: number | null
+          rejected_refusal?: number | null
+          rejected_source_disabled?: number | null
+          run_at?: string
+          scraped?: number | null
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      listing_import_review_events: {
+        Row: {
+          action: string
+          ai_description: string | null
+          ai_title: string | null
+          created_at: string
+          diff_tokens_removed: Json | null
+          final_description: string | null
+          final_title: string | null
+          id: string
+          property_id: string | null
+          reason: string | null
+          reviewer_id: string | null
+          source_platform: string | null
+        }
+        Insert: {
+          action: string
+          ai_description?: string | null
+          ai_title?: string | null
+          created_at?: string
+          diff_tokens_removed?: Json | null
+          final_description?: string | null
+          final_title?: string | null
+          id?: string
+          property_id?: string | null
+          reason?: string | null
+          reviewer_id?: string | null
+          source_platform?: string | null
+        }
+        Update: {
+          action?: string
+          ai_description?: string | null
+          ai_title?: string | null
+          created_at?: string
+          diff_tokens_removed?: Json | null
+          final_description?: string | null
+          final_title?: string | null
+          id?: string
+          property_id?: string | null
+          reason?: string | null
+          reviewer_id?: string | null
+          source_platform?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_import_review_events_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_import_source_health: {
+        Row: {
+          approval_rate: number | null
+          auto_disabled_until: string | null
+          consecutive_failures: number | null
+          last_failure_at: string | null
+          last_success_at: string | null
+          notes: string | null
+          source_platform: string
+          total_approved: number | null
+          total_attempts: number | null
+          total_edited: number | null
+          total_published: number | null
+          total_rejected: number | null
+          total_user_rejected: number | null
+          updated_at: string
+        }
+        Insert: {
+          approval_rate?: number | null
+          auto_disabled_until?: string | null
+          consecutive_failures?: number | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          notes?: string | null
+          source_platform: string
+          total_approved?: number | null
+          total_attempts?: number | null
+          total_edited?: number | null
+          total_published?: number | null
+          total_rejected?: number | null
+          total_user_rejected?: number | null
+          updated_at?: string
+        }
+        Update: {
+          approval_rate?: number | null
+          auto_disabled_until?: string | null
+          consecutive_failures?: number | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          notes?: string | null
+          source_platform?: string
+          total_approved?: number | null
+          total_attempts?: number | null
+          total_edited?: number | null
+          total_published?: number | null
+          total_rejected?: number | null
+          total_user_rejected?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       local_tips: {
         Row: {
           created_at: string
@@ -2798,7 +3028,10 @@ export type Database = {
           property_code: string | null
           property_condition: string | null
           property_subtype: string | null
+          quality_score: number | null
           renovation_year: number | null
+          review_action: string | null
+          reviewed_at: string | null
           roi_percentage: string | null
           rooms: number | null
           sanitization_log: Json | null
@@ -2883,7 +3116,10 @@ export type Database = {
           property_code?: string | null
           property_condition?: string | null
           property_subtype?: string | null
+          quality_score?: number | null
           renovation_year?: number | null
+          review_action?: string | null
+          reviewed_at?: string | null
           roi_percentage?: string | null
           rooms?: number | null
           sanitization_log?: Json | null
@@ -2968,7 +3204,10 @@ export type Database = {
           property_code?: string | null
           property_condition?: string | null
           property_subtype?: string | null
+          quality_score?: number | null
           renovation_year?: number | null
+          review_action?: string | null
+          reviewed_at?: string | null
           roi_percentage?: string | null
           rooms?: number | null
           sanitization_log?: Json | null
@@ -7824,6 +8063,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      listing_import_record_review: {
+        Args: {
+          _action: string
+          _quality_delta?: number
+          _source_platform: string
+        }
+        Returns: undefined
       }
       log_cron_run: {
         Args: {

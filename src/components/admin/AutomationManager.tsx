@@ -22,6 +22,7 @@ import SelfHealingSettings from "./SelfHealingSettings";
 import AutomationLiveLogs from "./AutomationLiveLogs";
 import JobSelfHealingOverride from "./JobSelfHealingOverride";
 import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
+import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
 
 type Settings = {
   enabled: boolean;
@@ -896,6 +897,10 @@ const AutomationManager = () => {
 
       {/* AUTO-PUBLISH LISTINGS */}
       <AutoPublishListingsPanel />
+
+      {/* SELF-HEALING & LEARNING */}
+      <ListingImportHealthPanel />
+
 
 
 

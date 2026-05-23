@@ -1,24 +1,19 @@
 /**
- * auto-publish-listings — premium scraper → site-injector pipeline.
+ * auto-publish-listings — premium scraper → site-injector pipeline (v2: self-healing).
  *
  * Flow per run:
- *   1. Pull eligible rows from `prospect_listings` (score ≥ MIN_SCORE,
- *      not already imported, in Timișoara, has source_url).
- *   2. For each: deep-scrape with Firecrawl to get full description + images.
- *   3. Run shared sanitizer:
- *        – strip phones, emails, addresses, forbidden phrases.
- *        – if refusal phrase ("nu colaborez cu agenții") → REJECT.
- *   4. Optionally rewrite with Lovable AI Gateway for premium copy.
- *   5. Insert into `properties` as DRAFT (is_active=false, needs_review=true).
- *   6. Mark prospect as `imported_to_site`.
- *
- * Designed to be idempotent: dedupes on `original_source_url`.
- *
- * Auth: requires admin JWT OR `x-cron-secret` header matching SUPABASE_SERVICE_ROLE_KEY.
+ *   1. Load sanitizer config + auto-learned forbidden phrases.
+ *   2. Skip prospects from source_platforms currently auto-disabled.
+ *   3. Deep-scrape each candidate with Firecrawl.
+ *   4. Sanitize, compute heuristic quality_score (0-100).
+ *   5. Reject if refusal phrase OR quality < MIN_QUALITY.
+ *   6. Inject "lessons learned" hints into AI rewrite prompt.
+ *   7. Insert as DRAFT, mark prospect imported, increment source health published.
+ *   8. Write a metrics row + per_source breakdown for self-heal to consume.
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { loadImportConfig, sanitizeListingText } from "../_shared/listingSanitizer.ts";
+import { loadImportConfig, sanitizeListingText, type ImportConfigRow } from "../_shared/listingSanitizer.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,6 +24,7 @@ const corsHeaders = {
 const MIN_SCORE = 55;
 const DEFAULT_BATCH = 8;
 const MAX_BATCH = 25;
+const MIN_QUALITY = 35; // below this we don't even publish a draft
 
 interface RunSummary {
   candidates: number;
@@ -37,7 +33,11 @@ interface RunSummary {
   rejected_no_content: number;
   rejected_duplicate: number;
   rejected_error: number;
+  rejected_low_quality: number;
+  rejected_source_disabled: number;
   published: number;
+  avg_quality_score: number;
+  per_source: Record<string, { attempts: number; published: number; rejected: number; avg_quality: number }>;
   errors: string[];
   published_ids: string[];
 }
@@ -90,7 +90,6 @@ async function firecrawlScrape(url: string, key: string): Promise<{ markdown: st
     const md = data?.data?.markdown || data?.markdown || '';
     const links: string[] = data?.data?.links || [];
     const images = links.filter((l) => /\.(jpe?g|png|webp|avif)(\?|$)/i.test(l));
-    // Also pull images from markdown
     const mdImgs: string[] = [];
     const re = /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g;
     let m;
@@ -102,18 +101,95 @@ async function firecrawlScrape(url: string, key: string): Promise<{ markdown: st
   }
 }
 
-async function rewriteWithAI(title: string, sanitized: string, listingType: string): Promise<{ title?: string; short?: string; full?: string } | null> {
+/**
+ * Heuristic quality score 0–100. Lower bound triggers low-quality rejection,
+ * higher score → less likely to need admin edits. Self-heal tunes the floor.
+ */
+function computeQualityScore(opts: {
+  finalDesc: string;
+  finalTitle: string;
+  imageCount: number;
+  hasPrice: boolean;
+  hasZone: boolean;
+  hasRooms: boolean;
+  hasSize: boolean;
+  removedPhrasesCount: number;
+  removedPhonesCount: number;
+}): number {
+  let score = 0;
+  // content depth
+  if (opts.finalDesc.length >= 800) score += 25;
+  else if (opts.finalDesc.length >= 400) score += 18;
+  else if (opts.finalDesc.length >= 200) score += 10;
+  else score += 2;
+  // title quality
+  if (opts.finalTitle.length >= 30 && opts.finalTitle.length <= 90) score += 10;
+  else if (opts.finalTitle.length >= 15) score += 5;
+  // imagery
+  if (opts.imageCount >= 6) score += 20;
+  else if (opts.imageCount >= 3) score += 12;
+  else if (opts.imageCount >= 1) score += 5;
+  // structured facts
+  if (opts.hasPrice) score += 12;
+  if (opts.hasZone) score += 8;
+  if (opts.hasRooms) score += 6;
+  if (opts.hasSize) score += 6;
+  // penalty: too much sanitization noise → likely owner-direct ad
+  score -= Math.min(20, opts.removedPhrasesCount * 4);
+  score -= Math.min(10, opts.removedPhonesCount * 3);
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+async function loadActiveLearnings(supabase: any): Promise<{ forbidden: string[]; hints: string[] }> {
+  const { data } = await supabase
+    .from('listing_import_learnings')
+    .select('pattern_type, pattern')
+    .eq('is_active', true)
+    .limit(200);
+  const forbidden: string[] = [];
+  const hints: string[] = [];
+  for (const r of (data || []) as Array<{ pattern_type: string; pattern: string }>) {
+    if (r.pattern_type === 'phrase') forbidden.push(r.pattern);
+    else if (r.pattern_type === 'title_hint' || r.pattern_type === 'description_hint') hints.push(r.pattern);
+  }
+  return { forbidden, hints };
+}
+
+async function loadDisabledSources(supabase: any): Promise<Set<string>> {
+  const { data } = await supabase
+    .from('listing_import_source_health')
+    .select('source_platform, auto_disabled_until')
+    .not('auto_disabled_until', 'is', null);
+  const now = Date.now();
+  const disabled = new Set<string>();
+  for (const r of (data || []) as Array<{ source_platform: string; auto_disabled_until: string }>) {
+    if (r.auto_disabled_until && new Date(r.auto_disabled_until).getTime() > now) {
+      disabled.add(r.source_platform);
+    }
+  }
+  return disabled;
+}
+
+async function rewriteWithAI(
+  title: string,
+  sanitized: string,
+  listingType: string,
+  hints: string[],
+): Promise<{ title?: string; short?: string; full?: string } | null> {
   const key = Deno.env.get('LOVABLE_API_KEY');
   if (!key || !sanitized || sanitized.length < 80) return null;
   try {
-    const prompt = `Ești copywriter imobiliar premium pentru RealTrust (agenție din Timișoara). 
-Rescrie descrierea de mai jos pentru un anunț de ${listingType === 'inchiriere' ? 'închiriere' : 'vânzare'}.
+    const hintBlock = hints.length > 0
+      ? `\nLECȚII ÎNVĂȚATE DIN CORECȚIILE ADMINULUI (aplică automat):\n- ${hints.slice(0, 8).join('\n- ')}\n`
+      : '';
+    const prompt = `Ești copywriter imobiliar premium pentru RealTrust (agenție din Timișoara).
+Rescrie descrierea pentru un anunț de ${listingType === 'inchiriere' ? 'închiriere' : 'vânzare'}.
 REGULI STRICTE:
 - NU include numere de telefon, emailuri, adrese exacte cu număr stradal.
-- NU folosi cuvinte ca "proprietar", "persoană fizică", "fără comision", "comision 0", "direct proprietar".
-- Folosește limbaj profesional de agenție, cu accent pe avantaje și investiție.
+- NU folosi: "proprietar", "persoană fizică", "fără comision", "comision 0", "direct proprietar".
+- Limbaj profesional de agenție, accent pe avantaje și potențial de investiție.
 - Răspunde STRICT în formatul: ---TITLU---\\n[titlu]\\n---SCURT---\\n[descriere scurtă <200 char]\\n---COMPLET---\\n[descriere completă markdown]
-
+${hintBlock}
 TITLU ORIGINAL: ${title}
 DESCRIERE: ${sanitized.substring(0, 3000)}`;
 
@@ -164,6 +240,7 @@ Deno.serve(async (req) => {
     if (typeof body?.triggered_by === 'string') triggeredBy = body.triggered_by;
   } catch { /* no body */ }
 
+  const t0 = Date.now();
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -173,13 +250,29 @@ Deno.serve(async (req) => {
     candidates: 0, scraped: 0,
     rejected_refusal: 0, rejected_no_content: 0,
     rejected_duplicate: 0, rejected_error: 0,
-    published: 0, errors: [], published_ids: [],
+    rejected_low_quality: 0, rejected_source_disabled: 0,
+    published: 0, avg_quality_score: 0,
+    per_source: {}, errors: [], published_ids: [],
   };
 
-  // Load sanitizer config once
-  const config = await loadImportConfig(supabase);
+  // Load config + learnings + disabled sources
+  const baseConfig = await loadImportConfig(supabase);
+  const learnings = await loadActiveLearnings(supabase);
+  const disabledSources = await loadDisabledSources(supabase);
 
-  // 1. Pick candidates that are NOT already imported.
+  // Merge learned forbidden phrases on top of config (without DB write)
+  const mergedConfig: ImportConfigRow[] = [
+    ...baseConfig,
+    ...learnings.forbidden.map((p) => ({
+      kind: 'forbidden_phrase' as const,
+      pattern: p,
+      replacement: '',
+      is_regex: false,
+      enabled: true,
+    })),
+  ];
+
+  // Dedupe vs already imported URLs
   const { data: alreadyImported } = await supabase
     .from('properties')
     .select('original_source_url')
@@ -194,18 +287,41 @@ Deno.serve(async (req) => {
     .eq('prospect_type', 'proprietar')
     .not('source_url', 'is', null)
     .order('lead_score', { ascending: false })
-    .limit(batchSize * 3);
+    .limit(batchSize * 4);
   if (cErr) {
     return new Response(JSON.stringify({ error: cErr.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  const queue = (candidates || []).filter((c: any) => !importedSet.has(c.source_url)).slice(0, batchSize);
+  const queue = (candidates || [])
+    .filter((c: any) => !importedSet.has(c.source_url))
+    .filter((c: any) => {
+      if (disabledSources.has(c.source_platform)) {
+        summary.rejected_source_disabled++;
+        return false;
+      }
+      return true;
+    })
+    .slice(0, batchSize);
   summary.candidates = queue.length;
 
+  const qualityScores: number[] = [];
+
+  const bumpSource = (platform: string, key: keyof RunSummary['per_source'][string], delta = 1, qScore?: number) => {
+    const p = platform || 'unknown';
+    summary.per_source[p] ||= { attempts: 0, published: 0, rejected: 0, avg_quality: 0 };
+    (summary.per_source[p][key] as number) += delta;
+    if (typeof qScore === 'number') {
+      const cur = summary.per_source[p].avg_quality;
+      const n = summary.per_source[p].published;
+      summary.per_source[p].avg_quality = n > 0 ? (cur * (n - 1) + qScore) / n : qScore;
+    }
+  };
+
   for (const prospect of queue) {
+    const platform = prospect.source_platform || 'unknown';
+    bumpSource(platform, 'attempts');
     try {
-      // Deep scrape
       const scrape = await firecrawlScrape(prospect.source_url, firecrawlKey);
       summary.scraped++;
       const rawMd = scrape?.markdown || prospect.description || '';
@@ -215,16 +331,16 @@ Deno.serve(async (req) => {
 
       if (!rawMd || rawMd.length < 60) {
         summary.rejected_no_content++;
+        bumpSource(platform, 'rejected');
         continue;
       }
 
-      // Sanitize
-      const cleanDesc = sanitizeListingText(rawMd, config);
-      const cleanTitle = sanitizeListingText(prospect.title || 'Anunț Imobiliar', config);
+      const cleanDesc = sanitizeListingText(rawMd, mergedConfig);
+      const cleanTitle = sanitizeListingText(prospect.title || 'Anunț Imobiliar', mergedConfig);
 
       if (cleanDesc.refusalDetected || cleanTitle.refusalDetected) {
         summary.rejected_refusal++;
-        // Mark prospect so we never retry it
+        bumpSource(platform, 'rejected');
         await supabase.from('prospect_listings')
           .update({
             admin_notes: `[auto-publish] Refuzat: refusal phrase = "${cleanDesc.refusalMatch || cleanTitle.refusalMatch}"`,
@@ -233,16 +349,38 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Optional AI rewrite for premium copy
       let finalTitle = cleanTitle.sanitized || 'Anunț Imobiliar Timișoara';
       let finalShort = cleanDesc.sanitized.substring(0, 220);
       let finalFull = cleanDesc.sanitized;
 
       if (useAiRewrite) {
-        const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare');
-        if (ai?.title) finalTitle = sanitizeListingText(ai.title, config).sanitized || finalTitle;
-        if (ai?.short) finalShort = sanitizeListingText(ai.short, config).sanitized || finalShort;
-        if (ai?.full) finalFull = sanitizeListingText(ai.full, config).sanitized || finalFull;
+        const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare', learnings.hints);
+        if (ai?.title) finalTitle = sanitizeListingText(ai.title, mergedConfig).sanitized || finalTitle;
+        if (ai?.short) finalShort = sanitizeListingText(ai.short, mergedConfig).sanitized || finalShort;
+        if (ai?.full)  finalFull  = sanitizeListingText(ai.full,  mergedConfig).sanitized || finalFull;
+      }
+
+      const quality = computeQualityScore({
+        finalDesc: finalFull,
+        finalTitle,
+        imageCount: rawImages.length,
+        hasPrice: Boolean(prospect.price),
+        hasZone: Boolean(prospect.zone),
+        hasRooms: Boolean(prospect.rooms),
+        hasSize: Boolean(prospect.size),
+        removedPhrasesCount: cleanDesc.removed.phrases.length + cleanTitle.removed.phrases.length,
+        removedPhonesCount: cleanDesc.removed.phones.length + cleanTitle.removed.phones.length,
+      });
+
+      if (quality < MIN_QUALITY) {
+        summary.rejected_low_quality++;
+        bumpSource(platform, 'rejected');
+        await supabase.from('prospect_listings')
+          .update({
+            admin_notes: `[auto-publish] Respins calitate < ${MIN_QUALITY} (score=${quality})`,
+            tags: ['scrape-prospects', 'auto-import', 'low-quality'],
+          }).eq('id', prospect.id);
+        continue;
       }
 
       const listingType = prospect.category === 'inchiriere' ? 'inchiriere'
@@ -261,6 +399,7 @@ Deno.serve(async (req) => {
         tag: listingType === 'vanzare' ? 'De Vânzare' : listingType === 'inchiriere' ? 'De Închiriat' : 'Disponibil',
         is_active: false,
         needs_review: true,
+        quality_score: quality,
         import_source: triggeredBy,
         imported_at: new Date().toISOString(),
         original_source_url: prospect.source_url,
@@ -271,7 +410,9 @@ Deno.serve(async (req) => {
           removed_addresses: cleanDesc.removed.addresses.length,
           removed_phrases: Array.from(new Set([...cleanDesc.removed.phrases, ...cleanTitle.removed.phrases])),
           ai_rewritten: useAiRewrite,
-          source_platform: prospect.source_platform,
+          source_platform: platform,
+          quality_score: quality,
+          learnings_applied: learnings.forbidden.length,
         },
         migrated_from_prospect_id: prospect.id,
         rooms: prospect.rooms,
@@ -285,8 +426,8 @@ Deno.serve(async (req) => {
         capital_necesar: listingType === 'vanzare' ? prospect.price : null,
         images: rawImages,
         booking_url: null,
-        source_platform: prospect.source_platform,
-        source_url: null, // intentionally hidden from public
+        source_platform: platform,
+        source_url: null,
       };
 
       const { data: inserted, error: insErr } = await supabase
@@ -302,25 +443,60 @@ Deno.serve(async (req) => {
           summary.rejected_error++;
           summary.errors.push(`prospect ${prospect.id}: ${insErr.message}`);
         }
+        bumpSource(platform, 'rejected');
         continue;
       }
 
       summary.published++;
       summary.published_ids.push(inserted.id);
+      qualityScores.push(quality);
+      bumpSource(platform, 'published', 1, quality);
 
-      // Mark prospect as imported
+      // Increment published count on source health
+      await supabase.rpc('listing_import_record_review', {
+        _source_platform: platform, _action: 'edit', _quality_delta: 0, // neutral bump for "attempt"
+      }).catch(() => null);
+
       await supabase.from('prospect_listings')
         .update({
           tags: ['scrape-prospects', 'auto-import', 'site-published'],
-          admin_notes: `[auto-publish] Publicat ca proprietate ${inserted.id} (draft, needs review).`,
+          admin_notes: `[auto-publish] Publicat ca proprietate ${inserted.id} (draft, q=${quality}).`,
         }).eq('id', prospect.id);
     } catch (err: any) {
       summary.rejected_error++;
+      bumpSource(platform, 'rejected');
       summary.errors.push(`prospect ${prospect.id}: ${err.message || String(err)}`);
     }
   }
 
-  // Log run
+  summary.avg_quality_score = qualityScores.length > 0
+    ? Math.round(qualityScores.reduce((a, b) => a + b, 0) / qualityScores.length)
+    : 0;
+
+  // Write metrics row for self-heal
+  try {
+    await supabase.from('listing_import_metrics').insert({
+      triggered_by: triggeredBy,
+      candidates: summary.candidates,
+      scraped: summary.scraped,
+      published: summary.published,
+      rejected_refusal: summary.rejected_refusal,
+      rejected_no_content: summary.rejected_no_content,
+      rejected_duplicate: summary.rejected_duplicate,
+      rejected_error: summary.rejected_error,
+      rejected_low_quality: summary.rejected_low_quality,
+      rejected_source_disabled: summary.rejected_source_disabled,
+      avg_quality_score: summary.avg_quality_score,
+      ai_rewrite_used: useAiRewrite,
+      batch_size: batchSize,
+      duration_ms: Date.now() - t0,
+      errors_sample: summary.errors.slice(0, 8),
+      per_source: summary.per_source,
+    });
+  } catch (e) {
+    console.error('metrics insert failed:', e);
+  }
+
   try {
     await supabase.rpc('automation_complete_run', {
       _job_key: 'auto-publish-listings',
@@ -328,7 +504,7 @@ Deno.serve(async (req) => {
       _payload: summary as any,
       _triggered_by: triggeredBy,
     });
-  } catch { /* table may not require */ }
+  } catch { /* optional */ }
 
   return new Response(JSON.stringify({ success: true, summary }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
