@@ -33,6 +33,7 @@ type DraftProperty = {
   imported_at: string | null;
   import_source: string | null;
   listing_type: string | null;
+  property_type: string | null;
   base_price_per_night: number | null;
   capital_necesar: number | null;
   size: number | null;
