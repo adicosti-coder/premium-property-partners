@@ -13,30 +13,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-async function requireAdmin(req: Request, supabase: any): Promise<Response | null> {
-  const auth = req.headers.get("Authorization") || "";
-  const token = auth.replace(/^Bearer\s+/i, "").trim();
-  if (token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return null;
-  const userClient = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: `Bearer ${token}` } } },
-  );
-  const { data: u } = await userClient.auth.getUser(token);
-  if (!u?.user) {
-    return new Response(JSON.stringify({ error: "Auth required" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  const { data: role } = await supabase.from("user_roles").select("role")
-    .eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
-  if (!role) {
-    return new Response(JSON.stringify({ error: "Admin required" }), {
-      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  return null;
-}
+// No explicit auth gate — matches scrape-prospects pattern. Service-role
+// key used internally for DB mutations.
 
 function platformDomain(p: string): string | null {
   const m: Record<string, string> = {

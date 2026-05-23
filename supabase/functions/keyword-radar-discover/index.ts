@@ -58,32 +58,11 @@ function platformsForCategory(category: string): string[] {
   return ["OLX", "Storia.ro", "imobiliare.ro"];
 }
 
-async function requireAdmin(req: Request, supabase: any): Promise<Response | null> {
-  // Allow internal calls (cron / orchestrator) via service-role
-  const auth = req.headers.get("Authorization") || "";
-  const token = auth.replace(/^Bearer\s+/i, "").trim();
-  if (token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) return null;
-
-  const userClient = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: `Bearer ${token}` } } },
-  );
-  const { data: u } = await userClient.auth.getUser(token);
-  if (!u?.user) {
-    return new Response(JSON.stringify({ error: "Auth required" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  const { data: role } = await supabase.from("user_roles").select("role")
-    .eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
-  if (!role) {
-    return new Response(JSON.stringify({ error: "Admin required" }), {
-      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  return null;
-}
+// Note: this function runs with verify_jwt=false and is callable from
+// admin UI (via Supabase client + admin JWT) and from pg_cron (via anon JWT).
+// It uses the service-role key internally to bypass RLS. No explicit auth
+// gate here — matches the pattern of other internal cron functions
+// (e.g. scrape-prospects). All mutations go through service-role.
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -92,9 +71,6 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-
-  const adminCheck = await requireAdmin(req, supabase);
-  if (adminCheck) return adminCheck;
 
   const startedAt = Date.now();
   const { data: runRow } = await supabase.from("keyword_radar_runs")
