@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // Blog Hub Weekly Digest
 // Cron: weekly Monday. Computes per-location impressions, hub clicks (inline + card),
 // CTR%, and emails a compact report to admin. Also returns JSON payload for orchestrator.
@@ -10,6 +11,9 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
 
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = body?.dry_run === true;

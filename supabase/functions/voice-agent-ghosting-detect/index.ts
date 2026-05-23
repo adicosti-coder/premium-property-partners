@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // Ghosting Detection: scans recent calls, flags 3+ consecutive no-answer profiles,
 // generates a Last Chance WhatsApp draft via Gemini, queues for admin approval.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -13,6 +14,9 @@ const NO_ANSWER_STATUSES = ["no-answer", "busy", "failed", "no_answer"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
   try {
     const KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!KEY) return json({ error: "LOVABLE_API_KEY missing" }, 500);

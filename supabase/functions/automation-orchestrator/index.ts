@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // Automation Orchestrator v2
 // Cron */5 min. Cron parser complet (croner), Europe/Bucharest TZ, paralel cu cap,
 // timeout per job (AbortController), retry pe joburi event/manuale.
@@ -320,6 +321,9 @@ async function pMap<T, R>(items: T[], cap: number, fn: (it: T) => Promise<R>): P
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

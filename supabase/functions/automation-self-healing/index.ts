@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // Automation Self-Healing & Self-Improvement
 // Reads tunable thresholds from public.automation_settings.self_healing_config.
 // Streams progress to public.automation_live_logs so the Admin "Live Logs" tab can tail it.
@@ -70,6 +71,9 @@ async function liveLog(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // Lead Auto-Dedup
 // Computes a normalized dedup_key for prospect_listings missing it (phone+zone+rooms+size band),
 // then marks newer rows as duplicate_of the earliest matching row. Safe & idempotent.
@@ -35,6 +36,9 @@ function buildKey(row: {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
 
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = body?.dry_run === true;

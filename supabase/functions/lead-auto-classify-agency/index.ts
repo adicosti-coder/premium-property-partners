@@ -1,3 +1,4 @@
+import { requireAdmin } from "../_shared/adminAuth.ts";
 // Lead Auto-Classify Agency
 // Picks up to 25 unscored prospect_listings (created in last 14 days), runs Gemini batch
 // classification, writes agency_suspicion_score (0-100) + reason. If score >= 85, creates a
@@ -44,6 +45,9 @@ ${items.map((i) => `- id=${i.id} | platform=${i.source_platform} | name=${i.cont
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const __auth = await requireAdmin(req, corsHeaders);
+  if (!__auth.ok) return __auth.response!;
+
 
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = body?.dry_run === true;
