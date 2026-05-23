@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
   // Server-to-server (orchestrator) bypass
   const isServiceCall = !!serviceKey && token === serviceKey;
 
+  let generatedBy: string | null = null;
   if (!isServiceCall) {
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -49,6 +50,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+    generatedBy = u.user.id;
 
     const adminCheck = createClient(
       Deno.env.get('SUPABASE_URL')!,
