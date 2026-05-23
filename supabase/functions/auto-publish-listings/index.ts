@@ -193,20 +193,21 @@ async function rewriteWithAI(
   sanitized: string,
   listingType: string,
   hints: string[],
+  compiledPrompt: string | null,
 ): Promise<{ title?: string; short?: string; full?: string } | null> {
   const key = Deno.env.get('LOVABLE_API_KEY');
   if (!key || !sanitized || sanitized.length < 80) return null;
   try {
     const hintBlock = hints.length > 0
-      ? `\nLECȚII ÎNVĂȚATE DIN CORECȚIILE ADMINULUI (aplică automat):\n- ${hints.slice(0, 8).join('\n- ')}\n`
+      ? `\nLECȚII ÎNVĂȚATE DIN CORECȚIILE ADMINULUI (aplică automat):\n- ${hints.slice(0, 12).join('\n- ')}\n`
       : '';
-    const prompt = `Ești copywriter imobiliar premium pentru RealTrust (agenție din Timișoara).
-Rescrie descrierea pentru un anunț de ${listingType === 'inchiriere' ? 'închiriere' : 'vânzare'}.
+    const systemPrompt = compiledPrompt || `Ești copywriter imobiliar premium pentru RealTrust (agenție din Timișoara).
 REGULI STRICTE:
 - NU include numere de telefon, emailuri, adrese exacte cu număr stradal.
 - NU folosi: "proprietar", "persoană fizică", "fără comision", "comision 0", "direct proprietar".
-- Limbaj profesional de agenție, accent pe avantaje și potențial de investiție.
-- Răspunde STRICT în formatul: ---TITLU---\\n[titlu]\\n---SCURT---\\n[descriere scurtă <200 char]\\n---COMPLET---\\n[descriere completă markdown]
+- Limbaj profesional de agenție, accent pe avantaje și potențial de investiție.`;
+    const userPrompt = `Rescrie descrierea pentru un anunț de ${listingType === 'inchiriere' ? 'închiriere' : 'vânzare'}.
+Răspunde STRICT în formatul: ---TITLU---\\n[titlu]\\n---SCURT---\\n[descriere scurtă <200 char]\\n---COMPLET---\\n[descriere completă markdown]
 ${hintBlock}
 TITLU ORIGINAL: ${title}
 DESCRIERE: ${sanitized.substring(0, 3000)}`;
@@ -216,7 +217,10 @@ DESCRIERE: ${sanitized.substring(0, 3000)}`;
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
       }),
     });
     if (!resp.ok) return null;
