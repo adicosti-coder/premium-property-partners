@@ -21,6 +21,7 @@ import { AutomationAnalytics } from "./AutomationAnalytics";
 import SelfHealingSettings from "./SelfHealingSettings";
 import AutomationLiveLogs from "./AutomationLiveLogs";
 import JobSelfHealingOverride from "./JobSelfHealingOverride";
+import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
 
 type Settings = {
   enabled: boolean;
