@@ -156,17 +156,19 @@ const AutomationManager = () => {
     in_dedupe_7d: number;
     structurally_eligible: number;
     autopilot_on: boolean;
+    weekend_standby: boolean;
     min_score: number;
     next_eligible_at: string | null;
     loading: boolean;
-  }>({ callable_now: 0, in_dedupe_7d: 0, structurally_eligible: 0, autopilot_on: false, min_score: 50, next_eligible_at: null, loading: true });
+  }>({ callable_now: 0, in_dedupe_7d: 0, structurally_eligible: 0, autopilot_on: false, weekend_standby: false, min_score: 50, next_eligible_at: null, loading: true });
+  const [togglingStandby, setTogglingStandby] = useState(false);
 
   const loadQueueStatus = async () => {
     try {
       const nowIso = new Date().toISOString();
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400 * 1000).toISOString();
       const [vs, prospectsRes, recentRes] = await Promise.all([
-        supabase.from("voice_agent_settings").select("autopilot_enabled, min_lead_score").eq("id", 1).maybeSingle(),
+        supabase.from("voice_agent_settings").select("autopilot_enabled, min_lead_score, weekend_standby_enabled").eq("id", 1).maybeSingle(),
         supabase.from("prospect_listings")
           .select("phone_normalized")
           .gte("lead_score", 50)
@@ -205,6 +207,7 @@ const AutomationManager = () => {
         in_dedupe_7d: inDedupe,
         structurally_eligible: eligiblePhones.size,
         autopilot_on: !!(vs.data as any)?.autopilot_enabled,
+        weekend_standby: !!(vs.data as any)?.weekend_standby_enabled,
         min_score: minScore,
         next_eligible_at: earliestRelease ? new Date(earliestRelease).toISOString() : null,
         loading: false,
@@ -213,6 +216,29 @@ const AutomationManager = () => {
       setQueueStatus((q) => ({ ...q, loading: false }));
     }
   };
+
+  const toggleWeekendStandby = async (next: boolean) => {
+    setTogglingStandby(true);
+    const prev = queueStatus.weekend_standby;
+    setQueueStatus((q) => ({ ...q, weekend_standby: next }));
+    const { error } = await supabase
+      .from("voice_agent_settings")
+      .update({ weekend_standby_enabled: next })
+      .eq("id", 1);
+    setTogglingStandby(false);
+    if (error) {
+      setQueueStatus((q) => ({ ...q, weekend_standby: prev }));
+      toast({ title: "Eroare", description: error.message, variant: "destructive" });
+    } else {
+      toast({
+        title: next ? "Mod standby weekend ACTIVAT" : "Mod standby weekend DEZACTIVAT",
+        description: next
+          ? "Andrei nu va mai apela sâmbătă/duminică (Europe/Bucharest). Apelurile manuale rămân posibile."
+          : "Autopilot rulează inclusiv în weekend, în fereastra orară configurată.",
+      });
+    }
+  };
+
 
   const load = async () => {
     setLoading(true);
