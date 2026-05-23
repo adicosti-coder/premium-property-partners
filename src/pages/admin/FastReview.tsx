@@ -417,8 +417,16 @@ export default function FastReview() {
               Nu există anunțuri în așteptare pentru revizuire. Sistemul de auto-publish va popula automat lista la următoarea rulare.
             </AlertDescription>
           </Alert>
+        ) : filtered.length === 0 ? (
+          <Alert>
+            <Filter className="h-4 w-4" />
+            <AlertTitle>Niciun rezultat</AlertTitle>
+            <AlertDescription>
+              Filtrele active nu returnează niciun anunț. Ajustează criteriile sau apasă „Resetează”.
+            </AlertDescription>
+          </Alert>
         ) : (
-          rows.map((row) => (
+          filtered.map((row) => (
             <ReviewCard
               key={row.id}
               row={row}
