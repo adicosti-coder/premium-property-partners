@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
-import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText } from "lucide-react";
+import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye } from "lucide-react";
 
 type Counts = {
   drafts: number;
@@ -86,9 +86,16 @@ export function AutoPublishListingsPanel() {
               Scrapează prospect_listings, sanitizează (fără telefon/adresă/cuvinte interzise), respinge anunțurile cu refuz „fără agenții", rescrie premium cu AI și publică ca DRAFT pe realtrust.ro.
             </CardDescription>
           </div>
-          <Button size="sm" variant="outline" onClick={load} disabled={loading} className="shrink-0">
-            {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Reîmprospătează"}
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button size="sm" variant="default" asChild>
+              <a href="/admin/properties/fast-review">
+                <Eye className="w-3 h-3 mr-1" /> Vedere Rapidă Revizuire
+              </a>
+            </Button>
+            <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+              {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Reîmprospătează"}
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
