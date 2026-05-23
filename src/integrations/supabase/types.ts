@@ -435,6 +435,8 @@ export type Database = {
           job_key: string
           proposal: Json
           rejected_reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
           severity: string
           status: string
         }
@@ -451,6 +453,8 @@ export type Database = {
           job_key: string
           proposal?: Json
           rejected_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           severity?: string
           status?: string
         }
@@ -467,6 +471,8 @@ export type Database = {
           job_key?: string
           proposal?: Json
           rejected_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           severity?: string
           status?: string
         }
