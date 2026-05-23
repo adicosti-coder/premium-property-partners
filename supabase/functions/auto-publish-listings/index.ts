@@ -280,6 +280,7 @@ Deno.serve(async (req) => {
   // Load config + learnings + disabled sources
   const baseConfig = await loadImportConfig(supabase);
   const learnings = await loadActiveLearnings(supabase);
+  const compiledPrompt = await loadCompiledPrompt(supabase);
   const disabledSources = await loadDisabledSources(supabase);
 
   // Merge learned forbidden phrases on top of config (without DB write)
