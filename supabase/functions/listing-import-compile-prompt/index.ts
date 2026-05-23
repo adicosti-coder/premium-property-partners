@@ -66,12 +66,6 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
-  const { data: roleRow } = await admin
-    .from('user_roles').select('role').eq('user_id', u.user.id).eq('role', 'admin').maybeSingle();
-  if (!roleRow) {
-    return new Response(JSON.stringify({ error: 'Admin only' }),
-      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
 
   // Load top active learnings (most evidence first)
   const { data: learnings } = await admin
