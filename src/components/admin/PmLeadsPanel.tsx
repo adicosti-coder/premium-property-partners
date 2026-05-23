@@ -27,6 +27,7 @@ interface PmLead {
   ai_pitch: string | null;
   status: string;
   sent_to_andrei_at: string | null;
+  contacted_at?: string | null;
   notes: string | null;
   created_at: string;
 }
