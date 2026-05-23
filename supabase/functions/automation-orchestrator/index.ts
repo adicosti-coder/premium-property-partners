@@ -38,6 +38,11 @@ const JOB_FN: Record<string, string> = {
   "system.daily_digest": "automation-daily-digest",
   "system.self_healing": "automation-self-healing",
   "system.anomaly_notifier": "automation-anomaly-notifier",
+  // Listing import pipeline (auto-publish + self-heal + continuous learning)
+  "auto-publish-listings": "auto-publish-listings",
+  "listing-import-self-heal": "listing-import-self-heal",
+  "listing.compile_prompt": "listing-import-compile-prompt",
+  "listing.learn": "listing-import-learn",
 };
 
 // Per-job body overrides for manual Run (event-driven jobs that need params).
@@ -58,6 +63,7 @@ const NOOP_JOB = new Set([
   "blog.cta_dedup_server",                // trigger Postgres pe cta_analytics
   "ai.memory_cross_function",             // agregat inline de visitor-memory
   "prospect.predictive_score_on_insert",  // trigger DB la inserare prospect
+  "listing.learn",                        // declanșat inline din FastReview după aprobare/respingere
 ]);
 
 const INLINE_JOB = new Set([

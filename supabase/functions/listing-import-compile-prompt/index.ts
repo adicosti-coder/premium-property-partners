@@ -29,32 +29,45 @@ Deno.serve(async (req) => {
 
   const auth = req.headers.get('Authorization') || '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!token) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  const userClient = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: `Bearer ${token}` } } },
-  );
-  const { data: u } = await userClient.auth.getUser(token);
-  if (!u?.user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  // Server-to-server (orchestrator) bypass
+  const isServiceCall = !!serviceKey && token === serviceKey;
+
+  let generatedBy: string | null = null;
+  if (!isServiceCall) {
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
+    );
+    const { data: u } = await userClient.auth.getUser(token);
+    if (!u?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    generatedBy = u.user.id;
+
+    const adminCheck = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+    const { data: roleRow } = await adminCheck
+      .from('user_roles').select('role').eq('user_id', u.user.id).eq('role', 'admin').maybeSingle();
+    if (!roleRow) {
+      return new Response(JSON.stringify({ error: 'Admin only' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
   }
 
   const admin = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   );
-  const { data: roleRow } = await admin
-    .from('user_roles').select('role').eq('user_id', u.user.id).eq('role', 'admin').maybeSingle();
-  if (!roleRow) {
-    return new Response(JSON.stringify({ error: 'Admin only' }),
-      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  }
 
   // Load top active learnings (most evidence first)
   const { data: learnings } = await admin
@@ -131,7 +144,7 @@ Cerințe pentru output:
     hints_count: hints.length,
     forbidden_count: phrases.length,
     semantic_count: semantic.length,
-    generated_by: u.user.id,
+    generated_by: generatedBy,
     is_active: true,
     notes: `Force re-sync (${phrases.length} fraze, ${hints.length} hints, ${semantic.length} concepte semantice)`,
   }).select('id, created_at').single();
