@@ -1,0 +1,1 @@
+ALTER TABLE public.voice_agent_settings ADD COLUMN IF NOT EXISTS weekend_standby_enabled boolean NOT NULL DEFAULT false;

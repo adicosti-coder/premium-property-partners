@@ -6621,6 +6621,7 @@ export type Database = {
           voice_stability: number
           voice_style: number
           voice_use_speaker_boost: boolean
+          weekend_standby_enabled: boolean
         }
         Insert: {
           allowed_hours_end?: number
@@ -6658,6 +6659,7 @@ export type Database = {
           voice_stability?: number
           voice_style?: number
           voice_use_speaker_boost?: boolean
+          weekend_standby_enabled?: boolean
         }
         Update: {
           allowed_hours_end?: number
@@ -6695,6 +6697,7 @@ export type Database = {
           voice_stability?: number
           voice_style?: number
           voice_use_speaker_boost?: boolean
+          weekend_standby_enabled?: boolean
         }
         Relationships: []
       }
