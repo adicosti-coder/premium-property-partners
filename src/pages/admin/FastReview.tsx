@@ -134,10 +134,10 @@ export default function FastReview() {
     setLoading(true);
     const { data, error } = await supabase
       .from("properties")
-      .select("id,name,slug,location,description_ro,long_description_ro,images,original_description_raw,original_source_url,sanitization_log,imported_at,import_source,listing_type,base_price_per_night,capital_necesar,size,rooms")
+      .select("id,name,slug,location,description_ro,long_description_ro,images,original_description_raw,original_source_url,sanitization_log,imported_at,import_source,listing_type,property_type,base_price_per_night,capital_necesar,size,rooms")
       .eq("needs_review", true)
       .order("imported_at", { ascending: false })
-      .limit(50);
+      .limit(200);
     if (error) {
       toast({ title: "Eroare", description: error.message, variant: "destructive" });
     } else {
