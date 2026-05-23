@@ -59,6 +59,8 @@ async function isAuthorized(req: Request): Promise<boolean> {
   const auth = req.headers.get('Authorization') || '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
   if (!token) return false;
+  // Server-to-server (orchestrator) call: Bearer = service role key
+  if (serviceKey && token === serviceKey) return true;
 
   const userClient = createClient(
     Deno.env.get('SUPABASE_URL')!,
