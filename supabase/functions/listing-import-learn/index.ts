@@ -245,6 +245,70 @@ Deno.serve(async (req) => {
     }
   }
 
+  // 3b. Semantic generalization via Gemini (single diff → conceptual rule)
+  const semanticPromoted: string[] = [];
+  if ((body.action === 'edit' && diffTokens.length >= 2) || (body.action === 'reject' && body.reason && body.reason.length > 8)) {
+    const sourcePhrases = body.action === 'edit' ? diffTokens : [body.reason || ''];
+    const rule = await generateSemanticRule(sourcePhrases, body.action === 'reject' ? body.reason : undefined);
+    if (rule) {
+      const conceptKey = rule.concept.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const { data: existingSem } = await admin
+        .from('listing_import_learnings')
+        .select('id, evidence_count, metadata')
+        .eq('pattern_type', 'semantic_concept')
+        .eq('pattern', conceptKey)
+        .maybeSingle();
+
+      if (existingSem) {
+        const mergedVariants = Array.from(new Set([
+          ...((existingSem as any).metadata?.variants || []),
+          ...rule.variants,
+        ])).slice(0, 25);
+        await admin.from('listing_import_learnings').update({
+          evidence_count: ((existingSem as any).evidence_count || 0) + 1,
+          confidence: Math.min(1, 0.75 + ((existingSem as any).evidence_count || 0) * 0.05),
+          is_active: true,
+          last_seen: new Date().toISOString(),
+          metadata: {
+            concept: rule.concept,
+            variants: mergedVariants,
+            description_hint: rule.description_hint,
+            source_platform: platform,
+          },
+        }).eq('id', (existingSem as any).id);
+      } else {
+        await admin.from('listing_import_learnings').insert({
+          pattern_type: 'semantic_concept',
+          pattern: conceptKey,
+          evidence_count: 1,
+          confidence: 0.78,
+          is_active: true, // Gemini-validated → activate immediately
+          promoted_at: new Date().toISOString(),
+          notes: `Generalizat semantic din ${body.action} (${platform})`,
+          metadata: {
+            concept: rule.concept,
+            variants: rule.variants,
+            description_hint: rule.description_hint,
+            source_platform: platform,
+            source_phrases: sourcePhrases.slice(0, 8),
+          },
+        });
+        semanticPromoted.push(rule.concept);
+      }
+
+      // Also push the description_hint as a hint candidate
+      await admin.from('listing_import_learnings').upsert({
+        pattern_type: 'description_hint',
+        pattern: rule.description_hint,
+        evidence_count: 1,
+        confidence: 0.7,
+        is_active: true,
+        notes: `Hint semantic (${rule.concept})`,
+        last_seen: new Date().toISOString(),
+      }, { onConflict: 'pattern_type,pattern', ignoreDuplicates: false }).catch(() => null);
+    }
+  }
+
   // 4. Store rejection reason as description_hint candidate
   if (body.action === 'reject' && body.reason && body.reason.length > 5 && body.reason.length < 200) {
     await admin.from('listing_import_learnings').upsert({
