@@ -2173,6 +2173,102 @@ export type Database = {
         }
         Relationships: []
       }
+      keyword_radar_queries: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          keyword: string
+          keyword_normalized: string | null
+          last_error: string | null
+          last_scanned_at: string | null
+          metadata: Json
+          platforms: string[]
+          priority_score: number
+          results_count: number
+          scan_count: number
+          source: string
+          total_results_count: number
+          updated_at: string
+          volume: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword: string
+          keyword_normalized?: string | null
+          last_error?: string | null
+          last_scanned_at?: string | null
+          metadata?: Json
+          platforms?: string[]
+          priority_score?: number
+          results_count?: number
+          scan_count?: number
+          source: string
+          total_results_count?: number
+          updated_at?: string
+          volume?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keyword?: string
+          keyword_normalized?: string | null
+          last_error?: string | null
+          last_scanned_at?: string | null
+          metadata?: Json
+          platforms?: string[]
+          priority_score?: number
+          results_count?: number
+          scan_count?: number
+          source?: string
+          total_results_count?: number
+          updated_at?: string
+          volume?: number
+        }
+        Relationships: []
+      }
+      keyword_radar_runs: {
+        Row: {
+          duration_ms: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          run_type: string
+          started_at: string
+          stats: Json
+          status: string
+          triggered_by: string
+        }
+        Insert: {
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          run_type: string
+          started_at?: string
+          stats?: Json
+          status?: string
+          triggered_by?: string
+        }
+        Update: {
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          run_type?: string
+          started_at?: string
+          stats?: Json
+          status?: string
+          triggered_by?: string
+        }
+        Relationships: []
+      }
       lead_notes: {
         Row: {
           content: string
