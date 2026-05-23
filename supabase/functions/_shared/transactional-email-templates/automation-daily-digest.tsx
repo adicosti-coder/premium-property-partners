@@ -15,6 +15,11 @@ interface Props {
   duplicates_marked_24h: number
   seo_drafts_pending: number
   seo_anomalies_24h: number
+  pm_leads_24h?: number
+  pm_leads_airbnb_24h?: number
+  pm_leads_booking_24h?: number
+  pm_leads_avg_score?: number
+  pm_leads_admin_url?: string
   top_failures: Array<{ job_key: string; error: string; consecutive_failures: number }>
   top_approvals: Array<{ action_type: string; severity: string; created_at: string }>
 }
@@ -52,6 +57,21 @@ const AutomationDailyDigest: React.FC<Props> = (p) => {
           <Stat label="Leaduri hot ≥90" value={p.high_score_leads_24h} />
           <Stat label="Suspecți agenție" value={p.agency_suspects_24h} />
           <Stat label="Duplicate marcate" value={p.duplicates_marked_24h} />
+
+          <Heading as="h2" style={{ fontSize: 14, color: '#374151', margin: '24px 0 8px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            💼 Prospectare B2B (Short-Term Leads)
+          </Heading>
+          <Text style={{ fontSize: 13, color: '#374151', margin: '0 0 8px' }}>
+            Gazde noi descoperite: <strong>{p.pm_leads_24h ?? 0}</strong>
+            {' '}(Airbnb: <strong>{p.pm_leads_airbnb_24h ?? 0}</strong>
+            {' '}| Booking: <strong>{p.pm_leads_booking_24h ?? 0}</strong>)
+            {' '}| Scor mediu PM: <strong>{p.pm_leads_avg_score ?? 0}%</strong>
+          </Text>
+          <Text style={{ fontSize: 12, margin: '0 0 4px' }}>
+            <a href={p.pm_leads_admin_url || 'https://realtrust.ro/admin?tab=listing-import'} style={{ color: '#0f1b3d', fontWeight: 600 }}>
+              → Gestionează PM Leads
+            </a>
+          </Text>
 
           <Heading as="h2" style={{ fontSize: 14, color: '#374151', margin: '24px 0 8px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
             SEO (24h)
@@ -116,6 +136,11 @@ export const template = {
     duplicates_marked_24h: 12,
     seo_drafts_pending: 5,
     seo_anomalies_24h: 1,
+    pm_leads_24h: 6,
+    pm_leads_airbnb_24h: 4,
+    pm_leads_booking_24h: 2,
+    pm_leads_avg_score: 72,
+    pm_leads_admin_url: 'https://realtrust.ro/admin?tab=listing-import',
     top_failures: [
       { job_key: 'lead.auto_classify_agency', error: 'Gateway 429: rate limited', consecutive_failures: 2 },
     ],
