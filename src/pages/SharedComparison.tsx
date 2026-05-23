@@ -53,12 +53,10 @@ const SharedComparison = () => {
     if (!shareCode) return;
     const load = async () => {
       const { data } = await supabase
-        .from("saved_comparisons")
-        .select("items")
-        .eq("share_code", shareCode)
-        .single();
-      if (data?.items) {
-        setItems(data.items as unknown as ComparableItem[]);
+        .rpc("get_shared_comparison", { p_share_code: shareCode });
+      const row = Array.isArray(data) ? data[0] : null;
+      if (row?.items) {
+        setItems(row.items as unknown as ComparableItem[]);
       } else {
         setError(true);
       }
