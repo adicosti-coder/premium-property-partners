@@ -125,22 +125,58 @@ export function sanitizeListingText(
     return m;
   });
 
-  // 5. Forbidden phrases (whole-word, diacritic-insensitive)
-  const forbidden = config.filter((r) => r.kind === 'forbidden_phrase' && r.enabled);
-  for (const row of forbidden) {
-    const needleNorm = normalize(row.pattern);
-    if (!needleNorm) continue;
-    // Build a fuzzy diacritic-insensitive regex.
-    // We rebuild from each character in original pattern letting unicode marks match.
-    const fuzzy = new RegExp(
-      `\\b${escapeRegex(row.pattern).replace(/[a-zA-Z]/g, (c) => `[${c.toLowerCase()}${c.toUpperCase()}\u0300-\u036f]`)}\\b`,
-      'gi',
-    );
-    out = out.replace(fuzzy, () => { removed.phrases.push(row.pattern); return row.replacement || ''; });
+  // 5. Forbidden phrases (Unicode-aware word boundary, diacritic-insensitive).
+  //    Process longest first so "direct proprietar" matches before "proprietar".
+  const forbidden = config
+    .filter((r) => r.kind === 'forbidden_phrase' && r.enabled)
+    .sort((a, b) => b.pattern.length - a.pattern.length);
 
-    // Also catch diacritic-stripped form
-    const flatNeedle = new RegExp(`\\b${escapeRegex(needleNorm)}\\b`, 'gi');
-    out = out.replace(flatNeedle, () => { removed.phrases.push(row.pattern); return row.replacement || ''; });
+  // Work on a parallel diacritic-stripped buffer for matching, but apply
+  // replacements on the original string by index.
+  for (const row of forbidden) {
+    const needle = normalize(row.pattern);
+    if (!needle) continue;
+    // Allow flexible whitespace between tokens.
+    const tokenRegex = needle.split(/\s+/).map(escapeRegex).join('\\s+');
+    const re = new RegExp(`(?<![\\p{L}\\p{N}])${tokenRegex}(?![\\p{L}\\p{N}])`, 'giu');
+
+    // Scan diacritic-stripped form for match positions, then translate to
+    // the original string. Since NFD-strip preserves index alignment for
+    // most Latin chars but combining marks add length, we do a simpler
+    // approach: build a NFD-flat lowercase version with index map.
+    const flatChars: string[] = [];
+    const indexMap: number[] = [];
+    const decomposed = out.toLowerCase().normalize('NFD');
+    let origIdx = 0;
+    let outIdx = 0;
+    // Build map from decomposed-index → original index (approx)
+    while (origIdx < out.length) {
+      const ch = out[origIdx];
+      const decomp = ch.toLowerCase().normalize('NFD');
+      for (let k = 0; k < decomp.length; k++) {
+        if (!/[\u0300-\u036f]/.test(decomp[k])) {
+          flatChars.push(decomp[k]);
+          indexMap.push(origIdx);
+        }
+      }
+      origIdx++;
+      outIdx++;
+    }
+    const flat = flatChars.join('');
+
+    const matches: { start: number; end: number }[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(flat)) !== null) {
+      const startOrig = indexMap[m.index];
+      const endOrig = (indexMap[m.index + m[0].length - 1] ?? indexMap[indexMap.length - 1]) + 1;
+      matches.push({ start: startOrig, end: endOrig });
+      removed.phrases.push(row.pattern);
+    }
+    // Apply replacements right-to-left
+    matches.sort((a, b) => b.start - a.start);
+    for (const mt of matches) {
+      out = out.slice(0, mt.start) + (row.replacement || '') + out.slice(mt.end);
+    }
   }
 
   // 6. Explicit replacement phrases ("contactați-mă" → "contactați RealTrust")
