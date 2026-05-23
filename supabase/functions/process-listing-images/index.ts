@@ -168,37 +168,65 @@ Deno.serve(async (req) => {
   }).eq("id", propertyId);
 
   const mode = pickMode(prop.source_platform || "");
-  const newUrls: string[] = [];
+  const finalUrls: string[] = [];
   const perImage: any[] = [];
   let okCount = 0;
+  let aiFailures = 0;
+  const aiErrors: string[] = [];
 
   for (let i = 0; i < sources.length; i++) {
     const src = sources[i];
     try {
       const raw = await fetchImageBytes(src);
-      if (!raw) { perImage.push({ i, src, status: "fetch_failed" }); continue; }
-      const { out, method } = await processOne(raw, mode);
+      if (!raw) {
+        finalUrls.push(src);
+        perImage.push({ i, src, status: "fetch_failed", fallback: "kept_original" });
+        continue;
+      }
+      const result = await processOne(raw, mode);
+
+      // Hard fallback: AI failed → keep ORIGINAL url, do not silently bottom-crop
+      if (result.kind === "ai_failed") {
+        aiFailures++;
+        aiErrors.push(result.error);
+        finalUrls.push(src);
+        perImage.push({ i, src, status: "ai_failed", error: result.error, fallback: "kept_original" });
+        continue;
+      }
 
       const path = `properties/${propertyId}/${Date.now()}-${i}.jpg`;
-      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, out, {
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, result.out, {
         contentType: "image/jpeg",
         upsert: true,
         cacheControl: "31536000",
       });
-      if (upErr) { perImage.push({ i, src, status: "upload_failed", error: upErr.message }); continue; }
+      if (upErr) {
+        finalUrls.push(src);
+        perImage.push({ i, src, status: "upload_failed", error: upErr.message, fallback: "kept_original" });
+        continue;
+      }
 
       const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      newUrls.push(pub.publicUrl);
-      perImage.push({ i, status: "ok", method, bytes_in: raw.byteLength, bytes_out: out.byteLength });
+      finalUrls.push(pub.publicUrl);
+      perImage.push({ i, status: "ok", method: result.method, bytes_in: raw.byteLength, bytes_out: result.out.byteLength });
       okCount++;
     } catch (err: any) {
-      perImage.push({ i, src, status: "error", error: String(err?.message || err) });
+      finalUrls.push(src);
+      perImage.push({ i, src, status: "error", error: String(err?.message || err), fallback: "kept_original" });
     }
   }
 
-  const status = newUrls.length > 0 ? "completed" : "failed";
+  // Status decision matrix:
+  // - any AI failure (timeout/http/error) on an ai_inpaint source → fallback_failed
+  // - otherwise some succeeded → completed
+  // - otherwise nothing succeeded → failed
+  let status: "completed" | "fallback_failed" | "failed";
+  if (aiFailures > 0) status = "fallback_failed";
+  else if (okCount > 0) status = "completed";
+  else status = "failed";
+
   await supabase.from("properties").update({
-    images: newUrls.length > 0 ? newUrls : prop.images,
+    images: finalUrls,
     images_processing_status: status,
     images_processed_at: new Date().toISOString(),
     images_processing_log: {
@@ -206,11 +234,14 @@ Deno.serve(async (req) => {
       source_platform: prop.source_platform,
       total: sources.length,
       ok: okCount,
+      ai_failures: aiFailures,
+      ai_errors: aiErrors.slice(0, 5),
       details: perImage,
     },
   }).eq("id", propertyId);
 
   return new Response(JSON.stringify({
-    ok: true, property_id: propertyId, mode, processed: okCount, total: sources.length, status,
+    ok: true, property_id: propertyId, mode, processed: okCount,
+    ai_failures: aiFailures, total: sources.length, status,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
