@@ -377,7 +377,7 @@ Deno.serve(async (req) => {
       let finalFull = cleanDesc.sanitized;
 
       if (useAiRewrite) {
-        const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare', learnings.hints);
+        const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare', learnings.hints, compiledPrompt);
         if (ai?.title) finalTitle = sanitizeListingText(ai.title, mergedConfig).sanitized || finalTitle;
         if (ai?.short) finalShort = sanitizeListingText(ai.short, mergedConfig).sanitized || finalShort;
         if (ai?.full)  finalFull  = sanitizeListingText(ai.full,  mergedConfig).sanitized || finalFull;
