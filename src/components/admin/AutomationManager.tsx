@@ -869,6 +869,27 @@ const AutomationManager = () => {
               </AlertDescription>
             </Alert>
           )}
+
+          {/* WEEKEND STANDBY TOGGLE — pauză autopilot sâmbătă/duminică */}
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-3">
+            <div className="flex-1 min-w-0">
+              <Label htmlFor="weekend-standby-switch" className="text-sm font-medium cursor-pointer">
+                Mod standby weekend
+                {queueStatus.weekend_standby && (
+                  <Badge variant="secondary" className="ml-2 text-[10px]">ACTIV</Badge>
+                )}
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Când e activ, Andrei nu apelează sâmbătă și duminică (Europe/Bucharest). Apelurile manuale rămân disponibile.
+              </p>
+            </div>
+            <Switch
+              id="weekend-standby-switch"
+              checked={queueStatus.weekend_standby}
+              onCheckedChange={toggleWeekendStandby}
+              disabled={togglingStandby || queueStatus.loading}
+            />
+          </div>
         </CardContent>
       </Card>
 
