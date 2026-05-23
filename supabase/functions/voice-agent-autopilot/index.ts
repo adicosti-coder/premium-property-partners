@@ -47,7 +47,13 @@ type AutonomySettings = {
   min_lead_score: number;
   allowed_hours_start: number;
   allowed_hours_end: number;
+  weekend_standby_enabled?: boolean;
 };
+
+function isWeekendBucharest(): boolean {
+  const wd = new Date().toLocaleString("en-US", { timeZone: "Europe/Bucharest", weekday: "short" });
+  return wd === "Sat" || wd === "Sun";
+}
 
 type RunSource = "cron" | "manual";
 
@@ -129,6 +135,11 @@ serve(async (req) => {
       summary.notes.push("autopilot disabled in settings");
       await finalize(supabase, runId, "skipped", summary);
       return jsonResp({ ok: true, skipped: "disabled", summary });
+    }
+    if (!bypassSchedule && s.weekend_standby_enabled && isWeekendBucharest()) {
+      summary.notes.push("weekend standby mode active");
+      await finalize(supabase, runId, "skipped", summary);
+      return jsonResp({ ok: true, skipped: "weekend_standby", summary });
     }
     if (!bypassSchedule && !isWithinHours(s)) {
       summary.notes.push(`outside hours ${s.allowed_hours_start}-${s.allowed_hours_end}`);
