@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { requireAdmin } from "../_shared/adminAuth.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,22 +18,35 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Optional auth: if a valid user token is provided, accept it; otherwise allow anonymous
-  // (the public voice widget is callable without sign-in). Quota abuse is mitigated upstream.
+  // Rate limit per IP — public widget is anonymous-friendly but we cap quota abuse.
+  const ip =
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  const rl = checkRateLimit(`elevenlabs-token:${ip}`, { maxRequests: 5, windowMs: 60_000 });
+  if (!rl.allowed) {
+    return new Response(JSON.stringify({ error: "Too many requests" }), {
+      status: 429,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)),
+      },
+    });
+  }
+
+  // Optional auth: accept a valid user JWT but do not require it (public voice widget).
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (token && token !== Deno.env.get("SUPABASE_ANON_KEY")) {
     try {
       const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
-      const { data: userData } = await sb.auth.getUser(token);
-      // Don't fail if invalid — just proceed as anonymous.
-      if (!userData?.user) {
-        console.log("[elevenlabs-conversation-token] Anonymous request (token not user JWT)");
-      }
-    } catch (e) {
-      console.log("[elevenlabs-conversation-token] getUser failed, proceeding anonymous:", (e as Error).message);
-    }
+      await sb.auth.getUser(token);
+    } catch { /* anonymous */ }
   }
+
+
 
   try {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
