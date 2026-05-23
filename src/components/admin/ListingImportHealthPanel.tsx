@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Activity, AlertTriangle, Beaker, Brain, FlaskConical, Loader2, RefreshCw, Search, ShieldAlert, Sparkles, TrendingUp, User, Wand2, Zap } from "lucide-react";
+import { Activity, AlertTriangle, Beaker, Brain, FlaskConical, Loader2, RefreshCw, Search, ShieldAlert, Sparkles, TrendingUp, Wand2, Zap } from "lucide-react";
 
 type Metric = {
   id: string;
