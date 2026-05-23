@@ -81,6 +81,7 @@ const CATEGORY_LABEL: Record<Job["category"], string> = {
   system: "System & Digest",
   blog: "Blog & Analytics",
   ai: "AI & Intelligence",
+  listing: "Listing Import",
 };
 
 const CATEGORY_ICON: Record<Job["category"], React.ComponentType<{ className?: string }>> = {
@@ -89,6 +90,7 @@ const CATEGORY_ICON: Record<Job["category"], React.ComponentType<{ className?: s
   system: Activity,
   blog: Newspaper,
   ai: Brain,
+  listing: Inbox,
 };
 
 const StatusBadge = ({ status }: { status: Job["last_status"] }) => {
