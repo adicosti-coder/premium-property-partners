@@ -9,6 +9,9 @@ Deno.serve(async (req) => {
 
   const reqBody = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = reqBody?.dry_run === true;
+  const recipientOverride: string | null = typeof reqBody?.recipient_override === "string" && reqBody.recipient_override.includes("@")
+    ? reqBody.recipient_override.trim()
+    : null;
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
