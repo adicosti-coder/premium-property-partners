@@ -124,15 +124,52 @@ Deno.serve(async (req) => {
   const platform = body.platform || "both";
   const maxResults = Math.min(Math.max(body.max_results || 8, 1), 15);
 
+  // Load live filter settings (set in admin → PM Leads → Setări Scanare)
+  const { data: settingsRow } = await supabase
+    .from("pm_scan_settings")
+    .select("*")
+    .limit(1)
+    .maybeSingle();
+  const settings = settingsRow || {
+    min_rating_airbnb: 4.5,
+    min_rating_booking: 8.5,
+    price_min: 35,
+    price_max: 200,
+    priority_zones: [] as string[],
+  };
+  const zoneAllowList: string[] = Array.isArray(settings.priority_zones) ? settings.priority_zones : [];
+  const zoneMatch = (z: string | null | undefined): boolean => {
+    if (zoneAllowList.length === 0) return true;
+    if (!z) return false;
+    const norm = String(z).toLowerCase();
+    return zoneAllowList.some((allow) => norm.includes(String(allow).toLowerCase()) || String(allow).toLowerCase().includes(norm));
+  };
+
   const platforms = platform === "both" ? ["booking", "airbnb"] : [platform];
   const allInserted: any[] = [];
   const errors: string[] = [];
+  let skippedByFilter = 0;
 
   for (const p of platforms) {
     try {
       const leads = await discoverViaGemini(keyword, p, maxResults);
       for (const lead of leads) {
         if (!lead?.source_url) continue;
+
+        // Apply live filters: rating, price, zone
+        const rating = lead.rating != null ? Number(lead.rating) : null;
+        const price = lead.price_per_night != null ? Number(lead.price_per_night) : null;
+        const minRating = p === "airbnb"
+          ? Number(settings.min_rating_airbnb)
+          : Number(settings.min_rating_booking);
+        if (rating != null && rating < minRating) { skippedByFilter++; continue; }
+        if (price != null) {
+          if (price < Number(settings.price_min) || price > Number(settings.price_max)) {
+            skippedByFilter++; continue;
+          }
+        }
+        if (!zoneMatch(lead.zone)) { skippedByFilter++; continue; }
+
         const row = {
           platform: p,
           source_url: String(lead.source_url).trim(),
@@ -173,6 +210,14 @@ Deno.serve(async (req) => {
   return new Response(JSON.stringify({
     success: true,
     inserted: allInserted.length,
+    skipped_by_filter: skippedByFilter,
+    filters_applied: {
+      min_rating_airbnb: settings.min_rating_airbnb,
+      min_rating_booking: settings.min_rating_booking,
+      price_min: settings.price_min,
+      price_max: settings.price_max,
+      priority_zones: zoneAllowList,
+    },
     leads: allInserted,
     errors,
   }), {

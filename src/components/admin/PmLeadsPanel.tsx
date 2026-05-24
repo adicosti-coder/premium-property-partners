@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Send, ExternalLink, RefreshCw, Mail, Copy, Search, Save, Settings } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Send, ExternalLink, RefreshCw, Mail, Copy, Search, Save, Settings, SlidersHorizontal } from "lucide-react";
 
 interface PmLead {
   id: string;
@@ -52,6 +53,25 @@ const AVAILABLE_TAGS = [
   "{{zone}}",
 ];
 
+const PRIORITY_ZONE_OPTIONS = ["ISHO", "Paltim", "City of Mara", "Fructus Plaza", "Cetate/Unirii"];
+
+interface ScanSettings {
+  id?: string;
+  min_rating_airbnb: number;
+  min_rating_booking: number;
+  price_min: number;
+  price_max: number;
+  priority_zones: string[];
+}
+
+const DEFAULT_SETTINGS: ScanSettings = {
+  min_rating_airbnb: 4.5,
+  min_rating_booking: 8.5,
+  price_min: 35,
+  price_max: 200,
+  priority_zones: [...PRIORITY_ZONE_OPTIONS],
+};
+
 const renderTemplate = (tpl: string, lead: PmLead): string => {
   const map: Record<string, string> = {
     "{{host_name}}": lead.host_name || "gazdă",
@@ -73,6 +93,44 @@ const PmLeadsPanel = () => {
   const [andreiEmail, setAndreiEmail] = useState<string>(() => localStorage.getItem(ANDREI_EMAIL_KEY) || "");
   const [editingTpl, setEditingTpl] = useState<Record<string, OutreachTemplate>>({});
   const [savingTpl, setSavingTpl] = useState<string | null>(null);
+  const [settings, setSettings] = useState<ScanSettings>(DEFAULT_SETTINGS);
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  const loadSettings = async () => {
+    const { data } = await supabase
+      .from("pm_scan_settings" as any)
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+    if (data) setSettings(data as any);
+  };
+
+  const saveSettings = async () => {
+    setSavingSettings(true);
+    const payload = {
+      min_rating_airbnb: Number(settings.min_rating_airbnb),
+      min_rating_booking: Number(settings.min_rating_booking),
+      price_min: Number(settings.price_min),
+      price_max: Number(settings.price_max),
+      priority_zones: settings.priority_zones,
+    };
+    const q = settings.id
+      ? supabase.from("pm_scan_settings" as any).update(payload).eq("id", settings.id)
+      : supabase.from("pm_scan_settings" as any).insert({ ...payload, singleton: true } as any);
+    const { error } = await q;
+    setSavingSettings(false);
+    if (error) toast.error(error.message);
+    else { toast.success("Setări salvate"); loadSettings(); }
+  };
+
+  const toggleZone = (zone: string) => {
+    setSettings((s) => ({
+      ...s,
+      priority_zones: s.priority_zones.includes(zone)
+        ? s.priority_zones.filter((z) => z !== zone)
+        : [...s.priority_zones, zone],
+    }));
+  };
 
   const loadLeads = async () => {
     setLoading(true);
@@ -103,7 +161,7 @@ const PmLeadsPanel = () => {
   };
 
   useEffect(() => { loadLeads(); }, [statusFilter]);
-  useEffect(() => { loadTemplates(); }, []);
+  useEffect(() => { loadTemplates(); loadSettings(); }, []);
 
   const triggerScan = async () => {
     setScanning(true);
@@ -204,6 +262,7 @@ const PmLeadsPanel = () => {
       <TabsList>
         <TabsTrigger value="leads"><Mail className="w-4 h-4 mr-1" /> Leaduri</TabsTrigger>
         <TabsTrigger value="templates"><Settings className="w-4 h-4 mr-1" /> Șabloane pitch</TabsTrigger>
+        <TabsTrigger value="settings"><SlidersHorizontal className="w-4 h-4 mr-1" /> Setări Scanare</TabsTrigger>
       </TabsList>
 
       <TabsContent value="leads" className="space-y-4">
@@ -403,6 +462,79 @@ const PmLeadsPanel = () => {
             );
           })
         )}
+      </TabsContent>
+
+      <TabsContent value="settings" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <SlidersHorizontal className="w-5 h-5" /> Setări Scanare PM Leads
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Criterii aplicate live de <code>pm-leads-scan</code> la fiecare rulare (inclusiv cron 06:10).
+              Anunțurile care nu se încadrează sunt ignorate înainte de inserare — protejează creditele Gemini.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-medium">⭐ Rating minim Airbnb (0–5)</label>
+                <Input
+                  type="number" step="0.1" min={0} max={5}
+                  value={settings.min_rating_airbnb}
+                  onChange={(e) => setSettings((s) => ({ ...s, min_rating_airbnb: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">⭐ Rating minim Booking (0–10)</label>
+                <Input
+                  type="number" step="0.1" min={0} max={10}
+                  value={settings.min_rating_booking}
+                  onChange={(e) => setSettings((s) => ({ ...s, min_rating_booking: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">💶 Preț minim / noapte (EUR)</label>
+                <Input
+                  type="number" min={0}
+                  value={settings.price_min}
+                  onChange={(e) => setSettings((s) => ({ ...s, price_min: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">💶 Preț maxim / noapte (EUR)</label>
+                <Input
+                  type="number" min={0}
+                  value={settings.price_max}
+                  onChange={(e) => setSettings((s) => ({ ...s, price_max: Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium block mb-2">📍 Zone prioritare Timișoara</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {PRIORITY_ZONE_OPTIONS.map((zone) => (
+                  <label key={zone} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted">
+                    <Checkbox
+                      checked={settings.priority_zones.includes(zone)}
+                      onCheckedChange={() => toggleZone(zone)}
+                    />
+                    {zone}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Lista goală = nu se filtrează după zonă (acceptă toate).
+              </p>
+            </div>
+
+            <Button onClick={saveSettings} disabled={savingSettings}>
+              {savingSettings ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+              Salvează setările
+            </Button>
+          </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   );
