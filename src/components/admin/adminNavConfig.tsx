@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, Phone, Zap, CalendarDays, Calendar, MessageSquare,
   Building, Hotel, TrendingUp, Building2, FileText, LinkIcon, Key,
-  Sparkles, Search, BarChart3,
+  Sparkles, BarChart3,
   Mail, MailCheck, Megaphone, Euro, PenLine, BookOpen, Lightbulb, Play,
   MousePointerClick, Target, Activity, FlaskConical,
   Film, MapPin, Wrench, Shield, ShieldCheck, Brain, Radar,
