@@ -71,6 +71,16 @@ Deno.serve(async (req) => {
   }
 
   const e164 = normalizeRoPhone(rawPhone);
+  const digits = rawPhone.replace(/\D/g, "");
+  // Build candidate variants for matching across columns that may not be normalized
+  const variants = new Set<string>();
+  if (rawPhone) variants.add(rawPhone);
+  if (e164) variants.add(e164);
+  if (digits) {
+    variants.add(digits);
+    if (digits.startsWith("40")) variants.add("0" + digits.slice(2));
+    if (digits.startsWith("0")) variants.add("40" + digits.slice(1));
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -78,16 +88,27 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   );
 
-  // Query v_prospect_funnel — match on phone_e164 first, then raw phone fallback.
-  const orFilter = e164
-    ? `phone_e164.eq.${e164},phone.eq.${rawPhone},phone_normalized.eq.${e164}`
-    : `phone.eq.${rawPhone}`;
+  // Match across phone_normalized / contact_phone / scraper_phone using all variants
+  const orParts: string[] = [];
+  for (const v of variants) {
+    const esc = v.replace(/[(),]/g, "");
+    orParts.push(`phone_normalized.eq.${esc}`);
+    orParts.push(`contact_phone.eq.${esc}`);
+    orParts.push(`scraper_phone.eq.${esc}`);
+    // Loose contains match (last 9 digits) to catch formatting differences
+    if (esc.length >= 9) {
+      const tail = esc.slice(-9);
+      orParts.push(`contact_phone.ilike.*${tail}*`);
+      orParts.push(`scraper_phone.ilike.*${tail}*`);
+      orParts.push(`phone_normalized.ilike.*${tail}*`);
+    }
+  }
 
   const { data, error } = await supabase
     .from("v_prospect_funnel")
     .select("*")
-    .or(orFilter)
-    .order("scraped_at", { ascending: false, nullsFirst: false })
+    .or(orParts.join(","))
+    .order("last_activity_at", { ascending: false, nullsFirst: false })
     .limit(1)
     .maybeSingle();
 
@@ -98,11 +119,9 @@ Deno.serve(async (req) => {
         caller_found: false,
         agent_memory_context: UNKNOWN_CONTEXT,
         error: "db_query_failed",
+        details: error.message,
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
@@ -113,39 +132,21 @@ Deno.serve(async (req) => {
         phone_e164: e164,
         agent_memory_context: UNKNOWN_CONTEXT,
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
-  const ownerName =
-    (data as any).owner_name ||
-    (data as any).contact_name ||
-    (data as any).full_name ||
-    "proprietar";
-  const propertyType =
-    (data as any).property_type || (data as any).category || "proprietate";
-  const rooms = (data as any).rooms ?? (data as any).num_rooms ?? "n/a";
-  const zone =
-    (data as any).zone || (data as any).location || (data as any).neighborhood || "Timișoara";
-  const price = (data as any).price ?? (data as any).asking_price ?? "n/a";
-  const funnelStatus =
-    (data as any).funnel_status ||
-    (data as any).lifecycle_status ||
-    (data as any).status ||
-    "necunoscut";
-  const qualityScore =
-    (data as any).quality_score ??
-    (data as any).lead_score ??
-    (data as any).score ??
-    "n/a";
-  const notes =
-    (data as any).notes ||
-    (data as any).admin_notes ||
-    (data as any).title ||
-    "fără note anterioare";
+  const d = data as any;
+  const ownerName = d.title || "proprietar";
+  const propertyType = d.prospect_type || "proprietate";
+  const zone = d.zone || d.location || "Timișoara";
+  const price = d.price ?? "n/a";
+  const funnelStatus = d.funnel_status || d.prospect_lifecycle || "necunoscut";
+  const qualityScore = d.prospect_score ?? d.lead_score ?? "n/a";
+  const notes = d.call_summary || d.title || "fără note anterioare";
+  const rooms = "n/a";
+
+
 
   const agent_memory_context =
     `CFR NOTE: Vorbești cu ${ownerName}. Acest număr este verificat prin Twilio. ` +
