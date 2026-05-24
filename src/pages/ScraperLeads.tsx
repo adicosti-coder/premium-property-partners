@@ -3185,8 +3185,18 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                             </div>
                             <span className="truncate flex items-center gap-1">{isPremiumLead(lead.title) && <span title="Ansamblu Premium">✨</span>}{cleanTitleStatic(lead.title)}</span>
                             <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
-                              <Phone className="w-3 h-3" /> {lead.phone || "Fără telefon"} · {getLeadContactName(lead)}
+                              <Phone className="w-3 h-3" /> {lead.phone || "Fără telefon"}
+                              {lead.is_phone_verified && (
+                                <span
+                                  title={`Mobil pre-validat Twilio${lead.phone_e164 ? ` (${lead.phone_e164})` : ""}`}
+                                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-500"
+                                >
+                                  <CheckCircle className="w-3 h-3" />
+                                </span>
+                              )}
+                              {" · "}{getLeadContactName(lead)}
                             </span>
+
                             <div className="flex gap-1 flex-wrap items-center">
                               <Select
                                 value={(lead as any)._prospect_type || "proprietar"}
