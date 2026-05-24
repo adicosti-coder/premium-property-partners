@@ -511,8 +511,53 @@ const AutomationManager = () => {
     }
   };
 
+  const sendDigestTest = async () => {
+    if (!reportEmail || !/.+@.+\..+/.test(reportEmail)) {
+      toast({ title: "Email invalid", description: "Introdu o adresă validă.", variant: "destructive" });
+      return;
+    }
+    setSendingDigestTest(true);
+    setDigestTestBanner(null);
+    try {
+      console.log("[digest-test] invoking automation-daily-digest", { recipient: reportEmail });
+      const { data, error } = await supabase.functions.invoke("automation-daily-digest", {
+        body: { dry_run: false, recipient_override: reportEmail },
+      });
+      if (error) {
+        console.error("[digest-test] invoke error", error);
+        throw error;
+      }
+      console.log("[digest-test] response", data);
+      const result = (data as { recipients?: Array<{ to: string; ok: boolean; status: number; error?: string }>; digest?: Record<string, unknown> }) || {};
+      const first = result.recipients?.[0];
+      if (!first || !first.ok) {
+        const errMsg = first?.error || `HTTP ${first?.status ?? "?"}`;
+        console.error("[digest-test] resend gateway rejected", { recipients: result.recipients, digest: result.digest });
+        setDigestTestBanner({
+          type: "error",
+          message: "Resend a respins email-ul. Vezi consola pentru log complet.",
+          details: errMsg,
+        });
+        toast({ title: "Eroare Resend", description: errMsg.slice(0, 180), variant: "destructive" });
+        return;
+      }
+      setDigestTestBanner({
+        type: "success",
+        message: "Email trimis cu succes! Verifică inbox-ul.",
+        details: `Livrat către ${first.to} • PM Leads: ${(result.digest?.pm_leads_24h as number) ?? 0} • Proprietăți noi: ${(result.digest?.properties_24h as number) ?? 0}`,
+      });
+      toast({ title: "Digest trimis", description: `Către ${first.to}` });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[digest-test] exception", e);
+      setDigestTestBanner({ type: "error", message: "Eroare la trimitere", details: msg });
+      toast({ title: "Eroare", description: msg, variant: "destructive" });
+    } finally {
+      setSendingDigestTest(false);
+    }
+  };
 
-  const applyApproval = async (a: Approval) => {
+
     setRunningJob(`approval:${a.id}`);
     try {
       const proposal = a.proposal as Record<string, unknown>;
