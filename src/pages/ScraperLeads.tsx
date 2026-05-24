@@ -41,6 +41,7 @@ import { FollowUpManager, DueRemindersBanner, useDebounce } from "@/components/a
 import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperKeyboardShortcuts";
 import { ScraperAnalyticsDashboard } from "@/components/admin/ScraperAnalytics";
 import { Keyboard, BarChart3 } from "lucide-react";
+import OutreachQuickAction from "@/components/admin/outreach/OutreachQuickAction";
 
 interface ScraperLead {
   id: string;
@@ -3288,6 +3289,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                             >
                               <MessageCircle className="h-4 w-4" />
                             </Button>
+                            <OutreachQuickAction lead={lead as any} />
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}>
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -3425,7 +3427,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="col-span-2 h-8 text-xs"
+                      className="h-8 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         const msg = lead.whatsapp_message || `Bună ziua! Vă contactez referitor la anunțul '${cleanTitleStatic(lead.title)}'. Mai este disponibil?`;
@@ -3434,6 +3436,9 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     >
                       <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
                     </Button>
+                    <div className="h-8 flex items-center justify-center">
+                      <OutreachQuickAction lead={lead as any} />
+                    </div>
                     <Button
                       size="sm"
                       variant="outline"

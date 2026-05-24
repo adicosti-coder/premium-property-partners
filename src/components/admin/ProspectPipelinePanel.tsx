@@ -1,14 +1,15 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Inbox, Phone, Bot, Radar, ShieldCheck } from "lucide-react";
+import { Inbox, Phone, Bot, Radar, ShieldCheck, FileText } from "lucide-react";
 import ScraperLeads from "@/pages/ScraperLeads";
 import ProspectListings from "@/pages/ProspectListings";
 import ProspectManager from "@/components/admin/ProspectManager";
 import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
+import OutreachTemplatesPanelB2C from "@/components/admin/outreach/OutreachTemplatesPanelB2C";
 
-const VALID_SUBTABS = ["leads", "hot", "bot", "status", "agency"] as const;
+const VALID_SUBTABS = ["leads", "hot", "templates", "bot", "status", "agency"] as const;
 type Subtab = (typeof VALID_SUBTABS)[number];
 const DEFAULT_SUBTAB: Subtab = "leads";
 
@@ -40,6 +41,7 @@ export default function ProspectPipelinePanel() {
     () => [
       { value: "leads", label: "Lead-uri Scorate", icon: Inbox },
       { value: "hot", label: "Hot Prospects (Call)", icon: Phone },
+      { value: "templates", label: "Șabloane Outreach", icon: FileText },
       { value: "bot", label: "Configurare Bot", icon: Bot },
       { value: "status", label: "Status & Monitoring", icon: Radar },
       { value: "agency", label: "Filtre Agenții", icon: ShieldCheck },
@@ -52,7 +54,7 @@ export default function ProspectPipelinePanel() {
       <div>
         <h2 className="text-2xl font-bold text-foreground">Pipeline Prospecți</h2>
         <p className="text-sm text-muted-foreground">
-          Flux unificat de prospectare: scoring AI, apelare, configurare bot, monitoring și filtre agenții.
+          Flux unificat de prospectare: scoring AI, apelare, șabloane outreach, configurare bot, monitoring și filtre agenții.
         </p>
       </div>
 
@@ -73,6 +75,7 @@ export default function ProspectPipelinePanel() {
           const Content =
             t.value === "leads" ? <ScraperLeads embedded /> :
             t.value === "hot" ? <ProspectListings embedded /> :
+            t.value === "templates" ? <OutreachTemplatesPanelB2C /> :
             t.value === "bot" ? <ProspectManager /> :
             t.value === "status" ? <ScraperStatusDashboard /> :
             <AgencyDetectionSettings />;
