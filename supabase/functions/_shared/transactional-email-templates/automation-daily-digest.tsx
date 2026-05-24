@@ -20,6 +20,7 @@ interface Props {
   pm_leads_booking_24h?: number
   pm_leads_avg_score?: number
   pm_leads_admin_url?: string
+  properties_24h?: number
   top_failures: Array<{ job_key: string; error: string; consecutive_failures: number }>
   top_approvals: Array<{ action_type: string; severity: string; created_at: string }>
 }
@@ -57,6 +58,7 @@ const AutomationDailyDigest: React.FC<Props> = (p) => {
           <Stat label="Leaduri hot ≥90" value={p.high_score_leads_24h} />
           <Stat label="Suspecți agenție" value={p.agency_suspects_24h} />
           <Stat label="Duplicate marcate" value={p.duplicates_marked_24h} />
+          <Stat label="Proprietăți noi" value={p.properties_24h ?? 0} />
 
           <Heading as="h2" style={{ fontSize: 14, color: '#374151', margin: '24px 0 8px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
             💼 Prospectare B2B (Short-Term Leads)
@@ -141,6 +143,7 @@ export const template = {
     pm_leads_booking_24h: 2,
     pm_leads_avg_score: 72,
     pm_leads_admin_url: 'https://realtrust.ro/admin?tab=listing-import',
+    properties_24h: 3,
     top_failures: [
       { job_key: 'lead.auto_classify_agency', error: 'Gateway 429: rate limited', consecutive_failures: 2 },
     ],

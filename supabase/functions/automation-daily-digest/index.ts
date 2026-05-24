@@ -9,6 +9,9 @@ Deno.serve(async (req) => {
 
   const reqBody = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = reqBody?.dry_run === true;
+  const recipientOverride: string | null = typeof reqBody?.recipient_override === "string" && reqBody.recipient_override.includes("@")
+    ? reqBody.recipient_override.trim()
+    : null;
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -20,8 +23,9 @@ Deno.serve(async (req) => {
   // Recipient: try system_health_thresholds.daily_report_email; fallback to constant
   const { data: cfg } = await supabase
     .from("system_health_thresholds").select("daily_report_email").maybeSingle();
-  const recipients: string[] = String(cfg?.daily_report_email || "contact@realtrust.ro")
+  const baseRecipients: string[] = String(cfg?.daily_report_email || "contact@realtrust.ro")
     .split(/[,;]/).map((s) => s.trim()).filter((s) => s.includes("@"));
+  const recipients = recipientOverride ? [recipientOverride] : baseRecipients;
 
   // Aggregate KPIs in parallel
   const [
@@ -34,6 +38,7 @@ Deno.serve(async (req) => {
     seoAnomaliesRes,
     recentApprovalsRes,
     pmLeadsRes,
+    propertiesRes,
   ] = await Promise.all([
     supabase.from("automation_approvals").select("id, severity", { count: "exact" }).eq("status", "pending"),
     supabase.from("automation_jobs").select("job_key, last_status, last_error, consecutive_failures, enabled"),
@@ -50,6 +55,8 @@ Deno.serve(async (req) => {
     supabase.from("automation_approvals").select("action_type, severity, created_at")
       .eq("status", "pending").order("created_at", { ascending: false }).limit(5),
     supabase.from("pm_collaboration_leads").select("platform, pm_potential_score, created_at")
+      .gte("created_at", since),
+    supabase.from("properties").select("id", { count: "exact", head: true })
       .gte("created_at", since),
   ]);
 
@@ -90,35 +97,49 @@ Deno.serve(async (req) => {
     pm_leads_booking_24h: pmBooking,
     pm_leads_avg_score: pmAvgScore,
     pm_leads_admin_url: "https://realtrust.ro/admin?tab=listing-import",
+    properties_24h: propertiesRes.count ?? 0,
     top_failures: topFailures,
     top_approvals: recentApprovalsRes.data ?? [],
   };
 
   // Email — one per recipient via existing transactional pipeline
-  const emailResults: Array<{ to: string; ok: boolean; status: number; skipped?: boolean }> = [];
+  const emailResults: Array<{ to: string; ok: boolean; status: number; skipped?: boolean; error?: string }> = [];
   if (dryRun) {
     for (const to of recipients) emailResults.push({ to, ok: true, status: 0, skipped: true });
   } else {
     for (const to of recipients) {
-      const idempotencyKey = `automation-digest-${new Date().toISOString().slice(0, 10)}-${to}`;
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          "x-webhook-secret": SERVICE_KEY,
-        },
-        body: JSON.stringify({
-          template_name: "automation-daily-digest",
-          to,
-          idempotency_key: idempotencyKey,
-          purpose: "transactional",
-          data,
-        }),
-      });
-      emailResults.push({ to, ok: res.ok, status: res.status });
+      const idempotencyKey = `automation-digest-${new Date().toISOString().slice(0, 10)}-${to}-${recipientOverride ? Date.now() : "auto"}`;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SERVICE_KEY}`,
+            "x-webhook-secret": SERVICE_KEY,
+          },
+          body: JSON.stringify({
+            templateName: "automation-daily-digest",
+            recipientEmail: to,
+            idempotencyKey,
+            purpose: "transactional",
+            templateData: data,
+          }),
+        });
+        const respText = await res.text().catch(() => "");
+        if (!res.ok) {
+          console.error("[automation-daily-digest] send failed", { to, status: res.status, body: respText.slice(0, 500) });
+          emailResults.push({ to, ok: false, status: res.status, error: respText.slice(0, 500) });
+        } else {
+          emailResults.push({ to, ok: true, status: res.status });
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error("[automation-daily-digest] send exception", { to, error: msg });
+        emailResults.push({ to, ok: false, status: 0, error: msg });
+      }
     }
   }
+
 
   // WhatsApp critical alert: only if there are critical-severity approvals or self-healing-disabled jobs
   const criticalApprovals = (pendingApprovalsRes.data ?? []).filter((a) => a.severity === "critical").length;

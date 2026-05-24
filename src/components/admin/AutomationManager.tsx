@@ -153,6 +153,8 @@ const AutomationManager = () => {
   const [sendingReport, setSendingReport] = useState(false);
   const [lastReportAt, setLastReportAt] = useState<string | null>(null);
   const [reportEmail, setReportEmail] = useState<string>("adicosti@gmail.com");
+  const [sendingDigestTest, setSendingDigestTest] = useState(false);
+  const [digestTestBanner, setDigestTestBanner] = useState<{ type: "success" | "error"; message: string; details?: string } | null>(null);
 
   // Voice Agent queue snapshot (callable now vs în dedupe 7d) — pentru standby visibility
   const [queueStatus, setQueueStatus] = useState<{
@@ -509,6 +511,51 @@ const AutomationManager = () => {
     }
   };
 
+  const sendDigestTest = async () => {
+    if (!reportEmail || !/.+@.+\..+/.test(reportEmail)) {
+      toast({ title: "Email invalid", description: "Introdu o adresă validă.", variant: "destructive" });
+      return;
+    }
+    setSendingDigestTest(true);
+    setDigestTestBanner(null);
+    try {
+      console.log("[digest-test] invoking automation-daily-digest", { recipient: reportEmail });
+      const { data, error } = await supabase.functions.invoke("automation-daily-digest", {
+        body: { dry_run: false, recipient_override: reportEmail },
+      });
+      if (error) {
+        console.error("[digest-test] invoke error", error);
+        throw error;
+      }
+      console.log("[digest-test] response", data);
+      const result = (data as { recipients?: Array<{ to: string; ok: boolean; status: number; error?: string }>; digest?: Record<string, unknown> }) || {};
+      const first = result.recipients?.[0];
+      if (!first || !first.ok) {
+        const errMsg = first?.error || `HTTP ${first?.status ?? "?"}`;
+        console.error("[digest-test] resend gateway rejected", { recipients: result.recipients, digest: result.digest });
+        setDigestTestBanner({
+          type: "error",
+          message: "Resend a respins email-ul. Vezi consola pentru log complet.",
+          details: errMsg,
+        });
+        toast({ title: "Eroare Resend", description: errMsg.slice(0, 180), variant: "destructive" });
+        return;
+      }
+      setDigestTestBanner({
+        type: "success",
+        message: "Email trimis cu succes! Verifică inbox-ul.",
+        details: `Livrat către ${first.to} • PM Leads: ${(result.digest?.pm_leads_24h as number) ?? 0} • Proprietăți noi: ${(result.digest?.properties_24h as number) ?? 0}`,
+      });
+      toast({ title: "Digest trimis", description: `Către ${first.to}` });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[digest-test] exception", e);
+      setDigestTestBanner({ type: "error", message: "Eroare la trimitere", details: msg });
+      toast({ title: "Eroare", description: msg, variant: "destructive" });
+    } finally {
+      setSendingDigestTest(false);
+    }
+  };
 
   const applyApproval = async (a: Approval) => {
     setRunningJob(`approval:${a.id}`);
@@ -974,8 +1021,46 @@ const AutomationManager = () => {
         </CardContent>
       </Card>
 
+      {/* DAILY DIGEST LIVE TEST (B2C + B2B in one email) */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="w-4 h-4" /> Digest zilnic — test live (B2C + B2B)
+          </CardTitle>
+          <CardDescription>
+            Rulează interogarea reală pe ultimele 24h (Proprietăți + PM Leads din Booking/Airbnb) și trimite email-ul prin Resend către adresa de mai sus.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <Button onClick={sendDigestTest} disabled={sendingDigestTest} className="gap-2">
+              {sendingDigestTest ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {sendingDigestTest ? "Se trimite..." : "Trimite digest de test acum"}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Destinatar: <strong>{reportEmail}</strong> (editează în câmpul de mai sus)
+            </span>
+          </div>
+          {digestTestBanner && (
+            <div
+              className={
+                digestTestBanner.type === "success"
+                  ? "rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-900"
+                  : "rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900"
+              }
+              role="status"
+            >
+              <div className="font-semibold">{digestTestBanner.message}</div>
+              {digestTestBanner.details && (
+                <div className="mt-1 text-xs opacity-80 font-mono break-all">{digestTestBanner.details}</div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* TABS */}
+
       <Tabs defaultValue="jobs" className="space-y-4">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="jobs">

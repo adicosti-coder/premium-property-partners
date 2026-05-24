@@ -460,7 +460,7 @@ export function ListingImportHealthPanel() {
                   <Switch checked={sbUseAi} onCheckedChange={setSbUseAi} id="sb-ai" />
                   <Label htmlFor="sb-ai" className="text-xs cursor-pointer">Rescrie cu Gemini</Label>
                 </div>
-                <Button onClick={runSandbox} disabled={sbRunning} className="w-full gap-1">
+                <Button onClick={() => runSandbox()} disabled={sbRunning} className="w-full gap-1">
                   {sbRunning ? <Loader2 className="w-3 h-3 animate-spin" /> : <FlaskConical className="w-3 h-3" />}
                   Simulează pipeline
                 </Button>
