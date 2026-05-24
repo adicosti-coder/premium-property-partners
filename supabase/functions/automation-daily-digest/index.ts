@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     seoAnomaliesRes,
     recentApprovalsRes,
     pmLeadsRes,
+    propertiesRes,
   ] = await Promise.all([
     supabase.from("automation_approvals").select("id, severity", { count: "exact" }).eq("status", "pending"),
     supabase.from("automation_jobs").select("job_key, last_status, last_error, consecutive_failures, enabled"),
@@ -54,6 +55,8 @@ Deno.serve(async (req) => {
     supabase.from("automation_approvals").select("action_type, severity, created_at")
       .eq("status", "pending").order("created_at", { ascending: false }).limit(5),
     supabase.from("pm_collaboration_leads").select("platform, pm_potential_score, created_at")
+      .gte("created_at", since),
+    supabase.from("properties").select("id", { count: "exact", head: true })
       .gte("created_at", since),
   ]);
 
