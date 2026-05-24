@@ -502,6 +502,7 @@ export default function VoiceAgentManager() {
           </div>
         </CardContent>
       </Card>
+      <VoiceAgentCallSimulator />
       <VoiceAgentResultsDashboard />
       <VoiceAgentAutopilot />
       <VoiceAgentSimSuccessRate />
