@@ -600,7 +600,7 @@ const IMPORT_WORKFLOW_LABELS: Record<ImportWorkflow, string> = {
   active: "Import activ",
 };
 
-const ScraperLeads = () => {
+const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const [selectedLead, setSelectedLead] = useState<ScraperLead | null>(null);
@@ -2356,10 +2356,10 @@ const ScraperLeads = () => {
 
   return (
     <>
-      <SEOHead title={`${t.title} | RealTrust`} description={t.subtitle} noIndex />
-      <Header />
-      <main className="min-h-screen bg-background pt-24 pb-16">
-        <div className="container mx-auto px-4 md:px-6">
+      {!embedded && <SEOHead title={`${t.title} | RealTrust`} description={t.subtitle} noIndex />}
+      {!embedded && <Header />}
+      <main className={embedded ? "" : "min-h-screen bg-background pt-24 pb-16"}>
+        <div className={embedded ? "" : "container mx-auto px-4 md:px-6"}>
           {/* Header */}
           <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
             <div className="flex items-center gap-3">
