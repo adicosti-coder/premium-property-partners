@@ -69,21 +69,25 @@ export default function ProspectPipelinePanel() {
           })}
         </TabsList>
 
-        <TabsContent value="leads" className="mt-0">
-          <ScraperLeads embedded />
-        </TabsContent>
-        <TabsContent value="hot" className="mt-0">
-          <ProspectListings embedded />
-        </TabsContent>
-        <TabsContent value="bot" className="mt-0">
-          <ProspectManager />
-        </TabsContent>
-        <TabsContent value="status" className="mt-0">
-          <ScraperStatusDashboard />
-        </TabsContent>
-        <TabsContent value="agency" className="mt-0">
-          <AgencyDetectionSettings />
-        </TabsContent>
+        {tabs.map((t) => {
+          const Content =
+            t.value === "leads" ? <ScraperLeads embedded /> :
+            t.value === "hot" ? <ProspectListings embedded /> :
+            t.value === "bot" ? <ProspectManager /> :
+            t.value === "status" ? <ScraperStatusDashboard /> :
+            <AgencyDetectionSettings />;
+          return (
+            <TabsContent
+              key={t.value}
+              value={t.value}
+              className="mt-0 space-y-4 [&_input]:rounded-md [&_select]:rounded-md [&_button]:rounded-md"
+            >
+              <div className="rounded-lg border border-border/40 bg-card/30 p-4 md:p-6">
+                {Content}
+              </div>
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </div>
   );
