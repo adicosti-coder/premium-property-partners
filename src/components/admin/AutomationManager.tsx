@@ -557,7 +557,7 @@ const AutomationManager = () => {
     }
   };
 
-
+  const applyApproval = async (a: Approval) => {
     setRunningJob(`approval:${a.id}`);
     try {
       const proposal = a.proposal as Record<string, unknown>;
