@@ -70,10 +70,10 @@ export default function ProspectPipelinePanel() {
         </TabsList>
 
         <TabsContent value="leads" className="mt-0">
-          <ScraperLeads />
+          <ScraperLeads embedded />
         </TabsContent>
         <TabsContent value="hot" className="mt-0">
-          <ProspectListings />
+          <ProspectListings embedded />
         </TabsContent>
         <TabsContent value="bot" className="mt-0">
           <ProspectManager />

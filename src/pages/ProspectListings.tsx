@@ -451,7 +451,7 @@ export function computeAgencySuspicion(p: {
   return { level, reasons };
 }
 
-const ProspectListings = () => {
+const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
@@ -1118,9 +1118,9 @@ const ProspectListings = () => {
 
   return (
     <>
-      <Header />
-      <div className="min-h-screen bg-background p-4 md:p-6 pt-24 md:pt-28">
-        <SEOHead title="Prospect Listings | Admin" description="AI-scored leads pipeline" />
+      {!embedded && <Header />}
+      <div className={embedded ? "" : "min-h-screen bg-background p-4 md:p-6 pt-24 md:pt-28"}>
+        {!embedded && <SEOHead title="Prospect Listings | Admin" description="AI-scored leads pipeline" />}
 
 
       {/* Debug banner — vizibil pe mobil pentru diagnoză */}
