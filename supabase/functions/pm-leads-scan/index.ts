@@ -210,6 +210,14 @@ Deno.serve(async (req) => {
   return new Response(JSON.stringify({
     success: true,
     inserted: allInserted.length,
+    skipped_by_filter: skippedByFilter,
+    filters_applied: {
+      min_rating_airbnb: settings.min_rating_airbnb,
+      min_rating_booking: settings.min_rating_booking,
+      price_min: settings.price_min,
+      price_max: settings.price_max,
+      priority_zones: zoneAllowList,
+    },
     leads: allInserted,
     errors,
   }), {
