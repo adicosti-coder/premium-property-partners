@@ -118,9 +118,12 @@ serve(async (req) => {
         .neq("status", "archived")
         .neq("status", "rejected")
         .neq("status", "converted")
+        .neq("status", "phone_invalid")
+        .neq("status", "dnc_blocked")
         .or(`prediction_generated_at.is.null,prediction_generated_at.lt.${cutoff}`)
         .order("lead_score", { ascending: false })
         .limit(body.limit || 10);
+
 
       let processed = 0;
       const results: any[] = [];
