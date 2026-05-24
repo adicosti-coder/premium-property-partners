@@ -3061,6 +3061,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pm_scan_settings: {
+        Row: {
+          id: string
+          min_rating_airbnb: number
+          min_rating_booking: number
+          price_max: number
+          price_min: number
+          priority_zones: string[]
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          min_rating_airbnb?: number
+          min_rating_booking?: number
+          price_max?: number
+          price_min?: number
+          priority_zones?: string[]
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          min_rating_airbnb?: number
+          min_rating_booking?: number
+          price_max?: number
+          price_min?: number
+          priority_zones?: string[]
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       poi_favorites: {
         Row: {
           created_at: string
