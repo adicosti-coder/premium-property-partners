@@ -463,6 +463,79 @@ const PmLeadsPanel = () => {
           })
         )}
       </TabsContent>
+
+      <TabsContent value="settings" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <SlidersHorizontal className="w-5 h-5" /> Setări Scanare PM Leads
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Criterii aplicate live de <code>pm-leads-scan</code> la fiecare rulare (inclusiv cron 06:10).
+              Anunțurile care nu se încadrează sunt ignorate înainte de inserare — protejează creditele Gemini.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-medium">⭐ Rating minim Airbnb (0–5)</label>
+                <Input
+                  type="number" step="0.1" min={0} max={5}
+                  value={settings.min_rating_airbnb}
+                  onChange={(e) => setSettings((s) => ({ ...s, min_rating_airbnb: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">⭐ Rating minim Booking (0–10)</label>
+                <Input
+                  type="number" step="0.1" min={0} max={10}
+                  value={settings.min_rating_booking}
+                  onChange={(e) => setSettings((s) => ({ ...s, min_rating_booking: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">💶 Preț minim / noapte (EUR)</label>
+                <Input
+                  type="number" min={0}
+                  value={settings.price_min}
+                  onChange={(e) => setSettings((s) => ({ ...s, price_min: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium">💶 Preț maxim / noapte (EUR)</label>
+                <Input
+                  type="number" min={0}
+                  value={settings.price_max}
+                  onChange={(e) => setSettings((s) => ({ ...s, price_max: Number(e.target.value) }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium block mb-2">📍 Zone prioritare Timișoara</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {PRIORITY_ZONE_OPTIONS.map((zone) => (
+                  <label key={zone} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted">
+                    <Checkbox
+                      checked={settings.priority_zones.includes(zone)}
+                      onCheckedChange={() => toggleZone(zone)}
+                    />
+                    {zone}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Lista goală = nu se filtrează după zonă (acceptă toate).
+              </p>
+            </div>
+
+            <Button onClick={saveSettings} disabled={savingSettings}>
+              {savingSettings ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+              Salvează setările
+            </Button>
+          </CardContent>
+        </Card>
+      </TabsContent>
     </Tabs>
   );
 };
