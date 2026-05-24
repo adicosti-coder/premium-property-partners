@@ -64,6 +64,17 @@ const safeEqual = (a: string, b: string): boolean => {
   return diff === 0;
 };
 
+// ── Twilio Lookup helpers ──
+function normalizeToE164(phone: string): string {
+  const raw = String(phone).replace(/[^\d+]/g, "");
+  if (raw.startsWith("+")) return raw;
+  if (raw.startsWith("004")) return "+" + raw.slice(2);
+  if (raw.startsWith("0") && raw.length === 10) return "+4" + raw;
+  if (raw.startsWith("40") && raw.length === 11) return "+" + raw;
+  if (raw.startsWith("7") && raw.length === 9) return "+40" + raw;
+  return raw.startsWith("+") ? raw : "+" + raw;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -113,18 +124,28 @@ Deno.serve(async (req) => {
   }
   const nonArchivedLeads = leads.filter((l: any) => !archivedUrls.has(l.url));
 
-  // ── Phone intelligence lookup ──
+  // ── Phone intelligence lookup (cache) ──
   const phones = nonArchivedLeads.map((l: any) => l.phone).filter((p: any) => typeof p === "string" && p.length > 0);
-  let phoneMap: Record<string, { category: string | null; is_blacklisted: boolean }> = {};
+  let phoneMap: Record<string, { category: string | null; is_blacklisted: boolean; line_type: string | null; is_unreachable: boolean; lookup_at: string | null }> = {};
   if (phones.length > 0) {
     const { data: piData } = await supabase
-      .from("phone_intelligence").select("phone_number, category, is_blacklisted").in("phone_number", phones);
+      .from("phone_intelligence")
+      .select("phone_number, category, is_blacklisted, line_type, is_unreachable, lookup_at")
+      .in("phone_number", phones);
     if (piData) {
-      for (const pi of piData) phoneMap[pi.phone_number] = { category: pi.category, is_blacklisted: pi.is_blacklisted };
+      for (const pi of piData) {
+        phoneMap[pi.phone_number] = {
+          category: pi.category,
+          is_blacklisted: pi.is_blacklisted,
+          line_type: pi.line_type,
+          is_unreachable: pi.is_unreachable,
+          lookup_at: pi.lookup_at,
+        };
+      }
     }
   }
 
-  // ── Filter blacklisted ──
+  // ── Filter hard-blacklisted ──
   const filteredLeads = nonArchivedLeads.filter((l: any) => {
     if (l.phone && phoneMap[l.phone]?.is_blacklisted) return false;
     return true;
@@ -140,17 +161,99 @@ Deno.serve(async (req) => {
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // ── Prepare rows with neighborhood mapping & prioritization ──
+  // ── Twilio Lookup INLINE (short-circuit înainte de AI scoring) ──
+  // Pre-validează fiecare număr unic. Numere voip/landline/unreachable sunt
+  // marcate cu status='phone_invalid'|'dnc_blocked' și NU mai trec prin Gemini,
+  // economisind credite AI.
+  const TWILIO_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
+  const TWILIO_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+  const twilioConfigured = Boolean(TWILIO_SID && TWILIO_TOKEN);
+
+  type LookupResult = { line_type: string | null; is_unreachable: boolean; valid: boolean; e164: string; cached: boolean };
+  const lookupResults: Record<string, LookupResult> = {};
+
+  async function doTwilioLookup(rawPhone: string): Promise<LookupResult> {
+    const e164 = normalizeToE164(rawPhone);
+    const cached = phoneMap[rawPhone];
+    if (cached?.lookup_at) {
+      return {
+        line_type: cached.line_type,
+        is_unreachable: cached.is_unreachable,
+        valid: !cached.is_unreachable && cached.line_type === "mobile",
+        e164,
+        cached: true,
+      };
+    }
+    if (!twilioConfigured) {
+      return { line_type: null, is_unreachable: false, valid: false, e164, cached: false };
+    }
+    try {
+      const auth = btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`);
+      const url = `https://lookups.twilio.com/v2/PhoneNumbers/${encodeURIComponent(e164)}?Fields=line_type_intelligence`;
+      const res = await fetch(url, { headers: { Authorization: `Basic ${auth}` } });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const code = data?.code || data?.error_code;
+        const isUnreachable = code === 60600 || code === 60601 || res.status === 404;
+        await supabase.from("phone_intelligence").upsert({
+          phone_number: rawPhone,
+          lookup_at: new Date().toISOString(),
+          lookup_error: `${res.status}:${code || "unknown"}`,
+          is_unreachable: isUnreachable,
+          last_seen: new Date().toISOString(),
+        }, { onConflict: "phone_number" });
+        return { line_type: null, is_unreachable: isUnreachable, valid: false, e164, cached: false };
+      }
+
+      const lti = data?.line_type_intelligence || {};
+      const rawType = String(lti.type || "unknown").toLowerCase();
+      const isVoip = /voip/.test(rawType);
+      const lineType = isVoip ? "voip" : (rawType === "mobile" || rawType === "landline" ? rawType : "unknown");
+
+      await supabase.from("phone_intelligence").upsert({
+        phone_number: rawPhone,
+        line_type: lineType,
+        carrier_name: lti.carrier_name || null,
+        country_code: data?.country_code || null,
+        lookup_at: new Date().toISOString(),
+        lookup_error: null,
+        is_unreachable: false,
+        last_seen: new Date().toISOString(),
+      }, { onConflict: "phone_number" });
+
+      return { line_type: lineType, is_unreachable: false, valid: lineType === "mobile", e164, cached: false };
+    } catch (e) {
+      console.error(`[twilio-lookup] ${rawPhone} exception:`, (e as Error).message);
+      return { line_type: null, is_unreachable: false, valid: false, e164, cached: false };
+    }
+  }
+
+  if (twilioConfigured) {
+    const uniquePhones = Array.from(new Set(filteredLeads.map((l: any) => l.phone).filter(Boolean))) as string[];
+    for (const ph of uniquePhones) {
+      lookupResults[ph] = await doTwilioLookup(ph);
+      // Gentle pace for Tier-1 quota; skip pause for cached hits
+      if (!lookupResults[ph].cached) await new Promise((r) => setTimeout(r, 120));
+    }
+  } else {
+    console.warn("[ingest-scraper-leads] Twilio nu este configurat — sar peste pre-validare.");
+  }
+
+  // ── Prepare rows ──
   let priorityMapped = 0;
+  let phoneInvalidCount = 0;
+  let dncBlockedCount = 0;
+  let phoneVerifiedCount = 0;
+
   const rows = filteredLeads.map((l: Record<string, any>) => {
     const phoneInfo = l.phone ? phoneMap[l.phone] : null;
+    const lookup = l.phone ? lookupResults[l.phone] : null;
 
-    // Neighborhood auto-mapping
     const matchedSlug = mapLocationToSlug(l.location || l.title, l.title);
     const isPriority = matchedSlug !== null;
     if (isPriority) priorityMapped++;
 
-    // Auto-ROI estimation for priority leads
     const price = Number(l.original_price ?? 0);
     const size = Number(l.size ?? l.surface ?? 0);
     let estimatedRoi: number | null = null;
@@ -158,18 +261,38 @@ Deno.serve(async (req) => {
 
     if (isPriority && matchedSlug) {
       estimatedRoi = estimateROI(price, size, matchedSlug);
-
-      // Auto-generate SEO-style description
       const rooms = Number(l.rooms ?? 1);
       const type = rooms === 1 ? "garsonieră" : `apartament ${rooms} camere`;
       const zoneName = matchedSlug.replace(/-/g, " ").replace(/^zona /, "").replace(/^calea /, "Calea ");
       seoDescription = `${type.charAt(0).toUpperCase() + type.slice(1)} în ${zoneName}, Timișoara.${estimatedRoi ? ` Randament estimat: ${estimatedRoi}%.` : ""} Administrare RealTrust inclusă.`;
     }
 
+    // ── Twilio-based short-circuit ──
+    let phoneStatus: string | null = null;
+    let isPhoneVerified = false;
+    if (l.phone && lookup && twilioConfigured) {
+      if (lookup.is_unreachable) {
+        phoneStatus = "phone_invalid";
+        phoneInvalidCount++;
+      } else if (lookup.line_type === "voip" || lookup.line_type === "landline") {
+        phoneStatus = "dnc_blocked";
+        dncBlockedCount++;
+      } else if (lookup.valid) {
+        isPhoneVerified = true;
+        phoneVerifiedCount++;
+      }
+    }
+
     const notes: string[] = [];
     if (phoneInfo?.category) notes.push(`[Auto] Categorie telefon: ${phoneInfo.category}`);
     if (isPriority && matchedSlug) notes.push(`[Auto] Zona prioritară: ${matchedSlug}`);
     if (estimatedRoi) notes.push(`[Auto] ROI estimat: ${estimatedRoi}%`);
+    if (lookup?.line_type) notes.push(`[Twilio] line_type=${lookup.line_type}`);
+    if (phoneStatus === "phone_invalid") notes.push(`[Twilio] Număr invalid/unreachable — AI skip.`);
+    if (phoneStatus === "dnc_blocked") notes.push(`[Twilio] DNC (${lookup?.line_type}) — AI skip.`);
+    if (isPhoneVerified) notes.push(`[Twilio] ✓ Mobil pre-validat (${lookup?.e164}).`);
+
+    const finalStatus = phoneStatus ?? (isPriority ? "priority" : String(l.status ?? "new"));
 
     return {
       title: String(l.title ?? ""),
@@ -179,24 +302,28 @@ Deno.serve(async (req) => {
       lead_score: Number(l.lead_score ?? 0),
       whatsapp_message: l.whatsapp_message ? String(l.whatsapp_message) : null,
       url: String(l.url ?? ""),
-      status: isPriority ? "priority" : String(l.status ?? "new"),
+      status: finalStatus,
       listing_type: String(l.listing_type ?? "vanzare"),
       source: l.source ? String(l.source) : "OLX",
       phone: l.phone ? String(l.phone) : null,
       prospect_category: phoneInfo?.category || null,
       admin_notes: notes.length > 0 ? notes.join(" | ") : null,
-      // Priority zone metadata
       neighborhood_slug: matchedSlug,
       estimated_roi: estimatedRoi,
       seo_description: seoDescription,
       is_priority: isPriority,
+      // Twilio pre-validation fields
+      is_phone_verified: isPhoneVerified,
+      phone_e164: lookup?.e164 || null,
+      phone_verified_at: isPhoneVerified ? new Date().toISOString() : null,
+      phone_line_type: lookup?.line_type || null,
       created_at: new Date().toISOString(),
     };
   });
 
-  // ── Upsert new phones ──
+  // ── Upsert phones that weren't processed by Twilio inline ──
   const newPhones = filteredLeads
-    .filter((l: any) => l.phone && !phoneMap[l.phone])
+    .filter((l: any) => l.phone && !phoneMap[l.phone] && !lookupResults[l.phone])
     .map((l: any) => ({ phone_number: String(l.phone), category: null, is_blacklisted: false, last_seen: new Date().toISOString() }));
   if (newPhones.length > 0) {
     await supabase.from("phone_intelligence").upsert(newPhones, { onConflict: "phone_number" });
@@ -206,7 +333,7 @@ Deno.serve(async (req) => {
   const { data, error } = await supabase
     .from("scraper_leads")
     .upsert(rows, { onConflict: "url", ignoreDuplicates: false })
-    .select("id, title, source, url, phone, neighborhood_slug, is_priority");
+    .select("id, title, source, url, phone, neighborhood_slug, is_priority, is_phone_verified, status");
 
   if (error) {
     console.error("Supabase Upsert Error:", error.message);
@@ -221,8 +348,12 @@ Deno.serve(async (req) => {
     success: true,
     count: data?.length ?? 0,
     priority_mapped: priorityMapped,
+    phone_verified: phoneVerifiedCount,
+    phone_invalid: phoneInvalidCount,
+    dnc_blocked: dncBlockedCount,
+    twilio_configured: twilioConfigured,
     archived_skipped: archivedCount,
     blacklisted_skipped: blacklistedCount,
-    message: `Ingestie reușită: ${data?.length ?? 0} lead-uri (${priorityMapped} prioritare).${archivedCount > 0 ? ` ${archivedCount} arhivate ignorate.` : ""}${blacklistedCount > 0 ? ` ${blacklistedCount} blocate.` : ""}`,
+    message: `Ingestie reușită: ${data?.length ?? 0} lead-uri (${priorityMapped} prioritare · ${phoneVerifiedCount} ✓ mobil · ${phoneInvalidCount} invalid · ${dncBlockedCount} DNC).`,
   }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

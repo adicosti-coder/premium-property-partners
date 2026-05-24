@@ -71,7 +71,11 @@ interface ScraperLead {
   location?: string | null;
   zone?: string | null;
   _origin?: "archive" | "prospect";
+  is_phone_verified?: boolean | null;
+  phone_e164?: string | null;
+  phone_line_type?: string | null;
 }
+
 
 /**
  * Native platform filter toggles. Each filter is a checkbox shown in the UI
@@ -3181,8 +3185,18 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                             </div>
                             <span className="truncate flex items-center gap-1">{isPremiumLead(lead.title) && <span title="Ansamblu Premium">✨</span>}{cleanTitleStatic(lead.title)}</span>
                             <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
-                              <Phone className="w-3 h-3" /> {lead.phone || "Fără telefon"} · {getLeadContactName(lead)}
+                              <Phone className="w-3 h-3" /> {lead.phone || "Fără telefon"}
+                              {lead.is_phone_verified && (
+                                <span
+                                  title={`Mobil pre-validat Twilio${lead.phone_e164 ? ` (${lead.phone_e164})` : ""}`}
+                                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-emerald-500/20 text-emerald-500"
+                                >
+                                  <CheckCircle className="w-3 h-3" />
+                                </span>
+                              )}
+                              {" · "}{getLeadContactName(lead)}
                             </span>
+
                             <div className="flex gap-1 flex-wrap items-center">
                               <Select
                                 value={(lead as any)._prospect_type || "proprietar"}
@@ -3381,9 +3395,18 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     <div className="flex items-center gap-1 text-foreground font-medium truncate">
                       <Phone className="w-3 h-3 shrink-0" />
                       {lead.phone ? <a href={`tel:${lead.phone}`} onClick={(e) => e.stopPropagation()} className="font-mono truncate">{lead.phone}</a> : <span className="text-muted-foreground">Fără telefon</span>}
+                      {lead.is_phone_verified && (
+                        <span
+                          title={`Mobil pre-validat Twilio${lead.phone_e164 ? ` (${lead.phone_e164})` : ""}`}
+                          className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-emerald-500/15 text-emerald-500 text-[9px] font-semibold uppercase tracking-wide"
+                        >
+                          <CheckCircle className="w-2.5 h-2.5" /> ok
+                        </span>
+                      )}
                     </div>
                     <div className="mt-0.5 text-muted-foreground truncate">Contact: {getLeadContactName(lead)}</div>
                   </div>
+
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 flex-wrap">
                     <span className="font-medium text-foreground">{formatPrice(lead.original_price, getPriceSuffix(lead))}</span>
                     <span className="text-emerald-500">+{formatPrice(lead.monthly_extra)}/lună</span>
