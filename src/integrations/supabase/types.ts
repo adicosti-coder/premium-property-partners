@@ -4078,6 +4078,7 @@ export type Database = {
           score: number | null
           score_breakdown: Json | null
           scraped_at: string | null
+          scraper_lead_id: string | null
           search_keywords: string[]
           size: number | null
           source_platform: string
@@ -4154,6 +4155,7 @@ export type Database = {
           score?: number | null
           score_breakdown?: Json | null
           scraped_at?: string | null
+          scraper_lead_id?: string | null
           search_keywords?: string[]
           size?: number | null
           source_platform: string
@@ -4230,6 +4232,7 @@ export type Database = {
           score?: number | null
           score_breakdown?: Json | null
           scraped_at?: string | null
+          scraper_lead_id?: string | null
           search_keywords?: string[]
           size?: number | null
           source_platform?: string
@@ -4252,6 +4255,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "prospect_listings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_listings_duplicate_of_fkey"
+            columns: ["duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+          {
+            foreignKeyName: "prospect_listings_scraper_lead_id_fkey"
+            columns: ["scraper_lead_id"]
+            isOneToOne: false
+            referencedRelation: "scraper_leads_archive_2026"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_listings_scraper_lead_id_fkey"
+            columns: ["scraper_lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["scraper_lead_id"]
           },
         ]
       }
@@ -4674,6 +4698,13 @@ export type Database = {
             referencedRelation: "scraper_leads_archive_2026"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "scraper_lead_status_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["scraper_lead_id"]
+          },
         ]
       }
       scraper_leads_archive_2026: {
@@ -5010,6 +5041,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "prospect_listings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seo_andrei_bridge_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
           },
         ]
       }
@@ -7559,11 +7597,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "voice_call_sessions_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+          {
             foreignKeyName: "voice_call_sessions_scraper_lead_id_fkey"
             columns: ["scraper_lead_id"]
             isOneToOne: false
             referencedRelation: "scraper_leads_archive_2026"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_call_sessions_scraper_lead_id_fkey"
+            columns: ["scraper_lead_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["scraper_lead_id"]
           },
         ]
       }
@@ -7792,6 +7844,13 @@ export type Database = {
             referencedRelation: "prospect_listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "voice_ghosting_queue_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
         ]
       }
       voice_latency_alerts: {
@@ -7860,6 +7919,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "prospect_listings"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_lead_cluster_assignments_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
           },
         ]
       }
@@ -8176,6 +8242,35 @@ export type Database = {
           count: number | null
           day: string | null
           rejection_reason: string | null
+        }
+        Relationships: []
+      }
+      v_prospect_funnel: {
+        Row: {
+          auto_call_triggered_at: string | null
+          call_summary: string | null
+          contact_phone: string | null
+          first_seen_at: string | null
+          funnel_status: string | null
+          is_active: boolean | null
+          last_activity_at: string | null
+          lead_score: number | null
+          location: string | null
+          phone_normalized: string | null
+          price: number | null
+          prospect_id: string | null
+          prospect_lifecycle: string | null
+          prospect_score: number | null
+          prospect_type: string | null
+          scraper_lead_id: string | null
+          scraper_lifecycle: string | null
+          scraper_phone: string | null
+          source_platform: string | null
+          source_url: string | null
+          tags: string[] | null
+          title: string | null
+          voice_call_session_id: string | null
+          zone: string | null
         }
         Relationships: []
       }
