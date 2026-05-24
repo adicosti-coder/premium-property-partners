@@ -63,6 +63,7 @@ import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
 import AutomationManager from "@/components/admin/AutomationManager";
+import ProspectPipelinePanel from "@/components/admin/ProspectPipelinePanel";
 import BlogCtaABDashboard from "@/components/admin/BlogCtaABDashboard";
 import BlogHubClicksDashboard from "@/components/admin/BlogHubClicksDashboard";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -230,6 +231,7 @@ const Admin = () => {
     newLeads: newLeadsCount,
     newScraper: newScraperCount,
     hotProspects: hotProspectsCount,
+    prospectPipeline: newScraperCount + hotProspectsCount,
   };
 
   return (
@@ -360,6 +362,7 @@ const Admin = () => {
                   <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
                   <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
                   <TabsContent value="automation"><AutomationManager /></TabsContent>
+                  <TabsContent value="prospect-pipeline"><ProspectPipelinePanel /></TabsContent>
                 </Tabs>
               </main>
 

@@ -15,7 +15,7 @@ interface Props {
   pinned: string[];
   onTogglePin: (value: string) => void;
   onOpenCommand: () => void;
-  counters: { newLeads: number; newScraper: number; hotProspects: number };
+  counters: { newLeads: number; newScraper: number; hotProspects: number; prospectPipeline: number };
 }
 
 function getCount(tab: AdminTab, c: Props["counters"]): number {
