@@ -2758,6 +2758,39 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_templates: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          platform: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          platform: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          platform?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       owner_codes: {
         Row: {
           code: string
