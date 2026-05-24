@@ -71,12 +71,9 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "seo-optimizer", label: "SEO AI", icon: Sparkles, subgroup: "AI Tools", keywords: ["seo"] },
       { value: "ai-memory", label: "AI Memory", icon: Brain, subgroup: "AI Tools", keywords: ["memorie", "context"] },
 
-      // 🔍 Scraper Pipeline — întregul flux de prospectare imobiliară
-      { value: "scraper-leads", label: "Oportunități AI", icon: Zap, externalRoute: "/scraper-leads", badgeKey: "newScraper", subgroup: "Scraper Pipeline", keywords: ["leads scraper", "oportunitati"] },
-      { value: "prospect-listings", label: "Prospect Listings", icon: Phone, externalRoute: "/admin/prospect-listings", badgeKey: "hotProspects", subgroup: "Scraper Pipeline", keywords: ["prospects", "anunturi"] },
-      { value: "prospects", label: "Bot Prospectare", icon: Search, subgroup: "Scraper Pipeline", keywords: ["bot", "scan", "scrape"] },
-      { value: "scraper-status", label: "Scraper Status", icon: Radar, subgroup: "Scraper Pipeline", keywords: ["status", "monitoring", "health"] },
-      { value: "agency-ai", label: "Detecție Agenții", icon: ShieldCheck, subgroup: "Scraper Pipeline", keywords: ["agentie", "blocklist", "filtrare"] },
+      // 🔍 Scraper Pipeline — întregul flux de prospectare imobiliară (unificat)
+      { value: "prospect-pipeline", label: "Pipeline Prospecți", icon: Radar, badgeKey: "prospectPipeline", subgroup: "Scraper Pipeline", keywords: ["prospects", "scraper", "leads", "bot", "hot", "agentii", "monitoring"] },
+
     ],
   },
   {
