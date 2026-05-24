@@ -319,7 +319,9 @@ Deno.serve(async (req) => {
   return new Response(JSON.stringify({
     success: true,
     inserted: allInserted.length,
+    competitor_blocked: blocked.length,
     skipped_by_filter: skippedByFilter,
+    blocklist_size: blocklist.length,
     filters_applied: {
       min_rating_airbnb: settings.min_rating_airbnb,
       min_rating_booking: settings.min_rating_booking,
@@ -328,6 +330,7 @@ Deno.serve(async (req) => {
       priority_zones: zoneAllowList,
     },
     leads: allInserted,
+    blocked,
     errors,
   }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
