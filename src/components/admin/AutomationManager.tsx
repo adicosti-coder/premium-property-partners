@@ -1021,8 +1021,46 @@ const AutomationManager = () => {
         </CardContent>
       </Card>
 
+      {/* DAILY DIGEST LIVE TEST (B2C + B2B in one email) */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="w-4 h-4" /> Digest zilnic — test live (B2C + B2B)
+          </CardTitle>
+          <CardDescription>
+            Rulează interogarea reală pe ultimele 24h (Proprietăți + PM Leads din Booking/Airbnb) și trimite email-ul prin Resend către adresa de mai sus.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <Button onClick={sendDigestTest} disabled={sendingDigestTest} className="gap-2">
+              {sendingDigestTest ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {sendingDigestTest ? "Se trimite..." : "Trimite digest de test acum"}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Destinatar: <strong>{reportEmail}</strong> (editează în câmpul de mai sus)
+            </span>
+          </div>
+          {digestTestBanner && (
+            <div
+              className={
+                digestTestBanner.type === "success"
+                  ? "rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-900"
+                  : "rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900"
+              }
+              role="status"
+            >
+              <div className="font-semibold">{digestTestBanner.message}</div>
+              {digestTestBanner.details && (
+                <div className="mt-1 text-xs opacity-80 font-mono break-all">{digestTestBanner.details}</div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* TABS */}
+
       <Tabs defaultValue="jobs" className="space-y-4">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="jobs">
