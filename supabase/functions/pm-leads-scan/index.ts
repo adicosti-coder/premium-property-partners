@@ -110,6 +110,76 @@ function buildPitch(lead: any): string {
     `Te-ar interesa să preluăm noi managementul (curățenie, check-in, prețuri dinamice, multi-platform) pe comision?`;
 }
 
+// Hard-coded fallback if DB blocklist is empty — local Timișoara PM competitors
+// + generic agency/property-manager indicators in EN/RO.
+const STATIC_BLOCKLIST = [
+  "apartments", "apart hotel", "aparthotel", "rentals", "rent ", "for rent",
+  "management", "property management", "agency", "agenție", "agentie",
+  "imobiliare", "real estate", "broker", "regim hotelier",
+  // Common Timișoara competitors / aggregators
+  "timisoara stays", "timisoara apartments", "bookalike", "hotelo",
+  "guestready", "airhost", "sweetinn",
+];
+
+function normalizeText(s: string | null | undefined): string {
+  if (!s) return "";
+  return String(s)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function loadCompetitorBlocklist(supabase: any): Promise<string[]> {
+  const phrases = new Set<string>();
+  try {
+    const { data: kw } = await supabase
+      .from("agency_keywords")
+      .select("keyword,type,enabled")
+      .eq("enabled", true)
+      .in("type", ["hard", "soft"]);
+    for (const k of (kw || [])) {
+      const v = normalizeText(k.keyword);
+      if (v.length >= 3) phrases.add(v);
+    }
+  } catch (_) { /* ignore */ }
+  try {
+    const { data: cfg } = await supabase
+      .from("listing_import_config")
+      .select("pattern,kind,enabled,is_regex")
+      .eq("enabled", true)
+      .eq("is_regex", false)
+      .in("kind", ["forbidden_phrase", "refusal_phrase"]);
+    for (const c of (cfg || [])) {
+      const v = normalizeText(c.pattern);
+      if (v.length >= 3) phrases.add(v);
+    }
+  } catch (_) { /* ignore */ }
+  for (const s of STATIC_BLOCKLIST) phrases.add(normalizeText(s));
+  return Array.from(phrases);
+}
+
+function matchCompetitor(lead: any, blocklist: string[]): string | null {
+  const haystack = normalizeText(
+    [lead.host_name, lead.property_name, lead.description, lead.host_profile_url]
+      .filter(Boolean)
+      .join(" | ")
+  );
+  if (!haystack) return null;
+  for (const phrase of blocklist) {
+    if (!phrase) continue;
+    // Token-aware match: wrap short phrases in word boundaries to avoid false hits
+    if (phrase.length <= 4) {
+      const re = new RegExp(`(^|\\W)${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\W|$)`);
+      if (re.test(haystack)) return phrase;
+    } else if (haystack.includes(phrase)) {
+      return phrase;
+    }
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -117,6 +187,7 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
 
   let body: ScanRequest = {};
   try { body = await req.json(); } catch { /* empty */ }
@@ -147,8 +218,12 @@ Deno.serve(async (req) => {
 
   const platforms = platform === "both" ? ["booking", "airbnb"] : [platform];
   const allInserted: any[] = [];
+  const blocked: any[] = [];
   const errors: string[] = [];
   let skippedByFilter = 0;
+
+  // Load competitor blocklist ONCE per scan (agency_keywords + listing_import_config + static)
+  const blocklist = await loadCompetitorBlocklist(supabase);
 
   for (const p of platforms) {
     try {
@@ -156,7 +231,40 @@ Deno.serve(async (req) => {
       for (const lead of leads) {
         if (!lead?.source_url) continue;
 
-        // Apply live filters: rating, price, zone
+        // Step 1: Competitor / agency block — silent log, NO Gemini pitch
+        const hit = matchCompetitor(lead, blocklist);
+        if (hit) {
+          const blockedRow = {
+            platform: p,
+            source_url: String(lead.source_url).trim(),
+            property_name: lead.property_name || null,
+            host_name: lead.host_name || null,
+            zone: lead.zone || null,
+            rating: lead.rating ? Number(lead.rating) : null,
+            reviews_count: lead.reviews_count ? Number(lead.reviews_count) : null,
+            price_per_night: lead.price_per_night ? Number(lead.price_per_night) : null,
+            currency: lead.currency || "EUR",
+            property_type: lead.property_type || null,
+            rooms: lead.rooms ? Number(lead.rooms) : null,
+            capacity: lead.capacity ? Number(lead.capacity) : null,
+            description: lead.description || null,
+            pm_potential_score: 0,
+            ai_pitch: null,
+            discovered_via: body.keyword_id || keyword,
+            raw_data: { ...lead, _block_reason: hit },
+            status: "competitor_blocked",
+            notes: `Auto-blocat: match cuvânt-cheie agenție/competitor "${hit}"`,
+          };
+          const { data } = await supabase
+            .from("pm_collaboration_leads")
+            .upsert(blockedRow, { onConflict: "source_url", ignoreDuplicates: false })
+            .select("id, source_url")
+            .maybeSingle();
+          if (data) blocked.push({ ...data, matched: hit });
+          continue;
+        }
+
+        // Step 2: Apply live filters: rating, price, zone
         const rating = lead.rating != null ? Number(lead.rating) : null;
         const price = lead.price_per_night != null ? Number(lead.price_per_night) : null;
         const minRating = p === "airbnb"
@@ -207,10 +315,13 @@ Deno.serve(async (req) => {
     }
   }
 
+
   return new Response(JSON.stringify({
     success: true,
     inserted: allInserted.length,
+    competitor_blocked: blocked.length,
     skipped_by_filter: skippedByFilter,
+    blocklist_size: blocklist.length,
     filters_applied: {
       min_rating_airbnb: settings.min_rating_airbnb,
       min_rating_booking: settings.min_rating_booking,
@@ -219,6 +330,7 @@ Deno.serve(async (req) => {
       priority_zones: zoneAllowList,
     },
     leads: allInserted,
+    blocked,
     errors,
   }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },

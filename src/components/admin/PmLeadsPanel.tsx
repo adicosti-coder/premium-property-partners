@@ -140,12 +140,18 @@ const PmLeadsPanel = () => {
       .order("pm_potential_score", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(200);
-    if (statusFilter !== "all") q = q.eq("status", statusFilter);
+    if (statusFilter === "all") {
+      // "Toate" = toate statusurile vizibile (exclude log-ul de competitori)
+      q = q.neq("status", "competitor_blocked");
+    } else {
+      q = q.eq("status", statusFilter);
+    }
     const { data, error } = await q;
     if (error) toast.error(error.message);
     else setLeads((data as PmLead[]) || []);
     setLoading(false);
   };
+
 
   const loadTemplates = async () => {
     const { data, error } = await supabase
@@ -253,9 +259,11 @@ const PmLeadsPanel = () => {
       onboarded: "bg-green-100 text-green-800",
       declined: "bg-rose-100 text-rose-800",
       blacklisted: "bg-gray-200 text-gray-700",
+      competitor_blocked: "bg-red-100 text-red-800 border border-red-300",
     };
     return <Badge className={map[s] || ""}>{s}</Badge>;
   };
+
 
   return (
     <Tabs defaultValue="leads" className="space-y-4">
@@ -300,17 +308,19 @@ const PmLeadsPanel = () => {
             </div>
             <div className="flex items-center gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="all">Toate (active)</SelectItem>
                   <SelectItem value="new">Noi</SelectItem>
                   <SelectItem value="reviewed">Revizuite</SelectItem>
                   <SelectItem value="sent_to_andrei">Trimise lui Andrei</SelectItem>
                   <SelectItem value="contacted">Contactate</SelectItem>
                   <SelectItem value="onboarded">Onboarded</SelectItem>
                   <SelectItem value="declined">Refuzate</SelectItem>
+                  <SelectItem value="competitor_blocked">🚫 Blocate (log competitori)</SelectItem>
                 </SelectContent>
               </Select>
+
               <Button variant="outline" size="sm" onClick={loadLeads}>
                 <RefreshCw className="w-4 h-4 mr-1" /> Refresh
               </Button>
