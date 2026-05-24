@@ -3288,6 +3288,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                             >
                               <MessageCircle className="h-4 w-4" />
                             </Button>
+                            <OutreachQuickAction lead={lead as any} />
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setSelectedLead(lead); setGeneratedMessage(""); }}>
                               <Eye className="w-4 h-4" />
                             </Button>
