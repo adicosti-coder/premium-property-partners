@@ -74,6 +74,16 @@ serve(async (req) => {
         return jsonResponse({ error: "Lead not found" }, 404);
       }
 
+      // Short-circuit: numere pre-respinse de Twilio nu merită credite Gemini
+      if (lead.status === "phone_invalid" || lead.status === "dnc_blocked") {
+        return jsonResponse({
+          skipped: true,
+          reason: lead.status,
+          message: `Predictive sărit (${lead.status}) — număr nevaloros pentru outreach.`,
+        });
+      }
+
+
       const cacheValid = lead.prediction_generated_at &&
         (Date.now() - new Date(lead.prediction_generated_at).getTime()) < 24 * 60 * 60 * 1000;
       if (cacheValid && !body.forceRefresh) {
