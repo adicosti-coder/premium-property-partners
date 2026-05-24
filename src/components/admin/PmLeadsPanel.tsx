@@ -308,17 +308,19 @@ const PmLeadsPanel = () => {
             </div>
             <div className="flex items-center gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toate</SelectItem>
+                  <SelectItem value="all">Toate (active)</SelectItem>
                   <SelectItem value="new">Noi</SelectItem>
                   <SelectItem value="reviewed">Revizuite</SelectItem>
                   <SelectItem value="sent_to_andrei">Trimise lui Andrei</SelectItem>
                   <SelectItem value="contacted">Contactate</SelectItem>
                   <SelectItem value="onboarded">Onboarded</SelectItem>
                   <SelectItem value="declined">Refuzate</SelectItem>
+                  <SelectItem value="competitor_blocked">🚫 Blocate (log competitori)</SelectItem>
                 </SelectContent>
               </Select>
+
               <Button variant="outline" size="sm" onClick={loadLeads}>
                 <RefreshCw className="w-4 h-4 mr-1" /> Refresh
               </Button>
