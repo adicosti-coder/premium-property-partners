@@ -112,6 +112,41 @@ Deno.serve(async (req) => {
     .limit(1)
     .maybeSingle();
 
+  if (error) {
+    console.error("v_prospect_funnel query error:", error.message);
+    return new Response(
+      JSON.stringify({
+        caller_found: false,
+        agent_memory_context: UNKNOWN_CONTEXT,
+        error: "db_query_failed",
+        details: error.message,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  if (!data) {
+    return new Response(
+      JSON.stringify({
+        caller_found: false,
+        phone_e164: e164,
+        agent_memory_context: UNKNOWN_CONTEXT,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  const d = data as any;
+  const ownerName = d.title || "proprietar";
+  const propertyType = d.prospect_type || "proprietate";
+  const zone = d.zone || d.location || "Timișoara";
+  const price = d.price ?? "n/a";
+  const funnelStatus = d.funnel_status || d.prospect_lifecycle || "necunoscut";
+  const qualityScore = d.prospect_score ?? d.lead_score ?? "n/a";
+  const notes = d.call_summary || d.title || "fără note anterioare";
+  const rooms = "n/a";
+
+
 
   const agent_memory_context =
     `CFR NOTE: Vorbești cu ${ownerName}. Acest număr este verificat prin Twilio. ` +
