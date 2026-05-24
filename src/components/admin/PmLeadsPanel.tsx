@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Send, ExternalLink, RefreshCw, Mail, Copy, Search, Save, Settings } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Send, ExternalLink, RefreshCw, Mail, Copy, Search, Save, Settings, SlidersHorizontal } from "lucide-react";
 
 interface PmLead {
   id: string;
@@ -52,6 +53,25 @@ const AVAILABLE_TAGS = [
   "{{zone}}",
 ];
 
+const PRIORITY_ZONE_OPTIONS = ["ISHO", "Paltim", "City of Mara", "Fructus Plaza", "Cetate/Unirii"];
+
+interface ScanSettings {
+  id?: string;
+  min_rating_airbnb: number;
+  min_rating_booking: number;
+  price_min: number;
+  price_max: number;
+  priority_zones: string[];
+}
+
+const DEFAULT_SETTINGS: ScanSettings = {
+  min_rating_airbnb: 4.5,
+  min_rating_booking: 8.5,
+  price_min: 35,
+  price_max: 200,
+  priority_zones: [...PRIORITY_ZONE_OPTIONS],
+};
+
 const renderTemplate = (tpl: string, lead: PmLead): string => {
   const map: Record<string, string> = {
     "{{host_name}}": lead.host_name || "gazdă",
@@ -73,6 +93,44 @@ const PmLeadsPanel = () => {
   const [andreiEmail, setAndreiEmail] = useState<string>(() => localStorage.getItem(ANDREI_EMAIL_KEY) || "");
   const [editingTpl, setEditingTpl] = useState<Record<string, OutreachTemplate>>({});
   const [savingTpl, setSavingTpl] = useState<string | null>(null);
+  const [settings, setSettings] = useState<ScanSettings>(DEFAULT_SETTINGS);
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  const loadSettings = async () => {
+    const { data } = await supabase
+      .from("pm_scan_settings" as any)
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+    if (data) setSettings(data as any);
+  };
+
+  const saveSettings = async () => {
+    setSavingSettings(true);
+    const payload = {
+      min_rating_airbnb: Number(settings.min_rating_airbnb),
+      min_rating_booking: Number(settings.min_rating_booking),
+      price_min: Number(settings.price_min),
+      price_max: Number(settings.price_max),
+      priority_zones: settings.priority_zones,
+    };
+    const q = settings.id
+      ? supabase.from("pm_scan_settings" as any).update(payload).eq("id", settings.id)
+      : supabase.from("pm_scan_settings" as any).insert({ ...payload, singleton: true } as any);
+    const { error } = await q;
+    setSavingSettings(false);
+    if (error) toast.error(error.message);
+    else { toast.success("Setări salvate"); loadSettings(); }
+  };
+
+  const toggleZone = (zone: string) => {
+    setSettings((s) => ({
+      ...s,
+      priority_zones: s.priority_zones.includes(zone)
+        ? s.priority_zones.filter((z) => z !== zone)
+        : [...s.priority_zones, zone],
+    }));
+  };
 
   const loadLeads = async () => {
     setLoading(true);
@@ -103,7 +161,7 @@ const PmLeadsPanel = () => {
   };
 
   useEffect(() => { loadLeads(); }, [statusFilter]);
-  useEffect(() => { loadTemplates(); }, []);
+  useEffect(() => { loadTemplates(); loadSettings(); }, []);
 
   const triggerScan = async () => {
     setScanning(true);
@@ -204,6 +262,7 @@ const PmLeadsPanel = () => {
       <TabsList>
         <TabsTrigger value="leads"><Mail className="w-4 h-4 mr-1" /> Leaduri</TabsTrigger>
         <TabsTrigger value="templates"><Settings className="w-4 h-4 mr-1" /> Șabloane pitch</TabsTrigger>
+        <TabsTrigger value="settings"><SlidersHorizontal className="w-4 h-4 mr-1" /> Setări Scanare</TabsTrigger>
       </TabsList>
 
       <TabsContent value="leads" className="space-y-4">
