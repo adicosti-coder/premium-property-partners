@@ -58,6 +58,7 @@ const AutomationDailyDigest: React.FC<Props> = (p) => {
           <Stat label="Leaduri hot ≥90" value={p.high_score_leads_24h} />
           <Stat label="Suspecți agenție" value={p.agency_suspects_24h} />
           <Stat label="Duplicate marcate" value={p.duplicates_marked_24h} />
+          <Stat label="Proprietăți noi" value={p.properties_24h ?? 0} />
 
           <Heading as="h2" style={{ fontSize: 14, color: '#374151', margin: '24px 0 8px', textTransform: 'uppercase', letterSpacing: 0.5 }}>
             💼 Prospectare B2B (Short-Term Leads)
