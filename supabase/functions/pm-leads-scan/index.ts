@@ -218,8 +218,12 @@ Deno.serve(async (req) => {
 
   const platforms = platform === "both" ? ["booking", "airbnb"] : [platform];
   const allInserted: any[] = [];
+  const blocked: any[] = [];
   const errors: string[] = [];
   let skippedByFilter = 0;
+
+  // Load competitor blocklist ONCE per scan (agency_keywords + listing_import_config + static)
+  const blocklist = await loadCompetitorBlocklist(supabase);
 
   for (const p of platforms) {
     try {
@@ -227,7 +231,40 @@ Deno.serve(async (req) => {
       for (const lead of leads) {
         if (!lead?.source_url) continue;
 
-        // Apply live filters: rating, price, zone
+        // Step 1: Competitor / agency block — silent log, NO Gemini pitch
+        const hit = matchCompetitor(lead, blocklist);
+        if (hit) {
+          const blockedRow = {
+            platform: p,
+            source_url: String(lead.source_url).trim(),
+            property_name: lead.property_name || null,
+            host_name: lead.host_name || null,
+            zone: lead.zone || null,
+            rating: lead.rating ? Number(lead.rating) : null,
+            reviews_count: lead.reviews_count ? Number(lead.reviews_count) : null,
+            price_per_night: lead.price_per_night ? Number(lead.price_per_night) : null,
+            currency: lead.currency || "EUR",
+            property_type: lead.property_type || null,
+            rooms: lead.rooms ? Number(lead.rooms) : null,
+            capacity: lead.capacity ? Number(lead.capacity) : null,
+            description: lead.description || null,
+            pm_potential_score: 0,
+            ai_pitch: null,
+            discovered_via: body.keyword_id || keyword,
+            raw_data: { ...lead, _block_reason: hit },
+            status: "competitor_blocked",
+            notes: `Auto-blocat: match cuvânt-cheie agenție/competitor "${hit}"`,
+          };
+          const { data } = await supabase
+            .from("pm_collaboration_leads")
+            .upsert(blockedRow, { onConflict: "source_url", ignoreDuplicates: false })
+            .select("id, source_url")
+            .maybeSingle();
+          if (data) blocked.push({ ...data, matched: hit });
+          continue;
+        }
+
+        // Step 2: Apply live filters: rating, price, zone
         const rating = lead.rating != null ? Number(lead.rating) : null;
         const price = lead.price_per_night != null ? Number(lead.price_per_night) : null;
         const minRating = p === "airbnb"
@@ -277,6 +314,7 @@ Deno.serve(async (req) => {
       errors.push(`${p}: ${msg}`);
     }
   }
+
 
   return new Response(JSON.stringify({
     success: true,
