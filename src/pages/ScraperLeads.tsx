@@ -71,7 +71,11 @@ interface ScraperLead {
   location?: string | null;
   zone?: string | null;
   _origin?: "archive" | "prospect";
+  is_phone_verified?: boolean | null;
+  phone_e164?: string | null;
+  phone_line_type?: string | null;
 }
+
 
 /**
  * Native platform filter toggles. Each filter is a checkbox shown in the UI
