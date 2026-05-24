@@ -23,8 +23,9 @@ Deno.serve(async (req) => {
   // Recipient: try system_health_thresholds.daily_report_email; fallback to constant
   const { data: cfg } = await supabase
     .from("system_health_thresholds").select("daily_report_email").maybeSingle();
-  const recipients: string[] = String(cfg?.daily_report_email || "contact@realtrust.ro")
+  const baseRecipients: string[] = String(cfg?.daily_report_email || "contact@realtrust.ro")
     .split(/[,;]/).map((s) => s.trim()).filter((s) => s.includes("@"));
+  const recipients = recipientOverride ? [recipientOverride] : baseRecipients;
 
   // Aggregate KPIs in parallel
   const [
