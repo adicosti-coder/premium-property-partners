@@ -186,6 +186,8 @@ project_id = "mvzssjyzbwccioqvhjpo"
     verify_jwt = false
   [functions.bulk-generate-ai-cache]
     verify_jwt = false
+  [functions.voice-agent-context]
+    verify_jwt = false
   [functions.scraper-lead-predictive]
     verify_jwt = false
 
