@@ -63,6 +63,7 @@ import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
 import AutomationManager from "@/components/admin/AutomationManager";
+import ProspectPipelinePanel from "@/components/admin/ProspectPipelinePanel";
 import BlogCtaABDashboard from "@/components/admin/BlogCtaABDashboard";
 import BlogHubClicksDashboard from "@/components/admin/BlogHubClicksDashboard";
 import { useAdminRole } from "@/hooks/useAdminRole";
