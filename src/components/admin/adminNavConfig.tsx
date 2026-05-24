@@ -15,7 +15,7 @@ export interface AdminTab {
   /** Optional external route (uses navigate instead of internal tab content) */
   externalRoute?: string;
   /** Counter key for live badges */
-  badgeKey?: "newLeads" | "newScraper" | "hotProspects";
+  badgeKey?: "newLeads" | "newScraper" | "hotProspects" | "prospectPipeline";
   /** Keywords for command palette search */
   keywords?: string[];
   /** Optional sub-section label inside the parent group (visual divider only) */
