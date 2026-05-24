@@ -20,6 +20,7 @@ interface Props {
   pm_leads_booking_24h?: number
   pm_leads_avg_score?: number
   pm_leads_admin_url?: string
+  properties_24h?: number
   top_failures: Array<{ job_key: string; error: string; consecutive_failures: number }>
   top_approvals: Array<{ action_type: string; severity: string; created_at: string }>
 }
