@@ -92,8 +92,11 @@ serve(async (req) => {
         .neq("status", "archived")
         .neq("status", "rejected")
         .neq("status", "converted")
+        .neq("status", "phone_invalid")
+        .neq("status", "dnc_blocked")
         .order("lead_score", { ascending: false })
         .limit(5);
+
 
       const briefing = await generateBriefing(leads || [], LOVABLE_API_KEY);
       return jsonResponse({ briefing, leads: leads || [] });
