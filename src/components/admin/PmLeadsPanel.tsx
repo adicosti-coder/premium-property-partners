@@ -53,15 +53,14 @@ const AVAILABLE_TAGS = [
 ];
 
 const renderTemplate = (tpl: string, lead: PmLead): string => {
-  return tpl
-    .replaceAll("{{host_name}}", lead.host_name || "gazdă")
-    .replaceAll("{{property_name}}", lead.property_name || "proprietatea ta")
-    .replaceAll("{{rating}}", lead.rating != null ? String(lead.rating) : "n/a")
-    .replaceAll(
-      "{{average_price}}",
-      lead.price_per_night != null ? String(lead.price_per_night) : "n/a"
-    )
-    .replaceAll("{{zone}}", lead.zone || "Timișoara");
+  const map: Record<string, string> = {
+    "{{host_name}}": lead.host_name || "gazdă",
+    "{{property_name}}": lead.property_name || "proprietatea ta",
+    "{{rating}}": lead.rating != null ? String(lead.rating) : "n/a",
+    "{{average_price}}": lead.price_per_night != null ? String(lead.price_per_night) : "n/a",
+    "{{zone}}": lead.zone || "Timișoara",
+  };
+  return tpl.replace(/\{\{(host_name|property_name|rating|average_price|zone)\}\}/g, (m) => map[m] ?? m);
 };
 
 const PmLeadsPanel = () => {
