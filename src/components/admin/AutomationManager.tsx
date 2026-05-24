@@ -153,6 +153,8 @@ const AutomationManager = () => {
   const [sendingReport, setSendingReport] = useState(false);
   const [lastReportAt, setLastReportAt] = useState<string | null>(null);
   const [reportEmail, setReportEmail] = useState<string>("adicosti@gmail.com");
+  const [sendingDigestTest, setSendingDigestTest] = useState(false);
+  const [digestTestBanner, setDigestTestBanner] = useState<{ type: "success" | "error"; message: string; details?: string } | null>(null);
 
   // Voice Agent queue snapshot (callable now vs în dedupe 7d) — pentru standby visibility
   const [queueStatus, setQueueStatus] = useState<{
