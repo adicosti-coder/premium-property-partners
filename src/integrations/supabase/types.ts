@@ -4723,6 +4723,7 @@ export type Database = {
           follow_up_at: string | null
           followup_sent_at: string | null
           id: string
+          is_phone_verified: boolean
           is_priority: boolean | null
           lead_score: number
           lifecycle_status: Database["public"]["Enums"]["scraper_lead_status"]
@@ -4732,6 +4733,9 @@ export type Database = {
           neighborhood_slug: string | null
           original_price: number
           phone: string | null
+          phone_e164: string | null
+          phone_line_type: string | null
+          phone_verified_at: string | null
           predicted_market_value: number | null
           prediction_generated_at: string | null
           prediction_reasoning: string | null
@@ -4763,6 +4767,7 @@ export type Database = {
           follow_up_at?: string | null
           followup_sent_at?: string | null
           id?: string
+          is_phone_verified?: boolean
           is_priority?: boolean | null
           lead_score?: number
           lifecycle_status?: Database["public"]["Enums"]["scraper_lead_status"]
@@ -4772,6 +4777,9 @@ export type Database = {
           neighborhood_slug?: string | null
           original_price?: number
           phone?: string | null
+          phone_e164?: string | null
+          phone_line_type?: string | null
+          phone_verified_at?: string | null
           predicted_market_value?: number | null
           prediction_generated_at?: string | null
           prediction_reasoning?: string | null
@@ -4803,6 +4811,7 @@ export type Database = {
           follow_up_at?: string | null
           followup_sent_at?: string | null
           id?: string
+          is_phone_verified?: boolean
           is_priority?: boolean | null
           lead_score?: number
           lifecycle_status?: Database["public"]["Enums"]["scraper_lead_status"]
@@ -4812,6 +4821,9 @@ export type Database = {
           neighborhood_slug?: string | null
           original_price?: number
           phone?: string | null
+          phone_e164?: string | null
+          phone_line_type?: string | null
+          phone_verified_at?: string | null
           predicted_market_value?: number | null
           prediction_generated_at?: string | null
           prediction_reasoning?: string | null
