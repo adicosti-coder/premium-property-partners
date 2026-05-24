@@ -362,6 +362,7 @@ const Admin = () => {
                   <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
                   <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
                   <TabsContent value="automation"><AutomationManager /></TabsContent>
+                  <TabsContent value="prospect-pipeline"><ProspectPipelinePanel /></TabsContent>
                 </Tabs>
               </main>
 
