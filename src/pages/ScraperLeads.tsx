@@ -3427,7 +3427,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="col-span-2 h-8 text-xs"
+                      className="h-8 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         const msg = lead.whatsapp_message || `Bună ziua! Vă contactez referitor la anunțul '${cleanTitleStatic(lead.title)}'. Mai este disponibil?`;
@@ -3436,6 +3436,9 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     >
                       <MessageCircle className="h-3 w-3 mr-1" /> WhatsApp
                     </Button>
+                    <div className="h-8 flex items-center justify-center">
+                      <OutreachQuickAction lead={lead as any} />
+                    </div>
                     <Button
                       size="sm"
                       variant="outline"
