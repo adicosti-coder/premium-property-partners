@@ -41,6 +41,7 @@ import { FollowUpManager, DueRemindersBanner, useDebounce } from "@/components/a
 import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperKeyboardShortcuts";
 import { ScraperAnalyticsDashboard } from "@/components/admin/ScraperAnalytics";
 import { Keyboard, BarChart3 } from "lucide-react";
+import OutreachQuickAction from "@/components/admin/outreach/OutreachQuickAction";
 
 interface ScraperLead {
   id: string;
