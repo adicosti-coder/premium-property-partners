@@ -259,9 +259,11 @@ const PmLeadsPanel = () => {
       onboarded: "bg-green-100 text-green-800",
       declined: "bg-rose-100 text-rose-800",
       blacklisted: "bg-gray-200 text-gray-700",
+      competitor_blocked: "bg-red-100 text-red-800 border border-red-300",
     };
     return <Badge className={map[s] || ""}>{s}</Badge>;
   };
+
 
   return (
     <Tabs defaultValue="leads" className="space-y-4">
