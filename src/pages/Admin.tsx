@@ -230,6 +230,7 @@ const Admin = () => {
     newLeads: newLeadsCount,
     newScraper: newScraperCount,
     hotProspects: hotProspectsCount,
+    prospectPipeline: newScraperCount + hotProspectsCount,
   };
 
   return (
