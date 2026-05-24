@@ -140,12 +140,18 @@ const PmLeadsPanel = () => {
       .order("pm_potential_score", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(200);
-    if (statusFilter !== "all") q = q.eq("status", statusFilter);
+    if (statusFilter === "all") {
+      // "Toate" = toate statusurile vizibile (exclude log-ul de competitori)
+      q = q.neq("status", "competitor_blocked");
+    } else {
+      q = q.eq("status", statusFilter);
+    }
     const { data, error } = await q;
     if (error) toast.error(error.message);
     else setLeads((data as PmLead[]) || []);
     setLoading(false);
   };
+
 
   const loadTemplates = async () => {
     const { data, error } = await supabase
