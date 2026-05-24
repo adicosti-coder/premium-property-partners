@@ -1,0 +1,2 @@
+ALTER TABLE public.pm_collaboration_leads DROP CONSTRAINT IF EXISTS pm_collaboration_leads_status_check;
+ALTER TABLE public.pm_collaboration_leads ADD CONSTRAINT pm_collaboration_leads_status_check CHECK (status = ANY (ARRAY['new'::text, 'reviewed'::text, 'sent_to_andrei'::text, 'contacted'::text, 'onboarded'::text, 'declined'::text, 'blacklisted'::text, 'competitor_blocked'::text]));
