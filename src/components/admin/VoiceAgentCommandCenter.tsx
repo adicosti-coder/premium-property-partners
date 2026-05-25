@@ -20,6 +20,7 @@ import {
   CheckCircle2, XCircle, Voicemail, ChevronDown, Settings2, Zap, ShieldAlert, Users, RefreshCw,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import MarkAsAgencyButton from "./MarkAsAgencyButton";
 
 const VoiceAgentManager = lazy(() => import("./VoiceAgentManager"));
