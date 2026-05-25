@@ -77,9 +77,6 @@ export default function ProspectTriageQueue() {
     }
   };
 
-    }
-  };
-
   return (
     <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
       <CardHeader className="flex flex-row items-start justify-between gap-3">
