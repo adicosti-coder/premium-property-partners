@@ -109,29 +109,94 @@ type SourceHealth = {
   notes: string | null;
 };
 
+type ScanLogLine = {
+  id: string;
+  level: string;
+  message: string;
+  created_at: string;
+  job_key: string | null;
+};
+
 function SourceBadge({ s }: { s: SourceHealth }) {
+  const [logs, setLogs] = useState<ScanLogLine[] | null>(null);
+  const [loadingLogs, setLoadingLogs] = useState(false);
   const now = Date.now();
   const disabled = s.auto_disabled_until && new Date(s.auto_disabled_until).getTime() > now;
   const failing = s.consecutive_failures >= 2 || disabled;
   const warn = s.consecutive_failures === 1 || (!s.last_success_at && !s.last_failure_at);
   const tone = failing ? "bg-red-500" : warn ? "bg-amber-500" : "bg-green-500";
-  const tip = disabled
+
+  const summary = disabled
     ? `Dezactivat până ${new Date(s.auto_disabled_until!).toLocaleString("ro-RO")}${s.notes ? ` — ${s.notes}` : ""}`
     : failing
     ? `${s.consecutive_failures} eșecuri consecutive${s.last_failure_at ? ` — ultim: ${new Date(s.last_failure_at).toLocaleString("ro-RO")}` : ""}`
     : warn
     ? "Atenție — fără succes recent"
     : `OK — ultim succes ${s.last_success_at ? new Date(s.last_success_at).toLocaleString("ro-RO") : "—"}`;
+
+  const loadLogs = async (open: boolean) => {
+    if (!open || logs !== null) return;
+    setLoadingLogs(true);
+    try {
+      const platform = s.source_platform;
+      // Best-effort match: by message/job_key/details containing the platform name
+      const { data } = await supabase
+        .from("automation_live_logs")
+        .select("id, level, message, created_at, job_key")
+        .or(`message.ilike.%${platform}%,job_key.ilike.%${platform}%`)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      setLogs((data || []) as ScanLogLine[]);
+    } catch {
+      setLogs([]);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
+  const levelColor = (lvl: string) =>
+    lvl === "error" ? "text-red-500"
+    : lvl === "warning" ? "text-amber-500"
+    : lvl === "success" ? "text-green-600"
+    : "text-muted-foreground";
+
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
+    <Popover onOpenChange={loadLogs}>
+      <PopoverTrigger asChild>
         <button type="button" className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-border bg-background/60 hover:bg-muted">
           <span className={`h-1.5 w-1.5 rounded-full ${tone}`} />
-          <span className="truncate max-w-[70px]">{s.source_platform}</span>
+          <span className="truncate max-w-[90px]">{s.source_platform}</span>
         </button>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" className="max-w-[260px] text-xs">{tip}</TooltipContent>
-    </Tooltip>
+      </PopoverTrigger>
+      <PopoverContent side="bottom" align="start" className="w-[340px] p-3 space-y-2">
+        <div className="text-xs font-medium text-foreground flex items-center gap-1.5">
+          <span className={`h-2 w-2 rounded-full ${tone}`} />
+          {s.source_platform}
+        </div>
+        <div className="text-[11px] text-muted-foreground leading-snug">{summary}</div>
+        <div className="border-t border-border pt-2">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Ultimele 5 linii jurnal</div>
+          {loadingLogs ? (
+            <div className="flex items-center justify-center py-3"><Loader2 className="h-3 w-3 animate-spin text-muted-foreground" /></div>
+          ) : !logs || logs.length === 0 ? (
+            <div className="text-[11px] italic text-muted-foreground py-1">Niciun log specific pentru această sursă.</div>
+          ) : (
+            <ul className="space-y-1">
+              {logs.map(l => {
+                const t = new Date(l.created_at);
+                const hhmm = t.toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit", hour12: false });
+                return (
+                  <li key={l.id} className="text-[11px] leading-snug font-mono">
+                    <span className="text-muted-foreground">[{hhmm}]</span>{" "}
+                    <span className={levelColor(l.level)}>{l.message}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
