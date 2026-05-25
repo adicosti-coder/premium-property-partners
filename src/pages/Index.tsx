@@ -287,6 +287,9 @@ const Index = () => {
             {/* SEO H2 strip — explicit service headings (per audit) */}
             <ServicesH2Strip />
 
+            {/* SEO dual CTA — investor complexes + ROI calculator */}
+            <SEODualCTASection />
+
             {/* SEO H3 strip — fills missing keywords (consultanță, evaluare, randament) */}
             <SEOConsultingStrip />
 
