@@ -17,8 +17,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "@/hooks/use-toast";
 import {
   PhoneCall, TrendingDown, TrendingUp, AlertTriangle, Target, Clock, Loader2,
-  CheckCircle2, XCircle, Voicemail, ChevronDown, Settings2, Zap, ShieldAlert, Users,
+  CheckCircle2, XCircle, Voicemail, ChevronDown, Settings2, Zap, ShieldAlert, Users, RefreshCw,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import MarkAsAgencyButton from "./MarkAsAgencyButton";
 
 const VoiceAgentManager = lazy(() => import("./VoiceAgentManager"));
