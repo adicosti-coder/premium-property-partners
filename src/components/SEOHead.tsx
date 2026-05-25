@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { BRAND, ORG_ID, SITE_ORIGIN } from "@/lib/orgIdentity";
+import { BRAND, ORG_ID, SITE_ORIGIN, REAL_ESTATE_AGENT_SCHEMA } from "@/lib/orgIdentity";
 import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
