@@ -338,9 +338,9 @@ export default function VoiceAgentCommandCenter() {
                   <span className="ml-1.5 hidden sm:inline">Sună</span>
                 </Button>
                 <MarkAsAgencyButton
-                  prospectId={p.id}
-                  phone={p.phone_normalized || ""}
-                  iconOnly
+                  id={p.id}
+                  phone={p.phone_normalized}
+                  variant="icon"
                   onMarked={() => setHotProspects(prev => prev.filter(x => x.id !== p.id))}
                 />
               </div>
