@@ -311,8 +311,8 @@ const CityOfMaraTimisoara = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Apartamente City of Mara Timișoara | Vânzare apartamente noi"
-        description="Apartamente City of Mara Timișoara: investiții imobiliare Timișoara centru, randament estimat, tipuri de apartamente și listă actualizată de disponibilități."
+        title="City of Mara Timișoara | Analiză ROI & Investiții RealTrust"
+        description="Vezi analiza financiară completă pentru complexul City of Mara din Timișoara. Calcul ROI, prețuri medii și oportunități de property management prin ApArt Hotel."
         url="https://realtrust.ro/complexe/city-of-mara"
         image="https://realtrust.ro/assets/apt-03.webp"
         jsonLd={jsonLd}
