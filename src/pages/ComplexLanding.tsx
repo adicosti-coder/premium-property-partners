@@ -227,8 +227,12 @@ const ComplexLanding = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={`Apartament în ${complex.name}, în regim hotelier — Timișoara | RealTrust`}
-        description={`Apartamente în regim hotelier în ${complex.name}, Timișoara. ROI net țintă ${complex.roi} pe ipoteze publice (ocupare 75%, deducere 27%), venit lunar estimat ${complex.avgIncome}, ocupare ${complex.occupancy}. Administrare end-to-end.`}
+        title={isRo
+          ? `${complex.name} Timișoara | Analiză ROI & Investiții RealTrust`
+          : `${complex.name} Timișoara | ROI Analysis & Investments RealTrust`}
+        description={isRo
+          ? `Vezi analiza financiară completă pentru complexul ${complex.name} din Timișoara. Calcul ROI, prețuri medii și oportunități de property management prin ApArt Hotel.`
+          : `See the complete financial analysis for ${complex.name} complex in Timișoara. ROI calculation, average prices and property management opportunities via ApArt Hotel.`}
         url={`https://realtrust.ro/complexe/${complex.slug}`}
         jsonLd={jsonLd}
         breadcrumbItems={[
