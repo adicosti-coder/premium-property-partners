@@ -59,7 +59,7 @@ import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
 import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
 import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
-import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
+import VoiceAgentCommandCenter from "@/components/admin/VoiceAgentCommandCenter";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
 import AutomationManager from "@/components/admin/AutomationManager";
@@ -358,7 +358,7 @@ const Admin = () => {
                     </div>
                   </TabsContent>
                   <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
-                  <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
+                  <TabsContent value="voice-agent"><VoiceAgentCommandCenter /></TabsContent>
                   <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
                   <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
                   <TabsContent value="automation"><AutomationManager /></TabsContent>
