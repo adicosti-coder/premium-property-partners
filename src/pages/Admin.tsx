@@ -358,7 +358,7 @@ const Admin = () => {
                     </div>
                   </TabsContent>
                   <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
-                  <TabsContent value="voice-agent"><VoiceAgentManager /></TabsContent>
+                  <TabsContent value="voice-agent"><VoiceAgentCommandCenter /></TabsContent>
                   <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
                   <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
                   <TabsContent value="automation"><AutomationManager /></TabsContent>
