@@ -228,6 +228,13 @@ export default function VoiceAgentCommandCenter() {
         .order("next_callback_at", { ascending: true }).limit(10);
 
       setCallbacks((cb || []) as CallbackDue[]);
+
+      // Source health
+      const { data: sh } = await supabase
+        .from("listing_import_source_health")
+        .select("source_platform, last_success_at, last_failure_at, consecutive_failures, auto_disabled_until, notes")
+        .order("source_platform", { ascending: true });
+      setSources((sh || []) as SourceHealth[]);
     } catch (e) {
       console.error("[CommandCenter] load failed", e);
       toast({ title: "Eroare", description: "Nu am putut încărca datele.", variant: "destructive" });
