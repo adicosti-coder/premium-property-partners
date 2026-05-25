@@ -142,6 +142,8 @@ export default function VoiceAgentCommandCenter() {
   const [hotProspects, setHotProspects] = useState<HotProspect[]>([]);
   const [callbacks, setCallbacks] = useState<CallbackDue[]>([]);
   const [callingId, setCallingId] = useState<string | null>(null);
+  const [sources, setSources] = useState<SourceHealth[]>([]);
+  const [triggeringScraper, setTriggeringScraper] = useState(false);
 
   // Quality filters (saved to localStorage)
   const [skipPreviouslyCalled, setSkipPreviouslyCalled] = useState(
