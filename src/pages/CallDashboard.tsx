@@ -713,6 +713,15 @@ export default function CallDashboard() {
                           >
                             <MessageCircle className="w-3.5 h-3.5 text-green-600" />
                           </Button>
+                          <MarkAsAgencyButton
+                            variant="icon"
+                            id={r.id}
+                            source={sourceToTable(r.source) as any}
+                            rawPhone={r.contact_phone}
+                            url={r.url}
+                            contextLabel={`Call · ${r.contact_name || r.property_title || ""}`}
+                            onMarked={() => setRows((prev) => prev.filter((x) => x.id !== r.id))}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
