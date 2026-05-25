@@ -3,6 +3,7 @@ import SEOHead from "@/components/SEOHead";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { NeighborhoodsGrid } from "@/components/NeighborhoodsGrid";
+import { SEODualCTASection } from "@/components/SEODualCTASection";
 import { ServicesH2Strip } from "@/components/ServicesH2Strip";
 import { SEOConsultingStrip } from "@/components/SEOConsultingStrip";
 import { LocalLandmarksStrip } from "@/components/LocalLandmarksStrip";
@@ -285,6 +286,9 @@ const Index = () => {
           <>
             {/* SEO H2 strip — explicit service headings (per audit) */}
             <ServicesH2Strip />
+
+            {/* SEO dual CTA — investor complexes + ROI calculator */}
+            <SEODualCTASection />
 
             {/* SEO H3 strip — fills missing keywords (consultanță, evaluare, randament) */}
             <SEOConsultingStrip />
