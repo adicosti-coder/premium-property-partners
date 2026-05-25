@@ -17,6 +17,10 @@ import { ArrowLeft, ArrowUpDown, Download, FileText, Headphones, MessageCircle, 
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
+
+const sourceToTable = (s: "voice" | "scraper" | "prospect") =>
+  s === "scraper" ? "scraper_leads_archive_2026" : s === "prospect" ? "prospect_listings" : null;
 
 // Compute a 0-100 hotness score based on outcome + sentiment + lead_score
 const computeHotScore = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null }): number => {
