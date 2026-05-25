@@ -63,7 +63,7 @@ interface CallbackDue {
 
 // ── KPI Card ────────────────────────────────────────────────────────────────
 function KpiCard({
-  label, value, sublabel, trend, tone = "neutral", icon: Icon,
+  label, value, sublabel, trend, tone = "neutral", icon: Icon, children,
 }: {
   label: string;
   value: string | number;
@@ -71,6 +71,7 @@ function KpiCard({
   trend?: "up" | "down" | "flat";
   tone?: "good" | "bad" | "warn" | "neutral";
   icon: React.ComponentType<{ className?: string }>;
+  children?: React.ReactNode;
 }) {
   const toneCls = {
     good: "border-green-500/30 bg-green-500/5",
@@ -92,7 +93,44 @@ function KpiCard({
           <span>{sublabel}</span>
         </div>
       )}
+      {children}
     </div>
+  );
+}
+
+// ── Source health badge ─────────────────────────────────────────────────────
+type SourceHealth = {
+  source_platform: string;
+  last_success_at: string | null;
+  last_failure_at: string | null;
+  consecutive_failures: number;
+  auto_disabled_until: string | null;
+  notes: string | null;
+};
+
+function SourceBadge({ s }: { s: SourceHealth }) {
+  const now = Date.now();
+  const disabled = s.auto_disabled_until && new Date(s.auto_disabled_until).getTime() > now;
+  const failing = s.consecutive_failures >= 2 || disabled;
+  const warn = s.consecutive_failures === 1 || (!s.last_success_at && !s.last_failure_at);
+  const tone = failing ? "bg-red-500" : warn ? "bg-amber-500" : "bg-green-500";
+  const tip = disabled
+    ? `Dezactivat până ${new Date(s.auto_disabled_until!).toLocaleString("ro-RO")}${s.notes ? ` — ${s.notes}` : ""}`
+    : failing
+    ? `${s.consecutive_failures} eșecuri consecutive${s.last_failure_at ? ` — ultim: ${new Date(s.last_failure_at).toLocaleString("ro-RO")}` : ""}`
+    : warn
+    ? "Atenție — fără succes recent"
+    : `OK — ultim succes ${s.last_success_at ? new Date(s.last_success_at).toLocaleString("ro-RO") : "—"}`;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-border bg-background/60 hover:bg-muted">
+          <span className={`h-1.5 w-1.5 rounded-full ${tone}`} />
+          <span className="truncate max-w-[70px]">{s.source_platform}</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-[260px] text-xs">{tip}</TooltipContent>
+    </Tooltip>
   );
 }
 
