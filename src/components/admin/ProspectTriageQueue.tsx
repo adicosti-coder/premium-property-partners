@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, RefreshCw, CheckCircle2, Ban, AlertTriangle, ExternalLink } from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
 
 interface TriageRow {
   id: string;
