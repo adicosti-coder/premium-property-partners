@@ -317,6 +317,7 @@ export default function VoiceAgentCommandCenter() {
   }
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -352,7 +353,19 @@ export default function VoiceAgentCommandCenter() {
         />
         <KpiCard label="Callbacks" value={stats?.callback ?? 0} sublabel="programate" icon={Clock} tone="neutral" />
         <KpiCard label="Voicemail" value={stats?.voicemail ?? 0} sublabel={`${((stats?.voicemail ?? 0) / Math.max(1, stats?.total ?? 1) * 100).toFixed(0)}% din apeluri`} icon={Voicemail} tone="warn" />
-        <KpiCard label="Pool unic" value={stats?.unique_numbers ?? 0} sublabel={`avg ${(stats?.avg_duration ?? 0).toFixed(0)}s/apel`} icon={Users} tone={(stats?.unique_numbers ?? 0) < 30 ? "warn" : "neutral"} />
+        <KpiCard
+          label="Pool unic"
+          value={stats?.unique_numbers ?? 0}
+          sublabel={`avg ${(stats?.avg_duration ?? 0).toFixed(0)}s/apel`}
+          icon={Users}
+          tone={(stats?.unique_numbers ?? 0) < 30 ? "warn" : "neutral"}
+        >
+          {sources.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-border/60 flex flex-wrap gap-1">
+              {sources.slice(0, 6).map(s => <SourceBadge key={s.source_platform} s={s} />)}
+            </div>
+          )}
+        </KpiCard>
       </div>
 
       {/* Diagnosis banner */}
@@ -364,10 +377,23 @@ export default function VoiceAgentCommandCenter() {
         {diagnosis.tone === "bad" ? <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" /> :
          diagnosis.tone === "warn" ? <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" /> :
          <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />}
-        <div>
+        <div className="flex-1 min-w-0">
           <div className="font-semibold text-foreground">{diagnosis.title}</div>
           <div className="text-sm text-muted-foreground mt-0.5">{diagnosis.advice}</div>
         </div>
+        {diagnosis.tone !== "good" && (
+          <Button
+            size="sm"
+            variant={diagnosis.tone === "bad" ? "destructive" : "default"}
+            onClick={triggerScraper}
+            disabled={triggeringScraper}
+            className="flex-shrink-0"
+          >
+            {triggeringScraper
+              ? <><Loader2 className="h-3 w-3 animate-spin mr-1.5" /> Pornesc…</>
+              : <><RefreshCw className="h-3 w-3 mr-1.5" /> Pornește scanare forțată</>}
+          </Button>
+        )}
       </div>
 
       {/* Two-col: Hot Prospects + Callbacks Due */}
