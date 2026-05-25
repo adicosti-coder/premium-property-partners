@@ -266,6 +266,27 @@ export default function VoiceAgentCommandCenter() {
     }
   };
 
+  // ── Force scraper scan ────────────────────────────────────────────────────
+  const triggerScraper = async () => {
+    setTriggeringScraper(true);
+    try {
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: { manual: true, source: "command_center", max_results: 30 },
+      });
+      if (error) throw error;
+      toast({
+        title: "Scraper pornit",
+        description: "Scraperul a fost pornit cu succes pentru zonele premium (Centru, Cetate, Nord). Verifică sub-tabul Triaj în 2-3 minute pentru lead-uri noi.",
+      });
+      // Refresh after a short delay to let inserts land
+      setTimeout(() => loadAll(), 4000);
+    } catch (e: any) {
+      toast({ title: "Eroare scraper", description: e.message || "Nu am putut porni scraperul.", variant: "destructive" });
+    } finally {
+      setTriggeringScraper(false);
+    }
+  };
+
   // ── Root-cause diagnosis ──────────────────────────────────────────────────
   const diagnosis = useMemo(() => {
     if (!stats || stats.total === 0) {
