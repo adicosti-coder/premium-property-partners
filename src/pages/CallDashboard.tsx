@@ -763,6 +763,16 @@ export default function CallDashboard() {
                       <Button size="sm" variant="ghost" className="flex-1 h-8 px-2" onClick={() => sendWhatsAppCatalog(r.contact_phone, r.contact_name)}>
                         <MessageCircle className="w-3.5 h-3.5 mr-1 text-green-600" /> <span className="text-xs">WA</span>
                       </Button>
+                      <MarkAsAgencyButton
+                        variant="icon"
+                        id={r.id}
+                        source={sourceToTable(r.source) as any}
+                        rawPhone={r.contact_phone}
+                        url={r.url}
+                        contextLabel={`Call · ${r.contact_name || r.property_title || ""}`}
+                        className="h-8 w-8"
+                        onMarked={() => setRows((prev) => prev.filter((x) => x.id !== r.id))}
+                      />
                     </div>
                   </CardContent>
                 </Card>
