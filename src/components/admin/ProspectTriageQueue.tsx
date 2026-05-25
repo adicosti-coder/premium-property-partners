@@ -193,15 +193,15 @@ export default function ProspectTriageQueue() {
                         {actingId === row.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
                         Aprobă pentru Andrei
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => archiveAsAgency(row)}
-                        disabled={actingId === row.id}
-                      >
-                        <Ban className="h-3 w-3 mr-1" />
-                        Arhivează / Agenție
-                      </Button>
+                      <MarkAsAgencyButton
+                        id={row.id}
+                        source="prospect_listings"
+                        rawPhone={row.contact_phone}
+                        phone={row.phone_normalized}
+                        url={row.source_url}
+                        contextLabel={`Triage · ${row.title?.slice(0, 60) || row.id}`}
+                        onMarked={() => setRows((prev) => prev.filter((r) => r.id !== row.id))}
+                      />
                     </div>
                   </div>
                 </div>
