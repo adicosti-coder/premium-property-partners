@@ -25,6 +25,8 @@ import VoiceAgentGhostingQueue from "./VoiceAgentGhostingQueue";
 import VoiceAgentAutopilot from "./VoiceAgentAutopilot";
 import VoiceAgentCallSimulator from "./VoiceAgentCallSimulator";
 import VoiceAgentResultsDashboard, { hourWindow, normalizeSentiment, sentimentEmojiMap, type HourWindow, type SentimentBucket } from "./VoiceAgentResultsDashboard";
+import ProspectTriageQueue from "./ProspectTriageQueue";
+import KeywordRadarPanel from "./KeywordRadarPanel";
 
 interface VoiceCall {
   id: string;
@@ -514,6 +516,8 @@ export default function VoiceAgentManager() {
       <VoiceAgentKnowledgeBase />
       <VoiceAgentFollowupQueue />
       <VoiceAgentGhostingQueue />
+      <ProspectTriageQueue />
+      <KeywordRadarPanel />
       {/* QUICK LINK to unified dashboard */}
       <Card className="border-2 border-primary/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
         <CardContent className="pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
