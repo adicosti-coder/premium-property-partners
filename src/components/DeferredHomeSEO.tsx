@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { generateHomepageSchemas, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
-import { ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA } from "@/lib/orgIdentity";
+
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
