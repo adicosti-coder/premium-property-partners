@@ -332,25 +332,60 @@ export default function VoiceAgentCommandCenter() {
     }
   };
 
-  // ── Force scraper scan ────────────────────────────────────────────────────
+  // ── Force scraper scan (with exponential backoff retry: 2s, 4s, 8s) ──────
   const triggerScraper = async () => {
     setTriggeringScraper(true);
-    try {
-      const { error } = await supabase.functions.invoke("scrape-prospects", {
-        body: { manual: true, source: "command_center", max_results: 30 },
-      });
-      if (error) throw error;
-      toast({
-        title: "Scraper pornit",
-        description: "Scraperul a fost pornit cu succes pentru zonele premium (Centru, Cetate, Nord). Verifică sub-tabul Triaj în 2-3 minute pentru lead-uri noi.",
-      });
-      // Refresh after a short delay to let inserts land
-      setTimeout(() => loadAll(), 4000);
-    } catch (e: any) {
-      toast({ title: "Eroare scraper", description: e.message || "Nu am putut porni scraperul.", variant: "destructive" });
-    } finally {
-      setTriggeringScraper(false);
+    const maxAttempts = 3;
+    const isRetryable = (err: any) => {
+      const msg = String(err?.message || err || "").toLowerCase();
+      return (
+        msg.includes("network") ||
+        msg.includes("timeout") ||
+        msg.includes("timed out") ||
+        msg.includes("fetch") ||
+        msg.includes("503") ||
+        msg.includes("502") ||
+        msg.includes("504") ||
+        msg.includes("econnreset")
+      );
+    };
+
+    let lastError: any = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const { error } = await supabase.functions.invoke("scrape-prospects", {
+          body: { manual: true, source: "command_center", max_results: 30 },
+        });
+        if (error) throw error;
+        toast({
+          title: attempt > 1 ? `Scraper pornit (încercarea ${attempt})` : "Scraper pornit",
+          description: "Scraperul a fost pornit cu succes pentru zonele premium (Centru, Cetate, Nord). Verifică sub-tabul Triaj în 2-3 minute pentru lead-uri noi. Rate limiting activ — nu vom fi banați.",
+        });
+        setTimeout(() => loadAll(), 4000);
+        setTriggeringScraper(false);
+        return;
+      } catch (e: any) {
+        lastError = e;
+        if (attempt < maxAttempts && isRetryable(e)) {
+          const delay = 2000 * Math.pow(2, attempt - 1); // 2s, 4s
+          toast({
+            title: `Eroare temporară (încercarea ${attempt}/${maxAttempts})`,
+            description: `Reîncerc în ${delay / 1000}s… (${e.message || "rețea/timeout"})`,
+          });
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        break;
+      }
     }
+    toast({
+      title: "Eroare scraper",
+      description: `${maxAttempts} încercări eșuate. Sursele afectate marcate ca indisponibile. ${lastError?.message || ""}`,
+      variant: "destructive",
+    });
+    // Refresh source health so badges flip to red
+    setTimeout(() => loadAll(), 1000);
+    setTriggeringScraper(false);
   };
 
   // ── Root-cause diagnosis ──────────────────────────────────────────────────
