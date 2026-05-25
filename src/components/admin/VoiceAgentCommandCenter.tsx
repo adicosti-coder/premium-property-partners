@@ -17,8 +17,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "@/hooks/use-toast";
 import {
   PhoneCall, TrendingDown, TrendingUp, AlertTriangle, Target, Clock, Loader2,
-  CheckCircle2, XCircle, Voicemail, ChevronDown, Settings2, Zap, ShieldAlert, Users,
+  CheckCircle2, XCircle, Voicemail, ChevronDown, Settings2, Zap, ShieldAlert, Users, RefreshCw,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import MarkAsAgencyButton from "./MarkAsAgencyButton";
 
 const VoiceAgentManager = lazy(() => import("./VoiceAgentManager"));
@@ -62,7 +63,7 @@ interface CallbackDue {
 
 // ── KPI Card ────────────────────────────────────────────────────────────────
 function KpiCard({
-  label, value, sublabel, trend, tone = "neutral", icon: Icon,
+  label, value, sublabel, trend, tone = "neutral", icon: Icon, children,
 }: {
   label: string;
   value: string | number;
@@ -70,6 +71,7 @@ function KpiCard({
   trend?: "up" | "down" | "flat";
   tone?: "good" | "bad" | "warn" | "neutral";
   icon: React.ComponentType<{ className?: string }>;
+  children?: React.ReactNode;
 }) {
   const toneCls = {
     good: "border-green-500/30 bg-green-500/5",
@@ -91,7 +93,44 @@ function KpiCard({
           <span>{sublabel}</span>
         </div>
       )}
+      {children}
     </div>
+  );
+}
+
+// ── Source health badge ─────────────────────────────────────────────────────
+type SourceHealth = {
+  source_platform: string;
+  last_success_at: string | null;
+  last_failure_at: string | null;
+  consecutive_failures: number;
+  auto_disabled_until: string | null;
+  notes: string | null;
+};
+
+function SourceBadge({ s }: { s: SourceHealth }) {
+  const now = Date.now();
+  const disabled = s.auto_disabled_until && new Date(s.auto_disabled_until).getTime() > now;
+  const failing = s.consecutive_failures >= 2 || disabled;
+  const warn = s.consecutive_failures === 1 || (!s.last_success_at && !s.last_failure_at);
+  const tone = failing ? "bg-red-500" : warn ? "bg-amber-500" : "bg-green-500";
+  const tip = disabled
+    ? `Dezactivat până ${new Date(s.auto_disabled_until!).toLocaleString("ro-RO")}${s.notes ? ` — ${s.notes}` : ""}`
+    : failing
+    ? `${s.consecutive_failures} eșecuri consecutive${s.last_failure_at ? ` — ultim: ${new Date(s.last_failure_at).toLocaleString("ro-RO")}` : ""}`
+    : warn
+    ? "Atenție — fără succes recent"
+    : `OK — ultim succes ${s.last_success_at ? new Date(s.last_success_at).toLocaleString("ro-RO") : "—"}`;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border border-border bg-background/60 hover:bg-muted">
+          <span className={`h-1.5 w-1.5 rounded-full ${tone}`} />
+          <span className="truncate max-w-[70px]">{s.source_platform}</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-[260px] text-xs">{tip}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -103,6 +142,8 @@ export default function VoiceAgentCommandCenter() {
   const [hotProspects, setHotProspects] = useState<HotProspect[]>([]);
   const [callbacks, setCallbacks] = useState<CallbackDue[]>([]);
   const [callingId, setCallingId] = useState<string | null>(null);
+  const [sources, setSources] = useState<SourceHealth[]>([]);
+  const [triggeringScraper, setTriggeringScraper] = useState(false);
 
   // Quality filters (saved to localStorage)
   const [skipPreviouslyCalled, setSkipPreviouslyCalled] = useState(
@@ -187,6 +228,13 @@ export default function VoiceAgentCommandCenter() {
         .order("next_callback_at", { ascending: true }).limit(10);
 
       setCallbacks((cb || []) as CallbackDue[]);
+
+      // Source health
+      const { data: sh } = await supabase
+        .from("listing_import_source_health")
+        .select("source_platform, last_success_at, last_failure_at, consecutive_failures, auto_disabled_until, notes")
+        .order("source_platform", { ascending: true });
+      setSources((sh || []) as SourceHealth[]);
     } catch (e) {
       console.error("[CommandCenter] load failed", e);
       toast({ title: "Eroare", description: "Nu am putut încărca datele.", variant: "destructive" });
@@ -215,6 +263,27 @@ export default function VoiceAgentCommandCenter() {
       toast({ title: "Eroare apel", description: e.message, variant: "destructive" });
     } finally {
       setCallingId(null);
+    }
+  };
+
+  // ── Force scraper scan ────────────────────────────────────────────────────
+  const triggerScraper = async () => {
+    setTriggeringScraper(true);
+    try {
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: { manual: true, source: "command_center", max_results: 30 },
+      });
+      if (error) throw error;
+      toast({
+        title: "Scraper pornit",
+        description: "Scraperul a fost pornit cu succes pentru zonele premium (Centru, Cetate, Nord). Verifică sub-tabul Triaj în 2-3 minute pentru lead-uri noi.",
+      });
+      // Refresh after a short delay to let inserts land
+      setTimeout(() => loadAll(), 4000);
+    } catch (e: any) {
+      toast({ title: "Eroare scraper", description: e.message || "Nu am putut porni scraperul.", variant: "destructive" });
+    } finally {
+      setTriggeringScraper(false);
     }
   };
 
@@ -248,6 +317,7 @@ export default function VoiceAgentCommandCenter() {
   }
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -283,7 +353,19 @@ export default function VoiceAgentCommandCenter() {
         />
         <KpiCard label="Callbacks" value={stats?.callback ?? 0} sublabel="programate" icon={Clock} tone="neutral" />
         <KpiCard label="Voicemail" value={stats?.voicemail ?? 0} sublabel={`${((stats?.voicemail ?? 0) / Math.max(1, stats?.total ?? 1) * 100).toFixed(0)}% din apeluri`} icon={Voicemail} tone="warn" />
-        <KpiCard label="Pool unic" value={stats?.unique_numbers ?? 0} sublabel={`avg ${(stats?.avg_duration ?? 0).toFixed(0)}s/apel`} icon={Users} tone={(stats?.unique_numbers ?? 0) < 30 ? "warn" : "neutral"} />
+        <KpiCard
+          label="Pool unic"
+          value={stats?.unique_numbers ?? 0}
+          sublabel={`avg ${(stats?.avg_duration ?? 0).toFixed(0)}s/apel`}
+          icon={Users}
+          tone={(stats?.unique_numbers ?? 0) < 30 ? "warn" : "neutral"}
+        >
+          {sources.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-border/60 flex flex-wrap gap-1">
+              {sources.slice(0, 6).map(s => <SourceBadge key={s.source_platform} s={s} />)}
+            </div>
+          )}
+        </KpiCard>
       </div>
 
       {/* Diagnosis banner */}
@@ -295,10 +377,23 @@ export default function VoiceAgentCommandCenter() {
         {diagnosis.tone === "bad" ? <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" /> :
          diagnosis.tone === "warn" ? <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" /> :
          <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />}
-        <div>
+        <div className="flex-1 min-w-0">
           <div className="font-semibold text-foreground">{diagnosis.title}</div>
           <div className="text-sm text-muted-foreground mt-0.5">{diagnosis.advice}</div>
         </div>
+        {diagnosis.tone !== "good" && (
+          <Button
+            size="sm"
+            variant={diagnosis.tone === "bad" ? "destructive" : "default"}
+            onClick={triggerScraper}
+            disabled={triggeringScraper}
+            className="flex-shrink-0"
+          >
+            {triggeringScraper
+              ? <><Loader2 className="h-3 w-3 animate-spin mr-1.5" /> Pornesc…</>
+              : <><RefreshCw className="h-3 w-3 mr-1.5" /> Pornește scanare forțată</>}
+          </Button>
+        )}
       </div>
 
       {/* Two-col: Hot Prospects + Callbacks Due */}
@@ -448,5 +543,6 @@ export default function VoiceAgentCommandCenter() {
         </CollapsibleContent>
       </Collapsible>
     </div>
+    </TooltipProvider>
   );
 }
