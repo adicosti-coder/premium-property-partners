@@ -2,7 +2,7 @@ import React, { useEffect, lazy, Suspense, useState } from "react";
 import SEOHead from "@/components/SEOHead";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { NeighborhoodsGrid } from "@/components/NeighborhoodsGrid";
+import { SEODualCTASection } from "@/components/SEODualCTASection";
 import { ServicesH2Strip } from "@/components/ServicesH2Strip";
 import { SEOConsultingStrip } from "@/components/SEOConsultingStrip";
 import { LocalLandmarksStrip } from "@/components/LocalLandmarksStrip";
