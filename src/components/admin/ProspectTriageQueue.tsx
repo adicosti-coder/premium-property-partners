@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, RefreshCw, CheckCircle2, Ban, AlertTriangle, ExternalLink } from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
 
 interface TriageRow {
   id: string;
@@ -71,55 +72,6 @@ export default function ProspectTriageQueue() {
       setRows(prev => prev.filter(r => r.id !== row.id));
     } catch (e: any) {
       toast({ title: "Eroare aprobare", description: e.message, variant: "destructive" });
-    } finally {
-      setActingId(null);
-    }
-  };
-
-  const archiveAsAgency = async (row: TriageRow) => {
-    setActingId(row.id);
-    try {
-      const domain = row.source_url
-        ? row.source_url.replace(/^https?:\/\//i, "").split("/")[0].toLowerCase()
-        : null;
-
-      const { error: updErr } = await supabase
-        .from("prospect_listings")
-        .update({
-          prospect_type: "agentie",
-          is_active: false,
-          auto_blacklisted_at: new Date().toISOString(),
-          auto_blacklist_reason: "Triage admin: marcat ca agenție",
-        })
-        .eq("id", row.id);
-      if (updErr) throw updErr;
-
-      // Add to blocklist (phone and/or domain). Ignore conflict.
-      const blockRows: Array<Record<string, unknown>> = [];
-      if (row.phone_normalized) {
-        blockRows.push({
-          phone_normalized: row.phone_normalized,
-          reason: "triage_admin",
-          notes: "Marcat manual din carantină",
-          source_prospect_id: row.id,
-        });
-      }
-      if (domain) {
-        blockRows.push({
-          domain,
-          reason: "triage_admin",
-          notes: "Marcat manual din carantină",
-          source_prospect_id: row.id,
-        });
-      }
-      if (blockRows.length > 0) {
-        await supabase.from("agency_blocklist").insert(blockRows);
-      }
-
-      toast({ title: "Arhivat ca agenție", description: `Blocklist: ${row.phone_normalized || domain || "—"}` });
-      setRows(prev => prev.filter(r => r.id !== row.id));
-    } catch (e: any) {
-      toast({ title: "Eroare arhivare", description: e.message, variant: "destructive" });
     } finally {
       setActingId(null);
     }
@@ -192,15 +144,15 @@ export default function ProspectTriageQueue() {
                         {actingId === row.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
                         Aprobă pentru Andrei
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => archiveAsAgency(row)}
-                        disabled={actingId === row.id}
-                      >
-                        <Ban className="h-3 w-3 mr-1" />
-                        Arhivează / Agenție
-                      </Button>
+                      <MarkAsAgencyButton
+                        id={row.id}
+                        source="prospect_listings"
+                        rawPhone={row.contact_phone}
+                        phone={row.phone_normalized}
+                        url={row.source_url}
+                        contextLabel={`Triage · ${row.title?.slice(0, 60) || row.id}`}
+                        onMarked={() => setRows((prev) => prev.filter((r) => r.id !== row.id))}
+                      />
                     </div>
                   </div>
                 </div>

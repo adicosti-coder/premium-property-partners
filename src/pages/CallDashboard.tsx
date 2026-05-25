@@ -17,6 +17,10 @@ import { ArrowLeft, ArrowUpDown, Download, FileText, Headphones, MessageCircle, 
 import { toast } from "sonner";
 import { Helmet } from "react-helmet-async";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
+
+const sourceToTable = (s: "voice" | "scraper" | "prospect") =>
+  s === "scraper" ? "scraper_leads_archive_2026" : s === "prospect" ? "prospect_listings" : null;
 
 // Compute a 0-100 hotness score based on outcome + sentiment + lead_score
 const computeHotScore = (r: { outcome: string | null; sentiment: string | null; lead_score: number | null }): number => {
@@ -709,6 +713,15 @@ export default function CallDashboard() {
                           >
                             <MessageCircle className="w-3.5 h-3.5 text-green-600" />
                           </Button>
+                          <MarkAsAgencyButton
+                            variant="icon"
+                            id={r.id}
+                            source={sourceToTable(r.source) as any}
+                            rawPhone={r.contact_phone}
+                            url={r.url}
+                            contextLabel={`Call · ${r.contact_name || r.property_title || ""}`}
+                            onMarked={() => setRows((prev) => prev.filter((x) => x.id !== r.id))}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -750,6 +763,16 @@ export default function CallDashboard() {
                       <Button size="sm" variant="ghost" className="flex-1 h-8 px-2" onClick={() => sendWhatsAppCatalog(r.contact_phone, r.contact_name)}>
                         <MessageCircle className="w-3.5 h-3.5 mr-1 text-green-600" /> <span className="text-xs">WA</span>
                       </Button>
+                      <MarkAsAgencyButton
+                        variant="icon"
+                        id={r.id}
+                        source={sourceToTable(r.source) as any}
+                        rawPhone={r.contact_phone}
+                        url={r.url}
+                        contextLabel={`Call · ${r.contact_name || r.property_title || ""}`}
+                        className="h-8 w-8"
+                        onMarked={() => setRows((prev) => prev.filter((x) => x.id !== r.id))}
+                      />
                     </div>
                   </CardContent>
                 </Card>
