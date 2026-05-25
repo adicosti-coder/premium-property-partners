@@ -173,8 +173,8 @@ const SEOHead = ({
   const [override, setOverride] = useState<import("@/hooks/useSeoOverride").SeoOverride | null>(null);
   
   const defaultTitles = {
-    ro: "RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI",
-    en: "Real Estate Agency Timișoara | Short-Term Rentals & 9.4% ROI"
+    ro: "RealTrust | Trust Estate - Investiții & Property Management Timișoara",
+    en: "RealTrust | Trust Estate - Real Estate Investment & Property Management Timișoara"
   };
   
   const defaultDescriptions = {
