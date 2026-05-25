@@ -286,7 +286,9 @@ const SEOHead = ({
   let finalJsonLd: Record<string, unknown> | Record<string, unknown>[] =
     overrideJsonLd || jsonLd || defaultJsonLd;
   if (!jsonLd && !overrideJsonLd) {
-    const schemas: Record<string, unknown>[] = [defaultJsonLd];
+    const schemas: Record<string, unknown>[] = [defaultJsonLd, REAL_ESTATE_AGENT_SCHEMA];
+    
+    // Add Organization reference so every page carries the canonical brand node
     
     // Add Article schema if type is article
     if (type === "article") {
