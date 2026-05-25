@@ -160,7 +160,7 @@ export default function VoiceAgentCommandCenter() {
         .not("phone_normalized", "is", null)
         .neq("prospect_type", "agentie")
         .neq("do_not_call", true)
-        .in("lifecycle_status", ["new", "queued", "callback", "interested"]);
+        .in("lifecycle_status", ["new", "callback", "interested", "scoring"]);
 
       if (requireScoreThreshold) q = q.gte("lead_score", 70);
       if (skipPreviouslyCalled) q = q.or("retry_count.is.null,retry_count.lt.3");
