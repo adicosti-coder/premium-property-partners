@@ -59,7 +59,7 @@ import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
 import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
 import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
-import VoiceAgentManager from "@/components/admin/VoiceAgentManager";
+import VoiceAgentCommandCenter from "@/components/admin/VoiceAgentCommandCenter";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
 import AutomationManager from "@/components/admin/AutomationManager";
