@@ -98,10 +98,10 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
     mainSchema.priceRange = "€€";
   }
 
-  // Canonical Organization + RealEstateAgent identity — imported from the
-  // single source of truth (src/lib/orgIdentity.ts) instead of being inlined.
-  // Stable @id values let Google merge per-page references into one entity.
-  const allSchemas = [...homepageSchemas, ORGANIZATION_SCHEMA, REAL_ESTATE_AGENT_SCHEMA];
+  // RealEstateAgent & Organization schemas are now injected globally by
+  // SEOHead.tsx on every page. DeferredHomeSEO only injects homepage-specific
+  // schemas (aggregate rating, FAQ, speakable, WebSite SearchAction).
+  const allSchemas = [...homepageSchemas];
 
 
   return (
