@@ -77,52 +77,6 @@ export default function ProspectTriageQueue() {
     }
   };
 
-  const archiveAsAgency = async (row: TriageRow) => {
-    setActingId(row.id);
-    try {
-      const domain = row.source_url
-        ? row.source_url.replace(/^https?:\/\//i, "").split("/")[0].toLowerCase()
-        : null;
-
-      const { error: updErr } = await supabase
-        .from("prospect_listings")
-        .update({
-          prospect_type: "agentie",
-          is_active: false,
-          auto_blacklisted_at: new Date().toISOString(),
-          auto_blacklist_reason: "Triage admin: marcat ca agenție",
-        })
-        .eq("id", row.id);
-      if (updErr) throw updErr;
-
-      // Add to blocklist (phone and/or domain). Ignore conflict.
-      const blockRows: Array<Record<string, unknown>> = [];
-      if (row.phone_normalized) {
-        blockRows.push({
-          phone_normalized: row.phone_normalized,
-          reason: "triage_admin",
-          notes: "Marcat manual din carantină",
-          source_prospect_id: row.id,
-        });
-      }
-      if (domain) {
-        blockRows.push({
-          domain,
-          reason: "triage_admin",
-          notes: "Marcat manual din carantină",
-          source_prospect_id: row.id,
-        });
-      }
-      if (blockRows.length > 0) {
-        await supabase.from("agency_blocklist").insert(blockRows);
-      }
-
-      toast({ title: "Arhivat ca agenție", description: `Blocklist: ${row.phone_normalized || domain || "—"}` });
-      setRows(prev => prev.filter(r => r.id !== row.id));
-    } catch (e: any) {
-      toast({ title: "Eroare arhivare", description: e.message, variant: "destructive" });
-    } finally {
-      setActingId(null);
     }
   };
 
