@@ -543,5 +543,6 @@ export default function VoiceAgentCommandCenter() {
         </CollapsibleContent>
       </Collapsible>
     </div>
+    </TooltipProvider>
   );
 }
