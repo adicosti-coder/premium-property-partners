@@ -286,14 +286,27 @@ export default function VoiceAgentCommandCenter() {
       // Callbacks due today
       const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
       const { data: cb } = await supabase.from("prospect_listings")
-        .select("id, title, phone_normalized, next_callback_at, callback_attempts, last_failure_reason")
+        .select("id, title, phone_normalized, next_callback_at, callback_attempts, last_failure_reason, source_url")
         .not("next_callback_at", "is", null)
         .lte("next_callback_at", endOfDay.toISOString())
         .eq("is_active", true)
         .neq("prospect_type", "agentie")
-        .order("next_callback_at", { ascending: true }).limit(10);
+        .in("lifecycle_status", ["new", "callback", "interested", "scoring", "pending_credentials"])
+        .order("next_callback_at", { ascending: true }).limit(30);
 
-      setCallbacks((cb || []) as CallbackDue[]);
+      // Exclude aggregator/index pages (e.g. Trovit category listings like
+      // "6.367 apartamente vânzări în Timișoara" or "113 proprietăți în Iosefin").
+      const AGGREGATOR_TITLE = /^\s*\d{1,3}([.,\s]\d{3})*\s+(apartamente|propriet[ăa][țt]i|case|garsoniere|vile|imobile|anun[țt]uri)\b/i;
+      const AGGREGATOR_URL = /(trovit\.|\/category\/|\/cauta|\/search|\/list($|\?))/i;
+      const filtered = (cb || []).filter((row: any) => {
+        const t = String(row.title || "");
+        const u = String(row.source_url || "");
+        if (AGGREGATOR_TITLE.test(t)) return false;
+        if (AGGREGATOR_URL.test(u) && !/\/ad\/|\/anunt|\/oferta/i.test(u)) return false;
+        return true;
+      }).slice(0, 10);
+
+      setCallbacks(filtered as CallbackDue[]);
 
       // Source health
       const { data: sh } = await supabase
