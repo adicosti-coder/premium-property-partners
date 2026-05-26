@@ -335,7 +335,7 @@ Deno.serve(async (req) => {
 
   const { data: candidates, error: cErr } = await supabase
     .from('prospect_listings')
-    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform')
+    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status')
     .gte('lead_score', minScore)
     .eq('is_active', true)
     .eq('prospect_type', 'proprietar')
