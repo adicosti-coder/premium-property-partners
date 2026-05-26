@@ -22,6 +22,7 @@ import { detectObjection, OBJECTION_LABEL } from "@/lib/voiceObjections";
 import ProspectInjectionRejectionStats from "./ProspectInjectionRejectionStats";
 import ProspectRejectionAlerts from "./ProspectRejectionAlerts";
 import ProspectAlertSettings from "./ProspectAlertSettings";
+import ProspectEnrichmentPanel, { type EnrichedImage } from "./ProspectEnrichmentPanel";
 
 interface ProspectListing {
   id: string;
@@ -58,6 +59,13 @@ interface ProspectListing {
   next_callback_at?: string | null;
   lifecycle_status?: string | null;
   last_failure_reason?: string | null;
+  enriched_title?: string | null;
+  enriched_description?: string | null;
+  enriched_images?: EnrichedImage[] | null;
+  enrichment_status?: string | null;
+  enriched_at?: string | null;
+  enrichment_error?: string | null;
+  enrichment_saved_at?: string | null;
 }
 
 const PROSPECT_TYPES = [
@@ -843,6 +851,15 @@ const ProspectManager = () => {
                     <p className="text-sm line-clamp-6">{selectedListing.description}</p>
                   </div>
                 )}
+
+                {/* ── Content Enrichment & Image Optimization ─── */}
+                <ProspectEnrichmentPanel
+                  prospect={selectedListing}
+                  onUpdated={(patch) => {
+                    setSelectedListing(prev => prev ? { ...prev, ...patch } as ProspectListing : null);
+                    setAllListings(prev => prev.map(l => l.id === selectedListing.id ? { ...l, ...patch } as ProspectListing : l));
+                  }}
+                />
 
                 {/* ── Quick Replies ──────────────────────── */}
                 <Card className="border-green-200 dark:border-green-800">
