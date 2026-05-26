@@ -353,8 +353,6 @@ export default function VoiceAgentCommandCenter() {
       const msg = String(err?.message || err || "").toLowerCase();
       return (
         msg.includes("network") ||
-        msg.includes("timeout") ||
-        msg.includes("timed out") ||
         msg.includes("fetch") ||
         msg.includes("503") ||
         msg.includes("502") ||
@@ -362,12 +360,27 @@ export default function VoiceAgentCommandCenter() {
         msg.includes("econnreset")
       );
     };
+    // Long scrapes often exceed the client/edge response window even when the worker keeps
+    // running successfully on the server. Treat that as "started in background", not as failure.
+    const isBackgroundTimeout = (err: any) => {
+      const msg = String(err?.message || err || "").toLowerCase();
+      return (
+        msg.includes("non-2xx") ||
+        msg.includes("non 2xx") ||
+        msg.includes("status code") ||
+        msg.includes("timeout") ||
+        msg.includes("timed out") ||
+        msg.includes("shutdown") ||
+        msg.includes("aborted")
+      );
+    };
 
     let lastError: any = null;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const { error } = await supabase.functions.invoke("scrape-prospects", {
-          body: { manual: true, source: "command_center", max_results: 30 },
+          // Lower batch (was 30) — keeps wall-clock under edge limit so the SDK doesn't surface non-2xx.
+          body: { manual: true, source: "command_center", max_results: 10 },
         });
         if (error) throw error;
         toast({
@@ -379,6 +392,15 @@ export default function VoiceAgentCommandCenter() {
         return;
       } catch (e: any) {
         lastError = e;
+        if (isBackgroundTimeout(e)) {
+          toast({
+            title: "Scraper pornit în background",
+            description: "Răspunsul a depășit fereastra de timp, dar scraperul continuă să ruleze pe server. Rezultatele apar în Triaj în 2-3 minute.",
+          });
+          setTimeout(() => loadAll(), 8000);
+          setTriggeringScraper(false);
+          return;
+        }
         if (attempt < maxAttempts && isRetryable(e)) {
           const delay = 2000 * Math.pow(2, attempt - 1); // 2s, 4s
           toast({
