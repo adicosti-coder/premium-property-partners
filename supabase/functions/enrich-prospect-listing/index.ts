@@ -111,11 +111,14 @@ async function rewriteWithAI(p: ProspectRow): Promise<{ title: string; descripti
     return null;
   }
 
-  const prompt = `Rescrie acest anunț imobiliar într-un stil premium pentru realtrust.ro.
+  const cleanTitle = sanitizeListingText(p.title);
+  const cleanDesc = sanitizeListingText(p.description);
 
-DATE BRUTE:
-- Titlu original: ${p.title || "(lipsește)"}
-- Descriere originală: ${p.description || "(lipsește)"}
+  const prompt = `Rescrie acest anunț imobiliar într-un stil premium pentru realtrust.ro (agenție imobiliară).
+
+DATE BRUTE (deja curățate de mențiuni de proprietar):
+- Titlu original: ${cleanTitle || "(lipsește)"}
+- Descriere originală: ${cleanDesc || "(lipsește)"}
 - Zonă: ${p.zone || p.location || "Timișoara"}
 - Camere: ${p.rooms ?? "n/a"}, Suprafață: ${p.size ?? "n/a"} mp, Preț: ${p.price ?? "n/a"} EUR
 - Dotări detectate: ${(p.features || []).join(", ") || "n/a"}
@@ -125,7 +128,8 @@ CERINȚE STRICTE:
 1. Titlu SEO max 70 caractere, format: "Apartament [Camere] [Stil] – Zona [Cartier], Timișoara"
 2. Descriere structurată cu bullet points markdown, secțiuni: **📍 Localizare**, **✨ Finisaje & Dotări**, **💼 Potențial investițional** (mențiune regim hotelier / chirie lungă cu cifre realiste 9.4% ROI pentru Timișoara).
 3. Limba română cu diacritice. Curăță greșelile gramaticale. Fără superlative goale.
-4. Returnează STRICT JSON: {"title":"...","description":"..."} — fără backticks, fără text adițional.`;
+4. INTERZIS să incluzi (anunțul apare pe site de agenție): "proprietar", "proprietari", "persoană fizică", "persoane fizice", "fără comision", "comision 0%", "comision zero", "fără agenții", "fără intermediari", "nu doresc colaborare", "nu vreau agenții", "doar persoane fizice", "owner", "no agents", "no commission" sau orice variantă similară. Nu menționa cine este vânzătorul; descrie doar proprietatea.
+5. Returnează STRICT JSON: {"title":"...","description":"..."} — fără backticks, fără text adițional.`;
 
   const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -133,7 +137,7 @@ CERINȚE STRICTE:
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [
-        { role: "system", content: "Ești copywriter imobiliar premium pentru RealTrust Timișoara. Returnezi DOAR JSON valid." },
+        { role: "system", content: "Ești copywriter imobiliar premium pentru RealTrust Timișoara (AGENȚIE). Nu menționezi niciodată proprietar, persoană fizică, comision sau agenții. Returnezi DOAR JSON valid." },
         { role: "user", content: prompt },
       ],
     }),
@@ -150,12 +154,47 @@ CERINȚE STRICTE:
   try {
     const parsed = JSON.parse(jsonStr);
     if (parsed.title && parsed.description) {
-      return { title: String(parsed.title).slice(0, 150), description: String(parsed.description) };
+      // Defense-in-depth: sanitize AI output too, in case it slipped any banned terms.
+      const title = sanitizeListingText(String(parsed.title)).slice(0, 150);
+      const description = sanitizeListingText(String(parsed.description));
+      return { title, description };
     }
   } catch (e) {
     console.error("AI rewrite JSON parse fail", e, raw.slice(0, 200));
   }
   return null;
+}
+
+// Try removing source watermarks via Dewatermark.ai. Returns cleaned bytes or null on failure.
+async function removeSourceWatermark(bytes: Uint8Array): Promise<Uint8Array | null> {
+  const apiKey = Deno.env.get("DEWATERMARK_API_KEY");
+  if (!apiKey) return null;
+  try {
+    const form = new FormData();
+    form.append("original_preview_image", new Blob([bytes], { type: "image/jpeg" }), "image.jpg");
+    form.append("remove_text", "true");
+    form.append("predict_mode", "3.0");
+    const resp = await fetch(DEWATERMARK_URL, {
+      method: "POST",
+      headers: { "X-API-KEY": apiKey },
+      body: form,
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!resp.ok) {
+      console.warn("dewatermark non-ok", resp.status);
+      return null;
+    }
+    const data = await resp.json();
+    const b64: string | undefined = data?.edited_image?.image;
+    if (!b64) return null;
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  } catch (e) {
+    console.warn("dewatermark err", (e as Error).message);
+    return null;
+  }
 }
 
 async function processImage(
