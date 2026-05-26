@@ -3346,10 +3346,12 @@ export type Database = {
           images_processing_status: string | null
           import_source: string | null
           imported_at: string | null
+          indexing_status: string
           intercom_type: string | null
           is_active: boolean
           kitchens: number | null
           land_area: number | null
+          last_google_check_at: string | null
           latitude: number | null
           listing_type: string | null
           location: string
@@ -3438,10 +3440,12 @@ export type Database = {
           images_processing_status?: string | null
           import_source?: string | null
           imported_at?: string | null
+          indexing_status?: string
           intercom_type?: string | null
           is_active?: boolean
           kitchens?: number | null
           land_area?: number | null
+          last_google_check_at?: string | null
           latitude?: number | null
           listing_type?: string | null
           location: string
@@ -3530,10 +3534,12 @@ export type Database = {
           images_processing_status?: string | null
           import_source?: string | null
           imported_at?: string | null
+          indexing_status?: string
           intercom_type?: string | null
           is_active?: boolean
           kitchens?: number | null
           land_area?: number | null
+          last_google_check_at?: string | null
           latitude?: number | null
           listing_type?: string | null
           location?: string
@@ -4094,10 +4100,12 @@ export type Database = {
           followup_sent_at: string | null
           id: string
           images: string[] | null
+          indexing_status: string
           invalid_reason: string | null
           is_active: boolean | null
           last_callback_window: string | null
           last_failure_reason: string | null
+          last_google_check_at: string | null
           last_retry_at: string | null
           last_seen_at: string | null
           lead_score: number | null
@@ -4180,10 +4188,12 @@ export type Database = {
           followup_sent_at?: string | null
           id?: string
           images?: string[] | null
+          indexing_status?: string
           invalid_reason?: string | null
           is_active?: boolean | null
           last_callback_window?: string | null
           last_failure_reason?: string | null
+          last_google_check_at?: string | null
           last_retry_at?: string | null
           last_seen_at?: string | null
           lead_score?: number | null
@@ -4266,10 +4276,12 @@ export type Database = {
           followup_sent_at?: string | null
           id?: string
           images?: string[] | null
+          indexing_status?: string
           invalid_reason?: string | null
           is_active?: boolean | null
           last_callback_window?: string | null
           last_failure_reason?: string | null
+          last_google_check_at?: string | null
           last_retry_at?: string | null
           last_seen_at?: string | null
           lead_score?: number | null
