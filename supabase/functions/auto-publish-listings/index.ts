@@ -569,7 +569,7 @@ Deno.serve(async (req) => {
         }).eq('id', prospect.id);
 
       // Fire-and-forget image processing pipeline (crop / inpaint + rehost)
-      if (Array.isArray(rawImages) && rawImages.length > 0) {
+      if (Array.isArray(finalImages) && finalImages.length > 0) {
         const proc = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-listing-images`, {
           method: 'POST',
           headers: {
