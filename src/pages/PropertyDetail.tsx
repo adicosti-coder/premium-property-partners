@@ -278,7 +278,9 @@ const PropertyDetail = () => {
     slug: dbProperty.slug || slug || "",
     name: dbProperty.name,
     location: dbProperty.location || "Timișoara",
-    images: dbProperty.image_path ? [dbProperty.image_path.startsWith("http") ? dbProperty.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${dbProperty.image_path}`] : [],
+    images: (Array.isArray(dbProperty.images) && dbProperty.images.length > 0)
+      ? dbProperty.images.map((u: string) => u && u.startsWith("http") ? u : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${u}`)
+      : (dbProperty.image_path ? [dbProperty.image_path.startsWith("http") ? dbProperty.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${dbProperty.image_path}`] : []),
     features: [],
     bookingUrl: dbProperty.booking_url || "",
     description: dbProperty.description_ro || "",
