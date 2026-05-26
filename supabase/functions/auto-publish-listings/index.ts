@@ -596,6 +596,41 @@ Deno.serve(async (req) => {
           EdgeRuntime.waitUntil(proc);
         }
       }
+
+      // Hot deal alert — fire-and-forget to Make.com webhook
+      const leadScore = Number(prospect.lead_score ?? 0);
+      if (hotDealCfg.enabled && leadScore >= hotDealCfg.minScore) {
+        const payload = {
+          event: 'hot_deal_published',
+          severity: 'opportunity',
+          score: leadScore,
+          quality,
+          enriched_title: finalTitle,
+          price: prospect.price,
+          currency: prospect.currency || 'EUR',
+          zone: prospect.zone || prospect.location || null,
+          location: prospect.location || null,
+          rooms: prospect.rooms,
+          size: prospect.size,
+          property_id: inserted.id,
+          slug: inserted.slug,
+          admin_url: `https://realtrust.ro/admin/properties/${inserted.id}`,
+          fast_review_url: `https://realtrust.ro/admin/properties/fast-review`,
+          source_url: prospect.source_url,
+          source_platform: platform,
+          published_at: new Date().toISOString(),
+        };
+        const hook = fetch(hotDealCfg.url!, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }).catch((e) => console.warn('hot_deal webhook failed', e?.message));
+        // @ts-ignore EdgeRuntime is provided in Deno deploy
+        if (typeof EdgeRuntime !== 'undefined' && (EdgeRuntime as any).waitUntil) {
+          // @ts-ignore
+          EdgeRuntime.waitUntil(hook);
+        }
+      }
     } catch (err: any) {
       summary.rejected_error++;
       bumpSource(platform, 'rejected');
