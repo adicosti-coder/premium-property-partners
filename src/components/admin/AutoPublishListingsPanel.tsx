@@ -167,5 +167,6 @@ export function AutoPublishListingsPanel() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
