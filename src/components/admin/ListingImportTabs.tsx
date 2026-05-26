@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { LinkIcon, Radar, Building2, CheckSquare, Wrench } from "lucide-react";
+import { LinkIcon, Radar, Building2, CheckSquare, Wrench, LineChart } from "lucide-react";
 import ListingImporter from "./ListingImporter";
 import KeywordRadarPanel from "./KeywordRadarPanel";
 import PmLeadsPanel from "./PmLeadsPanel";
 import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
+import { PerformanceROIPanel } from "./PerformanceROIPanel";
 
-const VALID_SUBTABS = ["manual", "radar", "pm-leads", "auto-publish", "sandbox"] as const;
+const VALID_SUBTABS = ["manual", "radar", "pm-leads", "auto-publish", "sandbox", "performance"] as const;
+
 type SubTab = (typeof VALID_SUBTABS)[number];
 
 /**
@@ -59,6 +61,9 @@ const ListingImportTabs = () => {
         <TabsTrigger value="sandbox" className="gap-2">
           <Wrench className="w-4 h-4" /> Sandbox & Health
         </TabsTrigger>
+        <TabsTrigger value="performance" className="gap-2">
+          <LineChart className="w-4 h-4" /> Performanță & ROI
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="manual"><ListingImporter /></TabsContent>
@@ -66,6 +71,8 @@ const ListingImportTabs = () => {
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
       <TabsContent value="auto-publish"><AutoPublishListingsPanel /></TabsContent>
       <TabsContent value="sandbox"><ListingImportHealthPanel /></TabsContent>
+      <TabsContent value="performance"><PerformanceROIPanel /></TabsContent>
+
     </Tabs>
   );
 };
