@@ -76,6 +76,7 @@ export function AutoPublishListingsPanel() {
   return (
     <div className="space-y-4">
       <EnrichmentBacklogWidget />
+      <ProductionAlertsConfig />
       <Card className="border-primary/30">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
