@@ -158,7 +158,7 @@ export function PerformanceROIPanel() {
       if (entry) entry.clicks = s.gsc_clicks || 0;
     }
     for (const p of allProspects) {
-      const k = p.created_at.slice(0, 10);
+      const k = (p.created_at ?? "").slice(0, 10);
       const entry = map.get(k);
       if (entry && ["done", "enriching", "processing"].includes(p.enrichment_status ?? "")) {
         entry.enrichment += 1;
