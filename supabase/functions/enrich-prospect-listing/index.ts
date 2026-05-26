@@ -17,6 +17,44 @@ const BUCKET = "property-images";
 const MAX_IMAGES = 6;
 const FONT_URL =
   "https://github.com/google/fonts/raw/main/apache/roboto/static/Roboto-Bold.ttf";
+const DEWATERMARK_URL =
+  "https://platform.dewatermark.ai/api/object_removal/v2/erase_watermark";
+
+// ---------- Text sanitizer: strip owner/anti-agency phrases ----------
+// Order matters: longer multi-word phrases first.
+const BANNED_PATTERNS: RegExp[] = [
+  /nu\s+(?:vreau|doresc)\s+(?:s[ăa]\s+fie\s+preluat\s+anun[țt]ul|sa\s+fie\s+preluat)[^.\n!?]*/giu,
+  /nu\s+(?:vreau|doresc|accept[aă]?m?)\s+(?:colaborare|colabor[ăa]ri|agen[țt]ii?|intermediari)[^.\n!?]*/giu,
+  /f[ăa]r[ăa]\s+(?:agen[țt]ii?|intermediari|comision|comisioane)[^.\n!?]*/giu,
+  /(?:rog|v[ăa]\s+rog)\s+(?:far[ăa]|fara)\s+(?:agen[țt]ii?|intermediari)[^.\n!?]*/giu,
+  /(?:nu\s+sun(?:a[țt]i)?|nu\s+contacta[țt]i)\s+(?:agen[țt]ii?|intermediari)[^.\n!?]*/giu,
+  /(?:doar|numai)\s+(?:persoane\s+fizice|cump[ăa]r[ăa]tori\s+direc[țt]i)[^.\n!?]*/giu,
+  /(?:strict\s+)?(?:de\s+la\s+)?proprietar(?:i|ul|ului)?(?:\s+direct)?/giu,
+  /persoan[ăa]\s+fizic[ăa]/giu,
+  /persoane\s+fizice/giu,
+  /comision\s*0\s*%?/giu,
+  /comision\s+zero/giu,
+  /zero\s+comision/giu,
+  /f[ăa]r[ăa]\s+comision/giu,
+  /no\s+commission/gi,
+  /owner\s+only/gi,
+  /no\s+agents?/gi,
+];
+
+function sanitizeListingText(input: string | null | undefined): string {
+  if (!input) return "";
+  let s = String(input);
+  for (const re of BANNED_PATTERNS) s = s.replace(re, " ");
+  // Collapse leftovers: double spaces, orphan punctuation, repeated newlines
+  s = s
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .replace(/([.,;:!?]){2,}/g, "$1")
+    .replace(/(?:^|\n)[\s\-•·]*[.,;:!?]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return s;
+}
 
 let cachedFont: Uint8Array | null = null;
 async function getFont(): Promise<Uint8Array | null> {
