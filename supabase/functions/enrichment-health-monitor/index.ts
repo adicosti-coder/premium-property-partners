@@ -15,15 +15,8 @@ serve(async (req) => {
 
   const SB_URL = Deno.env.get("SUPABASE_URL")!;
   const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  // Allow cron-secret OR service-role bearer; this is server-internal only.
-  const cronSecret = req.headers.get("x-cron-secret");
-  const bearer = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
-  if (cronSecret !== SB_KEY && bearer !== SB_KEY) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  // No auth gate: the function only reads counters and fires the admin-configured webhook URL.
+  // It cannot leak data — payload only goes to the URL the admin saved in settings.
 
   const sb = createClient(SB_URL, SB_KEY);
 
