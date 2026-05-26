@@ -1,0 +1,1 @@
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS image_alts text[] DEFAULT '{}'::text[];

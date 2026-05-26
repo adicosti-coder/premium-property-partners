@@ -335,7 +335,7 @@ Deno.serve(async (req) => {
 
   const { data: candidates, error: cErr } = await supabase
     .from('prospect_listings')
-    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform')
+    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status')
     .gte('lead_score', minScore)
     .eq('is_active', true)
     .eq('prospect_type', 'proprietar')
@@ -376,48 +376,97 @@ Deno.serve(async (req) => {
     const platform = prospect.source_platform || 'unknown';
     bumpSource(platform, 'attempts');
     try {
-      const scrape = await firecrawlScrape(prospect.source_url, firecrawlKey);
-      summary.scraped++;
-      const rawMd = scrape?.markdown || prospect.description || '';
-      const rawImages = (scrape?.images && scrape.images.length > 0)
-        ? scrape.images
-        : (Array.isArray(prospect.images) ? prospect.images : []);
+      // ── PREMIUM PATH: prospect already enriched by `enrich-prospect-listing`.
+      // Use the AI-rewritten title/description + optimized/watermarked images directly,
+      // skip Firecrawl + secondary AI rewrite, and harvest per-image alts.
+      const hasEnriched =
+        prospect.enrichment_status === 'done' &&
+        (prospect.enriched_title || prospect.enriched_description) &&
+        Array.isArray(prospect.enriched_images);
 
-      if (!rawMd || rawMd.length < 60) {
-        summary.rejected_no_content++;
-        bumpSource(platform, 'rejected');
-        continue;
-      }
+      let finalTitle: string;
+      let finalShort: string;
+      let finalFull: string;
+      let finalImages: string[];
+      let finalImageAlts: string[];
+      let rawMd: string;
+      let cleanDesc: ReturnType<typeof sanitizeListingText>;
+      let cleanTitle: ReturnType<typeof sanitizeListingText>;
 
-      const cleanDesc = sanitizeListingText(rawMd, mergedConfig);
-      const cleanTitle = sanitizeListingText(prospect.title || 'Anunț Imobiliar', mergedConfig);
+      if (hasEnriched) {
+        rawMd = prospect.description || prospect.enriched_description || '';
+        // Run sanitizer to detect refusal phrases on the RAW input only; the enriched
+        // text is already clean but we still want refusal-detection accuracy.
+        cleanDesc = sanitizeListingText(prospect.description || '', mergedConfig);
+        cleanTitle = sanitizeListingText(prospect.title || '', mergedConfig);
+        if (cleanDesc.refusalDetected || cleanTitle.refusalDetected) {
+          summary.rejected_refusal++;
+          bumpSource(platform, 'rejected');
+          await supabase.from('prospect_listings')
+            .update({
+              admin_notes: `[auto-publish] Refuzat: refusal phrase = "${cleanDesc.refusalMatch || cleanTitle.refusalMatch}"`,
+              tags: ['scrape-prospects', 'auto-import', 'no-agency-refusal'],
+            }).eq('id', prospect.id);
+          continue;
+        }
+        finalTitle = (prospect.enriched_title || prospect.title || 'Anunț Imobiliar Timișoara').substring(0, 200);
+        finalFull = prospect.enriched_description || prospect.description || '';
+        // Short = first paragraph stripped of markdown markers.
+        finalShort = finalFull
+          .replace(/[*_`#>]/g, '')
+          .replace(/\n+/g, ' ')
+          .trim()
+          .substring(0, 220);
+        const ei = (prospect.enriched_images as Array<{ optimized?: string; original?: string; alt?: string }>) || [];
+        finalImages = ei.map((x) => x.optimized || x.original).filter(Boolean) as string[];
+        finalImageAlts = ei.map((x) => x.alt || '').filter(Boolean);
+        if (finalImages.length === 0 && Array.isArray(prospect.images)) finalImages = prospect.images;
+      } else {
+        const scrape = await firecrawlScrape(prospect.source_url, firecrawlKey);
+        summary.scraped++;
+        rawMd = scrape?.markdown || prospect.description || '';
+        const rawImages = (scrape?.images && scrape.images.length > 0)
+          ? scrape.images
+          : (Array.isArray(prospect.images) ? prospect.images : []);
 
-      if (cleanDesc.refusalDetected || cleanTitle.refusalDetected) {
-        summary.rejected_refusal++;
-        bumpSource(platform, 'rejected');
-        await supabase.from('prospect_listings')
-          .update({
-            admin_notes: `[auto-publish] Refuzat: refusal phrase = "${cleanDesc.refusalMatch || cleanTitle.refusalMatch}"`,
-            tags: ['scrape-prospects', 'auto-import', 'no-agency-refusal'],
-          }).eq('id', prospect.id);
-        continue;
-      }
+        if (!rawMd || rawMd.length < 60) {
+          summary.rejected_no_content++;
+          bumpSource(platform, 'rejected');
+          continue;
+        }
 
-      let finalTitle = cleanTitle.sanitized || 'Anunț Imobiliar Timișoara';
-      let finalShort = cleanDesc.sanitized.substring(0, 220);
-      let finalFull = cleanDesc.sanitized;
+        cleanDesc = sanitizeListingText(rawMd, mergedConfig);
+        cleanTitle = sanitizeListingText(prospect.title || 'Anunț Imobiliar', mergedConfig);
 
-      if (useAiRewrite) {
-        const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare', learnings.hints, compiledPrompt);
-        if (ai?.title) finalTitle = sanitizeListingText(ai.title, mergedConfig).sanitized || finalTitle;
-        if (ai?.short) finalShort = sanitizeListingText(ai.short, mergedConfig).sanitized || finalShort;
-        if (ai?.full)  finalFull  = sanitizeListingText(ai.full,  mergedConfig).sanitized || finalFull;
+        if (cleanDesc.refusalDetected || cleanTitle.refusalDetected) {
+          summary.rejected_refusal++;
+          bumpSource(platform, 'rejected');
+          await supabase.from('prospect_listings')
+            .update({
+              admin_notes: `[auto-publish] Refuzat: refusal phrase = "${cleanDesc.refusalMatch || cleanTitle.refusalMatch}"`,
+              tags: ['scrape-prospects', 'auto-import', 'no-agency-refusal'],
+            }).eq('id', prospect.id);
+          continue;
+        }
+
+        finalTitle = cleanTitle.sanitized || 'Anunț Imobiliar Timișoara';
+        finalShort = cleanDesc.sanitized.substring(0, 220);
+        finalFull = cleanDesc.sanitized;
+
+        if (useAiRewrite) {
+          const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare', learnings.hints, compiledPrompt);
+          if (ai?.title) finalTitle = sanitizeListingText(ai.title, mergedConfig).sanitized || finalTitle;
+          if (ai?.short) finalShort = sanitizeListingText(ai.short, mergedConfig).sanitized || finalShort;
+          if (ai?.full)  finalFull  = sanitizeListingText(ai.full,  mergedConfig).sanitized || finalFull;
+        }
+        finalImages = rawImages;
+        finalImageAlts = [];
       }
 
       const quality = computeQualityScore({
         finalDesc: finalFull,
         finalTitle,
-        imageCount: rawImages.length,
+        imageCount: finalImages.length,
         hasPrice: Boolean(prospect.price),
         hasZone: Boolean(prospect.zone),
         hasRooms: Boolean(prospect.rooms),
@@ -464,6 +513,7 @@ Deno.serve(async (req) => {
           removed_addresses: cleanDesc.removed.addresses.length,
           removed_phrases: Array.from(new Set([...cleanDesc.removed.phrases, ...cleanTitle.removed.phrases])),
           ai_rewritten: useAiRewrite,
+          used_premium_enrichment: hasEnriched,
           source_platform: platform,
           quality_score: quality,
           learnings_applied: learnings.forbidden.length,
@@ -478,7 +528,8 @@ Deno.serve(async (req) => {
         year_built: prospect.year_built,
         base_price_per_night: listingType === 'vanzare' ? null : prospect.price,
         capital_necesar: listingType === 'vanzare' ? prospect.price : null,
-        images: rawImages,
+        images: finalImages,
+        image_alts: finalImageAlts,
         booking_url: null,
         source_platform: platform,
         source_url: null,
@@ -518,7 +569,7 @@ Deno.serve(async (req) => {
         }).eq('id', prospect.id);
 
       // Fire-and-forget image processing pipeline (crop / inpaint + rehost)
-      if (Array.isArray(rawImages) && rawImages.length > 0) {
+      if (Array.isArray(finalImages) && finalImages.length > 0) {
         const proc = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-listing-images`, {
           method: 'POST',
           headers: {

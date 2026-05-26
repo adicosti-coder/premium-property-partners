@@ -18,6 +18,8 @@ import NotFound from "@/pages/NotFound";
 import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 import PinterestPinButton from "@/components/PinterestPinButton";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useImageCaptions } from "@/hooks/useImageCaptions";
 import { useListingDwellTracker } from "@/hooks/useListingDwellTracker";
 
@@ -67,6 +69,8 @@ interface DbPropertyData {
   long_description_en?: string | null;
   tag?: string;
   image_path?: string | null;
+  images?: string[] | null;
+  image_alts?: string[] | null;
   capital_necesar?: number | null;
   estimated_revenue?: string | null;
   roi_percentage?: string | null;
@@ -200,7 +204,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude, images, image_alts")
             .eq("id", slug)
             .maybeSingle();
           
@@ -213,7 +217,7 @@ const PropertyDetail = () => {
           // Static property - fetch additional data by name
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude, images, image_alts")
             .eq("name", staticProperty.name)
             .maybeSingle();
           
@@ -226,7 +230,7 @@ const PropertyDetail = () => {
           setIsLoadingProperty(true);
           const { data: dbProp } = await supabase
             .from("properties")
-            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude")
+            .select("id, slug, name, booking_url, location, description_ro, description_en, long_description_ro, long_description_en, tag, image_path, capital_necesar, estimated_revenue, roi_percentage, listing_type, status_operativ, property_code, base_price_per_night, weekend_price_per_night, size, bedrooms, bathrooms, capacity, floor, year_built, balconies, terrace_area, has_storage, has_cellar, orientation, view_type, has_elevator, intercom_type, has_ac, usable_area, built_area, land_area, price_per_sqm, annual_tax, monthly_maintenance, renovation_year, property_condition, total_building_floors, apartments_in_building, parking, heating_type, energy_class, furnished, construction_type, compartimentare, features, amenities, amenities_en, house_rules, house_rules_en, latitude, longitude, images, image_alts")
             .eq("slug", slug)
             .maybeSingle();
           
@@ -276,7 +280,9 @@ const PropertyDetail = () => {
     slug: dbProperty.slug || slug || "",
     name: dbProperty.name,
     location: dbProperty.location || "Timișoara",
-    images: dbProperty.image_path ? [dbProperty.image_path.startsWith("http") ? dbProperty.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${dbProperty.image_path}`] : [],
+    images: (Array.isArray(dbProperty.images) && dbProperty.images.length > 0)
+      ? dbProperty.images.map((u: string) => u && u.startsWith("http") ? u : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${u}`)
+      : (dbProperty.image_path ? [dbProperty.image_path.startsWith("http") ? dbProperty.image_path : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${dbProperty.image_path}`] : []),
     features: [],
     bookingUrl: dbProperty.booking_url || "",
     description: dbProperty.description_ro || "",
@@ -648,7 +654,7 @@ const PropertyDetail = () => {
               imageUrl={galleryImages[currentImageIndex] || galleryImages[0]}
               description={normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat Timișoara | RealTrust` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier, property management | RealTrust`}
             />
-            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat ${property.location}` : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`} className="w-full h-full object-cover" priority={true} />
+            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={(dbProperty?.image_alts?.[currentImageIndex]) || (staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat ${property.location}` : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`)} className="w-full h-full object-cover" priority={true} />
             <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
             {/* Navigation arrows on hero */}
             {galleryImages.length > 1 && (
@@ -668,7 +674,7 @@ const PropertyDetail = () => {
                     className={`w-20 h-14 sm:w-24 sm:h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-primary ring-2 ring-primary/30' : 'border-border opacity-70 hover:opacity-100'}`}
                     aria-label={`${language === 'ro' ? 'Fotografie' : 'Photo'} ${idx + 1}`}
                   >
-                    <OptimizedImage src={img} alt={staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat foto ${idx + 1}` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    <OptimizedImage src={img} alt={(dbProperty?.image_alts?.[idx]) || (staticProperty ? getImageAlt(staticProperty, idx, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat foto ${idx + 1}` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier foto ${idx + 1}`)} className="w-full h-full object-cover" />
                   </button>
                   <p className="text-[10px] text-muted-foreground text-center mt-1 max-w-20 sm:max-w-24 line-clamp-2 leading-tight">{getDisplayCaption(idx)}</p>
                 </div>
@@ -830,7 +836,9 @@ const PropertyDetail = () => {
               {property.longDescription && (
                 <div>
                   <h2 className="text-2xl font-serif font-semibold mb-4">{t.propertyDetail.about}</h2>
-                  <p className="text-muted-foreground leading-relaxed">{displayDescription}</p>
+                  <div className="prose prose-sm sm:prose-base max-w-none text-muted-foreground leading-relaxed prose-headings:text-foreground prose-strong:text-foreground prose-ul:my-3 prose-li:my-1">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayDescription}</ReactMarkdown>
+                  </div>
                 </div>
               )}
 

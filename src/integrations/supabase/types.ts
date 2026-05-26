@@ -3305,6 +3305,7 @@ export type Database = {
           house_rules: string[] | null
           house_rules_en: string[] | null
           id: string
+          image_alts: string[] | null
           image_path: string | null
           images: string[] | null
           images_processed_at: string | null
@@ -3396,6 +3397,7 @@ export type Database = {
           house_rules?: string[] | null
           house_rules_en?: string[] | null
           id?: string
+          image_alts?: string[] | null
           image_path?: string | null
           images?: string[] | null
           images_processed_at?: string | null
@@ -3487,6 +3489,7 @@ export type Database = {
           house_rules?: string[] | null
           house_rules_en?: string[] | null
           id?: string
+          image_alts?: string[] | null
           image_path?: string | null
           images?: string[] | null
           images_processed_at?: string | null
