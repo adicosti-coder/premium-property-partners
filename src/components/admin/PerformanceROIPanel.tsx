@@ -268,6 +268,8 @@ export function PerformanceROIPanel() {
         </CardContent>
       </Card>
 
+      <GoogleIndexingDiagnostic />
+
       {/* Source efficiency */}
       <Card>
         <CardHeader className="pb-2">
