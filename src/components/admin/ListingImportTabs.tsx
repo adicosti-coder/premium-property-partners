@@ -61,6 +61,9 @@ const ListingImportTabs = () => {
         <TabsTrigger value="sandbox" className="gap-2">
           <Wrench className="w-4 h-4" /> Sandbox & Health
         </TabsTrigger>
+        <TabsTrigger value="performance" className="gap-2">
+          <LineChart className="w-4 h-4" /> Performanță & ROI
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="manual"><ListingImporter /></TabsContent>
@@ -68,6 +71,8 @@ const ListingImportTabs = () => {
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
       <TabsContent value="auto-publish"><AutoPublishListingsPanel /></TabsContent>
       <TabsContent value="sandbox"><ListingImportHealthPanel /></TabsContent>
+      <TabsContent value="performance"><PerformanceROIPanel /></TabsContent>
+
     </Tabs>
   );
 };
