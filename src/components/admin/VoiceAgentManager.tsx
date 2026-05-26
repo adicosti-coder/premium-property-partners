@@ -512,6 +512,7 @@ export default function VoiceAgentManager() {
       <VoiceAgentBatchCalling />
       {/* === PRIORITIZED: Triage + Keyword Radar above Training Lab === */}
       <ProspectTriageQueue />
+      <AggregatorRejectionLog />
       <KeywordRadarPanel />
       <VoiceAgentTrainingLab />
       <VoiceAgentMonitoring />
