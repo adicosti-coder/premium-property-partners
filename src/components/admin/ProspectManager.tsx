@@ -852,6 +852,15 @@ const ProspectManager = () => {
                   </div>
                 )}
 
+                {/* ── Content Enrichment & Image Optimization ─── */}
+                <ProspectEnrichmentPanel
+                  prospect={selectedListing}
+                  onUpdated={(patch) => {
+                    setSelectedListing(prev => prev ? { ...prev, ...patch } as ProspectListing : null);
+                    setAllListings(prev => prev.map(l => l.id === selectedListing.id ? { ...l, ...patch } as ProspectListing : l));
+                  }}
+                />
+
                 {/* ── Quick Replies ──────────────────────── */}
                 <Card className="border-green-200 dark:border-green-800">
                   <CardHeader className="pb-2">
