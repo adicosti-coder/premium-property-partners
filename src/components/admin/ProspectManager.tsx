@@ -59,6 +59,13 @@ interface ProspectListing {
   next_callback_at?: string | null;
   lifecycle_status?: string | null;
   last_failure_reason?: string | null;
+  enriched_title?: string | null;
+  enriched_description?: string | null;
+  enriched_images?: EnrichedImage[] | null;
+  enrichment_status?: string | null;
+  enriched_at?: string | null;
+  enrichment_error?: string | null;
+  enrichment_saved_at?: string | null;
 }
 
 const PROSPECT_TYPES = [
