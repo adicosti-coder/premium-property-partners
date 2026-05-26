@@ -652,7 +652,7 @@ const PropertyDetail = () => {
               imageUrl={galleryImages[currentImageIndex] || galleryImages[0]}
               description={normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat Timișoara | RealTrust` : `${property.name} — investiție imobiliară Timișoara, randament regim hotelier, property management | RealTrust`}
             />
-            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat ${property.location}` : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`} className="w-full h-full object-cover" priority={true} />
+            <OptimizedImage src={galleryImages[currentImageIndex] || galleryImages[0]} alt={(dbProperty?.image_alts?.[currentImageIndex]) || (staticProperty ? getImageAlt(staticProperty, currentImageIndex, language as 'ro' | 'en') : normalizedListingType === 'inchiriere' ? `${property.name} — apartament de închiriat ${property.location}` : `${property.name} — investiție imobiliară Timișoara, cazare regim hotelier ${property.location}`)} className="w-full h-full object-cover" priority={true} />
             <div className="absolute bottom-4 right-4"><Badge variant="secondary">{galleryImages.length} Foto</Badge></div>
             {/* Navigation arrows on hero */}
             {galleryImages.length > 1 && (
