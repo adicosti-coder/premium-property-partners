@@ -11,6 +11,7 @@ import {
   Tooltip, Legend, CartesianGrid,
 } from "recharts";
 import { TrendingDown, TrendingUp, MousePointerClick, Target, Euro, Activity } from "lucide-react";
+import { GoogleIndexingDiagnostic } from "./GoogleIndexingDiagnostic";
 
 // Cost estimates (EUR) – ajustabile dintr-un singur loc
 const COST_DEWATERMARK_PER_IMG = 0.01;
