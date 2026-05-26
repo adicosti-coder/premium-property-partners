@@ -22,6 +22,7 @@ import { detectObjection, OBJECTION_LABEL } from "@/lib/voiceObjections";
 import ProspectInjectionRejectionStats from "./ProspectInjectionRejectionStats";
 import ProspectRejectionAlerts from "./ProspectRejectionAlerts";
 import ProspectAlertSettings from "./ProspectAlertSettings";
+import ProspectEnrichmentPanel, { type EnrichedImage } from "./ProspectEnrichmentPanel";
 
 interface ProspectListing {
   id: string;
