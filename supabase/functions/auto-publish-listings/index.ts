@@ -466,7 +466,7 @@ Deno.serve(async (req) => {
       const quality = computeQualityScore({
         finalDesc: finalFull,
         finalTitle,
-        imageCount: rawImages.length,
+        imageCount: finalImages.length,
         hasPrice: Boolean(prospect.price),
         hasZone: Boolean(prospect.zone),
         hasRooms: Boolean(prospect.rooms),
