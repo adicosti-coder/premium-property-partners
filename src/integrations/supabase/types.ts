@@ -4044,6 +4044,13 @@ export type Database = {
           do_not_call_at: string | null
           do_not_call_reason: string | null
           duplicate_of: string | null
+          enriched_at: string | null
+          enriched_description: string | null
+          enriched_images: Json | null
+          enriched_title: string | null
+          enrichment_error: string | null
+          enrichment_saved_at: string | null
+          enrichment_status: string | null
           features: string[] | null
           floor: string | null
           followup_sent_at: string | null
@@ -4121,6 +4128,13 @@ export type Database = {
           do_not_call_at?: string | null
           do_not_call_reason?: string | null
           duplicate_of?: string | null
+          enriched_at?: string | null
+          enriched_description?: string | null
+          enriched_images?: Json | null
+          enriched_title?: string | null
+          enrichment_error?: string | null
+          enrichment_saved_at?: string | null
+          enrichment_status?: string | null
           features?: string[] | null
           floor?: string | null
           followup_sent_at?: string | null
@@ -4198,6 +4212,13 @@ export type Database = {
           do_not_call_at?: string | null
           do_not_call_reason?: string | null
           duplicate_of?: string | null
+          enriched_at?: string | null
+          enriched_description?: string | null
+          enriched_images?: Json | null
+          enriched_title?: string | null
+          enrichment_error?: string | null
+          enrichment_saved_at?: string | null
+          enrichment_status?: string | null
           features?: string[] | null
           floor?: string | null
           followup_sent_at?: string | null
