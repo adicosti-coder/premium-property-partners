@@ -442,11 +442,16 @@ export default function VoiceAgentCommandCenter() {
           <p className="text-sm text-muted-foreground">
             Focus pe acțiune: ce trebuie făcut acum ca să închizi lead-uri. Operațional avansat în josul paginii.
           </p>
+          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-blue-500/30 bg-blue-500/5 text-sm">
+            <span className="font-medium text-blue-700 dark:text-blue-300">📋 Mod Colectare: Manual</span>
+            <span className="text-xs text-muted-foreground">Andrei sună doar la comandă (buton „Sună" sau „🚀 Start Sesiune Apeluri")</span>
+          </div>
         </div>
         <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
           {loading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null} Refresh
         </Button>
       </div>
+
 
       {/* KPI Strip 7d */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
