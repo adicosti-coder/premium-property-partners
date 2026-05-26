@@ -4051,7 +4051,9 @@ export type Database = {
           enriched_description: string | null
           enriched_images: Json | null
           enriched_title: string | null
+          enrichment_attempts: number
           enrichment_error: string | null
+          enrichment_next_retry_at: string | null
           enrichment_saved_at: string | null
           enrichment_status: string | null
           features: string[] | null
@@ -4135,7 +4137,9 @@ export type Database = {
           enriched_description?: string | null
           enriched_images?: Json | null
           enriched_title?: string | null
+          enrichment_attempts?: number
           enrichment_error?: string | null
+          enrichment_next_retry_at?: string | null
           enrichment_saved_at?: string | null
           enrichment_status?: string | null
           features?: string[] | null
@@ -4219,7 +4223,9 @@ export type Database = {
           enriched_description?: string | null
           enriched_images?: Json | null
           enriched_title?: string | null
+          enrichment_attempts?: number
           enrichment_error?: string | null
+          enrichment_next_retry_at?: string | null
           enrichment_saved_at?: string | null
           enrichment_status?: string | null
           features?: string[] | null
