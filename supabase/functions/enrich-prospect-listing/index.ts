@@ -208,7 +208,13 @@ async function processImage(
     if (!ct.startsWith("image/")) return null;
     const buf = new Uint8Array(await r.arrayBuffer());
     if (buf.byteLength > 12 * 1024 * 1024) return null; // 12MB cap
-    const decoded = await decode(buf);
+
+    // Step 1: try to remove source watermarks (OLX/Storia/proprietar etc.) via Dewatermark.ai.
+    // Fail-open: if API down / no credits, fall back to original bytes.
+    const cleaned = await removeSourceWatermark(buf);
+    const workingBuf = cleaned ?? buf;
+
+    const decoded = await decode(workingBuf);
     if (!(decoded instanceof Image)) return null;
     const img = decoded as Image;
 
