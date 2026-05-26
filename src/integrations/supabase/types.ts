@@ -2737,6 +2737,39 @@ export type Database = {
           },
         ]
       }
+      marketing_snapshot: {
+        Row: {
+          ad_spend_eur: number
+          created_at: string
+          date: string
+          ga4_users: number
+          gsc_clicks: number
+          gsc_impressions: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          ad_spend_eur?: number
+          created_at?: string
+          date: string
+          ga4_users?: number
+          gsc_clicks?: number
+          gsc_impressions?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          ad_spend_eur?: number
+          created_at?: string
+          date?: string
+          ga4_users?: number
+          gsc_clicks?: number
+          gsc_impressions?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
