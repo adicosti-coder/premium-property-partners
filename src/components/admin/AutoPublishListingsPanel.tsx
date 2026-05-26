@@ -73,7 +73,9 @@ export function AutoPublishListingsPanel() {
   };
 
   return (
-    <Card className="border-primary/30">
+    <div className="space-y-4">
+      <EnrichmentBacklogWidget />
+      <Card className="border-primary/30">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div>
