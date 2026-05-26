@@ -107,6 +107,17 @@ serve(async (req) => {
   const runSource: RunSource = body?.source === "manual" || body?.manual === true ? "manual" : "cron";
   const bypassSchedule = runSource === "manual" || body?.bypass_schedule === true;
 
+  // ── MANUAL-ONLY MODE (hard guard) ──
+  // Background autopilot is permanently disabled. The whole orchestrator is
+  // a no-op unless an admin explicitly invokes it from the UI (source:"manual").
+  // Cron invocations are refused without touching any state.
+  if (runSource !== "manual") {
+    return new Response(JSON.stringify({
+      skipped: "manual_only_mode",
+      message: "Autopilot Andrei este oprit. Colectarea rămâne automată, dar apelurile pornesc doar la comandă manuală din Command Center.",
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   // Create run record
   const { data: run } = await supabase
     .from("voice_autonomy_runs")
