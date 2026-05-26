@@ -171,7 +171,7 @@ export function PerformanceROIPanel() {
   const sources = (() => {
     const acc = new Map<string, { total: number; done: number }>();
     for (const p of allProspects) {
-      const key = (p.source || "necunoscut").toLowerCase();
+      const key = (p.source_platform || "necunoscut").toLowerCase();
       const cur = acc.get(key) ?? { total: 0, done: 0 };
       cur.total += 1;
       if (p.enrichment_status === "done") cur.done += 1;
