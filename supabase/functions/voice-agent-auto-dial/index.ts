@@ -161,6 +161,19 @@ serve(async (req) => {
     const bypassSchedule = manual || body.bypass_schedule === true;
     const resumePending = body.resume_pending === true;
 
+    // ── MANUAL-ONLY MODE (hard guard) ──
+    // Background auto-dial is permanently disabled. The agent only dials when
+    // the admin explicitly clicks "Sună" or "Start Sesiune Apeluri" in the UI
+    // (those paths set manual:true; resume_pending:true is also a manual UI action).
+    // Cron, DB triggers, autopilot and empty-body invocations are refused here.
+    if (!manual && !resumePending) {
+      return jsonResp({
+        skipped: "manual_only_mode",
+        message: "Auto-dial automat este oprit. Andrei sună doar la comandă din UI.",
+        source: body.source || "unknown",
+      });
+    }
+
     // Settings
     const { data: settings } = await supabase
       .from("voice_agent_settings")
