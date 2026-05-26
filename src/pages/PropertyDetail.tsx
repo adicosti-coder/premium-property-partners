@@ -18,6 +18,8 @@ import NotFound from "@/pages/NotFound";
 import OptimizedImage from "@/components/OptimizedImage";
 import PropertyImageLightbox from "@/components/PropertyImageLightbox";
 import PinterestPinButton from "@/components/PinterestPinButton";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useImageCaptions } from "@/hooks/useImageCaptions";
 import { useListingDwellTracker } from "@/hooks/useListingDwellTracker";
 
