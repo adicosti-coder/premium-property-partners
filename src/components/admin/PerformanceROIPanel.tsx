@@ -36,9 +36,9 @@ type Snapshot = {
 
 type Prospect = {
   id: string;
-  source: string | null;
+  source_platform: string | null;
   enrichment_status: string | null;
-  created_at: string;
+  created_at: string | null;
 };
 
 function useMarketingSnapshots(days: number) {
@@ -64,7 +64,7 @@ function useProspects(days: number) {
     queryFn: async (): Promise<Prospect[]> => {
       const { data, error } = await supabase
         .from("prospect_listings")
-        .select("id, source, enrichment_status, created_at")
+        .select("id, source_platform, enrichment_status, created_at")
         .gte("created_at", isoDaysAgo(days))
         .limit(5000);
       if (error) throw error;
@@ -72,6 +72,7 @@ function useProspects(days: number) {
     },
   });
 }
+
 
 function usePublishedDrafts(days: number) {
   return useQuery({
