@@ -314,6 +314,18 @@ Deno.serve(async (req) => {
   const compiledPrompt = await loadCompiledPrompt(supabase);
   const disabledSources = await loadDisabledSources(supabase);
 
+  // Load production alert settings (hot-deal webhook)
+  const { data: alertSettings } = await supabase
+    .from('voice_agent_settings')
+    .select('production_webhook_url, alert_hot_deals_enabled, hot_deal_min_score')
+    .eq('id', 1)
+    .maybeSingle();
+  const hotDealCfg = {
+    enabled: Boolean(alertSettings?.alert_hot_deals_enabled && alertSettings?.production_webhook_url),
+    url: alertSettings?.production_webhook_url as string | undefined,
+    minScore: Number(alertSettings?.hot_deal_min_score ?? 85),
+  };
+
   // Merge learned forbidden phrases on top of config (without DB write)
   const mergedConfig: ImportConfigRow[] = [
     ...baseConfig,
