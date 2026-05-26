@@ -836,7 +836,9 @@ const PropertyDetail = () => {
               {property.longDescription && (
                 <div>
                   <h2 className="text-2xl font-serif font-semibold mb-4">{t.propertyDetail.about}</h2>
-                  <p className="text-muted-foreground leading-relaxed">{displayDescription}</p>
+                  <div className="prose prose-sm sm:prose-base max-w-none text-muted-foreground leading-relaxed prose-headings:text-foreground prose-strong:text-foreground prose-ul:my-3 prose-li:my-1">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayDescription}</ReactMarkdown>
+                  </div>
                 </div>
               )}
 
