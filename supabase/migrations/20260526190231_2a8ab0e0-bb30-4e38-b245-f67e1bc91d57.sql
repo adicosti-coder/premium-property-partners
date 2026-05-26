@@ -1,0 +1,2 @@
+UPDATE public.automation_jobs SET config = jsonb_set(coalesce(config,'{}'::jsonb), '{timeout_ms}', '120000'::jsonb) WHERE job_key='auto-publish-listings';
+UPDATE public.automation_jobs SET config = jsonb_set(coalesce(config,'{}'::jsonb), '{max_retries}', '0'::jsonb) WHERE job_key='auto-publish-listings';
