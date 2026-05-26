@@ -26,6 +26,7 @@ import VoiceAgentAutopilot from "./VoiceAgentAutopilot";
 import VoiceAgentCallSimulator from "./VoiceAgentCallSimulator";
 import VoiceAgentResultsDashboard, { hourWindow, normalizeSentiment, sentimentEmojiMap, type HourWindow, type SentimentBucket } from "./VoiceAgentResultsDashboard";
 import ProspectTriageQueue from "./ProspectTriageQueue";
+import AggregatorRejectionLog from "./AggregatorRejectionLog";
 import KeywordRadarPanel from "./KeywordRadarPanel";
 
 interface VoiceCall {
@@ -511,6 +512,7 @@ export default function VoiceAgentManager() {
       <VoiceAgentBatchCalling />
       {/* === PRIORITIZED: Triage + Keyword Radar above Training Lab === */}
       <ProspectTriageQueue />
+      <AggregatorRejectionLog />
       <KeywordRadarPanel />
       <VoiceAgentTrainingLab />
       <VoiceAgentMonitoring />
