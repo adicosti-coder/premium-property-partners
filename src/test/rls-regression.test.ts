@@ -132,4 +132,43 @@ describe("RLS regression — anonymous access is denied", () => {
       });
     }
   });
+
+  // Test 10 — SEO integrity: anon cannot tamper with GSC indexing columns
+  describe("indexing_status integrity", () => {
+    it("anon cannot UPDATE indexing_status on prospect_listings via REST", async () => {
+      if (!online) return;
+      const { data, error } = await anon
+        .from("prospect_listings")
+        .update({
+          indexing_status: "INDEXED",
+          last_google_check_at: new Date().toISOString(),
+        })
+        .neq("id", "00000000-0000-0000-0000-000000000000")
+        .select("id");
+      // Either RLS blocks with an error, or update is silently scoped to 0 rows.
+      if (error) {
+        expect(error.message.length).toBeGreaterThan(0);
+        return;
+      }
+      expect((data ?? []).length).toBe(0);
+    });
+
+    it("anon cannot UPDATE indexing_status on properties via REST", async () => {
+      if (!online) return;
+      const { data, error } = await anon
+        .from("properties")
+        .update({
+          indexing_status: "INDEXED",
+          last_google_check_at: new Date().toISOString(),
+        })
+        .neq("id", "00000000-0000-0000-0000-000000000000")
+        .select("id");
+      if (error) {
+        expect(error.message.length).toBeGreaterThan(0);
+        return;
+      }
+      expect((data ?? []).length).toBe(0);
+    });
+  });
 });
+
