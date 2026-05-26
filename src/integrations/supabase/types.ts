@@ -7274,6 +7274,8 @@ export type Database = {
       }
       voice_agent_settings: {
         Row: {
+          alert_hot_deals_enabled: boolean
+          alert_worker_errors_enabled: boolean
           allowed_hours_end: number
           allowed_hours_start: number
           amd_enabled: boolean
@@ -7290,6 +7292,7 @@ export type Database = {
           elevenlabs_min_score: number
           elevenlabs_model_id: string
           elevenlabs_voice_id: string
+          hot_deal_min_score: number
           id: number
           max_calls_per_day: number
           min_lead_score: number
@@ -7298,6 +7301,7 @@ export type Database = {
           notify_whatsapp_enabled: boolean
           phone_lookup_enabled: boolean
           predictive_sort_enabled: boolean
+          production_webhook_url: string | null
           real_conversation_threshold_seconds: number
           skip_landline: boolean
           skip_voip: boolean
@@ -7310,8 +7314,14 @@ export type Database = {
           voice_style: number
           voice_use_speaker_boost: boolean
           weekend_standby_enabled: boolean
+          worker_alert_last_sent_at: string | null
+          worker_failed_baseline_at: string | null
+          worker_failed_baseline_count: number
+          worker_failed_threshold: number
         }
         Insert: {
+          alert_hot_deals_enabled?: boolean
+          alert_worker_errors_enabled?: boolean
           allowed_hours_end?: number
           allowed_hours_start?: number
           amd_enabled?: boolean
@@ -7328,6 +7338,7 @@ export type Database = {
           elevenlabs_min_score?: number
           elevenlabs_model_id?: string
           elevenlabs_voice_id?: string
+          hot_deal_min_score?: number
           id?: number
           max_calls_per_day?: number
           min_lead_score?: number
@@ -7336,6 +7347,7 @@ export type Database = {
           notify_whatsapp_enabled?: boolean
           phone_lookup_enabled?: boolean
           predictive_sort_enabled?: boolean
+          production_webhook_url?: string | null
           real_conversation_threshold_seconds?: number
           skip_landline?: boolean
           skip_voip?: boolean
@@ -7348,8 +7360,14 @@ export type Database = {
           voice_style?: number
           voice_use_speaker_boost?: boolean
           weekend_standby_enabled?: boolean
+          worker_alert_last_sent_at?: string | null
+          worker_failed_baseline_at?: string | null
+          worker_failed_baseline_count?: number
+          worker_failed_threshold?: number
         }
         Update: {
+          alert_hot_deals_enabled?: boolean
+          alert_worker_errors_enabled?: boolean
           allowed_hours_end?: number
           allowed_hours_start?: number
           amd_enabled?: boolean
@@ -7366,6 +7384,7 @@ export type Database = {
           elevenlabs_min_score?: number
           elevenlabs_model_id?: string
           elevenlabs_voice_id?: string
+          hot_deal_min_score?: number
           id?: number
           max_calls_per_day?: number
           min_lead_score?: number
@@ -7374,6 +7393,7 @@ export type Database = {
           notify_whatsapp_enabled?: boolean
           phone_lookup_enabled?: boolean
           predictive_sort_enabled?: boolean
+          production_webhook_url?: string | null
           real_conversation_threshold_seconds?: number
           skip_landline?: boolean
           skip_voip?: boolean
@@ -7386,6 +7406,10 @@ export type Database = {
           voice_style?: number
           voice_use_speaker_boost?: boolean
           weekend_standby_enabled?: boolean
+          worker_alert_last_sent_at?: string | null
+          worker_failed_baseline_at?: string | null
+          worker_failed_baseline_count?: number
+          worker_failed_threshold?: number
         }
         Relationships: []
       }

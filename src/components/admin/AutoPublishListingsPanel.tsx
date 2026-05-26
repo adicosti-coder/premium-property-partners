@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye } from "lucide-react";
 import { EnrichmentBacklogWidget } from "./EnrichmentBacklogWidget";
+import { ProductionAlertsConfig } from "./ProductionAlertsConfig";
 
 type Counts = {
   drafts: number;
@@ -75,6 +76,7 @@ export function AutoPublishListingsPanel() {
   return (
     <div className="space-y-4">
       <EnrichmentBacklogWidget />
+      <ProductionAlertsConfig />
       <Card className="border-primary/30">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">

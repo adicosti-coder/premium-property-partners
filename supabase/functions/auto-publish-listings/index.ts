@@ -314,6 +314,18 @@ Deno.serve(async (req) => {
   const compiledPrompt = await loadCompiledPrompt(supabase);
   const disabledSources = await loadDisabledSources(supabase);
 
+  // Load production alert settings (hot-deal webhook)
+  const { data: alertSettings } = await supabase
+    .from('voice_agent_settings')
+    .select('production_webhook_url, alert_hot_deals_enabled, hot_deal_min_score')
+    .eq('id', 1)
+    .maybeSingle();
+  const hotDealCfg = {
+    enabled: Boolean(alertSettings?.alert_hot_deals_enabled && alertSettings?.production_webhook_url),
+    url: alertSettings?.production_webhook_url as string | undefined,
+    minScore: Number(alertSettings?.hot_deal_min_score ?? 85),
+  };
+
   // Merge learned forbidden phrases on top of config (without DB write)
   const mergedConfig: ImportConfigRow[] = [
     ...baseConfig,
@@ -335,7 +347,7 @@ Deno.serve(async (req) => {
 
   const { data: candidates, error: cErr } = await supabase
     .from('prospect_listings')
-    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status')
+    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score')
     .gte('lead_score', minScore)
     .eq('is_active', true)
     .eq('prospect_type', 'proprietar')
@@ -582,6 +594,41 @@ Deno.serve(async (req) => {
         if (typeof EdgeRuntime !== 'undefined' && (EdgeRuntime as any).waitUntil) {
           // @ts-ignore
           EdgeRuntime.waitUntil(proc);
+        }
+      }
+
+      // Hot deal alert — fire-and-forget to Make.com webhook
+      const leadScore = Number(prospect.lead_score ?? 0);
+      if (hotDealCfg.enabled && leadScore >= hotDealCfg.minScore) {
+        const payload = {
+          event: 'hot_deal_published',
+          severity: 'opportunity',
+          score: leadScore,
+          quality,
+          enriched_title: finalTitle,
+          price: prospect.price,
+          currency: prospect.currency || 'EUR',
+          zone: prospect.zone || prospect.location || null,
+          location: prospect.location || null,
+          rooms: prospect.rooms,
+          size: prospect.size,
+          property_id: inserted.id,
+          slug: inserted.slug,
+          admin_url: `https://realtrust.ro/admin/properties/${inserted.id}`,
+          fast_review_url: `https://realtrust.ro/admin/properties/fast-review`,
+          source_url: prospect.source_url,
+          source_platform: platform,
+          published_at: new Date().toISOString(),
+        };
+        const hook = fetch(hotDealCfg.url!, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }).catch((e) => console.warn('hot_deal webhook failed', e?.message));
+        // @ts-ignore EdgeRuntime is provided in Deno deploy
+        if (typeof EdgeRuntime !== 'undefined' && (EdgeRuntime as any).waitUntil) {
+          // @ts-ignore
+          EdgeRuntime.waitUntil(hook);
         }
       }
     } catch (err: any) {
