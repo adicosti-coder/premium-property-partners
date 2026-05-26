@@ -41,7 +41,7 @@ export default function ProspectTriageQueue() {
         .from("prospect_listings")
         .select("id,title,source_url,source_platform,zone,location,price,contact_phone,phone_normalized,prospect_type,lifecycle_status,rejection_reason,score,scraped_at,created_at")
         .eq("is_active", true)
-        .or(`prospect_type.in.(${AMBIGUOUS_TYPES.join(",")}),prospect_type.is.null,lifecycle_status.eq.pending_review`)
+        .or(`prospect_type.in.(${AMBIGUOUS_TYPES.join(",")}),prospect_type.is.null`)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
