@@ -67,6 +67,8 @@ interface DbPropertyData {
   long_description_en?: string | null;
   tag?: string;
   image_path?: string | null;
+  images?: string[] | null;
+  image_alts?: string[] | null;
   capital_necesar?: number | null;
   estimated_revenue?: string | null;
   roi_percentage?: string | null;
