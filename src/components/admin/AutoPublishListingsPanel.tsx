@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye } from "lucide-react";
+import { EnrichmentBacklogWidget } from "./EnrichmentBacklogWidget";
 
 type Counts = {
   drafts: number;
