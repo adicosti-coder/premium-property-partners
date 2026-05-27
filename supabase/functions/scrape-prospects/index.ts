@@ -772,10 +772,12 @@ Deno.serve(async (req) => {
 
             // Check phone blacklist
             let skipBlacklist = false;
+            let blacklistReason: string | null = null;
             if (extracted.contactPhone) {
               const normalizedPhone = normalizeRoPhone(extracted.contactPhone);
               if (preserveAgencyFilter && normalizedPhone && blockedPhones.has(normalizedPhone) && !whitelistedPhones.has(normalizedPhone)) {
                 skipBlacklist = true;
+                blacklistReason = 'agency_blocklist_phone';
               }
               const { data: phoneData } = await supabase
                 .from('phone_intelligence')
@@ -784,13 +786,30 @@ Deno.serve(async (req) => {
                 .maybeSingle();
               if (phoneData?.is_blacklisted) {
                 skipBlacklist = true;
+                blacklistReason = blacklistReason || 'phone_intelligence_blacklist';
               }
             }
 
-            if (skipBlacklist) {
+            // In strict mode, drop suspect leads. In permissive mode, let them
+            // through tagged as `suspect_spam` with lifecycle_status='to_review'
+            // so admins can manually approve via the Rescue Log UI.
+            const suspectSpam = skipBlacklist && permissiveSpamShield;
+            if (skipBlacklist && !permissiveSpamShield) {
               blacklistedSkipped++;
               continue;
             }
+            if (suspectSpam) {
+              blacklistedReviewed++;
+            }
+
+            const baseTags = [
+              'scrape-prospects',
+              category === 'vanzare' ? 'auto-import' : 'recrutare-management',
+              category === 'hotelier' ? 'regim-hotelier' : null,
+              category === 'inchiriere' ? 'inchiriere-proprietar' : null,
+              explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari',
+              suspectSpam ? 'suspect_spam' : null,
+            ].filter(Boolean) as string[];
 
             const { data: inserted, error: insertErr } = await supabase
               .from('prospect_listings')
@@ -821,32 +840,30 @@ Deno.serve(async (req) => {
                   explicit_owner_signal: explicitOwnerSignal,
                   estimated_monthly_extra: monthlyExtra,
                   estimated_extra_profit_3y: extraProfit3Y,
+                  spam_shield_permissive: permissiveSpamShield,
+                  suspect_spam: suspectSpam,
                 },
                 status: 'new',
                 prospect_type: 'proprietar',
                 category,
-                lifecycle_status: 'new',
+                lifecycle_status: suspectSpam ? 'to_review' : 'new',
                 is_active: true,
+                last_failure_reason: blacklistReason,
                 search_keywords: [query],
-                tags: [
-                  'scrape-prospects',
-                  // Only sale prospects flow into the auto-publish pipeline.
-                  // Rental & hotel-regime owners are recruitment targets for Andrei.
-                  category === 'vanzare' ? 'auto-import' : 'recrutare-management',
-                  category === 'hotelier' ? 'regim-hotelier' : null,
-                  category === 'inchiriere' ? 'inchiriere-proprietar' : null,
-                  explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari',
-                ].filter(Boolean) as string[],
-                admin_notes: category !== 'vanzare'
-                  ? `Prospect ${category === 'hotelier' ? 'regim hotelier' : 'închiriere'} de la proprietar — NU se publică pe site. Lead pentru Andrei: propunere administrare ${category === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`
-                  : explicitOwnerSignal
-                    ? 'Import automat: semnal explicit proprietar/persoană fizică.'
-                    : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
+                tags: baseTags,
+                admin_notes: suspectSpam
+                  ? `⚠️ SUSPECT SPAM (mod permisiv activ) — motiv: ${blacklistReason}. Necesită aprobare manuală din Rescue Log înainte de rutare la Andrei.`
+                  : category !== 'vanzare'
+                    ? `Prospect ${category === 'hotelier' ? 'regim hotelier' : 'închiriere'} de la proprietar — NU se publică pe site. Lead pentru Andrei: propunere administrare ${category === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`
+                    : explicitOwnerSignal
+                      ? 'Import automat: semnal explicit proprietar/persoană fizică.'
+                      : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
               }, { onConflict: 'source_url', ignoreDuplicates: true })
               .select('id, title, lead_score, source_url')
               .maybeSingle();
+
 
             if (insertErr) {
               console.error(`Insert error for ${url}:`, insertErr.message);
