@@ -54,7 +54,7 @@ export default function GrowthEngineDashboard() {
 
   // Load checklist from storage
   useEffect(() => {
-    const saved = getLocalStorage(STORAGE_KEY);
+    const saved = safeLocalStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as { id: string; done: boolean }[];
