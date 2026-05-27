@@ -97,6 +97,9 @@ export default function QuickKeywordSimulator() {
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const feedRef = useRef<HTMLDivElement | null>(null);
+  const [confirmedHistory, setConfirmedHistory] = useState<
+    { ts: number; title: string; category: Category; route: Route }[]
+  >([]);
 
   const [showSettings, setShowSettings] = useState(false);
   const [detectHotelier, setDetectHotelier] = useState(true);
