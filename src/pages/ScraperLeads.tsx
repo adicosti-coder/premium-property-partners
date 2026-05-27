@@ -42,6 +42,7 @@ import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperK
 import { ScraperAnalyticsDashboard } from "@/components/admin/ScraperAnalytics";
 import { Keyboard, BarChart3 } from "lucide-react";
 import OutreachQuickAction from "@/components/admin/outreach/OutreachQuickAction";
+import AggregatorRejectionLog from "@/components/admin/AggregatorRejectionLog";
 
 interface ScraperLead {
   id: string;
