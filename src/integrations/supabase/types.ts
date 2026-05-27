@@ -6293,6 +6293,7 @@ export type Database = {
           last_spam_alert_at: string | null
           spam_alert_enabled: boolean | null
           spam_rate_threshold: number | null
+          spam_shield_permissive_mode: boolean
           updated_at: string
           weekly_report_enabled: boolean | null
           weekly_report_recipients: string[] | null
@@ -6324,6 +6325,7 @@ export type Database = {
           last_spam_alert_at?: string | null
           spam_alert_enabled?: boolean | null
           spam_rate_threshold?: number | null
+          spam_shield_permissive_mode?: boolean
           updated_at?: string
           weekly_report_enabled?: boolean | null
           weekly_report_recipients?: string[] | null
@@ -6355,6 +6357,7 @@ export type Database = {
           last_spam_alert_at?: string | null
           spam_alert_enabled?: boolean | null
           spam_rate_threshold?: number | null
+          spam_shield_permissive_mode?: boolean
           updated_at?: string
           weekly_report_enabled?: boolean | null
           weekly_report_recipients?: string[] | null
