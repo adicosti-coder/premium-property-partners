@@ -641,6 +641,27 @@ export default function QuickKeywordSimulator() {
             )}
           </div>
         </div>
+        {/* Compact session history: last 3 successful DB inserts */}
+        {confirmedHistory.length > 0 && (
+          <div className="border-t pt-2 space-y-1">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+              ✅ Ultimele {confirmedHistory.length} inserturi confirmate (sesiune)
+            </div>
+            <ul className="space-y-0.5">
+              {confirmedHistory.map((h, i) => (
+                <li key={i} className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
+                  <span className="text-foreground">
+                    [{new Date(h.ts).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}]
+                  </span>
+                  <span className="truncate max-w-[200px]">{h.title}</span>
+                  <ArrowRight className="h-2.5 w-2.5" />
+                  {catBadge(h.category)}
+                  {routeBadge(h.route)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
