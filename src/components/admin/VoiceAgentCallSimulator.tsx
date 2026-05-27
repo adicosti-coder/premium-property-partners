@@ -50,25 +50,17 @@ export default function VoiceAgentCallSimulator() {
     setError(null);
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-agent-context`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Voice-Agent-Secret": "RealTrustAndreiVoice2026",
-          },
-          body: JSON.stringify({ phone: phone.trim() }),
-        }
+      const { data, error: invokeErr } = await supabase.functions.invoke(
+        "voice-agent-context-proxy",
+        { body: { phone: phone.trim() } }
       );
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data?.error || `HTTP ${res.status}`);
+      if (invokeErr) {
+        const msg = invokeErr.message || "Eroare la apelul edge function";
+        setError(msg);
         toast({
           title: "Eroare context",
-          description: data?.error || `Status ${res.status}`,
+          description: msg,
           variant: "destructive",
         });
         return;
