@@ -20,6 +20,29 @@ const ANDREI_VOICE_ID = "S98OhkhaxeAKHEbhoLi7";
 // flash_v2_5 → ~50% lower latency vs turbo, identical quality for short RO replies
 const ANDREI_MODEL_ID = "eleven_flash_v2_5";
 
+// ── Circuit breaker for ElevenLabs ─────────────────────────────
+// In-memory module state (per edge isolate). When ElevenLabs is slow or fails,
+// we trip the breaker for FALLBACK_WINDOW_MS and reroute to OpenAI TTS.
+const LATENCY_THRESHOLD_MS = 1500;
+const FALLBACK_WINDOW_MS = 60_000;
+let breakerOpenUntil = 0;
+const tripBreaker = (reason: string) => {
+  breakerOpenUntil = Date.now() + FALLBACK_WINDOW_MS;
+  console.warn(`[voice-tts] circuit breaker tripped (${reason}) for ${FALLBACK_WINDOW_MS}ms`);
+};
+const isBreakerOpen = () => Date.now() < breakerOpenUntil;
+
+async function generateOpenAITTS(text: string, apiKey: string): Promise<ArrayBuffer> {
+  const res = await fetch("https://api.openai.com/v1/audio/speech", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "tts-1", voice: "onyx", input: text, response_format: "mp3" }),
+  });
+  if (!res.ok) throw new Error(`OpenAI TTS ${res.status}: ${await res.text()}`);
+  return res.arrayBuffer();
+}
+
+
 async function sha256(text: string): Promise<string> {
   const enc = new TextEncoder().encode(text);
   const buf = await crypto.subtle.digest("SHA-256", enc);
