@@ -255,6 +255,9 @@ export default function QuickKeywordSimulator() {
       setLogs((prev) =>
         prev.map((l) => (l.id === entry.id ? { ...l, confirmed: true, confirming: false } : l)),
       );
+      setConfirmedHistory((prev) =>
+        [{ ts: Date.now(), title: `[SIM] ${entry.keyword}`, category: entry.category, route: entry.route }, ...prev].slice(0, 3),
+      );
       toast({
         title: "Rutare confirmată",
         description:
