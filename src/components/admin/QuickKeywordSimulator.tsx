@@ -105,6 +105,8 @@ export default function QuickKeywordSimulator() {
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
   const [connectionChecking, setConnectionChecking] = useState(false);
   const [flashId, setFlashId] = useState<string | null>(null);
+  const [showPayload, setShowPayload] = useState(false);
+  const STORAGE_KEY = "keyword-sim-confirmed-history";
 
   const [showSettings, setShowSettings] = useState(false);
   const [detectHotelier, setDetectHotelier] = useState(true);
@@ -126,6 +128,22 @@ export default function QuickKeywordSimulator() {
         setConnectionChecking(false);
       });
   }, []);
+
+  // Load confirmed history from sessionStorage on mount
+  useEffect(() => {
+    const saved = getSessionStorage(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setConfirmedHistory(parsed);
+      } catch { /* ignore */ }
+    }
+  }, []);
+
+  // Persist confirmed history to sessionStorage
+  useEffect(() => {
+    setSessionStorage(STORAGE_KEY, JSON.stringify(confirmedHistory));
+  }, [confirmedHistory]);
 
   // Live sanitizer preview for the current input
   const livePreview = useMemo(() => {
@@ -165,6 +183,7 @@ export default function QuickKeywordSimulator() {
   // Live "what will be inserted in prospect_listings" preview
   const dbPreview = useMemo(() => {
     const clean = (livePreview?.clean || keyword.trim()).toLowerCase();
+    const raw = keyword.trim();
     if (!clean) return null;
     const hot = HOTELIER_RE[sensitivity].test(clean);
     const ren = RENTAL_RE[sensitivity].test(clean);
@@ -181,7 +200,25 @@ export default function QuickKeywordSimulator() {
       ...(livePreview?.changed ? ["sanitized-input"] : []),
       ...(override ? [`override:${override}`] : []),
     ];
-    return { category: finalCategory, route, status, tags, override };
+    const adminNotes = [
+      "[manual-confirm] Rutare din Mod Simulare Keyword",
+      livePreview?.changed ? `Sanitizat: ${livePreview.removed.join(", ")}` : null,
+      override ? `category_override=${override} (toggle dezactivat)` : null,
+      `sensitivity=${sensitivity}, hotelier=${detectHotelier}, inchiriere=${detectRental}`,
+    ].filter(Boolean).join(" | ");
+    const payload = {
+      source_platform: "manual-simulator",
+      source_url: "manual-sim://preview",
+      title: `[SIM] ${clean}`,
+      description: `Rutare confirmată manual din Mod Simulare Keyword. Input brut: "${raw}". Folosit: "${clean}".`,
+      zone: null,
+      category: finalCategory,
+      status,
+      admin_notes: adminNotes,
+      tags,
+      prospect_type: "proprietar",
+    };
+    return { category: finalCategory, route, status, tags, override, payload };
   }, [keyword, livePreview, sensitivity, detectHotelier, detectRental]);
 
 
@@ -525,7 +562,14 @@ export default function QuickKeywordSimulator() {
         ) : dbPreview ? (
           <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
             <div className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1">💾 Preview Output DB <span className="text-[9px] font-normal">(prospect_listings)</span></span>
+              <button
+                type="button"
+                onClick={() => setShowPayload((s) => !s)}
+                className="flex items-center gap-1 hover:text-foreground transition cursor-pointer"
+              >
+                💾 Preview Output DB <span className="text-[9px] font-normal">(prospect_listings)</span>
+                <span className="text-[9px] ml-1 text-primary underline">{showPayload ? "Ascunde" : "Arată payload"}</span>
+              </button>
               <SupabaseStatus />
             </div>
             <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
@@ -564,6 +608,13 @@ export default function QuickKeywordSimulator() {
             {dbPreview.override && (
               <div className="text-[10px] text-amber-700 dark:text-amber-400">
                 ⚠ Toggle dezactivat → forțat <code className="font-mono">category_override={dbPreview.override}</code>
+              </div>
+            )}
+            {showPayload && dbPreview.payload && (
+              <div className="mt-1 rounded border bg-black/80 p-2 overflow-x-auto">
+                <pre className="text-[10px] font-mono text-emerald-300 whitespace-pre-wrap break-all">
+                  {JSON.stringify(dbPreview.payload, null, 2)}
+                </pre>
               </div>
             )}
           </div>
@@ -710,8 +761,21 @@ export default function QuickKeywordSimulator() {
         {/* Compact session history: last 3 successful DB inserts */}
         {confirmedHistory.length > 0 && (
           <div className="border-t pt-2 space-y-1">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
-              ✅ Ultimele {confirmedHistory.length} inserturi confirmate (sesiune)
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                ✅ Ultimele {confirmedHistory.length} inserturi confirmate (sesiune)
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 text-[10px] px-2"
+                onClick={() => {
+                  setConfirmedHistory([]);
+                  setSessionStorage(STORAGE_KEY, "[]");
+                }}
+              >
+                <Trash2 className="h-3 w-3 mr-1" /> Șterge istoric
+              </Button>
             </div>
             <ul className="space-y-0.5">
               {confirmedHistory.map((h, i) => {
