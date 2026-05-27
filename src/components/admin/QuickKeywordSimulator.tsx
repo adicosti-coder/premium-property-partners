@@ -18,6 +18,7 @@ import {
   Check,
   PlayCircle,
   AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,7 +28,10 @@ type Sensitivity = "strict" | "normal" | "loose";
 
 interface LogEntry {
   id: string;
-  keyword: string;
+  keyword: string;          // sanitized term sent to backend
+  rawKeyword: string;       // original input
+  sanitized: boolean;
+  removedPhrases: string[];
   category: Category;
   route: Route;
   block_reason: string | null;
@@ -37,6 +41,7 @@ interface LogEntry {
   confirmed: boolean;
   confirming: boolean;
   duplicate?: boolean;
+  overrideApplied?: Category;
 }
 
 const QUICK_PRESETS: { label: string; query: string; expect: Category }[] = [
@@ -61,6 +66,32 @@ const RENTAL_RE: Record<Sensitivity, RegExp> = {
   loose: /(inchiriere|închiriere|chirie|chir|rent|lun[ăa])/i,
 };
 
+// Anti-bias sanitizer: remove phrases that would skew classification or
+// that we treat as Andrei-only signals (so the regex sees the actual intent).
+const SANITIZE_PATTERNS: { pattern: RegExp; label: string }[] = [
+  { pattern: /\bpersoan[ăa]\s*fizic[ăa]\b/gi, label: "persoană fizică" },
+  { pattern: /\bproprietar(ul|i)?\b/gi, label: "proprietar" },
+  { pattern: /\bf[ăa]r[ăa]\s*comision\b/gi, label: "fără comision" },
+  { pattern: /\bcomision\s*0\s*%?\b/gi, label: "comision 0%" },
+  { pattern: /\bf[ăa]r[ăa]\s*agen[țt]ii?\b/gi, label: "fără agenții" },
+  { pattern: /\bnu\s*doresc\s*colaborare\b/gi, label: "nu doresc colaborare" },
+  { pattern: /\bno\s*agents?\b/gi, label: "no agents" },
+  { pattern: /\bowner\s*only\b/gi, label: "owner only" },
+];
+
+function sanitizeInput(raw: string): { clean: string; removed: string[] } {
+  let clean = raw;
+  const removed: string[] = [];
+  for (const { pattern, label } of SANITIZE_PATTERNS) {
+    if (pattern.test(clean)) {
+      removed.push(label);
+      clean = clean.replace(pattern, " ");
+    }
+  }
+  clean = clean.replace(/\s{2,}/g, " ").trim();
+  return { clean, removed };
+}
+
 export default function QuickKeywordSimulator() {
   const [keyword, setKeyword] = useState("");
   const [running, setRunning] = useState(false);
@@ -76,6 +107,14 @@ export default function QuickKeywordSimulator() {
     if (feedRef.current) feedRef.current.scrollTop = 0;
   }, [logs]);
 
+  // Live sanitizer preview for the current input
+  const livePreview = useMemo(() => {
+    const term = keyword.trim();
+    if (!term) return null;
+    const { clean, removed } = sanitizeInput(term);
+    return { clean, removed, changed: removed.length > 0 && clean !== term };
+  }, [keyword]);
+
   const previewOverride = (term: string): Category | undefined => {
     const blob = term.toLowerCase();
     const hot = HOTELIER_RE[sensitivity].test(blob);
@@ -84,9 +123,9 @@ export default function QuickKeywordSimulator() {
     return undefined;
   };
 
-  // Live regex preview across all 3 sensitivity levels for the current input
+  // Live regex preview across all 3 sensitivity levels (post-sanitize)
   const sensitivityPreview = useMemo(() => {
-    const term = keyword.trim().toLowerCase();
+    const term = (livePreview?.clean || keyword.trim()).toLowerCase();
     if (!term) return null;
     return (["strict", "normal", "loose"] as Sensitivity[]).map((lvl) => {
       const hot = term.match(HOTELIER_RE[lvl]);
@@ -101,12 +140,17 @@ export default function QuickKeywordSimulator() {
         rentalMatch: ren?.[0] || null,
       };
     });
-  }, [keyword]);
+  }, [keyword, livePreview]);
 
   const runTest = async (kw?: string) => {
-    const term = (kw ?? keyword).trim();
-    if (!term) {
+    const raw = (kw ?? keyword).trim();
+    if (!raw) {
       toast({ title: "Introdu un cuvânt-cheie", variant: "destructive" });
+      return;
+    }
+    const { clean: term, removed } = sanitizeInput(raw);
+    if (!term) {
+      toast({ title: "Textul a fost igienizat complet", description: "Nu a mai rămas conținut de analizat.", variant: "destructive" });
       return;
     }
     setRunning(true);
@@ -129,6 +173,9 @@ export default function QuickKeywordSimulator() {
       const entry: LogEntry = {
         id: crypto.randomUUID(),
         keyword: term,
+        rawKeyword: raw,
+        sanitized: removed.length > 0,
+        removedPhrases: removed,
         category: r.decision.category,
         route: r.decision.route,
         block_reason: r.decision.block_reason,
@@ -137,6 +184,7 @@ export default function QuickKeywordSimulator() {
         admin_notes: r.decision.admin_notes || "",
         confirmed: false,
         confirming: false,
+        overrideApplied: override,
       };
       setLogs((prev) => [entry, ...prev].slice(0, 50));
       if (!kw) setKeyword("");
@@ -148,9 +196,9 @@ export default function QuickKeywordSimulator() {
   };
 
   const confirmRouting = async (entry: LogEntry) => {
+    if (entry.duplicate || entry.confirmed) return;
     setLogs((prev) => prev.map((l) => (l.id === entry.id ? { ...l, confirming: true } : l)));
     try {
-      // Duplicate check: same keyword + same category already saved via simulator?
       const simTitle = `[SIM] ${entry.keyword}`;
       const { data: existing, error: dupErr } = await supabase
         .from("prospect_listings")
@@ -173,16 +221,30 @@ export default function QuickKeywordSimulator() {
       }
 
       const fakeUrl = `manual-sim://${entry.id}`;
+      const tags = Array.from(new Set([
+        ...entry.tags,
+        "manual-simulator-confirm",
+        ...(entry.sanitized ? ["sanitized-input"] : []),
+        ...(entry.overrideApplied ? [`override:${entry.overrideApplied}`] : []),
+      ]));
+      const status = entry.route === "andrei_call_queue" ? "to_call" : "new";
+      const adminNotes = [
+        `[manual-confirm] ${entry.admin_notes}`,
+        entry.sanitized ? `Sanitizat: ${entry.removedPhrases.join(", ")}` : null,
+        entry.overrideApplied ? `category_override=${entry.overrideApplied} (toggle dezactivat)` : null,
+        `sensitivity=${sensitivity}, hotelier=${detectHotelier}, inchiriere=${detectRental}`,
+      ].filter(Boolean).join(" | ");
+
       const { error } = await supabase.from("prospect_listings").insert({
         source_platform: "manual-simulator",
         source_url: fakeUrl,
         title: simTitle,
-        description: `Rutare confirmată manual din Mod Simulare Keyword. Sensibilitate=${sensitivity}, hotelier=${detectHotelier}, inchiriere=${detectRental}.`,
+        description: `Rutare confirmată manual din Mod Simulare Keyword. Input brut: "${entry.rawKeyword}". Folosit: "${entry.keyword}".`,
         zone: null,
         category: entry.category,
-        status: entry.route === "andrei_call_queue" ? "to_call" : "new",
-        admin_notes: `[manual-confirm] ${entry.admin_notes}`,
-        tags: [...entry.tags, "manual-simulator-confirm"],
+        status,
+        admin_notes: adminNotes,
+        tags,
         prospect_type: "proprietar",
       });
       if (error) throw error;
@@ -193,8 +255,8 @@ export default function QuickKeywordSimulator() {
         title: "Rutare confirmată",
         description:
           entry.route === "andrei_call_queue"
-            ? "Lead salvat în coada lui Andrei."
-            : "Prospect salvat pentru publicare pe realtrust.ro.",
+            ? "Lead salvat (status=to_call) în coada lui Andrei."
+            : "Prospect salvat (status=new) pentru realtrust.ro.",
       });
     } catch (e: any) {
       setLogs((prev) => prev.map((l) => (l.id === entry.id ? { ...l, confirming: false } : l)));
@@ -219,6 +281,13 @@ export default function QuickKeywordSimulator() {
       </Badge>
     );
 
+  // Distinct color schemes per sensitivity level for fast visual scan
+  const levelStyles: Record<Sensitivity, { ring: string; bg: string; chip: string }> = {
+    strict: { ring: "border-rose-500/60", bg: "bg-rose-500/5", chip: "bg-rose-600 text-white" },
+    normal: { ring: "border-sky-500/60", bg: "bg-sky-500/5", chip: "bg-sky-600 text-white" },
+    loose:  { ring: "border-violet-500/60", bg: "bg-violet-500/5", chip: "bg-violet-600 text-white" },
+  };
+
   return (
     <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
       <CardHeader>
@@ -229,7 +298,7 @@ export default function QuickKeywordSimulator() {
               Mod Simulare Keyword
             </CardTitle>
             <CardDescription>
-              Testează clasificarea + ruta în mod read-only. Confirmă manual rutarea pentru a o salva în DB (cu protecție anti-duplicat).
+              Sanitizer anti-bias + 3 niveluri regex + rutare manuală cu dedup.
             </CardDescription>
           </div>
           <Button
@@ -285,7 +354,7 @@ export default function QuickKeywordSimulator() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !running && runTest()}
-            placeholder='ex: "regim hotelier cetate" sau "apartament vanzare isho"'
+            placeholder='ex: "regim hotelier cetate" sau "apartament proprietar fără comision"'
             className="flex-1"
             disabled={running}
           />
@@ -295,67 +364,104 @@ export default function QuickKeywordSimulator() {
           </Button>
         </div>
 
-        {/* Live regex sensitivity preview */}
-        {sensitivityPreview && (
-          <div className="rounded-md border bg-background/60 p-2.5 space-y-1.5">
-            <div className="text-[11px] font-semibold text-muted-foreground">
-              🔬 Preview regex pe 3 niveluri (live, fără apel la backend)
+        {/* Sanitizer preview */}
+        {livePreview?.changed && (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-[11px] space-y-1">
+            <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
+              <Sparkles className="h-3 w-3" /> [Text Igienizat] — sintagme eliminate înainte de regex
             </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {sensitivityPreview.map((p) => (
-                <div
-                  key={p.level}
-                  className={`rounded border p-1.5 text-[10px] space-y-1 ${
-                    p.level === sensitivity ? "border-primary bg-primary/5" : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono uppercase">{p.level}</span>
-                    {catBadge(p.category)}
-                  </div>
-                  {p.hotelierMatch && (
-                    <div className="font-mono text-amber-700 dark:text-amber-400 truncate">
-                      hotelier: "{p.hotelierMatch}"
-                    </div>
-                  )}
-                  {p.rentalMatch && (
-                    <div className="font-mono text-orange-700 dark:text-orange-400 truncate">
-                      rental: "{p.rentalMatch}"
-                    </div>
-                  )}
-                  {!p.hotelierMatch && !p.rentalMatch && (
-                    <div className="text-muted-foreground">no match → vanzare</div>
-                  )}
-                </div>
+            <div className="flex flex-wrap gap-1">
+              {livePreview.removed.map((p) => (
+                <span key={p} className="px-1.5 py-0.5 rounded bg-amber-600/20 text-amber-900 dark:text-amber-200 font-mono text-[10px]">
+                  − {p}
+                </span>
               ))}
+            </div>
+            <div className="font-mono text-[10px] text-muted-foreground">
+              <span className="line-through opacity-60">{keyword}</span>
+              <ArrowRight className="inline h-3 w-3 mx-1" />
+              <span className="text-foreground">{livePreview.clean}</span>
             </div>
           </div>
         )}
 
-        {/* Presets with explicit Test buttons */}
+        {/* Live regex sensitivity preview — distinct colors */}
+        {sensitivityPreview && (
+          <div className="rounded-md border bg-background/60 p-2.5 space-y-1.5">
+            <div className="text-[11px] font-semibold text-muted-foreground">
+              🔬 Preview regex pe 3 niveluri (după sanitizer)
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {sensitivityPreview.map((p) => {
+                const st = levelStyles[p.level];
+                const active = p.level === sensitivity;
+                return (
+                  <div
+                    key={p.level}
+                    className={`rounded border p-1.5 text-[10px] space-y-1 ${st.ring} ${st.bg} ${active ? "ring-2 ring-primary/40" : ""}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`px-1.5 py-0.5 rounded font-mono uppercase text-[9px] ${st.chip}`}>
+                        {p.level}
+                      </span>
+                      {catBadge(p.category)}
+                    </div>
+                    {p.hotelierMatch && (
+                      <div className="font-mono text-amber-700 dark:text-amber-400 truncate">
+                        hotelier: "{p.hotelierMatch}"
+                      </div>
+                    )}
+                    {p.rentalMatch && (
+                      <div className="font-mono text-orange-700 dark:text-orange-400 truncate">
+                        rental: "{p.rentalMatch}"
+                      </div>
+                    )}
+                    {!p.hotelierMatch && !p.rentalMatch && (
+                      <div className="text-muted-foreground">no match → vanzare</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Compact presets: 4 cols desktop, horizontal scroll mobile */}
         <div className="space-y-1.5">
-          <div className="text-[11px] text-muted-foreground">⚡ Preset-uri rapide (click pe „Test" pentru rulare):</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          <div className="text-[11px] text-muted-foreground">⚡ Preset-uri rapide:</div>
+          {/* Mobile: horizontal scroll */}
+          <div className="sm:hidden flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 snap-x">
             {QUICK_PRESETS.map((p) => (
-              <div
+              <button
                 key={p.query}
-                className="flex items-center gap-1.5 rounded-md border border-border bg-background/60 p-1.5"
+                onClick={() => runTest(p.query)}
+                disabled={running}
+                className="snap-start shrink-0 min-w-[140px] flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 hover:bg-accent transition disabled:opacity-50"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="text-[11px] font-medium truncate">{p.label}</div>
-                  <div className="text-[9px] text-muted-foreground font-mono truncate">{p.query}</div>
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-[10px] font-medium truncate">{p.label}</div>
                 </div>
                 {catBadge(p.expect)}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-[10px] px-2 shrink-0"
-                  onClick={() => runTest(p.query)}
-                  disabled={running}
-                >
-                  <PlayCircle className="h-3 w-3 mr-1" /> Test
-                </Button>
-              </div>
+                <PlayCircle className="h-3 w-3 shrink-0" />
+              </button>
+            ))}
+          </div>
+          {/* Desktop: 4-col grid */}
+          <div className="hidden sm:grid grid-cols-4 gap-1.5">
+            {QUICK_PRESETS.map((p) => (
+              <button
+                key={p.query}
+                onClick={() => runTest(p.query)}
+                disabled={running}
+                className="flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 hover:bg-accent transition disabled:opacity-50"
+                title={p.query}
+              >
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-[10px] font-medium truncate">{p.label}</div>
+                </div>
+                {catBadge(p.expect)}
+                <PlayCircle className="h-3 w-3 shrink-0" />
+              </button>
             ))}
           </div>
         </div>
@@ -378,58 +484,83 @@ export default function QuickKeywordSimulator() {
                 Nu există încă simulări. Rulează un test pentru a vedea rezultatele aici.
               </p>
             ) : (
-              logs.map((log) => (
-                <div key={log.id} className="rounded-md border bg-background p-2.5 space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <code className="text-xs font-mono px-1.5 py-0.5 rounded bg-muted">
-                      {log.keyword}
-                    </code>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                    {catBadge(log.category)}
-                    {routeBadge(log.route)}
-                    <div className="ml-auto flex items-center gap-1">
-                      {log.confirmed ? (
-                        <Badge variant="outline" className="text-[10px] gap-1 border-emerald-500 text-emerald-700 dark:text-emerald-400">
-                          <Check className="h-3 w-3" /> Salvat în DB
+              logs.map((log) => {
+                const blocked = log.duplicate || log.confirmed;
+                return (
+                  <div key={log.id} className="rounded-md border bg-background p-2.5 space-y-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-xs font-mono px-1.5 py-0.5 rounded bg-muted">
+                        {log.keyword}
+                      </code>
+                      {log.sanitized && (
+                        <Badge variant="outline" className="text-[9px] gap-1 border-amber-500 text-amber-700 dark:text-amber-400">
+                          <Sparkles className="h-2.5 w-2.5" /> Igienizat
                         </Badge>
-                      ) : log.duplicate ? (
-                        <Badge variant="outline" className="text-[10px] gap-1 border-amber-500 text-amber-700 dark:text-amber-400">
-                          <AlertTriangle className="h-3 w-3" /> Duplicat
-                        </Badge>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 text-[10px] px-2"
-                          onClick={() => confirmRouting(log)}
-                          disabled={log.confirming}
-                        >
-                          {log.confirming ? (
-                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                          )}
-                          Confirmă rutare
-                        </Button>
+                      )}
+                      <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                      {catBadge(log.category)}
+                      {routeBadge(log.route)}
+                      <div className="ml-auto flex items-center gap-1">
+                        {log.confirmed ? (
+                          <Badge variant="outline" className="text-[10px] gap-1 border-emerald-500 text-emerald-700 dark:text-emerald-400">
+                            <Check className="h-3 w-3" /> Salvat în DB
+                          </Badge>
+                        ) : log.duplicate ? (
+                          <>
+                            <Badge variant="outline" className="text-[10px] gap-1 border-amber-500 text-amber-700 dark:text-amber-400">
+                              <AlertTriangle className="h-3 w-3" /> Duplicat
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 text-[10px] px-2 opacity-40 cursor-not-allowed"
+                              disabled
+                              aria-disabled="true"
+                              title="Există deja în prospect_listings"
+                            >
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Confirmă rutare
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-[10px] px-2"
+                            onClick={() => confirmRouting(log)}
+                            disabled={log.confirming || blocked}
+                          >
+                            {log.confirming ? (
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                            )}
+                            Confirmă rutare
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      <strong>Decizie:</strong>{" "}
+                      {log.block_reason ||
+                        "Eligibil pentru publicare automată pe realtrust.ro (categorie vânzare)."}
+                      {log.overrideApplied && (
+                        <span className="ml-1 text-amber-700 dark:text-amber-400">
+                          • override → {log.overrideApplied}
+                        </span>
                       )}
                     </div>
+                    {log.signals.length > 0 && (
+                      <div className="text-[10px] flex flex-wrap gap-1">
+                        {log.signals.map((s, i) => (
+                          <span key={i} className="px-1.5 py-0.5 rounded bg-muted/60 font-mono">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
-                    <strong>Decizie:</strong>{" "}
-                    {log.block_reason ||
-                      "Eligibil pentru publicare automată pe realtrust.ro (categorie vânzare)."}
-                  </div>
-                  {log.signals.length > 0 && (
-                    <div className="text-[10px] flex flex-wrap gap-1">
-                      {log.signals.map((s, i) => (
-                        <span key={i} className="px-1.5 py-0.5 rounded bg-muted/60 font-mono">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
