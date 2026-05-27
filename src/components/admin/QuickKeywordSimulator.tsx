@@ -436,13 +436,23 @@ export default function QuickKeywordSimulator() {
               Sanitizer anti-bias + 3 niveluri regex + rutare manuală cu dedup.
             </CardDescription>
           </div>
-          <Button
-            variant={showSettings ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => setShowSettings((s) => !s)}
-          >
-            <Settings2 className="h-4 w-4 mr-1" /> Praguri regex
-          </Button>
+          <div className="flex gap-1.5">
+            <Button
+              variant={showSettings ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setShowSettings((s) => !s)}
+            >
+              <Settings2 className="h-4 w-4 mr-1" /> Praguri regex
+            </Button>
+            <Button
+              variant={showCalibration ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setShowCalibration((s) => !s)}
+              title="Configurare praguri & sanitizer"
+            >
+              ⚙️ Calibrare
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
