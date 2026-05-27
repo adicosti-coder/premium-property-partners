@@ -173,19 +173,45 @@ serve(async (req) => {
       } catch { /* non-fatal */ }
     };
 
-    // PREVIEW MODE: return base64 audio directly (don't cache)
-    if (mode === "preview") {
+    // Helper: try ElevenLabs first (unless breaker open); on slow/fail, switch to OpenAI TTS.
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const generateWithFallback = async (): Promise<{ buf: ArrayBuffer; provider: string; latency_ms: number; fallback_used: boolean }> => {
+      const startedAt = Date.now();
+      // Breaker open → skip ElevenLabs entirely
+      if (isBreakerOpen() && OPENAI_API_KEY) {
+        const buf = await generateOpenAITTS(phoneticText, OPENAI_API_KEY);
+        return { buf, provider: "openai", latency_ms: Date.now() - startedAt, fallback_used: true };
+      }
       try {
-        const audioBuffer = await generateMp3(phoneticText, voiceSettings, ELEVENLABS_API_KEY);
-        const { encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
-        const base64 = encode(new Uint8Array(audioBuffer));
-        return new Response(JSON.stringify({ audioContent: base64, mime: "audio/mpeg" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        const buf = await generateMp3(phoneticText, voiceSettings, ELEVENLABS_API_KEY);
+        const latency_ms = Date.now() - startedAt;
+        if (latency_ms > LATENCY_THRESHOLD_MS) {
+          tripBreaker(`latency ${latency_ms}ms > ${LATENCY_THRESHOLD_MS}ms`);
+          await tryLogTtsError({ message: `slow_response_${latency_ms}ms` });
+        }
+        return { buf, provider: "elevenlabs", latency_ms, fallback_used: false };
       } catch (e: any) {
         await tryLogTtsError(e);
+        tripBreaker(`error: ${e?.message?.slice(0, 80)}`);
+        if (OPENAI_API_KEY) {
+          const buf = await generateOpenAITTS(phoneticText, OPENAI_API_KEY);
+          return { buf, provider: "openai", latency_ms: Date.now() - startedAt, fallback_used: true };
+        }
         throw e;
       }
+    };
+
+    // PREVIEW MODE: return base64 audio directly (don't cache)
+    if (mode === "preview") {
+      const { buf, provider, latency_ms, fallback_used } = await generateWithFallback();
+      const { encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
+      const base64 = encode(new Uint8Array(buf));
+      return new Response(JSON.stringify({
+        audioContent: base64, mime: "audio/mpeg",
+        provider, latency_ms, fallback_used,
+        // Client may fall back to Web Speech API when no server provider is available.
+        web_speech_fallback: false,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // CACHE MODE: hash text + settings → check storage → generate if missing
@@ -199,19 +225,14 @@ serve(async (req) => {
 
     if (existing && existing.length > 0) {
       const signedUrl = await getSignedStorageUrl(supabase, filePath);
-      return new Response(JSON.stringify({ url: signedUrl, cached: true }), {
+      return new Response(JSON.stringify({ url: signedUrl, cached: true, provider: "cache", fallback_used: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Generate fresh
-    let audioBuffer: ArrayBuffer;
-    try {
-      audioBuffer = await generateMp3(phoneticText, voiceSettings, ELEVENLABS_API_KEY);
-    } catch (e: any) {
-      await tryLogTtsError(e);
-      throw e;
-    }
+    // Generate fresh (with fallback)
+    const { buf: audioBuffer, provider, latency_ms, fallback_used } = await generateWithFallback();
+
 
     const { error: upErr } = await supabase.storage
       .from("voice-recordings")
