@@ -68,7 +68,12 @@ const ListingImportTabs = () => {
       </TabsList>
 
       <TabsContent value="manual"><ListingImporter /></TabsContent>
-      <TabsContent value="radar"><KeywordRadarPanel /></TabsContent>
+      <TabsContent value="radar">
+        <div className="space-y-4">
+          <KeywordRadarPanel />
+          <KeywordSimulatorPanel />
+        </div>
+      </TabsContent>
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
       <TabsContent value="auto-publish"><AutoPublishListingsPanel /></TabsContent>
       <TabsContent value="sandbox"><ListingImportHealthPanel /></TabsContent>
