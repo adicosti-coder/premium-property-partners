@@ -184,8 +184,8 @@ export default function QuickKeywordSimulator() {
 
   const previewOverride = (term: string): Category | undefined => {
     const blob = term.toLowerCase();
-    const hot = HOTELIER_RE[sensitivity].test(blob);
-    const ren = RENTAL_RE[sensitivity].test(blob);
+    const hot = hotelierRe[sensitivity]?.test(blob) ?? false;
+    const ren = rentalRe[sensitivity]?.test(blob) ?? false;
     if ((hot && !detectHotelier) || (ren && !detectRental)) return "vanzare";
     return undefined;
   };
@@ -195,8 +195,8 @@ export default function QuickKeywordSimulator() {
     const term = (livePreview?.clean || keyword.trim()).toLowerCase();
     if (!term) return null;
     return (["strict", "normal", "loose"] as Sensitivity[]).map((lvl) => {
-      const hot = term.match(HOTELIER_RE[lvl]);
-      const ren = term.match(RENTAL_RE[lvl]);
+      const hot = hotelierRe[lvl] ? term.match(hotelierRe[lvl]!) : null;
+      const ren = rentalRe[lvl] ? term.match(rentalRe[lvl]!) : null;
       let category: Category = "vanzare";
       if (hot) category = "hotelier";
       else if (ren) category = "inchiriere";
@@ -207,15 +207,15 @@ export default function QuickKeywordSimulator() {
         rentalMatch: ren?.[0] || null,
       };
     });
-  }, [keyword, livePreview]);
+  }, [keyword, livePreview, hotelierRe, rentalRe]);
 
   // Live "what will be inserted in prospect_listings" preview
   const dbPreview = useMemo(() => {
     const clean = (livePreview?.clean || keyword.trim()).toLowerCase();
     const raw = keyword.trim();
     if (!clean) return null;
-    const hot = HOTELIER_RE[sensitivity].test(clean);
-    const ren = RENTAL_RE[sensitivity].test(clean);
+    const hot = hotelierRe[sensitivity]?.test(clean) ?? false;
+    const ren = rentalRe[sensitivity]?.test(clean) ?? false;
     let category: Category = "vanzare";
     if (hot) category = "hotelier";
     else if (ren) category = "inchiriere";
