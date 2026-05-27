@@ -894,6 +894,8 @@ Deno.serve(async (req) => {
         new_listings: results.length,
         count: results.length,
         blacklisted_skipped: blacklistedSkipped,
+        blacklisted_reviewed: blacklistedReviewed,
+        spam_shield_permissive_mode: permissiveSpamShield,
         archived_skipped: archivedSkipped,
         duplicate_skipped: duplicateSkipped,
         existing_sources_checked: existingUrls.size,
