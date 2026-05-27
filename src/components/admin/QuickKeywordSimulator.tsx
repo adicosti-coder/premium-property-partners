@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ import {
   Settings2,
   CheckCircle2,
   Check,
+  PlayCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -34,20 +36,20 @@ interface LogEntry {
   admin_notes: string;
   confirmed: boolean;
   confirming: boolean;
+  duplicate?: boolean;
 }
 
-const QUICK_PRESETS = [
-  "apartament vanzare isho timisoara",
-  "regim hotelier cetate",
-  "inchiriere apartament dumbravita proprietar",
-  "garsoniera de vanzare giroc",
-  "cazare timisoara airbnb",
-  "chirie 2 camere fabric",
+const QUICK_PRESETS: { label: string; query: string; expect: Category }[] = [
+  { label: "Vânzare ISHO", query: "apartament vanzare isho timisoara", expect: "vanzare" },
+  { label: "Garsonieră Giroc", query: "garsoniera de vanzare giroc", expect: "vanzare" },
+  { label: "Bloc vechi Fabric", query: "apartament 3 camere fabric bloc vechi vanzare", expect: "vanzare" },
+  { label: "Regim hotelier Cetate", query: "regim hotelier cetate", expect: "hotelier" },
+  { label: "Airbnb Timișoara", query: "cazare timisoara airbnb pe noapte", expect: "hotelier" },
+  { label: "Închiriere Dumbrăvița", query: "inchiriere apartament dumbravita proprietar", expect: "inchiriere" },
+  { label: "Chirie 2 cam Fabric", query: "chirie 2 camere fabric /luna", expect: "inchiriere" },
+  { label: "Short-term Iosefin", query: "short-term iosefin nightly", expect: "hotelier" },
 ];
 
-// Client-side preview regexes — used to pre-classify before calling the edge function.
-// When a category detection is disabled via the settings toggles, we forward
-// `category_override: "vanzare"` to the edge function so it reflects the user's setting.
 const HOTELIER_RE: Record<Sensitivity, RegExp> = {
   strict: /(regim\s*hotelier|airbnb|booking\.com)/i,
   normal: /(regim\s*hotelier|short[-\s]?term|nightly|pe\s*noapte|airbnb|booking\.com|cazare\s*timi[șs]oara)/i,
@@ -65,7 +67,6 @@ export default function QuickKeywordSimulator() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const feedRef = useRef<HTMLDivElement | null>(null);
 
-  // Settings
   const [showSettings, setShowSettings] = useState(false);
   const [detectHotelier, setDetectHotelier] = useState(true);
   const [detectRental, setDetectRental] = useState(true);
@@ -79,12 +80,28 @@ export default function QuickKeywordSimulator() {
     const blob = term.toLowerCase();
     const hot = HOTELIER_RE[sensitivity].test(blob);
     const ren = RENTAL_RE[sensitivity].test(blob);
-    // If detection for a matched category is disabled, force vanzare
-    if ((hot && !detectHotelier) || (ren && !detectRental)) {
-      return "vanzare";
-    }
+    if ((hot && !detectHotelier) || (ren && !detectRental)) return "vanzare";
     return undefined;
   };
+
+  // Live regex preview across all 3 sensitivity levels for the current input
+  const sensitivityPreview = useMemo(() => {
+    const term = keyword.trim().toLowerCase();
+    if (!term) return null;
+    return (["strict", "normal", "loose"] as Sensitivity[]).map((lvl) => {
+      const hot = term.match(HOTELIER_RE[lvl]);
+      const ren = term.match(RENTAL_RE[lvl]);
+      let category: Category = "vanzare";
+      if (hot) category = "hotelier";
+      else if (ren) category = "inchiriere";
+      return {
+        level: lvl,
+        category,
+        hotelierMatch: hot?.[0] || null,
+        rentalMatch: ren?.[0] || null,
+      };
+    });
+  }, [keyword]);
 
   const runTest = async (kw?: string) => {
     const term = (kw ?? keyword).trim();
@@ -133,11 +150,33 @@ export default function QuickKeywordSimulator() {
   const confirmRouting = async (entry: LogEntry) => {
     setLogs((prev) => prev.map((l) => (l.id === entry.id ? { ...l, confirming: true } : l)));
     try {
+      // Duplicate check: same keyword + same category already saved via simulator?
+      const simTitle = `[SIM] ${entry.keyword}`;
+      const { data: existing, error: dupErr } = await supabase
+        .from("prospect_listings")
+        .select("id")
+        .eq("source_platform", "manual-simulator")
+        .eq("title", simTitle)
+        .eq("category", entry.category)
+        .limit(1);
+      if (dupErr) throw dupErr;
+      if (existing && existing.length > 0) {
+        setLogs((prev) =>
+          prev.map((l) => (l.id === entry.id ? { ...l, confirming: false, duplicate: true } : l)),
+        );
+        toast({
+          title: "Duplicat detectat",
+          description: "Acest keyword + categorie există deja în prospect_listings.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const fakeUrl = `manual-sim://${entry.id}`;
       const { error } = await supabase.from("prospect_listings").insert({
         source_platform: "manual-simulator",
         source_url: fakeUrl,
-        title: `[SIM] ${entry.keyword}`,
+        title: simTitle,
         description: `Rutare confirmată manual din Mod Simulare Keyword. Sensibilitate=${sensitivity}, hotelier=${detectHotelier}, inchiriere=${detectRental}.`,
         zone: null,
         category: entry.category,
@@ -190,7 +229,7 @@ export default function QuickKeywordSimulator() {
               Mod Simulare Keyword
             </CardTitle>
             <CardDescription>
-              Testează clasificarea + ruta în mod read-only. Opțional, confirmă manual rutarea pentru a o salva în DB.
+              Testează clasificarea + ruta în mod read-only. Confirmă manual rutarea pentru a o salva în DB (cu protecție anti-duplicat).
             </CardDescription>
           </div>
           <Button
@@ -218,7 +257,7 @@ export default function QuickKeywordSimulator() {
               <Switch id="sim-rental" checked={detectRental} onCheckedChange={setDetectRental} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Sensibilitate regex</Label>
+              <Label className="text-xs">Sensibilitate regex activă</Label>
               <div className="flex gap-1.5">
                 {(["strict", "normal", "loose"] as Sensitivity[]).map((s) => (
                   <button
@@ -256,18 +295,69 @@ export default function QuickKeywordSimulator() {
           </Button>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          <span className="text-[11px] text-muted-foreground self-center mr-1">Preset-uri:</span>
-          {QUICK_PRESETS.map((p) => (
-            <button
-              key={p}
-              onClick={() => runTest(p)}
-              disabled={running}
-              className="text-[10px] px-2 py-1 rounded-md border border-border bg-background/60 hover:bg-accent hover:text-accent-foreground transition disabled:opacity-50"
-            >
-              {p}
-            </button>
-          ))}
+        {/* Live regex sensitivity preview */}
+        {sensitivityPreview && (
+          <div className="rounded-md border bg-background/60 p-2.5 space-y-1.5">
+            <div className="text-[11px] font-semibold text-muted-foreground">
+              🔬 Preview regex pe 3 niveluri (live, fără apel la backend)
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {sensitivityPreview.map((p) => (
+                <div
+                  key={p.level}
+                  className={`rounded border p-1.5 text-[10px] space-y-1 ${
+                    p.level === sensitivity ? "border-primary bg-primary/5" : "border-border"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono uppercase">{p.level}</span>
+                    {catBadge(p.category)}
+                  </div>
+                  {p.hotelierMatch && (
+                    <div className="font-mono text-amber-700 dark:text-amber-400 truncate">
+                      hotelier: "{p.hotelierMatch}"
+                    </div>
+                  )}
+                  {p.rentalMatch && (
+                    <div className="font-mono text-orange-700 dark:text-orange-400 truncate">
+                      rental: "{p.rentalMatch}"
+                    </div>
+                  )}
+                  {!p.hotelierMatch && !p.rentalMatch && (
+                    <div className="text-muted-foreground">no match → vanzare</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Presets with explicit Test buttons */}
+        <div className="space-y-1.5">
+          <div className="text-[11px] text-muted-foreground">⚡ Preset-uri rapide (click pe „Test" pentru rulare):</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {QUICK_PRESETS.map((p) => (
+              <div
+                key={p.query}
+                className="flex items-center gap-1.5 rounded-md border border-border bg-background/60 p-1.5"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] font-medium truncate">{p.label}</div>
+                  <div className="text-[9px] text-muted-foreground font-mono truncate">{p.query}</div>
+                </div>
+                {catBadge(p.expect)}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-[10px] px-2 shrink-0"
+                  onClick={() => runTest(p.query)}
+                  disabled={running}
+                >
+                  <PlayCircle className="h-3 w-3 mr-1" /> Test
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="border-t pt-3">
@@ -301,6 +391,10 @@ export default function QuickKeywordSimulator() {
                       {log.confirmed ? (
                         <Badge variant="outline" className="text-[10px] gap-1 border-emerald-500 text-emerald-700 dark:text-emerald-400">
                           <Check className="h-3 w-3" /> Salvat în DB
+                        </Badge>
+                      ) : log.duplicate ? (
+                        <Badge variant="outline" className="text-[10px] gap-1 border-amber-500 text-amber-700 dark:text-amber-400">
+                          <AlertTriangle className="h-3 w-3" /> Duplicat
                         </Badge>
                       ) : (
                         <Button
