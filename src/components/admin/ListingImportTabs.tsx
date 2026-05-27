@@ -67,6 +67,9 @@ const ListingImportTabs = () => {
         <TabsTrigger value="performance" className="gap-2">
           <LineChart className="w-4 h-4" /> Performanță & ROI
         </TabsTrigger>
+        <TabsTrigger value="growth" className="gap-2">
+          <TrendingUp className="w-4 h-4" /> Growth Engine
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="manual"><ListingImporter /></TabsContent>
@@ -81,6 +84,7 @@ const ListingImportTabs = () => {
       <TabsContent value="auto-publish"><AutoPublishListingsPanel /></TabsContent>
       <TabsContent value="sandbox"><ListingImportHealthPanel /></TabsContent>
       <TabsContent value="performance"><PerformanceROIPanel /></TabsContent>
+      <TabsContent value="growth"><GrowthEngineDashboard /></TabsContent>
 
     </Tabs>
   );
