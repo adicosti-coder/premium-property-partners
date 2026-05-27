@@ -45,11 +45,16 @@ export default function SystemHealthDashboard() {
   const [latencyTrend, setLatencyTrend] = useState<any[]>([]);
   const [recentE2E, setRecentE2E] = useState<any[]>([]);
   const [recentLatencyAlerts, setRecentLatencyAlerts] = useState<any[]>([]);
+  const [acking, setAcking] = useState(false);
   const [detailRow, setDetailRow] = useState<any | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterQuery, setFilterQuery] = useState<string>("");
+  const [probes, setProbes] = useState<{ name: string; ok: boolean; status: "green" | "amber" | "red"; latency_ms: number | null; message?: string }[] | null>(null);
+  const [probesLoading, setProbesLoading] = useState(false);
+  const [probesOpen, setProbesOpen] = useState(true);
+
 
   const validateEmails = (raw: string): string | null => {
     const list = raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
