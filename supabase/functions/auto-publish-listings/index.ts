@@ -345,12 +345,18 @@ Deno.serve(async (req) => {
     .not('original_source_url', 'is', null);
   const importedSet = new Set((alreadyImported || []).map((r: any) => r.original_source_url));
 
+  // IMPORTANT: Only `vanzare` (sales) prospects from owners are auto-published as
+  // listings on realtrust.ro. `inchiriere` and `hotelier` prospects from owners
+  // are RECRUITMENT targets — they stay in the prospect queue so Andrei can call
+  // them and pitch full / partial management (regim hotelier or classic rental).
+  // Never publish rental/hotel-regime owner prospects as site listings.
   const { data: candidates, error: cErr } = await supabase
     .from('prospect_listings')
     .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score')
     .gte('lead_score', minScore)
     .eq('is_active', true)
     .eq('prospect_type', 'proprietar')
+    .eq('category', 'vanzare')
     .not('source_url', 'is', null)
     .order('lead_score', { ascending: false })
     .limit(batchSize * 4);

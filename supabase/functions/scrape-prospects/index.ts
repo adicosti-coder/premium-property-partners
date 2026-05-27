@@ -727,16 +727,25 @@ Deno.serve(async (req) => {
               floor: extracted.floor, yearBuilt: extracted.yearBuilt, features,
             });
 
-            // Compute profit estimates
-            const isRental = /inchiriere|chirie/i.test(extracted.title || result.title || '');
+            // Detect intent from listing text AND from the originating search query.
+            // - `hotelier` = short-term-rental / regim hotelier owner → RECRUITMENT target for Andrei
+            //   (NEVER auto-published as a listing on realtrust.ro).
+            // - `inchiriere` = classic monthly rental owner → also RECRUITMENT (Andrei pitches management).
+            // - `vanzare` = sale → eligible for auto-publish pipeline.
+            const blob = `${extracted.title || ''} ${result.title || ''} ${query || ''}`.toLowerCase();
+            const isHotelier = /(regim\s*hotelier|short[-\s]?term|nightly|pe\s*noapte|airbnb|booking\.com|cazare\s*timisoara|cazare\s*timi[șs]oara)/i.test(blob);
+            const isRental = !isHotelier && /(inchiriere|închiriere|chirie|de\s*inchiriat|de\s*închiriat)/i.test(blob);
+            const category: 'hotelier' | 'inchiriere' | 'vanzare' =
+              isHotelier ? 'hotelier' : isRental ? 'inchiriere' : 'vanzare';
+
             let monthlyExtra: number | null = null;
             let extraProfit3Y: number | null = null;
-            
-            if (isRental && price) {
+
+            if ((isRental || isHotelier) && price) {
               // For rentals, price is monthly rent; estimate STR uplift ~70%
               monthlyExtra = Math.round(price * 0.7);
               extraProfit3Y = monthlyExtra * 36;
-            } else if (!isRental && price && size) {
+            } else if (!isRental && !isHotelier && price && size) {
               // For sales, estimate monthly rental income based on price/sqm
               const estimatedMonthlyRent = Math.round(price * 0.004); // ~0.4% of price
               monthlyExtra = Math.round(estimatedMonthlyRent * 0.7);
@@ -797,14 +806,24 @@ Deno.serve(async (req) => {
                 },
                 status: 'new',
                 prospect_type: 'proprietar',
-                category: isRental ? 'inchiriere' : 'vanzare',
+                category,
                 lifecycle_status: 'new',
                 is_active: true,
                 search_keywords: [query],
-                tags: ['scrape-prospects', 'auto-import', explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari'].filter(Boolean),
-                admin_notes: explicitOwnerSignal
-                  ? 'Import automat: semnal explicit proprietar/persoană fizică.'
-                  : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
+                tags: [
+                  'scrape-prospects',
+                  // Only sale prospects flow into the auto-publish pipeline.
+                  // Rental & hotel-regime owners are recruitment targets for Andrei.
+                  category === 'vanzare' ? 'auto-import' : 'recrutare-management',
+                  category === 'hotelier' ? 'regim-hotelier' : null,
+                  category === 'inchiriere' ? 'inchiriere-proprietar' : null,
+                  explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari',
+                ].filter(Boolean) as string[],
+                admin_notes: category !== 'vanzare'
+                  ? `Prospect ${category === 'hotelier' ? 'regim hotelier' : 'închiriere'} de la proprietar — NU se publică pe site. Lead pentru Andrei: propunere administrare ${category === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`
+                  : explicitOwnerSignal
+                    ? 'Import automat: semnal explicit proprietar/persoană fizică.'
+                    : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
               }, { onConflict: 'source_url', ignoreDuplicates: true })
