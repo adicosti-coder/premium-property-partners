@@ -226,14 +226,81 @@ Deno.serve(async (req) => {
       "apartament vanzare {zone} timisoara",
       "apartament 2 camere {zone} timisoara",
       "apartament 3 camere {zone} timisoara",
+      "apartament 4 camere {zone} timisoara",
       "garsoniera {zone} timisoara",
+      "garsoniera inchiriere {zone} timisoara",
       "inchiriere apartament {zone} timisoara",
+      "inchiriere apartament 2 camere {zone} timisoara",
       "casa vanzare {zone} timisoara",
+      "regim hotelier {zone} timisoara",
+      "cazare {zone} timisoara",
+      "apartament bloc nou {zone} timisoara",
+      "apartament bloc vechi {zone} timisoara",
+      "apartament decomandat {zone} timisoara",
     ];
     for (const z of TIMISOARA_ZONES) {
       for (const tpl of zoneTemplates) {
         addCandidate(tpl.replace("{zone}", z.toLowerCase()), "auto_zone", 0, { zone: z });
         stats.auto_zone++;
+      }
+    }
+
+    // ── 5) SEED: ANSAMBLURI REZIDENȚIALE NOI ────────────────────────────────
+    const complexTemplates = [
+      "apartamente {complex}",
+      "apartamente {complex} timisoara",
+      "apartamente {complex} de vanzare",
+      "apartamente {complex} pret",
+      "inchiriere apartament {complex}",
+      "cazare {complex}",
+      "regim hotelier {complex} timisoara",
+      "{complex} predare",
+      "{complex} 2 camere",
+      "{complex} 3 camere",
+      "investitie {complex} timisoara",
+    ];
+    for (const c of TIMISOARA_NEW_COMPLEXES) {
+      for (const tpl of complexTemplates) {
+        addCandidate(tpl.replace("{complex}", c.toLowerCase()), "seed_complex", 0, { complex: c });
+        stats.seed_complex++;
+      }
+    }
+
+    // ── 6) SEED: COMUNE PERIURBANE TIMIȘ ───────────────────────────────────
+    const periurbanTemplates = [
+      "casa vanzare {loc}",
+      "casa vanzare {loc} timis",
+      "casa noua {loc}",
+      "vila vanzare {loc} timis",
+      "teren vanzare {loc} timis",
+      "teren intravilan {loc}",
+      "apartament vanzare {loc}",
+      "apartament nou {loc}",
+      "inchiriere casa {loc} timis",
+      "duplex vanzare {loc} timis",
+      "casa direct proprietar {loc}",
+    ];
+    for (const loc of TIMISOARA_PERIURBAN) {
+      for (const tpl of periurbanTemplates) {
+        addCandidate(tpl.replace("{loc}", loc.toLowerCase()), "seed_periurban", 0, { commune: loc });
+        stats.seed_periurban++;
+      }
+    }
+
+    // ── 7) SEED: COMBINAȚII CU INTENȚIE COMERCIALĂ ─────────────────────────
+    const intentBases = [
+      "apartament timisoara",
+      "apartament 2 camere timisoara",
+      "apartament 3 camere timisoara",
+      "garsoniera timisoara",
+      "casa timisoara",
+      "inchiriere apartament timisoara",
+      "cazare timisoara",
+    ];
+    for (const base of intentBases) {
+      for (const mod of HIGH_INTENT_MODIFIERS) {
+        addCandidate(`${base} ${mod}`, "seed_intent", 0, { base, modifier: mod });
+        stats.seed_intent++;
       }
     }
 
@@ -248,6 +315,9 @@ Deno.serve(async (req) => {
         (c.source === "onsite" ? 100 : 0) +
         (c.source === "gsc" ? Math.min(c.volume / 10, 100) : 0) +
         (c.source === "auto_property" ? 20 : 0) +
+        (c.source === "seed_complex" ? 18 : 0) +
+        (c.source === "seed_periurban" ? 12 : 0) +
+        (c.source === "seed_intent" ? 8 : 0) +
         (c.source === "auto_zone" ? 5 : 0),
       volume: c.volume,
       metadata: c.metadata,
