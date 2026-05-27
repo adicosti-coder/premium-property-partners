@@ -806,14 +806,24 @@ Deno.serve(async (req) => {
                 },
                 status: 'new',
                 prospect_type: 'proprietar',
-                category: isRental ? 'inchiriere' : 'vanzare',
+                category,
                 lifecycle_status: 'new',
                 is_active: true,
                 search_keywords: [query],
-                tags: ['scrape-prospects', 'auto-import', explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari'].filter(Boolean),
-                admin_notes: explicitOwnerSignal
-                  ? 'Import automat: semnal explicit proprietar/persoană fizică.'
-                  : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
+                tags: [
+                  'scrape-prospects',
+                  // Only sale prospects flow into the auto-publish pipeline.
+                  // Rental & hotel-regime owners are recruitment targets for Andrei.
+                  category === 'vanzare' ? 'auto-import' : 'recrutare-management',
+                  category === 'hotelier' ? 'regim-hotelier' : null,
+                  category === 'inchiriere' ? 'inchiriere-proprietar' : null,
+                  explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari',
+                ].filter(Boolean) as string[],
+                admin_notes: category !== 'vanzare'
+                  ? `Prospect ${category === 'hotelier' ? 'regim hotelier' : 'închiriere'} de la proprietar — NU se publică pe site. Lead pentru Andrei: propunere administrare ${category === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`
+                  : explicitOwnerSignal
+                    ? 'Import automat: semnal explicit proprietar/persoană fizică.'
+                    : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
               }, { onConflict: 'source_url', ignoreDuplicates: true })
