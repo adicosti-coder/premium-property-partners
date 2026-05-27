@@ -111,6 +111,48 @@ export default function SystemHealthDashboard() {
 
   useEffect(() => { load(); }, []);
 
+  const runProbes = async () => {
+    setProbesLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const r = await fetch(`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/external-apis-ping`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token ?? ""}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "" },
+        body: "{}",
+      });
+      const json = await r.json();
+      setProbes(json?.probes ?? []);
+    } catch (e: any) {
+      toast.error(`Probe failed: ${e.message}`);
+      setProbes([]);
+    } finally {
+      setProbesLoading(false);
+    }
+  };
+
+  useEffect(() => { runProbes(); }, []);
+
+  const ackLatencyAlerts = async () => {
+    if (recentLatencyAlerts.length === 0) return;
+    setAcking(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const ids = recentLatencyAlerts.map((a) => a.id);
+      const { error } = await supabase
+        .from("voice_latency_alerts")
+        .update({ acknowledged_at: new Date().toISOString(), acknowledged_by: user?.id ?? null })
+        .in("id", ids);
+      if (error) throw error;
+      toast.success(`${ids.length} alerte confirmate.`);
+      setRecentLatencyAlerts([]);
+    } catch (e: any) {
+      toast.error(`Acknowledge a eșuat: ${e.message}`);
+    } finally {
+      setAcking(false);
+    }
+  };
+
+
   const saveThresholds = async () => {
     if (!thresholds) return;
     const emailErr = validateEmails(thresholds.daily_report_email || "");
