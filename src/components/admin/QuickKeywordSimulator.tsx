@@ -456,6 +456,53 @@ export default function QuickKeywordSimulator() {
           </div>
         )}
 
+        {/* Preview Output DB — what will be inserted in prospect_listings */}
+        {dbPreview && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
+            <div className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+              💾 Preview Output DB <span className="text-[9px] font-normal">(prospect_listings)</span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+              <span className="text-muted-foreground">status:</span>
+              <Badge
+                className={
+                  dbPreview.status === "to_call"
+                    ? "bg-amber-700 text-white hover:bg-amber-700 text-[10px]"
+                    : "bg-blue-600 text-white hover:bg-blue-600 text-[10px]"
+                }
+              >
+                {dbPreview.status}
+              </Badge>
+              <span className="text-muted-foreground ml-1">categorie:</span>
+              {catBadge(dbPreview.category)}
+              <span className="text-muted-foreground ml-1">rută:</span>
+              {routeBadge(dbPreview.route)}
+            </div>
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="text-[10px] text-muted-foreground">tags:</span>
+              {dbPreview.tags.map((t) => (
+                <span
+                  key={t}
+                  className={`px-1.5 py-0.5 rounded font-mono text-[9px] border ${
+                    t.startsWith("override:")
+                      ? "bg-amber-500/15 border-amber-500/60 text-amber-800 dark:text-amber-300 font-semibold"
+                      : t === "sanitized-input"
+                      ? "bg-amber-500/10 border-amber-400/40 text-amber-700 dark:text-amber-400"
+                      : "bg-muted/60 border-border"
+                  }`}
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+            {dbPreview.override && (
+              <div className="text-[10px] text-amber-700 dark:text-amber-400">
+                ⚠ Toggle dezactivat → forțat <code className="font-mono">category_override={dbPreview.override}</code>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Compact presets: 4 cols desktop, horizontal scroll mobile */}
         <div className="space-y-1.5">
           <div className="text-[11px] text-muted-foreground">⚡ Preset-uri rapide:</div>
