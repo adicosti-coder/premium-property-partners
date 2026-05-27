@@ -35,6 +35,7 @@ interface RunSummary {
   rejected_error: number;
   rejected_low_quality: number;
   rejected_source_disabled: number;
+  rejected_recruitment: number;
   published: number;
   avg_quality_score: number;
   per_source: Record<string, { attempts: number; published: number; rejected: number; avg_quality: number }>;
