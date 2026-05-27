@@ -262,7 +262,7 @@ export default function SystemHealthDashboard() {
       <Card className={allOk ? "border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20" : "border-red-500/40 bg-red-50/50 dark:bg-red-950/20"}>
         <CardContent className="p-4 flex items-center gap-3">
           {allOk ? <CheckCircle2 className="h-8 w-8 text-emerald-600" /> : <ShieldAlert className="h-8 w-8 text-red-600" />}
-          <div>
+          <div className="flex-1">
             <div className="font-semibold">{allOk ? "All systems operational" : "Atenție necesară"}</div>
             <div className="text-sm text-muted-foreground">
               {invalidKeys.length > 0 && `🔑 ${invalidKeys.length} chei invalide. `}
@@ -271,8 +271,73 @@ export default function SystemHealthDashboard() {
               {allOk && "Toate verificările au trecut în ultimele 24h."}
             </div>
           </div>
+          {recentLatencyAlerts.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={ackLatencyAlerts}
+              disabled={acking}
+              className="shrink-0"
+            >
+              {acking ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
+              Acknowledge &amp; Clear ({recentLatencyAlerts.length})
+            </Button>
+          )}
         </CardContent>
       </Card>
+
+      {/* Live Integration Check */}
+      <Card>
+        <CardHeader className="pb-2">
+          <button
+            type="button"
+            onClick={() => setProbesOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 text-left"
+            aria-expanded={probesOpen}
+          >
+            <CardTitle className="text-base flex items-center gap-2">
+              {probesOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              Status API-uri Externe (Live Integration Check)
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); runProbes(); }} disabled={probesLoading}>
+              {probesLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+            </Button>
+          </button>
+        </CardHeader>
+        {probesOpen && (
+          <CardContent className="pt-0">
+            {probes === null && probesLoading && (
+              <div className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Se rulează ping-uri...</div>
+            )}
+            {probes && probes.length === 0 && (
+              <div className="text-sm text-muted-foreground">Niciun rezultat.</div>
+            )}
+            {probes && probes.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {probes.map((p) => {
+                  const dot = p.status === "green" ? "bg-emerald-500" : p.status === "amber" ? "bg-amber-500" : "bg-red-500";
+                  const badgeVariant = p.status === "green" ? "default" : p.status === "amber" ? "secondary" : "destructive";
+                  return (
+                    <div key={p.name} className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2.5 w-2.5 rounded-full ${dot}`} aria-hidden />
+                        <div>
+                          <div className="text-sm font-medium">{p.name}</div>
+                          <div className="text-xs text-muted-foreground">{p.message ?? ""}</div>
+                        </div>
+                      </div>
+                      <Badge variant={badgeVariant as any} className="font-mono text-xs">
+                        {p.latency_ms != null ? `${p.latency_ms} ms` : "—"}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+
 
       {/* Incident summary (real-time correlation) */}
       <Card className={
