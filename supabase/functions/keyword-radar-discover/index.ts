@@ -14,10 +14,61 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Cartiere centrale + clasice (mix nou + bloc vechi)
 const TIMISOARA_ZONES = [
   "Centru", "Cetate", "Iosefin", "Fabric", "Elisabetin",
-  "Circumvalațiunii", "Dumbrăvița", "Aradului", "Lipovei",
-  "Soarelui", "Torontalului", "Complex Studențesc", "Iulius Town",
+  "Circumvalațiunii", "Circumvalatiunii",
+  "Dumbrăvița", "Dumbravita",
+  "Aradului", "Calea Aradului",
+  "Lipovei", "Calea Lipovei",
+  "Soarelui", "Steaua", "Dacia", "Mehala", "Plopi", "Ronaț", "Ronat",
+  "Tipografilor", "Olimpia", "Stadion", "Olimpia-Stadion",
+  "Calea Bogdăneștilor", "Calea Bogdanestilor",
+  "Calea Buziașului", "Calea Buziasului",
+  "Calea Șagului", "Calea Sagului", "Șagului", "Sagului",
+  "Calea Martirilor", "Martirilor",
+  "Girocului", "Calea Girocului",
+  "Bălcescu", "Balcescu",
+  "Torontalului", "Complex Studențesc", "Complex Studentesc",
+  "Iulius Town", "Take", "Take Park",
+];
+
+// Ansambluri rezidențiale noi (cele mai căutate pe Google)
+const TIMISOARA_NEW_COMPLEXES = [
+  "ISHO", "Openville", "Iulius Town", "Cloud9", "Cloud 9",
+  "Vox Vertical Village", "Vox Timisoara",
+  "Take Residence", "Take Park",
+  "Brytago", "Aviation Park", "City of Mara",
+  "Maurus Residence", "Belvedere Residence",
+  "Vivenda", "Lake Tower", "Tower Residence",
+  "United Business Center", "Ared Uta",
+  "Liziera de Lac", "Dumbravita Residence",
+  "Green Garden", "Confort Urban", "Borealis",
+];
+
+// Comune și localități periurbane Timiș (corridor metropolitan)
+const TIMISOARA_PERIURBAN = [
+  "Dumbrăvița", "Giroc", "Chișoda", "Chisoda",
+  "Moșnița Nouă", "Mosnita Noua", "Moșnița Veche", "Mosnita Veche",
+  "Albina", "Săcălaz", "Sacalaz",
+  "Sânmihaiu Român", "Sanmihaiu Roman", "Utvin",
+  "Ghiroda", "Giarmata", "Giarmata-Vii", "Giarmata Vii",
+  "Remetea Mare", "Șag", "Sag",
+  "Sânandrei", "Sanandrei", "Becicherecu Mic", "Dudeștii Noi", "Dudestii Noi",
+];
+
+// Modificatori cu intenție comercială ridicată
+const HIGH_INTENT_MODIFIERS = [
+  "ieftin", "pret", "preț", "sub 80000 euro", "sub 100000 euro",
+  "rate", "credit", "ipoteca", "ipotecă",
+  "direct proprietar", "fara comision", "fără comision",
+  "mobilat utilat", "mobilat", "nemobilat",
+  "bloc nou", "bloc vechi", "constructie noua", "construcție nouă",
+  "predare 2026", "predare la cheie", "key ready", "finalizat",
+  "decomandat", "semidecomandat", "confort 1", "confort 2",
+  "parter", "etaj intermediar", "ultimul etaj",
+  "parcare", "boxa", "boxă", "terasa", "terasă",
+  "vedere panoramica", "vedere lac",
 ];
 
 const REALESTATE_KEYWORDS = [
@@ -25,22 +76,27 @@ const REALESTATE_KEYWORDS = [
   "spatiu", "comercial", "inchiriere", "inchiri", "închiri",
   "vanzare", "vânzare", "cazare", "regim hotelier", "investitie",
   "investiție", "ansamblu", "rezidential", "rezidențial",
+  "bloc", "imobil", "imobiliare",
 ];
 
 function normalize(s: string): string {
   return s.toLowerCase().trim().replace(/\s+/g, " ");
 }
 
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function isRealEstateRelated(q: string): boolean {
-  const low = q.toLowerCase();
-  if (!low.includes("timi")) {
-    // accept even without "timisoara" if a zone is present
-    const hasZone = TIMISOARA_ZONES.some((z) =>
-      low.includes(z.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
-    );
-    if (!hasZone) return false;
-  }
-  return REALESTATE_KEYWORDS.some((k) => low.includes(k));
+  const low = stripDiacritics(q.toLowerCase());
+  const hasTimis = low.includes("timi");
+  const hasZone = TIMISOARA_ZONES.some((z) => low.includes(stripDiacritics(z.toLowerCase())));
+  const hasCommune = TIMISOARA_PERIURBAN.some((c) => low.includes(stripDiacritics(c.toLowerCase())));
+  const hasComplex = TIMISOARA_NEW_COMPLEXES.some((c) => low.includes(stripDiacritics(c.toLowerCase())));
+  if (!hasTimis && !hasZone && !hasCommune && !hasComplex) return false;
+  // Pentru ansambluri/comune, numele singur e suficient (intent imobiliar implicit)
+  if (hasComplex || hasCommune) return true;
+  return REALESTATE_KEYWORDS.some((k) => low.includes(stripDiacritics(k)));
 }
 
 function detectCategory(q: string): string {
@@ -77,7 +133,7 @@ Deno.serve(async (req) => {
     .insert({ run_type: "discover", triggered_by: "api" }).select("id").single();
   const runId = runRow?.id;
 
-  const stats: Record<string, number> = { onsite: 0, gsc: 0, auto_property: 0, auto_zone: 0, upserted: 0 };
+  const stats: Record<string, number> = { onsite: 0, gsc: 0, auto_property: 0, auto_zone: 0, seed_complex: 0, seed_periurban: 0, seed_intent: 0, upserted: 0 };
   const candidates: Map<string, {
     keyword: string; source: string; volume: number; category: string;
     platforms: string[]; metadata: Record<string, unknown>;
@@ -174,14 +230,81 @@ Deno.serve(async (req) => {
       "apartament vanzare {zone} timisoara",
       "apartament 2 camere {zone} timisoara",
       "apartament 3 camere {zone} timisoara",
+      "apartament 4 camere {zone} timisoara",
       "garsoniera {zone} timisoara",
+      "garsoniera inchiriere {zone} timisoara",
       "inchiriere apartament {zone} timisoara",
+      "inchiriere apartament 2 camere {zone} timisoara",
       "casa vanzare {zone} timisoara",
+      "regim hotelier {zone} timisoara",
+      "cazare {zone} timisoara",
+      "apartament bloc nou {zone} timisoara",
+      "apartament bloc vechi {zone} timisoara",
+      "apartament decomandat {zone} timisoara",
     ];
     for (const z of TIMISOARA_ZONES) {
       for (const tpl of zoneTemplates) {
         addCandidate(tpl.replace("{zone}", z.toLowerCase()), "auto_zone", 0, { zone: z });
         stats.auto_zone++;
+      }
+    }
+
+    // ── 5) SEED: ANSAMBLURI REZIDENȚIALE NOI ────────────────────────────────
+    const complexTemplates = [
+      "apartamente {complex}",
+      "apartamente {complex} timisoara",
+      "apartamente {complex} de vanzare",
+      "apartamente {complex} pret",
+      "inchiriere apartament {complex}",
+      "cazare {complex}",
+      "regim hotelier {complex} timisoara",
+      "{complex} predare",
+      "{complex} 2 camere",
+      "{complex} 3 camere",
+      "investitie {complex} timisoara",
+    ];
+    for (const c of TIMISOARA_NEW_COMPLEXES) {
+      for (const tpl of complexTemplates) {
+        addCandidate(tpl.replace("{complex}", c.toLowerCase()), "seed_complex", 0, { complex: c });
+        stats.seed_complex++;
+      }
+    }
+
+    // ── 6) SEED: COMUNE PERIURBANE TIMIȘ ───────────────────────────────────
+    const periurbanTemplates = [
+      "casa vanzare {loc}",
+      "casa vanzare {loc} timis",
+      "casa noua {loc}",
+      "vila vanzare {loc} timis",
+      "teren vanzare {loc} timis",
+      "teren intravilan {loc}",
+      "apartament vanzare {loc}",
+      "apartament nou {loc}",
+      "inchiriere casa {loc} timis",
+      "duplex vanzare {loc} timis",
+      "casa direct proprietar {loc}",
+    ];
+    for (const loc of TIMISOARA_PERIURBAN) {
+      for (const tpl of periurbanTemplates) {
+        addCandidate(tpl.replace("{loc}", loc.toLowerCase()), "seed_periurban", 0, { commune: loc });
+        stats.seed_periurban++;
+      }
+    }
+
+    // ── 7) SEED: COMBINAȚII CU INTENȚIE COMERCIALĂ ─────────────────────────
+    const intentBases = [
+      "apartament timisoara",
+      "apartament 2 camere timisoara",
+      "apartament 3 camere timisoara",
+      "garsoniera timisoara",
+      "casa timisoara",
+      "inchiriere apartament timisoara",
+      "cazare timisoara",
+    ];
+    for (const base of intentBases) {
+      for (const mod of HIGH_INTENT_MODIFIERS) {
+        addCandidate(`${base} ${mod}`, "seed_intent", 0, { base, modifier: mod });
+        stats.seed_intent++;
       }
     }
 
@@ -196,6 +319,9 @@ Deno.serve(async (req) => {
         (c.source === "onsite" ? 100 : 0) +
         (c.source === "gsc" ? Math.min(c.volume / 10, 100) : 0) +
         (c.source === "auto_property" ? 20 : 0) +
+        (c.source === "seed_complex" ? 18 : 0) +
+        (c.source === "seed_periurban" ? 12 : 0) +
+        (c.source === "seed_intent" ? 8 : 0) +
         (c.source === "auto_zone" ? 5 : 0),
       volume: c.volume,
       metadata: c.metadata,
