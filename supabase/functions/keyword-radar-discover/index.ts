@@ -14,10 +14,61 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Cartiere centrale + clasice (mix nou + bloc vechi)
 const TIMISOARA_ZONES = [
   "Centru", "Cetate", "Iosefin", "Fabric", "Elisabetin",
-  "Circumvalațiunii", "Dumbrăvița", "Aradului", "Lipovei",
-  "Soarelui", "Torontalului", "Complex Studențesc", "Iulius Town",
+  "Circumvalațiunii", "Circumvalatiunii",
+  "Dumbrăvița", "Dumbravita",
+  "Aradului", "Calea Aradului",
+  "Lipovei", "Calea Lipovei",
+  "Soarelui", "Steaua", "Dacia", "Mehala", "Plopi", "Ronaț", "Ronat",
+  "Tipografilor", "Olimpia", "Stadion", "Olimpia-Stadion",
+  "Calea Bogdăneștilor", "Calea Bogdanestilor",
+  "Calea Buziașului", "Calea Buziasului",
+  "Calea Șagului", "Calea Sagului", "Șagului", "Sagului",
+  "Calea Martirilor", "Martirilor",
+  "Girocului", "Calea Girocului",
+  "Bălcescu", "Balcescu",
+  "Torontalului", "Complex Studențesc", "Complex Studentesc",
+  "Iulius Town", "Take", "Take Park",
+];
+
+// Ansambluri rezidențiale noi (cele mai căutate pe Google)
+const TIMISOARA_NEW_COMPLEXES = [
+  "ISHO", "Openville", "Iulius Town", "Cloud9", "Cloud 9",
+  "Vox Vertical Village", "Vox Timisoara",
+  "Take Residence", "Take Park",
+  "Brytago", "Aviation Park", "City of Mara",
+  "Maurus Residence", "Belvedere Residence",
+  "Vivenda", "Lake Tower", "Tower Residence",
+  "United Business Center", "Ared Uta",
+  "Liziera de Lac", "Dumbravita Residence",
+  "Green Garden", "Confort Urban", "Borealis",
+];
+
+// Comune și localități periurbane Timiș (corridor metropolitan)
+const TIMISOARA_PERIURBAN = [
+  "Dumbrăvița", "Giroc", "Chișoda", "Chisoda",
+  "Moșnița Nouă", "Mosnita Noua", "Moșnița Veche", "Mosnita Veche",
+  "Albina", "Săcălaz", "Sacalaz",
+  "Sânmihaiu Român", "Sanmihaiu Roman", "Utvin",
+  "Ghiroda", "Giarmata", "Giarmata-Vii", "Giarmata Vii",
+  "Remetea Mare", "Șag", "Sag",
+  "Sânandrei", "Sanandrei", "Becicherecu Mic", "Dudeștii Noi", "Dudestii Noi",
+];
+
+// Modificatori cu intenție comercială ridicată
+const HIGH_INTENT_MODIFIERS = [
+  "ieftin", "pret", "preț", "sub 80000 euro", "sub 100000 euro",
+  "rate", "credit", "ipoteca", "ipotecă",
+  "direct proprietar", "fara comision", "fără comision",
+  "mobilat utilat", "mobilat", "nemobilat",
+  "bloc nou", "bloc vechi", "constructie noua", "construcție nouă",
+  "predare 2026", "predare la cheie", "key ready", "finalizat",
+  "decomandat", "semidecomandat", "confort 1", "confort 2",
+  "parter", "etaj intermediar", "ultimul etaj",
+  "parcare", "boxa", "boxă", "terasa", "terasă",
+  "vedere panoramica", "vedere lac",
 ];
 
 const REALESTATE_KEYWORDS = [
@@ -25,6 +76,7 @@ const REALESTATE_KEYWORDS = [
   "spatiu", "comercial", "inchiriere", "inchiri", "închiri",
   "vanzare", "vânzare", "cazare", "regim hotelier", "investitie",
   "investiție", "ansamblu", "rezidential", "rezidențial",
+  "bloc", "imobil", "imobiliare",
 ];
 
 function normalize(s: string): string {
