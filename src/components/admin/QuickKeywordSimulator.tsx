@@ -19,6 +19,7 @@ import {
   PlayCircle,
   AlertTriangle,
   Sparkles,
+  X,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -100,6 +101,9 @@ export default function QuickKeywordSimulator() {
   const [confirmedHistory, setConfirmedHistory] = useState<
     { ts: number; title: string; category: Category; route: Route }[]
   >([]);
+  const [dbConnected, setDbConnected] = useState<boolean | null>(null);
+  const [connectionChecking, setConnectionChecking] = useState(false);
+  const [flashId, setFlashId] = useState<string | null>(null);
 
   const [showSettings, setShowSettings] = useState(false);
   const [detectHotelier, setDetectHotelier] = useState(true);
@@ -109,6 +113,18 @@ export default function QuickKeywordSimulator() {
   useEffect(() => {
     if (feedRef.current) feedRef.current.scrollTop = 0;
   }, [logs]);
+
+  // Ping Supabase to show readiness indicator
+  useEffect(() => {
+    setConnectionChecking(true);
+    supabase
+      .from("prospect_listings")
+      .select("id", { head: true, count: "exact" })
+      .then(({ error }) => {
+        setDbConnected(!error);
+        setConnectionChecking(false);
+      });
+  }, []);
 
   // Live sanitizer preview for the current input
   const livePreview = useMemo(() => {
@@ -278,9 +294,13 @@ export default function QuickKeywordSimulator() {
       setLogs((prev) =>
         prev.map((l) => (l.id === entry.id ? { ...l, confirmed: true, confirming: false } : l)),
       );
+      const now = Date.now();
       setConfirmedHistory((prev) =>
-        [{ ts: Date.now(), title: `[SIM] ${entry.keyword}`, category: entry.category, route: entry.route }, ...prev].slice(0, 3),
+        [{ ts: now, title: `[SIM] ${entry.keyword}`, category: entry.category, route: entry.route }, ...prev].slice(0, 3),
       );
+      const newFlashId = `${now}-0`;
+      setFlashId(newFlashId);
+      setTimeout(() => setFlashId((curr) => (curr === newFlashId ? null : curr)), 1200);
       toast({
         title: "Rutare confirmată",
         description:
@@ -317,6 +337,24 @@ export default function QuickKeywordSimulator() {
     normal: { ring: "border-sky-500/60", bg: "bg-sky-500/5", chip: "bg-sky-600 text-white" },
     loose:  { ring: "border-violet-500/60", bg: "bg-violet-500/5", chip: "bg-violet-600 text-white" },
   };
+
+  const SupabaseStatus = () => (
+    <span className="flex items-center gap-1 text-[10px] font-normal shrink-0">
+      {connectionChecking ? (
+        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+      ) : dbConnected === true ? (
+        <>
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-emerald-600 dark:text-emerald-400">Supabase Active</span>
+        </>
+      ) : dbConnected === false ? (
+        <>
+          <span className="inline-block h-2 w-2 rounded-full bg-rose-500" />
+          <span className="text-rose-600 dark:text-rose-400">Supabase Inactiv</span>
+        </>
+      ) : null}
+    </span>
+  );
 
   return (
     <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
@@ -379,15 +417,28 @@ export default function QuickKeywordSimulator() {
           </div>
         )}
 
-        <div className="flex gap-2">
-          <Input
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !running && runTest()}
-            placeholder='ex: "regim hotelier cetate" sau "apartament proprietar fără comision"'
-            className="flex-1"
-            disabled={running}
-          />
+        <div className="flex gap-2 items-start">
+          <div className="relative flex-1">
+            <Input
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !running && runTest()}
+              placeholder='ex: "regim hotelier cetate" sau "apartament proprietar fără comision"'
+              className="pr-9"
+              disabled={running}
+            />
+            {keyword.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setKeyword("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition p-0.5 rounded"
+                title="Clear"
+                aria-label="Clear"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           <Button onClick={() => runTest()} disabled={running}>
             {running ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
             Rulează Test
@@ -395,7 +446,11 @@ export default function QuickKeywordSimulator() {
         </div>
 
         {/* Sanitizer preview */}
-        {livePreview?.changed && (
+        {!keyword.trim() ? (
+          <div className="rounded-md border border-dashed border-muted-foreground/20 bg-muted/20 p-2 text-[11px] text-muted-foreground text-center">
+            Așteptare text… introdu un cuvânt-cheie pentru a vedea sanitizer-ul.
+          </div>
+        ) : livePreview?.changed ? (
           <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-2 text-[11px] space-y-1">
             <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
               <Sparkles className="h-3 w-3" /> [Text Igienizat] — sintagme eliminate înainte de regex
@@ -413,10 +468,14 @@ export default function QuickKeywordSimulator() {
               <span className="text-foreground">{livePreview.clean}</span>
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Live regex sensitivity preview — distinct colors */}
-        {sensitivityPreview && (
+        {!keyword.trim() ? (
+          <div className="rounded-md border border-dashed border-muted-foreground/20 bg-muted/20 p-2 text-[11px] text-muted-foreground text-center">
+            Așteptare text… introdu un cuvânt-cheie pentru a vedea preview-ul regex pe 3 niveluri.
+          </div>
+        ) : sensitivityPreview ? (
           <div className="rounded-md border bg-background/60 p-2.5 space-y-1.5">
             <div className="text-[11px] font-semibold text-muted-foreground">
               🔬 Preview regex pe 3 niveluri (după sanitizer)
@@ -454,13 +513,19 @@ export default function QuickKeywordSimulator() {
               })}
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Preview Output DB — what will be inserted in prospect_listings */}
-        {dbPreview && (
+        {!keyword.trim() ? (
+          <div className="rounded-md border border-dashed border-muted-foreground/20 bg-muted/20 p-2 text-[11px] text-muted-foreground flex items-center justify-between gap-2">
+            <span>Așteptare text… preview-ul DB va apărea după ce tastezi.</span>
+            <SupabaseStatus />
+          </div>
+        ) : dbPreview ? (
           <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
-            <div className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-              💾 Preview Output DB <span className="text-[9px] font-normal">(prospect_listings)</span>
+            <div className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1">💾 Preview Output DB <span className="text-[9px] font-normal">(prospect_listings)</span></span>
+              <SupabaseStatus />
             </div>
             <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
               <span className="text-muted-foreground">status:</span>
@@ -501,7 +566,7 @@ export default function QuickKeywordSimulator() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* Compact presets: 4 cols desktop, horizontal scroll mobile */}
         <div className="space-y-1.5">
@@ -648,17 +713,26 @@ export default function QuickKeywordSimulator() {
               ✅ Ultimele {confirmedHistory.length} inserturi confirmate (sesiune)
             </div>
             <ul className="space-y-0.5">
-              {confirmedHistory.map((h, i) => (
-                <li key={i} className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
-                  <span className="text-foreground">
-                    [{new Date(h.ts).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}]
-                  </span>
-                  <span className="truncate max-w-[200px]">{h.title}</span>
-                  <ArrowRight className="h-2.5 w-2.5" />
-                  {catBadge(h.category)}
-                  {routeBadge(h.route)}
-                </li>
-              ))}
+              {confirmedHistory.map((h, i) => {
+                const itemId = `${h.ts}-${i}`;
+                const isFlashing = flashId === itemId;
+                return (
+                  <li
+                    key={itemId}
+                    className={`flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground rounded px-1 py-0.5 transition-colors duration-700 ${
+                      isFlashing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : ""
+                    }`}
+                  >
+                    <span className="text-foreground">
+                      [{new Date(h.ts).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}]
+                    </span>
+                    <span className="truncate max-w-[200px]">{h.title}</span>
+                    <ArrowRight className="h-2.5 w-2.5" />
+                    {catBadge(h.category)}
+                    {routeBadge(h.route)}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
