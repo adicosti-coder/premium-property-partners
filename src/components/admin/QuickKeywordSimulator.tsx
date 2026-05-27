@@ -145,6 +145,29 @@ export default function QuickKeywordSimulator() {
     });
   }, [keyword, livePreview]);
 
+  // Live "what will be inserted in prospect_listings" preview
+  const dbPreview = useMemo(() => {
+    const clean = (livePreview?.clean || keyword.trim()).toLowerCase();
+    if (!clean) return null;
+    const hot = HOTELIER_RE[sensitivity].test(clean);
+    const ren = RENTAL_RE[sensitivity].test(clean);
+    let category: Category = "vanzare";
+    if (hot) category = "hotelier";
+    else if (ren) category = "inchiriere";
+    const override = previewOverride(clean);
+    const finalCategory: Category = override ?? category;
+    const route: Route = finalCategory === "vanzare" ? "site_realtrust" : "andrei_call_queue";
+    const status = route === "andrei_call_queue" ? "to_call" : "new";
+    const tags = [
+      finalCategory,
+      "manual-simulator-confirm",
+      ...(livePreview?.changed ? ["sanitized-input"] : []),
+      ...(override ? [`override:${override}`] : []),
+    ];
+    return { category: finalCategory, route, status, tags, override };
+  }, [keyword, livePreview, sensitivity, detectHotelier, detectRental]);
+
+
   const runTest = async (kw?: string) => {
     const raw = (kw ?? keyword).trim();
     if (!raw) {
