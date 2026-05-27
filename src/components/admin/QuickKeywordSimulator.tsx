@@ -458,7 +458,7 @@ export default function QuickKeywordSimulator() {
             {QUICK_PRESETS.map((p) => (
               <button
                 key={p.query}
-                onClick={() => runTest(p.query)}
+                onClick={() => { setKeyword(p.query); runTest(p.query); }}
                 disabled={running}
                 className="flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 hover:bg-accent transition disabled:opacity-50"
                 title={p.query}
