@@ -66,7 +66,7 @@ export default function GrowthEngineDashboard() {
   }, []);
 
   useEffect(() => {
-    setLocalStorage(STORAGE_KEY, JSON.stringify(checklist.map((c) => ({ id: c.id, done: c.done }))));
+    safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(checklist.map((c) => ({ id: c.id, done: c.done }))));
   }, [checklist]);
 
   const loadMetrics = async () => {
