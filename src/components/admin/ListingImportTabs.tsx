@@ -5,6 +5,7 @@ import { LinkIcon, Radar, Building2, CheckSquare, Wrench, LineChart } from "luci
 import ListingImporter from "./ListingImporter";
 import KeywordRadarPanel from "./KeywordRadarPanel";
 import KeywordSimulatorPanel from "./KeywordSimulatorPanel";
+import QuickKeywordSimulator from "./QuickKeywordSimulator";
 import PmLeadsPanel from "./PmLeadsPanel";
 import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
@@ -71,6 +72,7 @@ const ListingImportTabs = () => {
       <TabsContent value="radar">
         <div className="space-y-4">
           <KeywordRadarPanel />
+          <QuickKeywordSimulator />
           <KeywordSimulatorPanel />
         </div>
       </TabsContent>
