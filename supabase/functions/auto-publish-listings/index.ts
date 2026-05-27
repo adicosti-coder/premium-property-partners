@@ -416,7 +416,7 @@ Deno.serve(async (req) => {
             'andrei-call-queue',
             'blocked-from-publish',
           ],
-          admin_notes: `[auto-publish] BLOCAT publicare: categorie "${cat}" — lead recrutare exclusiv pentru Andrei (propunere administrare ${cat === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}).`,
+          admin_notes: `NU se publică pe site. Lead pentru Andrei: propunere administrare ${cat === 'hotelier' ? 'regim hotelier' : 'totală/parțială'} (categorie="${cat}").`,
           lifecycle_status: 'andrei_queue',
         })
         .eq('id', prospect.id);
