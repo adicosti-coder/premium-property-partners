@@ -83,16 +83,20 @@ function normalize(s: string): string {
   return s.toLowerCase().trim().replace(/\s+/g, " ");
 }
 
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function isRealEstateRelated(q: string): boolean {
-  const low = q.toLowerCase();
-  if (!low.includes("timi")) {
-    // accept even without "timisoara" if a zone is present
-    const hasZone = TIMISOARA_ZONES.some((z) =>
-      low.includes(z.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
-    );
-    if (!hasZone) return false;
-  }
-  return REALESTATE_KEYWORDS.some((k) => low.includes(k));
+  const low = stripDiacritics(q.toLowerCase());
+  const hasTimis = low.includes("timi");
+  const hasZone = TIMISOARA_ZONES.some((z) => low.includes(stripDiacritics(z.toLowerCase())));
+  const hasCommune = TIMISOARA_PERIURBAN.some((c) => low.includes(stripDiacritics(c.toLowerCase())));
+  const hasComplex = TIMISOARA_NEW_COMPLEXES.some((c) => low.includes(stripDiacritics(c.toLowerCase())));
+  if (!hasTimis && !hasZone && !hasCommune && !hasComplex) return false;
+  // Pentru ansambluri/comune, numele singur e suficient (intent imobiliar implicit)
+  if (hasComplex || hasCommune) return true;
+  return REALESTATE_KEYWORDS.some((k) => low.includes(stripDiacritics(k)));
 }
 
 function detectCategory(q: string): string {
