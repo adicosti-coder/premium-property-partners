@@ -118,6 +118,30 @@ export default function QuickKeywordSimulator() {
   const [detectRental, setDetectRental] = useState(true);
   const [sensitivity, setSensitivity] = useState<Sensitivity>("normal");
 
+  // ── Editable calibration state (regex layers + sanitizer) ──
+  const [showCalibration, setShowCalibration] = useState(false);
+  const [hotelierPatterns, setHotelierPatterns] = useState<Record<Sensitivity, string>>(DEFAULT_HOTELIER);
+  const [rentalPatterns, setRentalPatterns] = useState<Record<Sensitivity, string>>(DEFAULT_RENTAL);
+  const [sanitizerRules, setSanitizerRules] = useState<SanitizerRule[]>(DEFAULT_SANITIZER);
+
+  const hotelierRe = useMemo(
+    () => ({
+      strict: safeRe(hotelierPatterns.strict),
+      normal: safeRe(hotelierPatterns.normal),
+      loose:  safeRe(hotelierPatterns.loose),
+    }),
+    [hotelierPatterns],
+  );
+  const rentalRe = useMemo(
+    () => ({
+      strict: safeRe(rentalPatterns.strict),
+      normal: safeRe(rentalPatterns.normal),
+      loose:  safeRe(rentalPatterns.loose),
+    }),
+    [rentalPatterns],
+  );
+  const sanitizeInput = (raw: string) => sanitizeWith(raw, sanitizerRules);
+
   useEffect(() => {
     if (feedRef.current) feedRef.current.scrollTop = 0;
   }, [logs]);
