@@ -187,7 +187,8 @@ export default function QuickKeywordSimulator() {
         overrideApplied: override,
       };
       setLogs((prev) => [entry, ...prev].slice(0, 50));
-      if (!kw) setKeyword("");
+      // Keep keyword filled so the live preview (sanitizer + 3-level regex) stays visible
+      setKeyword(raw);
     } catch (e: any) {
       toast({ title: "Eroare simulare", description: e.message, variant: "destructive" });
     } finally {
