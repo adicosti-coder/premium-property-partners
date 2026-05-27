@@ -97,6 +97,9 @@ export default function QuickKeywordSimulator() {
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const feedRef = useRef<HTMLDivElement | null>(null);
+  const [confirmedHistory, setConfirmedHistory] = useState<
+    { ts: number; title: string; category: Category; route: Route }[]
+  >([]);
 
   const [showSettings, setShowSettings] = useState(false);
   const [detectHotelier, setDetectHotelier] = useState(true);
@@ -141,6 +144,29 @@ export default function QuickKeywordSimulator() {
       };
     });
   }, [keyword, livePreview]);
+
+  // Live "what will be inserted in prospect_listings" preview
+  const dbPreview = useMemo(() => {
+    const clean = (livePreview?.clean || keyword.trim()).toLowerCase();
+    if (!clean) return null;
+    const hot = HOTELIER_RE[sensitivity].test(clean);
+    const ren = RENTAL_RE[sensitivity].test(clean);
+    let category: Category = "vanzare";
+    if (hot) category = "hotelier";
+    else if (ren) category = "inchiriere";
+    const override = previewOverride(clean);
+    const finalCategory: Category = override ?? category;
+    const route: Route = finalCategory === "vanzare" ? "site_realtrust" : "andrei_call_queue";
+    const status = route === "andrei_call_queue" ? "to_call" : "new";
+    const tags = [
+      finalCategory,
+      "manual-simulator-confirm",
+      ...(livePreview?.changed ? ["sanitized-input"] : []),
+      ...(override ? [`override:${override}`] : []),
+    ];
+    return { category: finalCategory, route, status, tags, override };
+  }, [keyword, livePreview, sensitivity, detectHotelier, detectRental]);
+
 
   const runTest = async (kw?: string) => {
     const raw = (kw ?? keyword).trim();
@@ -187,7 +213,8 @@ export default function QuickKeywordSimulator() {
         overrideApplied: override,
       };
       setLogs((prev) => [entry, ...prev].slice(0, 50));
-      if (!kw) setKeyword("");
+      // Keep keyword filled so the live preview (sanitizer + 3-level regex) stays visible
+      setKeyword(raw);
     } catch (e: any) {
       toast({ title: "Eroare simulare", description: e.message, variant: "destructive" });
     } finally {
@@ -250,6 +277,9 @@ export default function QuickKeywordSimulator() {
       if (error) throw error;
       setLogs((prev) =>
         prev.map((l) => (l.id === entry.id ? { ...l, confirmed: true, confirming: false } : l)),
+      );
+      setConfirmedHistory((prev) =>
+        [{ ts: Date.now(), title: `[SIM] ${entry.keyword}`, category: entry.category, route: entry.route }, ...prev].slice(0, 3),
       );
       toast({
         title: "Rutare confirmată",
@@ -426,6 +456,53 @@ export default function QuickKeywordSimulator() {
           </div>
         )}
 
+        {/* Preview Output DB — what will be inserted in prospect_listings */}
+        {dbPreview && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-2.5 space-y-1.5">
+            <div className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+              💾 Preview Output DB <span className="text-[9px] font-normal">(prospect_listings)</span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+              <span className="text-muted-foreground">status:</span>
+              <Badge
+                className={
+                  dbPreview.status === "to_call"
+                    ? "bg-amber-700 text-white hover:bg-amber-700 text-[10px]"
+                    : "bg-blue-600 text-white hover:bg-blue-600 text-[10px]"
+                }
+              >
+                {dbPreview.status}
+              </Badge>
+              <span className="text-muted-foreground ml-1">categorie:</span>
+              {catBadge(dbPreview.category)}
+              <span className="text-muted-foreground ml-1">rută:</span>
+              {routeBadge(dbPreview.route)}
+            </div>
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="text-[10px] text-muted-foreground">tags:</span>
+              {dbPreview.tags.map((t) => (
+                <span
+                  key={t}
+                  className={`px-1.5 py-0.5 rounded font-mono text-[9px] border ${
+                    t.startsWith("override:")
+                      ? "bg-amber-500/15 border-amber-500/60 text-amber-800 dark:text-amber-300 font-semibold"
+                      : t === "sanitized-input"
+                      ? "bg-amber-500/10 border-amber-400/40 text-amber-700 dark:text-amber-400"
+                      : "bg-muted/60 border-border"
+                  }`}
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+            {dbPreview.override && (
+              <div className="text-[10px] text-amber-700 dark:text-amber-400">
+                ⚠ Toggle dezactivat → forțat <code className="font-mono">category_override={dbPreview.override}</code>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Compact presets: 4 cols desktop, horizontal scroll mobile */}
         <div className="space-y-1.5">
           <div className="text-[11px] text-muted-foreground">⚡ Preset-uri rapide:</div>
@@ -434,7 +511,7 @@ export default function QuickKeywordSimulator() {
             {QUICK_PRESETS.map((p) => (
               <button
                 key={p.query}
-                onClick={() => runTest(p.query)}
+                onClick={() => { setKeyword(p.query); runTest(p.query); }}
                 disabled={running}
                 className="snap-start shrink-0 min-w-[140px] flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 hover:bg-accent transition disabled:opacity-50"
               >
@@ -451,7 +528,7 @@ export default function QuickKeywordSimulator() {
             {QUICK_PRESETS.map((p) => (
               <button
                 key={p.query}
-                onClick={() => runTest(p.query)}
+                onClick={() => { setKeyword(p.query); runTest(p.query); }}
                 disabled={running}
                 className="flex items-center gap-1 rounded-md border border-border bg-background/60 p-1.5 hover:bg-accent transition disabled:opacity-50"
                 title={p.query}
@@ -564,6 +641,27 @@ export default function QuickKeywordSimulator() {
             )}
           </div>
         </div>
+        {/* Compact session history: last 3 successful DB inserts */}
+        {confirmedHistory.length > 0 && (
+          <div className="border-t pt-2 space-y-1">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+              ✅ Ultimele {confirmedHistory.length} inserturi confirmate (sesiune)
+            </div>
+            <ul className="space-y-0.5">
+              {confirmedHistory.map((h, i) => (
+                <li key={i} className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
+                  <span className="text-foreground">
+                    [{new Date(h.ts).toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}]
+                  </span>
+                  <span className="truncate max-w-[200px]">{h.title}</span>
+                  <ArrowRight className="h-2.5 w-2.5" />
+                  {catBadge(h.category)}
+                  {routeBadge(h.route)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
