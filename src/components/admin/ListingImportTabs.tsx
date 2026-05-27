@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LinkIcon, Radar, Building2, CheckSquare, Wrench, LineChart } from "lucide-react";
 import ListingImporter from "./ListingImporter";
 import KeywordRadarPanel from "./KeywordRadarPanel";
+import KeywordSimulatorPanel from "./KeywordSimulatorPanel";
 import PmLeadsPanel from "./PmLeadsPanel";
 import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
