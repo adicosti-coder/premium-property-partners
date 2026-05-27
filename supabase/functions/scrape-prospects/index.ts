@@ -541,6 +541,7 @@ Deno.serve(async (req) => {
     const results: any[] = [];
     const errors: string[] = [];
     let blacklistedSkipped = 0;
+    let blacklistedReviewed = 0;
     let archivedSkipped = 0;
     let duplicateSkipped = 0;
     const existingUrls = new Set<string>();
@@ -548,6 +549,23 @@ Deno.serve(async (req) => {
     const blockedDomains = new Set<string>();
     const whitelistedPhones = new Set<string>();
     const whitelistedDomains = new Set<string>();
+
+    // ── Spam-shield permissive mode (global flag) ────────────────────────
+    let permissiveSpamShield = false;
+    try {
+      const { data: settingsRow } = await supabase
+        .from('site_settings')
+        .select('spam_shield_permissive_mode')
+        .limit(1)
+        .maybeSingle();
+      permissiveSpamShield = !!settingsRow?.spam_shield_permissive_mode;
+      if (permissiveSpamShield) {
+        console.log('🛡️ Spam shield: PERMISSIVE MODE active — suspect leads pass through tagged as suspect_spam.');
+      }
+    } catch (e) {
+      console.warn('Could not read spam_shield_permissive_mode, defaulting to strict.', e);
+    }
+
 
     // Load keywords from DB, fallback to hardcoded defaults
     let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
