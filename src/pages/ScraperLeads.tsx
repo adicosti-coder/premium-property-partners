@@ -2638,6 +2638,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             </div>
           </div>
 
+          {/* Anti-Spam Rescue: recuperare lead-uri blocate de filtre */}
+          <div className="mb-4">
+            <AggregatorRejectionLog />
+          </div>
+
           {/* Smart Filter Pills */}
           <div className="flex items-center gap-1.5 mb-4 overflow-x-auto pb-1">
             {SMART_FILTERS.map((sf) => (
