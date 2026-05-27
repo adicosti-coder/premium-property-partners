@@ -305,6 +305,7 @@ Deno.serve(async (req) => {
     rejected_refusal: 0, rejected_no_content: 0,
     rejected_duplicate: 0, rejected_error: 0,
     rejected_low_quality: 0, rejected_source_disabled: 0,
+    rejected_recruitment: 0,
     published: 0, avg_quality_score: 0,
     per_source: {}, errors: [], published_ids: [],
   };
