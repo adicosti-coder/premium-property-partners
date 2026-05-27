@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
     .insert({ run_type: "discover", triggered_by: "api" }).select("id").single();
   const runId = runRow?.id;
 
-  const stats: Record<string, number> = { onsite: 0, gsc: 0, auto_property: 0, auto_zone: 0, upserted: 0 };
+  const stats: Record<string, number> = { onsite: 0, gsc: 0, auto_property: 0, auto_zone: 0, seed_complex: 0, seed_periurban: 0, seed_intent: 0, upserted: 0 };
   const candidates: Map<string, {
     keyword: string; source: string; volume: number; category: string;
     platforms: string[]; metadata: Record<string, unknown>;
