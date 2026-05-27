@@ -42,6 +42,7 @@ import { useScraperKeyboardShortcuts, SHORTCUTS_HELP } from "@/hooks/useScraperK
 import { ScraperAnalyticsDashboard } from "@/components/admin/ScraperAnalytics";
 import { Keyboard, BarChart3 } from "lucide-react";
 import OutreachQuickAction from "@/components/admin/outreach/OutreachQuickAction";
+import AggregatorRejectionLog from "@/components/admin/AggregatorRejectionLog";
 
 interface ScraperLead {
   id: string;
@@ -2511,7 +2512,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
           {/* Scraper Analytics Dashboard */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <Card className="bg-card border-border">
+            <Card
+              className="bg-card border-border cursor-pointer transition-colors hover:border-rose-500/60 hover:bg-rose-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                document.getElementById("anti-spam-rescue-log")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  document.getElementById("anti-spam-rescue-log")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+              aria-label="Deschide lista lead-urilor blocate de anti-spam"
+            >
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-red-500/15">
                   <Shield className="w-4 h-4 text-red-500" />
@@ -2519,7 +2534,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Scut Anti-Spam</p>
                   <p className="text-xl font-bold font-mono">{lastIngestResult?.blacklisted_skipped ?? (lastScanLog as any)?.blacklisted_skipped ?? archivedCount}</p>
-                  <p className="text-[10px] text-muted-foreground">lead-uri blocate</p>
+                  <p className="text-[10px] text-rose-600 font-medium">click → recuperare</p>
                 </div>
               </CardContent>
             </Card>
@@ -2621,6 +2636,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 </Card>
               )}
             </div>
+          </div>
+
+          {/* Anti-Spam Rescue: recuperare lead-uri blocate de filtre */}
+          <div className="mb-4">
+            <AggregatorRejectionLog />
           </div>
 
           {/* Smart Filter Pills */}
