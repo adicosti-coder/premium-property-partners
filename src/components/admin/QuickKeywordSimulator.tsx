@@ -57,37 +57,42 @@ const QUICK_PRESETS: { label: string; query: string; expect: Category }[] = [
   { label: "Short-term Iosefin", query: "short-term iosefin nightly", expect: "hotelier" },
 ];
 
-const HOTELIER_RE: Record<Sensitivity, RegExp> = {
-  strict: /(regim\s*hotelier|airbnb|booking\.com)/i,
-  normal: /(regim\s*hotelier|short[-\s]?term|nightly|pe\s*noapte|airbnb|booking\.com|cazare\s*timi[șs]oara)/i,
-  loose: /(regim\s*hotelier|short[-\s]?term|nightly|pe\s*noapte|airbnb|booking|cazare|noapte)/i,
+const DEFAULT_HOTELIER: Record<Sensitivity, string> = {
+  strict: "(regim\\s*hotelier|airbnb|booking\\.com)",
+  normal: "(regim\\s*hotelier|short[-\\s]?term|nightly|pe\\s*noapte|airbnb|booking\\.com|cazare\\s*timi[șs]oara)",
+  loose:  "(regim\\s*hotelier|short[-\\s]?term|nightly|pe\\s*noapte|airbnb|booking|cazare|noapte)",
 };
-const RENTAL_RE: Record<Sensitivity, RegExp> = {
-  strict: /(de\s*inchiriat|de\s*închiriat|\/lun[ăa])/i,
-  normal: /(inchiriere|închiriere|chirie|de\s*inchiriat|de\s*închiriat|\/lun[ăa])/i,
-  loose: /(inchiriere|închiriere|chirie|chir|rent|lun[ăa])/i,
+const DEFAULT_RENTAL: Record<Sensitivity, string> = {
+  strict: "(de\\s*inchiriat|de\\s*închiriat|\\/lun[ăa])",
+  normal: "(inchiriere|închiriere|chirie|de\\s*inchiriat|de\\s*închiriat|\\/lun[ăa])",
+  loose:  "(inchiriere|închiriere|chirie|chir|rent|lun[ăa])",
 };
 
-// Anti-bias sanitizer: remove phrases that would skew classification or
-// that we treat as Andrei-only signals (so the regex sees the actual intent).
-const SANITIZE_PATTERNS: { pattern: RegExp; label: string }[] = [
-  { pattern: /\bpersoan[ăa]\s*fizic[ăa]\b/gi, label: "persoană fizică" },
-  { pattern: /\bproprietar(ul|i)?\b/gi, label: "proprietar" },
-  { pattern: /\bf[ăa]r[ăa]\s*comision\b/gi, label: "fără comision" },
-  { pattern: /\bcomision\s*0\s*%?\b/gi, label: "comision 0%" },
-  { pattern: /\bf[ăa]r[ăa]\s*agen[țt]ii?\b/gi, label: "fără agenții" },
-  { pattern: /\bnu\s*doresc\s*colaborare\b/gi, label: "nu doresc colaborare" },
-  { pattern: /\bno\s*agents?\b/gi, label: "no agents" },
-  { pattern: /\bowner\s*only\b/gi, label: "owner only" },
+interface SanitizerRule { pattern: string; label: string }
+const DEFAULT_SANITIZER: SanitizerRule[] = [
+  { pattern: "\\bpersoan[ăa]\\s*fizic[ăa]\\b", label: "persoană fizică" },
+  { pattern: "\\bproprietar(ul|i)?\\b",         label: "proprietar" },
+  { pattern: "\\bf[ăa]r[ăa]\\s*comision\\b",    label: "fără comision" },
+  { pattern: "\\bcomision\\s*0\\s*%?\\b",       label: "comision 0%" },
+  { pattern: "\\bf[ăa]r[ăa]\\s*agen[țt]ii?\\b", label: "fără agenții" },
+  { pattern: "\\bnu\\s*doresc\\s*colaborare\\b", label: "nu doresc colaborare" },
+  { pattern: "\\bno\\s*agents?\\b",             label: "no agents" },
+  { pattern: "\\bowner\\s*only\\b",             label: "owner only" },
 ];
 
-function sanitizeInput(raw: string): { clean: string; removed: string[] } {
+function safeRe(src: string, flags = "i"): RegExp | null {
+  try { return new RegExp(src, flags); } catch { return null; }
+}
+
+function sanitizeWith(raw: string, rules: SanitizerRule[]): { clean: string; removed: string[] } {
   let clean = raw;
   const removed: string[] = [];
-  for (const { pattern, label } of SANITIZE_PATTERNS) {
-    if (pattern.test(clean)) {
+  for (const { pattern, label } of rules) {
+    const re = safeRe(pattern, "gi");
+    if (!re) continue;
+    if (re.test(clean)) {
       removed.push(label);
-      clean = clean.replace(pattern, " ");
+      clean = clean.replace(re, " ");
     }
   }
   clean = clean.replace(/\s{2,}/g, " ").trim();
