@@ -244,9 +244,10 @@ serve(async (req) => {
     if (upErr) throw new Error(`Storage upload: ${upErr.message}`);
 
     const signedUrl = await getSignedStorageUrl(supabase, filePath);
-    return new Response(JSON.stringify({ url: signedUrl, cached: false }), {
+    return new Response(JSON.stringify({ url: signedUrl, cached: false, provider, latency_ms, fallback_used }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (e: any) {
     console.error("voice-tts-elevenlabs error:", e);
     return new Response(JSON.stringify({ error: e.message }), {
