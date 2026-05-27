@@ -57,37 +57,42 @@ const QUICK_PRESETS: { label: string; query: string; expect: Category }[] = [
   { label: "Short-term Iosefin", query: "short-term iosefin nightly", expect: "hotelier" },
 ];
 
-const HOTELIER_RE: Record<Sensitivity, RegExp> = {
-  strict: /(regim\s*hotelier|airbnb|booking\.com)/i,
-  normal: /(regim\s*hotelier|short[-\s]?term|nightly|pe\s*noapte|airbnb|booking\.com|cazare\s*timi[șs]oara)/i,
-  loose: /(regim\s*hotelier|short[-\s]?term|nightly|pe\s*noapte|airbnb|booking|cazare|noapte)/i,
+const DEFAULT_HOTELIER: Record<Sensitivity, string> = {
+  strict: "(regim\\s*hotelier|airbnb|booking\\.com)",
+  normal: "(regim\\s*hotelier|short[-\\s]?term|nightly|pe\\s*noapte|airbnb|booking\\.com|cazare\\s*timi[șs]oara)",
+  loose:  "(regim\\s*hotelier|short[-\\s]?term|nightly|pe\\s*noapte|airbnb|booking|cazare|noapte)",
 };
-const RENTAL_RE: Record<Sensitivity, RegExp> = {
-  strict: /(de\s*inchiriat|de\s*închiriat|\/lun[ăa])/i,
-  normal: /(inchiriere|închiriere|chirie|de\s*inchiriat|de\s*închiriat|\/lun[ăa])/i,
-  loose: /(inchiriere|închiriere|chirie|chir|rent|lun[ăa])/i,
+const DEFAULT_RENTAL: Record<Sensitivity, string> = {
+  strict: "(de\\s*inchiriat|de\\s*închiriat|\\/lun[ăa])",
+  normal: "(inchiriere|închiriere|chirie|de\\s*inchiriat|de\\s*închiriat|\\/lun[ăa])",
+  loose:  "(inchiriere|închiriere|chirie|chir|rent|lun[ăa])",
 };
 
-// Anti-bias sanitizer: remove phrases that would skew classification or
-// that we treat as Andrei-only signals (so the regex sees the actual intent).
-const SANITIZE_PATTERNS: { pattern: RegExp; label: string }[] = [
-  { pattern: /\bpersoan[ăa]\s*fizic[ăa]\b/gi, label: "persoană fizică" },
-  { pattern: /\bproprietar(ul|i)?\b/gi, label: "proprietar" },
-  { pattern: /\bf[ăa]r[ăa]\s*comision\b/gi, label: "fără comision" },
-  { pattern: /\bcomision\s*0\s*%?\b/gi, label: "comision 0%" },
-  { pattern: /\bf[ăa]r[ăa]\s*agen[țt]ii?\b/gi, label: "fără agenții" },
-  { pattern: /\bnu\s*doresc\s*colaborare\b/gi, label: "nu doresc colaborare" },
-  { pattern: /\bno\s*agents?\b/gi, label: "no agents" },
-  { pattern: /\bowner\s*only\b/gi, label: "owner only" },
+interface SanitizerRule { pattern: string; label: string }
+const DEFAULT_SANITIZER: SanitizerRule[] = [
+  { pattern: "\\bpersoan[ăa]\\s*fizic[ăa]\\b", label: "persoană fizică" },
+  { pattern: "\\bproprietar(ul|i)?\\b",         label: "proprietar" },
+  { pattern: "\\bf[ăa]r[ăa]\\s*comision\\b",    label: "fără comision" },
+  { pattern: "\\bcomision\\s*0\\s*%?\\b",       label: "comision 0%" },
+  { pattern: "\\bf[ăa]r[ăa]\\s*agen[țt]ii?\\b", label: "fără agenții" },
+  { pattern: "\\bnu\\s*doresc\\s*colaborare\\b", label: "nu doresc colaborare" },
+  { pattern: "\\bno\\s*agents?\\b",             label: "no agents" },
+  { pattern: "\\bowner\\s*only\\b",             label: "owner only" },
 ];
 
-function sanitizeInput(raw: string): { clean: string; removed: string[] } {
+function safeRe(src: string, flags = "i"): RegExp | null {
+  try { return new RegExp(src, flags); } catch { return null; }
+}
+
+function sanitizeWith(raw: string, rules: SanitizerRule[]): { clean: string; removed: string[] } {
   let clean = raw;
   const removed: string[] = [];
-  for (const { pattern, label } of SANITIZE_PATTERNS) {
-    if (pattern.test(clean)) {
+  for (const { pattern, label } of rules) {
+    const re = safeRe(pattern, "gi");
+    if (!re) continue;
+    if (re.test(clean)) {
       removed.push(label);
-      clean = clean.replace(pattern, " ");
+      clean = clean.replace(re, " ");
     }
   }
   clean = clean.replace(/\s{2,}/g, " ").trim();
@@ -112,6 +117,30 @@ export default function QuickKeywordSimulator() {
   const [detectHotelier, setDetectHotelier] = useState(true);
   const [detectRental, setDetectRental] = useState(true);
   const [sensitivity, setSensitivity] = useState<Sensitivity>("normal");
+
+  // ── Editable calibration state (regex layers + sanitizer) ──
+  const [showCalibration, setShowCalibration] = useState(false);
+  const [hotelierPatterns, setHotelierPatterns] = useState<Record<Sensitivity, string>>(DEFAULT_HOTELIER);
+  const [rentalPatterns, setRentalPatterns] = useState<Record<Sensitivity, string>>(DEFAULT_RENTAL);
+  const [sanitizerRules, setSanitizerRules] = useState<SanitizerRule[]>(DEFAULT_SANITIZER);
+
+  const hotelierRe = useMemo(
+    () => ({
+      strict: safeRe(hotelierPatterns.strict),
+      normal: safeRe(hotelierPatterns.normal),
+      loose:  safeRe(hotelierPatterns.loose),
+    }),
+    [hotelierPatterns],
+  );
+  const rentalRe = useMemo(
+    () => ({
+      strict: safeRe(rentalPatterns.strict),
+      normal: safeRe(rentalPatterns.normal),
+      loose:  safeRe(rentalPatterns.loose),
+    }),
+    [rentalPatterns],
+  );
+  const sanitizeInput = (raw: string) => sanitizeWith(raw, sanitizerRules);
 
   useEffect(() => {
     if (feedRef.current) feedRef.current.scrollTop = 0;
@@ -155,8 +184,8 @@ export default function QuickKeywordSimulator() {
 
   const previewOverride = (term: string): Category | undefined => {
     const blob = term.toLowerCase();
-    const hot = HOTELIER_RE[sensitivity].test(blob);
-    const ren = RENTAL_RE[sensitivity].test(blob);
+    const hot = hotelierRe[sensitivity]?.test(blob) ?? false;
+    const ren = rentalRe[sensitivity]?.test(blob) ?? false;
     if ((hot && !detectHotelier) || (ren && !detectRental)) return "vanzare";
     return undefined;
   };
@@ -166,8 +195,8 @@ export default function QuickKeywordSimulator() {
     const term = (livePreview?.clean || keyword.trim()).toLowerCase();
     if (!term) return null;
     return (["strict", "normal", "loose"] as Sensitivity[]).map((lvl) => {
-      const hot = term.match(HOTELIER_RE[lvl]);
-      const ren = term.match(RENTAL_RE[lvl]);
+      const hot = hotelierRe[lvl] ? term.match(hotelierRe[lvl]!) : null;
+      const ren = rentalRe[lvl] ? term.match(rentalRe[lvl]!) : null;
       let category: Category = "vanzare";
       if (hot) category = "hotelier";
       else if (ren) category = "inchiriere";
@@ -178,15 +207,15 @@ export default function QuickKeywordSimulator() {
         rentalMatch: ren?.[0] || null,
       };
     });
-  }, [keyword, livePreview]);
+  }, [keyword, livePreview, hotelierRe, rentalRe]);
 
   // Live "what will be inserted in prospect_listings" preview
   const dbPreview = useMemo(() => {
     const clean = (livePreview?.clean || keyword.trim()).toLowerCase();
     const raw = keyword.trim();
     if (!clean) return null;
-    const hot = HOTELIER_RE[sensitivity].test(clean);
-    const ren = RENTAL_RE[sensitivity].test(clean);
+    const hot = hotelierRe[sensitivity]?.test(clean) ?? false;
+    const ren = rentalRe[sensitivity]?.test(clean) ?? false;
     let category: Category = "vanzare";
     if (hot) category = "hotelier";
     else if (ren) category = "inchiriere";
@@ -407,13 +436,23 @@ export default function QuickKeywordSimulator() {
               Sanitizer anti-bias + 3 niveluri regex + rutare manuală cu dedup.
             </CardDescription>
           </div>
-          <Button
-            variant={showSettings ? "secondary" : "outline"}
-            size="sm"
-            onClick={() => setShowSettings((s) => !s)}
-          >
-            <Settings2 className="h-4 w-4 mr-1" /> Praguri regex
-          </Button>
+          <div className="flex gap-1.5">
+            <Button
+              variant={showSettings ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setShowSettings((s) => !s)}
+            >
+              <Settings2 className="h-4 w-4 mr-1" /> Praguri regex
+            </Button>
+            <Button
+              variant={showCalibration ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setShowCalibration((s) => !s)}
+              title="Configurare praguri & sanitizer"
+            >
+              ⚙️ Calibrare
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -452,6 +491,152 @@ export default function QuickKeywordSimulator() {
                 Când o categorie e dezactivată dar termenul o sugerează, sistemul forțează „vanzare" via category_override.
               </p>
             </div>
+          </div>
+        )}
+
+        {showCalibration && (
+          <div className="rounded-md border border-dashed border-primary/50 bg-background/60 p-3 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs font-semibold flex items-center gap-1">
+                ⚙️ Configurare Praguri & Sanitizer
+                <span className="text-[10px] font-normal text-muted-foreground">
+                  (recalculare live)
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-[10px]"
+                  onClick={() => {
+                    setHotelierPatterns(DEFAULT_HOTELIER);
+                    setRentalPatterns(DEFAULT_RENTAL);
+                    setSanitizerRules(DEFAULT_SANITIZER);
+                    toast({ title: "Resetat la default" });
+                  }}
+                >
+                  Reset
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="h-7 text-[10px]"
+                  onClick={async () => {
+                    const config = {
+                      generated_at: new Date().toISOString(),
+                      sensitivity_active: sensitivity,
+                      toggles: { detectHotelier, detectRental },
+                      hotelier_regex: hotelierPatterns,
+                      rental_regex: rentalPatterns,
+                      sanitizer_rules: sanitizerRules,
+                    };
+                    const json = JSON.stringify(config, null, 2);
+                    try {
+                      await navigator.clipboard.writeText(json);
+                      toast({ title: "Configurație copiată", description: "JSON-ul este în clipboard, gata de lipit în Edge Functions." });
+                    } catch {
+                      toast({ title: "Eroare clipboard", description: "Copiază manual din consolă.", variant: "destructive" });
+                      console.log(json);
+                    }
+                  }}
+                >
+                  📋 Copiază Configurație JSON
+                </Button>
+              </div>
+            </div>
+
+            {(["strict", "normal", "loose"] as Sensitivity[]).map((lvl) => {
+              const st = levelStyles[lvl];
+              const hotInvalid = !safeRe(hotelierPatterns[lvl]);
+              const renInvalid = !safeRe(rentalPatterns[lvl]);
+              return (
+                <div key={lvl} className={`rounded border p-2 space-y-1.5 ${st.ring} ${st.bg}`}>
+                  <div className={`inline-block px-1.5 py-0.5 rounded font-mono uppercase text-[9px] ${st.chip}`}>
+                    {lvl}
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] flex items-center justify-between">
+                      <span>hotelier regex</span>
+                      {hotInvalid && <span className="text-rose-600">regex invalid</span>}
+                    </Label>
+                    <Input
+                      value={hotelierPatterns[lvl]}
+                      onChange={(e) => setHotelierPatterns((p) => ({ ...p, [lvl]: e.target.value }))}
+                      className={`font-mono text-[10px] h-7 ${hotInvalid ? "border-rose-500" : ""}`}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] flex items-center justify-between">
+                      <span>rental regex</span>
+                      {renInvalid && <span className="text-rose-600">regex invalid</span>}
+                    </Label>
+                    <Input
+                      value={rentalPatterns[lvl]}
+                      onChange={(e) => setRentalPatterns((p) => ({ ...p, [lvl]: e.target.value }))}
+                      className={`font-mono text-[10px] h-7 ${renInvalid ? "border-rose-500" : ""}`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-[11px] font-semibold">Sanitizer — sintagme eliminate (anti-bias)</Label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 text-[10px]"
+                  onClick={() =>
+                    setSanitizerRules((r) => [...r, { pattern: "\\bnou\\b", label: "regulă nouă" }])
+                  }
+                >
+                  + Adaugă regulă
+                </Button>
+              </div>
+              <div className="space-y-1">
+                {sanitizerRules.map((rule, idx) => {
+                  const invalid = !safeRe(rule.pattern, "gi");
+                  return (
+                    <div key={idx} className="flex gap-1.5 items-center">
+                      <Input
+                        value={rule.label}
+                        onChange={(e) =>
+                          setSanitizerRules((rs) =>
+                            rs.map((r, i) => (i === idx ? { ...r, label: e.target.value } : r)),
+                          )
+                        }
+                        placeholder="etichetă"
+                        className="text-[10px] h-7 w-[35%]"
+                      />
+                      <Input
+                        value={rule.pattern}
+                        onChange={(e) =>
+                          setSanitizerRules((rs) =>
+                            rs.map((r, i) => (i === idx ? { ...r, pattern: e.target.value } : r)),
+                          )
+                        }
+                        placeholder="regex (flags gi)"
+                        className={`font-mono text-[10px] h-7 flex-1 ${invalid ? "border-rose-500" : ""}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSanitizerRules((rs) => rs.filter((_, i) => i !== idx))
+                        }
+                        className="text-muted-foreground hover:text-rose-600 transition p-1"
+                        title="Șterge"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Modificările se aplică instant pe input + preseturi. Folosește „Copiază Configurație JSON" pentru a porta regulile în Edge Functions.
+            </p>
           </div>
         )}
 
