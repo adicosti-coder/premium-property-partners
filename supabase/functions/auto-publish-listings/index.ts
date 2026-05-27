@@ -35,6 +35,7 @@ interface RunSummary {
   rejected_error: number;
   rejected_low_quality: number;
   rejected_source_disabled: number;
+  rejected_recruitment: number;
   published: number;
   avg_quality_score: number;
   per_source: Record<string, { attempts: number; published: number; rejected: number; avg_quality: number }>;
@@ -304,6 +305,7 @@ Deno.serve(async (req) => {
     rejected_refusal: 0, rejected_no_content: 0,
     rejected_duplicate: 0, rejected_error: 0,
     rejected_low_quality: 0, rejected_source_disabled: 0,
+    rejected_recruitment: 0,
     published: 0, avg_quality_score: 0,
     per_source: {}, errors: [], published_ids: [],
   };
@@ -393,6 +395,34 @@ Deno.serve(async (req) => {
   for (const prospect of queue) {
     const platform = prospect.source_platform || 'unknown';
     bumpSource(platform, 'attempts');
+
+    // ╔══════════════════════════════════════════════════════════════════════╗
+    // ║ HARD GUARD — DEFENSE IN DEPTH                                        ║
+    // ║ Rental & hotel-regime owner prospects MUST NEVER be published on     ║
+    // ║ realtrust.ro. They are recruitment leads exclusively for Andrei.     ║
+    // ║ Even if the upstream SELECT filter is ever relaxed, this block stops ║
+    // ║ them here and routes them to the call dashboard.                     ║
+    // ╚══════════════════════════════════════════════════════════════════════╝
+    const cat = String(prospect.category || '').toLowerCase().trim();
+    if (cat !== 'vanzare') {
+      summary.rejected_recruitment++;
+      bumpSource(platform, 'rejected');
+      await supabase.from('prospect_listings')
+        .update({
+          tags: [
+            'scrape-prospects',
+            'recrutare-management',
+            cat === 'hotelier' ? 'regim-hotelier' : 'inchiriere-proprietar',
+            'andrei-call-queue',
+            'blocked-from-publish',
+          ],
+          admin_notes: `[auto-publish] BLOCAT publicare: categorie "${cat}" — lead recrutare exclusiv pentru Andrei (propunere administrare ${cat === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}).`,
+          lifecycle_status: 'andrei_queue',
+        })
+        .eq('id', prospect.id);
+      continue;
+    }
+
     try {
       // ── PREMIUM PATH: prospect already enriched by `enrich-prospect-listing`.
       // Use the AI-rewritten title/description + optimized/watermarked images directly,

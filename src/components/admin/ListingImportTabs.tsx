@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LinkIcon, Radar, Building2, CheckSquare, Wrench, LineChart } from "lucide-react";
 import ListingImporter from "./ListingImporter";
 import KeywordRadarPanel from "./KeywordRadarPanel";
+import KeywordSimulatorPanel from "./KeywordSimulatorPanel";
 import PmLeadsPanel from "./PmLeadsPanel";
 import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
@@ -67,7 +68,12 @@ const ListingImportTabs = () => {
       </TabsList>
 
       <TabsContent value="manual"><ListingImporter /></TabsContent>
-      <TabsContent value="radar"><KeywordRadarPanel /></TabsContent>
+      <TabsContent value="radar">
+        <div className="space-y-4">
+          <KeywordRadarPanel />
+          <KeywordSimulatorPanel />
+        </div>
+      </TabsContent>
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
       <TabsContent value="auto-publish"><AutoPublishListingsPanel /></TabsContent>
       <TabsContent value="sandbox"><ListingImportHealthPanel /></TabsContent>
