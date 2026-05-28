@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
           .select("user_id")
           .in("user_id", adminIds)
           .eq("title", "🚨 Latență Andrei depășită")
-          .is("read_at", null);
+          .eq("is_read", false);
         const alreadyNotified = new Set((existingUnread || []).map((n: any) => n.user_id));
         const toNotify = adminIds.filter((id: string) => !alreadyNotified.has(id));
         if (toNotify.length > 0) {
