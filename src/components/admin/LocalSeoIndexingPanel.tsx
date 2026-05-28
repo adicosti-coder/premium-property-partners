@@ -364,6 +364,15 @@ export default function LocalSeoIndexingPanel() {
                   <span className="font-mono truncate max-w-[260px]" title={p.url}>{p.url.replace("https://www.realtrust.ro", "")}</span>
                   {p.http_status && <Badge variant="outline">HTTP {p.http_status}</Badge>}
                   {p.triggered_by && <Badge variant="secondary">{p.triggered_by}</Badge>}
+                  {p.actual_indexing_status === "indexed" && (
+                    <Badge className="bg-emerald-600 hover:bg-emerald-700">indexat</Badge>
+                  )}
+                  {p.actual_indexing_status === "missing" && (
+                    <Badge variant="destructive">lipsă</Badge>
+                  )}
+                  {p.actual_indexing_status === "pending" && (
+                    <Badge variant="outline" className="text-muted-foreground">neverificat</Badge>
+                  )}
                   <span className="ml-auto text-muted-foreground">{new Date(p.created_at).toLocaleString("ro-RO")}</span>
                 </div>
               ))
