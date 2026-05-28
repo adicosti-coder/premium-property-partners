@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, TrendingUp, AlertTriangle, PhoneCall, Filter, Sparkles, Target, RefreshCcw, Copy } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import VoiceLatencyMonitor from "./VoiceLatencyMonitor";
+import LocalSeoIndexingPanel from "./LocalSeoIndexingPanel";
+
 
 
 interface Metrics {
