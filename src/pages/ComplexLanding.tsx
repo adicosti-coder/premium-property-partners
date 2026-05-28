@@ -49,12 +49,30 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.6",
     avgPrice: 95000,
     avgADR: 55,
+    zoneMatchers: ["ISHO", "Iosefin"],
     advantages: [
       { ro: "Situat lângă Centrul Vechi și Piața Unirii — acces direct la cele mai vizitate zone turistice", en: "Located near the Old Town and Unirii Square — direct access to the most visited tourist areas" },
       { ro: "Comunitate mixtă rezidențial-business cu cerere constantă de cazare pe termen scurt", en: "Mixed residential-business community with constant demand for short-term accommodation" },
       { ro: "Infrastructură premium cu spații comerciale, restaurante și coworking la parter", en: "Premium infrastructure with commercial spaces, restaurants and coworking on the ground floor" },
     ],
   },
+  paltim: {
+    name: "Paltim",
+    slug: "paltim",
+    roi: "9.5%",
+    avgIncome: "€1,320",
+    occupancy: "93%",
+    rating: "9.7",
+    avgPrice: 92000,
+    avgADR: 56,
+    zoneMatchers: ["Paltim", "Cetate", "Centru"],
+    advantages: [
+      { ro: "Poziție premium în Cetate — la pas de Piața Unirii și Catedrală", en: "Premium position in Cetate — walking distance from Unirii Square and the Cathedral" },
+      { ro: "Cerere ridicată tot anul din partea turiștilor culturali și business travelers", en: "High year-round demand from cultural tourists and business travelers" },
+      { ro: "Finisaje premium și smart-lock — perfecte pentru self check-in 24/7", en: "Premium finishes and smart-lock — perfect for self check-in 24/7" },
+    ],
+  },
+
   ateneo: {
     name: "ATENEO",
     slug: "ateneo",
