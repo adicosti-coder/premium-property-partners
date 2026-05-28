@@ -255,10 +255,16 @@ export default function LocalSeoIndexingPanel() {
               IndexNow ping live către Bing, Yandex și Seznam la fiecare aprobare de anunț + densitate de cuvinte cheie pe zonele Timișoarei.
             </CardDescription>
           </div>
-          <Button size="sm" variant="outline" onClick={resubmitHubs} disabled={resubmitting} className="gap-1">
-            {resubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}
-            Re-trimite hub-urile premium
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={verifyIndexing} disabled={verifying} className="gap-1">
+              {verifying ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
+              Verifică indexare reală
+            </Button>
+            <Button size="sm" variant="outline" onClick={resubmitHubs} disabled={resubmitting} className="gap-1">
+              {resubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}
+              Re-trimite hub-urile premium
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
