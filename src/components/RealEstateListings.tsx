@@ -36,7 +36,7 @@ const RealEstateListings = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
-        .select("id, slug, name, location, listing_type, capital_necesar, image_path, description_ro, description_en, size, bedrooms, property_images(image_path, is_primary, display_order)")
+        .select("id, slug, name, location, listing_type, capital_necesar, image_path, images, description_ro, description_en, size, bedrooms, property_images(image_path, is_primary, display_order)")
         .in("listing_type", ["vanzare", "inchiriere"])
         .eq("is_active", true)
         .order("display_order");
