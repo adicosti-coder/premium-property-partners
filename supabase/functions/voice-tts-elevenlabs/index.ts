@@ -36,14 +36,24 @@ const tripBreaker = (reason: string) => {
 const isBreakerOpen = () => Date.now() < breakerOpenUntil;
 
 
-async function generateOpenAITTS(text: string, apiKey: string): Promise<ArrayBuffer> {
+interface TtsAttemptResult {
+  buf: ArrayBuffer;
+  ttfb_ms: number;
+  total_duration_ms: number;
+  http_status: number;
+}
+
+async function generateOpenAITTS(text: string, apiKey: string): Promise<TtsAttemptResult> {
+  const t0 = Date.now();
   const res = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ model: "tts-1", voice: "onyx", input: text, response_format: "mp3" }),
   });
+  const ttfb_ms = Date.now() - t0;
   if (!res.ok) throw new Error(`OpenAI TTS ${res.status}: ${await res.text()}`);
-  return res.arrayBuffer();
+  const buf = await res.arrayBuffer();
+  return { buf, ttfb_ms, total_duration_ms: Date.now() - t0, http_status: res.status };
 }
 
 
@@ -75,7 +85,16 @@ interface VoiceSettings {
   use_speaker_boost: boolean;
 }
 
-async function generateMp3(text: string, v: VoiceSettings, apiKey: string): Promise<ArrayBuffer> {
+class ElevenLabsHttpError extends Error {
+  status: number;
+  constructor(status: number, body: string) {
+    super(`ElevenLabs ${status}: ${body}`);
+    this.status = status;
+  }
+}
+
+async function generateMp3(text: string, v: VoiceSettings, apiKey: string): Promise<TtsAttemptResult> {
+  const t0 = Date.now();
   // optimize_streaming_latency=4 → maximum latency optimization (works on
   // non-stream endpoint too). Reduces TTFB ~30-40% for flash_v2_5.
   const res = await fetch(
@@ -99,12 +118,38 @@ async function generateMp3(text: string, v: VoiceSettings, apiKey: string): Prom
       }),
     }
   );
+  const ttfb_ms = Date.now() - t0;
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`ElevenLabs ${res.status}: ${errText}`);
+    throw new ElevenLabsHttpError(res.status, errText);
   }
-  return res.arrayBuffer();
+  const buf = await res.arrayBuffer();
+  return { buf, ttfb_ms, total_duration_ms: Date.now() - t0, http_status: res.status };
 }
+
+// Retry transient (429/5xx) with fast exponential backoff before tripping breaker.
+const RETRY_DELAYS_MS = [100, 300];
+const isTransientStatus = (s: number) => s === 429 || (s >= 500 && s <= 599);
+async function generateMp3WithRetry(
+  text: string, v: VoiceSettings, apiKey: string
+): Promise<{ result: TtsAttemptResult; retry_count: number }> {
+  let lastErr: any;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const result = await generateMp3(text, v, apiKey);
+      return { result, retry_count: attempt };
+    } catch (e: any) {
+      lastErr = e;
+      const status = e instanceof ElevenLabsHttpError ? e.status : 0;
+      const transient = status === 0 ? false : isTransientStatus(status);
+      if (!transient || attempt === RETRY_DELAYS_MS.length) throw e;
+      console.warn(`[voice-tts] retry ${attempt + 1} after ${RETRY_DELAYS_MS[attempt]}ms (status ${status})`);
+      await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+    }
+  }
+  throw lastErr;
+}
+
 
 
 serve(async (req) => {
