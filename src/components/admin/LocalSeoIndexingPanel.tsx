@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Search, Radio, MapPin, RefreshCcw, Loader2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { Search, Radio, MapPin, RefreshCcw, Loader2, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Send } from "lucide-react";
+import { toast } from "sonner";
 
 interface PingRow {
   id: string;
@@ -16,6 +17,8 @@ interface PingRow {
   triggered_by: string | null;
   batch_size: number;
   error: string | null;
+  actual_indexing_status?: "pending" | "indexed" | "missing" | null;
+  last_verified_at?: string | null;
 }
 
 interface KeywordRow {
