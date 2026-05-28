@@ -83,6 +83,8 @@ export default function LocalSeoIndexingPanel() {
   const [coverageLoading, setCoverageLoading] = useState(true);
   const [doneChecklist, setDoneChecklist] = useState<Record<string, boolean>>({});
   const [resubmitting, setResubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [resubmittingId, setResubmittingId] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = safeLocalStorage.getItem(STORAGE_KEY);
