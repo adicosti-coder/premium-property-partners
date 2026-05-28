@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Search, Radio, MapPin, RefreshCcw, Loader2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { Search, Radio, MapPin, RefreshCcw, Loader2, CheckCircle2, XCircle, AlertTriangle, ShieldCheck, Send } from "lucide-react";
+import { toast } from "sonner";
 
 interface PingRow {
   id: string;
@@ -16,6 +17,8 @@ interface PingRow {
   triggered_by: string | null;
   batch_size: number;
   error: string | null;
+  actual_indexing_status?: "pending" | "indexed" | "missing" | null;
+  last_verified_at?: string | null;
 }
 
 interface KeywordRow {
@@ -80,6 +83,8 @@ export default function LocalSeoIndexingPanel() {
   const [coverageLoading, setCoverageLoading] = useState(true);
   const [doneChecklist, setDoneChecklist] = useState<Record<string, boolean>>({});
   const [resubmitting, setResubmitting] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [resubmittingId, setResubmittingId] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = safeLocalStorage.getItem(STORAGE_KEY);
@@ -97,7 +102,7 @@ export default function LocalSeoIndexingPanel() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data } = await supabase
       .from("indexnow_pings")
-      .select("id,created_at,url,http_status,success,triggered_by,batch_size,error")
+      .select("id,created_at,url,http_status,success,triggered_by,batch_size,error,actual_indexing_status,last_verified_at")
       .gte("created_at", sevenDaysAgo)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -191,11 +196,51 @@ export default function LocalSeoIndexingPanel() {
       await supabase.functions.invoke("indexnow-notify", {
         body: { urls, triggered_by: "growth_dashboard_manual" },
       });
+      toast.success("Hub-urile premium au fost re-trimise");
     } finally {
       setResubmitting(false);
       loadPings();
     }
   }, [loadPings]);
+
+  const verifyIndexing = useCallback(async () => {
+    setVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("indexnow-verify-and-reindex", {
+        body: { action: "verify", limit: 25 },
+      });
+      if (error) throw error;
+      const indexed = (data as any)?.results?.filter((r: any) => r.status === "indexed").length ?? 0;
+      const missing = (data as any)?.results?.filter((r: any) => r.status === "missing").length ?? 0;
+      toast.success(`Verificare completă: ${indexed} indexate, ${missing} lipsă`);
+    } catch (e) {
+      toast.error("Eroare la verificare: " + (e as Error).message);
+    } finally {
+      setVerifying(false);
+      loadPings();
+    }
+  }, [loadPings]);
+
+  const resubmitSingle = useCallback(async (ping: PingRow) => {
+    setResubmittingId(ping.id);
+    try {
+      await supabase.functions.invoke("indexnow-notify", {
+        body: { urls: [ping.url], triggered_by: "admin_retry_failed" },
+      });
+      toast.success("URL re-trimis la IndexNow");
+    } finally {
+      setResubmittingId(null);
+      loadPings();
+    }
+  }, [loadPings]);
+
+  // Failed pings on hot zones (premium hubs) in the last 7 days — require attention.
+  const failedHotZonePings = useMemo(() => {
+    const hotKeywords = ["isho", "paltim", "city-of-mara", "fructus", "vivalia", "monarch", "vox-vertical", "ateneo"];
+    return pings.filter((p) =>
+      !p.success && hotKeywords.some((k) => p.url.toLowerCase().includes(k)),
+    ).slice(0, 8);
+  }, [pings]);
 
   return (
     <Card>
@@ -210,10 +255,16 @@ export default function LocalSeoIndexingPanel() {
               IndexNow ping live către Bing, Yandex și Seznam la fiecare aprobare de anunț + densitate de cuvinte cheie pe zonele Timișoarei.
             </CardDescription>
           </div>
-          <Button size="sm" variant="outline" onClick={resubmitHubs} disabled={resubmitting} className="gap-1">
-            {resubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}
-            Re-trimite hub-urile premium
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={verifyIndexing} disabled={verifying} className="gap-1">
+              {verifying ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
+              Verifică indexare reală
+            </Button>
+            <Button size="sm" variant="outline" onClick={resubmitHubs} disabled={resubmitting} className="gap-1">
+              {resubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCcw className="h-3 w-3" />}
+              Re-trimite hub-urile premium
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -236,6 +287,37 @@ export default function LocalSeoIndexingPanel() {
             <div className="text-2xl font-bold">{stats.uniqueUrls}</div>
           </div>
         </div>
+
+        {/* Atenție necesară — failed pings on hot zones */}
+        {failedHotZonePings.length > 0 && (
+          <div className="rounded-md border-2 border-rose-500/50 bg-rose-500/5 p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-rose-700 dark:text-rose-400">
+              <AlertTriangle className="h-4 w-4 animate-pulse" />
+              Atenție necesară — {failedHotZonePings.length} ping eșuat pe zone fierbinți
+            </div>
+            <ul className="mt-2 space-y-1 text-xs">
+              {failedHotZonePings.map((p) => (
+                <li key={p.id} className="flex items-center gap-2">
+                  <XCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                  <span className="font-mono truncate flex-1" title={p.url}>
+                    {p.url.replace("https://www.realtrust.ro", "")}
+                  </span>
+                  {p.http_status && <Badge variant="destructive">HTTP {p.http_status}</Badge>}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-6 px-2 gap-1"
+                    onClick={() => resubmitSingle(p)}
+                    disabled={resubmittingId === p.id}
+                  >
+                    {resubmittingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                    Retry
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Audit alerts */}
         {auditAlerts.length > 0 && (
@@ -282,6 +364,15 @@ export default function LocalSeoIndexingPanel() {
                   <span className="font-mono truncate max-w-[260px]" title={p.url}>{p.url.replace("https://www.realtrust.ro", "")}</span>
                   {p.http_status && <Badge variant="outline">HTTP {p.http_status}</Badge>}
                   {p.triggered_by && <Badge variant="secondary">{p.triggered_by}</Badge>}
+                  {p.actual_indexing_status === "indexed" && (
+                    <Badge className="bg-emerald-600 hover:bg-emerald-700">indexat</Badge>
+                  )}
+                  {p.actual_indexing_status === "missing" && (
+                    <Badge variant="destructive">lipsă</Badge>
+                  )}
+                  {p.actual_indexing_status === "pending" && (
+                    <Badge variant="outline" className="text-muted-foreground">neverificat</Badge>
+                  )}
                   <span className="ml-auto text-muted-foreground">{new Date(p.created_at).toLocaleString("ro-RO")}</span>
                 </div>
               ))

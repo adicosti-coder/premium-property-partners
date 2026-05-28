@@ -2175,39 +2175,87 @@ export type Database = {
       }
       indexnow_pings: {
         Row: {
+          actual_indexing_status: Database["public"]["Enums"]["indexnow_actual_status"]
           batch_size: number
           created_at: string
           error: string | null
           host: string
           http_status: number | null
           id: string
+          last_verified_at: string | null
+          priority: number
           response_body: string | null
           success: boolean
           triggered_by: string | null
           url: string
         }
         Insert: {
+          actual_indexing_status?: Database["public"]["Enums"]["indexnow_actual_status"]
           batch_size?: number
           created_at?: string
           error?: string | null
           host: string
           http_status?: number | null
           id?: string
+          last_verified_at?: string | null
+          priority?: number
           response_body?: string | null
           success?: boolean
           triggered_by?: string | null
           url: string
         }
         Update: {
+          actual_indexing_status?: Database["public"]["Enums"]["indexnow_actual_status"]
           batch_size?: number
           created_at?: string
           error?: string | null
           host?: string
           http_status?: number | null
           id?: string
+          last_verified_at?: string | null
+          priority?: number
           response_body?: string | null
           success?: boolean
           triggered_by?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
+      indexnow_reindex_queue: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          last_pinged_at: string | null
+          next_ping_after: string
+          ping_count: number
+          priority: number
+          reason: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_pinged_at?: string | null
+          next_ping_after?: string
+          ping_count?: number
+          priority?: number
+          reason?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_pinged_at?: string | null
+          next_ping_after?: string
+          ping_count?: number
+          priority?: number
+          reason?: string | null
+          updated_at?: string
           url?: string
         }
         Relationships: []
@@ -8739,6 +8787,7 @@ export type Database = {
     Enums: {
       agency_keyword_type: "hard" | "soft" | "owner"
       app_role: "admin" | "moderator" | "user" | "owner"
+      indexnow_actual_status: "pending" | "indexed" | "missing"
       lead_lifecycle_status:
         | "new"
         | "scoring"
@@ -8889,6 +8938,7 @@ export const Constants = {
     Enums: {
       agency_keyword_type: ["hard", "soft", "owner"],
       app_role: ["admin", "moderator", "user", "owner"],
+      indexnow_actual_status: ["pending", "indexed", "missing"],
       lead_lifecycle_status: [
         "new",
         "scoring",
