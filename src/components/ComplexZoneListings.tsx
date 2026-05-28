@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin } from "lucide-react";
+import WatermarkedImage from "@/components/WatermarkedImage";
 
 interface Listing {
   id: string;
@@ -100,14 +101,14 @@ export default function ComplexZoneListings({ complexName, zoneMatchers, isRo }:
                 <Link key={l.id} to={href} className="group">
                   <Card className="overflow-hidden border-border/50 transition-shadow hover:shadow-md h-full">
                     {img && (
-                      <div className="aspect-video bg-muted overflow-hidden">
-                        <img
-                          src={img}
-                          alt={`${l.name || complexName} — ${l.location || "Timișoara"}`}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      </div>
+                      <WatermarkedImage
+                        src={img}
+                        alt={`${l.name || complexName} — ${l.location || "Timișoara"}`}
+                        width={640}
+                        height={360}
+                        watermark
+                        imgClassName="group-hover:scale-105"
+                      />
                     )}
                     <CardContent className="pt-4 space-y-1">
                       <h3 className="font-medium text-foreground line-clamp-1">{l.name || complexName}</h3>

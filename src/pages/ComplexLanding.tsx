@@ -24,6 +24,7 @@ const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const CTA = lazy(() => import("@/components/CTA"));
 const ComplexZoneListings = lazy(() => import("@/components/ComplexZoneListings"));
+const OccupancyUrgencyBadge = lazy(() => import("@/components/complex/OccupancyUrgencyBadge"));
 
 
 interface ComplexData {
@@ -301,7 +302,15 @@ const ComplexLanding = () => {
                   ? `ROI net țintă ${complex.roi}, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Venit lunar estimat ${complex.avgIncome}, ocupare observată ${complex.occupancy}. Operațiuni gestionate end-to-end de echipa RealTrust și ApArt Hotel.`
                   : `Target net ROI ${complex.roi}, calculated on public assumptions (75% occupancy, 27% deduction). Estimated monthly income ${complex.avgIncome}, observed occupancy ${complex.occupancy}. Operations handled end-to-end by the RealTrust and ApArt Hotel team.`}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Suspense fallback={null}>
+                <OccupancyUrgencyBadge
+                  complexSlug={complex.slug}
+                  complexName={complex.name}
+                  baselineOccupancy={complex.occupancy}
+                  isRo={isRo}
+                />
+              </Suspense>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
                 <Link to="/pentru-proprietari">
                   <Button variant="premium" size="lg" className="gap-2">
                     <Phone className="w-4 h-4" />
