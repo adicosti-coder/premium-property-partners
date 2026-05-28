@@ -17,6 +17,7 @@ interface ListingProperty {
   listing_type: string | null;
   capital_necesar: number | null;
   image_path: string | null;
+  images: string[] | null;
   description_ro: string;
   description_en: string;
   size: number | null;
@@ -35,7 +36,7 @@ const RealEstateListings = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("properties")
-        .select("id, slug, name, location, listing_type, capital_necesar, image_path, description_ro, description_en, size, bedrooms, property_images(image_path, is_primary, display_order)")
+        .select("id, slug, name, location, listing_type, capital_necesar, image_path, images, description_ro, description_en, size, bedrooms, property_images(image_path, is_primary, display_order)")
         .in("listing_type", ["vanzare", "inchiriere"])
         .eq("is_active", true)
         .order("display_order");
@@ -76,9 +77,11 @@ const RealEstateListings = () => {
   };
 
   const getImageUrl = (listing: ListingProperty) => {
-    const path = listing.image_path ||
+    const path =
+      listing.image_path ||
       listing.property_images?.find(i => i.is_primary)?.image_path ||
-      listing.property_images?.[0]?.image_path;
+      listing.property_images?.[0]?.image_path ||
+      (Array.isArray(listing.images) ? listing.images.find(Boolean) : null);
     if (!path) return "/placeholder.svg";
     if (path.startsWith("http")) return path;
     return `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${path}`;
