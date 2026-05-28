@@ -1646,15 +1646,29 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                             <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                               <span className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Fără telefon</span>
                               {p.source_url && (
-                                <a
-                                  href={p.source_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary underline-offset-2 hover:underline inline-flex items-center gap-1"
-                                  title="Deschide anunțul sursă pentru a vedea telefonul"
-                                >
-                                  <ExternalLink className="h-3 w-3" /> deschide anunțul
-                                </a>
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
+                                    disabled={recoveringPhoneId === p.id}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-60"
+                                    title="Click pe „Arată numărul" pe sursă și extrage telefonul"
+                                  >
+                                    {recoveringPhoneId === p.id
+                                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                                      : <Sparkles className="h-3 w-3" />}
+                                    recuperează tel.
+                                  </button>
+                                  <a
+                                    href={p.source_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary underline-offset-2 hover:underline inline-flex items-center gap-1"
+                                    title="Deschide anunțul sursă"
+                                  >
+                                    <ExternalLink className="h-3 w-3" /> deschide
+                                  </a>
+                                </>
                               )}
                             </div>
                           )}
