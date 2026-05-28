@@ -616,12 +616,9 @@ export default function SystemHealthDashboard() {
             </p>
           </div>
           <div>
-            <Label>Slack / Discord webhook URL (opțional)</Label>
-            <Input type="url" value={thresholds.slack_webhook_url ?? ""}
-              placeholder="https://hooks.slack.com/services/T000/B000/XXXX"
-              onChange={(e) => setThresholds({ ...thresholds, slack_webhook_url: e.target.value || null })} />
+            <Label>Slack / Discord webhook URL</Label>
             <p className="text-xs mt-1 text-muted-foreground">
-              Dacă e setat, raportul zilnic și incidentele vor fi trimise și pe acest webhook (Slack incoming webhook sau Discord-compatible).
+              Configurat ca secret server-side (<code>SLACK_WEBHOOK_URL</code>). Cere unui admin să-l actualizeze din Setări Backend → Secrets.
             </p>
           </div>
           <div className="flex gap-2">
