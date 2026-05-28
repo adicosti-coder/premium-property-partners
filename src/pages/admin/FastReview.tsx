@@ -321,10 +321,14 @@ export default function FastReview() {
     if (error) return toast({ title: "Eroare batch", description: error.message, variant: "destructive" });
     toast({ title: `${ids.length} anunțuri publicate`, description: "Toate cele vizibile selectate sunt acum active." });
     ids.forEach((id) => void recordLearn({ property_id: id, action: "approve" }));
+    // Batch IndexNow ping
+    const slugs = rows.filter((r) => ids.includes(r.id) && r.slug).map((r) => `/proprietate/${r.slug}`);
+    if (slugs.length) void notifyIndexNow(slugs, "fast_review_batch_approve");
     const idSet = new Set(ids);
     setRows((p) => p.filter((r) => !idSet.has(r.id)));
     setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n; });
   };
+
 
 
   if (!authChecked || roleLoading) {
