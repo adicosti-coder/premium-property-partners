@@ -532,6 +532,29 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   }, [prospectTypeFilter]);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [scoringId, setScoringId] = useState<string | null>(null);
+  const [recoveringPhoneId, setRecoveringPhoneId] = useState<string | null>(null);
+
+  const handleRecoverPhone = async (p: { id: string; source_url: string }) => {
+    if (!p.source_url) {
+      toast({ title: "Fără URL sursă", description: "Nu am de unde recupera telefonul.", variant: "destructive" });
+      return;
+    }
+    setRecoveringPhoneId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-recover-phone", { body: { prospect_id: p.id } });
+      if (error) throw error;
+      if (data?.found) {
+        toast({ title: "📞 Telefon recuperat", description: data.phone });
+        refetch();
+      } else {
+        toast({ title: "Niciun telefon găsit", description: "Sursa nu expune numărul nici după click.", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Eroare recuperare", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setRecoveringPhoneId(null);
+    }
+  };
   const [resuming, setResuming] = useState(false);
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [campaignRunning, setCampaignRunning] = useState(false);
@@ -1623,15 +1646,29 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                             <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                               <span className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Fără telefon</span>
                               {p.source_url && (
-                                <a
-                                  href={p.source_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary underline-offset-2 hover:underline inline-flex items-center gap-1"
-                                  title="Deschide anunțul sursă pentru a vedea telefonul"
-                                >
-                                  <ExternalLink className="h-3 w-3" /> deschide anunțul
-                                </a>
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
+                                    disabled={recoveringPhoneId === p.id}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-60"
+                                    title="Apasă butonul «Arată numărul» pe sursă și extrage telefonul"
+                                  >
+                                    {recoveringPhoneId === p.id
+                                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                                      : <Sparkles className="h-3 w-3" />}
+                                    recuperează tel.
+                                  </button>
+                                  <a
+                                    href={p.source_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary underline-offset-2 hover:underline inline-flex items-center gap-1"
+                                    title="Deschide anunțul sursă"
+                                  >
+                                    <ExternalLink className="h-3 w-3" /> deschide
+                                  </a>
+                                </>
                               )}
                             </div>
                           )}
