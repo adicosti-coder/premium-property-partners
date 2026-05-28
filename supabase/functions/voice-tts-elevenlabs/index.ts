@@ -23,7 +23,10 @@ const ANDREI_MODEL_ID = "eleven_flash_v2_5";
 // ── Circuit breaker for ElevenLabs ─────────────────────────────
 // In-memory module state (per edge isolate). When ElevenLabs is slow or fails,
 // we trip the breaker for FALLBACK_WINDOW_MS and reroute to OpenAI TTS.
-const LATENCY_THRESHOLD_MS = 1500;
+// 2500ms aligns with realistic flash_v2_5 end-to-end latency for typical
+// 1-3 sentence Twilio replies (incl. network + storage upload). Anything
+// over this is genuinely degraded.
+const LATENCY_THRESHOLD_MS = 2500;
 const FALLBACK_WINDOW_MS = 60_000;
 let breakerOpenUntil = 0;
 const tripBreaker = (reason: string) => {
@@ -31,6 +34,7 @@ const tripBreaker = (reason: string) => {
   console.warn(`[voice-tts] circuit breaker tripped (${reason}) for ${FALLBACK_WINDOW_MS}ms`);
 };
 const isBreakerOpen = () => Date.now() < breakerOpenUntil;
+
 
 async function generateOpenAITTS(text: string, apiKey: string): Promise<ArrayBuffer> {
   const res = await fetch("https://api.openai.com/v1/audio/speech", {
