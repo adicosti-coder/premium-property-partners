@@ -23,6 +23,8 @@ import {
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const CTA = lazy(() => import("@/components/CTA"));
+const ComplexZoneListings = lazy(() => import("@/components/ComplexZoneListings"));
+
 
 interface ComplexData {
   name: string;
