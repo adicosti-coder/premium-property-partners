@@ -237,6 +237,28 @@ export default function LocalSeoIndexingPanel() {
           </div>
         </div>
 
+        {/* Audit alerts */}
+        {auditAlerts.length > 0 && (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4" />
+              Audit acoperire complexe — {auditAlerts.length} {auditAlerts.length === 1 ? "alertă" : "alerte"}
+            </div>
+            <ul className="mt-2 space-y-1 text-xs">
+              {auditAlerts.map((a) => (
+                <li key={a.zone} className="flex items-center gap-2">
+                  <span className="font-medium">{a.zone.replace("Complex: ", "")}</span>
+                  {a.zeroListings && <Badge variant="destructive">0 anunțuri</Badge>}
+                  {a.pingFailed && <Badge variant="outline" className="border-rose-500/40 text-rose-600">IndexNow eșuat</Badge>}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Acțiune recomandată: rulează scraping țintit pe complexele cu 0 anunțuri și re-trimite hub-urile premium pentru ping-urile eșuate.
+            </p>
+          </div>
+        )}
+
         {/* Recent pings list */}
         <div>
           <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
