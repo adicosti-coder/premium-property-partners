@@ -154,6 +154,28 @@ export default function LocalSeoIndexingPanel() {
     return { total, successful, failed, uniqueUrls };
   }, [pings]);
 
+  // AUDIT: complexes with 0 listings OR a failed IndexNow ping in the last 7 days.
+  const auditAlerts = useMemo(() => {
+    const failedUrlSlugs = new Set(
+      pings.filter((p) => !p.success).map((p) => {
+        const m = p.url.match(/\/complexe\/([a-z0-9-]+)/i);
+        return m ? m[1].toLowerCase() : "";
+      }).filter(Boolean),
+    );
+    return NEIGHBORHOODS
+      .filter((row) => row.zone.startsWith("Complex:"))
+      .map((row) => {
+        const count = keywordCoverage[row.zone]?.count ?? 0;
+        const slug = row.zone.replace("Complex:", "").trim().toLowerCase()
+          .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        const pingFailed = failedUrlSlugs.has(slug);
+        const zeroListings = !coverageLoading && count === 0;
+        return { zone: row.zone, count, pingFailed, zeroListings };
+      })
+      .filter((a) => a.zeroListings || a.pingFailed);
+  }, [keywordCoverage, coverageLoading, pings]);
+
+
   const resubmitHubs = useCallback(async () => {
     setResubmitting(true);
     const urls = [
