@@ -6397,7 +6397,6 @@ export type Database = {
           id: boolean
           key_expiry_warn_days: number
           seo_reaudit_interval_days: number
-          slack_webhook_url: string | null
           updated_at: string
           updated_by: string | null
           voice_latency_ms_threshold: number
@@ -6411,7 +6410,6 @@ export type Database = {
           id?: boolean
           key_expiry_warn_days?: number
           seo_reaudit_interval_days?: number
-          slack_webhook_url?: string | null
           updated_at?: string
           updated_by?: string | null
           voice_latency_ms_threshold?: number
@@ -6425,7 +6423,6 @@ export type Database = {
           id?: boolean
           key_expiry_warn_days?: number
           seo_reaudit_interval_days?: number
-          slack_webhook_url?: string | null
           updated_at?: string
           updated_by?: string | null
           voice_latency_ms_threshold?: number
