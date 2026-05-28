@@ -532,6 +532,29 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   }, [prospectTypeFilter]);
   const [callingId, setCallingId] = useState<string | null>(null);
   const [scoringId, setScoringId] = useState<string | null>(null);
+  const [recoveringPhoneId, setRecoveringPhoneId] = useState<string | null>(null);
+
+  const handleRecoverPhone = async (p: { id: string; source_url: string }) => {
+    if (!p.source_url) {
+      toast({ title: "Fără URL sursă", description: "Nu am de unde recupera telefonul.", variant: "destructive" });
+      return;
+    }
+    setRecoveringPhoneId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-recover-phone", { body: { prospect_id: p.id } });
+      if (error) throw error;
+      if (data?.found) {
+        toast({ title: "📞 Telefon recuperat", description: data.phone });
+        refetch();
+      } else {
+        toast({ title: "Niciun telefon găsit", description: "Sursa nu expune numărul nici după click.", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Eroare recuperare", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setRecoveringPhoneId(null);
+    }
+  };
   const [resuming, setResuming] = useState(false);
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [campaignRunning, setCampaignRunning] = useState(false);
