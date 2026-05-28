@@ -248,6 +248,8 @@ export default function GrowthEngineDashboard() {
   return (
     <div className="space-y-4">
       <VoiceLatencyMonitor />
+      <LocalSeoIndexingPanel />
+
       <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-primary/5 to-transparent">
 
       <CardHeader>
