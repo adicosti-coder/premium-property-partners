@@ -26,7 +26,7 @@ type Threshold = {
   daily_report_enabled: boolean;
   daily_report_email: string;
   e2e_seo_url: string;
-  slack_webhook_url: string | null;
+  
 };
 
 const STATUS_COLORS: Record<string, string> = {
