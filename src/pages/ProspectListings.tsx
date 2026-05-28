@@ -16,7 +16,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import {
-  Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw,
+  Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw, Clock,
   TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -113,6 +113,23 @@ interface Prospect {
 
 const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
 const VISIBLE_PHONE_PATTERN = /(?:\+?40|0040|0)\s*[237]\d{2}(?:[\s().-]*(?:\d|x|X|\*|•|\.)){2,}/g;
+
+function formatRelativeRo(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "—";
+  const diffMs = Date.now() - t;
+  const sec = Math.max(0, Math.round(diffMs / 1000));
+  if (sec < 60) return "acum";
+  const min = Math.round(sec / 60);
+  if (min < 60) return `acum ${min}m`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `acum ${hr}h`;
+  const d = Math.round(hr / 24);
+  if (d < 7) return `acum ${d}z`;
+  if (d < 30) return `acum ${Math.round(d / 7)}săpt`;
+  return new Date(iso).toLocaleDateString("ro-RO", { day: "2-digit", month: "short" });
+}
 
 type ProspectPhoneSource = "phone_normalized" | "contact_phone" | "admin_notes" | "description" | "title";
 
@@ -594,7 +611,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     queryFn: async () => {
       let q = supabase
         .from("prospect_listings")
-        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason,persona_snapshot,persona_generated_at")
+        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,created_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason,persona_snapshot,persona_generated_at")
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
@@ -1464,6 +1481,31 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                             {p.rooms && <span>{p.rooms}cam</span>}
                             {p.size && <span>{p.size}mp</span>}
                           </div>
+                          <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-1 flex-wrap">
+                            {p.source_url ? (
+                              <a
+                                href={p.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-muted/40 hover:bg-muted text-primary font-medium max-w-[220px] truncate"
+                                title={p.source_url}
+                              >
+                                <ExternalLink className="h-3 w-3 shrink-0" />
+                                {(() => { try { return new URL(p.source_url).hostname.replace(/^www\./, ""); } catch { return "sursă"; } })()}
+                              </a>
+                            ) : (
+                              <span className="text-[10px] italic text-amber-600">fără URL sursă</span>
+                            )}
+                            {(p.scraped_at || (p as any).created_at) && (
+                              <span
+                                className="inline-flex items-center gap-1"
+                                title={new Date(p.scraped_at || (p as any).created_at).toLocaleString("ro-RO")}
+                              >
+                                <Clock className="h-3 w-3" />
+                                {formatRelativeRo(p.scraped_at || (p as any).created_at)}
+                              </span>
+                            )}
+                          </div>
                           {p.ai_score_breakdown?.recommended_pitch && !p.persona_snapshot && (
                             <div className="text-xs italic text-primary/70 mt-1 line-clamp-1">💡 {p.ai_score_breakdown.recommended_pitch}</div>
                           )}
@@ -1578,9 +1620,19 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                               )}
                             </a>
                           ) : (
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                              <AlertTriangle className="h-3 w-3" />
-                              Fără telefon
+                            <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                              <span className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Fără telefon</span>
+                              {p.source_url && (
+                                <a
+                                  href={p.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary underline-offset-2 hover:underline inline-flex items-center gap-1"
+                                  title="Deschide anunțul sursă pentru a vedea telefonul"
+                                >
+                                  <ExternalLink className="h-3 w-3" /> deschide anunțul
+                                </a>
+                              )}
                             </div>
                           )}
                           <Button
