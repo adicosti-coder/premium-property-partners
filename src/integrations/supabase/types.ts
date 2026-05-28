@@ -8244,6 +8244,51 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_tts_request_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          fallback_used: boolean
+          http_status: number | null
+          id: string
+          mode: string | null
+          provider: string
+          retry_count: number
+          text_length: number | null
+          total_duration_ms: number | null
+          ttfb_ms: number | null
+          voice_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          fallback_used?: boolean
+          http_status?: number | null
+          id?: string
+          mode?: string | null
+          provider: string
+          retry_count?: number
+          text_length?: number | null
+          total_duration_ms?: number | null
+          ttfb_ms?: number | null
+          voice_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          fallback_used?: boolean
+          http_status?: number | null
+          id?: string
+          mode?: string | null
+          provider?: string
+          retry_count?: number
+          text_length?: number | null
+          total_duration_ms?: number | null
+          ttfb_ms?: number | null
+          voice_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       booking_availability: {

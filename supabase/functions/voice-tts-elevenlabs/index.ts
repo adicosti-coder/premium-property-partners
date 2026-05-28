@@ -36,14 +36,24 @@ const tripBreaker = (reason: string) => {
 const isBreakerOpen = () => Date.now() < breakerOpenUntil;
 
 
-async function generateOpenAITTS(text: string, apiKey: string): Promise<ArrayBuffer> {
+interface TtsAttemptResult {
+  buf: ArrayBuffer;
+  ttfb_ms: number;
+  total_duration_ms: number;
+  http_status: number;
+}
+
+async function generateOpenAITTS(text: string, apiKey: string): Promise<TtsAttemptResult> {
+  const t0 = Date.now();
   const res = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ model: "tts-1", voice: "onyx", input: text, response_format: "mp3" }),
   });
+  const ttfb_ms = Date.now() - t0;
   if (!res.ok) throw new Error(`OpenAI TTS ${res.status}: ${await res.text()}`);
-  return res.arrayBuffer();
+  const buf = await res.arrayBuffer();
+  return { buf, ttfb_ms, total_duration_ms: Date.now() - t0, http_status: res.status };
 }
 
 
@@ -75,7 +85,16 @@ interface VoiceSettings {
   use_speaker_boost: boolean;
 }
 
-async function generateMp3(text: string, v: VoiceSettings, apiKey: string): Promise<ArrayBuffer> {
+class ElevenLabsHttpError extends Error {
+  status: number;
+  constructor(status: number, body: string) {
+    super(`ElevenLabs ${status}: ${body}`);
+    this.status = status;
+  }
+}
+
+async function generateMp3(text: string, v: VoiceSettings, apiKey: string): Promise<TtsAttemptResult> {
+  const t0 = Date.now();
   // optimize_streaming_latency=4 → maximum latency optimization (works on
   // non-stream endpoint too). Reduces TTFB ~30-40% for flash_v2_5.
   const res = await fetch(
@@ -99,12 +118,38 @@ async function generateMp3(text: string, v: VoiceSettings, apiKey: string): Prom
       }),
     }
   );
+  const ttfb_ms = Date.now() - t0;
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`ElevenLabs ${res.status}: ${errText}`);
+    throw new ElevenLabsHttpError(res.status, errText);
   }
-  return res.arrayBuffer();
+  const buf = await res.arrayBuffer();
+  return { buf, ttfb_ms, total_duration_ms: Date.now() - t0, http_status: res.status };
 }
+
+// Retry transient (429/5xx) with fast exponential backoff before tripping breaker.
+const RETRY_DELAYS_MS = [100, 300];
+const isTransientStatus = (s: number) => s === 429 || (s >= 500 && s <= 599);
+async function generateMp3WithRetry(
+  text: string, v: VoiceSettings, apiKey: string
+): Promise<{ result: TtsAttemptResult; retry_count: number }> {
+  let lastErr: any;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      const result = await generateMp3(text, v, apiKey);
+      return { result, retry_count: attempt };
+    } catch (e: any) {
+      lastErr = e;
+      const status = e instanceof ElevenLabsHttpError ? e.status : 0;
+      const transient = status === 0 ? false : isTransientStatus(status);
+      if (!transient || attempt === RETRY_DELAYS_MS.length) throw e;
+      console.warn(`[voice-tts] retry ${attempt + 1} after ${RETRY_DELAYS_MS[attempt]}ms (status ${status})`);
+      await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+    }
+  }
+  throw lastErr;
+}
+
 
 
 serve(async (req) => {
@@ -180,29 +225,69 @@ serve(async (req) => {
       } catch { /* non-fatal */ }
     };
 
-    // Helper: try ElevenLabs first (unless breaker open); on slow/fail, switch to OpenAI TTS.
+    // Best-effort structured per-request log into voice_tts_request_logs.
+    const logRequest = async (entry: {
+      provider: string;
+      ttfb_ms: number | null;
+      total_duration_ms: number;
+      http_status: number | null;
+      fallback_used: boolean;
+      retry_count: number;
+      error?: string | null;
+      mode: string;
+    }) => {
+      try {
+        await supabase.from("voice_tts_request_logs").insert({
+          provider: entry.provider,
+          ttfb_ms: entry.ttfb_ms,
+          total_duration_ms: entry.total_duration_ms,
+          text_length: phoneticText.length,
+          http_status: entry.http_status,
+          fallback_used: entry.fallback_used,
+          retry_count: entry.retry_count,
+          voice_id: voiceSettings.voice_id,
+          mode: entry.mode,
+          error: entry.error ?? null,
+        });
+      } catch { /* non-fatal */ }
+      console.log(JSON.stringify({ tag: "voice_tts_request", text_length: phoneticText.length, voice_id: voiceSettings.voice_id, ...entry }));
+    };
+
+    // Helper: try ElevenLabs (with retry on transient); on slow/fail trip breaker and fall back to OpenAI.
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    const generateWithFallback = async (): Promise<{ buf: ArrayBuffer; provider: string; latency_ms: number; fallback_used: boolean }> => {
+    const runMode = mode === "preview" ? "preview" : "cache";
+    const generateWithFallback = async (): Promise<{
+      buf: ArrayBuffer; provider: string; latency_ms: number;
+      ttfb_ms: number | null; fallback_used: boolean; retry_count: number; http_status: number | null;
+    }> => {
       const startedAt = Date.now();
       // Breaker open → skip ElevenLabs entirely
       if (isBreakerOpen() && OPENAI_API_KEY) {
-        const buf = await generateOpenAITTS(phoneticText, OPENAI_API_KEY);
-        return { buf, provider: "openai", latency_ms: Date.now() - startedAt, fallback_used: true };
+        const r = await generateOpenAITTS(phoneticText, OPENAI_API_KEY);
+        const out = { buf: r.buf, provider: "openai", latency_ms: Date.now() - startedAt, ttfb_ms: r.ttfb_ms, fallback_used: true, retry_count: 0, http_status: r.http_status };
+        await logRequest({ provider: out.provider, ttfb_ms: out.ttfb_ms, total_duration_ms: out.latency_ms, http_status: out.http_status, fallback_used: true, retry_count: 0, mode: runMode, error: "breaker_open" });
+        return out;
       }
       try {
-        const buf = await generateMp3(phoneticText, voiceSettings, ELEVENLABS_API_KEY);
+        const { result, retry_count } = await generateMp3WithRetry(phoneticText, voiceSettings, ELEVENLABS_API_KEY);
         const latency_ms = Date.now() - startedAt;
         if (latency_ms > LATENCY_THRESHOLD_MS) {
           tripBreaker(`latency ${latency_ms}ms > ${LATENCY_THRESHOLD_MS}ms`);
           await tryLogTtsError({ message: `slow_response_${latency_ms}ms` });
         }
-        return { buf, provider: "elevenlabs", latency_ms, fallback_used: false };
+        await logRequest({ provider: "elevenlabs", ttfb_ms: result.ttfb_ms, total_duration_ms: latency_ms, http_status: result.http_status, fallback_used: false, retry_count, mode: runMode });
+        return { buf: result.buf, provider: "elevenlabs", latency_ms, ttfb_ms: result.ttfb_ms, fallback_used: false, retry_count, http_status: result.http_status };
       } catch (e: any) {
-        await tryLogTtsError(e);
-        tripBreaker(`error: ${e?.message?.slice(0, 80)}`);
+        const status = e instanceof ElevenLabsHttpError ? e.status : null;
+        await tryLogTtsError(e, status ?? undefined);
+        tripBreaker(`error: ${String(e?.message || "").slice(0, 80)}`);
+        await logRequest({ provider: "elevenlabs", ttfb_ms: null, total_duration_ms: Date.now() - startedAt, http_status: status, fallback_used: false, retry_count: RETRY_DELAYS_MS.length, mode: runMode, error: String(e?.message || e).slice(0, 500) });
         if (OPENAI_API_KEY) {
-          const buf = await generateOpenAITTS(phoneticText, OPENAI_API_KEY);
-          return { buf, provider: "openai", latency_ms: Date.now() - startedAt, fallback_used: true };
+          const fbStart = Date.now();
+          const r = await generateOpenAITTS(phoneticText, OPENAI_API_KEY);
+          const out = { buf: r.buf, provider: "openai", latency_ms: Date.now() - startedAt, ttfb_ms: r.ttfb_ms, fallback_used: true, retry_count: RETRY_DELAYS_MS.length, http_status: r.http_status };
+          await logRequest({ provider: "openai", ttfb_ms: r.ttfb_ms, total_duration_ms: Date.now() - fbStart, http_status: r.http_status, fallback_used: true, retry_count: 0, mode: runMode, error: "elevenlabs_fallback" });
+          return out;
         }
         throw e;
       }
@@ -210,13 +295,12 @@ serve(async (req) => {
 
     // PREVIEW MODE: return base64 audio directly (don't cache)
     if (mode === "preview") {
-      const { buf, provider, latency_ms, fallback_used } = await generateWithFallback();
+      const { buf, provider, latency_ms, ttfb_ms, fallback_used } = await generateWithFallback();
       const { encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
       const base64 = encode(new Uint8Array(buf));
       return new Response(JSON.stringify({
         audioContent: base64, mime: "audio/mpeg",
-        provider, latency_ms, fallback_used,
-        // Client may fall back to Web Speech API when no server provider is available.
+        provider, latency_ms, ttfb_ms, fallback_used,
         web_speech_fallback: false,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -225,7 +309,6 @@ serve(async (req) => {
     const cacheKey = await sha256(JSON.stringify({ text: phoneticText, ...voiceSettings }));
     const filePath = `tts-cache/${cacheKey}.mp3`;
 
-    // Check if already cached
     const { data: existing } = await supabase.storage
       .from("voice-recordings")
       .list("tts-cache", { search: `${cacheKey}.mp3`, limit: 1 });
@@ -237,9 +320,7 @@ serve(async (req) => {
       });
     }
 
-    // Generate fresh (with fallback)
-    const { buf: audioBuffer, provider, latency_ms, fallback_used } = await generateWithFallback();
-
+    const { buf: audioBuffer, provider, latency_ms, ttfb_ms, fallback_used } = await generateWithFallback();
 
     const { error: upErr } = await supabase.storage
       .from("voice-recordings")
@@ -251,9 +332,10 @@ serve(async (req) => {
     if (upErr) throw new Error(`Storage upload: ${upErr.message}`);
 
     const signedUrl = await getSignedStorageUrl(supabase, filePath);
-    return new Response(JSON.stringify({ url: signedUrl, cached: false, provider, latency_ms, fallback_used }), {
+    return new Response(JSON.stringify({ url: signedUrl, cached: false, provider, latency_ms, ttfb_ms, fallback_used }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
 
   } catch (e: any) {
     console.error("voice-tts-elevenlabs error:", e);
