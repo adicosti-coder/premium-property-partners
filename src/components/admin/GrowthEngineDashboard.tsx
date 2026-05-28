@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, TrendingUp, AlertTriangle, PhoneCall, Filter, Sparkles, Target, RefreshCcw, Copy } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import VoiceLatencyMonitor from "./VoiceLatencyMonitor";
+import LocalSeoIndexingPanel from "./LocalSeoIndexingPanel";
+
 
 
 interface Metrics {
@@ -246,6 +248,8 @@ export default function GrowthEngineDashboard() {
   return (
     <div className="space-y-4">
       <VoiceLatencyMonitor />
+      <LocalSeoIndexingPanel />
+
       <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-primary/5 to-transparent">
 
       <CardHeader>

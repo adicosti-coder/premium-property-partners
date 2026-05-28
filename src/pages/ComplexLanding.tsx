@@ -23,6 +23,8 @@ import {
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const CTA = lazy(() => import("@/components/CTA"));
+const ComplexZoneListings = lazy(() => import("@/components/ComplexZoneListings"));
+
 
 interface ComplexData {
   name: string;
@@ -33,8 +35,11 @@ interface ComplexData {
   rating: string;
   avgPrice: number;
   avgADR: number;
+  /** Keywords matched against properties.location/zone to auto-load approved listings. */
+  zoneMatchers?: string[];
   advantages: { ro: string; en: string }[];
 }
+
 
 const complexesData: Record<string, ComplexData> = {
   isho: {
@@ -46,12 +51,30 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.6",
     avgPrice: 95000,
     avgADR: 55,
+    zoneMatchers: ["ISHO", "Iosefin"],
     advantages: [
       { ro: "Situat lângă Centrul Vechi și Piața Unirii — acces direct la cele mai vizitate zone turistice", en: "Located near the Old Town and Unirii Square — direct access to the most visited tourist areas" },
       { ro: "Comunitate mixtă rezidențial-business cu cerere constantă de cazare pe termen scurt", en: "Mixed residential-business community with constant demand for short-term accommodation" },
       { ro: "Infrastructură premium cu spații comerciale, restaurante și coworking la parter", en: "Premium infrastructure with commercial spaces, restaurants and coworking on the ground floor" },
     ],
   },
+  paltim: {
+    name: "Paltim",
+    slug: "paltim",
+    roi: "9.5%",
+    avgIncome: "€1,320",
+    occupancy: "93%",
+    rating: "9.7",
+    avgPrice: 92000,
+    avgADR: 56,
+    zoneMatchers: ["Paltim", "Cetate", "Centru"],
+    advantages: [
+      { ro: "Poziție premium în Cetate — la pas de Piața Unirii și Catedrală", en: "Premium position in Cetate — walking distance from Unirii Square and the Cathedral" },
+      { ro: "Cerere ridicată tot anul din partea turiștilor culturali și business travelers", en: "High year-round demand from cultural tourists and business travelers" },
+      { ro: "Finisaje premium și smart-lock — perfecte pentru self check-in 24/7", en: "Premium finishes and smart-lock — perfect for self check-in 24/7" },
+    ],
+  },
+
   ateneo: {
     name: "ATENEO",
     slug: "ateneo",
@@ -106,6 +129,8 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.8",
     avgPrice: 90000,
     avgADR: 58,
+    zoneMatchers: ["Fructus", "Cetate", "Victoriei"],
+
     advantages: [
       { ro: "Poziție ultracentral pe strada principală — la 2 minute de Piața Victoriei", en: "Ultra-central position on the main street — 2 minutes from Victory Square" },
       { ro: "Cel mai bine cotat complex din portofoliu cu rating 9.8 pe Booking.com", en: "Best rated complex in portfolio with 9.8 rating on Booking.com" },
@@ -121,7 +146,9 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.5",
     avgPrice: 80000,
     avgADR: 48,
+    zoneMatchers: ["Mara", "Circumvalațiunii", "Aradului"],
     advantages: [
+
       { ro: "Zona Circumvalațiunii lângă Iulius Mall — acces rapid la shopping și divertisment", en: "Circumvalațiunii area near Iulius Mall — quick access to shopping and entertainment" },
       { ro: "Complex mare cu comunitate activă și servicii integrate", en: "Large complex with active community and integrated services" },
       { ro: "Preț de achiziție accesibil cu randament competitiv — ideal pentru prima investiție", en: "Accessible purchase price with competitive yield — ideal for first investment" },
@@ -228,11 +255,12 @@ const ComplexLanding = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title={isRo
-          ? `${complex.name} Timișoara | Analiză ROI & Investiții RealTrust`
-          : `${complex.name} Timișoara | ROI Analysis & Investments RealTrust`}
+          ? `Apartamente de închiriat și vânzare în ${complex.name} Timișoara | RealTrust`
+          : `Apartments for rent and sale in ${complex.name} Timișoara | RealTrust`}
         description={isRo
-          ? `Vezi analiza financiară completă pentru complexul ${complex.name} din Timișoara. Calcul ROI, prețuri medii și oportunități de property management prin ApArt Hotel.`
-          : `See the complete financial analysis for ${complex.name} complex in Timișoara. ROI calculation, average prices and property management opportunities via ApArt Hotel.`}
+          ? `Apartamente disponibile în ${complex.name}, Timișoara. ROI ${complex.roi}, venit ${complex.avgIncome}/lună, ocupare ${complex.occupancy}. Cele mai recente anunțuri verificate de RealTrust + analiză financiară completă pentru regim hotelier.`
+          : `Apartments available in ${complex.name}, Timișoara. ROI ${complex.roi}, income ${complex.avgIncome}/month, occupancy ${complex.occupancy}. Latest RealTrust-verified listings plus complete short-term-rental financial analysis.`}
+
         url={`https://realtrust.ro/complexe/${complex.slug}`}
         jsonLd={jsonLd}
         breadcrumbItems={[
@@ -326,7 +354,19 @@ const ComplexLanding = () => {
           </div>
         </section>
 
+        {/* Auto-loaded approved listings for this complex's zone */}
+        {complex.zoneMatchers && complex.zoneMatchers.length > 0 && (
+          <Suspense fallback={null}>
+            <ComplexZoneListings
+              complexName={complex.name}
+              zoneMatchers={complex.zoneMatchers}
+              isRo={isRo}
+            />
+          </Suspense>
+        )}
+
         {/* ROI Calculator */}
+
         <section className="py-16 bg-muted/20">
           <div className="container mx-auto px-6">
             <Suspense fallback={<div className="min-h-[400px]" />}>

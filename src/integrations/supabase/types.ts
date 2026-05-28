@@ -2173,6 +2173,45 @@ export type Database = {
         }
         Relationships: []
       }
+      indexnow_pings: {
+        Row: {
+          batch_size: number
+          created_at: string
+          error: string | null
+          host: string
+          http_status: number | null
+          id: string
+          response_body: string | null
+          success: boolean
+          triggered_by: string | null
+          url: string
+        }
+        Insert: {
+          batch_size?: number
+          created_at?: string
+          error?: string | null
+          host: string
+          http_status?: number | null
+          id?: string
+          response_body?: string | null
+          success?: boolean
+          triggered_by?: string | null
+          url: string
+        }
+        Update: {
+          batch_size?: number
+          created_at?: string
+          error?: string | null
+          host?: string
+          http_status?: number | null
+          id?: string
+          response_body?: string | null
+          success?: boolean
+          triggered_by?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       keyword_radar_queries: {
         Row: {
           category: string

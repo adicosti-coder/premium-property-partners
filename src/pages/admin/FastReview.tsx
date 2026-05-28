@@ -18,6 +18,8 @@ import {
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { notifyIndexNow } from "@/hooks/useIndexNowNotify";
+
 import type { User } from "@supabase/supabase-js";
 
 type DraftProperty = {
@@ -246,9 +248,13 @@ export default function FastReview() {
     if (error) return toast({ title: "Eroare", description: error.message, variant: "destructive" });
     toast({ title: "Publicat", description: "Anunțul este acum activ pe site." });
     void recordLearn({ property_id: id, action: "approve" });
+    // Instant IndexNow ping → Bing/Yandex/Seznam pick it up in minutes
+    const row = rows.find((r) => r.id === id);
+    if (row?.slug) void notifyIndexNow([`/proprietate/${row.slug}`], "fast_review_approve");
     setRows((p) => p.filter((r) => r.id !== id));
     setSelected((p) => { const n = new Set(p); n.delete(id); return n; });
   };
+
 
   const reject = async (row: DraftProperty) => {
     setActingId(row.id);
@@ -315,10 +321,14 @@ export default function FastReview() {
     if (error) return toast({ title: "Eroare batch", description: error.message, variant: "destructive" });
     toast({ title: `${ids.length} anunțuri publicate`, description: "Toate cele vizibile selectate sunt acum active." });
     ids.forEach((id) => void recordLearn({ property_id: id, action: "approve" }));
+    // Batch IndexNow ping
+    const slugs = rows.filter((r) => ids.includes(r.id) && r.slug).map((r) => `/proprietate/${r.slug}`);
+    if (slugs.length) void notifyIndexNow(slugs, "fast_review_batch_approve");
     const idSet = new Set(ids);
     setRows((p) => p.filter((r) => !idSet.has(r.id)));
     setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n; });
   };
+
 
 
   if (!authChecked || roleLoading) {
