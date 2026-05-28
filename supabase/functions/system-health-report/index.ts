@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
 
   // Optional: Slack/Discord webhook delivery (incident summary).
   let slackResult: any = null;
-  const slackUrl = String(cfg.slack_webhook_url || "").trim();
+  const slackUrl = String(Deno.env.get("SLACK_WEBHOOK_URL") || "").trim();
   if (slackUrl.startsWith("https://")) {
     const lines = [
       `*RealTrust System Health* — ${new Date().toLocaleDateString("ro-RO")}`,
