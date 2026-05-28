@@ -18,6 +18,8 @@ import {
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { notifyIndexNow } from "@/hooks/useIndexNowNotify";
+
 import type { User } from "@supabase/supabase-js";
 
 type DraftProperty = {
