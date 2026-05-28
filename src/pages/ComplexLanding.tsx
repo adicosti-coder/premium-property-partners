@@ -127,6 +127,8 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.8",
     avgPrice: 90000,
     avgADR: 58,
+    zoneMatchers: ["Fructus", "Cetate", "Victoriei"],
+
     advantages: [
       { ro: "Poziție ultracentral pe strada principală — la 2 minute de Piața Victoriei", en: "Ultra-central position on the main street — 2 minutes from Victory Square" },
       { ro: "Cel mai bine cotat complex din portofoliu cu rating 9.8 pe Booking.com", en: "Best rated complex in portfolio with 9.8 rating on Booking.com" },
