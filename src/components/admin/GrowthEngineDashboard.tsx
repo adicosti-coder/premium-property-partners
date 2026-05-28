@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, TrendingUp, AlertTriangle, PhoneCall, Filter, Sparkles, Target, RefreshCcw, Copy } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import VoiceLatencyMonitor from "./VoiceLatencyMonitor";
+
 
 interface Metrics {
   // Voice / Andrei
