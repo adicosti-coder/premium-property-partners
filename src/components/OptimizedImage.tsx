@@ -77,22 +77,27 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
     onError?.();
   };
 
+  // Guard against missing src (scraped listings without imagery, race conditions, etc.)
+  const safeSrc = typeof src === "string" ? src : "";
+  const hasSrc = safeSrc.length > 0;
+
   // Google Places images need server-side proxy due to hotlink protection
-  const isGoogleImage = isGoogleHostedImage(src);
+  const isGoogleImage = hasSrc && isGoogleHostedImage(safeSrc);
 
   // Determine if we should route through Cloudinary CDN
   const isSkipCdn =
-    src.startsWith("data:") ||
-    src.startsWith("blob:") ||
-    src.includes("res.cloudinary.com") ||
+    !hasSrc ||
+    safeSrc.startsWith("data:") ||
+    safeSrc.startsWith("blob:") ||
+    safeSrc.includes("res.cloudinary.com") ||
     isGoogleImage;
 
   // Proxy Google Places images through our edge function
-  const resolvedSrc = resolveExternalImageUrl(src);
+  const resolvedSrc = hasSrc ? resolveExternalImageUrl(safeSrc) : "";
 
   // Build Cloudinary-optimised src (f_auto, q_auto, responsive width)
-  const cdnSrc = isSkipCdn ? resolvedSrc : cloudinaryUrl(src, { width });
-  const cdnSrcSet = isSkipCdn ? undefined : cloudinarySrcSet(src);
+  const cdnSrc = isSkipCdn ? resolvedSrc : cloudinaryUrl(safeSrc, { width });
+  const cdnSrcSet = isSkipCdn ? undefined : cloudinarySrcSet(safeSrc);
 
   const containerStyle: React.CSSProperties = {
     width,
