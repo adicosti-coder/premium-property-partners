@@ -100,7 +100,7 @@ export default function LocalSeoIndexingPanel() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { data } = await supabase
       .from("indexnow_pings")
-      .select("id,created_at,url,http_status,success,triggered_by,batch_size,error")
+      .select("id,created_at,url,http_status,success,triggered_by,batch_size,error,actual_indexing_status,last_verified_at")
       .gte("created_at", sevenDaysAgo)
       .order("created_at", { ascending: false })
       .limit(50);
