@@ -17,6 +17,7 @@ interface ListingProperty {
   listing_type: string | null;
   capital_necesar: number | null;
   image_path: string | null;
+  images: string[] | null;
   description_ro: string;
   description_en: string;
   size: number | null;
