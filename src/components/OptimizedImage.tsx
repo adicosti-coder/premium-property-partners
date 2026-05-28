@@ -3,7 +3,7 @@ import { cloudinaryUrl, cloudinarySrcSet } from "@/utils/cloudinaryUrl";
 import { isGoogleHostedImage, resolveExternalImageUrl } from "@/utils/resolveExternalImageUrl";
 
 interface OptimizedImageProps {
-  src: string;
+  src?: string | null;
   alt: string;
   className?: string;
   width?: number;
