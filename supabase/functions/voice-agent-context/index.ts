@@ -26,11 +26,42 @@ function normalizeRoPhone(raw: string): string | null {
   return "+40" + cleaned;
 }
 
+// ── Andrei core playbook (injected on every call) ─────────────────────
+// Hybrid operating model: regim hotelier gestionat de RealTrust + ApArt Hotel.
+// • Venitul brut net realizat este cu ~70% MAI MARE decât chiria clasică pe termen
+//   lung pe aceeași proprietate (sursa: portofoliu intern, ocupare 75%, ADR mediu).
+// • ROI net standard publicat = 9.4%/an după deducerea de 27% pentru management+taxe.
+// • Combinația „venit +70% vs chiria clasică de 7%” = argumentul principal când
+//   un proprietar întreabă de randament. Andrei NU promite 70% ROI anual — promite
+//   „venit cu ~70% mai mare decât închirierea clasică, cu un ROI net de 9.4%/an”.
+const ANDREI_ROI_PLAYBOOK =
+  "ROI PLAYBOOK (obligatoriu când proprietarul întreabă de randament): " +
+  "Modelul nostru HIBRID (regim hotelier gestionat end-to-end de RealTrust + ApArt Hotel) " +
+  "generează un venit brut cu aproximativ 70% mai mare decât chiria clasică pe termen lung pe aceeași proprietate, " +
+  "rezultând un ROI NET de 9.4% pe an după deducerea standard de 27% (management + taxe + utilități neacoperite). " +
+  "Comparativ, chiria clasică în Timișoara aduce 5-7% net. " +
+  "Folosește mereu cifre clare: ocupare 75%, ADR mediu pe complex, venit lunar țintă. " +
+  "Nu inventa procente. Nu promite ROI > 9.4% pe an decât dacă ai date concrete de la dispatcher.";
+
+const ANDREI_OBJECTIONS_TIMISOARA =
+  "OBIECȚII LOCALE TIMIȘOARA (răspunsuri scurte, în maxim 2 fraze): " +
+  "(a) „E prea scump în ISHO/Paltim/Fructus/City of Mara” → justifică prin: standard de construcție clasa A, " +
+  "smart-lock + self check-in 24/7, parcare subterană, proximitate Piața Unirii/Victoriei (5-10 min), " +
+  "ocupare 90%+ pe Booking. " +
+  "(b) „În Dumbrăvița/Aradului/Torontalului e mai ieftin” → da, dar ocuparea pentru regim hotelier scade la 70-75% " +
+  "fiindcă turiștii preferă Cetatea; recomandă acele zone DOAR pentru închiriere clasică pe termen lung. " +
+  "(c) „Fabric/Iosefin nu e sigur” → corectează politicos: ambele cartiere s-au revitalizat puternic, " +
+  "Iosefin = ISHO + Sinagoga, Fabric = Piața Traian + Millennium, cerere mare din partea Capitalei Culturale. " +
+  "(d) „Vreau să administrez singur” → arată costul real al timpului: check-in, curățenie, plângeri, reglementări ANAF; " +
+  "noi preluăm tot pentru cei 27%. " +
+  "(e) „De ce 9.4% și nu 12-15%?” → randamentele de peste 10% nete sunt marketing; noi publicăm cifre auditate.";
+
 const UNKNOWN_CONTEXT =
   "CFR NOTE: Apelant necunoscut — numărul nu este în pipeline-ul nostru. " +
   "Adoptă o postură de partener de management imobiliar pentru brandurile RealTrust și ApArt Hotel. " +
   "Califică apelul: află dacă este proprietar interesat de regim hotelier în Timișoara, ce zonă, " +
-  "tipul proprietății, numărul de camere și disponibilitatea pentru o evaluare gratuită.";
+  "tipul proprietății, numărul de camere și disponibilitatea pentru o evaluare gratuită. " +
+  ANDREI_ROI_PLAYBOOK + " " + ANDREI_OBJECTIONS_TIMISOARA;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -153,7 +184,8 @@ Deno.serve(async (req) => {
     `Detalii proprietate identificată: ${propertyType} cu ${rooms} camere în zona ${zone}, ` +
     `listată la prețul de ${price} EUR. Stadiul actual în funnel-ul nostru: ${funnelStatus}. ` +
     `Scorul inițial AI: ${qualityScore}/100. Note anterioare: ${notes}. ` +
-    `Adoptă o postură de partener de management imobiliar pentru brandurile RealTrust și ApArt Hotel.`;
+    `Adoptă o postură de partener de management imobiliar pentru brandurile RealTrust și ApArt Hotel. ` +
+    ANDREI_ROI_PLAYBOOK + " " + ANDREI_OBJECTIONS_TIMISOARA;
 
   return new Response(
     JSON.stringify({

@@ -24,6 +24,7 @@ const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const CTA = lazy(() => import("@/components/CTA"));
 const ComplexZoneListings = lazy(() => import("@/components/ComplexZoneListings"));
+const OccupancyUrgencyBadge = lazy(() => import("@/components/complex/OccupancyUrgencyBadge"));
 
 
 interface ComplexData {
@@ -84,6 +85,7 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.7",
     avgPrice: 85000,
     avgADR: 55,
+    zoneMatchers: ["Ateneo", "Cetate", "Parcul Central"],
     advantages: [
       { ro: "Poziție ultracentral lângă Parcul Central și Catedrala Mitropolitană", en: "Ultra-central position near Central Park and the Metropolitan Cathedral" },
       { ro: "Design modern cu finisaje premium și parcare subterană — atracție pentru turiști business", en: "Modern design with premium finishes and underground parking — attractive for business tourists" },
@@ -99,6 +101,7 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.7",
     avgPrice: 88000,
     avgADR: 52,
+    zoneMatchers: ["Green Forest", "Padurea Verde", "Pădurea Verde"],
     advantages: [
       { ro: "Lângă Pădurea Verde și Amazonia Aquapark — ideal pentru familii și turism de weekend", en: "Near Green Forest and Amazonia Aquapark — ideal for families and weekend tourism" },
       { ro: "Zonă liniștită cu aer curat, combinată cu acces rapid la centrul orașului", en: "Quiet area with fresh air, combined with quick access to the city center" },
@@ -114,6 +117,7 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.5",
     avgPrice: 82000,
     avgADR: 50,
+    zoneMatchers: ["Helios", "Iulius Town", "Take Ionescu"],
     advantages: [
       { ro: "Complex modern cu facilități complete — sală fitness, spații verzi, loc de joacă", en: "Modern complex with complete facilities — gym, green spaces, playground" },
       { ro: "Apropiere de zona comercială Iulius Town — atracție pentru oaspeții corporate", en: "Close to Iulius Town commercial area — attractive for corporate guests" },
@@ -146,7 +150,7 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.5",
     avgPrice: 80000,
     avgADR: 48,
-    zoneMatchers: ["Mara", "Circumvalațiunii", "Aradului"],
+    zoneMatchers: ["Mara", "Circumvalațiunii", "Circumvalatiunii", "Aradului"],
     advantages: [
 
       { ro: "Zona Circumvalațiunii lângă Iulius Mall — acces rapid la shopping și divertisment", en: "Circumvalațiunii area near Iulius Mall — quick access to shopping and entertainment" },
@@ -163,6 +167,7 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.4",
     avgPrice: 78000,
     avgADR: 47,
+    zoneMatchers: ["Vivalia", "Dumbravita", "Dumbrăvița"],
     advantages: [
       { ro: "Complex nou cu finisaje premium și eficiență energetică clasă A", en: "New complex with premium finishes and class A energy efficiency" },
       { ro: "Zonă în dezvoltare rapidă cu potențial de apreciere a valorii proprietății", en: "Rapidly developing area with property value appreciation potential" },
@@ -178,6 +183,7 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.3",
     avgPrice: 75000,
     avgADR: 45,
+    zoneMatchers: ["Nord One", "Aradului", "Torontalului"],
     advantages: [
       { ro: "Zona de nord a Timișoarei cu acces rapid la autostradă și aeroport", en: "Northern Timișoara with quick access to highway and airport" },
       { ro: "Popular în rândul călătorilor de afaceri datorită proximității față de parcurile industriale", en: "Popular with business travelers due to proximity to industrial parks" },
@@ -193,6 +199,7 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.5",
     avgPrice: 87000,
     avgADR: 53,
+    zoneMatchers: ["XCity", "X City", "Aradului", "Oasis"],
     advantages: [
       { ro: "Poziție strategică pe Calea Aradului cu vedere panoramică asupra orașului", en: "Strategic position on Calea Aradului with panoramic city views" },
       { ro: "Complex mixed-use cu retail și birouri — fluxuri constante de oaspeți corporate", en: "Mixed-use complex with retail and offices — constant corporate guest flows" },
@@ -208,6 +215,7 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.4",
     avgPrice: 83000,
     avgADR: 50,
+    zoneMatchers: ["Denya", "Padurea Verde", "Pădurea Verde", "Ghiroda"],
     advantages: [
       { ro: "Situat la marginea Pădurii Verde — liniște și natură la câteva minute de centru", en: "Located at the edge of Green Forest — peace and nature minutes from downtown" },
       { ro: "Atracție deosebită pentru familii și cupluri care caută o experiență de retreat urban", en: "Special attraction for families and couples seeking an urban retreat experience" },
@@ -301,7 +309,15 @@ const ComplexLanding = () => {
                   ? `ROI net țintă ${complex.roi}, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Venit lunar estimat ${complex.avgIncome}, ocupare observată ${complex.occupancy}. Operațiuni gestionate end-to-end de echipa RealTrust și ApArt Hotel.`
                   : `Target net ROI ${complex.roi}, calculated on public assumptions (75% occupancy, 27% deduction). Estimated monthly income ${complex.avgIncome}, observed occupancy ${complex.occupancy}. Operations handled end-to-end by the RealTrust and ApArt Hotel team.`}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Suspense fallback={null}>
+                <OccupancyUrgencyBadge
+                  complexSlug={complex.slug}
+                  complexName={complex.name}
+                  baselineOccupancy={complex.occupancy}
+                  isRo={isRo}
+                />
+              </Suspense>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
                 <Link to="/pentru-proprietari">
                   <Button variant="premium" size="lg" className="gap-2">
                     <Phone className="w-4 h-4" />

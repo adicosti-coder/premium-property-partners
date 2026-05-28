@@ -24,11 +24,51 @@ interface KeywordRow {
 }
 
 const NEIGHBORHOODS: KeywordRow[] = [
-  { zone: "Cetate", keywords: ["cetate", "centru istoric", "piata unirii", "paltim"] },
+  // Cartiere centrale & istorice
+  { zone: "Cetate / Centru", keywords: ["cetate", "centru istoric", "piata unirii", "piața unirii", "paltim", "fructus"] },
   { zone: "Iosefin", keywords: ["iosefin", "isho", "sinagoga"] },
   { zone: "Fabric", keywords: ["fabric", "piata traian", "millennium"] },
-  { zone: "Dumbrăvița", keywords: ["dumbravita", "dumbrăvița"] },
-  { zone: "Aradului / Mara", keywords: ["aradului", "city of mara", "circumvalatiunii"] },
+  { zone: "Elisabetin", keywords: ["elisabetin"] },
+  { zone: "Take Ionescu", keywords: ["take ionescu", "take-ionescu", "helios"] },
+  { zone: "Tipografilor", keywords: ["tipografilor"] },
+  // Cartiere periferice nord
+  { zone: "Dumbrăvița", keywords: ["dumbravita", "dumbrăvița", "vivalia"] },
+  { zone: "Aradului", keywords: ["aradului", "calea aradului", "xcity", "nord one"] },
+  { zone: "Mehala", keywords: ["mehala"] },
+  { zone: "Lipovei", keywords: ["lipovei", "calea lipovei"] },
+  { zone: "Torontalului", keywords: ["torontalului", "calea torontalului"] },
+  { zone: "Ronat", keywords: ["ronat"] },
+  { zone: "Bucovina", keywords: ["bucovina"] },
+  // Cartiere sud & est
+  { zone: "Girocului", keywords: ["girocului", "calea girocului"] },
+  { zone: "Șagului", keywords: ["sagului", "șagului", "calea sagului"] },
+  { zone: "Soarelui", keywords: ["soarelui"] },
+  { zone: "Circumvalațiunii / Mara", keywords: ["circumvalatiunii", "circumvalațiunii", "city of mara", "mara"] },
+  { zone: "Complex Studențesc", keywords: ["complex studentesc", "complex studențesc"] },
+  { zone: "Olimpia / Stadion", keywords: ["olimpia", "stadion"] },
+  { zone: "Plopi", keywords: ["plopi"] },
+  { zone: "Blașcovici", keywords: ["blascovici", "blașcovici"] },
+  { zone: "Freidorf", keywords: ["freidorf"] },
+  // Zone periurbane
+  { zone: "Ghiroda", keywords: ["ghiroda", "denya"] },
+  { zone: "Moșnița Nouă", keywords: ["mosnita", "moșnița"] },
+  { zone: "Remetea Mare", keywords: ["remetea"] },
+  { zone: "Chișoda", keywords: ["chisoda", "chișoda"] },
+  { zone: "Săcălaz", keywords: ["sacalaz", "săcălaz"] },
+  // Complexe rezidențiale noi (cross-listed)
+  { zone: "Complex: ISHO", keywords: ["isho"] },
+  { zone: "Complex: Paltim", keywords: ["paltim"] },
+  { zone: "Complex: City of Mara", keywords: ["city of mara", "city-of-mara"] },
+  { zone: "Complex: Fructus Plaza", keywords: ["fructus", "fructus plaza"] },
+  { zone: "Complex: Vivalia", keywords: ["vivalia"] },
+  { zone: "Complex: Ateneo", keywords: ["ateneo"] },
+  { zone: "Complex: Iris", keywords: ["iris"] },
+  { zone: "Complex: Adora Forest", keywords: ["adora forest", "adora"] },
+  { zone: "Complex: Nord One", keywords: ["nord one"] },
+  { zone: "Complex: Monarch", keywords: ["monarch"] },
+  { zone: "Complex: Vox Vertical Village", keywords: ["vox vertical", "vox vertical village"] },
+  { zone: "Complex: Uranus Plaza", keywords: ["uranus plaza", "uranus"] },
+  { zone: "Complex: X City Oasis", keywords: ["x city", "xcity", "x-city oasis"] },
 ];
 
 const STORAGE_KEY = "local-seo-keyword-checklist-v1";
