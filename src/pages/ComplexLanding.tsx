@@ -144,7 +144,9 @@ const complexesData: Record<string, ComplexData> = {
     rating: "9.5",
     avgPrice: 80000,
     avgADR: 48,
+    zoneMatchers: ["Mara", "Circumvalațiunii", "Aradului"],
     advantages: [
+
       { ro: "Zona Circumvalațiunii lângă Iulius Mall — acces rapid la shopping și divertisment", en: "Circumvalațiunii area near Iulius Mall — quick access to shopping and entertainment" },
       { ro: "Complex mare cu comunitate activă și servicii integrate", en: "Large complex with active community and integrated services" },
       { ro: "Preț de achiziție accesibil cu randament competitiv — ideal pentru prima investiție", en: "Accessible purchase price with competitive yield — ideal for first investment" },
