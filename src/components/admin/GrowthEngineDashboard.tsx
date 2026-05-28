@@ -391,5 +391,7 @@ export default function GrowthEngineDashboard() {
         </section>
       </CardContent>
     </Card>
+    </div>
   );
 }
+
