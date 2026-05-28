@@ -248,9 +248,13 @@ export default function FastReview() {
     if (error) return toast({ title: "Eroare", description: error.message, variant: "destructive" });
     toast({ title: "Publicat", description: "Anunțul este acum activ pe site." });
     void recordLearn({ property_id: id, action: "approve" });
+    // Instant IndexNow ping → Bing/Yandex/Seznam pick it up in minutes
+    const row = rows.find((r) => r.id === id);
+    if (row?.slug) void notifyIndexNow([`/proprietate/${row.slug}`], "fast_review_approve");
     setRows((p) => p.filter((r) => r.id !== id));
     setSelected((p) => { const n = new Set(p); n.delete(id); return n; });
   };
+
 
   const reject = async (row: DraftProperty) => {
     setActingId(row.id);
