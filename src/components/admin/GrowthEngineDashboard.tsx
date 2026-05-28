@@ -242,7 +242,10 @@ export default function GrowthEngineDashboard() {
   );
 
   return (
-    <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-primary/5 to-transparent">
+    <div className="space-y-4">
+      <VoiceLatencyMonitor />
+      <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-primary/5 to-transparent">
+
       <CardHeader>
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div>
