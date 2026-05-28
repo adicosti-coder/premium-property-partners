@@ -196,11 +196,51 @@ export default function LocalSeoIndexingPanel() {
       await supabase.functions.invoke("indexnow-notify", {
         body: { urls, triggered_by: "growth_dashboard_manual" },
       });
+      toast.success("Hub-urile premium au fost re-trimise");
     } finally {
       setResubmitting(false);
       loadPings();
     }
   }, [loadPings]);
+
+  const verifyIndexing = useCallback(async () => {
+    setVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("indexnow-verify-and-reindex", {
+        body: { action: "verify", limit: 25 },
+      });
+      if (error) throw error;
+      const indexed = (data as any)?.results?.filter((r: any) => r.status === "indexed").length ?? 0;
+      const missing = (data as any)?.results?.filter((r: any) => r.status === "missing").length ?? 0;
+      toast.success(`Verificare completă: ${indexed} indexate, ${missing} lipsă`);
+    } catch (e) {
+      toast.error("Eroare la verificare: " + (e as Error).message);
+    } finally {
+      setVerifying(false);
+      loadPings();
+    }
+  }, [loadPings]);
+
+  const resubmitSingle = useCallback(async (ping: PingRow) => {
+    setResubmittingId(ping.id);
+    try {
+      await supabase.functions.invoke("indexnow-notify", {
+        body: { urls: [ping.url], triggered_by: "admin_retry_failed" },
+      });
+      toast.success("URL re-trimis la IndexNow");
+    } finally {
+      setResubmittingId(null);
+      loadPings();
+    }
+  }, [loadPings]);
+
+  // Failed pings on hot zones (premium hubs) in the last 7 days — require attention.
+  const failedHotZonePings = useMemo(() => {
+    const hotKeywords = ["isho", "paltim", "city-of-mara", "fructus", "vivalia", "monarch", "vox-vertical", "ateneo"];
+    return pings.filter((p) =>
+      !p.success && hotKeywords.some((k) => p.url.toLowerCase().includes(k)),
+    ).slice(0, 8);
+  }, [pings]);
 
   return (
     <Card>
