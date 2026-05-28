@@ -60,10 +60,33 @@ async function isAuthorized(req: Request): Promise<boolean> {
 
   const auth = req.headers.get('Authorization') || '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
-  if (!token) return false;
-  // Server-to-server (orchestrator) call: Bearer = service role key
-  if (serviceKey && token === serviceKey) return true;
 
+  // Server-to-server (orchestrator/cron) call: Bearer = service role key
+  if (token && serviceKey && token === serviceKey) return true;
+
+  // Fallback: vault-stored cron secrets (allows pg_cron to authenticate even when
+  // the platform service-role key has been rotated and the SUPABASE_SERVICE_ROLE_KEY
+  // env var no longer matches the value embedded in the cron job command).
+  if (cronSecret || token) {
+    try {
+      const admin = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      const { data: vaultRows } = await (admin as any)
+        .schema('vault')
+        .from('decrypted_secrets')
+        .select('name, decrypted_secret')
+        .in('name', ['cron_reconcile_secret', 'email_queue_service_role_key']);
+      const allowed = new Set<string>((vaultRows || []).map((r: any) => r.decrypted_secret).filter(Boolean));
+      if (cronSecret && allowed.has(cronSecret)) return true;
+      if (token && allowed.has(token)) return true;
+    } catch (e) {
+      console.warn('Vault fallback auth check failed:', (e as Error)?.message);
+    }
+  }
+
+  if (!token) return false;
   const userClient = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!,
