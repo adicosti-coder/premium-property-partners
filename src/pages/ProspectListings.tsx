@@ -114,6 +114,23 @@ interface Prospect {
 const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
 const VISIBLE_PHONE_PATTERN = /(?:\+?40|0040|0)\s*[237]\d{2}(?:[\s().-]*(?:\d|x|X|\*|•|\.)){2,}/g;
 
+function formatRelativeRo(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "—";
+  const diffMs = Date.now() - t;
+  const sec = Math.max(0, Math.round(diffMs / 1000));
+  if (sec < 60) return "acum";
+  const min = Math.round(sec / 60);
+  if (min < 60) return `acum ${min}m`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `acum ${hr}h`;
+  const d = Math.round(hr / 24);
+  if (d < 7) return `acum ${d}z`;
+  if (d < 30) return `acum ${Math.round(d / 7)}săpt`;
+  return new Date(iso).toLocaleDateString("ro-RO", { day: "2-digit", month: "short" });
+}
+
 type ProspectPhoneSource = "phone_normalized" | "contact_phone" | "admin_notes" | "description" | "title";
 
 interface ProspectPhoneInfo {
