@@ -1620,9 +1620,19 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                               )}
                             </a>
                           ) : (
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                              <AlertTriangle className="h-3 w-3" />
-                              Fără telefon
+                            <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+                              <span className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> Fără telefon</span>
+                              {p.source_url && (
+                                <a
+                                  href={p.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary underline-offset-2 hover:underline inline-flex items-center gap-1"
+                                  title="Deschide anunțul sursă pentru a vedea telefonul"
+                                >
+                                  <ExternalLink className="h-3 w-3" /> deschide anunțul
+                                </a>
+                              )}
                             </div>
                           )}
                           <Button
