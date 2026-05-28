@@ -578,6 +578,7 @@ Deno.serve(async (req) => {
         capital_necesar: listingType === 'vanzare' ? prospect.price : null,
         images: finalImages,
         image_alts: finalImageAlts,
+        image_path: Array.isArray(finalImages) && finalImages.length > 0 ? finalImages[0] : null,
         booking_url: null,
         source_platform: platform,
         source_url: null,
