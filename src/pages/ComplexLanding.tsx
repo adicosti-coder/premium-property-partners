@@ -354,7 +354,19 @@ const ComplexLanding = () => {
           </div>
         </section>
 
+        {/* Auto-loaded approved listings for this complex's zone */}
+        {complex.zoneMatchers && complex.zoneMatchers.length > 0 && (
+          <Suspense fallback={null}>
+            <ComplexZoneListings
+              complexName={complex.name}
+              zoneMatchers={complex.zoneMatchers}
+              isRo={isRo}
+            />
+          </Suspense>
+        )}
+
         {/* ROI Calculator */}
+
         <section className="py-16 bg-muted/20">
           <div className="container mx-auto px-6">
             <Suspense fallback={<div className="min-h-[400px]" />}>
