@@ -1652,7 +1652,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                                     onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
                                     disabled={recoveringPhoneId === p.id}
                                     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-60"
-                                    title="Click pe „Arată numărul" pe sursă și extrage telefonul"
+                                    title="Apasă butonul «Arată numărul» pe sursă și extrage telefonul"
                                   >
                                     {recoveringPhoneId === p.id
                                       ? <Loader2 className="h-3 w-3 animate-spin" />
