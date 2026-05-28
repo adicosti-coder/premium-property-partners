@@ -76,8 +76,10 @@ interface VoiceSettings {
 }
 
 async function generateMp3(text: string, v: VoiceSettings, apiKey: string): Promise<ArrayBuffer> {
+  // optimize_streaming_latency=4 → maximum latency optimization (works on
+  // non-stream endpoint too). Reduces TTFB ~30-40% for flash_v2_5.
   const res = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=mp3_22050_32`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${v.voice_id}?output_format=mp3_22050_32&optimize_streaming_latency=4`,
     {
       method: "POST",
       headers: {
@@ -103,6 +105,7 @@ async function generateMp3(text: string, v: VoiceSettings, apiKey: string): Prom
   }
   return res.arrayBuffer();
 }
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
