@@ -77,9 +77,11 @@ const RealEstateListings = () => {
   };
 
   const getImageUrl = (listing: ListingProperty) => {
-    const path = listing.image_path ||
+    const path =
+      listing.image_path ||
       listing.property_images?.find(i => i.is_primary)?.image_path ||
-      listing.property_images?.[0]?.image_path;
+      listing.property_images?.[0]?.image_path ||
+      (Array.isArray(listing.images) ? listing.images.find(Boolean) : null);
     if (!path) return "/placeholder.svg";
     if (path.startsWith("http")) return path;
     return `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${path}`;
