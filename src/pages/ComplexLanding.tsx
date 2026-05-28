@@ -255,11 +255,12 @@ const ComplexLanding = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title={isRo
-          ? `${complex.name} Timișoara | Analiză ROI & Investiții RealTrust`
-          : `${complex.name} Timișoara | ROI Analysis & Investments RealTrust`}
+          ? `Apartamente de închiriat și vânzare în ${complex.name} Timișoara | RealTrust`
+          : `Apartments for rent and sale in ${complex.name} Timișoara | RealTrust`}
         description={isRo
-          ? `Vezi analiza financiară completă pentru complexul ${complex.name} din Timișoara. Calcul ROI, prețuri medii și oportunități de property management prin ApArt Hotel.`
-          : `See the complete financial analysis for ${complex.name} complex in Timișoara. ROI calculation, average prices and property management opportunities via ApArt Hotel.`}
+          ? `Apartamente disponibile în ${complex.name}, Timișoara. ROI ${complex.roi}, venit ${complex.avgIncome}/lună, ocupare ${complex.occupancy}. Cele mai recente anunțuri verificate de RealTrust + analiză financiară completă pentru regim hotelier.`
+          : `Apartments available in ${complex.name}, Timișoara. ROI ${complex.roi}, income ${complex.avgIncome}/month, occupancy ${complex.occupancy}. Latest RealTrust-verified listings plus complete short-term-rental financial analysis.`}
+
         url={`https://realtrust.ro/complexe/${complex.slug}`}
         jsonLd={jsonLd}
         breadcrumbItems={[
