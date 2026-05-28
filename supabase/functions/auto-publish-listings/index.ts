@@ -512,6 +512,32 @@ Deno.serve(async (req) => {
         finalImageAlts = [];
       }
 
+      // Normalize image list (trim, drop empties, dedupe)
+      finalImages = Array.from(
+        new Set(
+          (finalImages || [])
+            .filter((u): u is string => typeof u === 'string')
+            .map((u) => u.trim())
+            .filter((u) => u.length > 0)
+        )
+      );
+
+      // HARD GATE: never publish a listing without imagery on realtrust.ro.
+      // Without photos the detail page renders empty cards and erodes trust.
+      // Send the prospect back into the enrichment queue so the next pass can
+      // re-scrape via Firecrawl (which usually recovers gallery URLs).
+      if (finalImages.length === 0) {
+        summary.rejected_no_images++;
+        bumpSource(platform, 'rejected');
+        await supabase.from('prospect_listings')
+          .update({
+            enrichment_status: 'pending',
+            admin_notes: `[auto-publish] Respins: 0 imagini detectate (re-scrape programat).`,
+            tags: ['scrape-prospects', 'auto-import', 'no-images-rescrape'],
+          }).eq('id', prospect.id);
+        continue;
+      }
+
       const quality = computeQualityScore({
         finalDesc: finalFull,
         finalTitle,
