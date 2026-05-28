@@ -114,12 +114,20 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-  // ── Check archived URLs ──
+  // ── Check archived URLs (cu cooldown 30 zile) ──
+  // Fix: anunțurile arhivate mai vechi de 30 zile pot fi re-importate
+  // (preț schimbat, anunț republicat, etc.) → altfel rămânem la 0 lead-uri noi la nesfârșit.
+  const ARCHIVE_COOLDOWN_DAYS = 30;
+  const cooldownCutoff = new Date(Date.now() - ARCHIVE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const urls = leads.map((l: any) => l.url).filter((u: any) => typeof u === "string" && u.length > 0);
   let archivedUrls = new Set<string>();
   if (urls.length > 0) {
     const { data: archivedData } = await supabase
-      .from("scraper_leads").select("url").eq("status", "archived").in("url", urls);
+      .from("scraper_leads")
+      .select("url")
+      .eq("status", "archived")
+      .gt("updated_at", cooldownCutoff)
+      .in("url", urls);
     if (archivedData) archivedUrls = new Set(archivedData.map((d: any) => d.url));
   }
   const nonArchivedLeads = leads.filter((l: any) => !archivedUrls.has(l.url));
