@@ -36,6 +36,7 @@ interface RunSummary {
   rejected_low_quality: number;
   rejected_source_disabled: number;
   rejected_recruitment: number;
+  rejected_no_images: number;
   published: number;
   avg_quality_score: number;
   per_source: Record<string, { attempts: number; published: number; rejected: number; avg_quality: number }>;
@@ -305,7 +306,7 @@ Deno.serve(async (req) => {
     rejected_refusal: 0, rejected_no_content: 0,
     rejected_duplicate: 0, rejected_error: 0,
     rejected_low_quality: 0, rejected_source_disabled: 0,
-    rejected_recruitment: 0,
+    rejected_recruitment: 0, rejected_no_images: 0,
     published: 0, avg_quality_score: 0,
     per_source: {}, errors: [], published_ids: [],
   };
@@ -509,6 +510,32 @@ Deno.serve(async (req) => {
         }
         finalImages = rawImages;
         finalImageAlts = [];
+      }
+
+      // Normalize image list (trim, drop empties, dedupe)
+      finalImages = Array.from(
+        new Set(
+          (finalImages || [])
+            .filter((u): u is string => typeof u === 'string')
+            .map((u) => u.trim())
+            .filter((u) => u.length > 0)
+        )
+      );
+
+      // HARD GATE: never publish a listing without imagery on realtrust.ro.
+      // Without photos the detail page renders empty cards and erodes trust.
+      // Send the prospect back into the enrichment queue so the next pass can
+      // re-scrape via Firecrawl (which usually recovers gallery URLs).
+      if (finalImages.length === 0) {
+        summary.rejected_no_images++;
+        bumpSource(platform, 'rejected');
+        await supabase.from('prospect_listings')
+          .update({
+            enrichment_status: 'pending',
+            admin_notes: `[auto-publish] Respins: 0 imagini detectate (re-scrape programat).`,
+            tags: ['scrape-prospects', 'auto-import', 'no-images-rescrape'],
+          }).eq('id', prospect.id);
+        continue;
       }
 
       const quality = computeQualityScore({
