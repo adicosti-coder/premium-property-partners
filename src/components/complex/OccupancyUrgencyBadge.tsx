@@ -28,6 +28,8 @@ export default function OccupancyUrgencyBadge({ complexSlug, complexName, baseli
 
   useEffect(() => {
     let cancelled = false;
+    let idleHandle: number | null = null;
+    let timeoutHandle: number | null = null;
 
     const baseline = parseInt(baselineOccupancy.replace(/[^\d]/g, ""), 10) || 90;
     // Deterministic daily delta (same value all day for same complex)
@@ -36,34 +38,52 @@ export default function OccupancyUrgencyBadge({ complexSlug, complexName, baseli
     const mockOccupancy = Math.min(98, baseline + seed - 1);
     const mockAvailable = Math.max(1, 4 - Math.floor(seed / 2));
 
-    (async () => {
+    const run = async () => {
+      // Render mock immediately (no main-thread blocking, no waiting on network).
+      if (!cancelled) {
+        setOccupancy(mockOccupancy);
+        setAvailable(mockAvailable);
+        setSource("mock");
+      }
+      // Then try to upgrade to live data in the background.
       try {
         const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-        if (!projectId) throw new Error("no_project");
+        if (!projectId) return;
+        const controller = new AbortController();
+        const t = window.setTimeout(() => controller.abort(), 4000);
         const res = await fetch(
           `https://${projectId}.supabase.co/functions/v1/pms-occupancy?slug=${encodeURIComponent(complexSlug)}`,
-          { method: "GET" },
+          { method: "GET", signal: controller.signal },
         );
-        if (res.ok) {
-          const data = await res.json();
-          if (!cancelled && typeof data?.occupancy === "number") {
-            setOccupancy(Math.round(data.occupancy));
-            setAvailable(typeof data.available === "number" ? data.available : mockAvailable);
-            setSource("live");
-            return;
-          }
+        window.clearTimeout(t);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && typeof data?.occupancy === "number") {
+          setOccupancy(Math.round(data.occupancy));
+          setAvailable(typeof data.available === "number" ? data.available : mockAvailable);
+          setSource("live");
         }
-        throw new Error("fallback");
       } catch {
-        if (!cancelled) {
-          setOccupancy(mockOccupancy);
-          setAvailable(mockAvailable);
-          setSource("mock");
-        }
+        /* keep mock */
       }
-    })();
+    };
 
-    return () => { cancelled = true; };
+    // Defer to idle time so the badge never competes with LCP / hero paint on mobile.
+    const ric = (window as any).requestIdleCallback as
+      | ((cb: () => void, opts?: { timeout: number }) => number)
+      | undefined;
+    if (ric) {
+      idleHandle = ric(() => { void run(); }, { timeout: 2500 });
+    } else {
+      timeoutHandle = window.setTimeout(() => { void run(); }, 1200);
+    }
+
+    return () => {
+      cancelled = true;
+      const cic = (window as any).cancelIdleCallback as ((h: number) => void) | undefined;
+      if (idleHandle !== null && cic) cic(idleHandle);
+      if (timeoutHandle !== null) window.clearTimeout(timeoutHandle);
+    };
   }, [complexSlug, baselineOccupancy]);
 
   if (occupancy === null) return null;

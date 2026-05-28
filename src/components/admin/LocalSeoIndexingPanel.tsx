@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Search, Radio, MapPin, RefreshCcw, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Search, Radio, MapPin, RefreshCcw, Loader2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 
 interface PingRow {
   id: string;
@@ -154,6 +154,28 @@ export default function LocalSeoIndexingPanel() {
     return { total, successful, failed, uniqueUrls };
   }, [pings]);
 
+  // AUDIT: complexes with 0 listings OR a failed IndexNow ping in the last 7 days.
+  const auditAlerts = useMemo(() => {
+    const failedUrlSlugs = new Set(
+      pings.filter((p) => !p.success).map((p) => {
+        const m = p.url.match(/\/complexe\/([a-z0-9-]+)/i);
+        return m ? m[1].toLowerCase() : "";
+      }).filter(Boolean),
+    );
+    return NEIGHBORHOODS
+      .filter((row) => row.zone.startsWith("Complex:"))
+      .map((row) => {
+        const count = keywordCoverage[row.zone]?.count ?? 0;
+        const slug = row.zone.replace("Complex:", "").trim().toLowerCase()
+          .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        const pingFailed = failedUrlSlugs.has(slug);
+        const zeroListings = !coverageLoading && count === 0;
+        return { zone: row.zone, count, pingFailed, zeroListings };
+      })
+      .filter((a) => a.zeroListings || a.pingFailed);
+  }, [keywordCoverage, coverageLoading, pings]);
+
+
   const resubmitHubs = useCallback(async () => {
     setResubmitting(true);
     const urls = [
@@ -214,6 +236,28 @@ export default function LocalSeoIndexingPanel() {
             <div className="text-2xl font-bold">{stats.uniqueUrls}</div>
           </div>
         </div>
+
+        {/* Audit alerts */}
+        {auditAlerts.length > 0 && (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4" />
+              Audit acoperire complexe — {auditAlerts.length} {auditAlerts.length === 1 ? "alertă" : "alerte"}
+            </div>
+            <ul className="mt-2 space-y-1 text-xs">
+              {auditAlerts.map((a) => (
+                <li key={a.zone} className="flex items-center gap-2">
+                  <span className="font-medium">{a.zone.replace("Complex: ", "")}</span>
+                  {a.zeroListings && <Badge variant="destructive">0 anunțuri</Badge>}
+                  {a.pingFailed && <Badge variant="outline" className="border-rose-500/40 text-rose-600">IndexNow eșuat</Badge>}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Acțiune recomandată: rulează scraping țintit pe complexele cu 0 anunțuri și re-trimite hub-urile premium pentru ping-urile eșuate.
+            </p>
+          </div>
+        )}
 
         {/* Recent pings list */}
         <div>
