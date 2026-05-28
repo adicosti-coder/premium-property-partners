@@ -288,6 +288,37 @@ export default function LocalSeoIndexingPanel() {
           </div>
         </div>
 
+        {/* Atenție necesară — failed pings on hot zones */}
+        {failedHotZonePings.length > 0 && (
+          <div className="rounded-md border-2 border-rose-500/50 bg-rose-500/5 p-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-rose-700 dark:text-rose-400">
+              <AlertTriangle className="h-4 w-4 animate-pulse" />
+              Atenție necesară — {failedHotZonePings.length} ping eșuat pe zone fierbinți
+            </div>
+            <ul className="mt-2 space-y-1 text-xs">
+              {failedHotZonePings.map((p) => (
+                <li key={p.id} className="flex items-center gap-2">
+                  <XCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                  <span className="font-mono truncate flex-1" title={p.url}>
+                    {p.url.replace("https://www.realtrust.ro", "")}
+                  </span>
+                  {p.http_status && <Badge variant="destructive">HTTP {p.http_status}</Badge>}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-6 px-2 gap-1"
+                    onClick={() => resubmitSingle(p)}
+                    disabled={resubmittingId === p.id}
+                  >
+                    {resubmittingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                    Retry
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Audit alerts */}
         {auditAlerts.length > 0 && (
           <div className="rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
