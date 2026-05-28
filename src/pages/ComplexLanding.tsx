@@ -33,8 +33,11 @@ interface ComplexData {
   rating: string;
   avgPrice: number;
   avgADR: number;
+  /** Keywords matched against properties.location/zone to auto-load approved listings. */
+  zoneMatchers?: string[];
   advantages: { ro: string; en: string }[];
 }
+
 
 const complexesData: Record<string, ComplexData> = {
   isho: {
