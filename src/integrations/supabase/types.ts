@@ -8423,7 +8423,7 @@ export type Database = {
       }
       check_cta_rate_limit: { Args: { p_session_id: string }; Returns: boolean }
       cleanup_old_e2e_runs: { Args: never; Returns: number }
-      cleanup_old_tracking_data: { Args: never; Returns: undefined }
+      cleanup_old_tracking_data: { Args: never; Returns: Json }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
