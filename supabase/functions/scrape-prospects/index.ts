@@ -910,6 +910,7 @@ Deno.serve(async (req) => {
         blacklisted_skipped: blacklistedSkipped,
         blacklisted_reviewed: blacklistedReviewed,
         spam_shield_permissive_mode: permissiveSpamShield,
+        discovery_mode: discoveryMode,
         archived_skipped: archivedSkipped,
         duplicate_skipped: duplicateSkipped,
         existing_sources_checked: existingUrls.size,
