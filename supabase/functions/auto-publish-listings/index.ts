@@ -413,9 +413,17 @@ Deno.serve(async (req) => {
     .order('lead_score', { ascending: false })
     .limit(batchSize * 4);
   if (cErr) {
-    return new Response(JSON.stringify({ error: cErr.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    try {
+      await supabase.rpc('automation_complete_run', {
+        _job_key: 'auto-publish-listings',
+        _success: false,
+        _payload: { error: cErr.message, stage: 'load_candidates' } as any,
+        _triggered_by: triggeredBy,
+      });
+    } catch { /* optional */ }
+    return safeJson({ success: false, error: cErr.message, fallback: true });
   }
+
 
   const queue = (candidates || [])
     .filter((c: any) => !importedSet.has(c.source_url))
