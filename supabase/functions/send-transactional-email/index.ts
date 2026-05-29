@@ -78,6 +78,11 @@ Deno.serve(async (req) => {
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
     }
+    if (typeof body.fromOverride === 'string' && body.fromOverride.includes('@')) {
+      fromOverride = body.fromOverride.trim()
+    } else if (typeof body.from_override === 'string' && body.from_override.includes('@')) {
+      fromOverride = body.from_override.trim()
+    }
   } catch {
     return new Response(
       JSON.stringify({ error: 'Invalid JSON in request body' }),
@@ -87,6 +92,7 @@ Deno.serve(async (req) => {
       }
     )
   }
+
 
   if (!templateName) {
     return new Response(
