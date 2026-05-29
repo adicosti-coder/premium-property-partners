@@ -492,11 +492,13 @@ const AutomationManager = () => {
           templateName: "automation-run-report",
           recipientEmail: reportEmail,
           idempotencyKey: `manual-report-${Date.now()}`,
+          fromOverride: "RealTrust Sistem <noreply@notify.realtrust.ro>",
           templateData: {
             summary: `Raport manual: ${ok} OK / ${failed} eșuate din ultimele ${recent.length}`,
             results: recent,
             generated_at: new Date().toISOString(),
           },
+
         },
       });
       if (error) throw error;
