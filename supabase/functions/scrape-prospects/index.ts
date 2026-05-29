@@ -818,7 +818,7 @@ Deno.serve(async (req) => {
               category === 'vanzare' ? 'auto-import' : 'recrutare-management',
               category === 'hotelier' ? 'regim-hotelier' : null,
               category === 'inchiriere' ? 'inchiriere-proprietar' : null,
-              explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari',
+              explicitOwnerSignal ? 'semnal-proprietar' : discoveryMode ? 'descoperire-broad' : 'filtru-proprietari',
               suspectSpam ? 'suspect_spam' : null,
             ].filter(Boolean) as string[];
 
@@ -847,6 +847,7 @@ Deno.serve(async (req) => {
                 score_breakdown: breakdown,
                 ai_score_breakdown: {
                   source: 'scrape-prospects',
+                  discovery_mode: discoveryMode,
                   owner_filter_intent: ownerFilterIntent,
                   explicit_owner_signal: explicitOwnerSignal,
                   estimated_monthly_extra: monthlyExtra,
@@ -868,6 +869,8 @@ Deno.serve(async (req) => {
                     ? `Prospect ${category === 'hotelier' ? 'regim hotelier' : 'închiriere'} de la proprietar — NU se publică pe site. Lead pentru Andrei: propunere administrare ${category === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`
                     : explicitOwnerSignal
                       ? 'Import automat: semnal explicit proprietar/persoană fizică.'
+                    : discoveryMode
+                      ? 'Import automat: descoperire broad din marketplace; fără semnal de agenție, necesită verificare rapidă înainte de publicare.'
                       : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
