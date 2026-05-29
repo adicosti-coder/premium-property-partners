@@ -292,11 +292,16 @@ const OWNER_SIGNALS = [
 ];
 
 const AGENCY_SIGNALS = [
-  'agentie', 'agenție', 'agency', 'agent imobiliar', 'consultant imobiliar',
-  'broker', 'brokeraj', 'reprezentant vanzari', 'reprezentant vânzări',
-  'dezvoltator', 'developer', 'ansamblu rezidential', 'ansamblu rezidențial',
+  'agentie imobiliara', 'agenție imobiliară', 'agent imobiliar', 'consultant imobiliar',
+  'broker imobiliar', 'brokeraj imobiliar', 'reprezentant vanzari', 'reprezentant vânzări',
+  'comision agentie', 'comision agenție', 'comision cumparator', 'comision cumpărător',
   'imobiliare srl', 'real estate srl',
 ];
+
+const MARKETPLACE_DOMAINS = new Set([
+  'olx.ro', 'www.olx.ro', 'storia.ro', 'www.storia.ro', 'imobiliare.ro', 'www.imobiliare.ro',
+  'publi24.ro', 'www.publi24.ro', 'bursaimobiliara.ro', 'www.bursaimobiliara.ro',
+]);
 
 const GENERIC_LISTING_TITLE_SIGNALS = [
   'anunturi gratuite', 'anunturi imobiliare', 'anunturi olx', 'imobiliare olx',
@@ -381,7 +386,9 @@ function hasExplicitOwnerSignal(title: string | null | undefined, url: string | 
 }
 
 function hasAgencySignal(title: string | null | undefined, url: string | null | undefined, markdown: string | null | undefined): boolean {
-  const blob = removeDiacritics(`${title || ''} ${url || ''} ${markdown || ''}`.toLowerCase());
+  const host = extractUrlDomain(url);
+  const blob = removeDiacritics(`${title || ''} ${(markdown || '').substring(0, 2500)}`.toLowerCase());
+  if (host && MARKETPLACE_DOMAINS.has(host)) return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
   return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
