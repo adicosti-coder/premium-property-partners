@@ -640,8 +640,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Process queries in parallel batches of 5 to avoid timeout
-    const BATCH_SIZE = 5;
+    // Keep Firecrawl calls deliberately paced. Parallel batches of 5 were
+    // exhausting the search quota and returning successful cron runs with 0 real imports.
+    const BATCH_SIZE = customQuery ? 1 : 2;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
       const batch = queries.slice(i, i + BATCH_SIZE);
       
