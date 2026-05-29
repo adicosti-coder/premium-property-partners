@@ -110,18 +110,35 @@ async function firecrawlScrape(url: string, key: string): Promise<{ markdown: st
     const resp = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, formats: ['markdown', 'links'], waitFor: 3000, onlyMainContent: true }),
+      body: JSON.stringify({ url, formats: ['markdown', 'html', 'links'], waitFor: 3000, onlyMainContent: false }),
     });
     if (!resp.ok) return null;
     const data = await resp.json();
     const md = data?.data?.markdown || data?.markdown || '';
+    const html = data?.data?.html || data?.html || '';
+    const meta = data?.data?.metadata || data?.metadata || {};
     const links: string[] = data?.data?.links || [];
     const images = links.filter((l) => /\.(jpe?g|png|webp|avif)(\?|$)/i.test(l));
     const mdImgs: string[] = [];
     const re = /!\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/g;
     let m;
     while ((m = re.exec(md)) !== null) { if (!mdImgs.includes(m[1])) mdImgs.push(m[1]); }
-    return { markdown: md, images: Array.from(new Set([...images, ...mdImgs])).slice(0, 25) };
+    const htmlImgs: string[] = [];
+    const pushImg = (raw?: string) => {
+      if (!raw || raw.startsWith('data:')) return;
+      const first = raw.split(',')[0]?.trim().split(/\s+/)[0];
+      if (!first) return;
+      try { htmlImgs.push(new URL(first, url).toString()); } catch { /* ignore invalid */ }
+    };
+    for (const rx of [
+      /<img[^>]+(?:src|data-src|data-original|data-lazy-src)=["']([^"']+)["']/gi,
+      /<source[^>]+srcset=["']([^"']+)["']/gi,
+      /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/gi,
+    ]) {
+      while ((m = rx.exec(html)) !== null) pushImg(m[1]);
+    }
+    pushImg(meta?.ogImage || meta?.image);
+    return { markdown: md, images: Array.from(new Set([...images, ...mdImgs, ...htmlImgs])).slice(0, 25) };
   } catch (err) {
     console.error('firecrawlScrape error:', err);
     return null;
