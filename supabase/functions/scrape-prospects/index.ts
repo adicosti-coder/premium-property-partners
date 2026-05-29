@@ -616,7 +616,7 @@ Deno.serve(async (req) => {
           const phone = normalizeRoPhone(row.phone);
           const domain = extractUrlDomain(row.url);
           if (phone) blockedPhones.add(phone);
-          if (domain) blockedDomains.add(domain);
+          if (domain && !MARKETPLACE_DOMAINS.has(domain)) blockedDomains.add(domain);
         }
       }
       for (const row of prospectRows || []) {
@@ -625,13 +625,13 @@ Deno.serve(async (req) => {
           const phone = normalizeRoPhone(row.phone_normalized || row.contact_phone);
           const domain = extractUrlDomain(row.source_url);
           if (phone) blockedPhones.add(phone);
-          if (domain) blockedDomains.add(domain);
+          if (domain && !MARKETPLACE_DOMAINS.has(domain)) blockedDomains.add(domain);
         }
       }
       for (const row of blockRows || []) {
         const phone = normalizeRoPhone(row.phone_normalized);
         if (phone) blockedPhones.add(phone);
-        if (row.domain) blockedDomains.add(row.domain);
+        if (row.domain && !MARKETPLACE_DOMAINS.has(row.domain)) blockedDomains.add(row.domain);
       }
       for (const row of whitelistRows || []) {
         const phone = normalizeRoPhone(row.phone_normalized);
