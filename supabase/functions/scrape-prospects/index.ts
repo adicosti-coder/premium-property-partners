@@ -537,12 +537,14 @@ Deno.serve(async (req) => {
     let customQuery: string | null = null;
     let onlyNewSources = false;
     let preserveAgencyFilter = true;
+    let discoveryMode = false;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
       if (body?.custom_query) customQuery = body.custom_query;
       onlyNewSources = body?.only_new_sources === true;
       preserveAgencyFilter = body?.preserve_agency_filter !== false;
+      discoveryMode = body?.discovery_mode === true;
     } catch { /* no body */ }
 
     const results: any[] = [];
@@ -595,12 +597,13 @@ Deno.serve(async (req) => {
     // Expand keywords with diacritics-free variants for fuzzy matching
     queries = expandKeywordsWithoutDiacritics(queries);
 
-    // GLOBAL RULE: force "Doar Proprietari" filter on every single query
+    // Default path stays owner-focused. Keyword Radar can use discovery mode
+    // for broader URL discovery, then agency/geo gates keep the queue clean.
     queries = queries.map((q) => ({
       platform: q.platform,
-      query: applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
+      query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
     }));
-    console.log(`Expanded to ${queries.length} owner-only search queries`);
+    console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries`);
 
     if (onlyNewSources || preserveAgencyFilter) {
       const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
@@ -680,7 +683,7 @@ Deno.serve(async (req) => {
 
             const explicitOwnerSignal = hasExplicitOwnerSignal(result.title || '', url, markdown);
             const ownerFilterIntent = hasOwnerFilterIntent(query, url);
-            if (!explicitOwnerSignal && !ownerFilterIntent) {
+            if (!explicitOwnerSignal && !ownerFilterIntent && !discoveryMode) {
               archivedSkipped++;
               continue;
             }
