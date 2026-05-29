@@ -15,6 +15,15 @@ const SENDER_DOMAIN = "notify.realtrust.ro"
 // even though actual sending uses the subdomain above.
 const FROM_DOMAIN = "realtrust.ro"
 
+// Technical sender for system/automation emails (reports, digests, anomaly alerts).
+// Routing system mail through notify.realtrust.ro protects the deliverability
+// reputation of the public "info@realtrust.ro" mailbox used by clients.
+const SYSTEM_FROM = "RealTrust Sistem <noreply@notify.realtrust.ro>"
+const SYSTEM_TEMPLATE_PREFIXES = ['automation-', 'system-', 'seo-', 'e2e-']
+const isSystemTemplate = (name: string) =>
+  SYSTEM_TEMPLATE_PREFIXES.some((p) => name.startsWith(p))
+
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -60,14 +69,21 @@ Deno.serve(async (req) => {
   let idempotencyKey: string
   let messageId: string
   let templateData: Record<string, any> = {}
+  let fromOverride: string | null = null
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
     recipientEmail = body.recipientEmail || body.recipient_email
     messageId = crypto.randomUUID()
     idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
+
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
+    }
+    if (typeof body.fromOverride === 'string' && body.fromOverride.includes('@')) {
+      fromOverride = body.fromOverride.trim()
+    } else if (typeof body.from_override === 'string' && body.from_override.includes('@')) {
+      fromOverride = body.from_override.trim()
     }
   } catch {
     return new Response(
@@ -78,6 +94,7 @@ Deno.serve(async (req) => {
       }
     )
   }
+
 
   if (!templateName) {
     return new Response(
@@ -348,7 +365,9 @@ Deno.serve(async (req) => {
           'Authorization': `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: `${SITE_NAME} <onboarding@resend.dev>`,
+          from: fromOverride
+            || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <onboarding@resend.dev>`),
+
           to: [effectiveRecipient],
           subject: resolvedSubject,
           html,
@@ -403,7 +422,9 @@ Deno.serve(async (req) => {
     payload: {
       message_id: messageId,
       to: effectiveRecipient,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      from: fromOverride
+        || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <noreply@${FROM_DOMAIN}>`),
+
       sender_domain: SENDER_DOMAIN,
       subject: resolvedSubject,
       html,

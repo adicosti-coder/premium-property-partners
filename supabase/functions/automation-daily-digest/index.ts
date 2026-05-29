@@ -122,8 +122,10 @@ Deno.serve(async (req) => {
             recipientEmail: to,
             idempotencyKey,
             purpose: "transactional",
+            fromOverride: "RealTrust Sistem <noreply@notify.realtrust.ro>",
             templateData: data,
           }),
+
         });
         const respText = await res.text().catch(() => "");
         if (!res.ok) {
