@@ -312,16 +312,25 @@ DESCRIERE: ${sanitized.substring(0, 3000)}`;
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  // Top-level safety net: ANY uncaught error must return 200 with success:false
+  // so the automation dashboard doesn't enter critical-alert state on transient
+  // network/timeout issues. Self-heal cron retries every 5 min.
+  const safeJson = (payload: Record<string, unknown>, status = 200) =>
+    new Response(JSON.stringify(payload), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  try {
   if (!(await isAuthorized(req))) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return safeJson({ success: false, error: 'Unauthorized', fallback: false }, 401);
   }
 
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   if (!firecrawlKey) {
-    return new Response(JSON.stringify({ error: 'FIRECRAWL_API_KEY not configured' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return safeJson({ success: false, error: 'FIRECRAWL_API_KEY not configured', fallback: true });
   }
+
 
   let batchSize = DEFAULT_BATCH;
   let minScore = MIN_SCORE;
@@ -404,9 +413,17 @@ Deno.serve(async (req) => {
     .order('lead_score', { ascending: false })
     .limit(batchSize * 4);
   if (cErr) {
-    return new Response(JSON.stringify({ error: cErr.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    try {
+      await supabase.rpc('automation_complete_run', {
+        _job_key: 'auto-publish-listings',
+        _success: false,
+        _payload: { error: cErr.message, stage: 'load_candidates' } as any,
+        _triggered_by: triggeredBy,
+      });
+    } catch { /* optional */ }
+    return safeJson({ success: false, error: cErr.message, fallback: true });
   }
+
 
   const queue = (candidates || [])
     .filter((c: any) => !importedSet.has(c.source_url))
@@ -779,6 +796,26 @@ Deno.serve(async (req) => {
     });
   } catch { /* optional */ }
 
-  return new Response(JSON.stringify({ success: true, summary }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  return safeJson({ success: true, summary });
+  } catch (err: any) {
+    const message = err?.message || String(err);
+    const isTimeout = /timeout|timed out|deadline|ETIMEDOUT|abort/i.test(message);
+    console.error('auto-publish-listings fatal error:', message);
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      await supabase.rpc('automation_complete_run', {
+        _job_key: 'auto-publish-listings',
+        _success: false,
+        _payload: { error: message, fallback: true, timeout: isTimeout } as any,
+        _triggered_by: 'fatal_handler',
+      });
+    } catch { /* logger may also be down */ }
+    // Return 200 so the orchestrator/UI doesn't trigger a critical alert; self-heal
+    // will retry on the next 5-min cron tick.
+    return safeJson({ success: false, error: message, fallback: true, timeout: isTimeout });
+  }
 });
+
