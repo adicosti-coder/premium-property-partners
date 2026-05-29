@@ -153,6 +153,12 @@ const AutomationManager = () => {
   const [sendingReport, setSendingReport] = useState(false);
   const [lastReportAt, setLastReportAt] = useState<string | null>(null);
   const [reportEmail, setReportEmail] = useState<string>("adicosti@gmail.com");
+  const [dismissedFailsBefore, setDismissedFailsBefore] = useState<number>(() => {
+    const v = typeof window !== "undefined" ? window.localStorage.getItem("autom_fails_dismissed_until") : null;
+    return v ? Number(v) : 0;
+  });
+  const [retryingFails, setRetryingFails] = useState(false);
+
   const [sendingDigestTest, setSendingDigestTest] = useState(false);
   const [digestTestBanner, setDigestTestBanner] = useState<{ type: "success" | "error"; message: string; details?: string } | null>(null);
 
