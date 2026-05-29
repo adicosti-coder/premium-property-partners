@@ -292,11 +292,16 @@ const OWNER_SIGNALS = [
 ];
 
 const AGENCY_SIGNALS = [
-  'agentie', 'agenție', 'agency', 'agent imobiliar', 'consultant imobiliar',
-  'broker', 'brokeraj', 'reprezentant vanzari', 'reprezentant vânzări',
-  'dezvoltator', 'developer', 'ansamblu rezidential', 'ansamblu rezidențial',
+  'agentie imobiliara', 'agenție imobiliară', 'agent imobiliar', 'consultant imobiliar',
+  'broker imobiliar', 'brokeraj imobiliar', 'reprezentant vanzari', 'reprezentant vânzări',
+  'comision agentie', 'comision agenție', 'comision cumparator', 'comision cumpărător',
   'imobiliare srl', 'real estate srl',
 ];
+
+const MARKETPLACE_DOMAINS = new Set([
+  'olx.ro', 'www.olx.ro', 'storia.ro', 'www.storia.ro', 'imobiliare.ro', 'www.imobiliare.ro',
+  'publi24.ro', 'www.publi24.ro', 'bursaimobiliara.ro', 'www.bursaimobiliara.ro',
+]);
 
 const GENERIC_LISTING_TITLE_SIGNALS = [
   'anunturi gratuite', 'anunturi imobiliare', 'anunturi olx', 'imobiliare olx',
@@ -381,7 +386,9 @@ function hasExplicitOwnerSignal(title: string | null | undefined, url: string | 
 }
 
 function hasAgencySignal(title: string | null | undefined, url: string | null | undefined, markdown: string | null | undefined): boolean {
-  const blob = removeDiacritics(`${title || ''} ${url || ''} ${markdown || ''}`.toLowerCase());
+  const host = extractUrlDomain(url);
+  const blob = removeDiacritics(`${title || ''} ${(markdown || '').substring(0, 2500)}`.toLowerCase());
+  if (host && MARKETPLACE_DOMAINS.has(host)) return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
   return AGENCY_SIGNALS.some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
@@ -530,12 +537,14 @@ Deno.serve(async (req) => {
     let customQuery: string | null = null;
     let onlyNewSources = false;
     let preserveAgencyFilter = true;
+    let discoveryMode = false;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
       if (body?.custom_query) customQuery = body.custom_query;
       onlyNewSources = body?.only_new_sources === true;
       preserveAgencyFilter = body?.preserve_agency_filter !== false;
+      discoveryMode = body?.discovery_mode === true;
     } catch { /* no body */ }
 
     const results: any[] = [];
@@ -588,12 +597,13 @@ Deno.serve(async (req) => {
     // Expand keywords with diacritics-free variants for fuzzy matching
     queries = expandKeywordsWithoutDiacritics(queries);
 
-    // GLOBAL RULE: force "Doar Proprietari" filter on every single query
+    // Default path stays owner-focused. Keyword Radar can use discovery mode
+    // for broader URL discovery, then agency/geo gates keep the queue clean.
     queries = queries.map((q) => ({
       platform: q.platform,
-      query: applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
+      query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
     }));
-    console.log(`Expanded to ${queries.length} owner-only search queries`);
+    console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries`);
 
     if (onlyNewSources || preserveAgencyFilter) {
       const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
@@ -609,7 +619,7 @@ Deno.serve(async (req) => {
           const phone = normalizeRoPhone(row.phone);
           const domain = extractUrlDomain(row.url);
           if (phone) blockedPhones.add(phone);
-          if (domain) blockedDomains.add(domain);
+          if (domain && !MARKETPLACE_DOMAINS.has(domain)) blockedDomains.add(domain);
         }
       }
       for (const row of prospectRows || []) {
@@ -618,13 +628,13 @@ Deno.serve(async (req) => {
           const phone = normalizeRoPhone(row.phone_normalized || row.contact_phone);
           const domain = extractUrlDomain(row.source_url);
           if (phone) blockedPhones.add(phone);
-          if (domain) blockedDomains.add(domain);
+          if (domain && !MARKETPLACE_DOMAINS.has(domain)) blockedDomains.add(domain);
         }
       }
       for (const row of blockRows || []) {
         const phone = normalizeRoPhone(row.phone_normalized);
         if (phone) blockedPhones.add(phone);
-        if (row.domain) blockedDomains.add(row.domain);
+        if (row.domain && !MARKETPLACE_DOMAINS.has(row.domain)) blockedDomains.add(row.domain);
       }
       for (const row of whitelistRows || []) {
         const phone = normalizeRoPhone(row.phone_normalized);
@@ -633,8 +643,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Process queries in parallel batches of 5 to avoid timeout
-    const BATCH_SIZE = 5;
+    // Keep Firecrawl calls deliberately paced. Parallel batches of 5 were
+    // exhausting the search quota and returning successful cron runs with 0 real imports.
+    const BATCH_SIZE = customQuery ? 1 : 2;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
       const batch = queries.slice(i, i + BATCH_SIZE);
       
@@ -672,7 +683,7 @@ Deno.serve(async (req) => {
 
             const explicitOwnerSignal = hasExplicitOwnerSignal(result.title || '', url, markdown);
             const ownerFilterIntent = hasOwnerFilterIntent(query, url);
-            if (!explicitOwnerSignal && !ownerFilterIntent) {
+            if (!explicitOwnerSignal && !ownerFilterIntent && !discoveryMode) {
               archivedSkipped++;
               continue;
             }
@@ -807,7 +818,7 @@ Deno.serve(async (req) => {
               category === 'vanzare' ? 'auto-import' : 'recrutare-management',
               category === 'hotelier' ? 'regim-hotelier' : null,
               category === 'inchiriere' ? 'inchiriere-proprietar' : null,
-              explicitOwnerSignal ? 'semnal-proprietar' : 'filtru-proprietari',
+              explicitOwnerSignal ? 'semnal-proprietar' : discoveryMode ? 'descoperire-broad' : 'filtru-proprietari',
               suspectSpam ? 'suspect_spam' : null,
             ].filter(Boolean) as string[];
 
@@ -836,6 +847,7 @@ Deno.serve(async (req) => {
                 score_breakdown: breakdown,
                 ai_score_breakdown: {
                   source: 'scrape-prospects',
+                  discovery_mode: discoveryMode,
                   owner_filter_intent: ownerFilterIntent,
                   explicit_owner_signal: explicitOwnerSignal,
                   estimated_monthly_extra: monthlyExtra,
@@ -857,6 +869,8 @@ Deno.serve(async (req) => {
                     ? `Prospect ${category === 'hotelier' ? 'regim hotelier' : 'închiriere'} de la proprietar — NU se publică pe site. Lead pentru Andrei: propunere administrare ${category === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`
                     : explicitOwnerSignal
                       ? 'Import automat: semnal explicit proprietar/persoană fizică.'
+                    : discoveryMode
+                      ? 'Import automat: descoperire broad din marketplace; fără semnal de agenție, necesită verificare rapidă înainte de publicare.'
                       : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
@@ -896,6 +910,7 @@ Deno.serve(async (req) => {
         blacklisted_skipped: blacklistedSkipped,
         blacklisted_reviewed: blacklistedReviewed,
         spam_shield_permissive_mode: permissiveSpamShield,
+        discovery_mode: discoveryMode,
         archived_skipped: archivedSkipped,
         duplicate_skipped: duplicateSkipped,
         existing_sources_checked: existingUrls.size,

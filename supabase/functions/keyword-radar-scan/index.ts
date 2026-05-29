@@ -129,6 +129,8 @@ Deno.serve(async (req) => {
                 custom_query: customQuery,
                 only_new_sources: true,
                 preserve_agency_filter: true,
+                discovery_mode: true,
+                max_results: 5,
                 source_label: `keyword-radar:${kw.id}`,
               }),
             });
