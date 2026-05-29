@@ -365,7 +365,9 @@ Deno.serve(async (req) => {
           'Authorization': `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: `${SITE_NAME} <onboarding@resend.dev>`,
+          from: fromOverride
+            || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <onboarding@resend.dev>`),
+
           to: [effectiveRecipient],
           subject: resolvedSubject,
           html,
