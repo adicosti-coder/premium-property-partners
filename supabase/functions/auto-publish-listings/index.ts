@@ -796,6 +796,26 @@ Deno.serve(async (req) => {
     });
   } catch { /* optional */ }
 
-  return new Response(JSON.stringify({ success: true, summary }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  return safeJson({ success: true, summary });
+  } catch (err: any) {
+    const message = err?.message || String(err);
+    const isTimeout = /timeout|timed out|deadline|ETIMEDOUT|abort/i.test(message);
+    console.error('auto-publish-listings fatal error:', message);
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      );
+      await supabase.rpc('automation_complete_run', {
+        _job_key: 'auto-publish-listings',
+        _success: false,
+        _payload: { error: message, fallback: true, timeout: isTimeout } as any,
+        _triggered_by: 'fatal_handler',
+      });
+    } catch { /* logger may also be down */ }
+    // Return 200 so the orchestrator/UI doesn't trigger a critical alert; self-heal
+    // will retry on the next 5-min cron tick.
+    return safeJson({ success: false, error: message, fallback: true, timeout: isTimeout });
+  }
 });
+
