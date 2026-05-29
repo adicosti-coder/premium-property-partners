@@ -15,6 +15,15 @@ const SENDER_DOMAIN = "notify.realtrust.ro"
 // even though actual sending uses the subdomain above.
 const FROM_DOMAIN = "realtrust.ro"
 
+// Technical sender for system/automation emails (reports, digests, anomaly alerts).
+// Routing system mail through notify.realtrust.ro protects the deliverability
+// reputation of the public "info@realtrust.ro" mailbox used by clients.
+const SYSTEM_FROM = "RealTrust Sistem <noreply@notify.realtrust.ro>"
+const SYSTEM_TEMPLATE_PREFIXES = ['automation-', 'system-', 'seo-', 'e2e-']
+const isSystemTemplate = (name: string) =>
+  SYSTEM_TEMPLATE_PREFIXES.some((p) => name.startsWith(p))
+
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
