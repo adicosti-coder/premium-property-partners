@@ -312,16 +312,25 @@ DESCRIERE: ${sanitized.substring(0, 3000)}`;
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
+  // Top-level safety net: ANY uncaught error must return 200 with success:false
+  // so the automation dashboard doesn't enter critical-alert state on transient
+  // network/timeout issues. Self-heal cron retries every 5 min.
+  const safeJson = (payload: Record<string, unknown>, status = 200) =>
+    new Response(JSON.stringify(payload), {
+      status,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  try {
   if (!(await isAuthorized(req))) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return safeJson({ success: false, error: 'Unauthorized', fallback: false }, 401);
   }
 
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
   if (!firecrawlKey) {
-    return new Response(JSON.stringify({ error: 'FIRECRAWL_API_KEY not configured' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return safeJson({ success: false, error: 'FIRECRAWL_API_KEY not configured', fallback: true });
   }
+
 
   let batchSize = DEFAULT_BATCH;
   let minScore = MIN_SCORE;
