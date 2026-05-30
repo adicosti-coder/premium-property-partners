@@ -462,8 +462,17 @@ Deno.serve(async (req) => {
     }
   };
 
+  // Wallclock guard: never let a single run exceed ~50s so the orchestrator
+  // (which has its own 50s timeout) doesn't observe a non-2xx / boot-error.
+  const WALLCLOCK_MS = 48000;
+
   for (const prospect of queue) {
+    if (Date.now() - t0 > WALLCLOCK_MS) {
+      summary.errors.push(`wallclock_guard: stopped after ${queue.indexOf(prospect)}/${queue.length} prospects`);
+      break;
+    }
     const platform = prospect.source_platform || 'unknown';
+
     bumpSource(platform, 'attempts');
 
     // ╔══════════════════════════════════════════════════════════════════════╗
