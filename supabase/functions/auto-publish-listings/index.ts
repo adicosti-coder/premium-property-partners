@@ -105,7 +105,11 @@ async function isAuthorized(req: Request): Promise<boolean> {
   return Boolean(roleRow);
 }
 
-async function firecrawlScrape(url: string, key: string, timeoutMs = 22000): Promise<{ markdown: string; images: string[] } | null> {
+type FirecrawlOutcome =
+  | { ok: true; markdown: string; images: string[]; attempts: number }
+  | { ok: false; kind: 'timeout' | 'http_refuse' | 'firecrawl_error' | 'net_error'; status?: number; message?: string; attempts: number };
+
+async function firecrawlScrapeOnce(url: string, key: string, timeoutMs: number): Promise<FirecrawlOutcome> {
   const ctl = new AbortController();
   const to = setTimeout(() => ctl.abort(), timeoutMs);
   try {
@@ -115,7 +119,11 @@ async function firecrawlScrape(url: string, key: string, timeoutMs = 22000): Pro
       body: JSON.stringify({ url, formats: ['markdown', 'html', 'links'], waitFor: 2000, onlyMainContent: false, timeout: 18000 }),
       signal: ctl.signal,
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      // 4xx => upstream site refusal / auth / not-found (do NOT retry); 5xx / 429 => firecrawl-side, retryable
+      const isClient = resp.status >= 400 && resp.status < 500 && resp.status !== 429;
+      return { ok: false, kind: isClient ? 'http_refuse' : 'firecrawl_error', status: resp.status, message: `HTTP ${resp.status}`, attempts: 1 };
+    }
     const data = await resp.json();
     const md = data?.data?.markdown || data?.markdown || '';
     const html = data?.data?.html || data?.html || '';
@@ -141,14 +149,34 @@ async function firecrawlScrape(url: string, key: string, timeoutMs = 22000): Pro
       while ((m = rx.exec(html)) !== null) pushImg(m[1]);
     }
     pushImg(meta?.ogImage || meta?.image);
-    return { markdown: md, images: Array.from(new Set([...images, ...mdImgs, ...htmlImgs])).slice(0, 25) };
+    return { ok: true, markdown: md, images: Array.from(new Set([...images, ...mdImgs, ...htmlImgs])).slice(0, 25), attempts: 1 };
   } catch (err: any) {
-    if (err?.name === 'AbortError') console.warn('firecrawlScrape timeout:', url);
-    else console.error('firecrawlScrape error:', err?.message || err);
-    return null;
+    if (err?.name === 'AbortError') return { ok: false, kind: 'timeout', message: `timeout ${timeoutMs}ms`, attempts: 1 };
+    return { ok: false, kind: 'net_error', message: err?.message || String(err), attempts: 1 };
   } finally {
     clearTimeout(to);
   }
+}
+
+/** Retry with exponential backoff (1s, 3s). Differentiates HTTP refusal (no retry),
+ *  Firecrawl 5xx/429 (retry), network errors (retry), and timeouts (1 retry only). */
+async function firecrawlScrape(url: string, key: string, timeoutMs = 22000): Promise<{ markdown: string; images: string[] } | null> {
+  const backoffs = [0, 1000, 3000];
+  let lastFail: FirecrawlOutcome | null = null;
+  for (let attempt = 0; attempt < backoffs.length; attempt++) {
+    if (backoffs[attempt] > 0) await new Promise((r) => setTimeout(r, backoffs[attempt]));
+    const r = await firecrawlScrapeOnce(url, key, timeoutMs);
+    if (r.ok) {
+      if (attempt > 0) console.log(`[fc:ok-retry] ${url} (attempt ${attempt + 1})`);
+      return { markdown: r.markdown, images: r.images };
+    }
+    lastFail = { ...r, attempts: attempt + 1 };
+    if (r.kind === 'http_refuse') { console.warn(`[fc:http-refuse] ${url} status=${r.status} (no retry)`); break; }
+    if (r.kind === 'timeout' && attempt >= 1) { console.warn(`[fc:timeout] ${url} (gave up after ${attempt + 1})`); break; }
+    console.warn(`[fc:${r.kind}] ${url} ${r.message || ''} (attempt ${attempt + 1})`);
+  }
+  if (lastFail && !lastFail.ok) console.error(`[fc:fail] ${url} kind=${lastFail.kind} attempts=${lastFail.attempts}`);
+  return null;
 }
 
 /** PostgrestFilterBuilder is thenable but has no `.catch` — wrap any rpc() that we want to fire-and-forget. */
