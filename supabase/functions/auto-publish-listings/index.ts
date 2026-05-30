@@ -22,7 +22,7 @@ const corsHeaders = {
 };
 
 const MIN_SCORE = 55;
-const DEFAULT_BATCH = 8;
+const DEFAULT_BATCH = 4; // keep under edge CPU limit when AI rewrite is enabled
 const MAX_BATCH = 25;
 const MIN_QUALITY = 35; // below this we don't even publish a draft
 
