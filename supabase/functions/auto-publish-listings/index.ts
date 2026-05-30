@@ -105,12 +105,15 @@ async function isAuthorized(req: Request): Promise<boolean> {
   return Boolean(roleRow);
 }
 
-async function firecrawlScrape(url: string, key: string): Promise<{ markdown: string; images: string[] } | null> {
+async function firecrawlScrape(url: string, key: string, timeoutMs = 22000): Promise<{ markdown: string; images: string[] } | null> {
+  const ctl = new AbortController();
+  const to = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const resp = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, formats: ['markdown', 'html', 'links'], waitFor: 3000, onlyMainContent: false }),
+      body: JSON.stringify({ url, formats: ['markdown', 'html', 'links'], waitFor: 2000, onlyMainContent: false, timeout: 18000 }),
+      signal: ctl.signal,
     });
     if (!resp.ok) return null;
     const data = await resp.json();
@@ -139,11 +142,20 @@ async function firecrawlScrape(url: string, key: string): Promise<{ markdown: st
     }
     pushImg(meta?.ogImage || meta?.image);
     return { markdown: md, images: Array.from(new Set([...images, ...mdImgs, ...htmlImgs])).slice(0, 25) };
-  } catch (err) {
-    console.error('firecrawlScrape error:', err);
+  } catch (err: any) {
+    if (err?.name === 'AbortError') console.warn('firecrawlScrape timeout:', url);
+    else console.error('firecrawlScrape error:', err?.message || err);
     return null;
+  } finally {
+    clearTimeout(to);
   }
 }
+
+/** PostgrestFilterBuilder is thenable but has no `.catch` — wrap any rpc() that we want to fire-and-forget. */
+async function safeRpc(p: PromiseLike<any>): Promise<void> {
+  try { await p; } catch (e: any) { console.warn('rpc swallowed:', e?.message || e); }
+}
+
 
 /**
  * Heuristic quality score 0–100. Lower bound triggers low-quality rejection,
