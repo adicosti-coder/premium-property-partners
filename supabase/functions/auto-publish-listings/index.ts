@@ -703,9 +703,11 @@ Deno.serve(async (req) => {
       bumpSource(platform, 'published', 1, quality);
 
       // Increment published count on source health
-      await supabase.rpc('listing_import_record_review', {
-        _source_platform: platform, _action: 'edit', _quality_delta: 0, // neutral bump for "attempt"
-      }).catch(() => null);
+      // Increment published count on source health (fire-and-forget; rpc has no .catch method)
+      await safeRpc(supabase.rpc('listing_import_record_review', {
+        _source_platform: platform, _action: 'edit', _quality_delta: 0,
+      }));
+
 
       await supabase.from('prospect_listings')
         .update({
