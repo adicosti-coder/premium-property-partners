@@ -480,335 +480,96 @@ Deno.serve(async (req) => {
   const qualityScores: number[] = [];
 
   const bumpSource = (platform: string, key: keyof RunSummary['per_source'][string], delta = 1, qScore?: number) => {
-    const p = platform || 'unknown';
-    summary.per_source[p] ||= { attempts: 0, published: 0, rejected: 0, avg_quality: 0 };
-    (summary.per_source[p][key] as number) += delta;
+    const pk = platform || 'unknown';
+    summary.per_source[pk] ||= { attempts: 0, published: 0, rejected: 0, avg_quality: 0 };
+    (summary.per_source[pk][key] as number) += delta;
     if (typeof qScore === 'number') {
-      const cur = summary.per_source[p].avg_quality;
-      const n = summary.per_source[p].published;
-      summary.per_source[p].avg_quality = n > 0 ? (cur * (n - 1) + qScore) / n : qScore;
+      const cur = summary.per_source[pk].avg_quality;
+      const n = summary.per_source[pk].published;
+      summary.per_source[pk].avg_quality = n > 0 ? (cur * (n - 1) + qScore) / n : qScore;
     }
   };
 
-  // Wallclock guard: never let a single run exceed ~50s so the orchestrator
-  // (which has its own 50s timeout) doesn't observe a non-2xx / boot-error.
-  const WALLCLOCK_MS = 48000;
+  // ─────────────────────────────────────────────────────────────────────────
+  // FAN-OUT PARALLEL: dispatch ONE worker invocation per prospect. Each worker
+  // gets its OWN edge CPU budget, so the orchestrator never hits
+  // "CPU Time exceeded" anymore — it only schedules work.
+  // ─────────────────────────────────────────────────────────────────────────
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  let dispatched = 0;
+  let recruitmentRouted = 0;
+  let pmsSyncFired = 0;
 
   for (const prospect of queue) {
-    if (Date.now() - t0 > WALLCLOCK_MS) {
-      summary.errors.push(`wallclock_guard: stopped after ${queue.indexOf(prospect)}/${queue.length} prospects`);
-      break;
-    }
     const platform = prospect.source_platform || 'unknown';
-
     bumpSource(platform, 'attempts');
-
-    // ╔══════════════════════════════════════════════════════════════════════╗
-    // ║ HARD GUARD — DEFENSE IN DEPTH                                        ║
-    // ║ Rental & hotel-regime owner prospects MUST NEVER be published on     ║
-    // ║ realtrust.ro. They are recruitment leads exclusively for Andrei.     ║
-    // ║ Even if the upstream SELECT filter is ever relaxed, this block stops ║
-    // ║ them here and routes them to the call dashboard.                     ║
-    // ╚══════════════════════════════════════════════════════════════════════╝
     const cat = String(prospect.category || '').toLowerCase().trim();
+
+    // Recruitment leads (inchiriere / hotelier from owners) — NEVER publish.
     if (cat !== 'vanzare') {
+      recruitmentRouted++;
       summary.rejected_recruitment++;
-      bumpSource(platform, 'rejected');
-      await supabase.from('prospect_listings')
-        .update({
-          tags: [
-            'scrape-prospects',
-            'recrutare-management',
-            cat === 'hotelier' ? 'regim-hotelier' : 'inchiriere-proprietar',
-            'andrei-call-queue',
-            'blocked-from-publish',
-          ],
-          admin_notes: `NU se publică pe site. Lead pentru Andrei: propunere administrare ${cat === 'hotelier' ? 'regim hotelier' : 'totală/parțială'} (categorie="${cat}").`,
-          lifecycle_status: 'andrei_queue',
-        })
-        .eq('id', prospect.id);
+      await supabase.from('prospect_listings').update({
+        tags: [
+          'scrape-prospects', 'recrutare-management',
+          cat === 'hotelier' ? 'regim-hotelier' : 'inchiriere-proprietar',
+          'andrei-call-queue', 'blocked-from-publish',
+        ],
+        admin_notes: `NU se publică pe site. Lead pentru Andrei: administrare ${cat === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`,
+        lifecycle_status: cat === 'hotelier' ? 'updated_reservation' : 'to_call',
+      }).eq('id', prospect.id);
       continue;
     }
 
-    try {
-      // ── PREMIUM PATH: prospect already enriched by `enrich-prospect-listing`.
-      // Use the AI-rewritten title/description + optimized/watermarked images directly,
-      // skip Firecrawl + secondary AI rewrite, and harvest per-image alts.
-      const hasEnriched =
-        prospect.enrichment_status === 'done' &&
-        (prospect.enriched_title || prospect.enriched_description) &&
-        Array.isArray(prospect.enriched_images);
+    // Fan-out the heavy work to an isolated single-prospect worker.
+    const inv = fetch(`${supabaseUrl}/functions/v1/auto-publish-listing-worker`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${serviceKey}` },
+      body: JSON.stringify({
+        prospect_id: prospect.id,
+        triggered_by: triggeredBy,
+        use_ai_rewrite: useAiRewrite,
+      }),
+    }).catch((e) => console.warn(`[fanout] dispatch failed for ${prospect.id}:`, e?.message));
 
-      let finalTitle: string;
-      let finalShort: string;
-      let finalFull: string;
-      let finalImages: string[];
-      let finalImageAlts: string[];
-      let rawMd: string;
-      let cleanDesc: ReturnType<typeof sanitizeListingText>;
-      let cleanTitle: ReturnType<typeof sanitizeListingText>;
-
-      if (hasEnriched) {
-        rawMd = prospect.description || prospect.enriched_description || '';
-        // Run sanitizer to detect refusal phrases on the RAW input only; the enriched
-        // text is already clean but we still want refusal-detection accuracy.
-        cleanDesc = sanitizeListingText(prospect.description || '', mergedConfig);
-        cleanTitle = sanitizeListingText(prospect.title || '', mergedConfig);
-        if (cleanDesc.refusalDetected || cleanTitle.refusalDetected) {
-          summary.rejected_refusal++;
-          bumpSource(platform, 'rejected');
-          await supabase.from('prospect_listings')
-            .update({
-              admin_notes: `[auto-publish] Refuzat: refusal phrase = "${cleanDesc.refusalMatch || cleanTitle.refusalMatch}"`,
-              tags: ['scrape-prospects', 'auto-import', 'no-agency-refusal'],
-            }).eq('id', prospect.id);
-          continue;
-        }
-        finalTitle = (prospect.enriched_title || prospect.title || 'Anunț Imobiliar Timișoara').substring(0, 200);
-        finalFull = prospect.enriched_description || prospect.description || '';
-        // Short = first paragraph stripped of markdown markers.
-        finalShort = finalFull
-          .replace(/[*_`#>]/g, '')
-          .replace(/\n+/g, ' ')
-          .trim()
-          .substring(0, 220);
-        const ei = (prospect.enriched_images as Array<{ optimized?: string; original?: string; alt?: string }>) || [];
-        finalImages = ei.map((x) => x.optimized || x.original).filter(Boolean) as string[];
-        finalImageAlts = ei.map((x) => x.alt || '').filter(Boolean);
-        if (finalImages.length === 0 && Array.isArray(prospect.images)) finalImages = prospect.images;
-      } else {
-        const scrape = await firecrawlScrape(prospect.source_url, firecrawlKey);
-        summary.scraped++;
-        rawMd = scrape?.markdown || prospect.description || '';
-        const rawImages = (scrape?.images && scrape.images.length > 0)
-          ? scrape.images
-          : (Array.isArray(prospect.images) ? prospect.images : []);
-
-        if (!rawMd || rawMd.length < 60) {
-          summary.rejected_no_content++;
-          bumpSource(platform, 'rejected');
-          continue;
-        }
-
-        cleanDesc = sanitizeListingText(rawMd, mergedConfig);
-        cleanTitle = sanitizeListingText(prospect.title || 'Anunț Imobiliar', mergedConfig);
-
-        if (cleanDesc.refusalDetected || cleanTitle.refusalDetected) {
-          summary.rejected_refusal++;
-          bumpSource(platform, 'rejected');
-          await supabase.from('prospect_listings')
-            .update({
-              admin_notes: `[auto-publish] Refuzat: refusal phrase = "${cleanDesc.refusalMatch || cleanTitle.refusalMatch}"`,
-              tags: ['scrape-prospects', 'auto-import', 'no-agency-refusal'],
-            }).eq('id', prospect.id);
-          continue;
-        }
-
-        finalTitle = cleanTitle.sanitized || 'Anunț Imobiliar Timișoara';
-        finalShort = cleanDesc.sanitized.substring(0, 220);
-        finalFull = cleanDesc.sanitized;
-
-        if (useAiRewrite) {
-          const ai = await rewriteWithAI(finalTitle, finalFull, prospect.category || 'vanzare', learnings.hints, compiledPrompt);
-          if (ai?.title) finalTitle = sanitizeListingText(ai.title, mergedConfig).sanitized || finalTitle;
-          if (ai?.short) finalShort = sanitizeListingText(ai.short, mergedConfig).sanitized || finalShort;
-          if (ai?.full)  finalFull  = sanitizeListingText(ai.full,  mergedConfig).sanitized || finalFull;
-        }
-        finalImages = rawImages;
-        finalImageAlts = [];
-      }
-
-      // Normalize image list (trim, drop empties, dedupe)
-      finalImages = Array.from(
-        new Set(
-          (finalImages || [])
-            .filter((u): u is string => typeof u === 'string')
-            .map((u) => u.trim())
-            .filter((u) => u.length > 0)
-        )
-      );
-
-      // HARD GATE: never publish a listing without imagery on realtrust.ro.
-      // Without photos the detail page renders empty cards and erodes trust.
-      // Send the prospect back into the enrichment queue so the next pass can
-      // re-scrape via Firecrawl (which usually recovers gallery URLs).
-      if (finalImages.length === 0) {
-        summary.rejected_no_images++;
-        bumpSource(platform, 'rejected');
-        await supabase.from('prospect_listings')
-          .update({
-            enrichment_status: 'pending',
-            admin_notes: `[auto-publish] Respins: 0 imagini detectate (re-scrape programat).`,
-            tags: ['scrape-prospects', 'auto-import', 'no-images-rescrape'],
-          }).eq('id', prospect.id);
-        continue;
-      }
-
-      const quality = computeQualityScore({
-        finalDesc: finalFull,
-        finalTitle,
-        imageCount: finalImages.length,
-        hasPrice: Boolean(prospect.price),
-        hasZone: Boolean(prospect.zone),
-        hasRooms: Boolean(prospect.rooms),
-        hasSize: Boolean(prospect.size),
-        removedPhrasesCount: cleanDesc.removed.phrases.length + cleanTitle.removed.phrases.length,
-        removedPhonesCount: cleanDesc.removed.phones.length + cleanTitle.removed.phones.length,
-      });
-
-      if (quality < MIN_QUALITY) {
-        summary.rejected_low_quality++;
-        bumpSource(platform, 'rejected');
-        await supabase.from('prospect_listings')
-          .update({
-            admin_notes: `[auto-publish] Respins calitate < ${MIN_QUALITY} (score=${quality})`,
-            tags: ['scrape-prospects', 'auto-import', 'low-quality'],
-          }).eq('id', prospect.id);
-        continue;
-      }
-
-      const listingType = prospect.category === 'inchiriere' ? 'inchiriere'
-        : prospect.category === 'hotelier' ? 'cazare' : 'vanzare';
-
-      const propertyData: Record<string, any> = {
-        name: finalTitle.substring(0, 200),
-        slug: `${slugify(finalTitle)}-${prospect.id.substring(0, 6)}`,
-        location: prospect.zone ? `${prospect.zone}, Timișoara` : (prospect.location || 'Timișoara'),
-        description_ro: finalShort,
-        long_description_ro: finalFull,
-        description_en: '',
-        long_description_en: '',
-        features: Array.isArray(prospect.features) ? prospect.features : [],
-        listing_type: listingType,
-        tag: listingType === 'vanzare' ? 'De Vânzare' : listingType === 'inchiriere' ? 'De Închiriat' : 'Disponibil',
-        is_active: false,
-        needs_review: true,
-        quality_score: quality,
-        import_source: triggeredBy,
-        imported_at: new Date().toISOString(),
-        original_source_url: prospect.source_url,
-        original_description_raw: rawMd.substring(0, 8000),
-        sanitization_log: {
-          removed_phones: cleanDesc.removed.phones.length + cleanTitle.removed.phones.length,
-          removed_emails: cleanDesc.removed.emails.length + cleanTitle.removed.emails.length,
-          removed_addresses: cleanDesc.removed.addresses.length,
-          removed_phrases: Array.from(new Set([...cleanDesc.removed.phrases, ...cleanTitle.removed.phrases])),
-          ai_rewritten: useAiRewrite,
-          used_premium_enrichment: hasEnriched,
-          source_platform: platform,
-          quality_score: quality,
-          learnings_applied: learnings.forbidden.length,
-        },
-        migrated_from_prospect_id: prospect.id,
-        rooms: prospect.rooms,
-        bedrooms: prospect.rooms,
-        size: prospect.size,
-        capacity: prospect.rooms ? prospect.rooms * 2 : 2,
-        bathrooms: 1,
-        floor: prospect.floor,
-        year_built: prospect.year_built,
-        base_price_per_night: listingType === 'vanzare' ? null : prospect.price,
-        capital_necesar: listingType === 'vanzare' ? prospect.price : null,
-        images: finalImages,
-        image_alts: finalImageAlts,
-        image_path: Array.isArray(finalImages) && finalImages.length > 0 ? finalImages[0] : null,
-        booking_url: null,
-        source_platform: platform,
-        source_url: null,
-      };
-
-      const { data: inserted, error: insErr } = await supabase
-        .from('properties')
-        .insert(propertyData)
-        .select('id, slug, name')
-        .single();
-
-      if (insErr) {
-        if ((insErr.message || '').toLowerCase().includes('duplicate')) {
-          summary.rejected_duplicate++;
-        } else {
-          summary.rejected_error++;
-          summary.errors.push(`prospect ${prospect.id}: ${insErr.message}`);
-        }
-        bumpSource(platform, 'rejected');
-        continue;
-      }
-
-      summary.published++;
-      summary.published_ids.push(inserted.id);
-      qualityScores.push(quality);
-      bumpSource(platform, 'published', 1, quality);
-
-      // Increment published count on source health
-      // Increment published count on source health (fire-and-forget; rpc has no .catch method)
-      await safeRpc(supabase.rpc('listing_import_record_review', {
-        _source_platform: platform, _action: 'edit', _quality_delta: 0,
-      }));
-
-
-      await supabase.from('prospect_listings')
-        .update({
-          tags: ['scrape-prospects', 'auto-import', 'site-published'],
-          admin_notes: `[auto-publish] Publicat ca proprietate ${inserted.id} (draft, q=${quality}).`,
-        }).eq('id', prospect.id);
-
-      // Fire-and-forget image processing pipeline (crop / inpaint + rehost)
-      if (Array.isArray(finalImages) && finalImages.length > 0) {
-        const proc = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-listing-images`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          },
-          body: JSON.stringify({ property_id: inserted.id }),
-        }).catch((e) => console.warn('process-listing-images dispatch failed', e?.message));
-        // @ts-ignore EdgeRuntime is provided in Deno deploy
-        if (typeof EdgeRuntime !== 'undefined' && (EdgeRuntime as any).waitUntil) {
-          // @ts-ignore
-          EdgeRuntime.waitUntil(proc);
-        }
-      }
-
-      // Hot deal alert — fire-and-forget to Make.com webhook
-      const leadScore = Number(prospect.lead_score ?? 0);
-      if (hotDealCfg.enabled && leadScore >= hotDealCfg.minScore) {
-        const payload = {
-          event: 'hot_deal_published',
-          severity: 'opportunity',
-          score: leadScore,
-          quality,
-          enriched_title: finalTitle,
-          price: prospect.price,
-          currency: prospect.currency || 'EUR',
-          zone: prospect.zone || prospect.location || null,
-          location: prospect.location || null,
-          rooms: prospect.rooms,
-          size: prospect.size,
-          property_id: inserted.id,
-          slug: inserted.slug,
-          admin_url: `https://realtrust.ro/admin/properties/${inserted.id}`,
-          fast_review_url: `https://realtrust.ro/admin/properties/fast-review`,
-          source_url: prospect.source_url,
-          source_platform: platform,
-          published_at: new Date().toISOString(),
-        };
-        const hook = fetch(hotDealCfg.url!, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }).catch((e) => console.warn('hot_deal webhook failed', e?.message));
-        // @ts-ignore EdgeRuntime is provided in Deno deploy
-        if (typeof EdgeRuntime !== 'undefined' && (EdgeRuntime as any).waitUntil) {
-          // @ts-ignore
-          EdgeRuntime.waitUntil(hook);
-        }
-      }
-    } catch (err: any) {
-      summary.rejected_error++;
-      bumpSource(platform, 'rejected');
-      summary.errors.push(`prospect ${prospect.id}: ${err.message || String(err)}`);
+    // @ts-ignore EdgeRuntime is provided in Deno deploy
+    if (typeof EdgeRuntime !== 'undefined' && (EdgeRuntime as any).waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(inv);
     }
+    dispatched++;
   }
+
+  // PMS side-channel (ApArt Hotel pipeline): if any active cazare property
+  // exists, fire a single iCal sync in parallel with publication.
+  try {
+    const { count: hotelCount } = await supabase
+      .from('properties').select('id', { count: 'exact', head: true })
+      .eq('listing_type', 'cazare').eq('is_active', true);
+    if ((hotelCount ?? 0) > 0) {
+      const pms = fetch(`${supabaseUrl}/functions/v1/sync-ical-bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${serviceKey}` },
+        body: JSON.stringify({ triggered_by: triggeredBy, source: 'auto-publish-fan-out' }),
+      }).catch((e) => console.warn('[pms-sync] dispatch failed:', e?.message));
+      // @ts-ignore
+      if (typeof EdgeRuntime !== 'undefined' && (EdgeRuntime as any).waitUntil) EdgeRuntime.waitUntil(pms);
+      pmsSyncFired++;
+    }
+  } catch (e: any) {
+    console.warn('[pms-sync] check failed:', e?.message);
+  }
+
+  // In fan-out mode the orchestrator no longer knows synchronously how many
+  // properties were published — workers report directly into the DB and the
+  // dashboard reads the 24h count from `properties.imported_at`.
+  (summary as any).dispatched = dispatched;
+  (summary as any).recruitment_routed = recruitmentRouted;
+  (summary as any).pms_sync_fired = pmsSyncFired;
+  (summary as any).mode = 'fan_out_parallel';
+  void qualityScores; // kept for type compat with metrics row below
 
   summary.avg_quality_score = qualityScores.length > 0
     ? Math.round(qualityScores.reduce((a, b) => a + b, 0) / qualityScores.length)
