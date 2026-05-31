@@ -1579,4 +1579,83 @@ const StatCard = ({
   </Card>
 );
 
+function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismissedFailsBefore: number }) {
+  const [stats, setStats] = useState<{ published24: number; pmsRuns24: number; dispatched24: number; loading: boolean }>({
+    published24: 0, pmsRuns24: 0, dispatched24: 0, loading: true,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+      const [{ count: pubCount }, { count: pmsCount }] = await Promise.all([
+        supabase.from("properties").select("id", { count: "exact", head: true })
+          .gte("imported_at", since).not("import_source", "is", null),
+        supabase.from("automation_runs").select("id", { count: "exact", head: true })
+          .eq("job_key", "sync-ical-bookings").gte("started_at", since),
+      ]);
+      const autoRuns24 = runs.filter(
+        (r) => r.job_key === "auto-publish-listings" &&
+          new Date(r.started_at).getTime() > Date.now() - 24 * 3600_000,
+      );
+      const dispatched24 = autoRuns24.reduce((acc, r) => {
+        const o = (r.output_summary || {}) as Record<string, unknown>;
+        return acc + (Number(o.dispatched) || 0);
+      }, 0);
+      if (!cancelled) setStats({ published24: pubCount ?? 0, pmsRuns24: pmsCount ?? 0, dispatched24, loading: false });
+    })();
+    return () => { cancelled = true; };
+  }, [runs]);
+
+  // Auto-dismiss CPU-limit alert when newer success exists after the failure.
+  useEffect(() => {
+    const cpuFails = runs.filter((r) =>
+      r.job_key === "auto-publish-listings" &&
+      (r.status === "failed" || r.status === "timeout") &&
+      /cpu time|cpu_time|cpu limit/i.test(String((r.output_summary as any)?.error || r.error || "")),
+    );
+    if (cpuFails.length === 0) return;
+    const lastFail = cpuFails[0];
+    const successAfter = runs.find((r) =>
+      r.job_key === "auto-publish-listings" && r.status === "success" &&
+      new Date(r.started_at).getTime() > new Date(lastFail.started_at).getTime(),
+    );
+    if (successAfter) {
+      const t = new Date(successAfter.started_at).getTime();
+      if (t > dismissedFailsBefore) {
+        window.localStorage.setItem("autom_fails_dismissed_until", String(t));
+      }
+    }
+  }, [runs, dismissedFailsBefore]);
+
+  return (
+    <Card className="bg-card/30">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Radio className="w-4 h-4 text-primary" /> Auto-publish fan-out · ultimele 24h
+        </CardTitle>
+        <CardDescription className="text-xs">
+          Workerul izolat procesează o singură proprietate per invocare (sanitizer + AI rewrite + insert) — fără CPU limit.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-1">
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div>
+            <div className="text-2xl font-bold tabular-nums">{stats.loading ? "…" : stats.published24}</div>
+            <div className="text-[11px] text-muted-foreground">publicate prin fan-out</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold tabular-nums">{stats.loading ? "…" : stats.dispatched24}</div>
+            <div className="text-[11px] text-muted-foreground">workeri dispatched</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold tabular-nums">{stats.loading ? "…" : stats.pmsRuns24}</div>
+            <div className="text-[11px] text-muted-foreground">sincronizări PMS</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default AutomationManager;
