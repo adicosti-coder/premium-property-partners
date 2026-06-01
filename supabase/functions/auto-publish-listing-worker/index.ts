@@ -436,6 +436,35 @@ Deno.serve(async (req) => {
   } catch (err: any) {
     const message = err?.message || String(err);
     console.error("auto-publish-listing-worker error:", message);
+    // Per-prospect failure log — does NOT block other parallel workers.
+    try {
+      const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const reqBody = await req.clone().json().catch(() => ({} as any));
+      const prospectId = reqBody?.prospect_id;
+      const idempotencyKey = reqBody?.idempotency_key || req.headers.get("x-idempotency-key");
+      const kind = /gemini|ai\.gateway|lovable_api/i.test(message)
+        ? "ai_gemini_error"
+        : /firecrawl|scrape/i.test(message)
+        ? "scrape_error"
+        : /html|parse|sanitiz/i.test(message)
+        ? "html_corrupt"
+        : "worker_error";
+      if (prospectId) {
+        await sb.from("admin_audit_log").insert({
+          action: "auto_publish_worker_failed",
+          actor_label: "system",
+          entity_type: "prospect_listing",
+          entity_id: prospectId,
+          details: { error: message, kind, idempotency_key: idempotencyKey },
+          severity: "error",
+        });
+        await sb.from("prospect_listings").update({
+          admin_notes: `[worker-fail:${kind}] ${message.substring(0, 280)}`,
+        }).eq("id", prospectId);
+      }
+    } catch (logErr) {
+      console.warn("worker fail-logging failed:", (logErr as Error)?.message);
+    }
     return safeJson({ success: false, error: message });
   }
 });
