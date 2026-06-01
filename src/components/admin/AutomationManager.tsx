@@ -1580,19 +1580,40 @@ const StatCard = ({
 );
 
 function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismissedFailsBefore: number }) {
-  const [stats, setStats] = useState<{ published24: number; pmsRuns24: number; dispatched24: number; loading: boolean }>({
-    published24: 0, pmsRuns24: 0, dispatched24: 0, loading: true,
+  const [stats, setStats] = useState<{
+    published24: number;
+    pmsRuns24: number;
+    dispatched24: number;
+    workerFails24: number;
+    updatedReservations24: number;
+    pmsSuccess24: number;
+    loading: boolean;
+  }>({
+    published24: 0, pmsRuns24: 0, dispatched24: 0,
+    workerFails24: 0, updatedReservations24: 0, pmsSuccess24: 0, loading: true,
   });
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const since = new Date(Date.now() - 24 * 3600_000).toISOString();
-      const [{ count: pubCount }, { count: pmsCount }] = await Promise.all([
+      const [
+        { count: pubCount },
+        { count: pmsCount },
+        { count: failCount },
+        { count: updatedResCount },
+        pmsSuccessRes,
+      ] = await Promise.all([
         supabase.from("properties").select("id", { count: "exact", head: true })
           .gte("imported_at", since).not("import_source", "is", null),
         supabase.from("automation_runs").select("id", { count: "exact", head: true })
           .eq("job_key", "sync-ical-bookings").gte("started_at", since),
+        supabase.from("admin_audit_log").select("id", { count: "exact", head: true })
+          .eq("action", "auto_publish_worker_failed").gte("created_at", since),
+        supabase.from("prospect_listings").select("id", { count: "exact", head: true })
+          .eq("lifecycle_status", "updated_reservation").gte("updated_at", since),
+        supabase.from("automation_runs").select("id", { count: "exact", head: true })
+          .eq("job_key", "sync-ical-bookings").eq("status", "success").gte("started_at", since),
       ]);
       const autoRuns24 = runs.filter(
         (r) => r.job_key === "auto-publish-listings" &&
@@ -1602,7 +1623,15 @@ function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismisse
         const o = (r.output_summary || {}) as Record<string, unknown>;
         return acc + (Number(o.dispatched) || 0);
       }, 0);
-      if (!cancelled) setStats({ published24: pubCount ?? 0, pmsRuns24: pmsCount ?? 0, dispatched24, loading: false });
+      if (!cancelled) setStats({
+        published24: pubCount ?? 0,
+        pmsRuns24: pmsCount ?? 0,
+        dispatched24,
+        workerFails24: failCount ?? 0,
+        updatedReservations24: updatedResCount ?? 0,
+        pmsSuccess24: pmsSuccessRes.count ?? 0,
+        loading: false,
+      });
     })();
     return () => { cancelled = true; };
   }, [runs]);
@@ -1628,6 +1657,12 @@ function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismisse
     }
   }, [runs, dismissedFailsBefore]);
 
+  const pmsMatch = stats.updatedReservations24 === 0
+    ? "—"
+    : stats.pmsSuccess24 >= stats.updatedReservations24
+    ? "sincronizat"
+    : "decalaj";
+
   return (
     <Card className="bg-card/30">
       <CardHeader className="pb-2">
@@ -1635,10 +1670,10 @@ function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismisse
           <Radio className="w-4 h-4 text-primary" /> Auto-publish fan-out · ultimele 24h
         </CardTitle>
         <CardDescription className="text-xs">
-          Workerul izolat procesează o singură proprietate per invocare (sanitizer + AI rewrite + insert) — fără CPU limit.
+          Workerul izolat procesează o singură proprietate per invocare (sanitizer + AI rewrite + insert) — cu idempotency key per prospect, fără duplicate.
         </CardDescription>
       </CardHeader>
-      <CardContent className="pt-1">
+      <CardContent className="pt-1 space-y-2">
         <div className="grid grid-cols-3 gap-3 text-center">
           <div>
             <div className="text-2xl font-bold tabular-nums">{stats.loading ? "…" : stats.published24}</div>
@@ -1652,6 +1687,19 @@ function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismisse
             <div className="text-2xl font-bold tabular-nums">{stats.loading ? "…" : stats.pmsRuns24}</div>
             <div className="text-[11px] text-muted-foreground">sincronizări PMS</div>
           </div>
+        </div>
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground border-t pt-2">
+          <span>
+            Workeri eșuați (24h):{" "}
+            <span className={`font-semibold tabular-nums ${stats.workerFails24 > 0 ? "text-destructive" : "text-foreground"}`}>
+              {stats.loading ? "…" : stats.workerFails24}
+            </span>
+          </span>
+          <span>
+            Audit PMS · updated_reservation: <span className="font-semibold tabular-nums text-foreground">{stats.updatedReservations24}</span>
+            {" "}vs sync OK: <span className="font-semibold tabular-nums text-foreground">{stats.pmsSuccess24}</span>
+            {" "}<span className={pmsMatch === "decalaj" ? "text-destructive" : "text-emerald-600"}>({pmsMatch})</span>
+          </span>
         </div>
       </CardContent>
     </Card>
