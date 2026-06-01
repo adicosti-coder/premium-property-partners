@@ -523,14 +523,23 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    // Idempotency key — workers refuse re-processing the same key, preventing
+    // duplicate property inserts if dispatch is accidentally repeated.
+    const idempotencyKey = `pub:${prospect.id}:${t0}`;
+
     // Fan-out the heavy work to an isolated single-prospect worker.
     const inv = fetch(`${supabaseUrl}/functions/v1/auto-publish-listing-worker`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${serviceKey}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${serviceKey}`,
+        'x-idempotency-key': idempotencyKey,
+      },
       body: JSON.stringify({
         prospect_id: prospect.id,
         triggered_by: triggeredBy,
         use_ai_rewrite: useAiRewrite,
+        idempotency_key: idempotencyKey,
       }),
     }).catch((e) => console.warn(`[fanout] dispatch failed for ${prospect.id}:`, e?.message));
 
