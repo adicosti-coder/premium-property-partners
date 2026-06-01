@@ -1611,7 +1611,7 @@ function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismisse
         supabase.from("admin_audit_log").select("id", { count: "exact", head: true })
           .eq("action", "auto_publish_worker_failed").gte("created_at", since),
         supabase.from("prospect_listings").select("id", { count: "exact", head: true })
-          .eq("lifecycle_status", "updated_reservation").gte("updated_at", since),
+          .eq("lifecycle_status", "updated_reservation" as any).gte("updated_at", since),
         supabase.from("automation_runs").select("id", { count: "exact", head: true })
           .eq("job_key", "sync-ical-bookings").eq("status", "success").gte("started_at", since),
       ]);
