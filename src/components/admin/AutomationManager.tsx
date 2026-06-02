@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -9,12 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertTriangle, CheckCircle2, Pause, Play, Power, Shield,
   Sparkles, Phone, Activity, Inbox, History, Zap, Loader2,
   FlaskConical, Copy, XCircle, Newspaper, Brain, ListTree, Radio, BarChart3,
-  Mail, Send,
+  Mail, Send, RotateCw, Wrench,
 } from "lucide-react";
 
 import { AutomationAnalytics } from "./AutomationAnalytics";
