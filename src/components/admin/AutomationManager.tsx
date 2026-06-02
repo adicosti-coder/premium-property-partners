@@ -1694,11 +1694,12 @@ function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismisse
           </div>
         </div>
         <div className="flex items-center justify-between text-[11px] text-muted-foreground border-t pt-2">
-          <span>
+          <span className="flex items-center gap-1">
             Workeri eșuați (24h):{" "}
-            <span className={`font-semibold tabular-nums ${stats.workerFails24 > 0 ? "text-destructive" : "text-foreground"}`}>
-              {stats.loading ? "…" : stats.workerFails24}
-            </span>
+            <FanOutFailuresDialog
+              count={stats.workerFails24}
+              loading={stats.loading}
+            />
           </span>
           <span>
             Audit PMS · updated_reservation: <span className="font-semibold tabular-nums text-foreground">{stats.updatedReservations24}</span>
