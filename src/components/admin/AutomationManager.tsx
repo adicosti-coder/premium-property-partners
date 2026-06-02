@@ -1031,6 +1031,9 @@ const AutomationManager = () => {
       {/* AUTO-PUBLISH FAN-OUT 24h STATS */}
       <FanOutStatsCard runs={runs} dismissedFailsBefore={dismissedFailsBefore} />
 
+      {/* DATA INTEGRITY RECONCILIATION */}
+      <ReconciliationCard />
+
       {/* AUTO-PUBLISH FALLBACK AUDIT — last 10 fallback responses caught by try/catch */}
       {(() => {
         const autoRuns = runs.filter((r) => r.job_key === "auto-publish-listings");
