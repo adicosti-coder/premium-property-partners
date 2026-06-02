@@ -1712,4 +1712,347 @@ function FanOutStatsCard({ runs, dismissedFailsBefore }: { runs: Run[]; dismisse
   );
 }
 
+// ============================================================================
+// Fan-Out Failures Drilldown Dialog
+// ============================================================================
+
+type WorkerFailRow = {
+  id: string;
+  entity_id: string | null;
+  created_at: string;
+  details: { error?: string; kind?: string; idempotency_key?: string } | null;
+};
+
+const KIND_LABEL: Record<string, string> = {
+  ai_gemini_error: "AI (Gemini)",
+  scrape_error: "Scrape (Firecrawl)",
+  html_corrupt: "HTML / Sanitizer",
+  worker_error: "Generic worker",
+};
+
+const KIND_BADGE: Record<string, string> = {
+  ai_gemini_error: "border-purple-400 text-purple-700 dark:text-purple-300",
+  scrape_error: "border-amber-400 text-amber-700 dark:text-amber-300",
+  html_corrupt: "border-orange-400 text-orange-700 dark:text-orange-300",
+  worker_error: "border-destructive/60 text-destructive",
+};
+
+function FanOutFailuresDialog({ count, loading }: { count: number; loading: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<WorkerFailRow[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [reprocessing, setReprocessing] = useState<Record<string, boolean>>({});
+
+  const load = async () => {
+    setBusy(true);
+    const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+    const { data, error } = await supabase
+      .from("admin_audit_log")
+      .select("id, entity_id, created_at, details")
+      .eq("action", "auto_publish_worker_failed")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      toast({ title: "Eroare", description: error.message, variant: "destructive" });
+    } else {
+      setRows((data || []) as unknown as WorkerFailRow[]);
+    }
+    setBusy(false);
+  };
+
+  useEffect(() => {
+    if (open) load();
+  }, [open]);
+
+  const grouped = useMemo(() => {
+    const m: Record<string, WorkerFailRow[]> = {};
+    for (const r of rows) {
+      const k = r.details?.kind || "worker_error";
+      (m[k] = m[k] || []).push(r);
+    }
+    return m;
+  }, [rows]);
+
+  const forceReprocess = async (row: WorkerFailRow) => {
+    if (!row.entity_id) return;
+    setReprocessing((s) => ({ ...s, [row.id]: true }));
+    try {
+      const idempotency_key = `force:${row.entity_id}:${Date.now()}`;
+      const { data, error } = await supabase.functions.invoke("auto-publish-listing-worker", {
+        body: {
+          prospect_id: row.entity_id,
+          idempotency_key,
+          force: true,
+          triggered_by: "manual_reprocess",
+        },
+        headers: { "x-idempotency-key": idempotency_key },
+      });
+      if (error) throw error;
+      const ok = (data as any)?.success && (data as any)?.published;
+      toast({
+        title: ok ? "Reprocesare reușită" : "Reprocesare trimisă",
+        description: ok
+          ? `Publicat ca ${(data as any).property_id?.slice(0, 8) || "—"}`
+          : (data as any)?.reason || (data as any)?.error || "Worker invocat.",
+      });
+      load();
+    } catch (e: any) {
+      toast({ title: "Eșec reprocesare", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setReprocessing((s) => ({ ...s, [row.id]: false }));
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        disabled={loading || count === 0}
+        className={`font-semibold tabular-nums underline-offset-2 ${
+          count > 0
+            ? "text-destructive hover:underline cursor-pointer"
+            : "text-foreground cursor-default"
+        } disabled:no-underline disabled:cursor-default`}
+        title={count > 0 ? "Vezi diagnostic eșecuri" : "Niciun eșec în ultimele 24h"}
+      >
+        {loading ? "…" : count}
+      </button>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-destructive" />
+            Diagnostic Eșecuri Fan-Out
+          </DialogTitle>
+          <DialogDescription>
+            Prospecți cu tag <code className="text-[11px]">[worker-fail:…]</code> din ultimele 24h, grupați pe tip de eroare. Poți forța reprocesarea ignorând eroarea anterioară.
+          </DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="flex-1 -mx-6 px-6">
+          {busy ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="text-center py-12 text-sm text-muted-foreground">
+              Niciun eșec în ultimele 24h. ✅
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(grouped).map(([kind, items]) => (
+                <div key={kind} className="border rounded-md overflow-hidden">
+                  <div className="bg-muted/40 px-3 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={`text-[11px] ${KIND_BADGE[kind] || ""}`}>
+                        {KIND_LABEL[kind] || kind}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{items.length} eșec(uri)</span>
+                    </div>
+                  </div>
+                  <div className="divide-y">
+                    {items.map((r) => (
+                      <div key={r.id} className="px-3 py-2 text-xs flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-muted-foreground">
+                            {new Date(r.created_at).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                            {" · "}
+                            <span className="font-mono">{r.entity_id?.slice(0, 8) || "—"}</span>
+                          </div>
+                          <div className="font-mono text-foreground/80 truncate" title={r.details?.error || ""}>
+                            {r.details?.error || "—"}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-[11px] shrink-0"
+                          disabled={!r.entity_id || !!reprocessing[r.id]}
+                          onClick={() => forceReprocess(r)}
+                        >
+                          {reprocessing[r.id] ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <RotateCw className="w-3 h-3" />
+                          )}
+                          <span className="ml-1">Forțează</span>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================================================
+// Data Integrity Reconciliation Card
+// Compares prospect_listings (lifecycle_status='to_call') vs properties
+// with valid migrated_from_prospect_id. Flags asymmetry & offers repair.
+// ============================================================================
+
+type ReconState = {
+  loading: boolean;
+  toCallIds: Set<string>;
+  migratedIds: Set<string>;
+  orphanProspects: string[]; // to_call but no matching property
+  orphanProperties: { id: string; prospect_id: string }[]; // property exists, prospect not in to_call
+};
+
+function ReconciliationCard() {
+  const [state, setState] = useState<ReconState>({
+    loading: true,
+    toCallIds: new Set(),
+    migratedIds: new Set(),
+    orphanProspects: [],
+    orphanProperties: [],
+  });
+  const [repairing, setRepairing] = useState(false);
+
+  const load = async () => {
+    setState((s) => ({ ...s, loading: true }));
+    try {
+      const [prospectsRes, propsRes] = await Promise.all([
+        supabase
+          .from("prospect_listings")
+          .select("id")
+          .eq("lifecycle_status", "to_call" as any)
+          .limit(2000),
+        supabase
+          .from("properties")
+          .select("id, migrated_from_prospect_id")
+          .not("migrated_from_prospect_id", "is", null)
+          .limit(2000),
+      ]);
+      if (prospectsRes.error) throw prospectsRes.error;
+      if (propsRes.error) throw propsRes.error;
+
+      const toCallIds = new Set<string>((prospectsRes.data || []).map((p: any) => p.id));
+      const migratedIds = new Set<string>(
+        (propsRes.data || []).map((p: any) => p.migrated_from_prospect_id).filter(Boolean),
+      );
+      const orphanProspects = [...toCallIds].filter((id) => !migratedIds.has(id));
+      const orphanProperties = (propsRes.data || [])
+        .filter((p: any) => p.migrated_from_prospect_id && !toCallIds.has(p.migrated_from_prospect_id))
+        .map((p: any) => ({ id: p.id as string, prospect_id: p.migrated_from_prospect_id as string }));
+
+      setState({ loading: false, toCallIds, migratedIds, orphanProspects, orphanProperties });
+    } catch (e: any) {
+      toast({ title: "Reconciliere eșuată", description: e?.message || String(e), variant: "destructive" });
+      setState((s) => ({ ...s, loading: false }));
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const asymmetry = state.orphanProspects.length + state.orphanProperties.length;
+
+  const repair = async () => {
+    if (asymmetry === 0) return;
+    setRepairing(true);
+    let fixed = 0;
+    try {
+      // Orphan prospects (to_call, no property) → revert to "pending" so they re-enter pipeline.
+      if (state.orphanProspects.length > 0) {
+        const { error, count } = await supabase
+          .from("prospect_listings")
+          .update({
+            lifecycle_status: "pending" as any,
+            admin_notes: "[reconcile] revert to_call → pending (no published property)",
+          } as any, { count: "exact" })
+          .in("id", state.orphanProspects);
+        if (error) throw error;
+        fixed += count || 0;
+      }
+      // Orphan properties (have prospect, but prospect not in to_call) → align prospect to to_call.
+      if (state.orphanProperties.length > 0) {
+        const ids = state.orphanProperties.map((p) => p.prospect_id);
+        const { error, count } = await supabase
+          .from("prospect_listings")
+          .update({
+            lifecycle_status: "to_call" as any,
+            admin_notes: "[reconcile] align prospect → to_call (property exists)",
+          } as any, { count: "exact" })
+          .in("id", ids);
+        if (error) throw error;
+        fixed += count || 0;
+      }
+      toast({ title: "Reparare finalizată", description: `${fixed} înregistrări sincronizate.` });
+      load();
+    } catch (e: any) {
+      toast({ title: "Reparare eșuată", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setRepairing(false);
+    }
+  };
+
+  return (
+    <Card className="bg-card/30">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Shield className="w-4 h-4 text-primary" /> Reconciliere integritate date
+          {!state.loading && asymmetry > 0 && (
+            <Badge variant="outline" className="border-destructive/60 text-destructive text-[10px] ml-1">
+              Asimetrie Date Detectată
+            </Badge>
+          )}
+          {!state.loading && asymmetry === 0 && (
+            <Badge variant="outline" className="border-emerald-500/60 text-emerald-600 text-[10px] ml-1">
+              Sincronizat
+            </Badge>
+          )}
+        </CardTitle>
+        <CardDescription className="text-xs">
+          Verifică simetria între prospecți „to_call” și proprietățile publicate cu <code>migrated_from_prospect_id</code>.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+          <div>
+            <div className="text-xl font-bold tabular-nums">{state.loading ? "…" : state.toCallIds.size}</div>
+            <div className="text-[11px] text-muted-foreground">prospecți to_call</div>
+          </div>
+          <div>
+            <div className="text-xl font-bold tabular-nums">{state.loading ? "…" : state.migratedIds.size}</div>
+            <div className="text-[11px] text-muted-foreground">properties migrate</div>
+          </div>
+          <div>
+            <div className={`text-xl font-bold tabular-nums ${state.orphanProspects.length > 0 ? "text-destructive" : ""}`}>
+              {state.loading ? "…" : state.orphanProspects.length}
+            </div>
+            <div className="text-[11px] text-muted-foreground">orfan: to_call fără property</div>
+          </div>
+          <div>
+            <div className={`text-xl font-bold tabular-nums ${state.orphanProperties.length > 0 ? "text-destructive" : ""}`}>
+              {state.loading ? "…" : state.orphanProperties.length}
+            </div>
+            <div className="text-[11px] text-muted-foreground">orfan: property fără to_call</div>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 mt-3">
+          <Button size="sm" variant="ghost" onClick={load} disabled={state.loading}>
+            <RotateCw className={`w-3 h-3 mr-1 ${state.loading ? "animate-spin" : ""}`} /> Re-scanare
+          </Button>
+          <Button
+            size="sm"
+            variant={asymmetry > 0 ? "default" : "outline"}
+            disabled={asymmetry === 0 || repairing}
+            onClick={repair}
+          >
+            {repairing ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Wrench className="w-3 h-3 mr-1" />}
+            Sincronizare și Reparare Stări
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default AutomationManager;
