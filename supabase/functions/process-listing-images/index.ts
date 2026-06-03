@@ -352,7 +352,7 @@ Deno.serve(async (req) => {
       ai_failures: aiFailures,
       crop_fallback_used: cropSalvaged,
       ai_errors: aiErrors.slice(0, 5),
-      retry_policy: { max_attempts: RETRY_DELAYS_MS.length, backoff_ms: RETRY_DELAYS_MS },
+      retry_policy: { max_attempts: MAX_RETRY_ATTEMPTS, base_ms: RETRY_BASE_MS, factor: RETRY_FACTOR, jitter: "±25%" },
       total_retries: totalRetries,
       details: perImage,
     },
