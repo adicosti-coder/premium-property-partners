@@ -43,6 +43,9 @@ export function AutoPublishListingsPanel() {
   const [showFailedDetails, setShowFailedDetails] = useState(false);
   const [loadingFailedDetails, setLoadingFailedDetails] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [retryDialogOpen, setRetryDialogOpen] = useState(false);
+  const [retrySelectedIds, setRetrySelectedIds] = useState<Set<string>>(new Set());
+  const [retryStage, setRetryStage] = useState<"select" | "confirm">("select");
 
   const load = async () => {
     setLoading(true);
