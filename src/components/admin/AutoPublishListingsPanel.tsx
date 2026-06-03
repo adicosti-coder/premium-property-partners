@@ -294,6 +294,53 @@ export function AutoPublishListingsPanel() {
           </AlertDescription>
         </Alert>
 
+        {backfillProgress && (
+          <div className={`border rounded-lg p-3 space-y-2 ${backfillProgress.done ? (backfillProgress.failed > 0 ? "border-destructive/40 bg-destructive/5" : "border-green-500/40 bg-green-500/5") : "border-primary/40 bg-primary/5"}`}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-semibold flex items-center gap-2">
+                <Eye className="w-3.5 h-3.5" />
+                {backfillProgress.done ? "Backfill în Drafts — rezumat" : "Backfill în Drafts — în curs..."}
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                {backfillProgress.elapsedSec}s
+              </span>
+            </div>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${backfillProgress.done ? (backfillProgress.failed > 0 ? "bg-destructive" : "bg-green-500") : "bg-primary"}`}
+                style={{
+                  width: `${backfillProgress.dispatched > 0 ? Math.min(100, Math.round((backfillProgress.inserted / backfillProgress.dispatched) * 100)) : 0}%`,
+                }}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="rounded bg-background/60 p-2">
+                <div className="text-muted-foreground text-[10px] uppercase">Trimise</div>
+                <div className="font-bold text-base">{backfillProgress.dispatched}</div>
+              </div>
+              <div className="rounded bg-background/60 p-2">
+                <div className="text-muted-foreground text-[10px] uppercase">În pending_review</div>
+                <div className="font-bold text-base text-green-600">{backfillProgress.inserted}</div>
+              </div>
+              <div className="rounded bg-background/60 p-2">
+                <div className="text-muted-foreground text-[10px] uppercase">Eșuate</div>
+                <div className={`font-bold text-base ${backfillProgress.failed > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {backfillProgress.done ? backfillProgress.failed : "—"}
+                </div>
+              </div>
+            </div>
+            {backfillProgress.done && backfillProgress.inserted > 0 && (
+              <Button size="sm" variant="default" asChild className="w-full">
+                <a href="/admin/properties/fast-review">
+                  <Eye className="w-3 h-3 mr-1" /> Vezi {backfillProgress.inserted} drafturi în Fast Review
+                </a>
+              </Button>
+            )}
+          </div>
+        )}
+
+
+
         {lastSummary && (
           <div className="text-xs border rounded-lg p-3 bg-muted/30 space-y-1">
             <div className="font-semibold flex items-center gap-1"><FileText className="w-3 h-3" /> Ultimul rezultat</div>
