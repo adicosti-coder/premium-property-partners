@@ -261,8 +261,8 @@ export function AutoPublishListingsPanel() {
     setRetryDialogOpen(false);
     setRetryStage("select");
     executeBackfillRun({
-      // Confirmation already collected via dialog — bypass native confirm by passing empty.
-      confirmText: `Reluare backfill pentru ${ids.length} prospect${ids.length === 1 ? "" : "e"} selectat${ids.length === 1 ? "" : "e"}. Confirmi execuția?`,
+      skipConfirm: true,
+      confirmText: "",
       triggeredBy: "manual_backfill_drafts_retry",
       invokeBody: {
         prospect_ids: ids,
