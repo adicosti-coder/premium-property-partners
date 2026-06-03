@@ -453,7 +453,8 @@ Deno.serve(async (req) => {
   //  - agency_suspicion_score < 85 (or NULL = not yet classified)
   //  - do_not_call != true (Twilio DNC / manual blacklist)
   //  - prospect_type = 'proprietar' (excludes 'agentie' if ever set)
-  //  - lifecycle_status not in ('rejected','blacklisted','to_call' already handled)
+  //  - lifecycle_status not in ('rejected') — enum values: new, scoring, calling, interested, rejected, posted, callback, pending_credentials, failed
+  //  - "blacklisted" is NOT an enum value; blacklisting is represented by is_active=false + auto_blacklisted_at (already filtered by .eq('is_active', true))
   const { data: candidates, error: cErr } = await supabase
     .from('prospect_listings')
     .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score, agency_suspicion_score, do_not_call, tags, lifecycle_status, contact_name')
@@ -463,7 +464,7 @@ Deno.serve(async (req) => {
     .eq('category', 'vanzare')
     .or('do_not_call.is.null,do_not_call.eq.false')
     .or('agency_suspicion_score.is.null,agency_suspicion_score.lt.85')
-    .not('lifecycle_status', 'in', '("rejected","blacklisted")')
+    .not('lifecycle_status', 'in', '("rejected")')
     .not('source_url', 'is', null)
     .order('lead_score', { ascending: false })
     .limit(batchSize * 4);
