@@ -68,32 +68,48 @@ async function bottomCrop(bytes: Uint8Array, cropRatio = 0.10): Promise<Uint8Arr
 
 type AiResult = { bytes: Uint8Array | null; error: string | null };
 
-// Retry policy: 3 attempts total, progressive backoff (2s → 5s → 10s)
-const RETRY_DELAYS_MS = [2000, 5000, 10000];
-const RETRYABLE = /timeout|network|fetch|abort|api_http_(408|429|5\d\d)|ECONN|ETIMEDOUT/i;
+// Retry policy: max 3 attempts total with TRUE exponential backoff + jitter.
+// Base = 2000ms, factor = 2  → 2s, 4s, 8s (± up to 25% jitter to avoid thundering herd).
+// Only timeouts and transient server errors (408/429/5xx, network/abort) are retried.
+// After the 3rd failure the caller falls back to bottom_crop.
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_BASE_MS = 2000;
+const RETRY_FACTOR = 2;
+const RETRYABLE =
+  /timeout|network|fetch|abort|api_http_(408|429|5\d\d)|ECONN|ETIMEDOUT|ENOTFOUND|socket/i;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function backoffDelay(attemptIndex: number): number {
+  // attemptIndex is 0-based for the *previous* failed attempt
+  const base = RETRY_BASE_MS * Math.pow(RETRY_FACTOR, attemptIndex);
+  const jitter = base * 0.25 * (Math.random() * 2 - 1); // ±25%
+  return Math.max(250, Math.round(base + jitter));
+}
 
 async function withRetry<T extends { error: string | null }>(
   label: string,
   fn: () => Promise<T>,
 ): Promise<T & { retries_attempted: number }> {
   let last: T | null = null;
-  for (let attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt++) {
+  for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
     if (attempt > 0) {
-      console.log(`[retry] ${label} attempt ${attempt + 1} after ${RETRY_DELAYS_MS[attempt - 1]}ms`);
-      await sleep(RETRY_DELAYS_MS[attempt - 1]);
+      const wait = backoffDelay(attempt - 1);
+      console.log(`[retry] ${label} attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS} after ${wait}ms backoff`);
+      await sleep(wait);
     }
     const res = await fn();
     last = res;
     if (!res.error) return { ...res, retries_attempted: attempt };
     if (!RETRYABLE.test(res.error)) {
-      // Non-retryable error → give up immediately
+      // Non-retryable (e.g. insufficient_balance, 400 decode error) → give up immediately
+      console.warn(`[retry] ${label} non-retryable error, aborting: ${res.error}`);
       return { ...res, retries_attempted: attempt };
     }
-    console.warn(`[retry] ${label} failed attempt ${attempt + 1}: ${res.error}`);
+    console.warn(`[retry] ${label} transient failure attempt ${attempt + 1}: ${res.error}`);
   }
-  return { ...(last as T), retries_attempted: RETRY_DELAYS_MS.length - 1 };
+  console.error(`[retry] ${label} exhausted ${MAX_RETRY_ATTEMPTS} attempts → falling back`);
+  return { ...(last as T), retries_attempted: MAX_RETRY_ATTEMPTS - 1 };
 }
 // Re-encode arbitrary input (webp/png/jpeg) to a clean JPEG buffer so Dewatermark
 // can always identify the file. Many Storia/OLX images are served as webp, which
