@@ -415,6 +415,61 @@ export function AutoPublishListingsPanel() {
                 </div>
               </div>
             </div>
+            {backfillProgress.done && backfillProgress.failed > 0 && (
+              <div className="space-y-2 pt-1 border-t border-destructive/20">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={toggleFailedDetails}
+                    disabled={loadingFailedDetails}
+                    className="gap-1.5"
+                  >
+                    {loadingFailedDetails ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : showFailedDetails ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                    {showFailedDetails ? "Ascunde detalii eșuate" : `Show failed details (${backfillProgress.failed})`}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={retryFailed}
+                    disabled={retrying || backfilling}
+                    className="gap-1.5"
+                    title="Reia procesarea doar pentru prospectele care au eșuat"
+                  >
+                    {retrying ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCw className="w-3 h-3" />}
+                    Retry failed ({backfillProgress.failed})
+                  </Button>
+                </div>
+                {showFailedDetails && (
+                  <div className="rounded border border-destructive/30 bg-background/60 max-h-60 overflow-y-auto divide-y divide-destructive/10">
+                    {failedDetails.length === 0 && !loadingFailedDetails && (
+                      <div className="p-2 text-[11px] text-muted-foreground">Nu am putut încărca detaliile.</div>
+                    )}
+                    {failedDetails.map((f) => (
+                      <div key={f.id} className="p-2 text-[11px] space-y-0.5">
+                        <div className="flex items-start gap-1.5">
+                          <AlertCircle className="w-3 h-3 mt-0.5 text-destructive shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate" title={f.title || f.id}>
+                              {f.title || `(fără titlu) ${f.id.slice(0, 8)}`}
+                            </div>
+                            <div className="text-muted-foreground font-mono text-[10px] break-words">
+                              {f.reason}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {backfillProgress.done && backfillProgress.inserted > 0 && (
               <Button size="sm" variant="default" asChild className="w-full">
                 <a href="/admin/properties/fast-review">
