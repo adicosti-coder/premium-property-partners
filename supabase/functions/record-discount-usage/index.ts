@@ -31,6 +31,7 @@ const isValidEmail = (email: string): boolean => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -41,13 +42,19 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get user from auth header (optional - could be anonymous booking)
+    // Require authentication to prevent discount-code exhaustion via anonymous abuse
     let userId: string | null = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
       const jwt = authHeader.replace("Bearer ", "");
       const { data: { user } } = await supabase.auth.getUser(jwt);
       userId = user?.id || null;
+    }
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const body: UsageRequest = await req.json();
