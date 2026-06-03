@@ -553,6 +553,33 @@ function ReviewCard({
   acting: boolean;
 }) {
   const [prospect, setProspect] = useState<{ id: string | null; phone: string | null } | null>(null);
+  const [aiCleaning, setAiCleaning] = useState(false);
+
+  const onAiClean = useCallback(async () => {
+    if (aiCleaning) return;
+    setAiCleaning(true);
+    toast({ title: "Procesare AI pornită", description: "Dewatermark rulează pe toate imaginile anunțului…" });
+    try {
+      const { data, error } = await supabase.functions.invoke("process-listing-images", {
+        body: { property_id: row.id, force_ai: true },
+      });
+      if (error) throw error;
+      const status = (data as any)?.status ?? "unknown";
+      const processed = (data as any)?.processed ?? 0;
+      const total = (data as any)?.total ?? 0;
+      const aiFails = (data as any)?.ai_failures ?? 0;
+      toast({
+        title: status === "completed" ? "Imagini curățate cu AI" : `Procesare finalizată (${status})`,
+        description: `${processed}/${total} imagini reușite${aiFails ? ` · ${aiFails} eșecuri AI (fallback crop aplicat)` : ""}.`,
+        variant: status === "failed" ? "destructive" : "default",
+      });
+    } catch (e: any) {
+      toast({ title: "Eroare AI", description: e?.message || "Apel eșuat către process-listing-images.", variant: "destructive" });
+    } finally {
+      setAiCleaning(false);
+    }
+  }, [row.id, aiCleaning]);
+
 
   useEffect(() => {
     let cancel = false;
