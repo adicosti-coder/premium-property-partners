@@ -2,3 +2,6 @@ project_id = "mvzssjyzbwccioqvhjpo"
 
 [functions.notify-triage-lead]
 verify_jwt = false
+
+[functions.kickoff-auto-publish]
+verify_jwt = false

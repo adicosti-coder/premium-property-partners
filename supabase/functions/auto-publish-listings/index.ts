@@ -55,8 +55,13 @@ function slugify(s: string): string {
 
 async function isAuthorized(req: Request): Promise<boolean> {
   const cronSecret = req.headers.get('x-cron-secret');
+  const webhookSecret = req.headers.get('x-webhook-secret');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const ingestSecret = Deno.env.get('SCRAPER_INGEST_SECRET');
   if (cronSecret && serviceKey && cronSecret === serviceKey) return true;
+  if (webhookSecret && serviceKey && webhookSecret === serviceKey) return true;
+  if (cronSecret && ingestSecret && cronSecret === ingestSecret) return true;
+  if (webhookSecret && ingestSecret && webhookSecret === ingestSecret) return true;
 
   const auth = req.headers.get('Authorization') || '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
@@ -67,7 +72,8 @@ async function isAuthorized(req: Request): Promise<boolean> {
   // Fallback: vault-stored cron secrets (allows pg_cron to authenticate even when
   // the platform service-role key has been rotated and the SUPABASE_SERVICE_ROLE_KEY
   // env var no longer matches the value embedded in the cron job command).
-  if (cronSecret || token) {
+  const candidates = [cronSecret, webhookSecret, token].filter(Boolean) as string[];
+  if (candidates.length > 0) {
     try {
       const admin = createClient(
         Deno.env.get('SUPABASE_URL')!,
@@ -77,10 +83,11 @@ async function isAuthorized(req: Request): Promise<boolean> {
         .schema('vault')
         .from('decrypted_secrets')
         .select('name, decrypted_secret')
-        .in('name', ['cron_reconcile_secret', 'email_queue_service_role_key']);
+        .in('name', ['cron_reconcile_secret', 'email_queue_service_role_key', 'SUPABASE_SERVICE_ROLE_KEY', 'service_role_key']);
       const allowed = new Set<string>((vaultRows || []).map((r: any) => r.decrypted_secret).filter(Boolean));
-      if (cronSecret && allowed.has(cronSecret)) return true;
-      if (token && allowed.has(token)) return true;
+      for (const c of candidates) {
+        if (allowed.has(c)) return true;
+      }
     } catch (e) {
       console.warn('Vault fallback auth check failed:', (e as Error)?.message);
     }
