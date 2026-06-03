@@ -109,6 +109,11 @@ export function AutoPublishListingsPanel() {
     if (!confirm(`Backfill în Drafts: procesează candidații acumulați (${counts.candidates}) și îi salvează ca DRAFTS (is_active=false, needs_review=true) pentru revizuire în Fast Review. Continuă?`)) return;
     setBackfilling(true);
     setLastSummary(null);
+    setBackfillProgress({ dispatched: 0, inserted: 0, elapsedSec: 0, done: false, failed: 0 });
+    const startedAt = new Date().toISOString();
+    const t0 = Date.now();
+    const triggeredBy = "manual_backfill_drafts";
+
     try {
       const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
         body: {
@@ -116,22 +121,70 @@ export function AutoPublishListingsPanel() {
           use_ai_rewrite: useAi,
           force: true,
           pending_review_only: true,
-          triggered_by: "manual_backfill_drafts",
+          triggered_by: triggeredBy,
         },
       });
       if (error) throw error;
+
+      const dispatched = Number(data?.summary?.dispatched ?? 0);
       setLastSummary(data?.summary);
+      setBackfillProgress({ dispatched, inserted: 0, elapsedSec: 0, done: false, failed: 0 });
+
+      if (dispatched === 0) {
+        setBackfillProgress({ dispatched: 0, inserted: 0, elapsedSec: 0, done: true, failed: 0 });
+        toast({ title: "Backfill complet", description: "Niciun candidat eligibil de procesat." });
+        load();
+        return;
+      }
+
+      // Poll properties inserted by workers (fan-out async).
+      // Stop when inserted == dispatched OR after 90s timeout.
+      const MAX_MS = 90_000;
+      const POLL_MS = 3_000;
+      let inserted = 0;
+      let stable = 0;
+      let lastInsertedCount = 0;
+      while (Date.now() - t0 < MAX_MS) {
+        await new Promise((r) => setTimeout(r, POLL_MS));
+        const { count } = await supabase
+          .from("properties")
+          .select("id", { count: "exact", head: true })
+          .eq("import_source", triggeredBy)
+          .gte("imported_at", startedAt);
+        inserted = count ?? 0;
+        const elapsedSec = Math.round((Date.now() - t0) / 1000);
+        setBackfillProgress({
+          dispatched,
+          inserted,
+          elapsedSec,
+          done: false,
+          failed: 0,
+        });
+        if (inserted >= dispatched) break;
+        // Early-exit dacă numărul rămâne stabil 3 cicluri consecutive (workers terminate).
+        if (inserted === lastInsertedCount) stable++; else stable = 0;
+        lastInsertedCount = inserted;
+        if (stable >= 3 && Date.now() - t0 > 15_000) break;
+      }
+
+      const failed = Math.max(0, dispatched - inserted);
+      const elapsedSec = Math.round((Date.now() - t0) / 1000);
+      setBackfillProgress({ dispatched, inserted, elapsedSec, done: true, failed });
+
       toast({
         title: "Backfill în Drafts complet",
-        description: `${data?.summary?.dispatched ?? 0} candidați trimiși spre Fast Review (drafts inactive).`,
+        description: `${inserted}/${dispatched} drafts create${failed > 0 ? ` · ${failed} eșuate` : ""} (${elapsedSec}s)`,
+        variant: failed > 0 ? "destructive" : undefined,
       });
       load();
     } catch (e: any) {
+      setBackfillProgress((p) => p ? { ...p, done: true } : null);
       toast({ title: "Eroare backfill drafts", description: e?.message || String(e), variant: "destructive" });
     } finally {
       setBackfilling(false);
     }
   };
+
 
 
 
