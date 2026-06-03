@@ -532,6 +532,100 @@ export function AutoPublishListingsPanel() {
         )}
       </CardContent>
     </Card>
+
+    <Dialog open={retryDialogOpen} onOpenChange={(open) => { setRetryDialogOpen(open); if (!open) setRetryStage("select"); }}>
+      <DialogContent className="max-w-lg">
+        {retryStage === "select" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <RotateCw className="w-4 h-4" /> Filtru failed înainte de retry
+              </DialogTitle>
+              <DialogDescription>
+                Selectează prospectele pentru care vrei să reiei procesarea. Doar cele bifate vor fi trimise către <code className="text-[11px]">auto-publish-listings</code>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center justify-between text-xs border-b pb-2">
+              <span className="text-muted-foreground">
+                <strong className="text-foreground">{retrySelectedIds.size}</strong> / {backfillProgress?.failedIds.length ?? 0} selectate
+              </span>
+              <div className="flex gap-1">
+                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAllRetrySelection(true)}>
+                  Selectează tot
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAllRetrySelection(false)}>
+                  Deselectează tot
+                </Button>
+              </div>
+            </div>
+            <div className="max-h-80 overflow-y-auto space-y-1 pr-1">
+              {(backfillProgress?.failedIds || []).map((id) => {
+                const detail = failedDetails.find((d) => d.id === id);
+                const checked = retrySelectedIds.has(id);
+                return (
+                  <label
+                    key={id}
+                    htmlFor={`retry-${id}`}
+                    className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${checked ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/40"}`}
+                  >
+                    <Checkbox
+                      id={`retry-${id}`}
+                      checked={checked}
+                      onCheckedChange={() => toggleRetryId(id)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium truncate" title={detail?.title || id}>
+                        {detail?.title || `(fără titlu) ${id.slice(0, 8)}`}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground font-mono break-words line-clamp-2">
+                        {detail?.reason || "Fără detalii"}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setRetryDialogOpen(false)}>
+                Anulează
+              </Button>
+              <Button
+                onClick={() => setRetryStage("confirm")}
+                disabled={retrySelectedIds.size === 0}
+                className="gap-1.5"
+              >
+                Continuă ({retrySelectedIds.size})
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive" /> Confirmare înainte de retry
+              </DialogTitle>
+              <DialogDescription>
+                Vei trimite <strong className="text-foreground">{retrySelectedIds.size}</strong> prospect{retrySelectedIds.size === 1 ? "" : "e"} către orchestrator în modul <code className="text-[11px]">pending_review_only</code> + <code className="text-[11px]">force</code>. Drafturile rezultate vor apărea în Fast Review pentru aprobare manuală.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="text-xs border rounded-lg p-3 bg-muted/30 space-y-1">
+              <div><strong>Triggered by:</strong> manual_backfill_drafts_retry</div>
+              <div><strong>AI rewrite:</strong> {useAi ? "activat" : "dezactivat"}</div>
+              <div><strong>Mod:</strong> drafts (is_active=false, needs_review=true)</div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setRetryStage("select")}>
+                Înapoi
+              </Button>
+              <Button variant="destructive" onClick={confirmAndExecuteRetry} className="gap-1.5">
+                <RotateCw className="w-3.5 h-3.5" /> Da, execută retry
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
     </div>
   );
 }
