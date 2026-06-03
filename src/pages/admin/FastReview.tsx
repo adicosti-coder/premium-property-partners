@@ -532,7 +532,7 @@ export default function FastReview() {
 }
 
 function ReviewCard({
-  row, checked, onToggle, onApprove, onReject, onEdit, acting,
+  row, checked, onToggle, onApprove, onReject, onEdit, onMarkedAgency, acting,
 }: {
   row: DraftProperty;
   checked: boolean;
@@ -540,8 +540,30 @@ function ReviewCard({
   onApprove: () => void;
   onReject: () => void;
   onEdit: () => void;
+  onMarkedAgency: () => void;
   acting: boolean;
 }) {
+  const [prospect, setProspect] = useState<{ id: string | null; phone: string | null } | null>(null);
+
+  useEffect(() => {
+    let cancel = false;
+    if (!row.original_source_url) { setProspect({ id: null, phone: null }); return; }
+    supabase
+      .from("prospect_listings")
+      .select("id, contact_phone, phone_normalized")
+      .eq("source_url", row.original_source_url)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancel) return;
+        const d = data as any;
+        setProspect({
+          id: d?.id ?? null,
+          phone: d?.phone_normalized || d?.contact_phone || null,
+        });
+      });
+    return () => { cancel = true; };
+  }, [row.original_source_url]);
+
   const log = row.sanitization_log || {};
   const removedPhrases: string[] = Array.isArray(log.removed_phrases) ? log.removed_phrases : [];
   const rawHtml = useMemo(
