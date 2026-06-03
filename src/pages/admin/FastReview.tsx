@@ -745,23 +745,37 @@ function ReviewCard({
           </Button>
         </div>
 
-        {/* Mark as agency */}
+        {/* Mark as agency + AI watermark cleanup */}
         <div className="pt-2 border-t flex flex-wrap items-center justify-between gap-2">
           <div className="text-xs text-muted-foreground">
             {prospect?.phone
               ? <>Telefon implicit: <span className="font-mono font-medium text-foreground">{prospect.phone}</span></>
               : "Telefon implicit indisponibil — se va bloca doar domeniul."}
           </div>
-          <MarkAsAgencyButton
-            id={prospect?.id ?? undefined}
-            source="prospect_listings"
-            phone={prospect?.phone ?? undefined}
-            url={row.original_source_url ?? undefined}
-            contextLabel={`FastReview · ${row.name ?? row.id}`}
-            label="Marchează ca Agenție"
-            onMarked={onMarkedAgency}
-            disabled={acting}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onAiClean}
+              disabled={acting || aiCleaning || !row.images?.length}
+              title="Rulează Dewatermark AI peste toate imaginile acestui anunț (folosește credite API)."
+              className="border-indigo-500/40 text-indigo-700 hover:bg-indigo-600 hover:text-white dark:text-indigo-300"
+            >
+              {aiCleaning ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Wand2 className="h-4 w-4 mr-1.5" />}
+              Curăță cu AI (Dewatermark)
+            </Button>
+            <MarkAsAgencyButton
+              id={prospect?.id ?? undefined}
+              source="prospect_listings"
+              phone={prospect?.phone ?? undefined}
+              url={row.original_source_url ?? undefined}
+              contextLabel={`FastReview · ${row.name ?? row.id}`}
+              label="Marchează ca Agenție"
+              onMarked={onMarkedAgency}
+              disabled={acting}
+            />
+          </div>
         </div>
 
       </CardContent>
