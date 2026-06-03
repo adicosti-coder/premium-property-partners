@@ -707,18 +707,24 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     queryKey: ["scraper-trend-7d"],
     queryFn: async () => {
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-      const { data } = await supabase
-        .from("scraper_leads_archive_2026" as any)
-        .select("created_at")
-        .gte("created_at", sevenDaysAgo)
-        .not("status", "eq", "archived");
-      if (!data) return [];
+      // Read from BOTH legacy archive AND live prospect_listings (real ingestion target)
+      const [{ data: archiveRows }, { data: prospectRows }] = await Promise.all([
+        supabase
+          .from("scraper_leads_archive_2026" as any)
+          .select("created_at")
+          .gte("created_at", sevenDaysAgo)
+          .not("status", "eq", "archived"),
+        supabase
+          .from("prospect_listings" as any)
+          .select("created_at")
+          .gte("created_at", sevenDaysAgo),
+      ]);
       const byDay = new Map<string, number>();
       for (let i = 6; i >= 0; i--) {
         const d = new Date(Date.now() - i * 86400000);
         byDay.set(d.toISOString().slice(0, 10), 0);
       }
-      data.forEach((row: any) => {
+      [...(archiveRows || []), ...(prospectRows || [])].forEach((row: any) => {
         const day = row.created_at?.slice(0, 10);
         if (day && byDay.has(day)) byDay.set(day, (byDay.get(day) || 0) + 1);
       });
