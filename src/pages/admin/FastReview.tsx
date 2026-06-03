@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import {
   ArrowLeft, CheckCircle2, XCircle, Pencil, Loader2, Sparkles,
   ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X, Wand2,
@@ -337,6 +338,7 @@ export default function FastReview() {
     const ids = Array.from(selected).filter((id) => visibleIds.has(id));
     if (ids.length === 0) return;
     if (!window.confirm(`Sigur respingi ${ids.length} anunțuri vizibile selectate?`)) return;
+    const snapshot = rows.filter((r) => ids.includes(r.id));
     setBatchRunning(true);
     const { error } = await supabase
       .from("properties")
@@ -344,11 +346,33 @@ export default function FastReview() {
       .in("id", ids);
     setBatchRunning(false);
     if (error) return toast({ title: "Eroare batch", description: error.message, variant: "destructive" });
-    toast({ title: `${ids.length} anunțuri respinse` });
     ids.forEach((id) => void recordLearn({ property_id: id, action: "reject", reason: "Batch reject FastReview" }));
     const idSet = new Set(ids);
     setRows((p) => p.filter((r) => !idSet.has(r.id)));
     setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n; });
+
+    sonnerToast.success(`${ids.length} anunțuri respinse`, {
+      duration: 12000,
+      action: {
+        label: "Anulează",
+        onClick: async () => {
+          const { error: undoErr } = await supabase
+            .from("properties")
+            .update({ needs_review: true, review_action: null, reviewed_at: null })
+            .in("id", ids);
+          if (undoErr) {
+            sonnerToast.error(`Eroare la anulare: ${undoErr.message}`);
+            return;
+          }
+          setRows((p) => {
+            const have = new Set(p.map((r) => r.id));
+            const restored = snapshot.filter((r) => !have.has(r.id));
+            return [...restored, ...p];
+          });
+          sonnerToast.success(`${ids.length} anunțuri restaurate în coadă`);
+        },
+      },
+    });
   };
 
   const aiCleanBatch = async () => {
@@ -383,12 +407,15 @@ export default function FastReview() {
     const targets = filtered.filter((r) => selected.has(r.id));
     if (targets.length === 0) return;
     if (!window.confirm(`Marchezi ${targets.length} anunțuri ca AGENȚIE? Telefoanele și domeniile lor vor intra în blocklist.`)) return;
+    const batchToken = `undo_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const batchStartIso = new Date().toISOString();
     setBatchRunning(true);
     let ok = 0, fail = 0;
     const removedIds: string[] = [];
+    const snapshot = targets.map((r) => ({ row: r }));
+    const urls: string[] = [];
     for (const r of targets) {
       try {
-        // Pull prospect phone for blocklist
         let phone: string | null = null;
         let prospectId: string | null = null;
         if (r.original_source_url) {
@@ -406,32 +433,78 @@ export default function FastReview() {
           source: "prospect_listings",
           phone: phone ?? undefined,
           url: r.original_source_url ?? undefined,
-          contextLabel: `FastReview batch · ${r.name ?? r.id}`,
+          contextLabel: `FastReview batch ${batchToken} · ${r.name ?? r.id}`,
         });
         if (!res.ok) { fail++; continue; }
-        // Archive the draft
         await supabase.from("properties").update({
           is_active: false, needs_review: false,
           review_action: "reject_agency", reviewed_at: new Date().toISOString(),
         }).eq("id", r.id);
         removedIds.push(r.id);
+        if (r.original_source_url) urls.push(r.original_source_url);
         ok++;
       } catch {
         fail++;
       }
     }
     setBatchRunning(false);
-    toast({
-      title: "Batch marcare agenție",
-      description: `${ok} marcate · ${fail} eșuate.`,
-      variant: fail > 0 ? "destructive" : "default",
-    });
     if (removedIds.length) {
       const rs = new Set(removedIds);
       setRows((p) => p.filter((r) => !rs.has(r.id)));
       setSelected((p) => { const n = new Set(p); removedIds.forEach((id) => n.delete(id)); return n; });
     }
+
+    const variant = fail > 0 ? sonnerToast.error : sonnerToast.success;
+    variant(`Batch agenție: ${ok} marcate · ${fail} eșuate`, {
+      duration: 15000,
+      action: removedIds.length ? {
+        label: "Anulează",
+        onClick: async () => {
+          try {
+            // 1. Remove blocklist entries added by this batch (matched via unique token in notes)
+            await supabase
+              .from("agency_blocklist" as any)
+              .delete()
+              .ilike("notes", `%${batchToken}%`);
+            // 2. Restore properties to review queue
+            await supabase
+              .from("properties")
+              .update({ needs_review: true, review_action: null, reviewed_at: null })
+              .in("id", removedIds);
+            // 3. Restore prospect_listings archived by this batch
+            if (urls.length) {
+              await supabase
+                .from("prospect_listings" as any)
+                .update({
+                  prospect_type: null,
+                  is_active: true,
+                  lifecycle_status: "active",
+                  auto_blacklisted_at: null,
+                  auto_blacklist_reason: null,
+                } as any)
+                .in("source_url", urls)
+                .gte("auto_blacklisted_at", batchStartIso);
+              await supabase
+                .from("scraper_leads_archive_2026" as any)
+                .update({ prospect_category: null, status: "new" } as any)
+                .in("url", urls);
+            }
+            const restored = snapshot
+              .filter(({ row }) => removedIds.includes(row.id))
+              .map(({ row }) => row);
+            setRows((p) => {
+              const have = new Set(p.map((r) => r.id));
+              return [...restored.filter((r) => !have.has(r.id)), ...p];
+            });
+            sonnerToast.success(`${removedIds.length} anunțuri restaurate · blocklist curățat`);
+          } catch (err: any) {
+            sonnerToast.error(`Eroare la anulare: ${err?.message || err}`);
+          }
+        },
+      } : undefined,
+    });
   };
+
 
   // Keyboard navigation + shortcuts
   const [focusedIdx, setFocusedIdx] = useState<number>(-1);
