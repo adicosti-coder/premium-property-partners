@@ -239,6 +239,7 @@ export function AutoPublishListingsPanel() {
     }
     setRetrySelectedIds(new Set(ids));
     setRetryStage("select");
+    setRetrySearch("");
     setRetryDialogOpen(true);
   };
 
