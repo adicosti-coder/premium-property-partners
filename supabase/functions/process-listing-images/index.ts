@@ -308,13 +308,15 @@ Deno.serve(async (req) => {
   }
 
   // Status decision matrix:
-  // - any AI failure (timeout/http/error after all retries) on an ai_inpaint source → fallback_failed
-  // - otherwise some succeeded → completed
-  // - otherwise nothing succeeded → failed
+  // - all good (no AI failure or all AI failures were salvaged by bottom_crop fallback) → completed
+  // - AI failed AND fallback crop also failed for some images → fallback_failed
+  // - nothing succeeded → failed
+  const cropSalvaged = fallbackCropUsed;
+  const unsalvagedAi = aiFailures - cropSalvaged;
   let status: "completed" | "fallback_failed" | "failed";
-  if (aiFailures > 0) status = "fallback_failed";
-  else if (okCount > 0) status = "completed";
-  else status = "failed";
+  if (okCount === 0) status = "failed";
+  else if (unsalvagedAi > 0) status = "fallback_failed";
+  else status = "completed";
 
   await supabase.from("properties").update({
     images: finalUrls,
@@ -322,10 +324,12 @@ Deno.serve(async (req) => {
     images_processed_at: new Date().toISOString(),
     images_processing_log: {
       mode,
+      ai_circuit_opened: aiCircuitOpen,
       source_platform: prop.source_platform,
       total: sources.length,
       ok: okCount,
       ai_failures: aiFailures,
+      crop_fallback_used: cropSalvaged,
       ai_errors: aiErrors.slice(0, 5),
       retry_policy: { max_attempts: RETRY_DELAYS_MS.length, backoff_ms: RETRY_DELAYS_MS },
       total_retries: totalRetries,
