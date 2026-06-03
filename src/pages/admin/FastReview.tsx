@@ -690,10 +690,13 @@ export default function FastReview() {
             </AlertDescription>
           </Alert>
         ) : (
-          filtered.map((row) => (
+          filtered.map((row, idx) => (
             <ReviewCard
               key={row.id}
               row={row}
+              focused={idx === focusedIdx}
+              registerRef={(el) => { cardRefs.current[row.id] = el; }}
+              onFocusCard={() => setFocusedIdx(idx)}
               checked={selected.has(row.id)}
               onToggle={() => toggleSelect(row.id)}
               onApprove={() => approve(row.id)}
