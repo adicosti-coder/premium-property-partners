@@ -222,36 +222,60 @@ Deno.serve(async (req) => {
   }).eq("id", propertyId);
 
   const mode = pickMode(prop.source_platform || "");
+  let effectiveMode: Mode = mode;
   const finalUrls: string[] = [];
   const perImage: any[] = [];
   let okCount = 0;
   let aiFailures = 0;
   let totalRetries = 0;
+  let aiCircuitOpen = false; // becomes true after a fatal AI error (e.g. insufficient balance)
   const aiErrors: string[] = [];
+  let fallbackCropUsed = 0;
 
   for (let i = 0; i < sources.length; i++) {
     const src = sources[i];
     try {
       const raw = await fetchImageBytes(src);
       if (!raw) {
+        // Last-resort: keep original (we don't even have bytes)
         finalUrls.push(src);
         perImage.push({ i, src, status: "fetch_failed", fallback: "kept_original", retries_attempted: 0 });
         continue;
       }
-      const result = await processOne(raw, mode);
+
+      // If AI circuit broke earlier in this run, force bottom_crop for remaining images
+      const modeForThis: Mode = aiCircuitOpen ? "bottom_crop" : effectiveMode;
+      const result = await processOne(raw, modeForThis);
       totalRetries += result.retries_attempted;
 
-      // Hard fallback: AI failed after all retries → keep ORIGINAL url
+      // AI failed: ALWAYS try bottom_crop fallback so we never publish a watermarked original
       if (result.kind === "ai_failed") {
         aiFailures++;
         aiErrors.push(result.error);
-        finalUrls.push(src);
-        perImage.push({
-          i, src, status: "ai_failed",
-          error: result.error,
-          retries_attempted: result.retries_attempted,
-          fallback: "kept_original",
-        });
+        if (result.fatal) {
+          aiCircuitOpen = true;
+          console.warn(`[process-listing-images] AI circuit opened: ${result.error}`);
+        }
+        try {
+          const cropped = await bottomCrop(raw, 0.12);
+          const path = `properties/${propertyId}/${Date.now()}-${i}-crop.jpg`;
+          const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, cropped, {
+            contentType: "image/jpeg", upsert: true, cacheControl: "31536000",
+          });
+          if (upErr) {
+            finalUrls.push(src);
+            perImage.push({ i, src, status: "ai_failed_crop_upload_failed", error: result.error, upload_error: upErr.message, fallback: "kept_original" });
+          } else {
+            const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+            finalUrls.push(pub.publicUrl);
+            fallbackCropUsed++;
+            perImage.push({ i, status: "ai_failed_cropped", method: "bottom_crop_fallback", ai_error: result.error, retries_attempted: result.retries_attempted });
+            okCount++;
+          }
+        } catch (cropErr: any) {
+          finalUrls.push(src);
+          perImage.push({ i, src, status: "ai_failed_crop_failed", error: result.error, crop_error: String(cropErr?.message || cropErr), fallback: "kept_original" });
+        }
         continue;
       }
 
