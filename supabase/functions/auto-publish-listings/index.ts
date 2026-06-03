@@ -480,11 +480,22 @@ Deno.serve(async (req) => {
   }
 
 
+  const AGENCY_NAME_RX = /(agenți[ae]|agency|imobiliar|real\s*estate|broker|s\.?r\.?l\.?|s\.?a\.?|consulting|properties|invest|estate)/i;
   const queue = (candidates || [])
     .filter((c: any) => !importedSet.has(c.source_url))
     .filter((c: any) => {
       if (disabledSources.has(c.source_platform)) {
         summary.rejected_source_disabled++;
+        return false;
+      }
+      // Secondary agency guard: tag-based + contact name regex
+      const tags: string[] = Array.isArray(c.tags) ? c.tags : [];
+      if (tags.includes('agency-suspect') || tags.includes('agency') || tags.includes('blacklist')) {
+        (summary as any).rejected_agency = ((summary as any).rejected_agency || 0) + 1;
+        return false;
+      }
+      if (c.contact_name && AGENCY_NAME_RX.test(String(c.contact_name))) {
+        (summary as any).rejected_agency = ((summary as any).rejected_agency || 0) + 1;
         return false;
       }
       return true;
