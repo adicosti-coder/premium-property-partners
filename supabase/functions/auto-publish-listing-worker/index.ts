@@ -181,6 +181,7 @@ Deno.serve(async (req) => {
     const prospectId: string | undefined = body?.prospect_id;
     const triggeredBy: string = body?.triggered_by || "fan_out";
     const useAiRewrite: boolean = body?.use_ai_rewrite !== false;
+    const pendingReviewOnly: boolean = body?.pending_review_only === true;
     const idempotencyKey: string | undefined =
       body?.idempotency_key || req.headers.get("x-idempotency-key") || undefined;
     if (!prospectId) return safeJson({ success: false, error: "missing prospect_id" }, 400);
