@@ -578,6 +578,7 @@ Deno.serve(async (req) => {
         triggered_by: triggeredBy,
         use_ai_rewrite: useAiRewrite,
         idempotency_key: idempotencyKey,
+        pending_review_only: pendingReviewOnly,
       }),
     }).catch((e) => console.warn(`[fanout] dispatch failed for ${prospect.id}:`, e?.message));
 
