@@ -16,6 +16,59 @@ Deno.serve(async (req) => {
   );
 
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+
+  // ============= STEP 0: detect "consecutive failures" anomalies per job_key =============
+  // Pentru fiecare job activ, dacă ultimele N≥3 rulări sunt toate `failed` consecutiv,
+  // emite o anomalie `job.consecutive_failures:<job_key>` (idempotent: dacă există deja
+  // o anomalie cu același metric în ultimele 24h și încă neacknowledged, NU dublăm).
+  try {
+    const { data: jobs } = await supabase
+      .from("automation_jobs")
+      .select("job_key, enabled")
+      .eq("enabled", true);
+
+    for (const job of jobs ?? []) {
+      const { data: runs } = await supabase
+        .from("automation_runs")
+        .select("status, started_at, error")
+        .eq("job_key", job.job_key)
+        .order("started_at", { ascending: false })
+        .limit(5);
+
+      const last3 = (runs ?? []).slice(0, 3);
+      if (last3.length < 3) continue;
+      if (!last3.every((r) => r.status === "failed")) continue;
+
+      const metric = `job.consecutive_failures:${job.job_key}`;
+      // Idempotency: skip dacă există anomalie recentă neacknowledged
+      const { data: existing } = await supabase
+        .from("automation_anomalies")
+        .select("id")
+        .eq("metric", metric)
+        .is("acknowledged_at", null)
+        .gte("created_at", since)
+        .limit(1);
+      if (existing && existing.length > 0) continue;
+
+      await supabase.from("automation_anomalies").insert({
+        metric,
+        observed: last3.length,
+        baseline: 0,
+        delta_pct: null,
+        severity: "critical",
+        notified: false,
+        context: {
+          job_key: job.job_key,
+          consecutive_failed: last3.length,
+          last_error: last3[0]?.error ?? null,
+          last_failed_at: last3[0]?.started_at ?? null,
+        },
+      });
+    }
+  } catch (e) {
+    console.error("[anomaly-notifier] consecutive-failure detector error:", e);
+  }
+
   const { data: anomalies, error } = await supabase
     .from("automation_anomalies")
     .select("id, metric, severity, observed, baseline, delta_pct, context, created_at")
@@ -23,6 +76,7 @@ Deno.serve(async (req) => {
     .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(50);
+
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
