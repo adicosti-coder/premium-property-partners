@@ -717,6 +717,26 @@ function ReviewCard({
             Respinge
           </Button>
         </div>
+
+        {/* Mark as agency */}
+        <div className="pt-2 border-t flex flex-wrap items-center justify-between gap-2">
+          <div className="text-xs text-muted-foreground">
+            {prospect?.phone
+              ? <>Telefon implicit: <span className="font-mono font-medium text-foreground">{prospect.phone}</span></>
+              : "Telefon implicit indisponibil — se va bloca doar domeniul."}
+          </div>
+          <MarkAsAgencyButton
+            id={prospect?.id ?? undefined}
+            source="prospect_listings"
+            phone={prospect?.phone ?? undefined}
+            url={row.original_source_url ?? undefined}
+            contextLabel={`FastReview · ${row.name ?? row.id}`}
+            label="Marchează ca Agenție"
+            onMarked={onMarkedAgency}
+            disabled={acting}
+          />
+        </div>
+
       </CardContent>
     </Card>
   );
