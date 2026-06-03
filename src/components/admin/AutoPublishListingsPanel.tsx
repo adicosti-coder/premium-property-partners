@@ -270,8 +270,6 @@ export function AutoPublishListingsPanel() {
       await loadFailedDetails();
     }
   };
-    }
-  };
 
 
 
