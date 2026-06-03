@@ -117,7 +117,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Recording discount usage: code=${codeId}, user=${userId || 'anonymous'}, amount=${discountAmount}`);
+    console.log(`Recording discount usage for user=${userId}`);
 
     // Insert usage record using service role (bypasses RLS)
     const { error: insertError } = await supabase
@@ -143,8 +143,6 @@ serve(async (req) => {
 
     // Note: The increment_discount_code_uses trigger will automatically update current_uses
 
-    console.log(`Discount usage recorded successfully for code ${codeId}`);
-
     return new Response(
       JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -152,9 +150,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in record-discount-usage:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
