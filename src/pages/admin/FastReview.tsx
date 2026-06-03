@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +14,14 @@ import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, CheckCircle2, XCircle, Pencil, Loader2, Sparkles,
   ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X, Wand2,
+  Keyboard, Building2,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
 import MarkAsAgencyButton from "@/components/admin/MarkAsAgencyButton";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { notifyIndexNow } from "@/hooks/useIndexNowNotify";
+import { markAsAgency } from "@/lib/markAsAgency";
 
 
 import type { User } from "@supabase/supabase-js";
@@ -331,6 +333,176 @@ export default function FastReview() {
     setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n; });
   };
 
+  const rejectBatch = async () => {
+    const ids = Array.from(selected).filter((id) => visibleIds.has(id));
+    if (ids.length === 0) return;
+    if (!window.confirm(`Sigur respingi ${ids.length} anunțuri vizibile selectate?`)) return;
+    setBatchRunning(true);
+    const { error } = await supabase
+      .from("properties")
+      .update({ is_active: false, needs_review: false, review_action: "reject", reviewed_at: new Date().toISOString() })
+      .in("id", ids);
+    setBatchRunning(false);
+    if (error) return toast({ title: "Eroare batch", description: error.message, variant: "destructive" });
+    toast({ title: `${ids.length} anunțuri respinse` });
+    ids.forEach((id) => void recordLearn({ property_id: id, action: "reject", reason: "Batch reject FastReview" }));
+    const idSet = new Set(ids);
+    setRows((p) => p.filter((r) => !idSet.has(r.id)));
+    setSelected((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n; });
+  };
+
+  const aiCleanBatch = async () => {
+    const targets = filtered.filter((r) => selected.has(r.id) && (r.images?.length ?? 0) > 0);
+    if (targets.length === 0) {
+      toast({ title: "Niciun anunț valid", description: "Selectează anunțuri vizibile care au imagini.", variant: "destructive" });
+      return;
+    }
+    if (!window.confirm(`Rulezi Dewatermark AI pe ${targets.length} anunțuri? (consumă credite API per imagine)`)) return;
+    setBatchRunning(true);
+    let ok = 0, fail = 0;
+    for (const r of targets) {
+      try {
+        const { error } = await supabase.functions.invoke("process-listing-images", {
+          body: { property_id: r.id, force_ai: true },
+        });
+        if (error) throw error;
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    setBatchRunning(false);
+    toast({
+      title: "Curățare AI batch finalizată",
+      description: `${ok} reușite · ${fail} eșuate (vor folosi fallback crop).`,
+      variant: fail > 0 ? "destructive" : "default",
+    });
+  };
+
+  const markAgencyBatch = async () => {
+    const targets = filtered.filter((r) => selected.has(r.id));
+    if (targets.length === 0) return;
+    if (!window.confirm(`Marchezi ${targets.length} anunțuri ca AGENȚIE? Telefoanele și domeniile lor vor intra în blocklist.`)) return;
+    setBatchRunning(true);
+    let ok = 0, fail = 0;
+    const removedIds: string[] = [];
+    for (const r of targets) {
+      try {
+        // Pull prospect phone for blocklist
+        let phone: string | null = null;
+        let prospectId: string | null = null;
+        if (r.original_source_url) {
+          const { data } = await supabase
+            .from("prospect_listings")
+            .select("id, contact_phone, phone_normalized")
+            .eq("source_url", r.original_source_url)
+            .maybeSingle();
+          const d = data as any;
+          prospectId = d?.id ?? null;
+          phone = d?.phone_normalized || d?.contact_phone || null;
+        }
+        const res = await markAsAgency({
+          id: prospectId ?? undefined,
+          source: "prospect_listings",
+          phone: phone ?? undefined,
+          url: r.original_source_url ?? undefined,
+          contextLabel: `FastReview batch · ${r.name ?? r.id}`,
+        });
+        if (!res.ok) { fail++; continue; }
+        // Archive the draft
+        await supabase.from("properties").update({
+          is_active: false, needs_review: false,
+          review_action: "reject_agency", reviewed_at: new Date().toISOString(),
+        }).eq("id", r.id);
+        removedIds.push(r.id);
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    setBatchRunning(false);
+    toast({
+      title: "Batch marcare agenție",
+      description: `${ok} marcate · ${fail} eșuate.`,
+      variant: fail > 0 ? "destructive" : "default",
+    });
+    if (removedIds.length) {
+      const rs = new Set(removedIds);
+      setRows((p) => p.filter((r) => !rs.has(r.id)));
+      setSelected((p) => { const n = new Set(p); removedIds.forEach((id) => n.delete(id)); return n; });
+    }
+  };
+
+  // Keyboard navigation + shortcuts
+  const [focusedIdx, setFocusedIdx] = useState<number>(-1);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (focusedIdx >= filtered.length) setFocusedIdx(filtered.length - 1);
+    if (focusedIdx < 0 && filtered.length > 0) setFocusedIdx(0);
+  }, [filtered.length, focusedIdx]);
+
+  useEffect(() => {
+    const row = filtered[focusedIdx];
+    if (!row) return;
+    const el = cardRefs.current[row.id];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusedIdx, filtered]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // Skip when typing in inputs/textareas or when a dialog is open
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (editTarget) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const row = filtered[focusedIdx];
+      switch (e.key.toLowerCase()) {
+        case "j":
+        case "arrowdown":
+          e.preventDefault();
+          setFocusedIdx((i) => Math.min(filtered.length - 1, i + 1));
+          break;
+        case "k":
+        case "arrowup":
+          e.preventDefault();
+          setFocusedIdx((i) => Math.max(0, i - 1));
+          break;
+        case " ":
+          if (row) { e.preventDefault(); toggleSelect(row.id); }
+          break;
+        case "a":
+          if (row && !actingId) { e.preventDefault(); approve(row.id); }
+          break;
+        case "r":
+          if (row && !actingId) { e.preventDefault(); reject(row); }
+          break;
+        case "e":
+          if (row) { e.preventDefault(); openEdit(row); }
+          break;
+        case "?":
+          e.preventDefault();
+          toast({
+            title: "Scurtături tastatură",
+            description: "J/K sau ↓/↑ navigare · Space selectează · A aprobă · R respinge · E editează · ? ajutor",
+          });
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, focusedIdx, editTarget, actingId]);
+
+  // Live document title with pending count
+  useEffect(() => {
+    const original = document.title;
+    if (rows.length > 0) document.title = `(${rows.length}) Vedere Rapidă Revizuire`;
+    return () => { document.title = original; };
+  }, [rows.length]);
+
+
 
 
   if (!authChecked || roleLoading) {
@@ -370,11 +542,51 @@ export default function FastReview() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="J/K navigare · Space selectează · A aprobă · R respinge · E editează · ? ajutor"
+              onClick={() => toast({
+                title: "Scurtături tastatură",
+                description: "J/K sau ↓/↑ navigare · Space selectează · A aprobă · R respinge · E editează",
+              })}
+            >
+              <Keyboard className="h-4 w-4" />
+            </Button>
             <Button variant="outline" size="sm" onClick={toggleAll} disabled={filtered.length === 0}>
               {filtered.length > 0 && filtered.every((r) => selected.has(r.id))
                 ? "Deselectează vizibile"
                 : "Selectează vizibile"}
+            </Button>
+            <Button
+              size="sm" variant="outline"
+              onClick={aiCleanBatch}
+              disabled={visibleSelectedCount === 0 || batchRunning}
+              className="border-indigo-500/40 text-indigo-700 hover:bg-indigo-600 hover:text-white dark:text-indigo-300"
+              title="Rulează Dewatermark AI pe toate anunțurile selectate (consumă credite)."
+            >
+              {batchRunning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Wand2 className="h-4 w-4 mr-1" />}
+              Curăță AI {visibleSelectedCount > 0 ? `(${visibleSelectedCount})` : ""}
+            </Button>
+            <Button
+              size="sm" variant="outline"
+              onClick={markAgencyBatch}
+              disabled={visibleSelectedCount === 0 || batchRunning}
+              className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              title="Marchează ca AGENȚIE toate selectate (blocklist telefon + domeniu)."
+            >
+              <Building2 className="h-4 w-4 mr-1" />
+              Agenție {visibleSelectedCount > 0 ? `(${visibleSelectedCount})` : ""}
+            </Button>
+            <Button
+              size="sm" variant="outline"
+              onClick={rejectBatch}
+              disabled={visibleSelectedCount === 0 || batchRunning}
+              className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              Respinge {visibleSelectedCount > 0 ? `(${visibleSelectedCount})` : ""}
             </Button>
             <Button
               size="sm"
@@ -383,9 +595,10 @@ export default function FastReview() {
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {batchRunning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
-              Aprobă {visibleSelectedCount > 0 ? `(${visibleSelectedCount} vizibile)` : "în masă"}
+              Aprobă {visibleSelectedCount > 0 ? `(${visibleSelectedCount})` : "în masă"}
             </Button>
           </div>
+
         </div>
       </div>
 
@@ -477,10 +690,13 @@ export default function FastReview() {
             </AlertDescription>
           </Alert>
         ) : (
-          filtered.map((row) => (
+          filtered.map((row, idx) => (
             <ReviewCard
               key={row.id}
               row={row}
+              focused={idx === focusedIdx}
+              registerRef={(el) => { cardRefs.current[row.id] = el; }}
+              onFocusCard={() => setFocusedIdx(idx)}
               checked={selected.has(row.id)}
               onToggle={() => toggleSelect(row.id)}
               onApprove={() => approve(row.id)}
@@ -542,6 +758,7 @@ export default function FastReview() {
 
 function ReviewCard({
   row, checked, onToggle, onApprove, onReject, onEdit, onMarkedAgency, acting,
+  focused, registerRef, onFocusCard,
 }: {
   row: DraftProperty;
   checked: boolean;
@@ -551,6 +768,9 @@ function ReviewCard({
   onEdit: () => void;
   onMarkedAgency: () => void;
   acting: boolean;
+  focused?: boolean;
+  registerRef?: (el: HTMLDivElement | null) => void;
+  onFocusCard?: () => void;
 }) {
   const [prospect, setProspect] = useState<{ id: string | null; phone: string | null } | null>(null);
   const [aiCleaning, setAiCleaning] = useState(false);
@@ -615,7 +835,8 @@ function ReviewCard({
     : row.listing_type === "cazare" ? "/noapte" : "";
 
   return (
-    <Card className={`border-2 transition-colors ${checked ? "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/10" : "border-border"}`}>
+    <div ref={registerRef} onClick={onFocusCard}>
+    <Card className={`border-2 transition-all ${focused ? "ring-2 ring-primary/60 ring-offset-2 ring-offset-background" : ""} ${checked ? "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/10" : "border-border"}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -780,5 +1001,6 @@ function ReviewCard({
 
       </CardContent>
     </Card>
+    </div>
   );
 }
