@@ -385,6 +385,7 @@ Deno.serve(async (req) => {
   let triggeredBy = 'manual_admin';
   let force = false;
   let pendingReviewOnly = false;
+  let explicitProspectIds: string[] | null = null;
   try {
     const body = await req.json();
     if (typeof body?.batch_size === 'number') batchSize = Math.min(Math.max(body.batch_size, 1), MAX_BATCH);
@@ -392,10 +393,16 @@ Deno.serve(async (req) => {
     if (body?.use_ai_rewrite === false) useAiRewrite = false;
     if (typeof body?.triggered_by === 'string') triggeredBy = body.triggered_by;
     if (body?.pending_review_only === true) pendingReviewOnly = true;
+    if (Array.isArray(body?.prospect_ids) && body.prospect_ids.length > 0) {
+      explicitProspectIds = body.prospect_ids
+        .filter((x: any) => typeof x === 'string')
+        .slice(0, MAX_BATCH);
+      batchSize = explicitProspectIds!.length || DEFAULT_BATCH;
+    }
     if (body?.force === true) {
       force = true;
       // Backfill mode: maximize batch & relax min score floor so stuck candidates pass.
-      batchSize = MAX_BATCH;
+      if (!explicitProspectIds) batchSize = MAX_BATCH;
       if (minScore > 50) minScore = 50;
     }
   } catch { /* no body */ }
@@ -466,19 +473,27 @@ Deno.serve(async (req) => {
   //  - prospect_type = 'proprietar' (excludes 'agentie' if ever set)
   //  - lifecycle_status not in ('rejected') — enum values: new, scoring, calling, interested, rejected, posted, callback, pending_credentials, failed
   //  - "blacklisted" is NOT an enum value; blacklisting is represented by is_active=false + auto_blacklisted_at (already filtered by .eq('is_active', true))
-  const { data: candidates, error: cErr } = await supabase
+  const candidatesQuery = supabase
     .from('prospect_listings')
-    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score, agency_suspicion_score, do_not_call, tags, lifecycle_status, contact_name')
-    .gte('lead_score', minScore)
-    .eq('is_active', true)
-    .eq('prospect_type', 'proprietar')
-    .eq('category', 'vanzare')
-    .or('do_not_call.is.null,do_not_call.eq.false')
-    .or('agency_suspicion_score.is.null,agency_suspicion_score.lt.85')
-    .not('lifecycle_status', 'in', '("rejected")')
-    .not('source_url', 'is', null)
-    .order('lead_score', { ascending: false })
-    .limit(batchSize * 4);
+    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score, agency_suspicion_score, do_not_call, tags, lifecycle_status, contact_name');
+
+  if (explicitProspectIds && explicitProspectIds.length > 0) {
+    // Explicit retry mode — process exactly these prospects, bypass score/category filters.
+    candidatesQuery.in('id', explicitProspectIds).eq('is_active', true);
+  } else {
+    candidatesQuery
+      .gte('lead_score', minScore)
+      .eq('is_active', true)
+      .eq('prospect_type', 'proprietar')
+      .eq('category', 'vanzare')
+      .or('do_not_call.is.null,do_not_call.eq.false')
+      .or('agency_suspicion_score.is.null,agency_suspicion_score.lt.85')
+      .not('lifecycle_status', 'in', '("rejected")')
+      .not('source_url', 'is', null)
+      .order('lead_score', { ascending: false })
+      .limit(batchSize * 4);
+  }
+  const { data: candidates, error: cErr } = await candidatesQuery;
   if (cErr) {
     try {
       await supabase.rpc('automation_complete_run', {
@@ -537,6 +552,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   let dispatched = 0;
+  const dispatchedIds: string[] = [];
   let recruitmentRouted = 0;
   let pmsSyncFired = 0;
 
@@ -588,6 +604,7 @@ Deno.serve(async (req) => {
       EdgeRuntime.waitUntil(inv);
     }
     dispatched++;
+    dispatchedIds.push(prospect.id);
   }
 
   // PMS side-channel (ApArt Hotel pipeline): if any active cazare property
@@ -614,6 +631,7 @@ Deno.serve(async (req) => {
   // properties were published — workers report directly into the DB and the
   // dashboard reads the 24h count from `properties.imported_at`.
   (summary as any).dispatched = dispatched;
+  (summary as any).dispatched_ids = dispatchedIds;
   (summary as any).recruitment_routed = recruitmentRouted;
   (summary as any).pms_sync_fired = pmsSyncFired;
   (summary as any).mode = 'fan_out_parallel';

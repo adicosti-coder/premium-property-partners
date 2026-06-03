@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
-import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye, Zap } from "lucide-react";
+import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye, Zap, ChevronDown, ChevronUp, RotateCw, AlertCircle } from "lucide-react";
 import { EnrichmentBacklogWidget } from "./EnrichmentBacklogWidget";
 import { ProductionAlertsConfig } from "./ProductionAlertsConfig";
 
@@ -34,7 +34,13 @@ export function AutoPublishListingsPanel() {
     elapsedSec: number;
     done: boolean;
     failed: number;
+    dispatchedIds: string[];
+    failedIds: string[];
   } | null>(null);
+  const [failedDetails, setFailedDetails] = useState<Array<{ id: string; title: string | null; reason: string }>>([]);
+  const [showFailedDetails, setShowFailedDetails] = useState(false);
+  const [loadingFailedDetails, setLoadingFailedDetails] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -105,40 +111,51 @@ export function AutoPublishListingsPanel() {
     }
   };
 
-  const runBackfillToDrafts = async () => {
-    if (!confirm(`Backfill în Drafts: procesează candidații acumulați (${counts.candidates}) și îi salvează ca DRAFTS (is_active=false, needs_review=true) pentru revizuire în Fast Review. Continuă?`)) return;
-    setBackfilling(true);
+  const executeBackfillRun = async (opts: {
+    confirmText: string;
+    triggeredBy: string;
+    invokeBody: Record<string, unknown>;
+    setBusy: (b: boolean) => void;
+  }) => {
+    if (!confirm(opts.confirmText)) return;
+    opts.setBusy(true);
     setLastSummary(null);
-    setBackfillProgress({ dispatched: 0, inserted: 0, elapsedSec: 0, done: false, failed: 0 });
+    setFailedDetails([]);
+    setShowFailedDetails(false);
+    setBackfillProgress({
+      dispatched: 0, inserted: 0, elapsedSec: 0, done: false, failed: 0,
+      dispatchedIds: [], failedIds: [],
+    });
     const startedAt = new Date().toISOString();
     const t0 = Date.now();
-    const triggeredBy = "manual_backfill_drafts";
 
     try {
       const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
-        body: {
-          batch_size: 25,
-          use_ai_rewrite: useAi,
-          force: true,
-          pending_review_only: true,
-          triggered_by: triggeredBy,
-        },
+        body: { ...opts.invokeBody, triggered_by: opts.triggeredBy },
       });
       if (error) throw error;
 
       const dispatched = Number(data?.summary?.dispatched ?? 0);
+      const dispatchedIds: string[] = Array.isArray(data?.summary?.dispatched_ids)
+        ? data.summary.dispatched_ids
+        : [];
       setLastSummary(data?.summary);
-      setBackfillProgress({ dispatched, inserted: 0, elapsedSec: 0, done: false, failed: 0 });
+      setBackfillProgress({
+        dispatched, inserted: 0, elapsedSec: 0, done: false, failed: 0,
+        dispatchedIds, failedIds: [],
+      });
 
       if (dispatched === 0) {
-        setBackfillProgress({ dispatched: 0, inserted: 0, elapsedSec: 0, done: true, failed: 0 });
-        toast({ title: "Backfill complet", description: "Niciun candidat eligibil de procesat." });
+        setBackfillProgress({
+          dispatched: 0, inserted: 0, elapsedSec: 0, done: true, failed: 0,
+          dispatchedIds: [], failedIds: [],
+        });
+        toast({ title: "Rulare completă", description: "Niciun candidat eligibil de procesat." });
         load();
         return;
       }
 
       // Poll properties inserted by workers (fan-out async).
-      // Stop when inserted == dispatched OR after 90s timeout.
       const MAX_MS = 90_000;
       const POLL_MS = 3_000;
       let inserted = 0;
@@ -149,39 +166,108 @@ export function AutoPublishListingsPanel() {
         const { count } = await supabase
           .from("properties")
           .select("id", { count: "exact", head: true })
-          .eq("import_source", triggeredBy)
+          .eq("import_source", opts.triggeredBy)
           .gte("imported_at", startedAt);
         inserted = count ?? 0;
         const elapsedSec = Math.round((Date.now() - t0) / 1000);
-        setBackfillProgress({
-          dispatched,
-          inserted,
-          elapsedSec,
-          done: false,
-          failed: 0,
-        });
+        setBackfillProgress((prev) => prev ? {
+          ...prev, dispatched, inserted, elapsedSec, done: false, failed: 0,
+        } : prev);
         if (inserted >= dispatched) break;
-        // Early-exit dacă numărul rămâne stabil 3 cicluri consecutive (workers terminate).
         if (inserted === lastInsertedCount) stable++; else stable = 0;
         lastInsertedCount = inserted;
         if (stable >= 3 && Date.now() - t0 > 15_000) break;
       }
 
-      const failed = Math.max(0, dispatched - inserted);
+      // Identify failed prospects: dispatched IDs that did NOT yield a property.
+      let failedIds: string[] = [];
+      if (dispatchedIds.length > 0) {
+        const { data: succeeded } = await supabase
+          .from("properties")
+          .select("migrated_from_prospect_id")
+          .in("migrated_from_prospect_id", dispatchedIds)
+          .gte("imported_at", startedAt);
+        const succeededSet = new Set(
+          (succeeded || []).map((r: any) => r.migrated_from_prospect_id).filter(Boolean),
+        );
+        failedIds = dispatchedIds.filter((id) => !succeededSet.has(id));
+      }
+      const failed = failedIds.length > 0 ? failedIds.length : Math.max(0, dispatched - inserted);
       const elapsedSec = Math.round((Date.now() - t0) / 1000);
-      setBackfillProgress({ dispatched, inserted, elapsedSec, done: true, failed });
+      setBackfillProgress({
+        dispatched, inserted, elapsedSec, done: true, failed,
+        dispatchedIds, failedIds,
+      });
 
       toast({
-        title: "Backfill în Drafts complet",
+        title: "Rulare completă",
         description: `${inserted}/${dispatched} drafts create${failed > 0 ? ` · ${failed} eșuate` : ""} (${elapsedSec}s)`,
         variant: failed > 0 ? "destructive" : undefined,
       });
       load();
     } catch (e: any) {
       setBackfillProgress((p) => p ? { ...p, done: true } : null);
-      toast({ title: "Eroare backfill drafts", description: e?.message || String(e), variant: "destructive" });
+      toast({ title: "Eroare rulare", description: e?.message || String(e), variant: "destructive" });
     } finally {
-      setBackfilling(false);
+      opts.setBusy(false);
+    }
+  };
+
+  const runBackfillToDrafts = () => executeBackfillRun({
+    confirmText: `Backfill în Drafts: procesează candidații acumulați (${counts.candidates}) și îi salvează ca DRAFTS (is_active=false, needs_review=true) pentru revizuire în Fast Review. Continuă?`,
+    triggeredBy: "manual_backfill_drafts",
+    invokeBody: { batch_size: 25, use_ai_rewrite: useAi, force: true, pending_review_only: true },
+    setBusy: setBackfilling,
+  });
+
+  const retryFailed = () => {
+    const ids = backfillProgress?.failedIds || [];
+    if (ids.length === 0) {
+      toast({ title: "Nimic de reluat", description: "Nu există elemente eșuate de procesat." });
+      return;
+    }
+    executeBackfillRun({
+      confirmText: `Reluare backfill pentru ${ids.length} prospect${ids.length === 1 ? "" : "e"} eșuat${ids.length === 1 ? "" : "e"}. Continuă?`,
+      triggeredBy: "manual_backfill_drafts_retry",
+      invokeBody: {
+        prospect_ids: ids,
+        use_ai_rewrite: useAi,
+        force: true,
+        pending_review_only: true,
+      },
+      setBusy: setRetrying,
+    });
+  };
+
+  const loadFailedDetails = async () => {
+    const ids = backfillProgress?.failedIds || [];
+    if (ids.length === 0) return;
+    setLoadingFailedDetails(true);
+    try {
+      const { data } = await supabase
+        .from("prospect_listings")
+        .select("id, title, admin_notes, lifecycle_status")
+        .in("id", ids);
+      const items = (data || []).map((r: any) => {
+        const notes: string = r.admin_notes || "";
+        // Extract latest [worker...] reason if present.
+        const match = notes.match(/\[worker[^\]]*\][^[]*$/);
+        const reason = (match ? match[0] : notes).trim() || `Status: ${r.lifecycle_status || "necunoscut"} — fără detalii`;
+        return { id: r.id, title: r.title || null, reason: reason.slice(0, 300) };
+      });
+      // Maintain original failed-ids order.
+      const byId = new Map(items.map((i) => [i.id, i]));
+      setFailedDetails(ids.map((id) => byId.get(id) || { id, title: null, reason: "Fără detalii în prospect_listings" }));
+    } finally {
+      setLoadingFailedDetails(false);
+    }
+  };
+
+  const toggleFailedDetails = async () => {
+    const next = !showFailedDetails;
+    setShowFailedDetails(next);
+    if (next && failedDetails.length === 0) {
+      await loadFailedDetails();
     }
   };
 
@@ -329,6 +415,61 @@ export function AutoPublishListingsPanel() {
                 </div>
               </div>
             </div>
+            {backfillProgress.done && backfillProgress.failed > 0 && (
+              <div className="space-y-2 pt-1 border-t border-destructive/20">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={toggleFailedDetails}
+                    disabled={loadingFailedDetails}
+                    className="gap-1.5"
+                  >
+                    {loadingFailedDetails ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : showFailedDetails ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                    {showFailedDetails ? "Ascunde detalii eșuate" : `Show failed details (${backfillProgress.failed})`}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={retryFailed}
+                    disabled={retrying || backfilling}
+                    className="gap-1.5"
+                    title="Reia procesarea doar pentru prospectele care au eșuat"
+                  >
+                    {retrying ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCw className="w-3 h-3" />}
+                    Retry failed ({backfillProgress.failed})
+                  </Button>
+                </div>
+                {showFailedDetails && (
+                  <div className="rounded border border-destructive/30 bg-background/60 max-h-60 overflow-y-auto divide-y divide-destructive/10">
+                    {failedDetails.length === 0 && !loadingFailedDetails && (
+                      <div className="p-2 text-[11px] text-muted-foreground">Nu am putut încărca detaliile.</div>
+                    )}
+                    {failedDetails.map((f) => (
+                      <div key={f.id} className="p-2 text-[11px] space-y-0.5">
+                        <div className="flex items-start gap-1.5">
+                          <AlertCircle className="w-3 h-3 mt-0.5 text-destructive shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate" title={f.title || f.id}>
+                              {f.title || `(fără titlu) ${f.id.slice(0, 8)}`}
+                            </div>
+                            <div className="text-muted-foreground font-mono text-[10px] break-words">
+                              {f.reason}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {backfillProgress.done && backfillProgress.inserted > 0 && (
               <Button size="sm" variant="default" asChild className="w-full">
                 <a href="/admin/properties/fast-review">
