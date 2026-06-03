@@ -373,7 +373,9 @@ Deno.serve(async (req) => {
       listing_type: listingType,
       tag: "De Vânzare",
       // Fan-out mode: publish ACTIVE directly (admin can still un-publish from review).
-      is_active: true,
+      // Pending-review mode (backfill controlat): salvăm ca DRAFT inactiv (is_active=false)
+      // ca anunțul să apară DOAR în Fast Review, nu live pe site.
+      is_active: pendingReviewOnly ? false : true,
       needs_review: true,
       quality_score: quality,
       import_source: triggeredBy,
