@@ -758,6 +758,7 @@ export default function FastReview() {
 
 function ReviewCard({
   row, checked, onToggle, onApprove, onReject, onEdit, onMarkedAgency, acting,
+  focused, registerRef, onFocusCard,
 }: {
   row: DraftProperty;
   checked: boolean;
@@ -767,6 +768,9 @@ function ReviewCard({
   onEdit: () => void;
   onMarkedAgency: () => void;
   acting: boolean;
+  focused?: boolean;
+  registerRef?: (el: HTMLDivElement | null) => void;
+  onFocusCard?: () => void;
 }) {
   const [prospect, setProspect] = useState<{ id: string | null; phone: string | null } | null>(null);
   const [aiCleaning, setAiCleaning] = useState(false);
