@@ -547,46 +547,84 @@ export function AutoPublishListingsPanel() {
                 Selectează prospectele pentru care vrei să reiei procesarea. Doar cele bifate vor fi trimise către <code className="text-[11px]">auto-publish-listings</code>.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex items-center justify-between text-xs border-b pb-2">
-              <span className="text-muted-foreground">
-                <strong className="text-foreground">{retrySelectedIds.size}</strong> / {backfillProgress?.failedIds.length ?? 0} selectate
-              </span>
-              <div className="flex gap-1">
-                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAllRetrySelection(true)}>
-                  Selectează tot
-                </Button>
-                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAllRetrySelection(false)}>
-                  Deselectează tot
-                </Button>
+            <div className="space-y-2 border-b pb-2">
+              <input
+                type="search"
+                value={retrySearch}
+                onChange={(e) => setRetrySearch(e.target.value)}
+                placeholder="Caută în failed (titlu sau motiv)..."
+                className="w-full px-3 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                aria-label="Caută în prospectele eșuate"
+              />
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">
+                  <strong className="text-foreground">{retrySelectedIds.size}</strong> / {backfillProgress?.failedIds.length ?? 0} selectate
+                  {retrySearch && (
+                    <span className="ml-2 opacity-70">
+                      ({(backfillProgress?.failedIds || []).filter((id) => {
+                        const d = failedDetails.find((x) => x.id === id);
+                        const q = retrySearch.toLowerCase();
+                        return (d?.title || "").toLowerCase().includes(q) || (d?.reason || "").toLowerCase().includes(q) || id.toLowerCase().includes(q);
+                      }).length} vizibile)
+                    </span>
+                  )}
+                </span>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAllRetrySelection(true)}>
+                    Selectează tot
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAllRetrySelection(false)}>
+                    Deselectează tot
+                  </Button>
+                </div>
               </div>
             </div>
             <div className="max-h-80 overflow-y-auto space-y-1 pr-1">
-              {(backfillProgress?.failedIds || []).map((id) => {
-                const detail = failedDetails.find((d) => d.id === id);
-                const checked = retrySelectedIds.has(id);
-                return (
-                  <label
-                    key={id}
-                    htmlFor={`retry-${id}`}
-                    className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${checked ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/40"}`}
-                  >
-                    <Checkbox
-                      id={`retry-${id}`}
-                      checked={checked}
-                      onCheckedChange={() => toggleRetryId(id)}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium truncate" title={detail?.title || id}>
-                        {detail?.title || `(fără titlu) ${id.slice(0, 8)}`}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground font-mono break-words line-clamp-2">
-                        {detail?.reason || "Fără detalii"}
-                      </div>
+              {(() => {
+                const q = retrySearch.trim().toLowerCase();
+                const allIds = backfillProgress?.failedIds || [];
+                const visibleIds = q
+                  ? allIds.filter((id) => {
+                      const d = failedDetails.find((x) => x.id === id);
+                      return (d?.title || "").toLowerCase().includes(q)
+                        || (d?.reason || "").toLowerCase().includes(q)
+                        || id.toLowerCase().includes(q);
+                    })
+                  : allIds;
+                if (visibleIds.length === 0) {
+                  return (
+                    <div className="text-xs text-muted-foreground p-3 text-center border border-dashed rounded">
+                      Niciun rezultat pentru „{retrySearch}".
                     </div>
-                  </label>
-                );
-              })}
+                  );
+                }
+                return visibleIds.map((id) => {
+                  const detail = failedDetails.find((d) => d.id === id);
+                  const checked = retrySelectedIds.has(id);
+                  return (
+                    <label
+                      key={id}
+                      htmlFor={`retry-${id}`}
+                      className={`flex items-start gap-2 p-2 rounded border cursor-pointer transition-colors ${checked ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/40"}`}
+                    >
+                      <Checkbox
+                        id={`retry-${id}`}
+                        checked={checked}
+                        onCheckedChange={() => toggleRetryId(id)}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium truncate" title={detail?.title || id}>
+                          {detail?.title || `(fără titlu) ${id.slice(0, 8)}`}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground font-mono break-words line-clamp-2">
+                          {detail?.reason || "Fără detalii"}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                });
+              })()}
             </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setRetryDialogOpen(false)}>
