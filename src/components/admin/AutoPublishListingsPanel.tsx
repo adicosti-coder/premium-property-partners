@@ -471,7 +471,7 @@ export function AutoPublishListingsPanel() {
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={retryFailed}
+                    onClick={openRetryDialog}
                     disabled={retrying || backfilling}
                     className="gap-1.5"
                     title="Reia procesarea doar pentru prospectele care au eșuat"
