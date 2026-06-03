@@ -1001,5 +1001,6 @@ function ReviewCard({
 
       </CardContent>
     </Card>
+    </div>
   );
 }
