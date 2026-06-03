@@ -542,11 +542,51 @@ export default function FastReview() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="J/K navigare · Space selectează · A aprobă · R respinge · E editează · ? ajutor"
+              onClick={() => toast({
+                title: "Scurtături tastatură",
+                description: "J/K sau ↓/↑ navigare · Space selectează · A aprobă · R respinge · E editează",
+              })}
+            >
+              <Keyboard className="h-4 w-4" />
+            </Button>
             <Button variant="outline" size="sm" onClick={toggleAll} disabled={filtered.length === 0}>
               {filtered.length > 0 && filtered.every((r) => selected.has(r.id))
                 ? "Deselectează vizibile"
                 : "Selectează vizibile"}
+            </Button>
+            <Button
+              size="sm" variant="outline"
+              onClick={aiCleanBatch}
+              disabled={visibleSelectedCount === 0 || batchRunning}
+              className="border-indigo-500/40 text-indigo-700 hover:bg-indigo-600 hover:text-white dark:text-indigo-300"
+              title="Rulează Dewatermark AI pe toate anunțurile selectate (consumă credite)."
+            >
+              {batchRunning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Wand2 className="h-4 w-4 mr-1" />}
+              Curăță AI {visibleSelectedCount > 0 ? `(${visibleSelectedCount})` : ""}
+            </Button>
+            <Button
+              size="sm" variant="outline"
+              onClick={markAgencyBatch}
+              disabled={visibleSelectedCount === 0 || batchRunning}
+              className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              title="Marchează ca AGENȚIE toate selectate (blocklist telefon + domeniu)."
+            >
+              <Building2 className="h-4 w-4 mr-1" />
+              Agenție {visibleSelectedCount > 0 ? `(${visibleSelectedCount})` : ""}
+            </Button>
+            <Button
+              size="sm" variant="outline"
+              onClick={rejectBatch}
+              disabled={visibleSelectedCount === 0 || batchRunning}
+              className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              Respinge {visibleSelectedCount > 0 ? `(${visibleSelectedCount})` : ""}
             </Button>
             <Button
               size="sm"
@@ -555,9 +595,10 @@ export default function FastReview() {
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {batchRunning ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
-              Aprobă {visibleSelectedCount > 0 ? `(${visibleSelectedCount} vizibile)` : "în masă"}
+              Aprobă {visibleSelectedCount > 0 ? `(${visibleSelectedCount})` : "în masă"}
             </Button>
           </div>
+
         </div>
       </div>
 
