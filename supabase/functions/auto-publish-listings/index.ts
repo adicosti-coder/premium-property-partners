@@ -631,6 +631,7 @@ Deno.serve(async (req) => {
   // properties were published — workers report directly into the DB and the
   // dashboard reads the 24h count from `properties.imported_at`.
   (summary as any).dispatched = dispatched;
+  (summary as any).dispatched_ids = dispatchedIds;
   (summary as any).recruitment_routed = recruitmentRouted;
   (summary as any).pms_sync_fired = pmsSyncFired;
   (summary as any).mode = 'fan_out_parallel';
