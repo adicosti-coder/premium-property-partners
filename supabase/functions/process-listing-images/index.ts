@@ -37,11 +37,15 @@ const CENTRAL_WM_SOURCES = new Set([
 
 type Mode = "bottom_crop" | "ai_inpaint" | "passthrough";
 
-function pickMode(platform: string): Mode {
-  const p = (platform || "").toLowerCase();
-  if (BOTTOM_CROP_SOURCES.has(p)) return "bottom_crop";
-  if (CENTRAL_WM_SOURCES.has(p)) return DEWATERMARK_KEY ? "ai_inpaint" : "bottom_crop";
-  return DEWATERMARK_KEY ? "ai_inpaint" : "bottom_crop";
+// AUTO PIPELINE = bottom_crop ONLY. Dewatermark AI is invoked exclusively on demand
+// (per-listing manual trigger via `force_ai: true` in the request body, or via the
+// dedicated `remove-watermark` edge function from the admin UI). This protects API
+// credits and avoids wasting calls on images where the simple crop is enough.
+function pickMode(platform: string, forceAi = false): Mode {
+  if (forceAi && DEWATERMARK_KEY) return "ai_inpaint";
+  // Everything else (including central-watermark sources) defaults to bottom_crop.
+  // Admin can manually escalate to AI for those listings that still show a watermark.
+  return "bottom_crop";
 }
 
 async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
@@ -204,9 +208,10 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-  let body: { property_id?: string };
+  let body: { property_id?: string; force_ai?: boolean };
   try { body = await req.json(); } catch { body = {}; }
   const propertyId = body.property_id;
+  const forceAi = body.force_ai === true;
 
   if (!propertyId || typeof propertyId !== "string") {
     return new Response(JSON.stringify({ error: "property_id required" }), {
@@ -242,7 +247,7 @@ Deno.serve(async (req) => {
     images_processing_status: "processing",
   }).eq("id", propertyId);
 
-  const mode = pickMode(prop.source_platform || "");
+  const mode = pickMode(prop.source_platform || "", forceAi);
   let effectiveMode: Mode = mode;
   const finalUrls: string[] = [];
   const perImage: any[] = [];
