@@ -552,6 +552,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   let dispatched = 0;
+  const dispatchedIds: string[] = [];
   let recruitmentRouted = 0;
   let pmsSyncFired = 0;
 
