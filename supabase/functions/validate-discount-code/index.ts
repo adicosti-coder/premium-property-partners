@@ -118,8 +118,6 @@ serve(async (req) => {
     // Ensure discount doesn't exceed total
     discountAmount = Math.min(discountAmount, totalAmount);
 
-    console.log(`Code ${normalizedCode} is valid. Discount: ${discountAmount}`);
-
     return new Response(
       JSON.stringify({
         valid: true,
@@ -138,9 +136,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in validate-discount-code function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ valid: false, error: errorMessage }),
+      JSON.stringify({ valid: false, error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
