@@ -95,13 +95,31 @@ async function withRetry<T extends { error: string | null }>(
   }
   return { ...(last as T), retries_attempted: RETRY_DELAYS_MS.length - 1 };
 }
+// Re-encode arbitrary input (webp/png/jpeg) to a clean JPEG buffer so Dewatermark
+// can always identify the file. Many Storia/OLX images are served as webp, which
+// caused "cannot identify image file" 400s before.
+async function toCleanJpeg(bytes: Uint8Array): Promise<Uint8Array | null> {
+  try {
+    const img = await Image.decode(bytes);
+    return await img.encodeJPEG(88);
+  } catch {
+    return null;
+  }
+}
 
 async function dewatermarkCleanOnce(bytes: Uint8Array): Promise<AiResult> {
   const ctl = new AbortController();
   const timeout = setTimeout(() => ctl.abort(), 30000);
   try {
+    // Normalize to JPEG first; if decode fails, give up immediately (non-retryable)
+    const jpeg = await toCleanJpeg(bytes);
+    if (!jpeg) {
+      clearTimeout(timeout);
+      return { bytes: null, error: "decode_failed_unsupported_format" };
+    }
+
     const form = new FormData();
-    form.append("original_preview_image", new Blob([bytes], { type: "image/jpeg" }), "image.jpeg");
+    form.append("original_preview_image", new Blob([jpeg], { type: "image/jpeg" }), "image.jpeg");
     form.append("remove_text", "true");
     form.append("predict_mode", "3.0");
 
@@ -114,6 +132,10 @@ async function dewatermarkCleanOnce(bytes: Uint8Array): Promise<AiResult> {
     clearTimeout(timeout);
     if (!res.ok) {
       const txt = (await res.text()).slice(0, 300);
+      // Mark insufficient balance / auth errors specially so caller can short-circuit
+      if (/insufficient\s*balance|payment\s*required|quota/i.test(txt)) {
+        return { bytes: null, error: `api_insufficient_balance: ${txt}` };
+      }
       return { bytes: null, error: `api_http_${res.status}: ${txt}` };
     }
     const data = await res.json();
@@ -136,13 +158,17 @@ async function dewatermarkClean(bytes: Uint8Array) {
 
 type ProcessResult =
   | { kind: "processed"; out: Uint8Array; method: string; retries_attempted: number }
-  | { kind: "ai_failed"; error: string; retries_attempted: number };
+  | { kind: "ai_failed"; error: string; retries_attempted: number; fatal?: boolean };
+
+// Errors that mean "stop trying AI for the rest of this property — won't recover this run"
+const FATAL_AI_ERROR_RX = /insufficient_balance|payment_required|api_http_40[123]/i;
 
 async function processOne(bytes: Uint8Array, mode: Mode): Promise<ProcessResult> {
   if (mode === "ai_inpaint") {
     const r = await dewatermarkClean(bytes);
     if (r.bytes) return { kind: "processed", out: r.bytes, method: "ai_inpaint_dewatermark", retries_attempted: r.retries_attempted };
-    return { kind: "ai_failed", error: r.error || "unknown_ai_error", retries_attempted: r.retries_attempted };
+    const fatal = FATAL_AI_ERROR_RX.test(r.error || "");
+    return { kind: "ai_failed", error: r.error || "unknown_ai_error", retries_attempted: r.retries_attempted, fatal };
   }
   if (mode === "bottom_crop") {
     return { kind: "processed", out: await bottomCrop(bytes, 0.10), method: "bottom_crop", retries_attempted: 0 };
@@ -196,36 +222,60 @@ Deno.serve(async (req) => {
   }).eq("id", propertyId);
 
   const mode = pickMode(prop.source_platform || "");
+  let effectiveMode: Mode = mode;
   const finalUrls: string[] = [];
   const perImage: any[] = [];
   let okCount = 0;
   let aiFailures = 0;
   let totalRetries = 0;
+  let aiCircuitOpen = false; // becomes true after a fatal AI error (e.g. insufficient balance)
   const aiErrors: string[] = [];
+  let fallbackCropUsed = 0;
 
   for (let i = 0; i < sources.length; i++) {
     const src = sources[i];
     try {
       const raw = await fetchImageBytes(src);
       if (!raw) {
+        // Last-resort: keep original (we don't even have bytes)
         finalUrls.push(src);
         perImage.push({ i, src, status: "fetch_failed", fallback: "kept_original", retries_attempted: 0 });
         continue;
       }
-      const result = await processOne(raw, mode);
+
+      // If AI circuit broke earlier in this run, force bottom_crop for remaining images
+      const modeForThis: Mode = aiCircuitOpen ? "bottom_crop" : effectiveMode;
+      const result = await processOne(raw, modeForThis);
       totalRetries += result.retries_attempted;
 
-      // Hard fallback: AI failed after all retries → keep ORIGINAL url
+      // AI failed: ALWAYS try bottom_crop fallback so we never publish a watermarked original
       if (result.kind === "ai_failed") {
         aiFailures++;
         aiErrors.push(result.error);
-        finalUrls.push(src);
-        perImage.push({
-          i, src, status: "ai_failed",
-          error: result.error,
-          retries_attempted: result.retries_attempted,
-          fallback: "kept_original",
-        });
+        if (result.fatal) {
+          aiCircuitOpen = true;
+          console.warn(`[process-listing-images] AI circuit opened: ${result.error}`);
+        }
+        try {
+          const cropped = await bottomCrop(raw, 0.12);
+          const path = `properties/${propertyId}/${Date.now()}-${i}-crop.jpg`;
+          const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, cropped, {
+            contentType: "image/jpeg", upsert: true, cacheControl: "31536000",
+          });
+          if (upErr) {
+            finalUrls.push(src);
+            perImage.push({ i, src, status: "ai_failed_crop_upload_failed", error: result.error, upload_error: upErr.message, fallback: "kept_original" });
+          } else {
+            const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
+            finalUrls.push(pub.publicUrl);
+            fallbackCropUsed++;
+            perImage.push({ i, status: "ai_failed_cropped", method: "bottom_crop_fallback", ai_error: result.error, retries_attempted: result.retries_attempted });
+            okCount++;
+          }
+        } catch (cropErr: any) {
+          finalUrls.push(src);
+          perImage.push({ i, src, status: "ai_failed_crop_failed", error: result.error, crop_error: String(cropErr?.message || cropErr), fallback: "kept_original" });
+        }
         continue;
       }
 
@@ -258,13 +308,15 @@ Deno.serve(async (req) => {
   }
 
   // Status decision matrix:
-  // - any AI failure (timeout/http/error after all retries) on an ai_inpaint source → fallback_failed
-  // - otherwise some succeeded → completed
-  // - otherwise nothing succeeded → failed
+  // - all good (no AI failure or all AI failures were salvaged by bottom_crop fallback) → completed
+  // - AI failed AND fallback crop also failed for some images → fallback_failed
+  // - nothing succeeded → failed
+  const cropSalvaged = fallbackCropUsed;
+  const unsalvagedAi = aiFailures - cropSalvaged;
   let status: "completed" | "fallback_failed" | "failed";
-  if (aiFailures > 0) status = "fallback_failed";
-  else if (okCount > 0) status = "completed";
-  else status = "failed";
+  if (okCount === 0) status = "failed";
+  else if (unsalvagedAi > 0) status = "fallback_failed";
+  else status = "completed";
 
   await supabase.from("properties").update({
     images: finalUrls,
@@ -272,10 +324,12 @@ Deno.serve(async (req) => {
     images_processed_at: new Date().toISOString(),
     images_processing_log: {
       mode,
+      ai_circuit_opened: aiCircuitOpen,
       source_platform: prop.source_platform,
       total: sources.length,
       ok: okCount,
       ai_failures: aiFailures,
+      crop_fallback_used: cropSalvaged,
       ai_errors: aiErrors.slice(0, 5),
       retry_policy: { max_attempts: RETRY_DELAYS_MS.length, backoff_ms: RETRY_DELAYS_MS },
       total_retries: totalRetries,

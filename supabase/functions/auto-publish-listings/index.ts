@@ -449,13 +449,21 @@ Deno.serve(async (req) => {
   // are RECRUITMENT targets — they stay in the prospect queue so Andrei can call
   // them and pitch full / partial management (regim hotelier or classic rental).
   // Never publish rental/hotel-regime owner prospects as site listings.
+  // Hard filters against agency listings (multiple defensive layers):
+  //  - agency_suspicion_score < 85 (or NULL = not yet classified)
+  //  - do_not_call != true (Twilio DNC / manual blacklist)
+  //  - prospect_type = 'proprietar' (excludes 'agentie' if ever set)
+  //  - lifecycle_status not in ('rejected','blacklisted','to_call' already handled)
   const { data: candidates, error: cErr } = await supabase
     .from('prospect_listings')
-    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score')
+    .select('id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score, agency_suspicion_score, do_not_call, tags, lifecycle_status, contact_name')
     .gte('lead_score', minScore)
     .eq('is_active', true)
     .eq('prospect_type', 'proprietar')
     .eq('category', 'vanzare')
+    .or('do_not_call.is.null,do_not_call.eq.false')
+    .or('agency_suspicion_score.is.null,agency_suspicion_score.lt.85')
+    .not('lifecycle_status', 'in', '("rejected","blacklisted")')
     .not('source_url', 'is', null)
     .order('lead_score', { ascending: false })
     .limit(batchSize * 4);
@@ -472,11 +480,22 @@ Deno.serve(async (req) => {
   }
 
 
+  const AGENCY_NAME_RX = /(agenți[ae]|agency|imobiliar|real\s*estate|broker|s\.?r\.?l\.?|s\.?a\.?|consulting|properties|invest|estate)/i;
   const queue = (candidates || [])
     .filter((c: any) => !importedSet.has(c.source_url))
     .filter((c: any) => {
       if (disabledSources.has(c.source_platform)) {
         summary.rejected_source_disabled++;
+        return false;
+      }
+      // Secondary agency guard: tag-based + contact name regex
+      const tags: string[] = Array.isArray(c.tags) ? c.tags : [];
+      if (tags.includes('agency-suspect') || tags.includes('agency') || tags.includes('blacklist')) {
+        (summary as any).rejected_agency = ((summary as any).rejected_agency || 0) + 1;
+        return false;
+      }
+      if (c.contact_name && AGENCY_NAME_RX.test(String(c.contact_name))) {
+        (summary as any).rejected_agency = ((summary as any).rejected_agency || 0) + 1;
         return false;
       }
       return true;
