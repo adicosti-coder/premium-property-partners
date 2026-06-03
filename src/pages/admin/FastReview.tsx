@@ -486,6 +486,10 @@ export default function FastReview() {
               onApprove={() => approve(row.id)}
               onReject={() => reject(row)}
               onEdit={() => openEdit(row)}
+              onMarkedAgency={() => {
+                setRows((p) => p.filter((r) => r.id !== row.id));
+                setSelected((p) => { const n = new Set(p); n.delete(row.id); return n; });
+              }}
               acting={actingId === row.id}
             />
           ))
