@@ -57,8 +57,11 @@ async function isAuthorized(req: Request): Promise<boolean> {
   const cronSecret = req.headers.get('x-cron-secret');
   const webhookSecret = req.headers.get('x-webhook-secret');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const ingestSecret = Deno.env.get('SCRAPER_INGEST_SECRET');
   if (cronSecret && serviceKey && cronSecret === serviceKey) return true;
   if (webhookSecret && serviceKey && webhookSecret === serviceKey) return true;
+  if (cronSecret && ingestSecret && cronSecret === ingestSecret) return true;
+  if (webhookSecret && ingestSecret && webhookSecret === ingestSecret) return true;
 
   const auth = req.headers.get('Authorization') || '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
