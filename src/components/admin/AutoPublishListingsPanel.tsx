@@ -98,6 +98,36 @@ export function AutoPublishListingsPanel() {
     }
   };
 
+  const runBackfillToDrafts = async () => {
+    if (!confirm(`Backfill în Drafts: procesează candidații acumulați (${counts.candidates}) și îi salvează ca DRAFTS (is_active=false, needs_review=true) pentru revizuire în Fast Review. Continuă?`)) return;
+    setBackfilling(true);
+    setLastSummary(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
+        body: {
+          batch_size: 25,
+          use_ai_rewrite: useAi,
+          force: true,
+          pending_review_only: true,
+          triggered_by: "manual_backfill_drafts",
+        },
+      });
+      if (error) throw error;
+      setLastSummary(data?.summary);
+      toast({
+        title: "Backfill în Drafts complet",
+        description: `${data?.summary?.dispatched ?? 0} candidați trimiși spre Fast Review (drafts inactive).`,
+      });
+      load();
+    } catch (e: any) {
+      toast({ title: "Eroare backfill drafts", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setBackfilling(false);
+    }
+  };
+
+
+
 
   return (
     <div className="space-y-4">
