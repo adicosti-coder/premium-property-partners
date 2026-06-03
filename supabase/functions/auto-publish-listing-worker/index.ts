@@ -181,6 +181,7 @@ Deno.serve(async (req) => {
     const prospectId: string | undefined = body?.prospect_id;
     const triggeredBy: string = body?.triggered_by || "fan_out";
     const useAiRewrite: boolean = body?.use_ai_rewrite !== false;
+    const pendingReviewOnly: boolean = body?.pending_review_only === true;
     const idempotencyKey: string | undefined =
       body?.idempotency_key || req.headers.get("x-idempotency-key") || undefined;
     if (!prospectId) return safeJson({ success: false, error: "missing prospect_id" }, 400);
@@ -372,7 +373,9 @@ Deno.serve(async (req) => {
       listing_type: listingType,
       tag: "De Vânzare",
       // Fan-out mode: publish ACTIVE directly (admin can still un-publish from review).
-      is_active: true,
+      // Pending-review mode (backfill controlat): salvăm ca DRAFT inactiv (is_active=false)
+      // ca anunțul să apară DOAR în Fast Review, nu live pe site.
+      is_active: pendingReviewOnly ? false : true,
       needs_review: true,
       quality_score: quality,
       import_source: triggeredBy,
@@ -389,6 +392,7 @@ Deno.serve(async (req) => {
         source_platform: platform,
         quality_score: quality,
         fan_out_worker: true,
+        pending_review_only: pendingReviewOnly,
       },
       migrated_from_prospect_id: prospect.id,
       rooms: prospect.rooms,

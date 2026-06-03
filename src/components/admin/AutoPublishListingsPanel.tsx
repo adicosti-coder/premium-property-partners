@@ -98,6 +98,36 @@ export function AutoPublishListingsPanel() {
     }
   };
 
+  const runBackfillToDrafts = async () => {
+    if (!confirm(`Backfill în Drafts: procesează candidații acumulați (${counts.candidates}) și îi salvează ca DRAFTS (is_active=false, needs_review=true) pentru revizuire în Fast Review. Continuă?`)) return;
+    setBackfilling(true);
+    setLastSummary(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
+        body: {
+          batch_size: 25,
+          use_ai_rewrite: useAi,
+          force: true,
+          pending_review_only: true,
+          triggered_by: "manual_backfill_drafts",
+        },
+      });
+      if (error) throw error;
+      setLastSummary(data?.summary);
+      toast({
+        title: "Backfill în Drafts complet",
+        description: `${data?.summary?.dispatched ?? 0} candidați trimiși spre Fast Review (drafts inactive).`,
+      });
+      load();
+    } catch (e: any) {
+      toast({ title: "Eroare backfill drafts", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setBackfilling(false);
+    }
+  };
+
+
+
 
   return (
     <div className="space-y-4">
@@ -166,22 +196,33 @@ export function AutoPublishListingsPanel() {
               <Sparkles className="w-3 h-3" /> Rescriere AI premium
             </Label>
           </div>
-          <div className="flex gap-2 ml-auto">
+          <div className="flex flex-wrap gap-2 ml-auto">
+            <Button
+              onClick={runBackfillToDrafts}
+              disabled={backfilling || running}
+              variant="outline"
+              className="gap-2"
+              title="Procesează candidații acumulați și îi salvează DOAR ca drafts (inactive) pentru Fast Review — nu live pe site"
+            >
+              {backfilling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+              Backfill în Drafts
+            </Button>
             <Button
               onClick={runBackfill}
               disabled={backfilling || running}
               variant="secondary"
               className="gap-2"
-              title="Rulează cu force=true, batch_size=25 și prag scor relaxat pentru a recupera candidații blocați"
+              title="Rulează cu force=true, batch_size=25 și prag scor relaxat. PUBLICĂ direct (active) — recuperează candidații blocați"
             >
               {backfilling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-              {backfilling ? "Backfill..." : "Backfill forțat"}
+              Backfill forțat (live)
             </Button>
             <Button onClick={runNow} disabled={running || backfilling} className="gap-2">
               {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               {running ? "Procesare..." : "Rulează acum"}
             </Button>
           </div>
+
 
         </div>
 
