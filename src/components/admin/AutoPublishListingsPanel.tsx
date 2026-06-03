@@ -225,14 +225,43 @@ export function AutoPublishListingsPanel() {
     setBusy: setBackfilling,
   });
 
-  const retryFailed = () => {
+  const openRetryDialog = async () => {
     const ids = backfillProgress?.failedIds || [];
     if (ids.length === 0) {
       toast({ title: "Nimic de reluat", description: "Nu există elemente eșuate de procesat." });
       return;
     }
+    // Ensure details are loaded so checkbox list has titles + reasons.
+    if (failedDetails.length === 0) {
+      await loadFailedDetails();
+    }
+    setRetrySelectedIds(new Set(ids));
+    setRetryStage("select");
+    setRetryDialogOpen(true);
+  };
+
+  const toggleRetryId = (id: string) => {
+    setRetrySelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const setAllRetrySelection = (selectAll: boolean) => {
+    const ids = backfillProgress?.failedIds || [];
+    setRetrySelectedIds(selectAll ? new Set(ids) : new Set());
+  };
+
+  const confirmAndExecuteRetry = () => {
+    const ids = Array.from(retrySelectedIds);
+    if (ids.length === 0) return;
+    setRetryDialogOpen(false);
+    setRetryStage("select");
     executeBackfillRun({
-      confirmText: `Reluare backfill pentru ${ids.length} prospect${ids.length === 1 ? "" : "e"} eșuat${ids.length === 1 ? "" : "e"}. Continuă?`,
+      // Confirmation already collected via dialog — bypass native confirm by passing empty.
+      confirmText: `Reluare backfill pentru ${ids.length} prospect${ids.length === 1 ? "" : "e"} selectat${ids.length === 1 ? "" : "e"}. Confirmi execuția?`,
       triggeredBy: "manual_backfill_drafts_retry",
       invokeBody: {
         prospect_ids: ids,
