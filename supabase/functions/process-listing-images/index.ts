@@ -95,13 +95,31 @@ async function withRetry<T extends { error: string | null }>(
   }
   return { ...(last as T), retries_attempted: RETRY_DELAYS_MS.length - 1 };
 }
+// Re-encode arbitrary input (webp/png/jpeg) to a clean JPEG buffer so Dewatermark
+// can always identify the file. Many Storia/OLX images are served as webp, which
+// caused "cannot identify image file" 400s before.
+async function toCleanJpeg(bytes: Uint8Array): Promise<Uint8Array | null> {
+  try {
+    const img = await Image.decode(bytes);
+    return await img.encodeJPEG(88);
+  } catch {
+    return null;
+  }
+}
 
 async function dewatermarkCleanOnce(bytes: Uint8Array): Promise<AiResult> {
   const ctl = new AbortController();
   const timeout = setTimeout(() => ctl.abort(), 30000);
   try {
+    // Normalize to JPEG first; if decode fails, give up immediately (non-retryable)
+    const jpeg = await toCleanJpeg(bytes);
+    if (!jpeg) {
+      clearTimeout(timeout);
+      return { bytes: null, error: "decode_failed_unsupported_format" };
+    }
+
     const form = new FormData();
-    form.append("original_preview_image", new Blob([bytes], { type: "image/jpeg" }), "image.jpeg");
+    form.append("original_preview_image", new Blob([jpeg], { type: "image/jpeg" }), "image.jpeg");
     form.append("remove_text", "true");
     form.append("predict_mode", "3.0");
 
@@ -114,6 +132,10 @@ async function dewatermarkCleanOnce(bytes: Uint8Array): Promise<AiResult> {
     clearTimeout(timeout);
     if (!res.ok) {
       const txt = (await res.text()).slice(0, 300);
+      // Mark insufficient balance / auth errors specially so caller can short-circuit
+      if (/insufficient\s*balance|payment\s*required|quota/i.test(txt)) {
+        return { bytes: null, error: `api_insufficient_balance: ${txt}` };
+      }
       return { bytes: null, error: `api_http_${res.status}: ${txt}` };
     }
     const data = await res.json();
@@ -136,13 +158,17 @@ async function dewatermarkClean(bytes: Uint8Array) {
 
 type ProcessResult =
   | { kind: "processed"; out: Uint8Array; method: string; retries_attempted: number }
-  | { kind: "ai_failed"; error: string; retries_attempted: number };
+  | { kind: "ai_failed"; error: string; retries_attempted: number; fatal?: boolean };
+
+// Errors that mean "stop trying AI for the rest of this property — won't recover this run"
+const FATAL_AI_ERROR_RX = /insufficient_balance|payment_required|api_http_40[123]/i;
 
 async function processOne(bytes: Uint8Array, mode: Mode): Promise<ProcessResult> {
   if (mode === "ai_inpaint") {
     const r = await dewatermarkClean(bytes);
     if (r.bytes) return { kind: "processed", out: r.bytes, method: "ai_inpaint_dewatermark", retries_attempted: r.retries_attempted };
-    return { kind: "ai_failed", error: r.error || "unknown_ai_error", retries_attempted: r.retries_attempted };
+    const fatal = FATAL_AI_ERROR_RX.test(r.error || "");
+    return { kind: "ai_failed", error: r.error || "unknown_ai_error", retries_attempted: r.retries_attempted, fatal };
   }
   if (mode === "bottom_crop") {
     return { kind: "processed", out: await bottomCrop(bytes, 0.10), method: "bottom_crop", retries_attempted: 0 };
