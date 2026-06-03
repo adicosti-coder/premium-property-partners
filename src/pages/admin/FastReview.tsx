@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, CheckCircle2, XCircle, Pencil, Loader2, Sparkles,
-  ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X,
+  ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X, Wand2,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
@@ -553,6 +553,33 @@ function ReviewCard({
   acting: boolean;
 }) {
   const [prospect, setProspect] = useState<{ id: string | null; phone: string | null } | null>(null);
+  const [aiCleaning, setAiCleaning] = useState(false);
+
+  const onAiClean = useCallback(async () => {
+    if (aiCleaning) return;
+    setAiCleaning(true);
+    toast({ title: "Procesare AI pornită", description: "Dewatermark rulează pe toate imaginile anunțului…" });
+    try {
+      const { data, error } = await supabase.functions.invoke("process-listing-images", {
+        body: { property_id: row.id, force_ai: true },
+      });
+      if (error) throw error;
+      const status = (data as any)?.status ?? "unknown";
+      const processed = (data as any)?.processed ?? 0;
+      const total = (data as any)?.total ?? 0;
+      const aiFails = (data as any)?.ai_failures ?? 0;
+      toast({
+        title: status === "completed" ? "Imagini curățate cu AI" : `Procesare finalizată (${status})`,
+        description: `${processed}/${total} imagini reușite${aiFails ? ` · ${aiFails} eșecuri AI (fallback crop aplicat)` : ""}.`,
+        variant: status === "failed" ? "destructive" : "default",
+      });
+    } catch (e: any) {
+      toast({ title: "Eroare AI", description: e?.message || "Apel eșuat către process-listing-images.", variant: "destructive" });
+    } finally {
+      setAiCleaning(false);
+    }
+  }, [row.id, aiCleaning]);
+
 
   useEffect(() => {
     let cancel = false;
@@ -718,23 +745,37 @@ function ReviewCard({
           </Button>
         </div>
 
-        {/* Mark as agency */}
+        {/* Mark as agency + AI watermark cleanup */}
         <div className="pt-2 border-t flex flex-wrap items-center justify-between gap-2">
           <div className="text-xs text-muted-foreground">
             {prospect?.phone
               ? <>Telefon implicit: <span className="font-mono font-medium text-foreground">{prospect.phone}</span></>
               : "Telefon implicit indisponibil — se va bloca doar domeniul."}
           </div>
-          <MarkAsAgencyButton
-            id={prospect?.id ?? undefined}
-            source="prospect_listings"
-            phone={prospect?.phone ?? undefined}
-            url={row.original_source_url ?? undefined}
-            contextLabel={`FastReview · ${row.name ?? row.id}`}
-            label="Marchează ca Agenție"
-            onMarked={onMarkedAgency}
-            disabled={acting}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onAiClean}
+              disabled={acting || aiCleaning || !row.images?.length}
+              title="Rulează Dewatermark AI peste toate imaginile acestui anunț (folosește credite API)."
+              className="border-indigo-500/40 text-indigo-700 hover:bg-indigo-600 hover:text-white dark:text-indigo-300"
+            >
+              {aiCleaning ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Wand2 className="h-4 w-4 mr-1.5" />}
+              Curăță cu AI (Dewatermark)
+            </Button>
+            <MarkAsAgencyButton
+              id={prospect?.id ?? undefined}
+              source="prospect_listings"
+              phone={prospect?.phone ?? undefined}
+              url={row.original_source_url ?? undefined}
+              contextLabel={`FastReview · ${row.name ?? row.id}`}
+              label="Marchează ca Agenție"
+              onMarked={onMarkedAgency}
+              disabled={acting}
+            />
+          </div>
         </div>
 
       </CardContent>
