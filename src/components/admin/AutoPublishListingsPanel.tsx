@@ -28,6 +28,13 @@ export function AutoPublishListingsPanel() {
   const [useAi, setUseAi] = useState(true);
   const [batch, setBatch] = useState(8);
   const [lastSummary, setLastSummary] = useState<any>(null);
+  const [backfillProgress, setBackfillProgress] = useState<{
+    dispatched: number;
+    inserted: number;
+    elapsedSec: number;
+    done: boolean;
+    failed: number;
+  } | null>(null);
 
   const load = async () => {
     setLoading(true);
