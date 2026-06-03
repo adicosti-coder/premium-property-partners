@@ -392,7 +392,7 @@ Deno.serve(async (req) => {
         source_platform: platform,
         quality_score: quality,
         fan_out_worker: true,
-      },
+        pending_review_only: pendingReviewOnly,
       migrated_from_prospect_id: prospect.id,
       rooms: prospect.rooms,
       bedrooms: prospect.rooms,
