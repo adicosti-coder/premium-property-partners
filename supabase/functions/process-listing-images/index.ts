@@ -208,9 +208,10 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-  let body: { property_id?: string };
+  let body: { property_id?: string; force_ai?: boolean };
   try { body = await req.json(); } catch { body = {}; }
   const propertyId = body.property_id;
+  const forceAi = body.force_ai === true;
 
   if (!propertyId || typeof propertyId !== "string") {
     return new Response(JSON.stringify({ error: "property_id required" }), {
