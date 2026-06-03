@@ -604,6 +604,7 @@ Deno.serve(async (req) => {
       EdgeRuntime.waitUntil(inv);
     }
     dispatched++;
+    dispatchedIds.push(prospect.id);
   }
 
   // PMS side-channel (ApArt Hotel pipeline): if any active cazare property
