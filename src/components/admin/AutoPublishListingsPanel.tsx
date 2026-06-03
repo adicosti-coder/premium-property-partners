@@ -196,22 +196,33 @@ export function AutoPublishListingsPanel() {
               <Sparkles className="w-3 h-3" /> Rescriere AI premium
             </Label>
           </div>
-          <div className="flex gap-2 ml-auto">
+          <div className="flex flex-wrap gap-2 ml-auto">
+            <Button
+              onClick={runBackfillToDrafts}
+              disabled={backfilling || running}
+              variant="outline"
+              className="gap-2"
+              title="Procesează candidații acumulați și îi salvează DOAR ca drafts (inactive) pentru Fast Review — nu live pe site"
+            >
+              {backfilling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+              Backfill în Drafts
+            </Button>
             <Button
               onClick={runBackfill}
               disabled={backfilling || running}
               variant="secondary"
               className="gap-2"
-              title="Rulează cu force=true, batch_size=25 și prag scor relaxat pentru a recupera candidații blocați"
+              title="Rulează cu force=true, batch_size=25 și prag scor relaxat. PUBLICĂ direct (active) — recuperează candidații blocați"
             >
               {backfilling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-              {backfilling ? "Backfill..." : "Backfill forțat"}
+              Backfill forțat (live)
             </Button>
             <Button onClick={runNow} disabled={running || backfilling} className="gap-2">
               {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
               {running ? "Procesare..." : "Rulează acum"}
             </Button>
           </div>
+
 
         </div>
 
