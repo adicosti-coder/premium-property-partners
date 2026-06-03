@@ -262,6 +262,7 @@ RESPONSE RULES:
 6. For specific price questions, direct them to the properties page or WhatsApp`;
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
