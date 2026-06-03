@@ -34,7 +34,13 @@ export function AutoPublishListingsPanel() {
     elapsedSec: number;
     done: boolean;
     failed: number;
+    dispatchedIds: string[];
+    failedIds: string[];
   } | null>(null);
+  const [failedDetails, setFailedDetails] = useState<Array<{ id: string; title: string | null; reason: string }>>([]);
+  const [showFailedDetails, setShowFailedDetails] = useState(false);
+  const [loadingFailedDetails, setLoadingFailedDetails] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   const load = async () => {
     setLoading(true);
