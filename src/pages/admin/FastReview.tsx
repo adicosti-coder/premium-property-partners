@@ -17,8 +17,10 @@ import {
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
+import MarkAsAgencyButton from "@/components/admin/MarkAsAgencyButton";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { notifyIndexNow } from "@/hooks/useIndexNowNotify";
+
 
 import type { User } from "@supabase/supabase-js";
 
@@ -484,6 +486,19 @@ export default function FastReview() {
               onApprove={() => approve(row.id)}
               onReject={() => reject(row)}
               onEdit={() => openEdit(row)}
+              onMarkedAgency={async () => {
+                await supabase
+                  .from("properties")
+                  .update({
+                    is_active: false,
+                    needs_review: false,
+                    review_action: "reject_agency",
+                    reviewed_at: new Date().toISOString(),
+                  })
+                  .eq("id", row.id);
+                setRows((p) => p.filter((r) => r.id !== row.id));
+                setSelected((p) => { const n = new Set(p); n.delete(row.id); return n; });
+              }}
               acting={actingId === row.id}
             />
           ))
@@ -526,7 +541,7 @@ export default function FastReview() {
 }
 
 function ReviewCard({
-  row, checked, onToggle, onApprove, onReject, onEdit, acting,
+  row, checked, onToggle, onApprove, onReject, onEdit, onMarkedAgency, acting,
 }: {
   row: DraftProperty;
   checked: boolean;
@@ -534,8 +549,30 @@ function ReviewCard({
   onApprove: () => void;
   onReject: () => void;
   onEdit: () => void;
+  onMarkedAgency: () => void;
   acting: boolean;
 }) {
+  const [prospect, setProspect] = useState<{ id: string | null; phone: string | null } | null>(null);
+
+  useEffect(() => {
+    let cancel = false;
+    if (!row.original_source_url) { setProspect({ id: null, phone: null }); return; }
+    supabase
+      .from("prospect_listings")
+      .select("id, contact_phone, phone_normalized")
+      .eq("source_url", row.original_source_url)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancel) return;
+        const d = data as any;
+        setProspect({
+          id: d?.id ?? null,
+          phone: d?.phone_normalized || d?.contact_phone || null,
+        });
+      });
+    return () => { cancel = true; };
+  }, [row.original_source_url]);
+
   const log = row.sanitization_log || {};
   const removedPhrases: string[] = Array.isArray(log.removed_phrases) ? log.removed_phrases : [];
   const rawHtml = useMemo(
@@ -680,6 +717,26 @@ function ReviewCard({
             Respinge
           </Button>
         </div>
+
+        {/* Mark as agency */}
+        <div className="pt-2 border-t flex flex-wrap items-center justify-between gap-2">
+          <div className="text-xs text-muted-foreground">
+            {prospect?.phone
+              ? <>Telefon implicit: <span className="font-mono font-medium text-foreground">{prospect.phone}</span></>
+              : "Telefon implicit indisponibil — se va bloca doar domeniul."}
+          </div>
+          <MarkAsAgencyButton
+            id={prospect?.id ?? undefined}
+            source="prospect_listings"
+            phone={prospect?.phone ?? undefined}
+            url={row.original_source_url ?? undefined}
+            contextLabel={`FastReview · ${row.name ?? row.id}`}
+            label="Marchează ca Agenție"
+            onMarked={onMarkedAgency}
+            disabled={acting}
+          />
+        </div>
+
       </CardContent>
     </Card>
   );
