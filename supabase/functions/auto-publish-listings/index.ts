@@ -385,6 +385,7 @@ Deno.serve(async (req) => {
   let triggeredBy = 'manual_admin';
   let force = false;
   let pendingReviewOnly = false;
+  let explicitProspectIds: string[] | null = null;
   try {
     const body = await req.json();
     if (typeof body?.batch_size === 'number') batchSize = Math.min(Math.max(body.batch_size, 1), MAX_BATCH);
@@ -392,10 +393,16 @@ Deno.serve(async (req) => {
     if (body?.use_ai_rewrite === false) useAiRewrite = false;
     if (typeof body?.triggered_by === 'string') triggeredBy = body.triggered_by;
     if (body?.pending_review_only === true) pendingReviewOnly = true;
+    if (Array.isArray(body?.prospect_ids) && body.prospect_ids.length > 0) {
+      explicitProspectIds = body.prospect_ids
+        .filter((x: any) => typeof x === 'string')
+        .slice(0, MAX_BATCH);
+      batchSize = explicitProspectIds!.length || DEFAULT_BATCH;
+    }
     if (body?.force === true) {
       force = true;
       // Backfill mode: maximize batch & relax min score floor so stuck candidates pass.
-      batchSize = MAX_BATCH;
+      if (!explicitProspectIds) batchSize = MAX_BATCH;
       if (minScore > 50) minScore = 50;
     }
   } catch { /* no body */ }
