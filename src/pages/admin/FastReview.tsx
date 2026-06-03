@@ -486,7 +486,16 @@ export default function FastReview() {
               onApprove={() => approve(row.id)}
               onReject={() => reject(row)}
               onEdit={() => openEdit(row)}
-              onMarkedAgency={() => {
+              onMarkedAgency={async () => {
+                await supabase
+                  .from("properties")
+                  .update({
+                    is_active: false,
+                    needs_review: false,
+                    review_action: "reject_agency",
+                    reviewed_at: new Date().toISOString(),
+                  })
+                  .eq("id", row.id);
                 setRows((p) => p.filter((r) => r.id !== row.id));
                 setSelected((p) => { const n = new Set(p); n.delete(row.id); return n; });
               }}
