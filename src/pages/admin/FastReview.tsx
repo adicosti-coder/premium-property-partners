@@ -835,7 +835,8 @@ function ReviewCard({
     : row.listing_type === "cazare" ? "/noapte" : "";
 
   return (
-    <Card className={`border-2 transition-colors ${checked ? "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/10" : "border-border"}`}>
+    <div ref={registerRef} onClick={onFocusCard}>
+    <Card className={`border-2 transition-all ${focused ? "ring-2 ring-primary/60 ring-offset-2 ring-offset-background" : ""} ${checked ? "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/10" : "border-border"}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
