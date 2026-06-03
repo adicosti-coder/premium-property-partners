@@ -1,10 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders } from "../_shared/securityHeaders.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rateLimiter.ts";
 
 /* ────────────────────────────────────────────────────────────
    Visitor Memory — cross-function tracker for anonymous and
@@ -14,6 +11,7 @@ const corsHeaders = {
 ──────────────────────────────────────────────────────────── */
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -125,6 +123,13 @@ serve(async (req) => {
 
     /* ── SUMMARIZE: AI-generate chatbot summary + infer prefs ── */
     if (action === "summarize") {
+      // Rate-limit AI summarization per IP to prevent credit drain abuse
+      const rl = checkRateLimit(`vm-sum:${getClientIp(req)}`, { maxRequests: 10, windowMs: 60_000 });
+      if (!rl.allowed) {
+        return new Response(JSON.stringify({ error: "rate_limit" }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { messages } = body;
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       if (!LOVABLE_API_KEY || !Array.isArray(messages) || messages.length === 0) {
@@ -132,8 +137,13 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      // Cap input size: max 20 messages, 500 chars each
+      const safeMessages = (messages as any[]).slice(0, 20).map((m) => ({
+        role: typeof m?.role === "string" ? m.role.slice(0, 20) : "user",
+        content: typeof m?.content === "string" ? m.content.slice(0, 500) : "",
+      }));
 
-      const transcript = messages.map((m: any) => `${m.role}: ${m.content}`).join("\n").slice(0, 8000);
+      const transcript = safeMessages.map((m) => `${m.role}: ${m.content}`).join("\n").slice(0, 8000);
 
       const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",

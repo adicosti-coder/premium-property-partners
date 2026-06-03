@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 
 interface ValidationRequest {
   code: string;
@@ -27,6 +23,7 @@ interface DiscountCode {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -48,8 +45,6 @@ serve(async (req) => {
 
     // Normalize code to uppercase
     const normalizedCode = code.trim().toUpperCase();
-
-    console.log(`Validating discount code: ${normalizedCode} for ${nights} nights, amount: ${totalAmount}`);
 
     // Fetch the discount code
     const { data: discountCode, error } = await supabase
@@ -123,8 +118,6 @@ serve(async (req) => {
     // Ensure discount doesn't exceed total
     discountAmount = Math.min(discountAmount, totalAmount);
 
-    console.log(`Code ${normalizedCode} is valid. Discount: ${discountAmount}`);
-
     return new Response(
       JSON.stringify({
         valid: true,
@@ -143,9 +136,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in validate-discount-code function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ valid: false, error: errorMessage }),
+      JSON.stringify({ valid: false, error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 
 interface UsageRequest {
   codeId: string;
@@ -35,6 +31,7 @@ const isValidEmail = (email: string): boolean => {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -45,13 +42,19 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get user from auth header (optional - could be anonymous booking)
+    // Require authentication to prevent discount-code exhaustion via anonymous abuse
     let userId: string | null = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
       const jwt = authHeader.replace("Bearer ", "");
       const { data: { user } } = await supabase.auth.getUser(jwt);
       userId = user?.id || null;
+    }
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const body: UsageRequest = await req.json();
@@ -114,7 +117,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Recording discount usage: code=${codeId}, user=${userId || 'anonymous'}, amount=${discountAmount}`);
+    console.log(`Recording discount usage for user=${userId}`);
 
     // Insert usage record using service role (bypasses RLS)
     const { error: insertError } = await supabase
@@ -140,8 +143,6 @@ serve(async (req) => {
 
     // Note: The increment_discount_code_uses trigger will automatically update current_uses
 
-    console.log(`Discount usage recorded successfully for code ${codeId}`);
-
     return new Response(
       JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -149,9 +150,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in record-discount-usage:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
