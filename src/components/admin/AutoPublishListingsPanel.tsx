@@ -111,40 +111,51 @@ export function AutoPublishListingsPanel() {
     }
   };
 
-  const runBackfillToDrafts = async () => {
-    if (!confirm(`Backfill în Drafts: procesează candidații acumulați (${counts.candidates}) și îi salvează ca DRAFTS (is_active=false, needs_review=true) pentru revizuire în Fast Review. Continuă?`)) return;
-    setBackfilling(true);
+  const executeBackfillRun = async (opts: {
+    confirmText: string;
+    triggeredBy: string;
+    invokeBody: Record<string, unknown>;
+    setBusy: (b: boolean) => void;
+  }) => {
+    if (!confirm(opts.confirmText)) return;
+    opts.setBusy(true);
     setLastSummary(null);
-    setBackfillProgress({ dispatched: 0, inserted: 0, elapsedSec: 0, done: false, failed: 0 });
+    setFailedDetails([]);
+    setShowFailedDetails(false);
+    setBackfillProgress({
+      dispatched: 0, inserted: 0, elapsedSec: 0, done: false, failed: 0,
+      dispatchedIds: [], failedIds: [],
+    });
     const startedAt = new Date().toISOString();
     const t0 = Date.now();
-    const triggeredBy = "manual_backfill_drafts";
 
     try {
       const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
-        body: {
-          batch_size: 25,
-          use_ai_rewrite: useAi,
-          force: true,
-          pending_review_only: true,
-          triggered_by: triggeredBy,
-        },
+        body: { ...opts.invokeBody, triggered_by: opts.triggeredBy },
       });
       if (error) throw error;
 
       const dispatched = Number(data?.summary?.dispatched ?? 0);
+      const dispatchedIds: string[] = Array.isArray(data?.summary?.dispatched_ids)
+        ? data.summary.dispatched_ids
+        : [];
       setLastSummary(data?.summary);
-      setBackfillProgress({ dispatched, inserted: 0, elapsedSec: 0, done: false, failed: 0 });
+      setBackfillProgress({
+        dispatched, inserted: 0, elapsedSec: 0, done: false, failed: 0,
+        dispatchedIds, failedIds: [],
+      });
 
       if (dispatched === 0) {
-        setBackfillProgress({ dispatched: 0, inserted: 0, elapsedSec: 0, done: true, failed: 0 });
-        toast({ title: "Backfill complet", description: "Niciun candidat eligibil de procesat." });
+        setBackfillProgress({
+          dispatched: 0, inserted: 0, elapsedSec: 0, done: true, failed: 0,
+          dispatchedIds: [], failedIds: [],
+        });
+        toast({ title: "Rulare completă", description: "Niciun candidat eligibil de procesat." });
         load();
         return;
       }
 
       // Poll properties inserted by workers (fan-out async).
-      // Stop when inserted == dispatched OR after 90s timeout.
       const MAX_MS = 90_000;
       const POLL_MS = 3_000;
       let inserted = 0;
@@ -155,39 +166,110 @@ export function AutoPublishListingsPanel() {
         const { count } = await supabase
           .from("properties")
           .select("id", { count: "exact", head: true })
-          .eq("import_source", triggeredBy)
+          .eq("import_source", opts.triggeredBy)
           .gte("imported_at", startedAt);
         inserted = count ?? 0;
         const elapsedSec = Math.round((Date.now() - t0) / 1000);
-        setBackfillProgress({
-          dispatched,
-          inserted,
-          elapsedSec,
-          done: false,
-          failed: 0,
-        });
+        setBackfillProgress((prev) => prev ? {
+          ...prev, dispatched, inserted, elapsedSec, done: false, failed: 0,
+        } : prev);
         if (inserted >= dispatched) break;
-        // Early-exit dacă numărul rămâne stabil 3 cicluri consecutive (workers terminate).
         if (inserted === lastInsertedCount) stable++; else stable = 0;
         lastInsertedCount = inserted;
         if (stable >= 3 && Date.now() - t0 > 15_000) break;
       }
 
-      const failed = Math.max(0, dispatched - inserted);
+      // Identify failed prospects: dispatched IDs that did NOT yield a property.
+      let failedIds: string[] = [];
+      if (dispatchedIds.length > 0) {
+        const { data: succeeded } = await supabase
+          .from("properties")
+          .select("migrated_from_prospect_id")
+          .in("migrated_from_prospect_id", dispatchedIds)
+          .gte("imported_at", startedAt);
+        const succeededSet = new Set(
+          (succeeded || []).map((r: any) => r.migrated_from_prospect_id).filter(Boolean),
+        );
+        failedIds = dispatchedIds.filter((id) => !succeededSet.has(id));
+      }
+      const failed = failedIds.length > 0 ? failedIds.length : Math.max(0, dispatched - inserted);
       const elapsedSec = Math.round((Date.now() - t0) / 1000);
-      setBackfillProgress({ dispatched, inserted, elapsedSec, done: true, failed });
+      setBackfillProgress({
+        dispatched, inserted, elapsedSec, done: true, failed,
+        dispatchedIds, failedIds,
+      });
 
       toast({
-        title: "Backfill în Drafts complet",
+        title: "Rulare completă",
         description: `${inserted}/${dispatched} drafts create${failed > 0 ? ` · ${failed} eșuate` : ""} (${elapsedSec}s)`,
         variant: failed > 0 ? "destructive" : undefined,
       });
       load();
     } catch (e: any) {
       setBackfillProgress((p) => p ? { ...p, done: true } : null);
-      toast({ title: "Eroare backfill drafts", description: e?.message || String(e), variant: "destructive" });
+      toast({ title: "Eroare rulare", description: e?.message || String(e), variant: "destructive" });
     } finally {
-      setBackfilling(false);
+      opts.setBusy(false);
+    }
+  };
+
+  const runBackfillToDrafts = () => executeBackfillRun({
+    confirmText: `Backfill în Drafts: procesează candidații acumulați (${counts.candidates}) și îi salvează ca DRAFTS (is_active=false, needs_review=true) pentru revizuire în Fast Review. Continuă?`,
+    triggeredBy: "manual_backfill_drafts",
+    invokeBody: { batch_size: 25, use_ai_rewrite: useAi, force: true, pending_review_only: true },
+    setBusy: setBackfilling,
+  });
+
+  const retryFailed = () => {
+    const ids = backfillProgress?.failedIds || [];
+    if (ids.length === 0) {
+      toast({ title: "Nimic de reluat", description: "Nu există elemente eșuate de procesat." });
+      return;
+    }
+    executeBackfillRun({
+      confirmText: `Reluare backfill pentru ${ids.length} prospect${ids.length === 1 ? "" : "e"} eșuat${ids.length === 1 ? "" : "e"}. Continuă?`,
+      triggeredBy: "manual_backfill_drafts_retry",
+      invokeBody: {
+        prospect_ids: ids,
+        use_ai_rewrite: useAi,
+        force: true,
+        pending_review_only: true,
+      },
+      setBusy: setRetrying,
+    });
+  };
+
+  const loadFailedDetails = async () => {
+    const ids = backfillProgress?.failedIds || [];
+    if (ids.length === 0) return;
+    setLoadingFailedDetails(true);
+    try {
+      const { data } = await supabase
+        .from("prospect_listings")
+        .select("id, title, admin_notes, lifecycle_status")
+        .in("id", ids);
+      const items = (data || []).map((r: any) => {
+        const notes: string = r.admin_notes || "";
+        // Extract latest [worker...] reason if present.
+        const match = notes.match(/\[worker[^\]]*\][^[]*$/);
+        const reason = (match ? match[0] : notes).trim() || `Status: ${r.lifecycle_status || "necunoscut"} — fără detalii`;
+        return { id: r.id, title: r.title || null, reason: reason.slice(0, 300) };
+      });
+      // Maintain original failed-ids order.
+      const byId = new Map(items.map((i) => [i.id, i]));
+      setFailedDetails(ids.map((id) => byId.get(id) || { id, title: null, reason: "Fără detalii în prospect_listings" }));
+    } finally {
+      setLoadingFailedDetails(false);
+    }
+  };
+
+  const toggleFailedDetails = async () => {
+    const next = !showFailedDetails;
+    setShowFailedDetails(next);
+    if (next && failedDetails.length === 0) {
+      await loadFailedDetails();
+    }
+  };
     }
   };
 
