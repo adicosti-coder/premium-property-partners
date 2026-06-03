@@ -247,7 +247,7 @@ Deno.serve(async (req) => {
     images_processing_status: "processing",
   }).eq("id", propertyId);
 
-  const mode = pickMode(prop.source_platform || "");
+  const mode = pickMode(prop.source_platform || "", forceAi);
   let effectiveMode: Mode = mode;
   const finalUrls: string[] = [];
   const perImage: any[] = [];
