@@ -165,13 +165,18 @@ const FATAL_AI_ERROR_RX = /insufficient_balance|payment_required|api_http_40[123
 
 async function processOne(bytes: Uint8Array, mode: Mode): Promise<ProcessResult> {
   if (mode === "ai_inpaint") {
-    const r = await dewatermarkClean(bytes);
-    if (r.bytes) return { kind: "processed", out: r.bytes, method: "ai_inpaint_dewatermark", retries_attempted: r.retries_attempted };
+    // Pipeline: ALWAYS bottom_crop ~12% FIRST, then run Dewatermark on the cropped image.
+    // Guarantees footer watermarks are gone even if AI later fails or leaves residue.
+    const pre = await bottomCrop(bytes, 0.12);
+    const r = await dewatermarkClean(pre);
+    if (r.bytes) {
+      return { kind: "processed", out: r.bytes, method: "bottom_crop+ai_inpaint_dewatermark", retries_attempted: r.retries_attempted };
+    }
     const fatal = FATAL_AI_ERROR_RX.test(r.error || "");
     return { kind: "ai_failed", error: r.error || "unknown_ai_error", retries_attempted: r.retries_attempted, fatal };
   }
   if (mode === "bottom_crop") {
-    return { kind: "processed", out: await bottomCrop(bytes, 0.10), method: "bottom_crop", retries_attempted: 0 };
+    return { kind: "processed", out: await bottomCrop(bytes, 0.12), method: "bottom_crop", retries_attempted: 0 };
   }
   return { kind: "processed", out: bytes, method: "passthrough", retries_attempted: 0 };
 }
