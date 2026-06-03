@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +14,14 @@ import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft, CheckCircle2, XCircle, Pencil, Loader2, Sparkles,
   ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X, Wand2,
+  Keyboard, Building2,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
 import MarkAsAgencyButton from "@/components/admin/MarkAsAgencyButton";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { notifyIndexNow } from "@/hooks/useIndexNowNotify";
+import { markAsAgency } from "@/lib/markAsAgency";
 
 
 import type { User } from "@supabase/supabase-js";
