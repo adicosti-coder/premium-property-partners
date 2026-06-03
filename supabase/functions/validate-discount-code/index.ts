@@ -23,6 +23,7 @@ interface DiscountCode {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -44,8 +45,6 @@ serve(async (req) => {
 
     // Normalize code to uppercase
     const normalizedCode = code.trim().toUpperCase();
-
-    console.log(`Validating discount code: ${normalizedCode} for ${nights} nights, amount: ${totalAmount}`);
 
     // Fetch the discount code
     const { data: discountCode, error } = await supabase
