@@ -1,12 +1,21 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { TOOL_DEFINITIONS, executeTool } from "./tools.ts";
+import { getCorsHeaders } from "../_shared/securityHeaders.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+// Sanitize user-supplied strings before injecting into the AI system prompt.
+// Strips control characters / newlines and enforces a hard length cap so a
+// malicious value cannot rewrite the system prompt via injection.
+function sanitizePromptField(value: unknown, maxLen = 80): string {
+  if (typeof value !== "string") return "";
+  return value
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[<>`]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLen);
+}
 
 // ─── Rate Limiting ──────────────────────────────────────────
 
