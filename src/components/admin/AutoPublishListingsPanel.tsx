@@ -76,6 +76,29 @@ export function AutoPublishListingsPanel() {
     }
   };
 
+  const runBackfill = async () => {
+    if (!confirm(`Backfill forțat: procesează imediat candidații acumulați (${counts.candidates}) cu batch_size=25 și prag scor relaxat. Continuă?`)) return;
+    setBackfilling(true);
+    setLastSummary(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
+        body: { batch_size: 25, use_ai_rewrite: useAi, force: true, triggered_by: "manual_backfill" },
+      });
+      if (error) throw error;
+      setLastSummary(data?.summary);
+      toast({
+        title: "Backfill complet",
+        description: `Publicate: ${data?.summary?.published ?? 0} / ${data?.summary?.candidates ?? 0} candidați`,
+      });
+      load();
+    } catch (e: any) {
+      toast({ title: "Eroare backfill", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setBackfilling(false);
+    }
+  };
+
+
   return (
     <div className="space-y-4">
       <EnrichmentBacklogWidget />
