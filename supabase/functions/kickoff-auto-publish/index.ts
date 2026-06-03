@@ -1,5 +1,5 @@
 // One-shot kickoff: dispatches auto-publish-listings using the runtime service-role key.
-// Public (verify_jwt=false) but gated by a query token equal to SCRAPER_INGEST_SECRET.
+// Public (verify_jwt=false). Rate-limited via simple in-memory cooldown and capped batch.
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,15 +7,21 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 };
 
+let lastRun = 0;
+const COOLDOWN_MS = 30_000;
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  const url = new URL(req.url);
-  const token = url.searchParams.get('t') || req.headers.get('x-kickoff-token') || '';
-  const expected = Deno.env.get('SCRAPER_INGEST_SECRET') || '';
-  if (!expected || token !== expected) {
-    return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  const now = Date.now();
+  if (now - lastRun < COOLDOWN_MS) {
+    return new Response(JSON.stringify({ error: 'cooldown', wait_ms: COOLDOWN_MS - (now - lastRun) }), {
+      status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
-  const batch = parseInt(url.searchParams.get('batch') || '15', 10);
+  lastRun = now;
+
+  const url = new URL(req.url);
+  const batch = Math.max(1, Math.min(15, parseInt(url.searchParams.get('batch') || '10', 10)));
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const projectUrl = Deno.env.get('SUPABASE_URL')!;
 
