@@ -23,6 +23,8 @@ export function AutoPublishListingsPanel() {
   const [counts, setCounts] = useState<Counts>({ drafts: 0, imported_total: 0, imported_24h: 0, candidates: 0 });
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
+
   const [useAi, setUseAi] = useState(true);
   const [batch, setBatch] = useState(8);
   const [lastSummary, setLastSummary] = useState<any>(null);
