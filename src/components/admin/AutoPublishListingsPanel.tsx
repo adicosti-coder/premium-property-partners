@@ -28,6 +28,13 @@ export function AutoPublishListingsPanel() {
   const [useAi, setUseAi] = useState(true);
   const [batch, setBatch] = useState(8);
   const [lastSummary, setLastSummary] = useState<any>(null);
+  const [backfillProgress, setBackfillProgress] = useState<{
+    dispatched: number;
+    inserted: number;
+    elapsedSec: number;
+    done: boolean;
+    failed: number;
+  } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -102,6 +109,11 @@ export function AutoPublishListingsPanel() {
     if (!confirm(`Backfill în Drafts: procesează candidații acumulați (${counts.candidates}) și îi salvează ca DRAFTS (is_active=false, needs_review=true) pentru revizuire în Fast Review. Continuă?`)) return;
     setBackfilling(true);
     setLastSummary(null);
+    setBackfillProgress({ dispatched: 0, inserted: 0, elapsedSec: 0, done: false, failed: 0 });
+    const startedAt = new Date().toISOString();
+    const t0 = Date.now();
+    const triggeredBy = "manual_backfill_drafts";
+
     try {
       const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
         body: {
@@ -109,22 +121,70 @@ export function AutoPublishListingsPanel() {
           use_ai_rewrite: useAi,
           force: true,
           pending_review_only: true,
-          triggered_by: "manual_backfill_drafts",
+          triggered_by: triggeredBy,
         },
       });
       if (error) throw error;
+
+      const dispatched = Number(data?.summary?.dispatched ?? 0);
       setLastSummary(data?.summary);
+      setBackfillProgress({ dispatched, inserted: 0, elapsedSec: 0, done: false, failed: 0 });
+
+      if (dispatched === 0) {
+        setBackfillProgress({ dispatched: 0, inserted: 0, elapsedSec: 0, done: true, failed: 0 });
+        toast({ title: "Backfill complet", description: "Niciun candidat eligibil de procesat." });
+        load();
+        return;
+      }
+
+      // Poll properties inserted by workers (fan-out async).
+      // Stop when inserted == dispatched OR after 90s timeout.
+      const MAX_MS = 90_000;
+      const POLL_MS = 3_000;
+      let inserted = 0;
+      let stable = 0;
+      let lastInsertedCount = 0;
+      while (Date.now() - t0 < MAX_MS) {
+        await new Promise((r) => setTimeout(r, POLL_MS));
+        const { count } = await supabase
+          .from("properties")
+          .select("id", { count: "exact", head: true })
+          .eq("import_source", triggeredBy)
+          .gte("imported_at", startedAt);
+        inserted = count ?? 0;
+        const elapsedSec = Math.round((Date.now() - t0) / 1000);
+        setBackfillProgress({
+          dispatched,
+          inserted,
+          elapsedSec,
+          done: false,
+          failed: 0,
+        });
+        if (inserted >= dispatched) break;
+        // Early-exit dacă numărul rămâne stabil 3 cicluri consecutive (workers terminate).
+        if (inserted === lastInsertedCount) stable++; else stable = 0;
+        lastInsertedCount = inserted;
+        if (stable >= 3 && Date.now() - t0 > 15_000) break;
+      }
+
+      const failed = Math.max(0, dispatched - inserted);
+      const elapsedSec = Math.round((Date.now() - t0) / 1000);
+      setBackfillProgress({ dispatched, inserted, elapsedSec, done: true, failed });
+
       toast({
         title: "Backfill în Drafts complet",
-        description: `${data?.summary?.dispatched ?? 0} candidați trimiși spre Fast Review (drafts inactive).`,
+        description: `${inserted}/${dispatched} drafts create${failed > 0 ? ` · ${failed} eșuate` : ""} (${elapsedSec}s)`,
+        variant: failed > 0 ? "destructive" : undefined,
       });
       load();
     } catch (e: any) {
+      setBackfillProgress((p) => p ? { ...p, done: true } : null);
       toast({ title: "Eroare backfill drafts", description: e?.message || String(e), variant: "destructive" });
     } finally {
       setBackfilling(false);
     }
   };
+
 
 
 
@@ -233,6 +293,53 @@ export function AutoPublishListingsPanel() {
             Sistemul elimină automat numere de telefon, adrese cu număr stradal, emailuri și cuvinte interzise pentru un site de agenție: <em>proprietar, persoană fizică, fără comision, direct proprietar, comision 0</em>. Dacă anunțul declară „nu colaborez cu agenții" este respins automat.
           </AlertDescription>
         </Alert>
+
+        {backfillProgress && (
+          <div className={`border rounded-lg p-3 space-y-2 ${backfillProgress.done ? (backfillProgress.failed > 0 ? "border-destructive/40 bg-destructive/5" : "border-green-500/40 bg-green-500/5") : "border-primary/40 bg-primary/5"}`}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-semibold flex items-center gap-2">
+                <Eye className="w-3.5 h-3.5" />
+                {backfillProgress.done ? "Backfill în Drafts — rezumat" : "Backfill în Drafts — în curs..."}
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                {backfillProgress.elapsedSec}s
+              </span>
+            </div>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${backfillProgress.done ? (backfillProgress.failed > 0 ? "bg-destructive" : "bg-green-500") : "bg-primary"}`}
+                style={{
+                  width: `${backfillProgress.dispatched > 0 ? Math.min(100, Math.round((backfillProgress.inserted / backfillProgress.dispatched) * 100)) : 0}%`,
+                }}
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="rounded bg-background/60 p-2">
+                <div className="text-muted-foreground text-[10px] uppercase">Trimise</div>
+                <div className="font-bold text-base">{backfillProgress.dispatched}</div>
+              </div>
+              <div className="rounded bg-background/60 p-2">
+                <div className="text-muted-foreground text-[10px] uppercase">În pending_review</div>
+                <div className="font-bold text-base text-green-600">{backfillProgress.inserted}</div>
+              </div>
+              <div className="rounded bg-background/60 p-2">
+                <div className="text-muted-foreground text-[10px] uppercase">Eșuate</div>
+                <div className={`font-bold text-base ${backfillProgress.failed > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {backfillProgress.done ? backfillProgress.failed : "—"}
+                </div>
+              </div>
+            </div>
+            {backfillProgress.done && backfillProgress.inserted > 0 && (
+              <Button size="sm" variant="default" asChild className="w-full">
+                <a href="/admin/properties/fast-review">
+                  <Eye className="w-3 h-3 mr-1" /> Vezi {backfillProgress.inserted} drafturi în Fast Review
+                </a>
+              </Button>
+            )}
+          </div>
+        )}
+
+
 
         {lastSummary && (
           <div className="text-xs border rounded-lg p-3 bg-muted/30 space-y-1">
