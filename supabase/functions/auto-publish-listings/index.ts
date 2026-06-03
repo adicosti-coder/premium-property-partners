@@ -383,13 +383,21 @@ Deno.serve(async (req) => {
   let minScore = MIN_SCORE;
   let useAiRewrite = true;
   let triggeredBy = 'manual_admin';
+  let force = false;
   try {
     const body = await req.json();
     if (typeof body?.batch_size === 'number') batchSize = Math.min(Math.max(body.batch_size, 1), MAX_BATCH);
     if (typeof body?.min_score === 'number') minScore = body.min_score;
     if (body?.use_ai_rewrite === false) useAiRewrite = false;
     if (typeof body?.triggered_by === 'string') triggeredBy = body.triggered_by;
+    if (body?.force === true) {
+      force = true;
+      // Backfill mode: maximize batch & relax min score floor so stuck candidates pass.
+      batchSize = MAX_BATCH;
+      if (minScore > 50) minScore = 50;
+    }
   } catch { /* no body */ }
+
 
   const t0 = Date.now();
   const supabase = createClient(

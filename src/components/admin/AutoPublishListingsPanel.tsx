@@ -7,9 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
-import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye } from "lucide-react";
+import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye, Zap } from "lucide-react";
 import { EnrichmentBacklogWidget } from "./EnrichmentBacklogWidget";
 import { ProductionAlertsConfig } from "./ProductionAlertsConfig";
+
 
 type Counts = {
   drafts: number;
@@ -22,6 +23,8 @@ export function AutoPublishListingsPanel() {
   const [counts, setCounts] = useState<Counts>({ drafts: 0, imported_total: 0, imported_24h: 0, candidates: 0 });
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
+
   const [useAi, setUseAi] = useState(true);
   const [batch, setBatch] = useState(8);
   const [lastSummary, setLastSummary] = useState<any>(null);
@@ -72,6 +75,29 @@ export function AutoPublishListingsPanel() {
       setRunning(false);
     }
   };
+
+  const runBackfill = async () => {
+    if (!confirm(`Backfill forțat: procesează imediat candidații acumulați (${counts.candidates}) cu batch_size=25 și prag scor relaxat. Continuă?`)) return;
+    setBackfilling(true);
+    setLastSummary(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
+        body: { batch_size: 25, use_ai_rewrite: useAi, force: true, triggered_by: "manual_backfill" },
+      });
+      if (error) throw error;
+      setLastSummary(data?.summary);
+      toast({
+        title: "Backfill complet",
+        description: `Publicate: ${data?.summary?.published ?? 0} / ${data?.summary?.candidates ?? 0} candidați`,
+      });
+      load();
+    } catch (e: any) {
+      toast({ title: "Eroare backfill", description: e?.message || String(e), variant: "destructive" });
+    } finally {
+      setBackfilling(false);
+    }
+  };
+
 
   return (
     <div className="space-y-4">
@@ -140,10 +166,23 @@ export function AutoPublishListingsPanel() {
               <Sparkles className="w-3 h-3" /> Rescriere AI premium
             </Label>
           </div>
-          <Button onClick={runNow} disabled={running} className="gap-2 ml-auto">
-            {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {running ? "Procesare..." : "Rulează acum"}
-          </Button>
+          <div className="flex gap-2 ml-auto">
+            <Button
+              onClick={runBackfill}
+              disabled={backfilling || running}
+              variant="secondary"
+              className="gap-2"
+              title="Rulează cu force=true, batch_size=25 și prag scor relaxat pentru a recupera candidații blocați"
+            >
+              {backfilling ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              {backfilling ? "Backfill..." : "Backfill forțat"}
+            </Button>
+            <Button onClick={runNow} disabled={running || backfilling} className="gap-2">
+              {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {running ? "Procesare..." : "Rulează acum"}
+            </Button>
+          </div>
+
         </div>
 
         <Alert>
