@@ -121,8 +121,9 @@ export function AutoPublishListingsPanel() {
     triggeredBy: string;
     invokeBody: Record<string, unknown>;
     setBusy: (b: boolean) => void;
+    skipConfirm?: boolean;
   }) => {
-    if (!confirm(opts.confirmText)) return;
+    if (!opts.skipConfirm && !confirm(opts.confirmText)) return;
     opts.setBusy(true);
     setLastSummary(null);
     setFailedDetails([]);
