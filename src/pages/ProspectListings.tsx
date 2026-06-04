@@ -830,6 +830,59 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     pending: prospects.filter((p) => p.lifecycle_status === "pending_credentials").length,
   };
 
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
+
+  const handleDismiss = async (p: Prospect, reason: "expired" | "manual" = "expired") => {
+    const label = reason === "expired" ? "expirat" : "renunțare manuală";
+    if (!window.confirm(`Renunți la „${(p.title || "anunț").slice(0, 60)}”?\n\nMotiv: ${label}\nAnunțul va fi marcat inactiv și ascuns din listă.`)) {
+      return;
+    }
+    setDismissingId(p.id);
+    const noteLine = `[${new Date().toISOString().slice(0, 16).replace("T", " ")}] dismissed (${reason}) din /admin/prospect-listings`;
+    try {
+      const { data: existing } = await supabase
+        .from("prospect_listings")
+        .select("admin_notes")
+        .eq("id", p.id)
+        .maybeSingle();
+      const newNotes = existing?.admin_notes ? `${existing.admin_notes}\n${noteLine}` : noteLine;
+
+      const { error } = await supabase
+        .from("prospect_listings")
+        .update({
+          is_active: false,
+          lifecycle_status: "rejected",
+          admin_notes: newNotes,
+        } as any)
+        .eq("id", p.id);
+
+      if (error) {
+        toast({ title: "Eroare", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      // Optimistic remove from cache
+      qc.setQueryData<Prospect[]>(["prospect-listings", statusFilter, categoryFilter], (old) =>
+        (old || []).filter((row) => row.id !== p.id)
+      );
+      sonnerToast.success("Anunț marcat ca renunțat", {
+        description: label,
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            await supabase
+              .from("prospect_listings")
+              .update({ is_active: true, lifecycle_status: "new" } as any)
+              .eq("id", p.id);
+            refetch();
+          },
+        },
+      });
+    } finally {
+      setDismissingId(null);
+    }
+  };
+
   const handleToggleProspectType = async (p: Prospect & { isAgency?: boolean }) => {
     const previous = p.isAgency ? "agentie" : "proprietar";
     const next = p.isAgency ? "proprietar" : "agentie";
