@@ -4182,6 +4182,7 @@ export type Database = {
           enrichment_next_retry_at: string | null
           enrichment_saved_at: string | null
           enrichment_status: string | null
+          expiry_check_status: string | null
           features: string[] | null
           floor: string | null
           followup_sent_at: string | null
@@ -4191,6 +4192,7 @@ export type Database = {
           invalid_reason: string | null
           is_active: boolean | null
           last_callback_window: string | null
+          last_expiry_check_at: string | null
           last_failure_reason: string | null
           last_google_check_at: string | null
           last_retry_at: string | null
@@ -4270,6 +4272,7 @@ export type Database = {
           enrichment_next_retry_at?: string | null
           enrichment_saved_at?: string | null
           enrichment_status?: string | null
+          expiry_check_status?: string | null
           features?: string[] | null
           floor?: string | null
           followup_sent_at?: string | null
@@ -4279,6 +4282,7 @@ export type Database = {
           invalid_reason?: string | null
           is_active?: boolean | null
           last_callback_window?: string | null
+          last_expiry_check_at?: string | null
           last_failure_reason?: string | null
           last_google_check_at?: string | null
           last_retry_at?: string | null
@@ -4358,6 +4362,7 @@ export type Database = {
           enrichment_next_retry_at?: string | null
           enrichment_saved_at?: string | null
           enrichment_status?: string | null
+          expiry_check_status?: string | null
           features?: string[] | null
           floor?: string | null
           followup_sent_at?: string | null
@@ -4367,6 +4372,7 @@ export type Database = {
           invalid_reason?: string | null
           is_active?: boolean | null
           last_callback_window?: string | null
+          last_expiry_check_at?: string | null
           last_failure_reason?: string | null
           last_google_check_at?: string | null
           last_retry_at?: string | null
@@ -8798,6 +8804,7 @@ export type Database = {
         | "callback"
         | "pending_credentials"
         | "failed"
+        | "expired"
       listing_category: "vanzare" | "inchiriere" | "regim_hotelier"
       listing_status: "pending_inspection" | "approved" | "rejected"
       offer_category: "vanzare" | "inchiriere" | "hotelier"
@@ -8949,6 +8956,7 @@ export const Constants = {
         "callback",
         "pending_credentials",
         "failed",
+        "expired",
       ],
       listing_category: ["vanzare", "inchiriere", "regim_hotelier"],
       listing_status: ["pending_inspection", "approved", "rejected"],

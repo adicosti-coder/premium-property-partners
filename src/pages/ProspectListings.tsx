@@ -17,7 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw, Clock,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap, Trash2,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap, Trash2, ShieldAlert,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
@@ -556,6 +556,31 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     }
   };
   const [resuming, setResuming] = useState(false);
+  const [expiryChecking, setExpiryChecking] = useState(false);
+
+  const handleExpiryRecheck = async (mode: "batch" | "all") => {
+    const label = mode === "all" ? "TOATE anunțurile active" : "primele 120 anunțuri";
+    if (!window.confirm(`Pornesc reverificarea pentru ${label}? Cele expirate vor fi marcate automat ca inactive.`)) return;
+    setExpiryChecking(true);
+    const startToast = sonnerToast.loading(`Reverific ${label}…`);
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-expiry-check", {
+        body: { mode, limit: mode === "all" ? 200 : 120 },
+      });
+      if (error) throw error;
+      sonnerToast.dismiss(startToast);
+      const exp = data?.expired ?? 0;
+      const ok = data?.ok ?? 0;
+      const err = data?.errors ?? 0;
+      sonnerToast.success(`Reverificare completă: ${exp} expirate, ${ok} active, ${err} erori`);
+      refetch();
+    } catch (e: any) {
+      sonnerToast.dismiss(startToast);
+      sonnerToast.error(`Eroare reverificare: ${e?.message || String(e)}`);
+    } finally {
+      setExpiryChecking(false);
+    }
+  };
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [campaignRunning, setCampaignRunning] = useState(false);
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
@@ -1273,6 +1298,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/admin/call-dashboard")}>
               <Phone className="h-4 w-4 mr-1" /> Call Dashboard
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExpiryRecheck("batch")} disabled={expiryChecking} title="Verifică pe sursă dacă anunțurile mai sunt active și retrage automat pe cele expirate">
+              {expiryChecking ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ShieldAlert className="h-4 w-4 mr-1" />}
+              Reverifică expirate
             </Button>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-1" /> Refresh
