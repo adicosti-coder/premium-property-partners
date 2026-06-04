@@ -1769,6 +1769,17 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                               {scoringId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
                               <span className="hidden sm:inline">Re-scoring AI</span>
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDismiss(p, "expired")}
+                              disabled={dismissingId === p.id}
+                              className="w-9 sm:w-full px-2 text-[10px] sm:text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                              title="Renunță la anunț (expirat / nu mai e valabil)"
+                            >
+                              {dismissingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 mr-1" />}
+                              <span className="hidden sm:inline">Renunță (expirat)</span>
+                            </Button>
                             <div className="hidden sm:flex items-center gap-2 w-full justify-end">
                               <AuditLogViewer
                                 entityType="prospect_listing"
