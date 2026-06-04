@@ -1299,6 +1299,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
             <Button variant="outline" size="sm" onClick={() => navigate("/admin/call-dashboard")}>
               <Phone className="h-4 w-4 mr-1" /> Call Dashboard
             </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExpiryRecheck("batch")} disabled={expiryChecking} title="Verifică pe sursă dacă anunțurile mai sunt active și retrage automat pe cele expirate">
+              {expiryChecking ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ShieldAlert className="h-4 w-4 mr-1" />}
+              Reverifică expirate
+            </Button>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-1" /> Refresh
             </Button>
