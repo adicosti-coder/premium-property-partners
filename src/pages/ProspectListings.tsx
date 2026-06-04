@@ -17,7 +17,7 @@ import { toast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw, Clock,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap, Trash2,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
@@ -828,6 +828,59 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     interested: prospects.filter((p) => p.lifecycle_status === "interested").length,
     calling: prospects.filter((p) => p.lifecycle_status === "calling").length,
     pending: prospects.filter((p) => p.lifecycle_status === "pending_credentials").length,
+  };
+
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
+
+  const handleDismiss = async (p: Prospect, reason: "expired" | "manual" = "expired") => {
+    const label = reason === "expired" ? "expirat" : "renunțare manuală";
+    if (!window.confirm(`Renunți la „${(p.title || "anunț").slice(0, 60)}”?\n\nMotiv: ${label}\nAnunțul va fi marcat inactiv și ascuns din listă.`)) {
+      return;
+    }
+    setDismissingId(p.id);
+    const noteLine = `[${new Date().toISOString().slice(0, 16).replace("T", " ")}] dismissed (${reason}) din /admin/prospect-listings`;
+    try {
+      const { data: existing } = await supabase
+        .from("prospect_listings")
+        .select("admin_notes")
+        .eq("id", p.id)
+        .maybeSingle();
+      const newNotes = existing?.admin_notes ? `${existing.admin_notes}\n${noteLine}` : noteLine;
+
+      const { error } = await supabase
+        .from("prospect_listings")
+        .update({
+          is_active: false,
+          lifecycle_status: "rejected",
+          admin_notes: newNotes,
+        } as any)
+        .eq("id", p.id);
+
+      if (error) {
+        toast({ title: "Eroare", description: error.message, variant: "destructive" });
+        return;
+      }
+
+      // Optimistic remove from cache
+      qc.setQueryData<Prospect[]>(["prospect-listings", statusFilter, categoryFilter], (old) =>
+        (old || []).filter((row) => row.id !== p.id)
+      );
+      sonnerToast.success("Anunț marcat ca renunțat", {
+        description: label,
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            await supabase
+              .from("prospect_listings")
+              .update({ is_active: true, lifecycle_status: "new" } as any)
+              .eq("id", p.id);
+            refetch();
+          },
+        },
+      });
+    } finally {
+      setDismissingId(null);
+    }
   };
 
   const handleToggleProspectType = async (p: Prospect & { isAgency?: boolean }) => {
@@ -1715,6 +1768,17 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                             >
                               {scoringId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
                               <span className="hidden sm:inline">Re-scoring AI</span>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDismiss(p, "expired")}
+                              disabled={dismissingId === p.id}
+                              className="w-9 sm:w-full px-2 text-[10px] sm:text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                              title="Renunță la anunț (expirat / nu mai e valabil)"
+                            >
+                              {dismissingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 mr-1" />}
+                              <span className="hidden sm:inline">Renunță (expirat)</span>
                             </Button>
                             <div className="hidden sm:flex items-center gap-2 w-full justify-end">
                               <AuditLogViewer
