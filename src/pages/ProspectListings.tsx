@@ -556,6 +556,31 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     }
   };
   const [resuming, setResuming] = useState(false);
+  const [expiryChecking, setExpiryChecking] = useState(false);
+
+  const handleExpiryRecheck = async (mode: "batch" | "all") => {
+    const label = mode === "all" ? "TOATE anunțurile active" : "primele 120 anunțuri";
+    if (!window.confirm(`Pornesc reverificarea pentru ${label}? Cele expirate vor fi marcate automat ca inactive.`)) return;
+    setExpiryChecking(true);
+    const startToast = sonnerToast.loading(`Reverific ${label}…`);
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-expiry-check", {
+        body: { mode, limit: mode === "all" ? 200 : 120 },
+      });
+      if (error) throw error;
+      sonnerToast.dismiss(startToast);
+      const exp = data?.expired ?? 0;
+      const ok = data?.ok ?? 0;
+      const err = data?.errors ?? 0;
+      sonnerToast.success(`Reverificare completă: ${exp} expirate, ${ok} active, ${err} erori`);
+      refetch();
+    } catch (e: any) {
+      sonnerToast.dismiss(startToast);
+      sonnerToast.error(`Eroare reverificare: ${e?.message || String(e)}`);
+    } finally {
+      setExpiryChecking(false);
+    }
+  };
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [campaignRunning, setCampaignRunning] = useState(false);
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null);
