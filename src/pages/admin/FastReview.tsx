@@ -1038,19 +1038,33 @@ function ReviewCard({
               className="prose prose-sm max-w-none text-sm leading-relaxed max-h-72 overflow-y-auto whitespace-pre-wrap"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
-            {row.images && row.images.length > 0 && (
+            {images.length > 0 && (
               <div className="grid grid-cols-4 gap-1 mt-3">
-                {row.images.slice(0, 8).map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt={`${row.name} ${i + 1}`}
-                    className="aspect-square object-cover rounded border"
-                    loading="lazy"
-                  />
+                {images.slice(0, 8).map((src, i) => (
+                  <div key={`${src}-${i}`} className="relative group aspect-square">
+                    <img
+                      src={src}
+                      alt={`${row.name} ${i + 1}`}
+                      className="w-full h-full object-cover rounded border"
+                      loading="lazy"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); deleteImage(i); }}
+                      disabled={deletingIdx === i}
+                      title="Șterge această fotografie"
+                      aria-label={`Șterge fotografia ${i + 1}`}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity shadow-md hover:scale-110 disabled:opacity-60"
+                    >
+                      {deletingIdx === i
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <Trash2 className="h-3 w-3" />}
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
+
           </div>
         </div>
 
