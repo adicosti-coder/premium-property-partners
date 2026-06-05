@@ -15,7 +15,7 @@ import { toast as sonnerToast } from "sonner";
 import {
   ArrowLeft, CheckCircle2, XCircle, Pencil, Loader2, Sparkles,
   ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X, Wand2,
-  Keyboard, Building2,
+  Keyboard, Building2, Trash2,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
@@ -847,6 +847,48 @@ function ReviewCard({
 }) {
   const [prospect, setProspect] = useState<{ id: string | null; phone: string | null } | null>(null);
   const [aiCleaning, setAiCleaning] = useState(false);
+  const [images, setImages] = useState<string[]>(row.images ?? []);
+  const [deletingIdx, setDeletingIdx] = useState<number | null>(null);
+
+  useEffect(() => { setImages(row.images ?? []); }, [row.images]);
+
+  const deleteImage = useCallback(async (idx: number) => {
+    const url = images[idx];
+    if (!url) return;
+    if (!window.confirm(`Ștergi fotografia #${idx + 1} din acest anunț?`)) return;
+    setDeletingIdx(idx);
+    const next = images.filter((_, i) => i !== idx);
+    const { error } = await supabase
+      .from("properties")
+      .update({ images: next })
+      .eq("id", row.id);
+    if (error) {
+      setDeletingIdx(null);
+      toast({ title: "Eroare ștergere", description: error.message, variant: "destructive" });
+      return;
+    }
+    // Best-effort: remove from property_images table if it exists there
+    try {
+      await supabase.from("property_images").delete().eq("property_id", row.id).eq("image_path", url);
+    } catch { /* noop */ }
+    setImages(next);
+    setDeletingIdx(null);
+    sonnerToast.success("Fotografie ștearsă", {
+      action: {
+        label: "Anulează",
+        onClick: async () => {
+          const restored = [...next.slice(0, idx), url, ...next.slice(idx)];
+          const { error: undoErr } = await supabase
+            .from("properties").update({ images: restored }).eq("id", row.id);
+          if (undoErr) { sonnerToast.error(undoErr.message); return; }
+          setImages(restored);
+          sonnerToast.success("Restaurată");
+        },
+      },
+      duration: 8000,
+    });
+  }, [images, row.id]);
+
 
   const onAiClean = useCallback(async () => {
     if (aiCleaning) return;
@@ -996,19 +1038,33 @@ function ReviewCard({
               className="prose prose-sm max-w-none text-sm leading-relaxed max-h-72 overflow-y-auto whitespace-pre-wrap"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
-            {row.images && row.images.length > 0 && (
+            {images.length > 0 && (
               <div className="grid grid-cols-4 gap-1 mt-3">
-                {row.images.slice(0, 8).map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt={`${row.name} ${i + 1}`}
-                    className="aspect-square object-cover rounded border"
-                    loading="lazy"
-                  />
+                {images.slice(0, 8).map((src, i) => (
+                  <div key={`${src}-${i}`} className="relative group aspect-square">
+                    <img
+                      src={src}
+                      alt={`${row.name} ${i + 1}`}
+                      className="w-full h-full object-cover rounded border"
+                      loading="lazy"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); deleteImage(i); }}
+                      disabled={deletingIdx === i}
+                      title="Șterge această fotografie"
+                      aria-label={`Șterge fotografia ${i + 1}`}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity shadow-md hover:scale-110 disabled:opacity-60"
+                    >
+                      {deletingIdx === i
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <Trash2 className="h-3 w-3" />}
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
+
           </div>
         </div>
 
