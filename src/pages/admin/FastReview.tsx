@@ -847,6 +847,48 @@ function ReviewCard({
 }) {
   const [prospect, setProspect] = useState<{ id: string | null; phone: string | null } | null>(null);
   const [aiCleaning, setAiCleaning] = useState(false);
+  const [images, setImages] = useState<string[]>(row.images ?? []);
+  const [deletingIdx, setDeletingIdx] = useState<number | null>(null);
+
+  useEffect(() => { setImages(row.images ?? []); }, [row.images]);
+
+  const deleteImage = useCallback(async (idx: number) => {
+    const url = images[idx];
+    if (!url) return;
+    if (!window.confirm(`Ștergi fotografia #${idx + 1} din acest anunț?`)) return;
+    setDeletingIdx(idx);
+    const next = images.filter((_, i) => i !== idx);
+    const { error } = await supabase
+      .from("properties")
+      .update({ images: next })
+      .eq("id", row.id);
+    if (error) {
+      setDeletingIdx(null);
+      toast({ title: "Eroare ștergere", description: error.message, variant: "destructive" });
+      return;
+    }
+    // Best-effort: remove from property_images table if it exists there
+    try {
+      await supabase.from("property_images").delete().eq("property_id", row.id).eq("image_path", url);
+    } catch { /* noop */ }
+    setImages(next);
+    setDeletingIdx(null);
+    sonnerToast.success("Fotografie ștearsă", {
+      action: {
+        label: "Anulează",
+        onClick: async () => {
+          const restored = [...next.slice(0, idx), url, ...next.slice(idx)];
+          const { error: undoErr } = await supabase
+            .from("properties").update({ images: restored }).eq("id", row.id);
+          if (undoErr) { sonnerToast.error(undoErr.message); return; }
+          setImages(restored);
+          sonnerToast.success("Restaurată");
+        },
+      },
+      duration: 8000,
+    });
+  }, [images, row.id]);
+
 
   const onAiClean = useCallback(async () => {
     if (aiCleaning) return;
