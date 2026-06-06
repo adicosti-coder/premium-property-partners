@@ -539,73 +539,8 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Phone className="w-5 h-5 text-primary" />
-            Contacte din anunțuri
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {prospectContacts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {prospectContacts.map((prospect) => {
-                const phone = prospect.contact_phone || prospect.phone_normalized;
-                return (
-                  <div key={prospect.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-foreground truncate">
-                          {prospect.contact_name || "Contact nespecificat"}
-                        </p>
-                        {prospect.source_url ? (
-                          <a
-                            href={prospect.source_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline truncate block"
-                            title={prospect.title || prospect.source_url}
-                          >
-                            {prospect.title || "Vezi anunț"} ↗
-                          </a>
-                        ) : (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {prospect.title || "Anunț fără titlu"}
-                          </p>
-                        )}
-                      </div>
-                      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                        {prospect.source_platform}
-                      </span>
-                    </div>
-                    {phone && (
-                      <a href={`tel:${phone}`} className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-                        <Phone className="w-4 h-4" />
-                        {phone}
-                      </a>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                      <span>Status: {prospect.lifecycle_status}</span>
-                      <span>·</span>
-                      <span>Scor: {prospect.lead_score ?? "—"}</span>
-                      {prospect.scraped_at && (
-                        <>
-                          <span>·</span>
-                          <span title={new Date(prospect.scraped_at).toLocaleString("ro-RO")}>
-                            📅 {new Date(prospect.scraped_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "numeric" })}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nu există încă anunțuri active cu număr de contact.</p>
-          )}
-        </CardContent>
-      </Card>
+      <ProspectContactsCard prospects={prospectContacts} />
+
 
       {/* Google Search Console */}
       <GooglePerformanceWidget />
