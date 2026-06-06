@@ -50,9 +50,11 @@ interface ProspectContact {
   contact_phone: string | null;
   phone_normalized: string | null;
   source_platform: string;
+  source_url: string | null;
   lifecycle_status: string;
   lead_score: number | null;
   scraped_at: string | null;
+  published_at: string | null;
 }
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
