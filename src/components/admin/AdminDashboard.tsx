@@ -103,7 +103,7 @@ const AdminDashboard = () => {
         .eq("is_active", true)
         .or("contact_phone.not.is.null,phone_normalized.not.is.null")
         .order("scraped_at", { ascending: false, nullsFirst: false })
-        .limit(8);
+        .limit(100);
 
       if (error) throw error;
       return (data || []) as ProspectContact[];
