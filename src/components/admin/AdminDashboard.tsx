@@ -556,9 +556,21 @@ const AdminDashboard = () => {
                         <p className="font-medium text-foreground truncate">
                           {prospect.contact_name || "Contact nespecificat"}
                         </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {prospect.title || "Anunț fără titlu"}
-                        </p>
+                        {prospect.source_url ? (
+                          <a
+                            href={prospect.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline truncate block"
+                            title={prospect.title || prospect.source_url}
+                          >
+                            {prospect.title || "Vezi anunț"} ↗
+                          </a>
+                        ) : (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {prospect.title || "Anunț fără titlu"}
+                          </p>
+                        )}
                       </div>
                       <span className="shrink-0 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
                         {prospect.source_platform}
@@ -570,10 +582,18 @@ const AdminDashboard = () => {
                         {phone}
                       </a>
                     )}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                       <span>Status: {prospect.lifecycle_status}</span>
                       <span>·</span>
                       <span>Scor: {prospect.lead_score ?? "—"}</span>
+                      {prospect.scraped_at && (
+                        <>
+                          <span>·</span>
+                          <span title={new Date(prospect.scraped_at).toLocaleString("ro-RO")}>
+                            📅 {new Date(prospect.scraped_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "numeric" })}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
