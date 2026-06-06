@@ -924,6 +924,17 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
                       </>
                     )}
                   </div>
+                  <div className="flex justify-end">
+                    <MarkAsAgencyButton
+                      id={prospect.id}
+                      source="prospect_listings"
+                      rawPhone={prospect.contact_phone}
+                      phone={prospect.phone_normalized}
+                      url={prospect.source_url}
+                      contextLabel={`Dashboard · ${prospect.title?.slice(0, 60) || prospect.id}`}
+                      invalidateKeys={[["admin-dashboard-prospect-contacts"]]}
+                    />
+                  </div>
                 </div>
               );
             })}
