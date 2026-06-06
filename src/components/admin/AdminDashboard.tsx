@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import GooglePerformanceWidget from "./GooglePerformanceWidget";
 import SeoAutomationWidget from "./SeoAutomationWidget";
 import { toast } from "@/hooks/use-toast";
+import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import {
@@ -923,6 +924,17 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
                         </span>
                       </>
                     )}
+                  </div>
+                  <div className="flex justify-end">
+                    <MarkAsAgencyButton
+                      id={prospect.id}
+                      source="prospect_listings"
+                      rawPhone={prospect.contact_phone}
+                      phone={prospect.phone_normalized}
+                      url={prospect.source_url}
+                      contextLabel={`Dashboard · ${prospect.title?.slice(0, 60) || prospect.id}`}
+                      invalidateKeys={[["admin-dashboard-prospect-contacts"]]}
+                    />
                   </div>
                 </div>
               );
