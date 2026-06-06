@@ -5,7 +5,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame, ClipboardList, ArrowRight } from "lucide-react";
+import { Loader2, CalendarDays, TrendingUp, Home, Users, Percent, BarChart3, RefreshCw, Star, FileSearch, MessageSquare, Phone, Flame, ClipboardList, ArrowRight, Copy, Check, ArrowDownUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GooglePerformanceWidget from "./GooglePerformanceWidget";
 import SeoAutomationWidget from "./SeoAutomationWidget";
 import { toast } from "@/hooks/use-toast";
@@ -101,7 +103,7 @@ const AdminDashboard = () => {
         .eq("is_active", true)
         .or("contact_phone.not.is.null,phone_normalized.not.is.null")
         .order("scraped_at", { ascending: false, nullsFirst: false })
-        .limit(8);
+        .limit(100);
 
       if (error) throw error;
       return (data || []) as ProspectContact[];
@@ -537,73 +539,8 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Phone className="w-5 h-5 text-primary" />
-            Contacte din anunțuri
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {prospectContacts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {prospectContacts.map((prospect) => {
-                const phone = prospect.contact_phone || prospect.phone_normalized;
-                return (
-                  <div key={prospect.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-foreground truncate">
-                          {prospect.contact_name || "Contact nespecificat"}
-                        </p>
-                        {prospect.source_url ? (
-                          <a
-                            href={prospect.source_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline truncate block"
-                            title={prospect.title || prospect.source_url}
-                          >
-                            {prospect.title || "Vezi anunț"} ↗
-                          </a>
-                        ) : (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {prospect.title || "Anunț fără titlu"}
-                          </p>
-                        )}
-                      </div>
-                      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                        {prospect.source_platform}
-                      </span>
-                    </div>
-                    {phone && (
-                      <a href={`tel:${phone}`} className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-                        <Phone className="w-4 h-4" />
-                        {phone}
-                      </a>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                      <span>Status: {prospect.lifecycle_status}</span>
-                      <span>·</span>
-                      <span>Scor: {prospect.lead_score ?? "—"}</span>
-                      {prospect.scraped_at && (
-                        <>
-                          <span>·</span>
-                          <span title={new Date(prospect.scraped_at).toLocaleString("ro-RO")}>
-                            📅 {new Date(prospect.scraped_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "numeric" })}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nu există încă anunțuri active cu număr de contact.</p>
-          )}
-        </CardContent>
-      </Card>
+      <ProspectContactsCard prospects={prospectContacts} />
+
 
       {/* Google Search Console */}
       <GooglePerformanceWidget />
@@ -826,4 +763,182 @@ const AdminDashboard = () => {
   );
 };
 
+type SortOrder = "newest" | "oldest";
+
+function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    const fromTs = fromDate ? new Date(fromDate + "T00:00:00").getTime() : null;
+    const toTs = toDate ? new Date(toDate + "T23:59:59").getTime() : null;
+    const list = prospects.filter((p) => {
+      if (!p.scraped_at) return !fromTs && !toTs;
+      const ts = new Date(p.scraped_at).getTime();
+      if (fromTs && ts < fromTs) return false;
+      if (toTs && ts > toTs) return false;
+      return true;
+    });
+    list.sort((a, b) => {
+      const ta = a.scraped_at ? new Date(a.scraped_at).getTime() : 0;
+      const tb = b.scraped_at ? new Date(b.scraped_at).getTime() : 0;
+      return sortOrder === "newest" ? tb - ta : ta - tb;
+    });
+    return list;
+  }, [prospects, sortOrder, fromDate, toDate]);
+
+  const handleCopy = async (id: string, url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      toast({ title: "Link copiat", description: "URL-ul anunțului a fost copiat în clipboard." });
+      setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 1800);
+    } catch {
+      toast({ title: "Eroare", description: "Nu am putut copia link-ul.", variant: "destructive" });
+    }
+  };
+
+  const resetFilters = () => {
+    setFromDate("");
+    setToDate("");
+    setSortOrder("newest");
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Phone className="w-5 h-5 text-primary" />
+          Contacte din anunțuri
+          <span className="ml-auto text-xs font-normal text-muted-foreground">
+            {filtered.length} / {prospects.length}
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Toolbar: sort + date range */}
+        <div className="flex flex-wrap items-end gap-2 rounded-lg border border-border bg-muted/30 p-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Sortare</label>
+            <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as SortOrder)}>
+              <SelectTrigger className="h-9 w-[170px]">
+                <ArrowDownUp className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Cele mai noi</SelectItem>
+                <SelectItem value="oldest">Cele mai vechi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">De la</label>
+            <Input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="h-9 w-[150px]"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Până la</label>
+            <Input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="h-9 w-[150px]"
+            />
+          </div>
+          {(fromDate || toDate || sortOrder !== "newest") && (
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="h-9">
+              Resetează
+            </Button>
+          )}
+        </div>
+
+        {filtered.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {filtered.map((prospect) => {
+              const phone = prospect.contact_phone || prospect.phone_normalized;
+              const isCopied = copiedId === prospect.id;
+              return (
+                <div key={prospect.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground truncate">
+                        {prospect.contact_name || "Contact nespecificat"}
+                      </p>
+                      {prospect.source_url ? (
+                        <div className="flex items-center gap-1 min-w-0">
+                          <a
+                            href={prospect.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline truncate"
+                            title={prospect.title || prospect.source_url}
+                          >
+                            {prospect.title || "Vezi anunț"} ↗
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(prospect.id, prospect.source_url!)}
+                            className="shrink-0 inline-flex items-center justify-center w-6 h-6 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                            aria-label="Copiază link-ul anunțului"
+                            title="Copiază link-ul anunțului"
+                          >
+                            {isCopied ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground truncate">
+                          {prospect.title || "Anunț fără titlu"}
+                        </p>
+                      )}
+                    </div>
+                    <span className="shrink-0 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                      {prospect.source_platform}
+                    </span>
+                  </div>
+                  {phone && (
+                    <a href={`tel:${phone}`} className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+                      <Phone className="w-4 h-4" />
+                      {phone}
+                    </a>
+                  )}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                    <span>Status: {prospect.lifecycle_status}</span>
+                    <span>·</span>
+                    <span>Scor: {prospect.lead_score ?? "—"}</span>
+                    {prospect.scraped_at && (
+                      <>
+                        <span>·</span>
+                        <span title={new Date(prospect.scraped_at).toLocaleString("ro-RO")}>
+                          📅 {new Date(prospect.scraped_at).toLocaleDateString("ro-RO", { day: "2-digit", month: "short", year: "numeric" })}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {prospects.length === 0
+              ? "Nu există încă anunțuri active cu număr de contact."
+              : "Niciun contact pentru filtrele selectate."}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default AdminDashboard;
+
