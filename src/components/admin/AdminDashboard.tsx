@@ -97,7 +97,7 @@ const AdminDashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("prospect_listings")
-        .select("id,title,contact_name,contact_phone,phone_normalized,source_platform,lifecycle_status,lead_score,scraped_at")
+        .select("id,title,contact_name,contact_phone,phone_normalized,source_platform,source_url,lifecycle_status,lead_score,scraped_at")
         .eq("is_active", true)
         .or("contact_phone.not.is.null,phone_normalized.not.is.null")
         .order("scraped_at", { ascending: false, nullsFirst: false })
