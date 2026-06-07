@@ -889,6 +889,21 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
               Resetează
             </Button>
           )}
+          <div className="ml-auto flex items-center gap-2 rounded-md border border-border bg-background px-3 h-9">
+            {showAgencies ? (
+              <Building2 className="w-3.5 h-3.5 text-destructive" />
+            ) : (
+              <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+            <label htmlFor="show-agencies" className="text-xs font-medium cursor-pointer select-none">
+              {showAgencies ? `Doar agenții (${agencyCount})` : "Ascunde agențiile"}
+            </label>
+            <Switch
+              id="show-agencies"
+              checked={showAgencies}
+              onCheckedChange={setShowAgencies}
+            />
+          </div>
         </div>
 
         {filtered.length > 0 ? (
