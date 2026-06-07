@@ -102,11 +102,11 @@ const AdminDashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("prospect_listings")
-        .select("id,title,contact_name,contact_phone,phone_normalized,source_platform,source_url,lifecycle_status,lead_score,scraped_at")
-        .eq("is_active", true)
+        .select("id,title,contact_name,contact_phone,phone_normalized,source_platform,source_url,lifecycle_status,lead_score,scraped_at,prospect_type,is_active")
+        .or("is_active.eq.true,prospect_type.eq.agentie")
         .or("contact_phone.not.is.null,phone_normalized.not.is.null")
         .order("scraped_at", { ascending: false, nullsFirst: false })
-        .limit(100);
+        .limit(150);
 
       if (error) throw error;
       return (data || []) as ProspectContact[];
