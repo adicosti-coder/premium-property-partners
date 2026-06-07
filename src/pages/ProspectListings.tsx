@@ -476,6 +476,8 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const { isAdmin, isLoading: adminLoading, error: adminError, recheck } = useAdminRole(user);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showRejected, setShowRejected] = useState<boolean>(false);
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
