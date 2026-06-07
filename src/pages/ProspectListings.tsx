@@ -891,10 +891,23 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         return;
       }
 
-      // Optimistic remove from cache
-      qc.setQueryData<Prospect[]>(["prospect-listings", statusFilter, categoryFilter], (old) =>
-        (old || []).filter((row) => row.id !== p.id)
-      );
+      // Trigger fade-out animation, then remove from cache.
+      setRemovingIds((cur) => {
+        const next = new Set(cur);
+        next.add(p.id);
+        return next;
+      });
+      setTimeout(() => {
+        qc.setQueryData<Prospect[]>(["prospect-listings", statusFilter, categoryFilter], (old) =>
+          (old || []).filter((row) => row.id !== p.id)
+        );
+        setRemovingIds((cur) => {
+          if (!cur.has(p.id)) return cur;
+          const next = new Set(cur);
+          next.delete(p.id);
+          return next;
+        });
+      }, 300);
       sonnerToast.success("Anunț marcat ca renunțat", {
         description: label,
         action: {
