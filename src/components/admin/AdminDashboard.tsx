@@ -774,11 +774,26 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showAgencies, setShowAgencies] = useState(false);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+
+  const agencyCount = useMemo(
+    () => prospects.filter((p) => p.prospect_type === "agentie").length,
+    [prospects],
+  );
 
   const filtered = useMemo(() => {
     const fromTs = fromDate ? new Date(fromDate + "T00:00:00").getTime() : null;
     const toTs = toDate ? new Date(toDate + "T23:59:59").getTime() : null;
     const list = prospects.filter((p) => {
+      if (hiddenIds.has(p.id)) return false;
+      const isAgency = p.prospect_type === "agentie";
+      if (showAgencies) {
+        if (!isAgency) return false;
+      } else {
+        if (isAgency) return false;
+        if (p.is_active === false) return false;
+      }
       if (!p.scraped_at) return !fromTs && !toTs;
       const ts = new Date(p.scraped_at).getTime();
       if (fromTs && ts < fromTs) return false;
@@ -791,7 +806,21 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
       return sortOrder === "newest" ? tb - ta : ta - tb;
     });
     return list;
-  }, [prospects, sortOrder, fromDate, toDate]);
+  }, [prospects, sortOrder, fromDate, toDate, showAgencies, hiddenIds]);
+
+  const hideOptimistic = (id: string) =>
+    setHiddenIds((cur) => {
+      const next = new Set(cur);
+      next.add(id);
+      return next;
+    });
+  const restoreOptimistic = (id: string) =>
+    setHiddenIds((cur) => {
+      if (!cur.has(id)) return cur;
+      const next = new Set(cur);
+      next.delete(id);
+      return next;
+    });
 
   const handleCopy = async (id: string, url: string) => {
     try {
