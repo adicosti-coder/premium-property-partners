@@ -1401,6 +1401,22 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 <SelectItem value="pending_credentials">⏸ Pending Credentials</SelectItem>
               </SelectContent>
             </Select>
+            <label
+              className="flex items-center gap-2 rounded-md border border-border bg-background px-3 h-10 text-xs font-medium cursor-pointer select-none whitespace-nowrap"
+              title="Anunțurile respinse sunt ascunse implicit (rămân în DB pentru a preveni re-importul)."
+            >
+              <Switch
+                checked={showRejected}
+                onCheckedChange={setShowRejected}
+                aria-label="Arată anunțurile respinse"
+              />
+              <span>
+                Arată respinse
+                <span className="ml-1 text-muted-foreground">
+                  ({enriched.filter((p) => p.lifecycle_status === "rejected").length})
+                </span>
+              </span>
+            </label>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger><SelectValue placeholder="Categorie" /></SelectTrigger>
               <SelectContent>
