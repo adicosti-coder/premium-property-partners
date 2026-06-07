@@ -148,6 +148,27 @@ export async function markAsAgency(input: MarkAsAgencyInput): Promise<MarkAsAgen
   }
   await Promise.allSettled(mirrors);
 
+  // 4. Audit log entry — best-effort, never block the destructive flow.
+  try {
+    await supabase.from("admin_audit_log").insert({
+      action: "prospect_marked_agency",
+      entity_type: "prospect_listing",
+      entity_id: input.id ?? null,
+      severity: "warning",
+      details: {
+        phone,
+        domain,
+        url,
+        source,
+        context: input.contextLabel ?? null,
+        blocklist_added: rows.length > 0,
+        marked_at: nowIso,
+      },
+    } as any);
+  } catch (e) {
+    console.warn("[markAsAgency] audit log failed:", (e as Error).message);
+  }
+
   const added = rows.map((r) => r.phone_normalized || r.domain).filter(Boolean).join(" · ");
   if (rows.length === 0) {
     return {
