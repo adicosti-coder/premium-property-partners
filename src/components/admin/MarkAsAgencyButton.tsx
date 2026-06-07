@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Building2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -12,16 +12,21 @@ interface Props extends MarkAsAgencyInput {
   size?: "sm" | "default" | "icon";
   className?: string;
   label?: string;
-  /** Called after a successful mark — use to remove the item from local list state. */
+  /** Called immediately (optimistic) — use to hide the card from list state. */
   onMarked?: (result: { phone?: string | null; domain?: string | null }) => void;
-  /** React-Query keys to invalidate after success. */
+  /** Called if the user clicks Undo within 5 seconds. */
+  onUndo?: () => void;
+  /** React-Query keys to invalidate after the destructive commit. */
   invalidateKeys?: Array<readonly unknown[] | string>;
   disabled?: boolean;
+  /** Delay before the destructive action fires (ms). Default 5000. */
+  undoDelayMs?: number;
 }
 
 /**
- * Reusable "Marchează Agenție" action.
- * Adds the phone + domain to the blocklist and archives the row across all prospect sources.
+ * "Marchează Agenție" with a 5-second Undo window.
+ * On click → optimistic UI hide + sonner toast with Undo.
+ * If untouched after the delay → runs blocklist + archive + audit log.
  */
 export function MarkAsAgencyButton({
   variant = "button",
@@ -29,35 +34,72 @@ export function MarkAsAgencyButton({
   className,
   label,
   onMarked,
+  onUndo,
   invalidateKeys,
   disabled,
+  undoDelayMs = 5000,
   ...payload
 }: Props) {
-  const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState(false);
   const queryClient = useQueryClient();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelledRef = useRef(false);
 
-  const handleClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (loading) return;
-    setLoading(true);
+  const commit = async () => {
+    if (cancelledRef.current) return;
+    setPending(true);
     try {
       const res = await markAsAgency(payload);
       if (!res.ok) {
         toast.error(res.message);
+        onUndo?.(); // restore UI if commit failed
         return;
       }
       const phoneLabel = res.blockedPhone || payload.rawPhone || "—";
-      toast.success(`Numărul ${phoneLabel} a fost marcat ca agenție și adăugat în blocklist.`);
-      onMarked?.({ phone: res.blockedPhone, domain: res.blockedDomain });
+      toast.success(`🏢 ${phoneLabel} marcat ca agenție și șters din index.`);
       invalidateKeys?.forEach((key) => {
         queryClient.invalidateQueries({ queryKey: Array.isArray(key) ? [...key] : [key] });
       });
     } catch (err: any) {
       toast.error(err?.message || "Eroare la marcarea ca agenție.");
+      onUndo?.();
     } finally {
-      setLoading(false);
+      setPending(false);
     }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (pending || timerRef.current) return;
+
+    cancelledRef.current = false;
+    // Optimistic: hide immediately
+    onMarked?.({ phone: payload.phone, domain: null });
+
+    const phoneLabel = payload.phone || payload.rawPhone || "contact";
+    const toastId = toast(`🏢 Marchez ca agenție: ${phoneLabel}`, {
+      description: "Se șterge din index în 5 secunde. Apasă Undo pentru a anula.",
+      duration: undoDelayMs,
+      action: {
+        label: "Undo",
+        onClick: () => {
+          cancelledRef.current = true;
+          if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+          }
+          toast.dismiss(toastId);
+          toast.success("Anulat. Contactul rămâne în listă.");
+          onUndo?.();
+        },
+      },
+    });
+
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      void commit();
+    }, undoDelayMs);
   };
 
   if (variant === "icon") {
@@ -66,16 +108,16 @@ export function MarkAsAgencyButton({
         type="button"
         size="icon"
         variant="ghost"
-        disabled={disabled || loading}
+        disabled={disabled || pending}
         onClick={handleClick}
         className={cn(
           "h-7 w-7 text-destructive hover:bg-destructive/10 hover:text-destructive",
           className,
         )}
-        title="Marchează ca Agenție (blocklist + arhivă)"
+        title="Marchează ca Agenție (blocklist + arhivă + audit)"
         aria-label="Marchează ca Agenție"
       >
-        {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Building2 className="h-3.5 w-3.5" />}
+        {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Building2 className="h-3.5 w-3.5" />}
       </Button>
     );
   }
@@ -85,15 +127,15 @@ export function MarkAsAgencyButton({
       type="button"
       size={size}
       variant="outline"
-      disabled={disabled || loading}
+      disabled={disabled || pending}
       onClick={handleClick}
       className={cn(
         "gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive",
         className,
       )}
-      title="Marchează ca Agenție (blocklist + arhivă)"
+      title="Marchează ca Agenție (blocklist + arhivă + audit · 5s Undo)"
     >
-      {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Building2 className="h-3.5 w-3.5" />}
+      {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Building2 className="h-3.5 w-3.5" />}
       <span>{label ?? "Marchează Agenție"}</span>
     </Button>
   );
