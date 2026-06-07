@@ -789,6 +789,8 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   }, [enriched, detectionSettings?.enabled, detectionSettings?.suspicion_threshold, triggeredRef, qc]);
 
   const filtered = enriched.filter((p) => {
+    // Hide rejected by default unless toggle is on or user explicitly filters by "rejected".
+    if (p.lifecycle_status === "rejected" && !showRejected && statusFilter !== "rejected") return false;
     // Hide generic search/category pages; keep owner/private/person-physical results imported from platform searches.
     if (p.isGenericSearch) return false;
     if (isImportedFromPlatformSearch(p) && !hasOwnerFilterSignal(p)) return false;
