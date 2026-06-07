@@ -1566,7 +1566,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
                     const callLocked = isCallLocked(p);
                     return (
-                      <TableRow key={p.id}>
+                      <TableRow key={p.id} className={`transition-all duration-300 ${removingIds.has(p.id) ? "opacity-0 -translate-x-2 pointer-events-none" : ""}`}>
                         <TableCell className="hidden md:table-cell">
                           <div className={`text-2xl font-bold ${scoreColor}`}>{score}</div>
                           {p.ai_scored_at && <div className="text-[10px] text-muted-foreground">AI ✓</div>}
