@@ -981,6 +981,8 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
                       url={prospect.source_url}
                       contextLabel={`Dashboard · ${prospect.title?.slice(0, 60) || prospect.id}`}
                       invalidateKeys={[["admin-dashboard-prospect-contacts"]]}
+                      onMarked={() => hideOptimistic(prospect.id)}
+                      onUndo={() => restoreOptimistic(prospect.id)}
                     />
                   </div>
                 </div>
