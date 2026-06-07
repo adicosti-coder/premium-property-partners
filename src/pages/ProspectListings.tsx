@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -476,6 +477,8 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const { isAdmin, isLoading: adminLoading, error: adminError, recheck } = useAdminRole(user);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showRejected, setShowRejected] = useState<boolean>(false);
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
@@ -786,6 +789,8 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   }, [enriched, detectionSettings?.enabled, detectionSettings?.suspicion_threshold, triggeredRef, qc]);
 
   const filtered = enriched.filter((p) => {
+    // Hide rejected by default unless toggle is on or user explicitly filters by "rejected".
+    if (p.lifecycle_status === "rejected" && !showRejected && statusFilter !== "rejected") return false;
     // Hide generic search/category pages; keep owner/private/person-physical results imported from platform searches.
     if (p.isGenericSearch) return false;
     if (isImportedFromPlatformSearch(p) && !hasOwnerFilterSignal(p)) return false;
@@ -886,10 +891,23 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         return;
       }
 
-      // Optimistic remove from cache
-      qc.setQueryData<Prospect[]>(["prospect-listings", statusFilter, categoryFilter], (old) =>
-        (old || []).filter((row) => row.id !== p.id)
-      );
+      // Trigger fade-out animation, then remove from cache.
+      setRemovingIds((cur) => {
+        const next = new Set(cur);
+        next.add(p.id);
+        return next;
+      });
+      setTimeout(() => {
+        qc.setQueryData<Prospect[]>(["prospect-listings", statusFilter, categoryFilter], (old) =>
+          (old || []).filter((row) => row.id !== p.id)
+        );
+        setRemovingIds((cur) => {
+          if (!cur.has(p.id)) return cur;
+          const next = new Set(cur);
+          next.delete(p.id);
+          return next;
+        });
+      }, 300);
       sonnerToast.success("Anunț marcat ca renunțat", {
         description: label,
         action: {
@@ -1383,6 +1401,22 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 <SelectItem value="pending_credentials">⏸ Pending Credentials</SelectItem>
               </SelectContent>
             </Select>
+            <label
+              className="flex items-center gap-2 rounded-md border border-border bg-background px-3 h-10 text-xs font-medium cursor-pointer select-none whitespace-nowrap"
+              title="Anunțurile respinse sunt ascunse implicit (rămân în DB pentru a preveni re-importul)."
+            >
+              <Switch
+                checked={showRejected}
+                onCheckedChange={setShowRejected}
+                aria-label="Arată anunțurile respinse"
+              />
+              <span>
+                Arată respinse
+                <span className="ml-1 text-muted-foreground">
+                  ({enriched.filter((p) => p.lifecycle_status === "rejected").length})
+                </span>
+              </span>
+            </label>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger><SelectValue placeholder="Categorie" /></SelectTrigger>
               <SelectContent>
@@ -1548,7 +1582,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
                     const callLocked = isCallLocked(p);
                     return (
-                      <TableRow key={p.id}>
+                      <TableRow key={p.id} className={`transition-all duration-300 ${removingIds.has(p.id) ? "opacity-0 -translate-x-2 pointer-events-none" : ""}`}>
                         <TableCell className="hidden md:table-cell">
                           <div className={`text-2xl font-bold ${scoreColor}`}>{score}</div>
                           {p.ai_scored_at && <div className="text-[10px] text-muted-foreground">AI ✓</div>}
