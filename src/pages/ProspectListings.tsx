@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useSuperAdminRole } from "@/hooks/useSuperAdminRole";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -482,6 +483,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const { isAdmin, isLoading: adminLoading, error: adminError, recheck } = useAdminRole(user);
+  const { isSuperAdmin } = useSuperAdminRole(user);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showRejected, setShowRejected] = useState<boolean>(false);
@@ -1042,6 +1044,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const runResetPhoneCounters = async (
     targets: Array<{ id: string; admin_notes?: string | null }>,
   ) => {
+    if (!isSuperAdmin) {
+      sonnerToast.error("Acțiune restricționată: necesită rol SuperAdmin.");
+      return;
+    }
     if (targets.length === 0) {
       sonnerToast.warning("Nimic de resetat.");
       return;
@@ -1050,17 +1056,21 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     const tId = sonnerToast.loading(`Resetez contoare: 0/${targets.length}…`);
     let ok = 0;
     let fail = 0;
+    const okIds = new Set<string>();
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+    const stripFetchLines = (notes: string | null | undefined) =>
+      (notes ?? "")
+        .split("\n")
+        .filter((ln) => !/^\s*\[fetch-phone /.test(ln))
+        .join("\n")
+        .trim();
+
     for (let i = 0; i < targets.length; i++) {
       const p = targets[i];
       sonnerToast.loading(`Resetez contoare: ${i + 1}/${targets.length}…`, { id: tId });
       try {
-        const cleaned = (p.admin_notes ?? "")
-          .split("\n")
-          .filter((ln) => !/^\s*\[fetch-phone /.test(ln))
-          .join("\n")
-          .trim();
-        const note = `[${stamp}] reset phone-fetch counters (admin)`;
+        const cleaned = stripFetchLines(p.admin_notes);
+        const note = `[${stamp}] reset phone-fetch counters (super_admin)`;
         const nextNotes = [cleaned, note].filter(Boolean).join("\n");
         const { error } = await supabase
           .from("prospect_listings")
@@ -1068,6 +1078,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
           .eq("id", p.id);
         if (error) throw error;
         ok++;
+        okIds.add(p.id);
       } catch {
         fail++;
       }
@@ -1076,11 +1087,35 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       targets.map((t) => ({
         action: "prospect_phone_fetch_counters_reset",
         entity_id: t.id,
-        details: { source: "admin_ui", scope: resetCountersScope },
+        details: { source: "admin_ui", scope: resetCountersScope, actor: "super_admin" },
       })) as any,
     );
+
+    // Optimistic cache update — strip [fetch-phone …] lines on every cached
+    // prospect-listings query so contoarele apar instant 0/5 și butoanele
+    // inline de recuperare se reactivează fără refetch hard.
+    if (okIds.size > 0) {
+      qc.setQueriesData<any[]>({ queryKey: ["prospect-listings"] }, (old) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((row) =>
+          row && okIds.has(row.id)
+            ? { ...row, admin_notes: stripFetchLines(row.admin_notes) }
+            : row,
+        );
+      });
+    }
+
     sonnerToast.dismiss(tId);
-    sonnerToast.success(`♻️ Contoare resetate: ${ok}${fail ? ` · ${fail} erori` : ""}.`);
+    if (ok > 0) {
+      sonnerToast.success(
+        `♻️ ${ok} ${ok === 1 ? "anunț a revenit" : "anunțuri au revenit"} la 0/${MAX_PHONE_FETCH_ATTEMPTS}${fail ? ` · ${fail} erori` : ""}.`,
+        { duration: 5000 },
+      );
+    } else {
+      sonnerToast.error(`Nu s-a putut reseta niciun contor (${fail} erori).`);
+    }
+
+    // Background sync to confirm DB state.
     refetch();
     setBulkPending(null);
   };
@@ -1925,20 +1960,22 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 <CheckSquare className="h-3.5 w-3.5 text-blue-600" />
                 Selectează eligibili ({eligibleForPhoneRecovery.length})
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setResetCountersScope("exhausted");
-                  setConfirmResetCountersOpen(true);
-                }}
-                disabled={bulkPending !== null || exhaustedInFiltered.length === 0}
-                className="gap-1.5 h-8"
-                title="Resetează contoarele de încercări pentru toate anunțurile epuizate (5/5) din lista filtrată"
-              >
-                <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
-                Resetează contoare ({exhaustedInFiltered.length})
-              </Button>
+              {isSuperAdmin && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setResetCountersScope("exhausted");
+                    setConfirmResetCountersOpen(true);
+                  }}
+                  disabled={bulkPending !== null || exhaustedInFiltered.length === 0}
+                  className="gap-1.5 h-8"
+                  title="SuperAdmin · Resetează contoarele de încercări pentru toate anunțurile epuizate (5/5) din lista filtrată"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                  Resetează contoare ({exhaustedInFiltered.length})
+                </Button>
+              )}
               <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono pl-2 border-l border-border ml-1">
                 <kbd className="px-1.5 py-0.5 rounded border bg-muted">J</kbd>/<kbd className="px-1.5 py-0.5 rounded border bg-muted">K</kbd> nav
                 · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Space</kbd> select
@@ -2423,20 +2460,22 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 <CheckSquare className="h-3.5 w-3.5 text-blue-600" />
                 Eligibili ({eligibleForPhoneRecovery.length})
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setResetCountersScope("selected");
-                  setConfirmResetCountersOpen(true);
-                }}
-                disabled={bulkPending !== null}
-                className="gap-1.5"
-                title="Resetează contoarele de încercări (5/5) pentru anunțurile selectate"
-              >
-                <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
-                Reset contoare ({selectedIds.size})
-              </Button>
+              {isSuperAdmin && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setResetCountersScope("selected");
+                    setConfirmResetCountersOpen(true);
+                  }}
+                  disabled={bulkPending !== null}
+                  className="gap-1.5"
+                  title="SuperAdmin · Resetează contoarele de încercări (5/5) pentru anunțurile selectate"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                  Reset contoare ({selectedIds.size})
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"

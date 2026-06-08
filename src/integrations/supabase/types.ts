@@ -8792,7 +8792,7 @@ export type Database = {
     }
     Enums: {
       agency_keyword_type: "hard" | "soft" | "owner"
-      app_role: "admin" | "moderator" | "user" | "owner"
+      app_role: "admin" | "moderator" | "user" | "owner" | "super_admin"
       indexnow_actual_status: "pending" | "indexed" | "missing"
       lead_lifecycle_status:
         | "new"
@@ -8944,7 +8944,7 @@ export const Constants = {
   public: {
     Enums: {
       agency_keyword_type: ["hard", "soft", "owner"],
-      app_role: ["admin", "moderator", "user", "owner"],
+      app_role: ["admin", "moderator", "user", "owner", "super_admin"],
       indexnow_actual_status: ["pending", "indexed", "missing"],
       lead_lifecycle_status: [
         "new",
