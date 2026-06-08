@@ -554,20 +554,29 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [recoveringPhoneId, setRecoveringPhoneId] = useState<string | null>(null);
 
-  const handleRecoverPhone = async (p: { id: string; source_url: string | null }) => {
+  const handleRecoverPhone = async (p: { id: string; source_url: string | null; admin_notes?: string | null }) => {
     if (!p.source_url) {
       toast({ title: "Fără URL sursă", description: "Nu am de unde recupera telefonul.", variant: "destructive" });
       return;
     }
+    const prior = countPhoneFetchAttempts(p.admin_notes);
+    if (prior >= MAX_PHONE_FETCH_ATTEMPTS) {
+      sonnerToast.warning(`Limită atinsă (${prior}/${MAX_PHONE_FETCH_ATTEMPTS})`, {
+        description: "Acest anunț a epuizat încercările de forțare. Verifică manual sursa.",
+      });
+      return;
+    }
     setRecoveringPhoneId(p.id);
-    const loadingToast = sonnerToast.loading("Forțez extragere telefon (proxy stealth + UA rotation)…");
+    const loadingToast = sonnerToast.loading(`Forțez extragere telefon (${prior + 1}/${MAX_PHONE_FETCH_ATTEMPTS})…`);
     try {
       const { data, error } = await supabase.functions.invoke("prospect-listings-fetch-phone", {
         body: { prospect_id: p.id, max_attempts: 3 },
       });
       if (error) throw error;
       sonnerToast.dismiss(loadingToast);
-      if (data?.found) {
+      if (data?.limit_reached) {
+        sonnerToast.warning(`Limită atinsă (${data.prior_runs}/${data.limit})`);
+      } else if (data?.found) {
         sonnerToast.success(`📞 Telefon recuperat: ${data.phone}`, {
           description: `${data.attempts} încercări · proxy rezidențial`,
         });
@@ -576,6 +585,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         sonnerToast.warning("Niciun telefon găsit", {
           description: `${data?.attempts ?? "?"} încercări · sursa nu expune numărul${data?.lastError ? ` (${data.lastError})` : ""}`,
         });
+        refetch();
       }
     } catch (e: any) {
       sonnerToast.dismiss(loadingToast);
