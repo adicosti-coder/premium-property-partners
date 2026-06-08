@@ -2415,6 +2415,31 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
               <Button
                 size="sm"
                 variant="outline"
+                onClick={selectEligibleForPhoneRecovery}
+                disabled={bulkPending !== null || eligibleForPhoneRecovery.length === 0}
+                className="gap-1.5"
+                title="Adaugă în selecție anunțurile fără telefon valid și cu buget de încercări rămas"
+              >
+                <CheckSquare className="h-3.5 w-3.5 text-blue-600" />
+                Eligibili ({eligibleForPhoneRecovery.length})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setResetCountersScope("selected");
+                  setConfirmResetCountersOpen(true);
+                }}
+                disabled={bulkPending !== null}
+                className="gap-1.5"
+                title="Resetează contoarele de încercări (5/5) pentru anunțurile selectate"
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                Reset contoare ({selectedIds.size})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => {
                   const ids = filtered.filter((p) => selectedIds.has(p.id)).map((p) => p.id);
                   void runBulkRescore(ids);
