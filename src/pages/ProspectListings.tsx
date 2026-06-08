@@ -1913,12 +1913,39 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between gap-3 flex-wrap">
             <CardTitle className="text-base">{filtered.length} prospecte afișate</CardTitle>
-            <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
-              <kbd className="px-1.5 py-0.5 rounded border bg-muted">J</kbd>/<kbd className="px-1.5 py-0.5 rounded border bg-muted">K</kbd> nav
-              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Space</kbd> select
-              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">C</kbd> call
-              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">X</kbd> dismiss
-              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Esc</kbd> reset
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={selectEligibleForPhoneRecovery}
+                disabled={bulkPending !== null || eligibleForPhoneRecovery.length === 0}
+                className="gap-1.5 h-8"
+                title="Bifează doar anunțurile din lista curentă care n-au telefon valid și nu au atins limita 5/5"
+              >
+                <CheckSquare className="h-3.5 w-3.5 text-blue-600" />
+                Selectează eligibili ({eligibleForPhoneRecovery.length})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setResetCountersScope("exhausted");
+                  setConfirmResetCountersOpen(true);
+                }}
+                disabled={bulkPending !== null || exhaustedInFiltered.length === 0}
+                className="gap-1.5 h-8"
+                title="Resetează contoarele de încercări pentru toate anunțurile epuizate (5/5) din lista filtrată"
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                Resetează contoare ({exhaustedInFiltered.length})
+              </Button>
+              <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono pl-2 border-l border-border ml-1">
+                <kbd className="px-1.5 py-0.5 rounded border bg-muted">J</kbd>/<kbd className="px-1.5 py-0.5 rounded border bg-muted">K</kbd> nav
+                · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Space</kbd> select
+                · <kbd className="px-1.5 py-0.5 rounded border bg-muted">C</kbd> call
+                · <kbd className="px-1.5 py-0.5 rounded border bg-muted">X</kbd> dismiss
+                · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Esc</kbd> reset
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
