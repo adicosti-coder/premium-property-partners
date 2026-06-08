@@ -779,7 +779,9 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         !hasPhone &&
         scrapedTs > 0 &&
         (Date.now() - scrapedTs) > 14 * 24 * 60 * 60 * 1000;
-      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion, isStale };
+      const phoneFetchAttempts = countPhoneFetchAttempts(p.admin_notes);
+      const phoneFetchExhausted = phoneFetchAttempts >= MAX_PHONE_FETCH_ATTEMPTS;
+      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion, isStale, phoneFetchAttempts, phoneFetchExhausted };
     }),
     [prospects, phoneCounts]
   );
