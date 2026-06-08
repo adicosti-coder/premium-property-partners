@@ -2460,20 +2460,22 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 <CheckSquare className="h-3.5 w-3.5 text-blue-600" />
                 Eligibili ({eligibleForPhoneRecovery.length})
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setResetCountersScope("selected");
-                  setConfirmResetCountersOpen(true);
-                }}
-                disabled={bulkPending !== null}
-                className="gap-1.5"
-                title="Resetează contoarele de încercări (5/5) pentru anunțurile selectate"
-              >
-                <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
-                Reset contoare ({selectedIds.size})
-              </Button>
+              {isSuperAdmin && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setResetCountersScope("selected");
+                    setConfirmResetCountersOpen(true);
+                  }}
+                  disabled={bulkPending !== null}
+                  className="gap-1.5"
+                  title="SuperAdmin · Resetează contoarele de încercări (5/5) pentru anunțurile selectate"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                  Reset contoare ({selectedIds.size})
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"
