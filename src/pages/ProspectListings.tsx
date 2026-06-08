@@ -1746,6 +1746,13 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10 px-1 md:px-2">
+                      <Checkbox
+                        checked={allSelectedOnPage ? true : someSelectedOnPage ? "indeterminate" : false}
+                        onCheckedChange={toggleSelectAllVisible}
+                        aria-label="Selectează toate anunțurile filtrate"
+                      />
+                    </TableHead>
                     <TableHead className="hidden md:table-cell w-16">AI Score</TableHead>
                     <TableHead className="hidden lg:table-cell w-20">Geo SEO</TableHead>
                     <TableHead className="min-w-[108px] px-1 md:min-w-[280px] md:px-4">Anunț</TableHead>
@@ -1757,10 +1764,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
                   ) : filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Niciun prospect.</TableCell></TableRow>
-                  ) : filtered.map((p) => {
+                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Niciun prospect.</TableCell></TableRow>
+                  ) : filtered.map((p, idx) => {
                     const score = p.lead_score ?? p.score ?? 0;
                     const scoreColor = score > 80 ? "text-orange-600" : score > 60 ? "text-amber-600" : "text-muted-foreground";
                     const phoneInfo = getVisibleProspectPhoneInfo(p);
@@ -1771,8 +1778,25 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                     const urgency = p.urgency_level ?? p.ai_score_breakdown?.urgency_level;
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
                     const callLocked = isCallLocked(p);
+                    const isSelected = selectedIds.has(p.id);
+                    const isFocused = focusedIndex === idx;
                     return (
-                      <TableRow key={p.id} className={`transition-all duration-300 ${removingIds.has(p.id) ? "opacity-0 -translate-x-2 pointer-events-none" : ""}`}>
+                      <TableRow
+                        key={p.id}
+                        data-prospect-row={idx}
+                        className={`transition-all duration-300 ${
+                          removingIds.has(p.id) ? "opacity-0 -translate-x-2 pointer-events-none" : ""
+                        } ${isFocused ? "ring-2 ring-primary/60 ring-inset bg-primary/5" : ""} ${
+                          isSelected ? "bg-primary/5" : ""
+                        }`}
+                      >
+                        <TableCell className="px-1 md:px-2 align-top pt-3">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelectOne(p.id)}
+                            aria-label={`Selectează ${p.title || "anunț"}`}
+                          />
+                        </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <div className={`text-2xl font-bold ${scoreColor}`}>{score}</div>
                           {p.ai_scored_at && <div className="text-[10px] text-muted-foreground">AI ✓</div>}
