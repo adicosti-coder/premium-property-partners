@@ -2069,15 +2069,17 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                                 <>
                                   <button
                                     type="button"
-                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
-                                    disabled={recoveringPhoneId === p.id}
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-60"
-                                    title="Apasă butonul «Arată numărul» pe sursă și extrage telefonul"
+                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })}
+                                    disabled={recoveringPhoneId === p.id || p.phoneFetchExhausted}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={p.phoneFetchExhausted
+                                      ? `Limită atinsă (${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS}). Verifică manual sursa.`
+                                      : `Apasă butonul «Arată numărul» pe sursă și extrage telefonul (${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS})`}
                                   >
                                     {recoveringPhoneId === p.id
                                       ? <Loader2 className="h-3 w-3 animate-spin" />
                                       : <Sparkles className="h-3 w-3" />}
-                                    recuperează tel.
+                                    {p.phoneFetchExhausted ? `limită ${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS}` : "recuperează tel."}
                                   </button>
                                   <a
                                     href={p.source_url}
