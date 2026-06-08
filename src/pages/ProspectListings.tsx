@@ -2107,6 +2107,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                       : <RefreshCw className="h-3.5 w-3.5 text-blue-600" />}
                                     Forțează extragere telefon
+                                  </DropdownMenuItem>
+                                )}
+
+
 
                                 <DropdownMenuItem
                                   onClick={() => handleToggleProspectType(p)}
