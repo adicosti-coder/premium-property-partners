@@ -484,7 +484,14 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showRejected, setShowRejected] = useState<boolean>(false);
+  const [showStale, setShowStale] = useState<boolean>(false);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  // ── Bulk selection + keyboard navigation ────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
+  const [confirmKbdDismissId, setConfirmKbdDismissId] = useState<string | null>(null);
+  const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
