@@ -550,23 +550,32 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [recoveringPhoneId, setRecoveringPhoneId] = useState<string | null>(null);
 
-  const handleRecoverPhone = async (p: { id: string; source_url: string }) => {
+  const handleRecoverPhone = async (p: { id: string; source_url: string | null }) => {
     if (!p.source_url) {
       toast({ title: "Fără URL sursă", description: "Nu am de unde recupera telefonul.", variant: "destructive" });
       return;
     }
     setRecoveringPhoneId(p.id);
+    const loadingToast = sonnerToast.loading("Forțez extragere telefon (proxy stealth + UA rotation)…");
     try {
-      const { data, error } = await supabase.functions.invoke("prospect-recover-phone", { body: { prospect_id: p.id } });
+      const { data, error } = await supabase.functions.invoke("prospect-listings-fetch-phone", {
+        body: { prospect_id: p.id, max_attempts: 3 },
+      });
       if (error) throw error;
+      sonnerToast.dismiss(loadingToast);
       if (data?.found) {
-        toast({ title: "📞 Telefon recuperat", description: data.phone });
+        sonnerToast.success(`📞 Telefon recuperat: ${data.phone}`, {
+          description: `${data.attempts} încercări · proxy rezidențial`,
+        });
         refetch();
       } else {
-        toast({ title: "Niciun telefon găsit", description: "Sursa nu expune numărul nici după click.", variant: "destructive" });
+        sonnerToast.warning("Niciun telefon găsit", {
+          description: `${data?.attempts ?? "?"} încercări · sursa nu expune numărul${data?.lastError ? ` (${data.lastError})` : ""}`,
+        });
       }
     } catch (e: any) {
-      toast({ title: "Eroare recuperare", description: e?.message || String(e), variant: "destructive" });
+      sonnerToast.dismiss(loadingToast);
+      sonnerToast.error(`Eroare extragere: ${e?.message || String(e)}`);
     } finally {
       setRecoveringPhoneId(null);
     }
@@ -2087,6 +2096,21 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                                     : <Sparkles className="h-3.5 w-3.5" />}
                                   Re-scoring AI
                                 </DropdownMenuItem>
+
+                                {p.source_url && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
+                                    disabled={recoveringPhoneId === p.id}
+                                    className="gap-2 cursor-pointer"
+                                  >
+                                    {recoveringPhoneId === p.id
+                                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      : <RefreshCw className="h-3.5 w-3.5 text-blue-600" />}
+                                    Forțează extragere telefon
+                                  </DropdownMenuItem>
+                                )}
+
+
 
                                 <DropdownMenuItem
                                   onClick={() => handleToggleProspectType(p)}
