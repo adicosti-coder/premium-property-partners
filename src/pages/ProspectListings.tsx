@@ -2310,6 +2310,38 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                   : <Sparkles className="h-3.5 w-3.5" />}
                 Re-score ({selectedIds.size})
               </Button>
+              {(() => {
+                const eligible = filtered.filter(
+                  (p) =>
+                    selectedIds.has(p.id) &&
+                    !!p.source_url &&
+                    !getProspectPhone(p) &&
+                    !p.phoneFetchExhausted,
+                );
+                return (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      void runBulkRecoverPhones(
+                        eligible.map((p) => ({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })),
+                      );
+                    }}
+                    disabled={bulkPending !== null || eligible.length === 0}
+                    className="gap-1.5"
+                    title={
+                      eligible.length === 0
+                        ? "Niciun anunț selectat fără telefon (sau toate la limita 5/5)"
+                        : `Forțează extragere telefon pentru ${eligible.length} anunțuri (max 5/anunț, secvențial)`
+                    }
+                  >
+                    {bulkPending === "recover_phones"
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <RefreshCw className="h-3.5 w-3.5 text-blue-600" />}
+                    Recuperează telefoane ({eligible.length})
+                  </Button>
+                );
+              })()}
               <Button
                 size="sm"
                 variant="destructive"
