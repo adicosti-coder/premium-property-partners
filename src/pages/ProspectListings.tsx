@@ -1607,6 +1607,20 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 </span>
               </span>
             </label>
+            <label
+              className="flex items-center gap-2 rounded-md border border-border bg-background px-3 h-10 text-xs font-medium cursor-pointer select-none whitespace-nowrap"
+              title="Anunțurile fără telefon și mai vechi de 14 zile sunt ascunse automat (auto-stale). Cron-ul nocturn le arhivează definitiv."
+            >
+              <Switch
+                checked={showStale}
+                onCheckedChange={setShowStale}
+                aria-label="Arată anunțurile stale (fără telefon, >14 zile)"
+              />
+              <span>
+                🌫️ Arată stale
+                <span className="ml-1 text-muted-foreground">({staleCount})</span>
+              </span>
+            </label>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger><SelectValue placeholder="Categorie" /></SelectTrigger>
               <SelectContent>
