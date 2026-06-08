@@ -2161,14 +2161,19 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
                                 {p.source_url && (
                                   <DropdownMenuItem
-                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
-                                    disabled={recoveringPhoneId === p.id}
+                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })}
+                                    disabled={recoveringPhoneId === p.id || p.phoneFetchExhausted}
                                     className="gap-2 cursor-pointer"
+                                    title={p.phoneFetchExhausted
+                                      ? `Limită atinsă (${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS})`
+                                      : `Încercare ${p.phoneFetchAttempts + 1}/${MAX_PHONE_FETCH_ATTEMPTS}`}
                                   >
                                     {recoveringPhoneId === p.id
                                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                      : <RefreshCw className="h-3.5 w-3.5 text-blue-600" />}
-                                    Forțează extragere telefon
+                                      : <RefreshCw className={`h-3.5 w-3.5 ${p.phoneFetchExhausted ? "text-muted-foreground" : "text-blue-600"}`} />}
+                                    {p.phoneFetchExhausted
+                                      ? `Limită telefon ${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS}`
+                                      : `Forțează extragere telefon (${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS})`}
                                   </DropdownMenuItem>
                                 )}
 
