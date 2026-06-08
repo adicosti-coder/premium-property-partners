@@ -998,6 +998,95 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     setBulkPending(null);
   };
 
+  // ── Smart selection: auto-pick rows on current filtered view that
+  // still have phone-fetch budget (no valid phone + attempts < cap).
+  const eligibleForPhoneRecovery = useMemo(
+    () =>
+      filtered.filter(
+        (p) =>
+          !!p.source_url &&
+          !getProspectPhone(p) &&
+          countPhoneFetchAttempts(p.admin_notes) < MAX_PHONE_FETCH_ATTEMPTS,
+      ),
+    [filtered],
+  );
+
+  const exhaustedInFiltered = useMemo(
+    () =>
+      filtered.filter(
+        (p) => countPhoneFetchAttempts(p.admin_notes) >= MAX_PHONE_FETCH_ATTEMPTS,
+      ),
+    [filtered],
+  );
+
+  const selectEligibleForPhoneRecovery = () => {
+    if (eligibleForPhoneRecovery.length === 0) {
+      sonnerToast.info("Niciun anunț eligibil în lista curentă (toate au telefon valid sau au atins limita 5/5).");
+      return;
+    }
+    setSelectedIds((cur) => {
+      const next = new Set(cur);
+      eligibleForPhoneRecovery.forEach((p) => next.add(p.id));
+      return next;
+    });
+    sonnerToast.success(`✅ ${eligibleForPhoneRecovery.length} anunțuri eligibile selectate (cu buget 1–5/5).`);
+  };
+
+  // ── Reset phone-fetch attempt counters ────────────────────────────────────
+  // Strips every "[fetch-phone ...]" line from admin_notes so the
+  // MAX_PHONE_FETCH_ATTEMPTS cap is recalculated from scratch. Per-row update
+  // (each note is different) but chunked sequentially to avoid hammering DB.
+  const [confirmResetCountersOpen, setConfirmResetCountersOpen] = useState(false);
+  const [resetCountersScope, setResetCountersScope] = useState<"selected" | "exhausted">("selected");
+
+  const runResetPhoneCounters = async (
+    targets: Array<{ id: string; admin_notes?: string | null }>,
+  ) => {
+    if (targets.length === 0) {
+      sonnerToast.warning("Nimic de resetat.");
+      return;
+    }
+    setBulkPending("recover_phones");
+    const tId = sonnerToast.loading(`Resetez contoare: 0/${targets.length}…`);
+    let ok = 0;
+    let fail = 0;
+    const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+    for (let i = 0; i < targets.length; i++) {
+      const p = targets[i];
+      sonnerToast.loading(`Resetez contoare: ${i + 1}/${targets.length}…`, { id: tId });
+      try {
+        const cleaned = (p.admin_notes ?? "")
+          .split("\n")
+          .filter((ln) => !/^\s*\[fetch-phone /.test(ln))
+          .join("\n")
+          .trim();
+        const note = `[${stamp}] reset phone-fetch counters (admin)`;
+        const nextNotes = [cleaned, note].filter(Boolean).join("\n");
+        const { error } = await supabase
+          .from("prospect_listings")
+          .update({ admin_notes: nextNotes } as any)
+          .eq("id", p.id);
+        if (error) throw error;
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    void supabase.from("admin_audit_log").insert(
+      targets.map((t) => ({
+        action: "prospect_phone_fetch_counters_reset",
+        entity_id: t.id,
+        details: { source: "admin_ui", scope: resetCountersScope },
+      })) as any,
+    );
+    sonnerToast.dismiss(tId);
+    sonnerToast.success(`♻️ Contoare resetate: ${ok}${fail ? ` · ${fail} erori` : ""}.`);
+    refetch();
+    setBulkPending(null);
+  };
+
+
+
 
   // ── Keyboard shortcuts (J/K nav, C call, X dismiss-with-confirm) ────────────
   useEffect(() => {
