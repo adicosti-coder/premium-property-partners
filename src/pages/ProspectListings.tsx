@@ -833,6 +833,171 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     return blob.includes(search.toLowerCase());
   });
 
+  // ── Bulk selection helpers ──────────────────────────────────────────────────
+  const filteredIds = useMemo(() => filtered.map((p) => p.id), [filtered]);
+  const allSelectedOnPage =
+    filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id));
+  const someSelectedOnPage =
+    !allSelectedOnPage && filteredIds.some((id) => selectedIds.has(id));
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((cur) => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((cur) => {
+      const next = new Set(cur);
+      if (allSelectedOnPage) filteredIds.forEach((id) => next.delete(id));
+      else filteredIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  // Bulk: mark N prospects as expired (5s sonner Undo, then commit DB + audit).
+  const runBulkDismiss = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setBulkPending("dismiss");
+    // Optimistic fade-out
+    setRemovingIds((cur) => {
+      const next = new Set(cur);
+      ids.forEach((id) => next.add(id));
+      return next;
+    });
+    const noteLine = `[${new Date().toISOString().slice(0, 16).replace("T", " ")}] bulk dismissed (expired) · /admin/prospect-listings`;
+
+    try {
+      // Update in chunks of 200 to stay well under any query-size cap.
+      const chunks: string[][] = [];
+      for (let i = 0; i < ids.length; i += 200) chunks.push(ids.slice(i, i + 200));
+      for (const chunk of chunks) {
+        const { error } = await supabase
+          .from("prospect_listings")
+          .update({
+            is_active: false,
+            lifecycle_status: "expired",
+          } as any)
+          .in("id", chunk);
+        if (error) throw error;
+      }
+      // Best-effort: append a single audit row per id (fire-and-forget).
+      void supabase.from("admin_audit_log").insert(
+        ids.map((id) => ({
+          action: "prospect_dismissed_expired_bulk",
+          entity_id: id,
+          details: { source: "bulk", note: noteLine },
+        })) as any,
+      );
+
+      sonnerToast.success(`🗑️ ${ids.length} anunțuri marcate ca expirate.`);
+      clearSelection();
+      qc.invalidateQueries({ queryKey: ["prospect-listings"] });
+    } catch (e: any) {
+      sonnerToast.error(`Eroare la dismiss în masă: ${e?.message || e}`);
+      // Restore optimistic fade-out
+      setRemovingIds((cur) => {
+        const next = new Set(cur);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+    } finally {
+      setBulkPending(null);
+    }
+  };
+
+  // Bulk: re-score N prospects sequentially through the existing handleAIScore.
+  const runBulkRescore = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setBulkPending("rescore");
+    let ok = 0;
+    let fail = 0;
+    for (const id of ids) {
+      try {
+        await handleAIScore(id);
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    sonnerToast.success(`🤖 Re-scoring complet: ${ok} reușite${fail ? ` · ${fail} eșuate` : ""}.`);
+    setBulkPending(null);
+  };
+
+  // ── Keyboard shortcuts (J/K nav, C call, X dismiss-with-confirm) ────────────
+  useEffect(() => {
+    if (!isAdmin) return;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if ((e.target as HTMLElement)?.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (filtered.length === 0) return;
+      const k = e.key.toLowerCase();
+
+      if (k === "j" || e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex((cur) => Math.min(filtered.length - 1, (cur < 0 ? -1 : cur) + 1));
+        return;
+      }
+      if (k === "k" || e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIndex((cur) => Math.max(0, (cur < 0 ? 0 : cur) - 1));
+        return;
+      }
+      if (k === "escape") {
+        setFocusedIndex(-1);
+        clearSelection();
+        return;
+      }
+
+      const target = filtered[focusedIndex];
+      if (!target) return;
+
+      if (k === "c") {
+        e.preventDefault();
+        const callable = getProspectPhone(target);
+        if (!callable) {
+          sonnerToast.error("Lead-ul nu are telefon valid pentru apel.");
+          return;
+        }
+        if (isCallLocked(target)) {
+          sonnerToast.error("Apel blocat pe acest lead (deja sunat sau în curs).");
+          return;
+        }
+        void handleCall(target as any);
+        return;
+      }
+      if (k === "x") {
+        e.preventDefault();
+        setConfirmKbdDismissId(target.id);
+        return;
+      }
+      if (k === " " || k === "spacebar") {
+        e.preventDefault();
+        toggleSelectOne(target.id);
+        return;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, filtered, focusedIndex]);
+
+  // Auto-scroll focused row into view
+  useEffect(() => {
+    if (focusedIndex < 0) return;
+    const row = document.querySelector<HTMLElement>(`[data-prospect-row="${focusedIndex}"]`);
+    row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [focusedIndex]);
+
+
+
   // Available zones (from current data + canonical Timișoara list)
   const availableZones = useMemo(() => {
     const canonical = ["Centru", "Aradului", "Girocului", "Iosefin", "Fabric", "Elisabetin", "Cetate", "Dumbrăvița", "Lipovei", "Soarelui", "Complex Studențesc", "Take Ionescu", "Circumvalațiunii", "Torontalului", "Mehala"];
