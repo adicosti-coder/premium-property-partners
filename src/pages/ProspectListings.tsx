@@ -2172,6 +2172,134 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         </Card>
       </div>
 
+      {/* ── Bulk action bar (fixed bottom, appears when items selected) ── */}
+      {selectedIds.size > 0 && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md shadow-2xl animate-in slide-in-from-bottom-4"
+          role="region"
+          aria-label="Acțiuni colective pentru anunțurile selectate"
+        >
+          <div className="container mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3 text-sm">
+              <Badge variant="default" className="text-sm px-2.5 py-1">
+                {selectedIds.size} selectat{selectedIds.size === 1 ? "" : "e"}
+              </Badge>
+              <span className="hidden sm:inline text-muted-foreground">
+                Acțiunile colective afectează doar anunțurile bifate.
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={clearSelection}
+                disabled={bulkPending !== null}
+              >
+                Anulează selecția
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const ids = filtered.filter((p) => selectedIds.has(p.id)).map((p) => p.id);
+                  void runBulkRescore(ids);
+                }}
+                disabled={bulkPending !== null}
+                className="gap-1.5"
+              >
+                {bulkPending === "rescore"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Sparkles className="h-3.5 w-3.5" />}
+                Re-score ({selectedIds.size})
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setConfirmBulkDismissOpen(true)}
+                disabled={bulkPending !== null}
+                className="gap-1.5"
+              >
+                {bulkPending === "dismiss"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Trash2 className="h-3.5 w-3.5" />}
+                Renunță ({selectedIds.size})
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm bulk dismiss ─────────────────────────────────────────── */}
+      <AlertDialog open={confirmBulkDismissOpen} onOpenChange={setConfirmBulkDismissOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Renunță în masă la {selectedIds.size} anunțuri?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Anunțurile vor fi marcate ca <strong>expirate</strong> și ascunse din listă.</p>
+                <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                  <div>📦 Rămân în baza de date (nu se șterg) — previn re-import scraper.</div>
+                  <div>📝 Se înregistrează în <code className="bg-background px-1 rounded">admin_audit_log</code> per ID.</div>
+                  <div>↩️ Pentru anulare individuală: filtrează după „expired" și folosește meniul ⋮.</div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const ids = filtered.filter((p) => selectedIds.has(p.id)).map((p) => p.id);
+                void runBulkDismiss(ids);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Da, renunță la {selectedIds.size}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Confirm keyboard X dismiss (single row) ──────────────────────── */}
+      <AlertDialog
+        open={confirmKbdDismissId !== null}
+        onOpenChange={(o) => { if (!o) setConfirmKbdDismissId(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Renunță la acest anunț?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {(() => {
+                const t = filtered.find((p) => p.id === confirmKbdDismissId);
+                return t
+                  ? `„${(t.title || "anunț").slice(0, 80)}" va fi marcat ca expirat și ascuns din listă.`
+                  : "Anunțul va fi marcat ca expirat și ascuns din listă.";
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmKbdDismissId) void runBulkDismiss([confirmKbdDismissId]);
+                setConfirmKbdDismissId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Da, renunță
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
+
       <AlertDialog open={campaignOpen} onOpenChange={setCampaignOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
