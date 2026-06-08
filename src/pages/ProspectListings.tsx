@@ -954,6 +954,50 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     setBulkPending(null);
   };
 
+  // Bulk: force-fetch phones for selected prospects without a usable number
+  // and not yet at the 5-attempt cap. Sequential to protect the residential proxy pool.
+  const runBulkRecoverPhones = async (
+    candidates: Array<{ id: string; source_url: string | null; admin_notes?: string | null }>
+  ) => {
+    const eligible = candidates.filter(
+      (p) => !!p.source_url && countPhoneFetchAttempts(p.admin_notes) < MAX_PHONE_FETCH_ATTEMPTS,
+    );
+    if (eligible.length === 0) {
+      sonnerToast.warning("Niciun anunț eligibil (toate au telefon valid sau au atins limita 5/5).");
+      return;
+    }
+    setBulkPending("recover_phones");
+    let recovered = 0;
+    let empty = 0;
+    let limit = 0;
+    let fail = 0;
+    const tId = sonnerToast.loading(`Recuperez telefoane: 0/${eligible.length}…`);
+    for (let i = 0; i < eligible.length; i++) {
+      const p = eligible[i];
+      sonnerToast.loading(`Recuperez telefoane: ${i + 1}/${eligible.length}…`, { id: tId });
+      try {
+        const { data, error } = await supabase.functions.invoke("prospect-listings-fetch-phone", {
+          body: { prospect_id: p.id, max_attempts: 3 },
+        });
+        if (error) throw error;
+        if (data?.limit_reached) limit++;
+        else if (data?.found) recovered++;
+        else empty++;
+      } catch {
+        fail++;
+      }
+      // Small breather between calls — keeps residential pool happy.
+      if (i < eligible.length - 1) await new Promise((r) => setTimeout(r, 800));
+    }
+    sonnerToast.dismiss(tId);
+    sonnerToast.success(
+      `📞 Bulk telefoane: ${recovered} recuperate · ${empty} fără rezultat${limit ? ` · ${limit} la limită` : ""}${fail ? ` · ${fail} erori` : ""}`,
+    );
+    refetch();
+    setBulkPending(null);
+  };
+
+
   // ── Keyboard shortcuts (J/K nav, C call, X dismiss-with-confirm) ────────────
   useEffect(() => {
     if (!isAdmin) return;
