@@ -488,6 +488,11 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   // ── Bulk selection + keyboard navigation ────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Hard cap on manual "force-fetch phone" runs per prospect (matches edge function).
+  const MAX_PHONE_FETCH_ATTEMPTS = 5;
+  const countPhoneFetchAttempts = (notes: string | null | undefined): number =>
+    ((notes ?? "").match(/\[fetch-phone /g) ?? []).length;
+  const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
   const [confirmKbdDismissId, setConfirmKbdDismissId] = useState<string | null>(null);
