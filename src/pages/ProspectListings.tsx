@@ -18,9 +18,13 @@ import { toast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw, Clock,
-  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap, Trash2, ShieldAlert,
+  TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap, Trash2, ShieldAlert, MoreVertical,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/admin/AgencyExplainerDialog";
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
@@ -1789,21 +1793,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                               )}
                             </div>
                           )}
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={p.isAgency ? "outline" : "secondary"}
-                            onClick={() => handleToggleProspectType(p)}
-                            className={`mt-1.5 h-7 text-[10px] sm:text-xs gap-1 px-2 ${
-                              p.isAgency
-                                ? "border-green-500 text-green-700 hover:bg-green-50 dark:text-green-300 dark:hover:bg-green-950/30"
-                                : "border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
-                            }`}
-                            title="Schimbă clasificarea (proprietar / agenție)"
-                          >
-                            <span className="sm:hidden">{p.isAgency ? "🏠 Prop." : "🏢 Ag."}</span>
-                            <span className="hidden sm:inline">{p.isAgency ? "🏠 Marchează ca Proprietar" : "🏢 Marchează ca Agenție"}</span>
-                          </Button>
+                          {/* Clasificarea (proprietar/agenție) a fost mutată în meniul «⋮ Acțiuni» pentru a preveni tap-uri accidentale pe mobil. */}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
@@ -1811,85 +1801,133 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                           </Badge>
                           {p.followup_sent_at && <div className="text-[10px] text-green-600 mt-1">WA ✓</div>}
                         </TableCell>
-                        <TableCell className="text-right space-y-1 px-2 md:px-4">
-                          <div className="flex flex-col gap-1 items-end">
+                        <TableCell className="text-right px-2 md:px-4">
+                          <div className="flex flex-col gap-1.5 items-end">
+                            {/* Acțiune primară — singura mare/colorată, pentru triere rapidă */}
                             <Button
                               size="sm"
                               variant={score > 80 ? "default" : "outline"}
                               onClick={() => handleCall(p)}
                               disabled={!callablePhone || callingId === p.id || callLocked}
-                              className="w-9 sm:w-full px-2 text-[10px] sm:text-xs"
+                              className="w-full min-h-[40px] px-2 text-[11px] sm:text-xs font-medium"
+                              title={callablePhone ? "Pornește apel AI (Andrei)" : "Nu există telefon valid"}
                             >
-                              {callingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Phone className="h-3 w-3 mr-1" />}
-                              <span className="hidden sm:inline">Apelează cu AI</span>
+                              {callingId === p.id
+                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                : <><Phone className="h-3.5 w-3.5 mr-1" /><span>Apelează AI</span></>}
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleAIScore(p.id)}
-                              disabled={scoringId === p.id}
-                              className="w-9 sm:w-full px-2 text-xs"
-                            >
-                              {scoringId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                              <span className="hidden sm:inline">Re-scoring AI</span>
-                            </Button>
-                            <DismissExpiredButton
-                              id={p.id}
-                              title={p.title}
-                              reason="expired"
-                              contextLabel="/admin/prospect-listings"
-                              className="w-9 sm:w-full px-2 text-[10px] sm:text-xs"
-                              onDismissed={() => {
-                                setRemovingIds((cur) => {
-                                  const next = new Set(cur);
-                                  next.add(p.id);
-                                  return next;
-                                });
-                              }}
-                              onUndo={() => {
-                                setRemovingIds((cur) => {
-                                  if (!cur.has(p.id)) return cur;
-                                  const next = new Set(cur);
-                                  next.delete(p.id);
-                                  return next;
-                                });
-                              }}
-                              invalidateKeys={[["prospect-listings", statusFilter, categoryFilter]]}
-                            />
 
-                            <div className="hidden sm:flex items-center gap-2 w-full justify-end">
-                              <AuditLogViewer
-                                entityType="prospect_listing"
-                                entityId={p.id}
-                                title={`Istoric: ${(p.title || "lead").slice(0, 40)}`}
-                                trigger={
-                                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Istoric lead">
-                                    <History className="h-3.5 w-3.5" />
-                                  </Button>
-                                }
-                              />
-                              <div className="flex flex-col items-end gap-0.5">
-                                <a href={p.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline flex items-center gap-1">
-                                  {p.source_platform || "Sursă"} <ExternalLink className="h-3 w-3" />
-                                </a>
-                                <Badge
-                                  variant="outline"
-                                  className="text-[9px] py-0 px-1 border-emerald-400 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30"
-                                  title="Filtru aplicat global: doar Proprietari / Persoane fizice / Privați"
+                            {/* Toate celelalte acțiuni (inclusiv distructive) — în spatele unui meniu, 2 tap-uri intenționate */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="w-full min-h-[36px] gap-1.5 text-muted-foreground hover:text-foreground"
+                                  title="Mai multe acțiuni"
+                                  aria-label="Mai multe acțiuni"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
-                                  👤 Doar Proprietari
-                                </Badge>
-                                {(p.search_keywords?.length ?? 0) > 0 && (
-                                  <span
-                                    className="text-[9px] text-muted-foreground font-mono max-w-[160px] truncate"
-                                    title={`Filtre căutare: ${p.search_keywords!.join(" • ")}`}
-                                  >
-                                    🔎 {p.search_keywords!.slice(0, 2).join(", ")}
-                                    {p.search_keywords!.length > 2 ? ` +${p.search_keywords!.length - 2}` : ""}
-                                  </span>
+                                  <MoreVertical className="h-4 w-4" />
+                                  <span className="text-[11px] sm:text-xs">Acțiuni</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-56">
+                                <DropdownMenuLabel className="text-[11px] text-muted-foreground">
+                                  Lead: {(p.title || "—").slice(0, 28)}
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuItem
+                                  onClick={() => handleAIScore(p.id)}
+                                  disabled={scoringId === p.id}
+                                  className="gap-2 cursor-pointer"
+                                >
+                                  {scoringId === p.id
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    : <Sparkles className="h-3.5 w-3.5" />}
+                                  Re-scoring AI
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onClick={() => handleToggleProspectType(p)}
+                                  className="gap-2 cursor-pointer"
+                                >
+                                  {p.isAgency
+                                    ? <><Home className="h-3.5 w-3.5 text-green-600" /> Marchează ca Proprietar</>
+                                    : <><Building2 className="h-3.5 w-3.5 text-amber-600" /> Marchează ca Agenție</>}
+                                </DropdownMenuItem>
+
+                                {p.source_url && (
+                                  <DropdownMenuItem asChild>
+                                    <a
+                                      href={p.source_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="gap-2 cursor-pointer flex items-center"
+                                    >
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                      Deschide sursa ({p.source_platform || "anunț"})
+                                    </a>
+                                  </DropdownMenuItem>
                                 )}
-                              </div>
-                            </div>
+
+                                <DropdownMenuSeparator />
+
+                                {/* Zonă distructivă — vizual separată */}
+                                <div className="px-1 py-1">
+                                  <DismissExpiredButton
+                                    id={p.id}
+                                    title={p.title}
+                                    reason="expired"
+                                    contextLabel="/admin/prospect-listings"
+                                    className="w-full justify-start min-h-[36px]"
+                                    label="Renunță (expirat)"
+                                    onDismissed={() => {
+                                      setRemovingIds((cur) => {
+                                        const next = new Set(cur);
+                                        next.add(p.id);
+                                        return next;
+                                      });
+                                    }}
+                                    onUndo={() => {
+                                      setRemovingIds((cur) => {
+                                        if (!cur.has(p.id)) return cur;
+                                        const next = new Set(cur);
+                                        next.delete(p.id);
+                                        return next;
+                                      });
+                                    }}
+                                    invalidateKeys={[["prospect-listings", statusFilter, categoryFilter]]}
+                                  />
+                                </div>
+
+                                <DropdownMenuSeparator />
+
+                                <div className="px-2 py-1">
+                                  <AuditLogViewer
+                                    entityType="prospect_listing"
+                                    entityId={p.id}
+                                    title={`Istoric: ${(p.title || "lead").slice(0, 40)}`}
+                                    trigger={
+                                      <Button size="sm" variant="ghost" className="w-full justify-start gap-2 h-8">
+                                        <History className="h-3.5 w-3.5" />
+                                        Istoric acțiuni
+                                      </Button>
+                                    }
+                                  />
+                                </div>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            {/* Badge informativ — vizibil doar pe desktop, fără să încarce mobilul */}
+                            <Badge
+                              variant="outline"
+                              className="hidden sm:inline-flex text-[9px] py-0 px-1 border-emerald-400 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30"
+                              title="Filtru aplicat global: doar Proprietari / Persoane fizice / Privați"
+                            >
+                              👤 Doar Proprietari
+                            </Badge>
                           </div>
                         </TableCell>
                       </TableRow>
