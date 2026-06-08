@@ -1793,21 +1793,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                               )}
                             </div>
                           )}
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={p.isAgency ? "outline" : "secondary"}
-                            onClick={() => handleToggleProspectType(p)}
-                            className={`mt-1.5 h-7 text-[10px] sm:text-xs gap-1 px-2 ${
-                              p.isAgency
-                                ? "border-green-500 text-green-700 hover:bg-green-50 dark:text-green-300 dark:hover:bg-green-950/30"
-                                : "border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
-                            }`}
-                            title="Schimbă clasificarea (proprietar / agenție)"
-                          >
-                            <span className="sm:hidden">{p.isAgency ? "🏠 Prop." : "🏢 Ag."}</span>
-                            <span className="hidden sm:inline">{p.isAgency ? "🏠 Marchează ca Proprietar" : "🏢 Marchează ca Agenție"}</span>
-                          </Button>
+                          {/* Clasificarea (proprietar/agenție) a fost mutată în meniul «⋮ Acțiuni» pentru a preveni tap-uri accidentale pe mobil. */}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
