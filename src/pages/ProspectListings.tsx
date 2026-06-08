@@ -1044,6 +1044,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const runResetPhoneCounters = async (
     targets: Array<{ id: string; admin_notes?: string | null }>,
   ) => {
+    if (!isSuperAdmin) {
+      sonnerToast.error("Acțiune restricționată: necesită rol SuperAdmin.");
+      return;
+    }
     if (targets.length === 0) {
       sonnerToast.warning("Nimic de resetat.");
       return;
@@ -1052,17 +1056,21 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     const tId = sonnerToast.loading(`Resetez contoare: 0/${targets.length}…`);
     let ok = 0;
     let fail = 0;
+    const okIds = new Set<string>();
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+    const stripFetchLines = (notes: string | null | undefined) =>
+      (notes ?? "")
+        .split("\n")
+        .filter((ln) => !/^\s*\[fetch-phone /.test(ln))
+        .join("\n")
+        .trim();
+
     for (let i = 0; i < targets.length; i++) {
       const p = targets[i];
       sonnerToast.loading(`Resetez contoare: ${i + 1}/${targets.length}…`, { id: tId });
       try {
-        const cleaned = (p.admin_notes ?? "")
-          .split("\n")
-          .filter((ln) => !/^\s*\[fetch-phone /.test(ln))
-          .join("\n")
-          .trim();
-        const note = `[${stamp}] reset phone-fetch counters (admin)`;
+        const cleaned = stripFetchLines(p.admin_notes);
+        const note = `[${stamp}] reset phone-fetch counters (super_admin)`;
         const nextNotes = [cleaned, note].filter(Boolean).join("\n");
         const { error } = await supabase
           .from("prospect_listings")
@@ -1070,6 +1078,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
           .eq("id", p.id);
         if (error) throw error;
         ok++;
+        okIds.add(p.id);
       } catch {
         fail++;
       }
@@ -1078,11 +1087,35 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       targets.map((t) => ({
         action: "prospect_phone_fetch_counters_reset",
         entity_id: t.id,
-        details: { source: "admin_ui", scope: resetCountersScope },
+        details: { source: "admin_ui", scope: resetCountersScope, actor: "super_admin" },
       })) as any,
     );
+
+    // Optimistic cache update — strip [fetch-phone …] lines on every cached
+    // prospect-listings query so contoarele apar instant 0/5 și butoanele
+    // inline de recuperare se reactivează fără refetch hard.
+    if (okIds.size > 0) {
+      qc.setQueriesData<any[]>({ queryKey: ["prospect-listings"] }, (old) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((row) =>
+          row && okIds.has(row.id)
+            ? { ...row, admin_notes: stripFetchLines(row.admin_notes) }
+            : row,
+        );
+      });
+    }
+
     sonnerToast.dismiss(tId);
-    sonnerToast.success(`♻️ Contoare resetate: ${ok}${fail ? ` · ${fail} erori` : ""}.`);
+    if (ok > 0) {
+      sonnerToast.success(
+        `♻️ ${ok} ${ok === 1 ? "anunț a revenit" : "anunțuri au revenit"} la 0/${MAX_PHONE_FETCH_ATTEMPTS}${fail ? ` · ${fail} erori` : ""}.`,
+        { duration: 5000 },
+      );
+    } else {
+      sonnerToast.error(`Nu s-a putut reseta niciun contor (${fail} erori).`);
+    }
+
+    // Background sync to confirm DB state.
     refetch();
     setBulkPending(null);
   };
