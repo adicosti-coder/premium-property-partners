@@ -492,11 +492,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const MAX_PHONE_FETCH_ATTEMPTS = 5;
   const countPhoneFetchAttempts = (notes: string | null | undefined): number =>
     ((notes ?? "").match(/\[fetch-phone /g) ?? []).length;
-  const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
   const [confirmKbdDismissId, setConfirmKbdDismissId] = useState<string | null>(null);
-  const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | null>(null);
+  const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | "recover_phones" | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
