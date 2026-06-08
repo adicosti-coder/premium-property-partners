@@ -1960,20 +1960,22 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 <CheckSquare className="h-3.5 w-3.5 text-blue-600" />
                 Selectează eligibili ({eligibleForPhoneRecovery.length})
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setResetCountersScope("exhausted");
-                  setConfirmResetCountersOpen(true);
-                }}
-                disabled={bulkPending !== null || exhaustedInFiltered.length === 0}
-                className="gap-1.5 h-8"
-                title="Resetează contoarele de încercări pentru toate anunțurile epuizate (5/5) din lista filtrată"
-              >
-                <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
-                Resetează contoare ({exhaustedInFiltered.length})
-              </Button>
+              {isSuperAdmin && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setResetCountersScope("exhausted");
+                    setConfirmResetCountersOpen(true);
+                  }}
+                  disabled={bulkPending !== null || exhaustedInFiltered.length === 0}
+                  className="gap-1.5 h-8"
+                  title="SuperAdmin · Resetează contoarele de încercări pentru toate anunțurile epuizate (5/5) din lista filtrată"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                  Resetează contoare ({exhaustedInFiltered.length})
+                </Button>
+              )}
               <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono pl-2 border-l border-border ml-1">
                 <kbd className="px-1.5 py-0.5 rounded border bg-muted">J</kbd>/<kbd className="px-1.5 py-0.5 rounded border bg-muted">K</kbd> nav
                 · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Space</kbd> select
