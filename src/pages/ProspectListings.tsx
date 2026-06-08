@@ -747,13 +747,23 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       const phoneKey = getProspectPhone(p) || "";
       const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
       const suspicion = computeAgencySuspicion(p, phoneCount);
-      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion };
+      // Stale = no usable phone + scraped_at older than 14 days (mirrors the
+      // pg_cron 'auto-archive-stale-prospects' rule, so the UI hides them
+      // even before the next nightly run).
+      const hasPhone = !!phoneKey;
+      const scrapedTs = p.scraped_at ? new Date(p.scraped_at).getTime() : 0;
+      const isStale =
+        !hasPhone &&
+        scrapedTs > 0 &&
+        (Date.now() - scrapedTs) > 14 * 24 * 60 * 60 * 1000;
+      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion, isStale };
     }),
     [prospects, phoneCounts]
   );
 
   // Count agencies before filtering, so we can show "X agenții ascunse"
   const agencyCount = useMemo(() => enriched.filter((p) => p.isAgency).length, [enriched]);
+  const staleCount = useMemo(() => enriched.filter((p) => p.isStale).length, [enriched]);
 
   // ─── AUTO-BLACKLIST ──────────────────────────────────────────────
   // When a prospect's suspicion crosses the configured threshold, fire the
