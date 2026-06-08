@@ -191,10 +191,18 @@ const NotificationBell = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={clearAllNotifications}
+                onClick={() => {
+                  if (window.confirm(language === "ro"
+                    ? "Sigur vrei să ștergi toate notificările? Acțiunea este definitivă."
+                    : "Are you sure you want to clear all notifications? This cannot be undone.")) {
+                    clearAllNotifications();
+                  }
+                }}
                 className="text-xs text-muted-foreground hover:text-destructive h-7 px-2"
+                aria-label={t.clearAll}
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-3 h-3 mr-1" />
+                {t.clearAll}
               </Button>
             )}
           </div>
