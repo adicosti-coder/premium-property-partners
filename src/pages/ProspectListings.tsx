@@ -2535,6 +2535,59 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* ── Confirm reset phone-fetch counters ──────────────────────────── */}
+      <AlertDialog open={confirmResetCountersOpen} onOpenChange={setConfirmResetCountersOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <RotateCcw className="h-5 w-5 text-amber-600" />
+              Resetează contoarele de încercări?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                {(() => {
+                  const targets = resetCountersScope === "selected"
+                    ? filtered.filter((p) => selectedIds.has(p.id))
+                    : exhaustedInFiltered;
+                  return (
+                    <>
+                      <p>
+                        Vor fi resetate contoarele de extragere telefon pentru{" "}
+                        <strong>{targets.length}</strong>{" "}
+                        {resetCountersScope === "selected" ? "anunțuri selectate" : "anunțuri epuizate (5/5) din lista filtrată"}.
+                      </p>
+                      <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                        <div>♻️ Bugetul revine la <strong>0/5</strong> — anunțul redevine eligibil pentru forțare telefon.</div>
+                        <div>📝 Liniile <code>[fetch-phone …]</code> din notițe sunt curățate, restul notițelor rămân.</div>
+                        <div>🛡️ Se înregistrează în <code>admin_audit_log</code> per ID.</div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const targets = resetCountersScope === "selected"
+                  ? filtered.filter((p) => selectedIds.has(p.id))
+                  : exhaustedInFiltered;
+                void runResetPhoneCounters(
+                  targets.map((p) => ({ id: p.id, admin_notes: p.admin_notes })),
+                );
+              }}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              <RotateCcw className="h-4 w-4 mr-1" /> Da, resetează
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
+
       {/* ── Confirm keyboard X dismiss (single row) ──────────────────────── */}
       <AlertDialog
         open={confirmKbdDismissId !== null}
