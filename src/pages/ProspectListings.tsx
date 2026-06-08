@@ -26,6 +26,7 @@ import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/a
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
 import { ProspectPersonaSnapshot } from "@/components/admin/ProspectPersonaSnapshot";
 import SEOHead from "@/components/SEOHead";
+import { DismissExpiredButton } from "@/components/admin/DismissExpiredButton";
 import Header from "@/components/Header";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import { useAgencyDetectionSettings } from "@/hooks/useAgencyDetectionSettings";
