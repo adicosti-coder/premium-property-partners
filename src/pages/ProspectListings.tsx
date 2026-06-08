@@ -1752,8 +1752,15 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
         {/* Table */}
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between gap-3 flex-wrap">
             <CardTitle className="text-base">{filtered.length} prospecte afișate</CardTitle>
+            <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+              <kbd className="px-1.5 py-0.5 rounded border bg-muted">J</kbd>/<kbd className="px-1.5 py-0.5 rounded border bg-muted">K</kbd> nav
+              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Space</kbd> select
+              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">C</kbd> call
+              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">X</kbd> dismiss
+              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Esc</kbd> reset
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
