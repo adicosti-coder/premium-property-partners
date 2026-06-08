@@ -2022,6 +2022,15 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
                             {p.lifecycle_status === "pending_credentials" ? "⏸ pending" : p.lifecycle_status}
                           </Badge>
+                          {p.isStale && (
+                            <Badge
+                              variant="outline"
+                              className="mt-1 text-[10px] py-0 px-1.5 border-slate-300 text-slate-500 bg-slate-50 dark:bg-slate-900/30"
+                              title="Fără telefon valid și mai vechi de 14 zile. Va fi arhivat automat la următorul cron nocturn."
+                            >
+                              🌫️ stale
+                            </Badge>
+                          )}
                           {p.followup_sent_at && <div className="text-[10px] text-green-600 mt-1">WA ✓</div>}
                         </TableCell>
                         <TableCell className="text-right px-2 md:px-4">
