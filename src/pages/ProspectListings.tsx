@@ -2097,6 +2097,17 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                                   Re-scoring AI
                                 </DropdownMenuItem>
 
+                                {p.source_url && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
+                                    disabled={recoveringPhoneId === p.id}
+                                    className="gap-2 cursor-pointer"
+                                  >
+                                    {recoveringPhoneId === p.id
+                                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      : <RefreshCw className="h-3.5 w-3.5 text-blue-600" />}
+                                    Forțează extragere telefon
+
                                 <DropdownMenuItem
                                   onClick={() => handleToggleProspectType(p)}
                                   className="gap-2 cursor-pointer"
