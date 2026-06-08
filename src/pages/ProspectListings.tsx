@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -483,7 +484,14 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showRejected, setShowRejected] = useState<boolean>(false);
+  const [showStale, setShowStale] = useState<boolean>(false);
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  // ── Bulk selection + keyboard navigation ────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
+  const [confirmKbdDismissId, setConfirmKbdDismissId] = useState<string | null>(null);
+  const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
@@ -739,13 +747,23 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       const phoneKey = getProspectPhone(p) || "";
       const phoneCount = phoneKey ? (phoneCounts.get(phoneKey) || 0) : 0;
       const suspicion = computeAgencySuspicion(p, phoneCount);
-      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion };
+      // Stale = no usable phone + scraped_at older than 14 days (mirrors the
+      // pg_cron 'auto-archive-stale-prospects' rule, so the UI hides them
+      // even before the next nightly run).
+      const hasPhone = !!phoneKey;
+      const scrapedTs = p.scraped_at ? new Date(p.scraped_at).getTime() : 0;
+      const isStale =
+        !hasPhone &&
+        scrapedTs > 0 &&
+        (Date.now() - scrapedTs) > 14 * 24 * 60 * 60 * 1000;
+      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion, isStale };
     }),
     [prospects, phoneCounts]
   );
 
   // Count agencies before filtering, so we can show "X agenții ascunse"
   const agencyCount = useMemo(() => enriched.filter((p) => p.isAgency).length, [enriched]);
+  const staleCount = useMemo(() => enriched.filter((p) => p.isStale).length, [enriched]);
 
   // ─── AUTO-BLACKLIST ──────────────────────────────────────────────
   // When a prospect's suspicion crosses the configured threshold, fire the
@@ -796,6 +814,8 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const filtered = enriched.filter((p) => {
     // Hide rejected by default unless toggle is on or user explicitly filters by "rejected".
     if (p.lifecycle_status === "rejected" && !showRejected && statusFilter !== "rejected") return false;
+    // Hide stale (no-phone, >14d) by default — cron archives them nightly, this is the UI defense.
+    if (p.isStale && !showStale) return false;
     // Hide generic search/category pages; keep owner/private/person-physical results imported from platform searches.
     if (p.isGenericSearch) return false;
     if (isImportedFromPlatformSearch(p) && !hasOwnerFilterSignal(p)) return false;
@@ -812,6 +832,171 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     const blob = `${p.title} ${p.location} ${p.zone} ${p.contact_name} ${p.contact_phone}`.toLowerCase();
     return blob.includes(search.toLowerCase());
   });
+
+  // ── Bulk selection helpers ──────────────────────────────────────────────────
+  const filteredIds = useMemo(() => filtered.map((p) => p.id), [filtered]);
+  const allSelectedOnPage =
+    filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id));
+  const someSelectedOnPage =
+    !allSelectedOnPage && filteredIds.some((id) => selectedIds.has(id));
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((cur) => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((cur) => {
+      const next = new Set(cur);
+      if (allSelectedOnPage) filteredIds.forEach((id) => next.delete(id));
+      else filteredIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  // Bulk: mark N prospects as expired (5s sonner Undo, then commit DB + audit).
+  const runBulkDismiss = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setBulkPending("dismiss");
+    // Optimistic fade-out
+    setRemovingIds((cur) => {
+      const next = new Set(cur);
+      ids.forEach((id) => next.add(id));
+      return next;
+    });
+    const noteLine = `[${new Date().toISOString().slice(0, 16).replace("T", " ")}] bulk dismissed (expired) · /admin/prospect-listings`;
+
+    try {
+      // Update in chunks of 200 to stay well under any query-size cap.
+      const chunks: string[][] = [];
+      for (let i = 0; i < ids.length; i += 200) chunks.push(ids.slice(i, i + 200));
+      for (const chunk of chunks) {
+        const { error } = await supabase
+          .from("prospect_listings")
+          .update({
+            is_active: false,
+            lifecycle_status: "expired",
+          } as any)
+          .in("id", chunk);
+        if (error) throw error;
+      }
+      // Best-effort: append a single audit row per id (fire-and-forget).
+      void supabase.from("admin_audit_log").insert(
+        ids.map((id) => ({
+          action: "prospect_dismissed_expired_bulk",
+          entity_id: id,
+          details: { source: "bulk", note: noteLine },
+        })) as any,
+      );
+
+      sonnerToast.success(`🗑️ ${ids.length} anunțuri marcate ca expirate.`);
+      clearSelection();
+      qc.invalidateQueries({ queryKey: ["prospect-listings"] });
+    } catch (e: any) {
+      sonnerToast.error(`Eroare la dismiss în masă: ${e?.message || e}`);
+      // Restore optimistic fade-out
+      setRemovingIds((cur) => {
+        const next = new Set(cur);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+    } finally {
+      setBulkPending(null);
+    }
+  };
+
+  // Bulk: re-score N prospects sequentially through the existing handleAIScore.
+  const runBulkRescore = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setBulkPending("rescore");
+    let ok = 0;
+    let fail = 0;
+    for (const id of ids) {
+      try {
+        await handleAIScore(id);
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    sonnerToast.success(`🤖 Re-scoring complet: ${ok} reușite${fail ? ` · ${fail} eșuate` : ""}.`);
+    setBulkPending(null);
+  };
+
+  // ── Keyboard shortcuts (J/K nav, C call, X dismiss-with-confirm) ────────────
+  useEffect(() => {
+    if (!isAdmin) return;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if ((e.target as HTMLElement)?.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (filtered.length === 0) return;
+      const k = e.key.toLowerCase();
+
+      if (k === "j" || e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex((cur) => Math.min(filtered.length - 1, (cur < 0 ? -1 : cur) + 1));
+        return;
+      }
+      if (k === "k" || e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedIndex((cur) => Math.max(0, (cur < 0 ? 0 : cur) - 1));
+        return;
+      }
+      if (k === "escape") {
+        setFocusedIndex(-1);
+        clearSelection();
+        return;
+      }
+
+      const target = filtered[focusedIndex];
+      if (!target) return;
+
+      if (k === "c") {
+        e.preventDefault();
+        const callable = getProspectPhone(target);
+        if (!callable) {
+          sonnerToast.error("Lead-ul nu are telefon valid pentru apel.");
+          return;
+        }
+        if (isCallLocked(target)) {
+          sonnerToast.error("Apel blocat pe acest lead (deja sunat sau în curs).");
+          return;
+        }
+        void handleCall(target as any);
+        return;
+      }
+      if (k === "x") {
+        e.preventDefault();
+        setConfirmKbdDismissId(target.id);
+        return;
+      }
+      if (k === " " || k === "spacebar") {
+        e.preventDefault();
+        toggleSelectOne(target.id);
+        return;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, filtered, focusedIndex]);
+
+  // Auto-scroll focused row into view
+  useEffect(() => {
+    if (focusedIndex < 0) return;
+    const row = document.querySelector<HTMLElement>(`[data-prospect-row="${focusedIndex}"]`);
+    row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [focusedIndex]);
+
+
 
   // Available zones (from current data + canonical Timișoara list)
   const availableZones = useMemo(() => {
@@ -1422,6 +1607,20 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 </span>
               </span>
             </label>
+            <label
+              className="flex items-center gap-2 rounded-md border border-border bg-background px-3 h-10 text-xs font-medium cursor-pointer select-none whitespace-nowrap"
+              title="Anunțurile fără telefon și mai vechi de 14 zile sunt ascunse automat (auto-stale). Cron-ul nocturn le arhivează definitiv."
+            >
+              <Switch
+                checked={showStale}
+                onCheckedChange={setShowStale}
+                aria-label="Arată anunțurile stale (fără telefon, >14 zile)"
+              />
+              <span>
+                🌫️ Arată stale
+                <span className="ml-1 text-muted-foreground">({staleCount})</span>
+              </span>
+            </label>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger><SelectValue placeholder="Categorie" /></SelectTrigger>
               <SelectContent>
@@ -1553,14 +1752,28 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
         {/* Table */}
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between gap-3 flex-wrap">
             <CardTitle className="text-base">{filtered.length} prospecte afișate</CardTitle>
+            <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+              <kbd className="px-1.5 py-0.5 rounded border bg-muted">J</kbd>/<kbd className="px-1.5 py-0.5 rounded border bg-muted">K</kbd> nav
+              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Space</kbd> select
+              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">C</kbd> call
+              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">X</kbd> dismiss
+              · <kbd className="px-1.5 py-0.5 rounded border bg-muted">Esc</kbd> reset
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10 px-1 md:px-2">
+                      <Checkbox
+                        checked={allSelectedOnPage ? true : someSelectedOnPage ? "indeterminate" : false}
+                        onCheckedChange={toggleSelectAllVisible}
+                        aria-label="Selectează toate anunțurile filtrate"
+                      />
+                    </TableHead>
                     <TableHead className="hidden md:table-cell w-16">AI Score</TableHead>
                     <TableHead className="hidden lg:table-cell w-20">Geo SEO</TableHead>
                     <TableHead className="min-w-[108px] px-1 md:min-w-[280px] md:px-4">Anunț</TableHead>
@@ -1572,10 +1785,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></TableCell></TableRow>
                   ) : filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Niciun prospect.</TableCell></TableRow>
-                  ) : filtered.map((p) => {
+                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Niciun prospect.</TableCell></TableRow>
+                  ) : filtered.map((p, idx) => {
                     const score = p.lead_score ?? p.score ?? 0;
                     const scoreColor = score > 80 ? "text-orange-600" : score > 60 ? "text-amber-600" : "text-muted-foreground";
                     const phoneInfo = getVisibleProspectPhoneInfo(p);
@@ -1586,8 +1799,25 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                     const urgency = p.urgency_level ?? p.ai_score_breakdown?.urgency_level;
                     const geoColor = p.geo.score >= 70 ? "text-green-600" : p.geo.score >= 40 ? "text-amber-600" : "text-muted-foreground";
                     const callLocked = isCallLocked(p);
+                    const isSelected = selectedIds.has(p.id);
+                    const isFocused = focusedIndex === idx;
                     return (
-                      <TableRow key={p.id} className={`transition-all duration-300 ${removingIds.has(p.id) ? "opacity-0 -translate-x-2 pointer-events-none" : ""}`}>
+                      <TableRow
+                        key={p.id}
+                        data-prospect-row={idx}
+                        className={`transition-all duration-300 ${
+                          removingIds.has(p.id) ? "opacity-0 -translate-x-2 pointer-events-none" : ""
+                        } ${isFocused ? "ring-2 ring-primary/60 ring-inset bg-primary/5" : ""} ${
+                          isSelected ? "bg-primary/5" : ""
+                        }`}
+                      >
+                        <TableCell className="px-1 md:px-2 align-top pt-3">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelectOne(p.id)}
+                            aria-label={`Selectează ${p.title || "anunț"}`}
+                          />
+                        </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <div className={`text-2xl font-bold ${scoreColor}`}>{score}</div>
                           {p.ai_scored_at && <div className="text-[10px] text-muted-foreground">AI ✓</div>}
@@ -1799,6 +2029,15 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                           <Badge className={`${lifecycleColors[p.lifecycle_status] || ""} text-xs`} variant="outline">
                             {p.lifecycle_status === "pending_credentials" ? "⏸ pending" : p.lifecycle_status}
                           </Badge>
+                          {p.isStale && (
+                            <Badge
+                              variant="outline"
+                              className="mt-1 text-[10px] py-0 px-1.5 border-slate-300 text-slate-500 bg-slate-50 dark:bg-slate-900/30"
+                              title="Fără telefon valid și mai vechi de 14 zile. Va fi arhivat automat la următorul cron nocturn."
+                            >
+                              🌫️ stale
+                            </Badge>
+                          )}
                           {p.followup_sent_at && <div className="text-[10px] text-green-600 mt-1">WA ✓</div>}
                         </TableCell>
                         <TableCell className="text-right px-2 md:px-4">
@@ -1939,6 +2178,134 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Bulk action bar (fixed bottom, appears when items selected) ── */}
+      {selectedIds.size > 0 && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md shadow-2xl animate-in slide-in-from-bottom-4"
+          role="region"
+          aria-label="Acțiuni colective pentru anunțurile selectate"
+        >
+          <div className="container mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3 text-sm">
+              <Badge variant="default" className="text-sm px-2.5 py-1">
+                {selectedIds.size} selectat{selectedIds.size === 1 ? "" : "e"}
+              </Badge>
+              <span className="hidden sm:inline text-muted-foreground">
+                Acțiunile colective afectează doar anunțurile bifate.
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={clearSelection}
+                disabled={bulkPending !== null}
+              >
+                Anulează selecția
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const ids = filtered.filter((p) => selectedIds.has(p.id)).map((p) => p.id);
+                  void runBulkRescore(ids);
+                }}
+                disabled={bulkPending !== null}
+                className="gap-1.5"
+              >
+                {bulkPending === "rescore"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Sparkles className="h-3.5 w-3.5" />}
+                Re-score ({selectedIds.size})
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setConfirmBulkDismissOpen(true)}
+                disabled={bulkPending !== null}
+                className="gap-1.5"
+              >
+                {bulkPending === "dismiss"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Trash2 className="h-3.5 w-3.5" />}
+                Renunță ({selectedIds.size})
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm bulk dismiss ─────────────────────────────────────────── */}
+      <AlertDialog open={confirmBulkDismissOpen} onOpenChange={setConfirmBulkDismissOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Renunță în masă la {selectedIds.size} anunțuri?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Anunțurile vor fi marcate ca <strong>expirate</strong> și ascunse din listă.</p>
+                <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                  <div>📦 Rămân în baza de date (nu se șterg) — previn re-import scraper.</div>
+                  <div>📝 Se înregistrează în <code className="bg-background px-1 rounded">admin_audit_log</code> per ID.</div>
+                  <div>↩️ Pentru anulare individuală: filtrează după „expired" și folosește meniul ⋮.</div>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const ids = filtered.filter((p) => selectedIds.has(p.id)).map((p) => p.id);
+                void runBulkDismiss(ids);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Da, renunță la {selectedIds.size}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Confirm keyboard X dismiss (single row) ──────────────────────── */}
+      <AlertDialog
+        open={confirmKbdDismissId !== null}
+        onOpenChange={(o) => { if (!o) setConfirmKbdDismissId(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Renunță la acest anunț?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {(() => {
+                const t = filtered.find((p) => p.id === confirmKbdDismissId);
+                return t
+                  ? `„${(t.title || "anunț").slice(0, 80)}" va fi marcat ca expirat și ascuns din listă.`
+                  : "Anunțul va fi marcat ca expirat și ascuns din listă.";
+              })()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmKbdDismissId) void runBulkDismiss([confirmKbdDismissId]);
+                setConfirmKbdDismissId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Da, renunță
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
 
       <AlertDialog open={campaignOpen} onOpenChange={setCampaignOpen}>
         <AlertDialogContent>
