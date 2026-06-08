@@ -171,8 +171,30 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Hard cap: max 5 force-fetch attempts per prospect (protects residential proxy pool) ──
+    const MAX_FORCE_FETCH_RUNS = 5;
+    const priorRuns = ((prospect.admin_notes ?? "").match(/\[fetch-phone /g) ?? []).length;
+    if (priorRuns >= MAX_FORCE_FETCH_RUNS) {
+      await supabase.from("admin_audit_log" as any).insert({
+        action: "prospect_phone_force_fetch_limit_reached",
+        entity_type: "prospect_listing",
+        entity_id: prospect.id,
+        metadata: { prior_runs: priorRuns, limit: MAX_FORCE_FETCH_RUNS, source_url: prospect.source_url },
+      } as any);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          limit_reached: true,
+          prior_runs: priorRuns,
+          limit: MAX_FORCE_FETCH_RUNS,
+          error: `Limită atinsă: ${priorRuns}/${MAX_FORCE_FETCH_RUNS} încercări de forțare deja efectuate pentru acest anunț.`,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const maxAttempts = Math.min(Math.max(parseInt(String(max_attempts ?? 3)) || 3, 1), 4);
-    console.log(`[fetch-phone] ${prospect.id} <- ${prospect.source_url} (max ${maxAttempts})`);
+    console.log(`[fetch-phone] ${prospect.id} <- ${prospect.source_url} (max ${maxAttempts}, run ${priorRuns + 1}/${MAX_FORCE_FETCH_RUNS})`);
 
     let lastErr: string | null = null;
     let allPhones: string[] = [];

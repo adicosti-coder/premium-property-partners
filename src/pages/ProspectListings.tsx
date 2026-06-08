@@ -488,10 +488,14 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
   // ── Bulk selection + keyboard navigation ────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Hard cap on manual "force-fetch phone" runs per prospect (matches edge function).
+  const MAX_PHONE_FETCH_ATTEMPTS = 5;
+  const countPhoneFetchAttempts = (notes: string | null | undefined): number =>
+    ((notes ?? "").match(/\[fetch-phone /g) ?? []).length;
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
   const [confirmKbdDismissId, setConfirmKbdDismissId] = useState<string | null>(null);
-  const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | null>(null);
+  const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | "recover_phones" | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
@@ -550,20 +554,29 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [recoveringPhoneId, setRecoveringPhoneId] = useState<string | null>(null);
 
-  const handleRecoverPhone = async (p: { id: string; source_url: string | null }) => {
+  const handleRecoverPhone = async (p: { id: string; source_url: string | null; admin_notes?: string | null }) => {
     if (!p.source_url) {
       toast({ title: "Fără URL sursă", description: "Nu am de unde recupera telefonul.", variant: "destructive" });
       return;
     }
+    const prior = countPhoneFetchAttempts(p.admin_notes);
+    if (prior >= MAX_PHONE_FETCH_ATTEMPTS) {
+      sonnerToast.warning(`Limită atinsă (${prior}/${MAX_PHONE_FETCH_ATTEMPTS})`, {
+        description: "Acest anunț a epuizat încercările de forțare. Verifică manual sursa.",
+      });
+      return;
+    }
     setRecoveringPhoneId(p.id);
-    const loadingToast = sonnerToast.loading("Forțez extragere telefon (proxy stealth + UA rotation)…");
+    const loadingToast = sonnerToast.loading(`Forțez extragere telefon (${prior + 1}/${MAX_PHONE_FETCH_ATTEMPTS})…`);
     try {
       const { data, error } = await supabase.functions.invoke("prospect-listings-fetch-phone", {
         body: { prospect_id: p.id, max_attempts: 3 },
       });
       if (error) throw error;
       sonnerToast.dismiss(loadingToast);
-      if (data?.found) {
+      if (data?.limit_reached) {
+        sonnerToast.warning(`Limită atinsă (${data.prior_runs}/${data.limit})`);
+      } else if (data?.found) {
         sonnerToast.success(`📞 Telefon recuperat: ${data.phone}`, {
           description: `${data.attempts} încercări · proxy rezidențial`,
         });
@@ -572,6 +585,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         sonnerToast.warning("Niciun telefon găsit", {
           description: `${data?.attempts ?? "?"} încercări · sursa nu expune numărul${data?.lastError ? ` (${data.lastError})` : ""}`,
         });
+        refetch();
       }
     } catch (e: any) {
       sonnerToast.dismiss(loadingToast);
@@ -765,7 +779,9 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         !hasPhone &&
         scrapedTs > 0 &&
         (Date.now() - scrapedTs) > 14 * 24 * 60 * 60 * 1000;
-      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion, isStale };
+      const phoneFetchAttempts = countPhoneFetchAttempts(p.admin_notes);
+      const phoneFetchExhausted = phoneFetchAttempts >= MAX_PHONE_FETCH_ATTEMPTS;
+      return { ...p, geo, isAgency, isGenericSearch, phoneCount, suspicion, isStale, phoneFetchAttempts, phoneFetchExhausted };
     }),
     [prospects, phoneCounts]
   );
@@ -937,6 +953,50 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     sonnerToast.success(`🤖 Re-scoring complet: ${ok} reușite${fail ? ` · ${fail} eșuate` : ""}.`);
     setBulkPending(null);
   };
+
+  // Bulk: force-fetch phones for selected prospects without a usable number
+  // and not yet at the 5-attempt cap. Sequential to protect the residential proxy pool.
+  const runBulkRecoverPhones = async (
+    candidates: Array<{ id: string; source_url: string | null; admin_notes?: string | null }>
+  ) => {
+    const eligible = candidates.filter(
+      (p) => !!p.source_url && countPhoneFetchAttempts(p.admin_notes) < MAX_PHONE_FETCH_ATTEMPTS,
+    );
+    if (eligible.length === 0) {
+      sonnerToast.warning("Niciun anunț eligibil (toate au telefon valid sau au atins limita 5/5).");
+      return;
+    }
+    setBulkPending("recover_phones");
+    let recovered = 0;
+    let empty = 0;
+    let limit = 0;
+    let fail = 0;
+    const tId = sonnerToast.loading(`Recuperez telefoane: 0/${eligible.length}…`);
+    for (let i = 0; i < eligible.length; i++) {
+      const p = eligible[i];
+      sonnerToast.loading(`Recuperez telefoane: ${i + 1}/${eligible.length}…`, { id: tId });
+      try {
+        const { data, error } = await supabase.functions.invoke("prospect-listings-fetch-phone", {
+          body: { prospect_id: p.id, max_attempts: 3 },
+        });
+        if (error) throw error;
+        if (data?.limit_reached) limit++;
+        else if (data?.found) recovered++;
+        else empty++;
+      } catch {
+        fail++;
+      }
+      // Small breather between calls — keeps residential pool happy.
+      if (i < eligible.length - 1) await new Promise((r) => setTimeout(r, 800));
+    }
+    sonnerToast.dismiss(tId);
+    sonnerToast.success(
+      `📞 Bulk telefoane: ${recovered} recuperate · ${empty} fără rezultat${limit ? ` · ${limit} la limită` : ""}${fail ? ` · ${fail} erori` : ""}`,
+    );
+    refetch();
+    setBulkPending(null);
+  };
+
 
   // ── Keyboard shortcuts (J/K nav, C call, X dismiss-with-confirm) ────────────
   useEffect(() => {
@@ -2009,15 +2069,17 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                                 <>
                                   <button
                                     type="button"
-                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
-                                    disabled={recoveringPhoneId === p.id}
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-60"
-                                    title="Apasă butonul «Arată numărul» pe sursă și extrage telefonul"
+                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })}
+                                    disabled={recoveringPhoneId === p.id || p.phoneFetchExhausted}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={p.phoneFetchExhausted
+                                      ? `Limită atinsă (${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS}). Verifică manual sursa.`
+                                      : `Apasă butonul «Arată numărul» pe sursă și extrage telefonul (${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS})`}
                                   >
                                     {recoveringPhoneId === p.id
                                       ? <Loader2 className="h-3 w-3 animate-spin" />
                                       : <Sparkles className="h-3 w-3" />}
-                                    recuperează tel.
+                                    {p.phoneFetchExhausted ? `limită ${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS}` : "recuperează tel."}
                                   </button>
                                   <a
                                     href={p.source_url}
@@ -2099,14 +2161,19 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
                                 {p.source_url && (
                                   <DropdownMenuItem
-                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url })}
-                                    disabled={recoveringPhoneId === p.id}
+                                    onClick={() => handleRecoverPhone({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })}
+                                    disabled={recoveringPhoneId === p.id || p.phoneFetchExhausted}
                                     className="gap-2 cursor-pointer"
+                                    title={p.phoneFetchExhausted
+                                      ? `Limită atinsă (${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS})`
+                                      : `Încercare ${p.phoneFetchAttempts + 1}/${MAX_PHONE_FETCH_ATTEMPTS}`}
                                   >
                                     {recoveringPhoneId === p.id
                                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                      : <RefreshCw className="h-3.5 w-3.5 text-blue-600" />}
-                                    Forțează extragere telefon
+                                      : <RefreshCw className={`h-3.5 w-3.5 ${p.phoneFetchExhausted ? "text-muted-foreground" : "text-blue-600"}`} />}
+                                    {p.phoneFetchExhausted
+                                      ? `Limită telefon ${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS}`
+                                      : `Forțează extragere telefon (${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS})`}
                                   </DropdownMenuItem>
                                 )}
 
@@ -2243,6 +2310,38 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                   : <Sparkles className="h-3.5 w-3.5" />}
                 Re-score ({selectedIds.size})
               </Button>
+              {(() => {
+                const eligible = filtered.filter(
+                  (p) =>
+                    selectedIds.has(p.id) &&
+                    !!p.source_url &&
+                    !getProspectPhone(p) &&
+                    !p.phoneFetchExhausted,
+                );
+                return (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      void runBulkRecoverPhones(
+                        eligible.map((p) => ({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })),
+                      );
+                    }}
+                    disabled={bulkPending !== null || eligible.length === 0}
+                    className="gap-1.5"
+                    title={
+                      eligible.length === 0
+                        ? "Niciun anunț selectat fără telefon (sau toate la limita 5/5)"
+                        : `Forțează extragere telefon pentru ${eligible.length} anunțuri (max 5/anunț, secvențial)`
+                    }
+                  >
+                    {bulkPending === "recover_phones"
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <RefreshCw className="h-3.5 w-3.5 text-blue-600" />}
+                    Recuperează telefoane ({eligible.length})
+                  </Button>
+                );
+              })()}
               <Button
                 size="sm"
                 variant="destructive"
