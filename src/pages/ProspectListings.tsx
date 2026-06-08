@@ -483,6 +483,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const { isAdmin, isLoading: adminLoading, error: adminError, recheck } = useAdminRole(user);
+  const { isSuperAdmin } = useSuperAdminRole(user);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showRejected, setShowRejected] = useState<boolean>(false);
