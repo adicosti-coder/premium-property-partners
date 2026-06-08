@@ -26,6 +26,7 @@ import { AgencyExplainerDialog, type AgencyExplainerInput } from "@/components/a
 import { ProspectKeywordsEditor } from "@/components/admin/ProspectKeywordsEditor";
 import { ProspectPersonaSnapshot } from "@/components/admin/ProspectPersonaSnapshot";
 import SEOHead from "@/components/SEOHead";
+import { DismissExpiredButton } from "@/components/admin/DismissExpiredButton";
 import Header from "@/components/Header";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import { useAgencyDetectionSettings } from "@/hooks/useAgencyDetectionSettings";
@@ -1832,17 +1833,30 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                               {scoringId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
                               <span className="hidden sm:inline">Re-scoring AI</span>
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDismiss(p, "expired")}
-                              disabled={dismissingId === p.id}
-                              className="w-9 sm:w-full px-2 text-[10px] sm:text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                              title="Renunță la anunț (expirat / nu mai e valabil)"
-                            >
-                              {dismissingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3 mr-1" />}
-                              <span className="hidden sm:inline">Renunță (expirat)</span>
-                            </Button>
+                            <DismissExpiredButton
+                              id={p.id}
+                              title={p.title}
+                              reason="expired"
+                              contextLabel="/admin/prospect-listings"
+                              className="w-9 sm:w-full px-2 text-[10px] sm:text-xs"
+                              onDismissed={() => {
+                                setRemovingIds((cur) => {
+                                  const next = new Set(cur);
+                                  next.add(p.id);
+                                  return next;
+                                });
+                              }}
+                              onUndo={() => {
+                                setRemovingIds((cur) => {
+                                  if (!cur.has(p.id)) return cur;
+                                  const next = new Set(cur);
+                                  next.delete(p.id);
+                                  return next;
+                                });
+                              }}
+                              invalidateKeys={[["prospect-listings", statusFilter, categoryFilter]]}
+                            />
+
                             <div className="hidden sm:flex items-center gap-2 w-full justify-end">
                               <AuditLogViewer
                                 entityType="prospect_listing"

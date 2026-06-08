@@ -13,6 +13,7 @@ import GooglePerformanceWidget from "./GooglePerformanceWidget";
 import SeoAutomationWidget from "./SeoAutomationWidget";
 import { toast } from "@/hooks/use-toast";
 import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
+import { DismissExpiredButton } from "@/components/admin/DismissExpiredButton";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, differenceInDays, isWithinInterval, parseISO } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import {
@@ -972,7 +973,16 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
                       </>
                     )}
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2 flex-wrap">
+                    <DismissExpiredButton
+                      id={prospect.id}
+                      title={prospect.title}
+                      reason="expired"
+                      contextLabel={`Dashboard · ${prospect.title?.slice(0, 60) || prospect.id}`}
+                      invalidateKeys={[["admin-dashboard-prospect-contacts"]]}
+                      onDismissed={() => hideOptimistic(prospect.id)}
+                      onUndo={() => restoreOptimistic(prospect.id)}
+                    />
                     <MarkAsAgencyButton
                       id={prospect.id}
                       source="prospect_listings"
@@ -985,6 +995,7 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
                       onUndo={() => restoreOptimistic(prospect.id)}
                     />
                   </div>
+
                 </div>
               );
             })}
