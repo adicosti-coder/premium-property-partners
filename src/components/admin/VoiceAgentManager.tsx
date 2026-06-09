@@ -516,7 +516,7 @@ export default function VoiceAgentManager() {
       <KeywordRadarPanel />
       <VoiceAgentTrainingLab />
       <VoiceAgentMonitoring />
-      <CronMonitor />
+      <div id="cron-monitor" className="scroll-mt-24"><CronMonitor /></div>
       <VoiceCallerProfilesManager />
       <VoiceAgentKnowledgeBase />
       <VoiceAgentFollowupQueue />
