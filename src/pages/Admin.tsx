@@ -190,6 +190,18 @@ const Admin = () => {
     }
   }, [adminTab, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Scroll to URL hash anchor (e.g. #cron-monitor) once the tab content mounts
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash?.replace(/^#/, "");
+    if (!hash) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [activeTab]);
+
   const handleSelectTab = useCallback((value: string) => {
     const tab = findTab(value);
     if (tab?.externalRoute) {
