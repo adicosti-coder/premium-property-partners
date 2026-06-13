@@ -17,6 +17,7 @@ interface Props {
   onTogglePin: (value: string) => void;
   onOpenCommand: () => void;
   counters: { newLeads: number; newScraper: number; hotProspects: number; prospectPipeline: number };
+  recent?: string[];
 }
 
 function getCount(tab: AdminTab, c: Props["counters"]): number {
