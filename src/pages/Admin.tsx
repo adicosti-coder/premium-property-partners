@@ -12,7 +12,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppAdminSidebar } from "@/components/admin/AppAdminSidebar";
-import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
+import { AdminGlobalSearch } from "@/components/admin/AdminGlobalSearch";
 import { AdminStatusBar } from "@/components/admin/AdminStatusBar";
 import { findTab } from "@/components/admin/adminNavConfig";
 import { useAdminPinned } from "@/hooks/useAdminPinned";
