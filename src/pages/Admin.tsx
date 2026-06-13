@@ -289,4 +289,27 @@ const Admin = () => {
   );
 };
 
+/**
+ * Randează doar tab-ul activ, lazy din `adminTabLoaders`.
+ * Avantaj cheie: bundle-ul inițial al /admin scade de la ~45 manageri statici
+ * la doar shell + chunk-ul tab-ului curent. Restul se descarcă on-demand
+ * (sau pe hover, via `prefetchAdminTab`).
+ */
+function ActiveTabRenderer({ activeTab }: { activeTab: string }) {
+  const Component = getAdminTabComponent(activeTab);
+  if (!Component) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground">
+        Secțiune necunoscută: <code>{activeTab}</code>
+      </div>
+    );
+  }
+  return (
+    <Suspense fallback={<AdminTabFallback />}>
+      <Component />
+    </Suspense>
+  );
+}
+
 export default Admin;
+
