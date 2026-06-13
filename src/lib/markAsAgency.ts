@@ -51,7 +51,7 @@ function normalizePhone(raw?: string | null): string | null {
 
 /**
  * Mark a contact / listing as an agency:
- *  - flips the source row to `agentie` / archived
+ *  - flips the source row to `agentie` / expired/inactive
  *  - mirrors the change across prospect_listings + scraper_leads_archive_2026 by phone & URL
  *  - inserts phone + domain into `agency_blocklist` (skipping duplicates)
  */
@@ -97,16 +97,17 @@ export async function markAsAgency(input: MarkAsAgencyInput): Promise<MarkAsAgen
         .update({ prospect_category: "agentie", status: "archived" } as any)
         .eq("id", input.id);
     } else if (source === "prospect_listings") {
-      await supabase
+      const { error: sourceErr } = await supabase
         .from("prospect_listings" as any)
         .update({
           prospect_type: "agentie",
           is_active: false,
-          lifecycle_status: "archived",
+          lifecycle_status: "expired",
           auto_blacklisted_at: nowIso,
           auto_blacklist_reason: reason,
         } as any)
         .eq("id", input.id);
+      if (sourceErr) return { ok: false, message: `Eroare arhivare prospect: ${sourceErr.message}`, error: sourceErr.message };
     }
   }
 
@@ -125,7 +126,7 @@ export async function markAsAgency(input: MarkAsAgencyInput): Promise<MarkAsAgen
         .update({
           prospect_type: "agentie",
           is_active: false,
-          lifecycle_status: "archived",
+          lifecycle_status: "expired",
           auto_blacklisted_at: nowIso,
           auto_blacklist_reason: reason,
         } as any)
@@ -139,7 +140,7 @@ export async function markAsAgency(input: MarkAsAgencyInput): Promise<MarkAsAgen
         .update({
           prospect_type: "agentie",
           is_active: false,
-          lifecycle_status: "archived",
+          lifecycle_status: "expired",
           auto_blacklisted_at: nowIso,
           auto_blacklist_reason: reason,
         } as any)
