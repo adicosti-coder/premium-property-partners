@@ -712,7 +712,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         q = q.eq("lifecycle_status", statusFilter as any);
       } else {
         // Default view never includes archived rows (agency, expired, manually killed).
-        q = q.neq("lifecycle_status", "archived" as any);
+        q = q.neq("lifecycle_status", "expired");
       }
       if (categoryFilter !== "all") q = q.eq("category", categoryFilter as any);
       const { data, error } = await q;
@@ -1340,7 +1340,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       ? {
           prospect_type: "agentie",
           is_active: false,
-          lifecycle_status: "archived",
+          lifecycle_status: "expired",
           auto_blacklisted_at: nowIso,
           auto_blacklist_reason: "manual_admin_mark_agency",
         }
@@ -1394,7 +1394,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         ? {
             prospect_type: "agentie",
             is_active: false,
-            lifecycle_status: "archived",
+            lifecycle_status: "expired",
             auto_blacklisted_at: new Date().toISOString(),
             auto_blacklist_reason: "manual_admin_mark_agency",
           }
