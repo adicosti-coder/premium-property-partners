@@ -122,7 +122,7 @@ export function AdminGlobalSearch({
         onValueChange={setQuery}
       />
       <CommandList>
-        {loading && <CommandLoading>Caut în baza de date…</CommandLoading>}
+        {loading && <div className="px-3 py-2 text-xs text-muted-foreground">Caut în baza de date…</div>}
         {!loading && enabled && leads.length + prospects.length + properties.length === 0 && tabsFiltered.length === 0 && (
           <CommandEmpty>Niciun rezultat pentru „{debounced}”.</CommandEmpty>
         )}
