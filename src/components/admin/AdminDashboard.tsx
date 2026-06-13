@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GooglePerformanceWidget from "./GooglePerformanceWidget";
 import SeoAutomationWidget from "./SeoAutomationWidget";
+import AdminUnifiedKpiBar from "./AdminUnifiedKpiBar";
+
 import { toast } from "@/hooks/use-toast";
 import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
 import { DismissExpiredButton } from "@/components/admin/DismissExpiredButton";
