@@ -260,77 +260,9 @@ const Admin = () => {
               </header>
 
               <main className="flex-1 px-4 py-6 md:px-6 overflow-x-hidden">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                  <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
-                  <TabsContent value="dashboard"><AdminDashboard /></TabsContent>
-                  <TabsContent value="leads"><LeadsManager /></TabsContent>
-                  <TabsContent value="leads-analytics"><LeadsAnalyticsDashboard /></TabsContent>
-                  <TabsContent value="bookings"><BookingManager /></TabsContent>
-                  <TabsContent value="cazare"><CazareManager /></TabsContent>
-                  <TabsContent value="properties"><PropertyManager /></TabsContent>
-                  <TabsContent value="investitii-premium"><InvestitiiPremiumManager /></TabsContent>
-                  <TabsContent value="blog"><BlogManager /></TabsContent>
-                  <TabsContent value="owner-codes"><OwnerCodeManager /></TabsContent>
-                  <TabsContent value="maintenance"><MaintenanceManager /></TabsContent>
-                  <TabsContent value="newsletter"><NewsletterManager /></TabsContent>
-                  <TabsContent value="complexes"><ComplexManager /></TabsContent>
-                  <TabsContent value="video-testimonials"><VideoTestimonialsManager /></TabsContent>
-                  <TabsContent value="poi"><POIManager /></TabsContent>
-                  <TabsContent value="hero-video">
-                    <div className="space-y-6">
-                      <HeroVideoManager />
-                      <HeroTextManager />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="local-tips"><LocalTipsManager /></TabsContent>
-                  <TabsContent value="followup-stats"><FollowupStatsManager /></TabsContent>
-                  <TabsContent value="ab-testing"><ABTestManager /></TabsContent>
-                  <TabsContent value="reviews"><ReviewsManager /></TabsContent>
-                  <TabsContent value="captcha"><CaptchaLogsManager /></TabsContent>
-                  <TabsContent value="community"><CommunityManager /></TabsContent>
-                  <TabsContent value="cta-analytics"><CtaAnalyticsManager /></TabsContent>
-                  <TabsContent value="blog-cta-ab"><BlogCtaABDashboard /></TabsContent>
-                  <TabsContent value="blog-hub-clicks"><BlogHubClicksDashboard /></TabsContent>
-                  <TabsContent value="evaluare-engagement"><EvaluareEngagementManager /></TabsContent>
-                  <TabsContent value="funnel-analytics"><FunnelAnalyticsManager /></TabsContent>
-                  <TabsContent value="security"><SecurityChecklist /></TabsContent>
-                  <TabsContent value="email-campaigns"><EmailCampaignManager /></TabsContent>
-                  <TabsContent value="discount-codes"><DiscountCodeManager /></TabsContent>
-                  <TabsContent value="property-views"><PropertyViewsManager /></TabsContent>
-                  <TabsContent value="ical-sync"><ICalManager /></TabsContent>
-                  <TabsContent value="prospects"><ProspectManager /></TabsContent>
-                  <TabsContent value="listing-import"><ListingImportTabs /></TabsContent>
-                  <TabsContent value="guest-guides"><GuestGuideManager /></TabsContent>
-                  <TabsContent value="catalogs"><CatalogManager /></TabsContent>
-                  <TabsContent value="scraper-status"><ScraperStatusDashboard /></TabsContent>
-                  <TabsContent value="seo-optimizer"><SEOOptimizerManager /></TabsContent>
-                  <TabsContent value="ai-memory">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <VisitorMemoryWidget />
-                      <div className="rounded-lg border border-border bg-muted/20 p-4 text-sm space-y-2">
-                        <h3 className="font-semibold flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-primary" /> Cum funcționează
-                        </h3>
-                        <p className="text-muted-foreground text-xs">
-                          Sistemul AI Memory urmărește anonim sesiunile vizitatorilor (proprietăți vizionate, căutări, interacțiuni cu chatbot-ul) și deduce automat preferințe.
-                        </p>
-                        <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                          <li><strong>+5</strong> per proprietate vizionată</li>
-                          <li><strong>+3</strong> per căutare semantică</li>
-                          <li><strong>+20</strong> dacă a declarat buget</li>
-                          <li><strong>+25</strong> dacă este autentificat</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
-                  <TabsContent value="voice-agent"><VoiceAgentCommandCenter /></TabsContent>
-                  <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
-                  <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
-                  <TabsContent value="automation"><AutomationManager /></TabsContent>
-                  <TabsContent value="prospect-pipeline"><ProspectPipelinePanel /></TabsContent>
-                </Tabs>
+                <ActiveTabRenderer activeTab={activeTab} />
               </main>
+
 
               <AdminStatusBar
                 newLeads={newLeadsCount}
