@@ -26,7 +26,7 @@ function getCount(tab: AdminTab, c: Props["counters"]): number {
 }
 
 export function AppAdminSidebar({
-  activeTab, onSelect, pinned, onTogglePin, onOpenCommand, counters,
+  activeTab, onSelect, pinned, onTogglePin, onOpenCommand, counters, recent = [],
 }: Props) {
   const navigate = useNavigate();
   const { state } = useSidebar();
@@ -40,7 +40,16 @@ export function AppAdminSidebar({
     onSelect(tab.value);
   };
 
+  /** Prefetch chunk-ul lazy când utilizatorul intenționează să dea click. */
+  const handleHover = (tab: AdminTab) => {
+    if (!tab.externalRoute) prefetchAdminTab(tab.value);
+  };
+
   const pinnedTabs = pinned.map(findTab).filter(Boolean) as AdminTab[];
+  const recentTabs = recent
+    .map(findTab)
+    .filter((t): t is AdminTab => !!t && t.value !== activeTab)
+    .slice(0, 5);
 
   return (
     <Sidebar collapsible="icon">
