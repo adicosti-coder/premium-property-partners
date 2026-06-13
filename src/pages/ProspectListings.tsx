@@ -1328,11 +1328,32 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
     // Optimistic
     qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
-      Array.isArray(old) ? old.map((row: any) => row.id === p.id ? { ...row, prospect_type: next } : row) : old
+      Array.isArray(old)
+        ? (next === "agentie"
+            // Hide immediately when marking as agency (permanent removal from view)
+            ? old.filter((row: any) => row.id !== p.id)
+            : old.map((row: any) => row.id === p.id ? { ...row, prospect_type: next } : row))
+        : old
     );
+    const nowIso = new Date().toISOString();
+    const updatePayload: Record<string, unknown> = next === "agentie"
+      ? {
+          prospect_type: "agentie",
+          is_active: false,
+          lifecycle_status: "archived",
+          auto_blacklisted_at: nowIso,
+          auto_blacklist_reason: "manual_admin_mark_agency",
+        }
+      : {
+          prospect_type: "proprietar",
+          is_active: true,
+          lifecycle_status: "new",
+          auto_blacklisted_at: null,
+          auto_blacklist_reason: null,
+        };
     const { error } = await supabase
       .from("prospect_listings")
-      .update({ prospect_type: next })
+      .update(updatePayload as any)
       .eq("id", p.id);
     if (error) {
       toast({ title: "Eroare", description: error.message, variant: "destructive" });
@@ -1342,6 +1363,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
     // Apply blocklist side-effect for the new state
     if (next === "agentie") {
+
       if (phone || domain) {
         const { error: blockErr } = await supabase
           .from("agency_blocklist" as any)
