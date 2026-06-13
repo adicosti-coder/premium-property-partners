@@ -278,7 +278,7 @@ const Admin = () => {
             </SidebarInset>
           </div>
 
-          <AdminCommandPalette
+          <AdminGlobalSearch
             open={cmdOpen}
             onOpenChange={setCmdOpen}
             onSelect={handleSelectTab}
