@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 export interface MarkAsAgencyInput {
   /** ID of the prospect/lead row (optional, used to update the source row) */
@@ -38,6 +38,24 @@ export function extractAgencyDomain(url?: string | null): string | null {
   }
 }
 
+const AGGREGATOR_DOMAINS = new Set([
+  "olx.ro",
+  "storia.ro",
+  "imobiliare.ro",
+  "facebook.com",
+  "m.facebook.com",
+  "ro-ro.facebook.com",
+  "publi24.ro",
+  "romimo.ro",
+  "compariimobiliare.ro",
+]);
+
+function getBlockableDomain(url?: string | null): string | null {
+  const domain = extractAgencyDomain(url);
+  if (!domain || AGGREGATOR_DOMAINS.has(domain)) return null;
+  return domain;
+}
+
 function normalizePhone(raw?: string | null): string | null {
   if (!raw) return null;
   const cleaned = raw.replace(/[^\d+]/g, "");
@@ -57,45 +75,25 @@ function normalizePhone(raw?: string | null): string | null {
  */
 export async function markAsAgency(input: MarkAsAgencyInput): Promise<MarkAsAgencyResult> {
   const phone = input.phone || normalizePhone(input.rawPhone);
-  const domain = extractAgencyDomain(input.url);
+  const domain = getBlockableDomain(input.url);
   const url = input.url || null;
   const reason = "manual_mark_agency";
   const nowIso = new Date().toISOString();
   const notes = `Marcat manual · ${(input.contextLabel || "").slice(0, 100)}`.trim();
 
-  if (!phone && !domain) {
-    return { ok: false, message: "Lipsește numărul de telefon și URL-ul pentru blocare.", error: "missing_identifiers" };
+  if (!input.id && !phone && !domain && !url) {
+    return { ok: false, message: "Lipsește ID-ul, numărul de telefon sau URL-ul pentru arhivare.", error: "missing_identifiers" };
   }
 
-  // 1. Check existing blocklist to avoid duplicates
-  const orParts: string[] = [];
-  if (phone) orParts.push(`phone_normalized.eq.${phone}`);
-  if (domain) orParts.push(`domain.eq.${domain}`);
-  const { data: existing } = await supabase
-    .from("agency_blocklist")
-    .select("phone_normalized, domain")
-    .or(orParts.join(","));
-
-  const phoneExists = !!existing?.some((e: any) => phone && e.phone_normalized === phone);
-  const domainExists = !!existing?.some((e: any) => domain && e.domain === domain);
-
-  const rows: any[] = [];
-  if (phone && !phoneExists) rows.push({ phone_normalized: phone, reason, notes });
-  if (domain && !domainExists) rows.push({ domain, reason, notes });
-
-  if (rows.length > 0) {
-    const { error: blErr } = await supabase.from("agency_blocklist").insert(rows);
-    if (blErr) return { ok: false, message: `Eroare blocklist: ${blErr.message}`, error: blErr.message };
-  }
-
-  // 2. Update the original row
+  // 1. Persist removal first. Blocklist is best-effort; the visible row must never survive a duplicate/permission error.
   const source = input.source || "prospect_listings";
   if (input.id) {
     if (source === "scraper_leads_archive_2026") {
-      await supabase
+      const { error: sourceErr } = await supabase
         .from("scraper_leads_archive_2026" as any)
         .update({ prospect_category: "agentie", status: "archived" } as any)
         .eq("id", input.id);
+      if (sourceErr) return { ok: false, message: `Eroare arhivare lead: ${sourceErr.message}`, error: sourceErr.message };
     } else if (source === "prospect_listings") {
       const { error: sourceErr } = await supabase
         .from("prospect_listings" as any)
@@ -111,7 +109,14 @@ export async function markAsAgency(input: MarkAsAgencyInput): Promise<MarkAsAgen
     }
   }
 
-  // 3. Mirror by phone / URL so the same contact disappears from every source
+  // 2. Mirror by phone / exact URL so the same contact disappears from every current source.
+  const archivePayload = {
+    prospect_type: "agentie",
+    is_active: false,
+    lifecycle_status: "expired",
+    auto_blacklisted_at: nowIso,
+    auto_blacklist_reason: reason,
+  } as any;
   const mirrors: Array<PromiseLike<any>> = [];
   if (url) {
     mirrors.push(
@@ -120,34 +125,32 @@ export async function markAsAgency(input: MarkAsAgencyInput): Promise<MarkAsAgen
         .update({ prospect_category: "agentie", status: "archived" } as any)
         .eq("url", url),
     );
-    mirrors.push(
-      supabase
-        .from("prospect_listings" as any)
-        .update({
-          prospect_type: "agentie",
-          is_active: false,
-          lifecycle_status: "expired",
-          auto_blacklisted_at: nowIso,
-          auto_blacklist_reason: reason,
-        } as any)
-        .eq("source_url", url),
-    );
+    mirrors.push(supabase.from("prospect_listings" as any).update(archivePayload).eq("source_url", url));
   }
   if (phone) {
-    mirrors.push(
-      supabase
-        .from("prospect_listings" as any)
-        .update({
-          prospect_type: "agentie",
-          is_active: false,
-          lifecycle_status: "expired",
-          auto_blacklisted_at: nowIso,
-          auto_blacklist_reason: reason,
-        } as any)
-        .eq("phone_normalized", phone),
-    );
+    mirrors.push(supabase.from("prospect_listings" as any).update(archivePayload).eq("phone_normalized", phone));
   }
   await Promise.allSettled(mirrors);
+
+  // 3. Check existing blocklist to avoid duplicates.
+  const orParts: string[] = [];
+  if (phone) orParts.push(`phone_normalized.eq.${phone}`);
+  if (domain) orParts.push(`domain.eq.${domain}`);
+  const { data: existing } = orParts.length > 0
+    ? await supabase.from("agency_blocklist").select("phone_normalized, domain").or(orParts.join(","))
+    : { data: [] as any[] };
+
+  const phoneExists = !!existing?.some((e: any) => phone && e.phone_normalized === phone);
+  const domainExists = !!existing?.some((e: any) => domain && e.domain === domain);
+
+  const rows: any[] = [];
+  if (phone && !phoneExists) rows.push({ phone_normalized: phone, reason, notes });
+  if (domain && !domainExists) rows.push({ domain, reason, notes });
+
+  if (rows.length > 0) {
+    const { error: blErr } = await supabase.from("agency_blocklist").insert(rows);
+    if (blErr) console.warn("[markAsAgency] blocklist insert failed after archive:", blErr.message);
+  }
 
   // 4. Audit log entry — best-effort, never block the destructive flow.
   try {
