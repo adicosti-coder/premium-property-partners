@@ -397,7 +397,9 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
+      <AdminUnifiedKpiBar />
       {/* Sync Section */}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
