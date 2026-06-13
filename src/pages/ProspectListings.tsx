@@ -705,7 +705,15 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
-      if (statusFilter !== "all") q = q.eq("lifecycle_status", statusFilter as any);
+      // Hard exclusion: anything explicitly marked as agency stays out of every view.
+      // (Manual "Marchează Agenție" sets prospect_type='agentie' AND archives the row.)
+      q = q.neq("prospect_type", "agentie");
+      if (statusFilter !== "all") {
+        q = q.eq("lifecycle_status", statusFilter as any);
+      } else {
+        // Default view never includes archived rows (agency, expired, manually killed).
+        q = q.neq("lifecycle_status", "archived");
+      }
       if (categoryFilter !== "all") q = q.eq("category", categoryFilter as any);
       const { data, error } = await q;
       if (error) {
@@ -715,6 +723,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       console.log("[ProspectListings] Loaded", data?.length ?? 0, "rows");
       return (data || []) as Prospect[];
     },
+
     enabled: authReady && isAdmin,
     refetchInterval: 30_000,
     retry: 1,
