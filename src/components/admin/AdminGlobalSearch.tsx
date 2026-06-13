@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput,
-  CommandItem, CommandList, CommandSeparator, CommandLoading,
+  CommandItem, CommandList, CommandSeparator,
 } from "@/components/ui/command";
 import { Users, Flame, Building2, Search as SearchIcon } from "lucide-react";
 import { ADMIN_GROUPS } from "./adminNavConfig";
