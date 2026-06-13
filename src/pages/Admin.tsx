@@ -47,6 +47,7 @@ const Admin = () => {
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole(user);
   const { newLeadsCount } = useNewLeadsNotification(activeTab);
   const { pinned, toggle: togglePin } = useAdminPinned();
+  const { recent } = useAdminRecentTabs(activeTab);
 
   // Persist sidebar open state in localStorage (in addition to cookie)
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
