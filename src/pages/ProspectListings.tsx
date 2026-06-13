@@ -1328,6 +1328,14 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     const previous = p.isAgency ? "agentie" : "proprietar";
     const next = p.isAgency ? "proprietar" : "agentie";
     const phone = getProspectPhone(p);
+    const domain = (() => {
+      try {
+        const host = p.source_url ? new URL(p.source_url).hostname.replace(/^www\./i, "").toLowerCase() : null;
+        return host && !["olx.ro", "storia.ro", "imobiliare.ro", "facebook.com", "publi24.ro", "romimo.ro"].includes(host) ? host : null;
+      } catch {
+        return null;
+      }
+    })();
 
     // Optimistic
     qc.setQueriesData({ queryKey: ["prospect-listings"] }, (old: any) =>
