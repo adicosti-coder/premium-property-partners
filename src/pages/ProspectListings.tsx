@@ -705,7 +705,15 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
-      if (statusFilter !== "all") q = q.eq("lifecycle_status", statusFilter as any);
+      // Hard exclusion: anything explicitly marked as agency stays out of every view.
+      // (Manual "Marchează Agenție" sets prospect_type='agentie' AND archives the row.)
+      q = q.neq("prospect_type", "agentie");
+      if (statusFilter !== "all") {
+        q = q.eq("lifecycle_status", statusFilter as any);
+      } else {
+        // Default view never includes archived rows (agency, expired, manually killed).
+        q = q.neq("lifecycle_status", "archived" as any);
+      }
       if (categoryFilter !== "all") q = q.eq("category", categoryFilter as any);
       const { data, error } = await q;
       if (error) {
@@ -715,6 +723,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       console.log("[ProspectListings] Loaded", data?.length ?? 0, "rows");
       return (data || []) as Prospect[];
     },
+
     enabled: authReady && isAdmin,
     refetchInterval: 30_000,
     retry: 1,
@@ -1319,11 +1328,32 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
     // Optimistic
     qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
-      Array.isArray(old) ? old.map((row: any) => row.id === p.id ? { ...row, prospect_type: next } : row) : old
+      Array.isArray(old)
+        ? (next === "agentie"
+            // Hide immediately when marking as agency (permanent removal from view)
+            ? old.filter((row: any) => row.id !== p.id)
+            : old.map((row: any) => row.id === p.id ? { ...row, prospect_type: next } : row))
+        : old
     );
+    const nowIso = new Date().toISOString();
+    const updatePayload: Record<string, unknown> = next === "agentie"
+      ? {
+          prospect_type: "agentie",
+          is_active: false,
+          lifecycle_status: "archived",
+          auto_blacklisted_at: nowIso,
+          auto_blacklist_reason: "manual_admin_mark_agency",
+        }
+      : {
+          prospect_type: "proprietar",
+          is_active: true,
+          lifecycle_status: "new",
+          auto_blacklisted_at: null,
+          auto_blacklist_reason: null,
+        };
     const { error } = await supabase
       .from("prospect_listings")
-      .update({ prospect_type: next })
+      .update(updatePayload as any)
       .eq("id", p.id);
     if (error) {
       toast({ title: "Eroare", description: error.message, variant: "destructive" });
@@ -1333,6 +1363,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
     // Apply blocklist side-effect for the new state
     if (next === "agentie") {
+
       if (phone || domain) {
         const { error: blockErr } = await supabase
           .from("agency_blocklist" as any)
@@ -1358,10 +1389,24 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
     // Undo handler: reverts everything (prospect_type + blocklist side-effects)
     const undo = async () => {
-      qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
-        Array.isArray(old) ? old.map((row: any) => row.id === p.id ? { ...row, prospect_type: previous } : row) : old
-      );
-      await supabase.from("prospect_listings").update({ prospect_type: previous }).eq("id", p.id);
+      qc.invalidateQueries({ queryKey: ["prospect-listings"] });
+      const undoPayload: Record<string, unknown> = previous === "agentie"
+        ? {
+            prospect_type: "agentie",
+            is_active: false,
+            lifecycle_status: "archived",
+            auto_blacklisted_at: new Date().toISOString(),
+            auto_blacklist_reason: "manual_admin_mark_agency",
+          }
+        : {
+            prospect_type: "proprietar",
+            is_active: true,
+            lifecycle_status: "new",
+            auto_blacklisted_at: null,
+            auto_blacklist_reason: null,
+          };
+      await supabase.from("prospect_listings").update(undoPayload as any).eq("id", p.id);
+
       if (previous === "agentie") {
         // Re-add to blocklist
         if (phone || domain) {
