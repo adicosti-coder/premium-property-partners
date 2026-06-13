@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Building2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,19 +14,18 @@ interface Props extends MarkAsAgencyInput {
   label?: string;
   /** Called immediately (optimistic) — use to hide the card from list state. */
   onMarked?: (result: { phone?: string | null; domain?: string | null }) => void;
-  /** Called if the user clicks Undo within 5 seconds. */
+  /** Called if immediate commit fails and the optimistic UI needs restoring. */
   onUndo?: () => void;
   /** React-Query keys to invalidate after the destructive commit. */
   invalidateKeys?: Array<readonly unknown[] | string>;
   disabled?: boolean;
-  /** Delay before the destructive action fires (ms). Default 5000. */
+  /** Kept for backwards compatibility; commit is immediate so refresh cannot cancel it. */
   undoDelayMs?: number;
 }
 
 /**
- * "Marchează Agenție" with a 5-second Undo window.
- * On click → optimistic UI hide + sonner toast with Undo.
- * If untouched after the delay → runs blocklist + archive + audit log.
+ * "Marchează Agenție" with immediate persistent archive/blocklist.
+ * On click → optimistic UI hide + DB update; no delayed commit that can be lost on refresh/navigation.
  */
 export function MarkAsAgencyButton({
   variant = "button",
@@ -37,16 +36,13 @@ export function MarkAsAgencyButton({
   onUndo,
   invalidateKeys,
   disabled,
-  undoDelayMs = 5000,
+  undoDelayMs = 2500,
   ...payload
 }: Props) {
   const [pending, setPending] = useState(false);
   const queryClient = useQueryClient();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancelledRef = useRef(false);
 
   const commit = async () => {
-    if (cancelledRef.current) return;
     setPending(true);
     try {
       const res = await markAsAgency(payload);
@@ -71,35 +67,17 @@ export function MarkAsAgencyButton({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    if (pending || timerRef.current) return;
+    if (pending) return;
 
-    cancelledRef.current = false;
     // Optimistic: hide immediately
     onMarked?.({ phone: payload.phone, domain: null });
 
     const phoneLabel = payload.phone || payload.rawPhone || "contact";
-    const toastId = toast(`🏢 Marchez ca agenție: ${phoneLabel}`, {
-      description: "Se șterge din index în 5 secunde. Apasă Undo pentru a anula.",
-      duration: undoDelayMs,
-      action: {
-        label: "Undo",
-        onClick: () => {
-          cancelledRef.current = true;
-          if (timerRef.current) {
-            clearTimeout(timerRef.current);
-            timerRef.current = null;
-          }
-          toast.dismiss(toastId);
-          toast.success("Anulat. Contactul rămâne în listă.");
-          onUndo?.();
-        },
-      },
+    toast(`🏢 Marchez ca agenție: ${phoneLabel}`, {
+      description: "Se salvează imediat ca inactiv/expirat ca să nu reapară la refresh.",
+      duration: Math.max(2500, undoDelayMs),
     });
-
-    timerRef.current = setTimeout(() => {
-      timerRef.current = null;
-      void commit();
-    }, undoDelayMs);
+    void commit();
   };
 
   if (variant === "icon") {
@@ -133,7 +111,7 @@ export function MarkAsAgencyButton({
         "gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive",
         className,
       )}
-      title="Marchează ca Agenție (blocklist + arhivă + audit · 5s Undo)"
+      title="Marchează ca Agenție (blocklist + arhivă + audit imediat)"
     >
       {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Building2 className="h-3.5 w-3.5" />}
       <span>{label ?? "Marchează Agenție"}</span>
