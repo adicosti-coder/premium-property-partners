@@ -1,10 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import SEOHead from "@/components/SEOHead";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { User, Session } from "@supabase/supabase-js";
 import {
   ArrowLeft, LogOut, Loader2, Users, ShieldAlert, Sparkles,
@@ -18,54 +16,10 @@ import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
 import { AdminStatusBar } from "@/components/admin/AdminStatusBar";
 import { findTab } from "@/components/admin/adminNavConfig";
 import { useAdminPinned } from "@/hooks/useAdminPinned";
-
-import BookingManager from "@/components/admin/BookingManager";
-import PropertyManager from "@/components/admin/PropertyManager";
-import AdminDashboard from "@/components/admin/AdminDashboard";
-import BlogManager from "@/components/admin/BlogManager";
-import OwnerCodeManager from "@/components/admin/OwnerCodeManager";
-import MaintenanceManager from "@/components/admin/MaintenanceManager";
-import NewsletterManager from "@/components/admin/NewsletterManager";
-import ComplexManager from "@/components/admin/ComplexManager";
-import VideoTestimonialsManager from "@/components/admin/VideoTestimonialsManager";
-import POIManager from "@/components/admin/POIManager";
-import HeroVideoManager from "@/components/admin/HeroVideoManager";
-import HeroTextManager from "@/components/admin/HeroTextManager";
-import LeadsManager from "@/components/admin/LeadsManager";
-import LeadsAnalyticsDashboard from "@/components/admin/LeadsAnalyticsDashboard";
-import LocalTipsManager from "@/components/admin/LocalTipsManager";
-import FollowupStatsManager from "@/components/admin/FollowupStatsManager";
-import ABTestManager from "@/components/admin/ABTestManager";
-import ReviewsManager from "@/components/admin/ReviewsManager";
-import CaptchaLogsManager from "@/components/admin/CaptchaLogsManager";
-import CommunityManager from "@/components/admin/CommunityManager";
-import CtaAnalyticsManager from "@/components/admin/CtaAnalyticsManager";
-import EvaluareEngagementManager from "@/components/admin/EvaluareEngagementManager";
-import SecurityChecklist from "@/components/admin/SecurityChecklist";
+import { useAdminRecentTabs } from "@/hooks/useAdminRecentTabs";
 import AdminMFAGuard from "@/components/admin/AdminMFAGuard";
-import EmailCampaignManager from "@/components/admin/EmailCampaignManager";
-import DiscountCodeManager from "@/components/admin/DiscountCodeManager";
-import FunnelAnalyticsManager from "@/components/admin/FunnelAnalyticsManager";
-import PropertyViewsManager from "@/components/admin/PropertyViewsManager";
-import CazareManager from "@/components/admin/CazareManager";
-import InvestitiiPremiumManager from "@/components/admin/InvestitiiPremiumManager";
-import ICalManager from "@/components/admin/ICalManager";
-import ListingImportTabs from "@/components/admin/ListingImportTabs";
-import ProspectManager from "@/components/admin/ProspectManager";
-import CatalogManager from "@/components/admin/CatalogManager";
-import GuestGuideManager from "@/components/admin/GuestGuideManager";
-import AICacheManager from "@/components/admin/AICacheManager";
-import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
-import SEOOptimizerManager from "@/components/admin/SEOOptimizerManager";
-import { VisitorMemoryWidget } from "@/components/admin/VisitorMemoryWidget";
-import PhotoStudioManager from "@/components/admin/PhotoStudioManager";
-import VoiceAgentCommandCenter from "@/components/admin/VoiceAgentCommandCenter";
-import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
-import SystemHealthDashboard from "@/components/admin/SystemHealthDashboard";
-import AutomationManager from "@/components/admin/AutomationManager";
-import ProspectPipelinePanel from "@/components/admin/ProspectPipelinePanel";
-import BlogCtaABDashboard from "@/components/admin/BlogCtaABDashboard";
-import BlogHubClicksDashboard from "@/components/admin/BlogHubClicksDashboard";
+import { getAdminTabComponent, prefetchAdminTab } from "@/components/admin/adminTabLoaders";
+import { AdminTabFallback } from "@/components/admin/AdminTabFallback";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -93,6 +47,7 @@ const Admin = () => {
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole(user);
   const { newLeadsCount } = useNewLeadsNotification(activeTab);
   const { pinned, toggle: togglePin } = useAdminPinned();
+  const { recent } = useAdminRecentTabs(activeTab);
 
   // Persist sidebar open state in localStorage (in addition to cookie)
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
@@ -259,6 +214,7 @@ const Admin = () => {
               onTogglePin={togglePin}
               onOpenCommand={() => setCmdOpen(true)}
               counters={counters}
+              recent={recent}
             />
 
             <SidebarInset className="flex flex-col min-w-0">
@@ -306,77 +262,9 @@ const Admin = () => {
               </header>
 
               <main className="flex-1 px-4 py-6 md:px-6 overflow-x-hidden">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                  <TabsContent value="ai-cache"><AICacheManager /></TabsContent>
-                  <TabsContent value="dashboard"><AdminDashboard /></TabsContent>
-                  <TabsContent value="leads"><LeadsManager /></TabsContent>
-                  <TabsContent value="leads-analytics"><LeadsAnalyticsDashboard /></TabsContent>
-                  <TabsContent value="bookings"><BookingManager /></TabsContent>
-                  <TabsContent value="cazare"><CazareManager /></TabsContent>
-                  <TabsContent value="properties"><PropertyManager /></TabsContent>
-                  <TabsContent value="investitii-premium"><InvestitiiPremiumManager /></TabsContent>
-                  <TabsContent value="blog"><BlogManager /></TabsContent>
-                  <TabsContent value="owner-codes"><OwnerCodeManager /></TabsContent>
-                  <TabsContent value="maintenance"><MaintenanceManager /></TabsContent>
-                  <TabsContent value="newsletter"><NewsletterManager /></TabsContent>
-                  <TabsContent value="complexes"><ComplexManager /></TabsContent>
-                  <TabsContent value="video-testimonials"><VideoTestimonialsManager /></TabsContent>
-                  <TabsContent value="poi"><POIManager /></TabsContent>
-                  <TabsContent value="hero-video">
-                    <div className="space-y-6">
-                      <HeroVideoManager />
-                      <HeroTextManager />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="local-tips"><LocalTipsManager /></TabsContent>
-                  <TabsContent value="followup-stats"><FollowupStatsManager /></TabsContent>
-                  <TabsContent value="ab-testing"><ABTestManager /></TabsContent>
-                  <TabsContent value="reviews"><ReviewsManager /></TabsContent>
-                  <TabsContent value="captcha"><CaptchaLogsManager /></TabsContent>
-                  <TabsContent value="community"><CommunityManager /></TabsContent>
-                  <TabsContent value="cta-analytics"><CtaAnalyticsManager /></TabsContent>
-                  <TabsContent value="blog-cta-ab"><BlogCtaABDashboard /></TabsContent>
-                  <TabsContent value="blog-hub-clicks"><BlogHubClicksDashboard /></TabsContent>
-                  <TabsContent value="evaluare-engagement"><EvaluareEngagementManager /></TabsContent>
-                  <TabsContent value="funnel-analytics"><FunnelAnalyticsManager /></TabsContent>
-                  <TabsContent value="security"><SecurityChecklist /></TabsContent>
-                  <TabsContent value="email-campaigns"><EmailCampaignManager /></TabsContent>
-                  <TabsContent value="discount-codes"><DiscountCodeManager /></TabsContent>
-                  <TabsContent value="property-views"><PropertyViewsManager /></TabsContent>
-                  <TabsContent value="ical-sync"><ICalManager /></TabsContent>
-                  <TabsContent value="prospects"><ProspectManager /></TabsContent>
-                  <TabsContent value="listing-import"><ListingImportTabs /></TabsContent>
-                  <TabsContent value="guest-guides"><GuestGuideManager /></TabsContent>
-                  <TabsContent value="catalogs"><CatalogManager /></TabsContent>
-                  <TabsContent value="scraper-status"><ScraperStatusDashboard /></TabsContent>
-                  <TabsContent value="seo-optimizer"><SEOOptimizerManager /></TabsContent>
-                  <TabsContent value="ai-memory">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <VisitorMemoryWidget />
-                      <div className="rounded-lg border border-border bg-muted/20 p-4 text-sm space-y-2">
-                        <h3 className="font-semibold flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-primary" /> Cum funcționează
-                        </h3>
-                        <p className="text-muted-foreground text-xs">
-                          Sistemul AI Memory urmărește anonim sesiunile vizitatorilor (proprietăți vizionate, căutări, interacțiuni cu chatbot-ul) și deduce automat preferințe.
-                        </p>
-                        <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                          <li><strong>+5</strong> per proprietate vizionată</li>
-                          <li><strong>+3</strong> per căutare semantică</li>
-                          <li><strong>+20</strong> dacă a declarat buget</li>
-                          <li><strong>+25</strong> dacă este autentificat</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="photo-studio"><PhotoStudioManager /></TabsContent>
-                  <TabsContent value="voice-agent"><VoiceAgentCommandCenter /></TabsContent>
-                  <TabsContent value="agency-ai"><AgencyDetectionSettings /></TabsContent>
-                  <TabsContent value="system-health"><SystemHealthDashboard /></TabsContent>
-                  <TabsContent value="automation"><AutomationManager /></TabsContent>
-                  <TabsContent value="prospect-pipeline"><ProspectPipelinePanel /></TabsContent>
-                </Tabs>
+                <ActiveTabRenderer activeTab={activeTab} />
               </main>
+
 
               <AdminStatusBar
                 newLeads={newLeadsCount}
@@ -403,4 +291,27 @@ const Admin = () => {
   );
 };
 
+/**
+ * Randează doar tab-ul activ, lazy din `adminTabLoaders`.
+ * Avantaj cheie: bundle-ul inițial al /admin scade de la ~45 manageri statici
+ * la doar shell + chunk-ul tab-ului curent. Restul se descarcă on-demand
+ * (sau pe hover, via `prefetchAdminTab`).
+ */
+function ActiveTabRenderer({ activeTab }: { activeTab: string }) {
+  const Component = getAdminTabComponent(activeTab);
+  if (!Component) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground">
+        Secțiune necunoscută: <code>{activeTab}</code>
+      </div>
+    );
+  }
+  return (
+    <Suspense fallback={<AdminTabFallback />}>
+      <Component />
+    </Suspense>
+  );
+}
+
 export default Admin;
+

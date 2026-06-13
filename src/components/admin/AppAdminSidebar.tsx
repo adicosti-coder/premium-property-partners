@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Pin, PinOff, Star } from "lucide-react";
+import { Pin, PinOff, Star, History } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge,
@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ADMIN_GROUPS, ALL_TABS, findTab, type AdminTab } from "./adminNavConfig";
+import { prefetchAdminTab } from "./adminTabLoaders";
 
 interface Props {
   activeTab: string;
@@ -16,6 +17,7 @@ interface Props {
   onTogglePin: (value: string) => void;
   onOpenCommand: () => void;
   counters: { newLeads: number; newScraper: number; hotProspects: number; prospectPipeline: number };
+  recent?: string[];
 }
 
 function getCount(tab: AdminTab, c: Props["counters"]): number {
@@ -24,7 +26,7 @@ function getCount(tab: AdminTab, c: Props["counters"]): number {
 }
 
 export function AppAdminSidebar({
-  activeTab, onSelect, pinned, onTogglePin, onOpenCommand, counters,
+  activeTab, onSelect, pinned, onTogglePin, onOpenCommand, counters, recent = [],
 }: Props) {
   const navigate = useNavigate();
   const { state } = useSidebar();
@@ -38,7 +40,16 @@ export function AppAdminSidebar({
     onSelect(tab.value);
   };
 
+  /** Prefetch chunk-ul lazy când utilizatorul intenționează să dea click. */
+  const handleHover = (tab: AdminTab) => {
+    if (!tab.externalRoute) prefetchAdminTab(tab.value);
+  };
+
   const pinnedTabs = pinned.map(findTab).filter(Boolean) as AdminTab[];
+  const recentTabs = recent
+    .map(findTab)
+    .filter((t): t is AdminTab => !!t && t.value !== activeTab)
+    .slice(0, 5);
 
   return (
     <Sidebar collapsible="icon">
@@ -80,6 +91,8 @@ export function AppAdminSidebar({
                       <SidebarMenuButton
                         isActive={isActive}
                         onClick={() => handleClick(tab)}
+                        onMouseEnter={() => handleHover(tab)}
+                        onFocus={() => handleHover(tab)}
                         tooltip={tab.label}
                       >
                         <Icon className="h-4 w-4 shrink-0" />
@@ -92,6 +105,35 @@ export function AppAdminSidebar({
                           </Badge>
                         </SidebarMenuBadge>
                       )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {recentTabs.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              <History className="mr-1 h-3 w-3" />
+              Recent
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {recentTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <SidebarMenuItem key={`recent-${tab.value}`}>
+                      <SidebarMenuButton
+                        onClick={() => handleClick(tab)}
+                        onMouseEnter={() => handleHover(tab)}
+                        onFocus={() => handleHover(tab)}
+                        tooltip={tab.label}
+                      >
+                        <Icon className="h-4 w-4 shrink-0 opacity-70" />
+                        <span className="opacity-80">{tab.label}</span>
+                      </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
                 })}
@@ -146,6 +188,8 @@ export function AppAdminSidebar({
                         <SidebarMenuButton
                           isActive={isActive}
                           onClick={() => handleClick(tab)}
+                          onMouseEnter={() => handleHover(tab)}
+                          onFocus={() => handleHover(tab)}
                           tooltip={tab.label}
                         >
                           <Icon className="h-4 w-4 shrink-0" />
