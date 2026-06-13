@@ -98,6 +98,7 @@ interface Prospect {
   phone_normalized: string | null;
   source_url: string;
   source_platform: string;
+  is_active: boolean | null;
   lead_score: number | null;
   score: number | null;
   category: string | null;
@@ -701,7 +702,9 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     queryFn: async () => {
       let q = supabase
         .from("prospect_listings")
-        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,created_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason,persona_snapshot,persona_generated_at")
+        .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,is_active,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,created_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason,persona_snapshot,persona_generated_at")
+        // Hard exclusion: dismissed/expired/agency rows are persisted as inactive.
+        .eq("is_active", true)
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("scraped_at", { ascending: false })
         .limit(300);
