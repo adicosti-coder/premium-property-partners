@@ -1389,10 +1389,24 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
 
     // Undo handler: reverts everything (prospect_type + blocklist side-effects)
     const undo = async () => {
-      qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
-        Array.isArray(old) ? old.map((row: any) => row.id === p.id ? { ...row, prospect_type: previous } : row) : old
-      );
-      await supabase.from("prospect_listings").update({ prospect_type: previous }).eq("id", p.id);
+      qc.invalidateQueries({ queryKey: ["prospect-listings"] });
+      const undoPayload: Record<string, unknown> = previous === "agentie"
+        ? {
+            prospect_type: "agentie",
+            is_active: false,
+            lifecycle_status: "archived",
+            auto_blacklisted_at: new Date().toISOString(),
+            auto_blacklist_reason: "manual_admin_mark_agency",
+          }
+        : {
+            prospect_type: "proprietar",
+            is_active: true,
+            lifecycle_status: "new",
+            auto_blacklisted_at: null,
+            auto_blacklist_reason: null,
+          };
+      await supabase.from("prospect_listings").update(undoPayload as any).eq("id", p.id);
+
       if (previous === "agentie") {
         // Re-add to blocklist
         if (phone || domain) {
