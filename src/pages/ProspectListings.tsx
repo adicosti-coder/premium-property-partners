@@ -712,7 +712,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         q = q.eq("lifecycle_status", statusFilter as any);
       } else {
         // Default view never includes archived rows (agency, expired, manually killed).
-        q = q.neq("lifecycle_status", "archived" as any);
+        q = q.neq("lifecycle_status", "expired");
       }
       if (categoryFilter !== "all") q = q.eq("category", categoryFilter as any);
       const { data, error } = await q;
