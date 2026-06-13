@@ -1394,7 +1394,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         ? {
             prospect_type: "agentie",
             is_active: false,
-            lifecycle_status: "archived",
+            lifecycle_status: "expired",
             auto_blacklisted_at: new Date().toISOString(),
             auto_blacklist_reason: "manual_admin_mark_agency",
           }
