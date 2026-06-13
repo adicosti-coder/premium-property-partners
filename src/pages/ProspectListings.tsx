@@ -38,6 +38,7 @@ import Header from "@/components/Header";
 import { computeProspectGeoMatch } from "@/lib/timisoaraGeo";
 import { useAgencyDetectionSettings } from "@/hooks/useAgencyDetectionSettings";
 import type { User } from "@supabase/supabase-js";
+import { markAsAgency } from "@/lib/markAsAgency";
 
 const lifecycleColors: Record<string, string> = {
   new: "border-primary/40 text-primary",
@@ -700,7 +701,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const { data: prospects = [], isLoading, refetch, error: queryError } = useQuery({
     queryKey: ["prospect-listings", statusFilter, categoryFilter],
     queryFn: async () => {
-      let q = supabase
+    let q = supabase
         .from("prospect_listings")
         .select("id,title,description,price,currency,location,zone,rooms,size,contact_name,contact_phone,phone_normalized,source_url,source_platform,is_active,lead_score,score,category,prospect_type,lifecycle_status,call_summary,admin_notes,ai_score_breakdown,ai_scored_at,voice_call_session_id,scraped_at,created_at,followup_sent_at,owner_sentiment,urgency_level,auto_call_triggered_at,search_keywords,auto_blacklisted_at,auto_blacklist_reason,persona_snapshot,persona_generated_at")
         // Hard exclusion: dismissed/expired/agency rows are persisted as inactive.
@@ -723,8 +724,9 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
         console.error("[ProspectListings] Query error:", error);
         throw error;
       }
-      console.log("[ProspectListings] Loaded", data?.length ?? 0, "rows");
-      return (data || []) as Prospect[];
+      const rows = ((data || []) as Prospect[]).filter((row) => row.is_active === true && row.prospect_type !== "agentie" && row.lifecycle_status !== "expired");
+      console.log("[ProspectListings] Loaded", rows.length, "rows");
+      return rows;
     },
 
     enabled: authReady && isAdmin,
@@ -1325,12 +1327,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const handleToggleProspectType = async (p: Prospect & { isAgency?: boolean }) => {
     const previous = p.isAgency ? "agentie" : "proprietar";
     const next = p.isAgency ? "proprietar" : "agentie";
-    let domain: string | null = null;
-    try { domain = p.source_url ? new URL(p.source_url).hostname.toLowerCase() : null; } catch { domain = null; }
-    const phone = p.phone_normalized || null;
+    const phone = getProspectPhone(p);
 
     // Optimistic
-    qc.setQueryData(["prospect-listings", statusFilter, categoryFilter], (old: any) =>
+    qc.setQueriesData({ queryKey: ["prospect-listings"] }, (old: any) =>
       Array.isArray(old)
         ? (next === "agentie"
             // Hide immediately when marking as agency (permanent removal from view)
@@ -1338,55 +1338,39 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
             : old.map((row: any) => row.id === p.id ? { ...row, prospect_type: next } : row))
         : old
     );
-    const nowIso = new Date().toISOString();
-    const updatePayload: Record<string, unknown> = next === "agentie"
-      ? {
-          prospect_type: "agentie",
-          is_active: false,
-          lifecycle_status: "expired",
-          auto_blacklisted_at: nowIso,
-          auto_blacklist_reason: "manual_admin_mark_agency",
-        }
-      : {
+
+    if (next === "agentie") {
+      const result = await markAsAgency({
+        id: p.id,
+        source: "prospect_listings",
+        phone,
+        rawPhone: p.contact_phone,
+        url: p.source_url,
+        contextLabel: `Prospect Listings · ${p.title?.slice(0, 80) || p.id}`,
+      });
+      if (!result.ok) {
+        toast({ title: "Eroare", description: result.message, variant: "destructive" });
+        qc.invalidateQueries({ queryKey: ["prospect-listings"] });
+        return;
+      }
+    } else {
+      const { error } = await supabase
+        .from("prospect_listings")
+        .update({
           prospect_type: "proprietar",
           is_active: true,
           lifecycle_status: "new",
           auto_blacklisted_at: null,
           auto_blacklist_reason: null,
-        };
-    const { error } = await supabase
-      .from("prospect_listings")
-      .update(updatePayload as any)
-      .eq("id", p.id);
-    if (error) {
-      toast({ title: "Eroare", description: error.message, variant: "destructive" });
-      refetch();
-      return;
-    }
-
-    // Apply blocklist side-effect for the new state
-    if (next === "agentie") {
-
-      if (phone || domain) {
-        const { error: blockErr } = await supabase
-          .from("agency_blocklist" as any)
-          .insert({
-            phone_normalized: phone,
-            domain,
-            reason: "manual_admin",
-            notes: `Marcat manual din /admin/prospect-listings (${p.contact_name || "—"})`,
-            source_prospect_id: p.id,
-          });
-        if (blockErr && !blockErr.message?.includes("duplicate")) {
-          console.warn("[blocklist] insert failed:", blockErr.message);
-        }
+        } as any)
+        .eq("id", p.id);
+      if (error) {
+        toast({ title: "Eroare", description: error.message, variant: "destructive" });
+        qc.invalidateQueries({ queryKey: ["prospect-listings"] });
+        return;
       }
-    } else {
       if (phone) {
         await supabase.from("agency_blocklist" as any).delete().eq("phone_normalized", phone);
-      }
-      if (domain) {
-        await supabase.from("agency_blocklist" as any).delete().eq("domain", domain);
       }
     }
 
