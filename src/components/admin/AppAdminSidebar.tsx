@@ -113,6 +113,35 @@ export function AppAdminSidebar({
           </SidebarGroup>
         )}
 
+        {recentTabs.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>
+              <History className="mr-1 h-3 w-3" />
+              Recent
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {recentTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <SidebarMenuItem key={`recent-${tab.value}`}>
+                      <SidebarMenuButton
+                        onClick={() => handleClick(tab)}
+                        onMouseEnter={() => handleHover(tab)}
+                        onFocus={() => handleHover(tab)}
+                        tooltip={tab.label}
+                      >
+                        <Icon className="h-4 w-4 shrink-0 opacity-70" />
+                        <span className="opacity-80">{tab.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         {ADMIN_GROUPS.map((group) => {
           const GroupIcon = group.icon;
           // Build ordered chunks: items grouped by `subgroup` (preserving insertion / subgroupOrder)
