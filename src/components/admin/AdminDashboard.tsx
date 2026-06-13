@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import GooglePerformanceWidget from "./GooglePerformanceWidget";
 import SeoAutomationWidget from "./SeoAutomationWidget";
+import AdminUnifiedKpiBar from "./AdminUnifiedKpiBar";
+
 import { toast } from "@/hooks/use-toast";
 import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
 import { DismissExpiredButton } from "@/components/admin/DismissExpiredButton";
@@ -397,7 +399,9 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
+      <AdminUnifiedKpiBar />
       {/* Sync Section */}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
