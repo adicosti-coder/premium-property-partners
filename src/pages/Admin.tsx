@@ -214,6 +214,7 @@ const Admin = () => {
               onTogglePin={togglePin}
               onOpenCommand={() => setCmdOpen(true)}
               counters={counters}
+              recent={recent}
             />
 
             <SidebarInset className="flex flex-col min-w-0">
