@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Pin, PinOff, Star } from "lucide-react";
+import { Pin, PinOff, Star, History } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge,
@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ADMIN_GROUPS, ALL_TABS, findTab, type AdminTab } from "./adminNavConfig";
+import { prefetchAdminTab } from "./adminTabLoaders";
 
 interface Props {
   activeTab: string;
