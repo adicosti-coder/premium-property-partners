@@ -159,6 +159,8 @@ export function AppAdminSidebar({
                         <SidebarMenuButton
                           isActive={isActive}
                           onClick={() => handleClick(tab)}
+                          onMouseEnter={() => handleHover(tab)}
+                          onFocus={() => handleHover(tab)}
                           tooltip={tab.label}
                         >
                           <Icon className="h-4 w-4 shrink-0" />
