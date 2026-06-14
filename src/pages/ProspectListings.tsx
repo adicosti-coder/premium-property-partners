@@ -501,6 +501,8 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
   const [confirmKbdDismissId, setConfirmKbdDismissId] = useState<string | null>(null);
   const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | "recover_phones" | null>(null);
+  const [confirmRecoverAllOpen, setConfirmRecoverAllOpen] = useState(false);
+  const [phonelessExpanded, setPhonelessExpanded] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
@@ -1983,6 +1985,149 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
             </div>
           )}
         </Card>
+
+        {/* ── Phoneless prospects: dedicated section with one-click bulk recover ── */}
+        {(() => {
+          const phoneless = filtered.filter((p) => !getProspectPhone(p));
+          if (phoneless.length === 0) return null;
+          const eligible = phoneless.filter(
+            (p) => !!p.source_url && !p.phoneFetchExhausted,
+          );
+          const exhausted = phoneless.filter((p) => p.phoneFetchExhausted);
+          const noUrl = phoneless.filter((p) => !p.source_url);
+          const preview = phoneless.slice(0, phonelessExpanded ? phoneless.length : 8);
+          return (
+            <Card className="border-amber-300/60 bg-amber-50/40 dark:bg-amber-950/20">
+              <CardHeader className="pb-3 flex flex-row items-start justify-between gap-3 flex-wrap">
+                <div className="space-y-1">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-amber-600" />
+                    Fără telefon ({phoneless.length})
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    {eligible.length} eligibile pentru recuperare
+                    {exhausted.length > 0 && ` · ${exhausted.length} la limită (5/5)`}
+                    {noUrl.length > 0 && ` · ${noUrl.length} fără sursă`}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {phoneless.length > 8 && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setPhonelessExpanded((v) => !v)}
+                    >
+                      {phonelessExpanded ? "Restrânge" : `Arată toate (${phoneless.length})`}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => setConfirmRecoverAllOpen(true)}
+                    disabled={bulkPending !== null || eligible.length === 0}
+                    className="gap-1.5"
+                    title={
+                      eligible.length === 0
+                        ? "Niciun anunț eligibil (lipsă sursă sau limită 5/5 atinsă)"
+                        : `Forțează extragere telefon pentru toate cele ${eligible.length} anunțuri eligibile`
+                    }
+                  >
+                    {bulkPending === "recover_phones"
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <RefreshCw className="h-3.5 w-3.5" />}
+                    Recuperează toate ({eligible.length})
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <ul className="divide-y divide-border/60 rounded-md border border-border/60 bg-background/60 text-sm">
+                  {preview.map((p) => (
+                    <li key={p.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium">{p.title || "(fără titlu)"}</div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          {[p.zone, p.location].filter(Boolean).join(" · ") || "—"}
+                          {p.source_platform ? ` · ${p.source_platform}` : ""}
+                          {p.phoneFetchExhausted
+                            ? ` · limită ${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS}`
+                            : p.phoneFetchAttempts > 0
+                              ? ` · încercări ${p.phoneFetchAttempts}/${MAX_PHONE_FETCH_ATTEMPTS}`
+                              : ""}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {p.source_url && (
+                          <a
+                            href={p.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-3 w-3" /> sursă
+                          </a>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1"
+                          disabled={recoveringPhoneId === p.id || p.phoneFetchExhausted || !p.source_url || bulkPending !== null}
+                          onClick={() => void handleRecoverPhone({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })}
+                        >
+                          {recoveringPhoneId === p.id
+                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                            : <RefreshCw className="h-3 w-3" />}
+                          tel.
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {/* ── Confirm recover-all phoneless ─────────────────────────────────── */}
+        <AlertDialog open={confirmRecoverAllOpen} onOpenChange={setConfirmRecoverAllOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-blue-600" />
+                Recuperează telefoane pentru toate anunțurile fără telefon?
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-2 text-sm">
+                  <p>
+                    Va rula extragerea forțată pentru{" "}
+                    <strong>
+                      {filtered.filter((p) => !getProspectPhone(p) && !!p.source_url && !p.phoneFetchExhausted).length}
+                    </strong>{" "}
+                    anunțuri eligibile din lista filtrată curentă.
+                  </p>
+                  <div className="bg-muted rounded-md p-3 text-xs space-y-1">
+                    <div>⏱️ Rulare secvențială (~5–10s/anunț) cu pauză între cereri.</div>
+                    <div>📞 Max 5 încercări/anunț (proxy stealth + UA rotation).</div>
+                    <div>🛡️ Cele la limita 5/5 sau fără sursă sunt sărite automat.</div>
+                  </div>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Anulează</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const eligible = filtered.filter(
+                    (p) => !getProspectPhone(p) && !!p.source_url && !p.phoneFetchExhausted,
+                  );
+                  void runBulkRecoverPhones(
+                    eligible.map((p) => ({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })),
+                  );
+                }}
+              >
+                <RefreshCw className="h-4 w-4 mr-1" /> Da, recuperează
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Table */}
         <Card>
