@@ -13,9 +13,13 @@ interface CampaignRequest {
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-const wrapContentInTemplate = (content: string, subject: string, campaignId: string, recipientEmail: string) => {
+const wrapContentInTemplate = async (content: string, subject: string, campaignId: string, recipientEmail: string) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?campaign_id=${campaignId}&email=${encodeURIComponent(recipientEmail)}`;
+  // Opaque signed pixel: no recipient email/user_id leaked to email intermediaries.
+  const { signTrackingPayload } = await import("../_shared/trackingToken.ts");
+  const emailType = `campaign:${campaignId}`;
+  const sig = await signTrackingPayload({ campaign_id: campaignId, email_type: emailType });
+  const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?campaign_id=${encodeURIComponent(campaignId)}&email_type=${encodeURIComponent(emailType)}&sig=${sig}`;
   const unsubscribeUrl = `https://realtrustaparthotel.lovable.app/setari?unsubscribe=true`;
   
   return `
