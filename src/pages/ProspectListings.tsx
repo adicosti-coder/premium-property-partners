@@ -2584,6 +2584,18 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                                 )}
 
 
+                                <DropdownMenuItem
+                                  onClick={() => void handlePushToFastReview(p.id)}
+                                  disabled={pushingId === p.id || bulkPending !== null}
+                                  className="gap-2 cursor-pointer"
+                                  title="Creează un draft în /admin/properties/fast-review din acest anunț"
+                                >
+                                  {pushingId === p.id
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    : <Send className="h-3.5 w-3.5 text-emerald-600" />}
+                                  Trimite la Fast Review
+                                </DropdownMenuItem>
+
 
                                 <DropdownMenuItem
                                   onClick={() => handleToggleProspectType(p)}
