@@ -10,13 +10,13 @@ const corsHeaders = {
 import { signTrackingPayload } from "../_shared/trackingToken.ts";
 
 // Generate tracked URL with UTM parameters
-async function getTrackedUrl(
+function getTrackedUrl(
   userId: string,
   emailType: string,
   linkType: string,
   targetUrl: string,
   supabaseUrl: string
-): Promise<string> {
+): string {
   const trackingUrl = new URL(`${supabaseUrl}/functions/v1/track-email-click`);
   trackingUrl.searchParams.set("user_id", userId);
   trackingUrl.searchParams.set("email_type", emailType);
@@ -26,19 +26,19 @@ async function getTrackedUrl(
   trackingUrl.searchParams.set("utm_campaign", emailType);
   trackingUrl.searchParams.set("utm_content", linkType);
   trackingUrl.searchParams.set("redirect", targetUrl);
-  const sig = await signTrackingPayload({ user_id: userId, email_type: emailType, link_type: linkType });
+  const sig = signTrackingPayload({ user_id: userId, email_type: emailType, link_type: linkType });
   trackingUrl.searchParams.set("sig", sig);
   return trackingUrl.toString();
 }
 
 // Generate tracking pixel URL for open tracking
-async function getTrackingPixelUrl(
+function getTrackingPixelUrl(
   userId: string,
   emailType: string,
   followupEmailId: string | null,
   abAssignmentId: string | null,
   supabaseUrl: string
-): Promise<string> {
+): string {
   const pixelUrl = new URL(`${supabaseUrl}/functions/v1/track-email-open`);
   pixelUrl.searchParams.set("user_id", userId);
   pixelUrl.searchParams.set("email_type", emailType);
@@ -48,7 +48,7 @@ async function getTrackingPixelUrl(
   if (abAssignmentId) {
     pixelUrl.searchParams.set("ab_id", abAssignmentId);
   }
-  const sig = await signTrackingPayload({ user_id: userId, email_type: emailType });
+  const sig = signTrackingPayload({ user_id: userId, email_type: emailType });
   pixelUrl.searchParams.set("sig", sig);
   return pixelUrl.toString();
 }
