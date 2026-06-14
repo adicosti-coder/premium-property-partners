@@ -77,6 +77,9 @@ function buildActionsForUrl(url: string) {
       'button[data-testid="show-phone"]',
       'button[data-cy="show-phone"]',
       'a[data-testid="contact-phone"]',
+      'button[data-testid*="phone" i]',
+      'button[data-cy*="phone" i]',
+      'a[href^="tel:"]',
       'button[aria-label*="telefon" i]',
       'button[aria-label*="phone" i]',
     ];
@@ -87,6 +90,8 @@ function buildActionsForUrl(url: string) {
       'button[data-testid="reveal-phone-button"]',
       'button[aria-label*="telefon" i]',
       'button[data-cy*="phone" i]',
+      'button[data-testid*="phone" i]',
+      'a[href^="tel:"]',
     ];
   } else if (u.includes("publi24.ro") || u.includes("anuntul.ro")) {
     phoneSelectors = [
@@ -94,6 +99,7 @@ function buildActionsForUrl(url: string) {
       'button[class*="phone" i]',
       'button[id*="phone" i]',
       'a[href^="tel:"]',
+      '[role="button"][aria-label*="telefon" i]',
     ];
   } else {
     phoneSelectors = [
@@ -101,7 +107,10 @@ function buildActionsForUrl(url: string) {
       'button[aria-label*="phone" i]',
       'a[href^="tel:"]',
       'button[class*="phone" i]',
+      'button[id*="phone" i]',
       'button[data-testid*="phone" i]',
+      'button[data-cy*="phone" i]',
+      '[role="button"][aria-label*="telefon" i]',
     ];
   }
 
