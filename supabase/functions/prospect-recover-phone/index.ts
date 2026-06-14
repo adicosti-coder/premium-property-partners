@@ -52,34 +52,51 @@ function extractPhones(text: string): string[] {
 /** Platform-specific click selectors for the "show phone" reveal CTA. */
 function buildActionsForUrl(url: string) {
   const u = url.toLowerCase();
-  const actions: any[] = [{ type: "wait", milliseconds: 2500 }];
-
-  // Best-effort cookie banner dismissal (works on OLX and many RO sites)
-  actions.push({ type: "click", selector: "#onetrust-accept-btn-handler" });
-  actions.push({ type: "click", selector: 'button[data-testid="cookie-policy-banner-accept"]' });
-  actions.push({ type: "wait", milliseconds: 800 });
+  let phoneSelectors: string[];
 
   if (u.includes("olx.ro")) {
-    actions.push({ type: "click", selector: 'button[data-testid="show-phone"]' });
-    actions.push({ type: "click", selector: 'button[data-cy="show-phone"]' });
-    actions.push({ type: "click", selector: 'a[data-testid="contact-phone"]' });
+    phoneSelectors = [
+      'button[data-testid="show-phone"]', 'button[data-cy="show-phone"]', 'a[data-testid="contact-phone"]',
+      'button[data-testid*="phone" i]', 'button[data-cy*="phone" i]', 'a[href^="tel:"]',
+      'button[aria-label*="telefon" i]', 'button[aria-label*="phone" i]',
+    ];
   } else if (u.includes("storia.ro") || u.includes("imobiliare.ro")) {
-    actions.push({ type: "click", selector: 'button[data-cy="phoneButton"]' });
-    actions.push({ type: "click", selector: 'button[data-cy="show-phone-number"]' });
-    actions.push({ type: "click", selector: 'button[aria-label*="telefon" i]' });
-    actions.push({ type: "click", selector: 'button:has-text("telefon")' });
-    actions.push({ type: "click", selector: 'button:has-text("Afiseaza")' });
+    phoneSelectors = [
+      'button[data-cy="phoneButton"]', 'button[data-cy="show-phone-number"]', 'button[data-testid="reveal-phone-button"]',
+      'button[aria-label*="telefon" i]', 'button[data-cy*="phone" i]', 'button[data-testid*="phone" i]', 'a[href^="tel:"]',
+    ];
   } else if (u.includes("publi24.ro") || u.includes("anuntul.ro")) {
-    actions.push({ type: "click", selector: 'button:has-text("Telefon")' });
-    actions.push({ type: "click", selector: 'a.phone-link' });
+    phoneSelectors = ['a.phone-link', 'button[class*="phone" i]', 'button[id*="phone" i]', 'a[href^="tel:"]'];
   } else {
-    // Generic fallback
-    actions.push({ type: "click", selector: 'button:has-text("telefon")' });
-    actions.push({ type: "click", selector: 'button:has-text("phone")' });
+    phoneSelectors = [
+      'button[aria-label*="telefon" i]', 'button[aria-label*="phone" i]', 'a[href^="tel:"]',
+      'button[class*="phone" i]', 'button[id*="phone" i]', 'button[data-testid*="phone" i]', 'button[data-cy*="phone" i]',
+    ];
   }
 
-  actions.push({ type: "wait", milliseconds: 1800 });
-  return actions;
+  const js = `
+    try {
+      var safeClick = function (sel) { try { document.querySelectorAll(sel).forEach(function (el) { try { el.click(); } catch (e) {} }); } catch (e) {} };
+      ['#onetrust-accept-btn-handler','button[data-testid="cookie-policy-banner-accept"]','button[id*="cookie" i][id*="accept" i]','button[class*="cookie" i][class*="accept" i]','button[aria-label*="accept" i]','button[aria-label*="acceptă" i]'].forEach(safeClick);
+      try { window.scrollTo(0, Math.max(500, Math.floor(document.body.scrollHeight * 0.35))); } catch (e) {}
+      ${JSON.stringify(phoneSelectors)}.forEach(safeClick);
+      try {
+        var re = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|apeleaz[ăa]|sun[ăa]|show|reveal|contact)\\b[\\s\\S]{0,44}?(telefon|num[ăa]r|phone|number|mobile|contact)|^(telefon|tel\\.?|phone)$/i;
+        document.querySelectorAll('button, a, [role="button"], [onclick], div, span').forEach(function (el) {
+          try { var txt = ((el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('title') || '') + ' ' + (el.textContent || '')).trim(); if (re.test(txt)) el.click(); } catch (e) {}
+        });
+      } catch (e) {}
+    } catch (e) {}
+  `;
+
+  return [
+    { type: "wait", milliseconds: 2200 },
+    { type: "executeJavascript", script: js },
+    { type: "wait", milliseconds: 2200 },
+    { type: "scroll", direction: "down", amount: 500 },
+    { type: "executeJavascript", script: js },
+    { type: "wait", milliseconds: 1500 },
+  ];
 }
 
 async function firecrawlScrape(url: string, apiKey: string) {
