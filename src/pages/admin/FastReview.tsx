@@ -903,6 +903,24 @@ function ReviewCard({
       const processed = (data as any)?.processed ?? 0;
       const total = (data as any)?.total ?? 0;
       const aiFails = (data as any)?.ai_failures ?? 0;
+
+      // Re-fetch updated images from DB and force browser cache-bust so
+      // the gallery shows the cleaned versions instead of the stale URLs.
+      const { data: fresh, error: fetchErr } = await supabase
+        .from("properties")
+        .select("images")
+        .eq("id", row.id)
+        .single();
+      if (!fetchErr && Array.isArray(fresh?.images)) {
+        const bust = Date.now();
+        const refreshed = (fresh.images as string[]).map((u) =>
+          typeof u === "string" && u.length > 0
+            ? `${u}${u.includes("?") ? "&" : "?"}v=${bust}`
+            : u,
+        );
+        setImages(refreshed);
+      }
+
       toast({
         title: status === "completed" ? "Imagini curățate cu AI" : `Procesare finalizată (${status})`,
         description: `${processed}/${total} imagini reușite${aiFails ? ` · ${aiFails} eșecuri AI (fallback crop aplicat)` : ""}.`,
