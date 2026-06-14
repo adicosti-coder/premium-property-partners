@@ -65,7 +65,13 @@ serve(async (req) => {
     // Anonymize IP by removing the last octet (GDPR compliant)
     const ipAddress = rawIp ? rawIp.replace(/\.\d+$/, ".0") : null;
 
-    // Check for duplicate opens (within 1 minute to avoid counting re-renders)
+    // Campaign-only opens have no user_id; we record nothing per-user.
+    if (!userId) {
+      return new Response(TRACKING_PIXEL, {
+        headers: { "Content-Type": "image/gif", ...corsHeaders },
+      });
+    }
+
     const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
     const { data: existingOpen } = await supabase
       .from("email_open_tracking")
@@ -74,7 +80,7 @@ serve(async (req) => {
       .eq("email_type", emailType)
       .gte("opened_at", oneMinuteAgo)
       .limit(1);
-
+    // Check for duplicate opens (within 1 minute to avoid counting re-renders)
     if (existingOpen && existingOpen.length > 0) {
       console.log("Duplicate open detected, skipping insert");
     } else {
