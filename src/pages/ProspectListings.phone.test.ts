@@ -61,4 +61,9 @@ describe("Telefon Contact fallback", () => {
   it("ignoră sume/prețuri și nu le afișează ca telefon", () => {
     expect(extractPhoneFromText("Preț 210.000 EUR, etaj 2, construit 2026")).toBeNull();
   });
+
+  it("extrage numere din contexte HTML/URL encoded și preferă mobilul", () => {
+    expect(extractPhoneFromText('href="tel:%2B40736%20344%20127"')).toBe("+40736344127");
+    expect(extractPhoneFromText("telefon: 0356 456 333 · WhatsApp 0736/344/127")).toBe("+40736344127");
+  });
 });
