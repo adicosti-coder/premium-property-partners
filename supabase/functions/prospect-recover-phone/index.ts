@@ -105,11 +105,18 @@ async function firecrawlScrape(url: string, apiKey: string) {
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       url,
-      formats: ["markdown", "html"],
+      formats: ["markdown", "html", "rawHtml"],
       onlyMainContent: false,
       waitFor: 3500,
+      timeout: 45000,
+      maxAge: 0,
+      proxy: "stealth",
       actions: buildActionsForUrl(url),
       location: { country: "RO", languages: ["ro"] },
+      headers: {
+        "User-Agent": USER_AGENT,
+        "Accept-Language": "ro-RO,ro;q=0.9,en;q=0.5",
+      },
     }),
   });
   const data = await res.json().catch(() => null);
@@ -119,6 +126,7 @@ async function firecrawlScrape(url: string, apiKey: string) {
   return {
     markdown: doc?.markdown ?? "",
     html: doc?.html ?? "",
+    rawHtml: doc?.rawHtml ?? doc?.raw_html ?? "",
   };
 }
 
@@ -165,11 +173,13 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[recover-phone] ${prospect.id} <- ${prospect.source_url}`);
-    const { markdown, html } = await firecrawlScrape(prospect.source_url, apiKey);
+    const { markdown, html, rawHtml } = await firecrawlScrape(prospect.source_url, apiKey);
 
     // Phone often lands in a tel: link inside html — search both bodies.
-    const telLinks = (html.match(/tel:[^"'<>\s]+/gi) ?? []).join(" ");
-    const corpus = `${telLinks}\n${markdown}\n${html}`;
+    const htmlBlob = `${html}\n${rawHtml}`;
+    const telLinks = (htmlBlob.match(/(?:tel:|callto:|whatsapp:\/\/send\?phone=)[^"'<>\s]+/gi) ?? []).join(" ");
+    const jsonPhones = (htmlBlob.match(/"(?:phone|telephone|phoneNumber|contactPhone|mobile|sellerPhone)"\s*:\s*"([^"]+)"/gi) ?? []).join(" ");
+    const corpus = `${telLinks}\n${jsonPhones}\n${markdown}\n${html}\n${rawHtml}`;
     const phones = extractPhones(corpus);
     const phone = phones[0] ?? null;
 
