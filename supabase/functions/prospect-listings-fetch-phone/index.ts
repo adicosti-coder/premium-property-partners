@@ -16,7 +16,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
+const PHONE_PATTERN = /(?:(?:\+|00)\s*40|0)\s*[237](?:[\s().\/-]*\d){8}\b/g;
+const CONTEXT_PHONE_PATTERN = /(?:telefon|tel\.?|mobil|mobile|whatsapp|contact|num[ăa]r|phone)\D{0,24}((?:(?:\+|00)\s*40|0)?\s*[237](?:[\s().\/-]*\d){8})/gi;
 
 const USER_AGENTS = [
   // Desktop Chrome (Windows)
@@ -29,7 +30,7 @@ const USER_AGENTS = [
 
 function normalizeRoPhone(raw?: string | null): string | null {
   if (!raw) return null;
-  if (raw.includes("...") || raw.includes("***") || raw.includes("•")) return null;
+  if (/[xX*•]{2,}|\.{3,}/.test(raw)) return null;
   let digits = raw.replace(/\D/g, "");
   if (digits.startsWith("0040")) digits = digits.slice(2);
   if (digits.startsWith("40") && digits.length === 11) return /^40[237]\d{8}$/.test(digits) ? `+${digits}` : null;
@@ -38,14 +39,29 @@ function normalizeRoPhone(raw?: string | null): string | null {
   return null;
 }
 
+function decodePhoneText(text: string): string {
+  return text
+    .replace(/%2B/gi, "+")
+    .replace(/\\u00([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&nbsp;|&thinsp;|&ensp;|&emsp;/gi, " ");
+}
+
 function extractPhones(text: string): string[] {
   const out = new Set<string>();
-  const matches = text.match(PHONE_PATTERN) ?? [];
+  const decoded = decodePhoneText(text);
+  const matches = decoded.match(PHONE_PATTERN) ?? [];
   for (const m of matches) {
     const n = normalizeRoPhone(m);
     if (n) out.add(n);
   }
-  return [...out];
+  for (const match of decoded.matchAll(CONTEXT_PHONE_PATTERN)) {
+    const m = match[1];
+    const n = normalizeRoPhone(m);
+    if (n) out.add(n);
+  }
+  return [...out].sort((a, b) => Number(!a.startsWith("+407")) - Number(!b.startsWith("+407")));
 }
 
 function buildActionsForUrl(url: string) {
