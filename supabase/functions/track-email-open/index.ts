@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyTrackingPayload } from "../_shared/trackingToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,21 +22,35 @@ serve(async (req) => {
     const emailType = url.searchParams.get("email_type");
     const followupEmailId = url.searchParams.get("followup_id");
     const abAssignmentId = url.searchParams.get("ab_id");
+    const campaignId = url.searchParams.get("campaign_id");
+    const sig = url.searchParams.get("sig");
 
-    console.log("Tracking email open:", { userId, emailType, followupEmailId, abAssignmentId });
+    const pixelResponse = () => new Response(TRACKING_PIXEL, {
+      headers: {
+        "Content-Type": "image/gif",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        ...corsHeaders,
+      },
+    });
 
-    if (!userId || !emailType) {
+    if (!emailType) {
       console.error("Missing required parameters");
-      // Still return the pixel to not break email rendering
-      return new Response(TRACKING_PIXEL, {
-        headers: {
-          "Content-Type": "image/gif",
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          "Pragma": "no-cache",
-          "Expires": "0",
-          ...corsHeaders,
-        },
-      });
+      return pixelResponse();
+    }
+
+    // Verify HMAC signature to prevent forged tracking events
+    const payload = campaignId
+      ? { campaign_id: campaignId, email_type: emailType }
+      : { user_id: userId ?? "", email_type: emailType };
+    if (!verifyTrackingPayload(payload, sig)) {
+      console.warn("Invalid tracking signature, dropping event");
+      return pixelResponse();
+    }
+
+    if (!userId && !campaignId) {
+      return pixelResponse();
     }
 
     // Create Supabase client with service role for inserting
@@ -50,7 +65,13 @@ serve(async (req) => {
     // Anonymize IP by removing the last octet (GDPR compliant)
     const ipAddress = rawIp ? rawIp.replace(/\.\d+$/, ".0") : null;
 
-    // Check for duplicate opens (within 1 minute to avoid counting re-renders)
+    // Campaign-only opens have no user_id; we record nothing per-user.
+    if (!userId) {
+      return new Response(TRACKING_PIXEL, {
+        headers: { "Content-Type": "image/gif", ...corsHeaders },
+      });
+    }
+
     const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
     const { data: existingOpen } = await supabase
       .from("email_open_tracking")
@@ -59,7 +80,7 @@ serve(async (req) => {
       .eq("email_type", emailType)
       .gte("opened_at", oneMinuteAgo)
       .limit(1);
-
+    // Check for duplicate opens (within 1 minute to avoid counting re-renders)
     if (existingOpen && existingOpen.length > 0) {
       console.log("Duplicate open detected, skipping insert");
     } else {

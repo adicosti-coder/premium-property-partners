@@ -91,9 +91,30 @@ serve(async (req) => {
     // Verify the discount code exists and is active
     const { data: discountCode, error: codeError } = await supabase
       .from('discount_codes')
-      .select('id, is_active, max_uses, current_uses')
+      .select('id, is_active, max_uses, current_uses, discount_type, discount_value')
       .eq('id', codeId)
       .single();
+
+    // Server-side recompute of discount/final amounts to prevent tampering
+    if (discountCode) {
+      const expectedDiscount = discountCode.discount_type === 'percentage'
+        ? (originalAmount * Number(discountCode.discount_value)) / 100
+        : Number(discountCode.discount_value);
+      const cappedDiscount = Math.min(expectedDiscount, originalAmount);
+      if (Math.abs(discountAmount - cappedDiscount) > 0.01) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Discount amount mismatch' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const expectedFinal = Math.max(0, originalAmount - cappedDiscount);
+      if (Math.abs(finalAmount - expectedFinal) > 0.01) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Final amount mismatch' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     if (codeError || !discountCode) {
       console.error('Discount code not found:', codeError);

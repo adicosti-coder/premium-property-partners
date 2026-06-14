@@ -7,6 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+import { signTrackingPayload } from "../_shared/trackingToken.ts";
+
 // Generate tracked URL with UTM parameters
 function getTrackedUrl(
   userId: string,
@@ -24,6 +26,8 @@ function getTrackedUrl(
   trackingUrl.searchParams.set("utm_campaign", emailType);
   trackingUrl.searchParams.set("utm_content", linkType);
   trackingUrl.searchParams.set("redirect", targetUrl);
+  const sig = signTrackingPayload({ user_id: userId, email_type: emailType, link_type: linkType });
+  trackingUrl.searchParams.set("sig", sig);
   return trackingUrl.toString();
 }
 
@@ -44,6 +48,8 @@ function getTrackingPixelUrl(
   if (abAssignmentId) {
     pixelUrl.searchParams.set("ab_id", abAssignmentId);
   }
+  const sig = signTrackingPayload({ user_id: userId, email_type: emailType });
+  pixelUrl.searchParams.set("sig", sig);
   return pixelUrl.toString();
 }
 

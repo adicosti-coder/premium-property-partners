@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { signTrackingPayload } from "../_shared/trackingToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -176,8 +177,10 @@ Deno.serve(async (req) => {
 
       // Send email if Resend is configured
       if (resendApiKey && user.email) {
-        const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?user_id=${user.user_id}&email_type=3day_reminder`;
-        const ctaUrl = `${supabaseUrl}/functions/v1/track-email-click?user_id=${user.user_id}&email_type=3day_reminder&link_type=cta&redirect=https://realtrustaparthotel.lovable.app/pentru-proprietari`;
+        const openSig = signTrackingPayload({ user_id: user.user_id, email_type: '3day_reminder' });
+        const clickSig = signTrackingPayload({ user_id: user.user_id, email_type: '3day_reminder', link_type: 'cta' });
+        const trackingPixelUrl = `${supabaseUrl}/functions/v1/track-email-open?user_id=${user.user_id}&email_type=3day_reminder&sig=${openSig}`;
+        const ctaUrl = `${supabaseUrl}/functions/v1/track-email-click?user_id=${user.user_id}&email_type=3day_reminder&link_type=cta&sig=${clickSig}&redirect=https://realtrustaparthotel.lovable.app/pentru-proprietari`;
 
         const emailHtml = `
           <!DOCTYPE html>

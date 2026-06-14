@@ -49,8 +49,11 @@ serve(async (req) => {
       });
     }
 
-    // Generate 6-digit code
-    const code = String(Math.floor(100000 + Math.random() * 900000));
+    // Generate 6-digit code using cryptographically secure RNG
+    const rngBytes = new Uint8Array(4);
+    crypto.getRandomValues(rngBytes);
+    const rngNum = new DataView(rngBytes.buffer).getUint32(0);
+    const code = String(100000 + (rngNum % 900000));
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     // Invalidate previous codes
