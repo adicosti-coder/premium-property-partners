@@ -266,12 +266,13 @@ function removeDiacritics(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
+const PHONE_PATTERN = /(?:(?:\+|00)\s*40|0)\s*[237](?:[\s().\/-]*\d){8}\b/g;
+const CONTEXT_PHONE_PATTERN = /(?:telefon|tel\.?|mobil|mobile|whatsapp|contact|num[ăa]r|phone)\D{0,24}((?:(?:\+|00)\s*40|0)?\s*[237](?:[\s().\/-]*\d){8})/gi;
 
 function normalizeRoPhone(phone: string | null | undefined): string | null {
   if (!phone) return null;
   const raw = String(phone);
-  if (raw.includes('...') || raw.includes('***') || raw.includes('•')) return null;
+  if (/[xX*•]{2,}|\.{3,}/.test(raw)) return null;
   let digits = raw.replace(/\D/g, '');
   if (digits.startsWith('0040')) digits = digits.slice(2);
   if (digits.startsWith('40') && digits.length === 11) return /^40[237]\d{8}$/.test(digits) ? `+${digits}` : null;
@@ -280,7 +281,183 @@ function normalizeRoPhone(phone: string | null | undefined): string | null {
   return null;
 }
 
+function decodePhoneText(text: string): string {
+  return text
+    .replace(/%2B/gi, '+')
+    .replace(/\\u00([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&nbsp;|&thinsp;|&ensp;|&emsp;/gi, ' ');
+}
+
 function extractPhonesFromText(text: string | null | undefined): string[] {
+  const out = new Set<string>();
+  const decoded = decodePhoneText(text ?? '');
+  const matches = decoded.match(PHONE_PATTERN) ?? [];
+  for (const match of matches) {
+    const normalized = normalizeRoPhone(match);
+    if (normalized) out.add(normalized);
+  }
+  for (const match of decoded.matchAll(CONTEXT_PHONE_PATTERN)) {
+    const normalized = normalizeRoPhone(match[1]);
+    if (normalized) out.add(normalized);
+  }
+  return [...out].sort((a, b) => Number(!a.startsWith('+407')) - Number(!b.startsWith('+407')));
+}
+
+function buildPhoneRevealJavascript(phoneSelectors: string[]): string {
+  return `
+    try {
+      var selectors = ${JSON.stringify(phoneSelectors)};
+      var safeClick = function (sel) {
+        try {
+          document.querySelectorAll(sel).forEach(function (el) {
+            try { el.click(); } catch (e) {}
+          });
+        } catch (e) {}
+      };
+      [
+        '#onetrust-accept-btn-handler',
+        'button[data-testid="cookie-policy-banner-accept"]',
+        'button[id*="cookie" i][id*="accept" i]',
+        'button[class*="cookie" i][class*="accept" i]',
+        'button[aria-label*="accept" i]',
+        'button[aria-label*="acceptă" i]'
+      ].forEach(safeClick);
+      try { window.scrollTo(0, Math.max(400, Math.floor(document.body.scrollHeight * 0.35))); } catch (e) {}
+      selectors.forEach(safeClick);
+      try {
+        var textRe = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|apeleaz[ăa]|sun[ăa]|show|reveal|contact)\b[\s\S]{0,44}?(telefon|num[ăa]r|phone|mobile|contact)|^(telefon|tel\.?|phone)$/i;
+        document.querySelectorAll('button, a, [role="button"], [onclick], div, span').forEach(function (el) {
+          try {
+            var txt = ((el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('title') || '') + ' ' + (el.textContent || '')).trim();
+            if (textRe.test(txt)) el.click();
+          } catch (e) {}
+        });
+      } catch (e) {}
+    } catch (e) {}
+  `;
+}
+
+function getPhoneSelectorsForUrl(url: string): string[] {
+  const u = url.toLowerCase();
+  const generic = [
+    'a[href^="tel:"]',
+    'button[aria-label*="telefon" i]',
+    'button[aria-label*="phone" i]',
+    'button[class*="phone" i]',
+    'button[id*="phone" i]',
+    'button[data-testid*="phone" i]',
+    'button[data-cy*="phone" i]',
+    '[role="button"][aria-label*="telefon" i]',
+  ];
+  if (u.includes('olx.ro')) return [
+    'button[data-testid="show-phone"]', 'button[data-cy="show-phone"]', 'a[data-testid="contact-phone"]',
+    'button[data-testid*="phone" i]', 'a[href^="tel:"]', ...generic,
+  ];
+  if (u.includes('storia.ro') || u.includes('imobiliare.ro')) return [
+    'button[data-cy="phoneButton"]', 'button[data-cy="show-phone-number"]', 'button[data-testid="reveal-phone-button"]',
+    'button[data-testid*="phone" i]', 'button[data-cy*="phone" i]', 'a[href^="tel:"]', ...generic,
+  ];
+  if (u.includes('publi24.ro') || u.includes('anuntul.ro')) return [
+    'a.phone-link', 'a[href^="tel:"]', 'button[class*="phone" i]', 'button[id*="phone" i]', ...generic,
+  ];
+  return generic;
+}
+
+function extractPhonesFromPayload(markdown: string, html: string, rawHtml = '', jsonPayload: unknown = null): string[] {
+  const telLinks = `${html}\n${rawHtml}`.match(/(?:tel:|callto:|whatsapp:\/\/send\?phone=)[^"'<>\s]+/gi)?.join(' ') ?? '';
+  const jsonPhones = `${html}\n${rawHtml}`.match(/"(?:phone|telephone|phoneNumber|contactPhone|mobile|sellerPhone)"\s*:\s*"([^"]+)"/gi)?.join(' ') ?? '';
+  return extractPhonesFromText(`${telLinks}\n${jsonPhones}\n${markdown}\n${html}\n${rawHtml}\n${JSON.stringify(jsonPayload ?? '')}`);
+}
+
+function legacyPhoneHydrationActions(url: string): any[] {
+  const selectors = getPhoneSelectorsForUrl(url);
+  const js = buildPhoneRevealJavascript(selectors);
+  return [
+    { type: 'wait', milliseconds: 2200 },
+    { type: 'executeJavascript', script: js },
+    { type: 'wait', milliseconds: 2200 },
+    { type: 'scroll', direction: 'down', amount: 500 },
+    { type: 'executeJavascript', script: js },
+    { type: 'wait', milliseconds: 1600 },
+  ];
+}
+
+function nativeClickPhoneHydrationActions(url: string): any[] {
+  const actions: any[] = [
+    { type: 'wait', milliseconds: 1800 },
+    { type: 'click', selector: '#onetrust-accept-btn-handler' },
+    { type: 'click', selector: 'button[data-testid="cookie-policy-banner-accept"]' },
+    { type: 'wait', milliseconds: 500 },
+    { type: 'scroll', direction: 'down', amount: 800 },
+  ];
+  for (const selector of getPhoneSelectorsForUrl(url).slice(0, 8)) actions.push({ type: 'click', selector });
+  actions.push({ type: 'wait', milliseconds: 1600 });
+  return actions;
+}
+
+function buildPhoneHydrationActions(url: string, mode: 'js' | 'native' = 'js') {
+  return mode === 'native' ? nativeClickPhoneHydrationActions(url) : legacyPhoneHydrationActions(url);
+}
+
+function normalizeFirecrawlDoc(data: any) {
+  const doc = data?.data ?? data;
+  return {
+    markdown: doc?.markdown ?? '',
+    html: doc?.html ?? '',
+    rawHtml: doc?.rawHtml ?? doc?.raw_html ?? '',
+  };
+}
+
+async function scrapePhoneHydrationOnce(url: string, firecrawlKey: string, mode: 'js' | 'native'): Promise<string[]> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), mode === 'native' ? 24000 : 42000);
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown', 'html', 'rawHtml'],
+        onlyMainContent: false,
+        waitFor: mode === 'native' ? 2600 : 3600,
+        timeout: mode === 'native' ? 22000 : 40000,
+        maxAge: 0,
+        proxy: 'stealth',
+        actions: buildPhoneHydrationActions(url, mode),
+        location: { country: 'RO', languages: ['ro'] },
+        headers: {
+          'User-Agent': PHONE_HYDRATION_USER_AGENT,
+          'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.5',
+        },
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      console.warn(`Phone hydration ${mode} failed for ${url}: ${data?.error || res.status}`);
+      return [];
+    }
+    const { markdown, html, rawHtml } = normalizeFirecrawlDoc(data);
+    return extractPhonesFromPayload(markdown, html, rawHtml, data);
+  } catch (e) {
+    console.warn(`Phone hydration ${mode} exception for ${url}:`, e instanceof Error ? e.message : String(e));
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function hydratePhoneFromListingUrl(url: string, firecrawlKey: string): Promise<string | null> {
+  for (const mode of ['js', 'native'] as const) {
+    const phones = await scrapePhoneHydrationOnce(url, firecrawlKey, mode);
+    if (phones.length > 0) return phones[0];
+  }
+  return null;
+}
+
+function extractPhonesFromTextLegacy(text: string | null | undefined): string[] {
   const out = new Set<string>();
   const matches = text?.match(PHONE_PATTERN) ?? [];
   for (const match of matches) {
