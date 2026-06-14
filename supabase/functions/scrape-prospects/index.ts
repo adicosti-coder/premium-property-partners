@@ -329,7 +329,7 @@ function buildPhoneRevealJavascript(phoneSelectors: string[]): string {
       try { window.scrollTo(0, Math.max(400, Math.floor(document.body.scrollHeight * 0.35))); } catch (e) {}
       selectors.forEach(safeClick);
       try {
-        var textRe = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|apeleaz[ăa]|sun[ăa]|show|reveal|contact)\b[\s\S]{0,44}?(telefon|num[ăa]r|phone|mobile|contact)|^(telefon|tel\.?|phone)$/i;
+        var textRe = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|apeleaz[ăa]|sun[ăa]|show|reveal|contact)\\b[\\s\\S]{0,44}?(telefon|num[ăa]r|phone|mobile|contact)|^(telefon|tel\\.?|phone)$/i;
         document.querySelectorAll('button, a, [role="button"], [onclick], div, span').forEach(function (el) {
           try {
             var txt = ((el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('title') || '') + ' ' + (el.textContent || '')).trim();
