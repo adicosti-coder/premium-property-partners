@@ -501,6 +501,8 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
   const [confirmKbdDismissId, setConfirmKbdDismissId] = useState<string | null>(null);
   const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | "recover_phones" | null>(null);
+  const [confirmRecoverAllOpen, setConfirmRecoverAllOpen] = useState(false);
+  const [phonelessExpanded, setPhonelessExpanded] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [minScore, setMinScore] = useState<string>("0");
   const [zoneFilter, setZoneFilter] = useState<string>("all");
