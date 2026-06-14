@@ -21,7 +21,7 @@ import { toast as sonnerToast } from "sonner";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw, Clock,
   TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap, Trash2, ShieldAlert, MoreVertical,
-  RotateCcw, CheckSquare,
+  RotateCcw, CheckSquare, Send,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -518,7 +518,56 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const [confirmBulkDismissOpen, setConfirmBulkDismissOpen] = useState(false);
   const [confirmKbdDismissId, setConfirmKbdDismissId] = useState<string | null>(null);
-  const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | "recover_phones" | null>(null);
+  const [bulkPending, setBulkPending] = useState<"dismiss" | "rescore" | "recover_phones" | "push_to_review" | null>(null);
+  const [pushingId, setPushingId] = useState<string | null>(null);
+
+  const handlePushToFastReview = async (prospectId: string) => {
+    setPushingId(prospectId);
+    const tId = sonnerToast.loading("Trimit la Fast Review…");
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-to-fast-review", {
+        body: { prospect_id: prospectId },
+      });
+      if (error) throw error;
+      const result = (data?.results?.[0]) as { property_id?: string; reason?: string; created?: boolean } | undefined;
+      if (!result?.property_id) throw new Error(result?.reason || "Eroare necunoscută");
+      sonnerToast.dismiss(tId);
+      if (result.created) {
+        sonnerToast.success("✅ Draft creat în Fast Review.");
+      } else {
+        sonnerToast.info("ℹ️ Anunțul era deja trimis — deschid draftul existent.");
+      }
+      window.open(`/admin/properties/fast-review?id=${result.property_id}`, "_blank", "noopener,noreferrer");
+      refetch();
+    } catch (e) {
+      sonnerToast.dismiss(tId);
+      sonnerToast.error(`Eroare: ${(e as Error).message}`);
+    } finally {
+      setPushingId(null);
+    }
+  };
+
+  const runBulkPushToFastReview = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    setBulkPending("push_to_review");
+    const tId = sonnerToast.loading(`Trimit ${ids.length} anunțuri la Fast Review…`);
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-to-fast-review", {
+        body: { prospect_ids: ids },
+      });
+      if (error) throw error;
+      sonnerToast.dismiss(tId);
+      sonnerToast.success(
+        `🚀 Fast Review: ${data?.created ?? 0} create · ${data?.existed ?? 0} existau deja${data?.failed ? ` · ${data.failed} erori` : ""}`,
+      );
+      refetch();
+    } catch (e) {
+      sonnerToast.dismiss(tId);
+      sonnerToast.error(`Eroare bulk: ${(e as Error).message}`);
+    } finally {
+      setBulkPending(null);
+    }
+  };
   const [confirmRecoverAllOpen, setConfirmRecoverAllOpen] = useState(false);
   const [phonelessExpanded, setPhonelessExpanded] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -2535,6 +2584,18 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                                 )}
 
 
+                                <DropdownMenuItem
+                                  onClick={() => void handlePushToFastReview(p.id)}
+                                  disabled={pushingId === p.id || bulkPending !== null}
+                                  className="gap-2 cursor-pointer"
+                                  title="Creează un draft în /admin/properties/fast-review din acest anunț"
+                                >
+                                  {pushingId === p.id
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    : <Send className="h-3.5 w-3.5 text-emerald-600" />}
+                                  Trimite la Fast Review
+                                </DropdownMenuItem>
+
 
                                 <DropdownMenuItem
                                   onClick={() => handleToggleProspectType(p)}
@@ -2726,6 +2787,22 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                   </Button>
                 );
               })()}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const ids = filtered.filter((p) => selectedIds.has(p.id)).map((p) => p.id);
+                  void runBulkPushToFastReview(ids);
+                }}
+                disabled={bulkPending !== null || selectedIds.size === 0}
+                className="gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+                title="Creează drafturi în /admin/properties/fast-review pentru anunțurile selectate"
+              >
+                {bulkPending === "push_to_review"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Send className="h-3.5 w-3.5" />}
+                Trimite la Fast Review ({selectedIds.size})
+              </Button>
               <Button
                 size="sm"
                 variant="destructive"
