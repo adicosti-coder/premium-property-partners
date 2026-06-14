@@ -1,5 +1,8 @@
 // Shared HMAC signer/verifier for email tracking URLs.
 // Prevents anonymous attackers from forging tracking events for arbitrary user_ids.
+// Uses node:crypto for synchronous HMAC (templates that build URLs are sync).
+
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 function getSecret(): string {
   return (
@@ -9,21 +12,6 @@ function getSecret(): string {
   );
 }
 
-async function hmacHex(message: string, secret: string): Promise<string> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign", "verify"],
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
-  return Array.from(new Uint8Array(sig))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 function canonical(parts: Record<string, string | null | undefined>): string {
   return Object.keys(parts)
     .sort()
@@ -31,23 +19,22 @@ function canonical(parts: Record<string, string | null | undefined>): string {
     .join("&");
 }
 
-export async function signTrackingPayload(
+export function signTrackingPayload(
   parts: Record<string, string | null | undefined>,
-): Promise<string> {
-  return hmacHex(canonical(parts), getSecret());
+): string {
+  return createHmac("sha256", getSecret()).update(canonical(parts)).digest("hex");
 }
 
-export async function verifyTrackingPayload(
+export function verifyTrackingPayload(
   parts: Record<string, string | null | undefined>,
   sig: string | null,
-): Promise<boolean> {
+): boolean {
   if (!sig) return false;
-  const expected = await hmacHex(canonical(parts), getSecret());
+  const expected = signTrackingPayload(parts);
   if (expected.length !== sig.length) return false;
-  // constant-time compare
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) {
-    diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
+  try {
+    return timingSafeEqual(Buffer.from(expected), Buffer.from(sig));
+  } catch {
+    return false;
   }
-  return diff === 0;
 }
