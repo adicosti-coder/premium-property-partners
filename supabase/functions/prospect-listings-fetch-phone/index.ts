@@ -42,6 +42,7 @@ function normalizeRoPhone(raw?: string | null): string | null {
 function decodePhoneText(text: string): string {
   return text
     .replace(/%2B/gi, "+")
+    .replace(/%([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
     .replace(/\\u00([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
