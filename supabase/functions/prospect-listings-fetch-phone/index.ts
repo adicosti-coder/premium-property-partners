@@ -163,7 +163,7 @@ async function firecrawlScrape(url: string, apiKey: string, userAgent: string) {
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       url,
-      formats: ["markdown", "html"],
+      formats: ["markdown", "html", "rawHtml"],
       onlyMainContent: false,
       waitFor: 3500,
       timeout: 45000,
@@ -183,15 +183,17 @@ async function firecrawlScrape(url: string, apiKey: string, userAgent: string) {
   return {
     markdown: doc?.markdown ?? "",
     html: doc?.html ?? "",
+    rawHtml: doc?.rawHtml ?? doc?.raw_html ?? "",
   };
 }
 
 async function tryExtract(url: string, apiKey: string, attempt: number): Promise<{ phones: string[]; ua: string }> {
   const ua = USER_AGENTS[attempt % USER_AGENTS.length];
-  const { markdown, html } = await firecrawlScrape(url, apiKey, ua);
-  const telLinks = (html.match(/tel:[^"'<>\s]+/gi) ?? []).join(" ");
-  const jsonPhones = (html.match(/"(?:phone|telephone|phoneNumber|contactPhone)"\s*:\s*"([^"]+)"/gi) ?? []).join(" ");
-  const corpus = `${telLinks}\n${jsonPhones}\n${markdown}\n${html}`;
+  const { markdown, html, rawHtml } = await firecrawlScrape(url, apiKey, ua);
+  const htmlBlob = `${html}\n${rawHtml}`;
+  const telLinks = (htmlBlob.match(/(?:tel:|callto:|whatsapp:\/\/send\?phone=)[^"'<>\s]+/gi) ?? []).join(" ");
+  const jsonPhones = (htmlBlob.match(/"(?:phone|telephone|phoneNumber|contactPhone|mobile|sellerPhone)"\s*:\s*"([^"]+)"/gi) ?? []).join(" ");
+  const corpus = `${telLinks}\n${jsonPhones}\n${markdown}\n${html}\n${rawHtml}`;
   return { phones: extractPhones(corpus), ua };
 }
 
