@@ -1,0 +1,1 @@
+ALTER FUNCTION public._extract_domain(text) SET search_path = public, pg_temp;
