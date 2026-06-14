@@ -50,45 +50,81 @@ function extractPhones(text: string): string[] {
 
 function buildActionsForUrl(url: string) {
   const u = url.toLowerCase();
-  const actions: any[] = [{ type: "wait", milliseconds: 2200 }];
 
-  // Cookie banner dismissals (works on OLX/Storia/Publi24)
-  actions.push({ type: "click", selector: "#onetrust-accept-btn-handler" });
-  actions.push({ type: "click", selector: 'button[data-testid="cookie-policy-banner-accept"]' });
-  actions.push({ type: "click", selector: 'button[id*="cookie" i][id*="accept" i]' });
-  actions.push({ type: "wait", milliseconds: 700 });
-
-  // Scroll to contact section to trigger lazy-load
-  actions.push({ type: "scroll", direction: "down", amount: 800 });
-  actions.push({ type: "wait", milliseconds: 500 });
-
+  // Per-platform selector groups for the "Show phone" CTA.
+  // We click them via executeJavascript so missing selectors NEVER fail the scrape
+  // (Firecrawl native `click` actions throw on missing elements and abort everything,
+  // and `:has-text()` is a Playwright-only pseudo that breaks Firecrawl validation).
+  let phoneSelectors: string[];
   if (u.includes("olx.ro")) {
-    actions.push({ type: "click", selector: 'button[data-testid="show-phone"]' });
-    actions.push({ type: "click", selector: 'button[data-cy="show-phone"]' });
-    actions.push({ type: "click", selector: 'a[data-testid="contact-phone"]' });
-    actions.push({ type: "click", selector: 'button[aria-label*="telefon" i]' });
+    phoneSelectors = [
+      'button[data-testid="show-phone"]',
+      'button[data-cy="show-phone"]',
+      'a[data-testid="contact-phone"]',
+      'button[aria-label*="telefon" i]',
+      'button[aria-label*="phone" i]',
+    ];
   } else if (u.includes("storia.ro") || u.includes("imobiliare.ro")) {
-    actions.push({ type: "click", selector: 'button[data-cy="phoneButton"]' });
-    actions.push({ type: "click", selector: 'button[data-cy="show-phone-number"]' });
-    actions.push({ type: "click", selector: 'button[data-testid="reveal-phone-button"]' });
-    actions.push({ type: "click", selector: 'button[aria-label*="telefon" i]' });
-    actions.push({ type: "click", selector: 'button:has-text("Afișează")' });
-    actions.push({ type: "click", selector: 'button:has-text("Afiseaza")' });
+    phoneSelectors = [
+      'button[data-cy="phoneButton"]',
+      'button[data-cy="show-phone-number"]',
+      'button[data-testid="reveal-phone-button"]',
+      'button[aria-label*="telefon" i]',
+      'button[data-cy*="phone" i]',
+    ];
   } else if (u.includes("publi24.ro") || u.includes("anuntul.ro")) {
-    actions.push({ type: "click", selector: 'button:has-text("Telefon")' });
-    actions.push({ type: "click", selector: 'a.phone-link' });
-    actions.push({ type: "click", selector: 'button[class*="phone" i]' });
+    phoneSelectors = [
+      'a.phone-link',
+      'button[class*="phone" i]',
+      'button[id*="phone" i]',
+      'a[href^="tel:"]',
+    ];
   } else {
-    actions.push({ type: "click", selector: 'button:has-text("telefon")' });
-    actions.push({ type: "click", selector: 'button:has-text("phone")' });
-    actions.push({ type: "click", selector: 'a[href^="tel:"]' });
+    phoneSelectors = [
+      'button[aria-label*="telefon" i]',
+      'button[aria-label*="phone" i]',
+      'a[href^="tel:"]',
+      'button[class*="phone" i]',
+      'button[data-testid*="phone" i]',
+    ];
   }
 
-  actions.push({ type: "wait", milliseconds: 2000 });
-  // Final scroll & wait for any animated reveal
-  actions.push({ type: "scroll", direction: "down", amount: 200 });
-  actions.push({ type: "wait", milliseconds: 600 });
-  return actions;
+  // Single JS payload: dismisses cookie banners, scrolls, and clicks any matching
+  // phone CTA. Wrapped in try/catch so it never throws and aborts the scrape.
+  const js = `
+    try {
+      var safeClick = function (sel) {
+        try {
+          document.querySelectorAll(sel).forEach(function (el) {
+            try { el.click(); } catch (e) {}
+          });
+        } catch (e) {}
+      };
+      [
+        '#onetrust-accept-btn-handler',
+        'button[data-testid="cookie-policy-banner-accept"]',
+        'button[id*="cookie" i][id*="accept" i]',
+        'button[aria-label*="accept" i]'
+      ].forEach(safeClick);
+      try { window.scrollTo(0, 600); } catch (e) {}
+      ${JSON.stringify(phoneSelectors)}.forEach(safeClick);
+      try {
+        var re = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|show)\\b[\\s\\S]{0,30}?(telefon|num[ăa]r|phone|number)/i;
+        document.querySelectorAll('button, a').forEach(function (el) {
+          try { if (re.test((el.textContent || '').trim())) el.click(); } catch (e) {}
+        });
+      } catch (e) {}
+    } catch (e) {}
+  `;
+
+  return [
+    { type: "wait", milliseconds: 2200 },
+    { type: "executeJavascript", script: js },
+    { type: "wait", milliseconds: 2200 },
+    { type: "scroll", direction: "down", amount: 400 },
+    { type: "executeJavascript", script: js },
+    { type: "wait", milliseconds: 1500 },
+  ];
 }
 
 async function firecrawlScrape(url: string, apiKey: string, userAgent: string) {
