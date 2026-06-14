@@ -8525,6 +8525,7 @@ export type Database = {
       }
     }
     Functions: {
+      _canonical_listing_url: { Args: { url: string }; Returns: string }
       _extract_domain: { Args: { url: string }; Returns: string }
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
       auto_blacklist_prospect: {
@@ -8571,6 +8572,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      extract_ro_phone_from_text: { Args: { p_text: string }; Returns: string }
       extract_url_domain: { Args: { p_url: string }; Returns: string }
       get_blog_hub_impressions: {
         Args: { p_days?: number }
