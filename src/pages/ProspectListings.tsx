@@ -122,7 +122,8 @@ interface Prospect {
   persona_generated_at: string | null;
 }
 
-const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
+const PHONE_PATTERN = /(?:(?:\+|00)\s*40|0)\s*[237](?:[\s().\/-]*\d){8}\b/g;
+const CONTEXT_PHONE_PATTERN = /(?:telefon|tel\.?|mobil|mobile|whatsapp|contact|num[ăa]r|phone)\D{0,24}((?:(?:\+|00)\s*40|0)?\s*[237](?:[\s().\/-]*\d){8})/gi;
 const VISIBLE_PHONE_PATTERN = /(?:\+?40|0040|0)\s*[237]\d{2}(?:[\s().-]*(?:\d|x|X|\*|•|\.)){2,}/g;
 
 function formatRelativeRo(iso: string | null | undefined): string {
@@ -157,7 +158,7 @@ interface VisibleProspectPhoneInfo extends ProspectPhoneInfo {
 
 export function normalizeRoPhone(raw?: string | null): string | null {
   if (!raw) return null;
-  if (raw.includes("...") || raw.includes("***")) return null;
+  if (/[xX*•]{2,}|\.{3,}/.test(raw)) return null;
   let digits = raw.replace(/\D/g, "");
   if (digits.startsWith("0040")) digits = digits.slice(2);
   if (digits.startsWith("40") && digits.length === 11) return /^40[237]\d{8}$/.test(digits) ? `+${digits}` : null;
@@ -166,9 +167,26 @@ export function normalizeRoPhone(raw?: string | null): string | null {
   return null;
 }
 
+function decodePhoneText(text: string): string {
+  return text
+    .replace(/%2B/gi, "+")
+    .replace(/%([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\u00([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&nbsp;|&thinsp;|&ensp;|&emsp;/gi, " ");
+}
+
 export function extractPhoneFromText(text?: string | null): string | null {
-  const matches = text?.match(PHONE_PATTERN) ?? [];
-  return matches.map(normalizeRoPhone).find(Boolean) ?? null;
+  if (!text) return null;
+  const decoded = decodePhoneText(text);
+  const candidates = new Set<string>();
+  for (const match of decoded.match(PHONE_PATTERN) ?? []) candidates.add(match);
+  for (const match of decoded.matchAll(CONTEXT_PHONE_PATTERN)) candidates.add(match[1]);
+  return [...candidates]
+    .map(normalizeRoPhone)
+    .filter(Boolean)
+    .sort((a, b) => Number(!a!.startsWith("+407")) - Number(!b!.startsWith("+407")))[0] ?? null;
 }
 
 export function getProspectPhoneInfo(

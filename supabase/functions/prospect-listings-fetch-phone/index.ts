@@ -16,7 +16,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
+const PHONE_PATTERN = /(?:(?:\+|00)\s*40|0)\s*[237](?:[\s().\/-]*\d){8}\b/g;
+const CONTEXT_PHONE_PATTERN = /(?:telefon|tel\.?|mobil|mobile|whatsapp|contact|num[ăa]r|phone)\D{0,24}((?:(?:\+|00)\s*40|0)?\s*[237](?:[\s().\/-]*\d){8})/gi;
 
 const USER_AGENTS = [
   // Desktop Chrome (Windows)
@@ -29,7 +30,7 @@ const USER_AGENTS = [
 
 function normalizeRoPhone(raw?: string | null): string | null {
   if (!raw) return null;
-  if (raw.includes("...") || raw.includes("***") || raw.includes("•")) return null;
+  if (/[xX*•]{2,}|\.{3,}/.test(raw)) return null;
   let digits = raw.replace(/\D/g, "");
   if (digits.startsWith("0040")) digits = digits.slice(2);
   if (digits.startsWith("40") && digits.length === 11) return /^40[237]\d{8}$/.test(digits) ? `+${digits}` : null;
@@ -38,14 +39,30 @@ function normalizeRoPhone(raw?: string | null): string | null {
   return null;
 }
 
+function decodePhoneText(text: string): string {
+  return text
+    .replace(/%2B/gi, "+")
+    .replace(/%([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/\\u00([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&nbsp;|&thinsp;|&ensp;|&emsp;/gi, " ");
+}
+
 function extractPhones(text: string): string[] {
   const out = new Set<string>();
-  const matches = text.match(PHONE_PATTERN) ?? [];
+  const decoded = decodePhoneText(text);
+  const matches = decoded.match(PHONE_PATTERN) ?? [];
   for (const m of matches) {
     const n = normalizeRoPhone(m);
     if (n) out.add(n);
   }
-  return [...out];
+  for (const match of decoded.matchAll(CONTEXT_PHONE_PATTERN)) {
+    const m = match[1];
+    const n = normalizeRoPhone(m);
+    if (n) out.add(n);
+  }
+  return [...out].sort((a, b) => Number(!a.startsWith("+407")) - Number(!b.startsWith("+407")));
 }
 
 function buildActionsForUrl(url: string) {
@@ -61,6 +78,9 @@ function buildActionsForUrl(url: string) {
       'button[data-testid="show-phone"]',
       'button[data-cy="show-phone"]',
       'a[data-testid="contact-phone"]',
+      'button[data-testid*="phone" i]',
+      'button[data-cy*="phone" i]',
+      'a[href^="tel:"]',
       'button[aria-label*="telefon" i]',
       'button[aria-label*="phone" i]',
     ];
@@ -71,6 +91,8 @@ function buildActionsForUrl(url: string) {
       'button[data-testid="reveal-phone-button"]',
       'button[aria-label*="telefon" i]',
       'button[data-cy*="phone" i]',
+      'button[data-testid*="phone" i]',
+      'a[href^="tel:"]',
     ];
   } else if (u.includes("publi24.ro") || u.includes("anuntul.ro")) {
     phoneSelectors = [
@@ -78,6 +100,7 @@ function buildActionsForUrl(url: string) {
       'button[class*="phone" i]',
       'button[id*="phone" i]',
       'a[href^="tel:"]',
+      '[role="button"][aria-label*="telefon" i]',
     ];
   } else {
     phoneSelectors = [
@@ -85,7 +108,10 @@ function buildActionsForUrl(url: string) {
       'button[aria-label*="phone" i]',
       'a[href^="tel:"]',
       'button[class*="phone" i]',
+      'button[id*="phone" i]',
       'button[data-testid*="phone" i]',
+      'button[data-cy*="phone" i]',
+      '[role="button"][aria-label*="telefon" i]',
     ];
   }
 
@@ -104,14 +130,19 @@ function buildActionsForUrl(url: string) {
         '#onetrust-accept-btn-handler',
         'button[data-testid="cookie-policy-banner-accept"]',
         'button[id*="cookie" i][id*="accept" i]',
-        'button[aria-label*="accept" i]'
+        'button[class*="cookie" i][class*="accept" i]',
+        'button[aria-label*="accept" i]',
+        'button[aria-label*="acceptă" i]'
       ].forEach(safeClick);
-      try { window.scrollTo(0, 600); } catch (e) {}
+      try { window.scrollTo(0, Math.max(500, Math.floor(document.body.scrollHeight * 0.35))); } catch (e) {}
       ${JSON.stringify(phoneSelectors)}.forEach(safeClick);
       try {
-        var re = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|show)\\b[\\s\\S]{0,30}?(telefon|num[ăa]r|phone|number)/i;
-        document.querySelectorAll('button, a').forEach(function (el) {
-          try { if (re.test((el.textContent || '').trim())) el.click(); } catch (e) {}
+        var re = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|apeleaz[ăa]|sun[ăa]|show|reveal|contact)\\b[\\s\\S]{0,44}?(telefon|num[ăa]r|phone|number|mobile|contact)|^(telefon|tel\\.?|phone)$/i;
+        document.querySelectorAll('button, a, [role="button"], [onclick], div, span').forEach(function (el) {
+          try {
+            var txt = ((el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('title') || '') + ' ' + (el.textContent || '')).trim();
+            if (re.test(txt)) el.click();
+          } catch (e) {}
         });
       } catch (e) {}
     } catch (e) {}
@@ -133,7 +164,7 @@ async function firecrawlScrape(url: string, apiKey: string, userAgent: string) {
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       url,
-      formats: ["markdown", "html"],
+      formats: ["markdown", "html", "rawHtml"],
       onlyMainContent: false,
       waitFor: 3500,
       timeout: 45000,
@@ -153,15 +184,17 @@ async function firecrawlScrape(url: string, apiKey: string, userAgent: string) {
   return {
     markdown: doc?.markdown ?? "",
     html: doc?.html ?? "",
+    rawHtml: doc?.rawHtml ?? doc?.raw_html ?? "",
   };
 }
 
 async function tryExtract(url: string, apiKey: string, attempt: number): Promise<{ phones: string[]; ua: string }> {
   const ua = USER_AGENTS[attempt % USER_AGENTS.length];
-  const { markdown, html } = await firecrawlScrape(url, apiKey, ua);
-  const telLinks = (html.match(/tel:[^"'<>\s]+/gi) ?? []).join(" ");
-  const jsonPhones = (html.match(/"(?:phone|telephone|phoneNumber|contactPhone)"\s*:\s*"([^"]+)"/gi) ?? []).join(" ");
-  const corpus = `${telLinks}\n${jsonPhones}\n${markdown}\n${html}`;
+  const { markdown, html, rawHtml } = await firecrawlScrape(url, apiKey, ua);
+  const htmlBlob = `${html}\n${rawHtml}`;
+  const telLinks = (htmlBlob.match(/(?:tel:|callto:|whatsapp:\/\/send\?phone=)[^"'<>\s]+/gi) ?? []).join(" ");
+  const jsonPhones = (htmlBlob.match(/"(?:phone|telephone|phoneNumber|contactPhone|mobile|sellerPhone)"\s*:\s*"([^"]+)"/gi) ?? []).join(" ");
+  const corpus = `${telLinks}\n${jsonPhones}\n${markdown}\n${html}\n${rawHtml}`;
   return { phones: extractPhones(corpus), ua };
 }
 
