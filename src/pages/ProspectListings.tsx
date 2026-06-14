@@ -21,7 +21,7 @@ import { toast as sonnerToast } from "sonner";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw, Clock,
   TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap, Trash2, ShieldAlert, MoreVertical,
-  RotateCcw, CheckSquare,
+  RotateCcw, CheckSquare, Send,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
