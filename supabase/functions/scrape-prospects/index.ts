@@ -266,14 +266,28 @@ function removeDiacritics(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+const PHONE_PATTERN = /(?:\+?40|0040|0)?\s*[237](?:[\s().-]*\d){8}\b/g;
+
 function normalizeRoPhone(phone: string | null | undefined): string | null {
   if (!phone) return null;
-  const cleaned = String(phone).replace(/[^0-9+]/g, '');
-  if (!cleaned) return null;
-  if (cleaned.startsWith('+')) return cleaned;
-  if (cleaned.startsWith('40')) return `+${cleaned}`;
-  if (cleaned.startsWith('0')) return `+4${cleaned}`;
-  return `+40${cleaned}`;
+  const raw = String(phone);
+  if (raw.includes('...') || raw.includes('***') || raw.includes('•')) return null;
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('0040')) digits = digits.slice(2);
+  if (digits.startsWith('40') && digits.length === 11) return /^40[237]\d{8}$/.test(digits) ? `+${digits}` : null;
+  if (digits.startsWith('0') && digits.length === 10) return /^0[237]\d{8}$/.test(digits) ? `+4${digits}` : null;
+  if (/^[237]\d{8}$/.test(digits)) return `+40${digits}`;
+  return null;
+}
+
+function extractPhonesFromText(text: string | null | undefined): string[] {
+  const out = new Set<string>();
+  const matches = text?.match(PHONE_PATTERN) ?? [];
+  for (const match of matches) {
+    const normalized = normalizeRoPhone(match);
+    if (normalized) out.add(normalized);
+  }
+  return [...out];
 }
 
 function extractUrlDomain(rawUrl: string | null | undefined): string | null {
@@ -282,6 +296,88 @@ function extractUrlDomain(rawUrl: string | null | undefined): string | null {
     return new URL(rawUrl).hostname.toLowerCase().replace(/^www\./, '');
   } catch {
     return String(rawUrl).toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '') || null;
+  }
+}
+
+const PHONE_HYDRATION_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+
+function buildPhoneHydrationActions(url: string) {
+  const u = url.toLowerCase();
+  const actions: any[] = [
+    { type: 'wait', milliseconds: 1800 },
+    { type: 'click', selector: '#onetrust-accept-btn-handler' },
+    { type: 'click', selector: 'button[data-testid="cookie-policy-banner-accept"]' },
+    { type: 'click', selector: 'button[id*="cookie" i][id*="accept" i]' },
+    { type: 'wait', milliseconds: 500 },
+    { type: 'scroll', direction: 'down', amount: 800 },
+    { type: 'wait', milliseconds: 400 },
+  ];
+
+  if (u.includes('olx.ro')) {
+    actions.push({ type: 'click', selector: 'button[data-testid="show-phone"]' });
+    actions.push({ type: 'click', selector: 'button[data-cy="show-phone"]' });
+    actions.push({ type: 'click', selector: 'a[data-testid="contact-phone"]' });
+  } else if (u.includes('storia.ro') || u.includes('imobiliare.ro')) {
+    actions.push({ type: 'click', selector: 'button[data-cy="phoneButton"]' });
+    actions.push({ type: 'click', selector: 'button[data-cy="show-phone-number"]' });
+    actions.push({ type: 'click', selector: 'button[data-testid="reveal-phone-button"]' });
+    actions.push({ type: 'click', selector: 'button[aria-label*="telefon" i]' });
+    actions.push({ type: 'click', selector: 'button:has-text("Afișează")' });
+    actions.push({ type: 'click', selector: 'button:has-text("Afiseaza")' });
+  } else if (u.includes('publi24.ro') || u.includes('anuntul.ro')) {
+    actions.push({ type: 'click', selector: 'button:has-text("Telefon")' });
+    actions.push({ type: 'click', selector: 'a.phone-link' });
+    actions.push({ type: 'click', selector: 'button[class*="phone" i]' });
+  } else {
+    actions.push({ type: 'click', selector: 'button:has-text("telefon")' });
+    actions.push({ type: 'click', selector: 'button:has-text("phone")' });
+    actions.push({ type: 'click', selector: 'a[href^="tel:"]' });
+  }
+
+  actions.push({ type: 'wait', milliseconds: 1600 });
+  return actions;
+}
+
+async function hydratePhoneFromListingUrl(url: string, firecrawlKey: string): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 26000);
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown', 'html'],
+        onlyMainContent: false,
+        waitFor: 2800,
+        timeout: 24000,
+        maxAge: 0,
+        proxy: 'stealth',
+        actions: buildPhoneHydrationActions(url),
+        location: { country: 'RO', languages: ['ro'] },
+        headers: {
+          'User-Agent': PHONE_HYDRATION_USER_AGENT,
+          'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.5',
+        },
+      }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      console.warn(`Phone hydration failed for ${url}: ${data?.error || res.status}`);
+      return null;
+    }
+    const doc = data?.data ?? data;
+    const html = doc?.html ?? '';
+    const markdown = doc?.markdown ?? '';
+    const telLinks = (html.match(/tel:[^"'<>\s]+/gi) ?? []).join(' ');
+    const jsonPhones = (html.match(/"(?:phone|telephone|phoneNumber|contactPhone)"\s*:\s*"([^"]+)"/gi) ?? []).join(' ');
+    return extractPhonesFromText(`${telLinks}\n${jsonPhones}\n${markdown}\n${html}`)[0] ?? null;
+  } catch (e) {
+    console.warn(`Phone hydration exception for ${url}:`, e instanceof Error ? e.message : String(e));
+    return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
