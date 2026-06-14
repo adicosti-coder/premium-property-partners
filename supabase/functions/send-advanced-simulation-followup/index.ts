@@ -7,14 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+import { signTrackingPayload } from "../_shared/trackingToken.ts";
+
 // Generate tracked URL with UTM parameters
-function getTrackedUrl(
+async function getTrackedUrl(
   userId: string,
   emailType: string,
   linkType: string,
   targetUrl: string,
   supabaseUrl: string
-): string {
+): Promise<string> {
   const trackingUrl = new URL(`${supabaseUrl}/functions/v1/track-email-click`);
   trackingUrl.searchParams.set("user_id", userId);
   trackingUrl.searchParams.set("email_type", emailType);
@@ -24,18 +26,22 @@ function getTrackedUrl(
   trackingUrl.searchParams.set("utm_campaign", emailType);
   trackingUrl.searchParams.set("utm_content", linkType);
   trackingUrl.searchParams.set("redirect", targetUrl);
+  const sig = await signTrackingPayload({ user_id: userId, email_type: emailType, link_type: linkType });
+  trackingUrl.searchParams.set("sig", sig);
   return trackingUrl.toString();
 }
 
 // Generate tracking pixel URL for open tracking
-function getTrackingPixelUrl(
+async function getTrackingPixelUrl(
   userId: string,
   emailType: string,
   supabaseUrl: string
-): string {
+): Promise<string> {
   const pixelUrl = new URL(`${supabaseUrl}/functions/v1/track-email-open`);
   pixelUrl.searchParams.set("user_id", userId);
   pixelUrl.searchParams.set("email_type", emailType);
+  const sig = await signTrackingPayload({ user_id: userId, email_type: emailType });
+  pixelUrl.searchParams.set("sig", sig);
   return pixelUrl.toString();
 }
 
