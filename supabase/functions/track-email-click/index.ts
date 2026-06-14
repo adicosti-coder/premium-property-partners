@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyTrackingPayload } from "../_shared/trackingToken.ts";
 
 const ALLOWED_DOMAINS = [
   'realtrustaparthotel.lovable.app',
@@ -41,8 +42,14 @@ serve(async (req) => {
     const utmContent = url.searchParams.get("utm_content");
     const redirectUrl = url.searchParams.get("redirect");
 
-    if (!userId) {
-      console.log("Missing user_id, redirecting without tracking");
+    const sig = url.searchParams.get("sig");
+    const sigOk = verifyTrackingPayload(
+      { user_id: userId ?? "", email_type: emailType, link_type: linkType },
+      sig,
+    );
+
+    if (!userId || !sigOk) {
+      console.log("Missing user_id or invalid signature, redirecting without tracking");
       if (redirectUrl && isAllowedRedirect(redirectUrl)) {
         return Response.redirect(redirectUrl, 302);
       }
