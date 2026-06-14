@@ -22,21 +22,35 @@ serve(async (req) => {
     const emailType = url.searchParams.get("email_type");
     const followupEmailId = url.searchParams.get("followup_id");
     const abAssignmentId = url.searchParams.get("ab_id");
+    const campaignId = url.searchParams.get("campaign_id");
+    const sig = url.searchParams.get("sig");
 
-    console.log("Tracking email open:", { userId, emailType, followupEmailId, abAssignmentId });
+    const pixelResponse = () => new Response(TRACKING_PIXEL, {
+      headers: {
+        "Content-Type": "image/gif",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        ...corsHeaders,
+      },
+    });
 
-    if (!userId || !emailType) {
+    if (!emailType) {
       console.error("Missing required parameters");
-      // Still return the pixel to not break email rendering
-      return new Response(TRACKING_PIXEL, {
-        headers: {
-          "Content-Type": "image/gif",
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          "Pragma": "no-cache",
-          "Expires": "0",
-          ...corsHeaders,
-        },
-      });
+      return pixelResponse();
+    }
+
+    // Verify HMAC signature to prevent forged tracking events
+    const payload = campaignId
+      ? { campaign_id: campaignId, email_type: emailType }
+      : { user_id: userId ?? "", email_type: emailType };
+    if (!verifyTrackingPayload(payload, sig)) {
+      console.warn("Invalid tracking signature, dropping event");
+      return pixelResponse();
+    }
+
+    if (!userId && !campaignId) {
+      return pixelResponse();
     }
 
     // Create Supabase client with service role for inserting
