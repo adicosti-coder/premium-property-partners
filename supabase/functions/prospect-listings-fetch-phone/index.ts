@@ -129,14 +129,19 @@ function buildActionsForUrl(url: string) {
         '#onetrust-accept-btn-handler',
         'button[data-testid="cookie-policy-banner-accept"]',
         'button[id*="cookie" i][id*="accept" i]',
-        'button[aria-label*="accept" i]'
+        'button[class*="cookie" i][class*="accept" i]',
+        'button[aria-label*="accept" i]',
+        'button[aria-label*="acceptă" i]'
       ].forEach(safeClick);
-      try { window.scrollTo(0, 600); } catch (e) {}
+      try { window.scrollTo(0, Math.max(500, Math.floor(document.body.scrollHeight * 0.35))); } catch (e) {}
       ${JSON.stringify(phoneSelectors)}.forEach(safeClick);
       try {
-        var re = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|show)\\b[\\s\\S]{0,30}?(telefon|num[ăa]r|phone|number)/i;
-        document.querySelectorAll('button, a').forEach(function (el) {
-          try { if (re.test((el.textContent || '').trim())) el.click(); } catch (e) {}
+        var re = /(afi[șs]eaz[ăa]|arat[ăa]|vezi|apeleaz[ăa]|sun[ăa]|show|reveal|contact)\\b[\\s\\S]{0,44}?(telefon|num[ăa]r|phone|number|mobile|contact)|^(telefon|tel\\.?|phone)$/i;
+        document.querySelectorAll('button, a, [role="button"], [onclick], div, span').forEach(function (el) {
+          try {
+            var txt = ((el.getAttribute('aria-label') || '') + ' ' + (el.getAttribute('title') || '') + ' ' + (el.textContent || '')).trim();
+            if (re.test(txt)) el.click();
+          } catch (e) {}
         });
       } catch (e) {}
     } catch (e) {}
