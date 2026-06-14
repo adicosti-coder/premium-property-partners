@@ -2,7 +2,7 @@
 // Prevents anonymous attackers from forging tracking events for arbitrary user_ids.
 // Uses node:crypto for synchronous HMAC (templates that build URLs are sync).
 
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac } from "node:crypto";
 
 function getSecret(): string {
   return (
@@ -32,9 +32,9 @@ export function verifyTrackingPayload(
   if (!sig) return false;
   const expected = signTrackingPayload(parts);
   if (expected.length !== sig.length) return false;
-  try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(sig));
-  } catch {
-    return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ sig.charCodeAt(i);
   }
+  return diff === 0;
 }
