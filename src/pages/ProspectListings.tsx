@@ -2070,7 +2070,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                           variant="outline"
                           className="h-7 text-xs gap-1"
                           disabled={recoveringPhoneId === p.id || p.phoneFetchExhausted || !p.source_url || bulkPending !== null}
-                          onClick={() => void recoverPhone(p.id, p.admin_notes)}
+                          onClick={() => void handleRecoverPhone({ id: p.id, source_url: p.source_url, admin_notes: p.admin_notes })}
                         >
                           {recoveringPhoneId === p.id
                             ? <Loader2 className="h-3 w-3 animate-spin" />
