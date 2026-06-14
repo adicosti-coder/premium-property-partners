@@ -580,11 +580,8 @@ function extractFromMarkdown(markdown: string, title: string, _url: string): {
     if (removeDiacritics(text.toLowerCase()).includes(clean)) features.push(f);
   }
 
-  // Contact
-  let contactPhone: string | null = null;
-  const phoneMatch = text.match(/(?:tel|telefon|contact)[.:\s]*([\d\s+()-]{7,})/i) ||
-    text.match(/(07\d{2}[\s.-]?\d{3}[\s.-]?\d{3})/);
-  if (phoneMatch) contactPhone = phoneMatch[1].trim();
+  // Contact — scan the whole scraped body, not only explicit "telefon:" labels.
+  const contactPhone = extractPhonesFromText(text)[0] ?? null;
 
   // Images from markdown
   const images: string[] = [];
@@ -800,6 +797,10 @@ Deno.serve(async (req) => {
             }
 
             const extracted = extractFromMarkdown(markdown, result.title || '', url);
+            const phoneFromSearchPayload = normalizeRoPhone(extracted.contactPhone) ??
+              extractPhonesFromText(`${markdown}\n${result.title || ''}\n${result.description || ''}`).find(Boolean) ??
+              null;
+            extracted.contactPhone = phoneFromSearchPayload || await hydratePhoneFromListingUrl(url, firecrawlKey);
 
             let price = extracted.price;
             if (price && extracted.currency === 'RON') {
