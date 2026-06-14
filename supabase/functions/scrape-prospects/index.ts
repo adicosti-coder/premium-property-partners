@@ -305,6 +305,8 @@ function extractPhonesFromText(text: string | null | undefined): string[] {
   return [...out].sort((a, b) => Number(!a.startsWith('+407')) - Number(!b.startsWith('+407')));
 }
 
+const PHONE_HYDRATION_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+
 function buildPhoneRevealJavascript(phoneSelectors: string[]): string {
   return `
     try {
@@ -455,16 +457,6 @@ async function hydratePhoneFromListingUrl(url: string, firecrawlKey: string): Pr
     if (phones.length > 0) return phones[0];
   }
   return null;
-}
-
-function extractPhonesFromTextLegacy(text: string | null | undefined): string[] {
-  const out = new Set<string>();
-  const matches = text?.match(PHONE_PATTERN) ?? [];
-  for (const match of matches) {
-    const normalized = normalizeRoPhone(match);
-    if (normalized) out.add(normalized);
-  }
-  return [...out];
 }
 
 function extractUrlDomain(rawUrl: string | null | undefined): string | null {
