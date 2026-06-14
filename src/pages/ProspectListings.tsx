@@ -2789,6 +2789,22 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
               })()}
               <Button
                 size="sm"
+                variant="outline"
+                onClick={() => {
+                  const ids = filtered.filter((p) => selectedIds.has(p.id)).map((p) => p.id);
+                  void runBulkPushToFastReview(ids);
+                }}
+                disabled={bulkPending !== null || selectedIds.size === 0}
+                className="gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
+                title="Creează drafturi în /admin/properties/fast-review pentru anunțurile selectate"
+              >
+                {bulkPending === "push_to_review"
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : <Send className="h-3.5 w-3.5" />}
+                Trimite la Fast Review ({selectedIds.size})
+              </Button>
+              <Button
+                size="sm"
                 variant="destructive"
                 onClick={() => setConfirmBulkDismissOpen(true)}
                 disabled={bulkPending !== null}
