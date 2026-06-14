@@ -208,7 +208,7 @@ const handler = async (req: Request): Promise<Response> => {
       await Promise.all(
         batch.map(async (email) => {
           try {
-            const htmlContent = wrapContentInTemplate(
+            const htmlContent = await wrapContentInTemplate(
               campaign.content,
               campaign.subject,
               campaignId,
