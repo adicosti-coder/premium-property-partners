@@ -8525,6 +8525,7 @@ export type Database = {
       }
     }
     Functions: {
+      _extract_domain: { Args: { url: string }; Returns: string }
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
       auto_blacklist_prospect: {
         Args: { p_prospect_id: string; p_reasons?: string[]; p_score: number }
