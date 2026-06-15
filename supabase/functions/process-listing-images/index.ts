@@ -353,12 +353,21 @@ Deno.serve(async (req) => {
   else if (unsalvagedAi > 0) status = "fallback_failed";
   else status = "completed";
 
+  // Merge processed batch back into the full image list (preserves untouched indices outside batch window)
+  const mergedImages = [...allSources];
+  for (let k = 0; k < finalUrls.length; k++) {
+    mergedImages[offset + k] = finalUrls[k];
+  }
+  const isLastBatch = offset + sources.length >= allSources.length;
+  const reportedStatus = isLastBatch ? status : "processing";
+
   await supabase.from("properties").update({
-    images: finalUrls,
-    images_processing_status: status,
+    images: mergedImages,
+    images_processing_status: reportedStatus,
     images_processed_at: new Date().toISOString(),
     images_processing_log: {
       mode,
+      batch: { offset, limit, total: allSources.length, is_last: isLastBatch },
       ai_circuit_opened: aiCircuitOpen,
       source_platform: prop.source_platform,
       total: sources.length,
@@ -375,6 +384,8 @@ Deno.serve(async (req) => {
   return new Response(JSON.stringify({
     ok: true, property_id: propertyId, mode, processed: okCount,
     ai_failures: aiFailures, total_retries: totalRetries,
-    total: sources.length, status,
+    batch: { offset, limit, total: allSources.length, is_last: isLastBatch },
+    next_offset: isLastBatch ? null : offset + sources.length,
+    total: sources.length, status: reportedStatus,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
