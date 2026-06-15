@@ -15,7 +15,7 @@ import { toast as sonnerToast } from "sonner";
 import {
   ArrowLeft, CheckCircle2, XCircle, Pencil, Loader2, Sparkles,
   ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X, Wand2,
-  Keyboard, Building2, Trash2,
+  Keyboard, Building2, Trash2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
@@ -849,6 +849,8 @@ function ReviewCard({
   const [aiCleaning, setAiCleaning] = useState(false);
   const [images, setImages] = useState<string[]>(row.images ?? []);
   const [deletingIdx, setDeletingIdx] = useState<number | null>(null);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+
 
   useEffect(() => { setImages(row.images ?? []); }, [row.images]);
 
@@ -1060,12 +1062,25 @@ function ReviewCard({
               <div className="grid grid-cols-4 gap-1 mt-3">
                 {images.slice(0, 8).map((src, i) => (
                   <div key={`${src}-${i}`} className="relative group aspect-square">
-                    <img
-                      src={src}
-                      alt={`${row.name} ${i + 1}`}
-                      className="w-full h-full object-cover rounded border"
-                      loading="lazy"
-                    />
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setLightboxIdx(i); }}
+                      className="block w-full h-full rounded border overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary"
+                      title="Click pentru a vizualiza"
+                      aria-label={`Vizualizează fotografia ${i + 1}`}
+                    >
+                      <img
+                        src={src}
+                        alt={`${row.name} ${i + 1}`}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    </button>
+                    {i === 7 && images.length > 8 && (
+                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/55 text-white text-sm font-semibold rounded">
+                        +{images.length - 8}
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); deleteImage(i); }}
@@ -1082,6 +1097,55 @@ function ReviewCard({
                 ))}
               </div>
             )}
+
+            {lightboxIdx !== null && images[lightboxIdx] && (
+              <div
+                className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
+                onClick={() => setLightboxIdx(null)}
+                role="dialog"
+                aria-modal="true"
+              >
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setLightboxIdx(null); }}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                  aria-label="Închide"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setLightboxIdx((idx) => (idx! - 1 + images.length) % images.length); }}
+                      className="absolute left-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                      aria-label="Anterioară"
+                    >
+                      <ChevronLeft className="h-7 w-7" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setLightboxIdx((idx) => (idx! + 1) % images.length); }}
+                      className="absolute right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                      aria-label="Următoarea"
+                    >
+                      <ChevronRight className="h-7 w-7" />
+                    </button>
+                  </>
+                )}
+                <div className="max-w-6xl w-full" onClick={(e) => e.stopPropagation()}>
+                  <img
+                    src={images[lightboxIdx]}
+                    alt={`${row.name} ${lightboxIdx + 1}`}
+                    className="w-full max-h-[85vh] object-contain rounded-lg"
+                  />
+                  <div className="text-center mt-3 text-white/80 text-sm">
+                    {lightboxIdx + 1} / {images.length}
+                  </div>
+                </div>
+              </div>
+            )}
+
 
           </div>
         </div>
