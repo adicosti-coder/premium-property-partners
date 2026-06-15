@@ -214,10 +214,12 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-  let body: { property_id?: string; force_ai?: boolean };
+  let body: { property_id?: string; force_ai?: boolean; offset?: number; limit?: number };
   try { body = await req.json(); } catch { body = {}; }
   const propertyId = body.property_id;
   const forceAi = body.force_ai === true;
+  const offset = Math.max(0, Number(body.offset) || 0);
+  const limit = Math.max(1, Math.min(DEFAULT_BATCH_SIZE, Number(body.limit) || DEFAULT_BATCH_SIZE));
 
   if (!propertyId || typeof propertyId !== "string") {
     return new Response(JSON.stringify({ error: "property_id required" }), {
