@@ -95,7 +95,7 @@ async function pushOne(
     images,
     image_path: images[0] || null,
     rooms: prospect.rooms ?? null,
-    size: prospect.size ?? null,
+    size: typeof prospect.size === "number" ? Math.round(prospect.size) : null,
     floor: prospect.floor ?? null,
     year_built: prospect.year_built ?? null,
     source_url: prospect.source_url ?? null,
@@ -105,7 +105,7 @@ async function pushOne(
     imported_at: new Date().toISOString(),
     migrated_from_prospect_id: prospectId,
     original_description_raw: prospect.description ?? null,
-    images_processing_status: images.length ? "pending" : "pending",
+    images_processing_status: "pending",
     capital_necesar: typeof prospect.price === "number" ? prospect.price : null,
   };
 
@@ -115,21 +115,25 @@ async function pushOne(
     .select("id")
     .single();
   if (insErr || !inserted) {
+    console.error("[prospect-to-fast-review] insert failed", { prospectId, error: insErr });
     return { prospect_id: prospectId, reason: insErr?.message || "insert_failed", created: false };
   }
 
   const propertyId = (inserted as any).id as string;
 
-  // Mark prospect so it disappears from outreach pipeline
+  // Mark prospect so it disappears from outreach pipeline (tags + notes only;
+  // we intentionally do NOT touch lifecycle_status because 'pushed_to_review'
+  // is not part of the lead_lifecycle_status enum and the update would fail.)
   const newTags = Array.from(new Set([...(Array.isArray(prospect.tags) ? prospect.tags : []), "pushed-to-fast-review"]));
   const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
   const noteLine = `[${stamp}] Trimis la Fast Review (property ${propertyId.slice(0, 8)}).`;
   const newNotes = prospect.admin_notes ? `${prospect.admin_notes}\n${noteLine}` : noteLine;
 
-  await supabase
+  const { error: updErr } = await supabase
     .from("prospect_listings")
-    .update({ tags: newTags, admin_notes: newNotes, lifecycle_status: "pushed_to_review" })
+    .update({ tags: newTags, admin_notes: newNotes })
     .eq("id", prospectId);
+  if (updErr) console.warn("[prospect-to-fast-review] prospect tag update failed", updErr.message);
 
   // Best-effort audit log
   try {
