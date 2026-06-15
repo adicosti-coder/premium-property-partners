@@ -557,8 +557,10 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
       });
       if (error) throw error;
       sonnerToast.dismiss(tId);
+      const failedItems = (data?.results ?? []).filter((r: any) => !r.property_id);
+      const firstReason = failedItems[0]?.reason;
       sonnerToast.success(
-        `🚀 Fast Review: ${data?.created ?? 0} create · ${data?.existed ?? 0} existau deja${data?.failed ? ` · ${data.failed} erori` : ""}`,
+        `🚀 Fast Review: ${data?.created ?? 0} create · ${data?.existed ?? 0} existau deja${data?.failed ? ` · ${data.failed} erori${firstReason ? ` (${firstReason})` : ""}` : ""}`,
       );
       refetch();
     } catch (e) {
