@@ -65,8 +65,13 @@ async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
 
 async function bottomCrop(bytes: Uint8Array, cropRatio = 0.10): Promise<Uint8Array> {
   const img = await Image.decode(bytes);
-  const newH = Math.max(1, Math.floor(img.height * (1 - cropRatio)));
-  const cropped = img.crop(0, 0, img.width, newH);
+  // Downscale large images first to keep worker memory under the compute limit.
+  if (img.width > 1600) {
+    const newH = Math.round((1600 / img.width) * img.height);
+    img.resize(1600, newH);
+  }
+  const newH2 = Math.max(1, Math.floor(img.height * (1 - cropRatio)));
+  const cropped = img.crop(0, 0, img.width, newH2);
   return await cropped.encodeJPEG(85);
 }
 
