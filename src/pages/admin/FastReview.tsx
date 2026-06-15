@@ -15,7 +15,7 @@ import { toast as sonnerToast } from "sonner";
 import {
   ArrowLeft, CheckCircle2, XCircle, Pencil, Loader2, Sparkles,
   ShieldCheck, ExternalLink, FileText, Eye, Search, Filter, X, Wand2,
-  Keyboard, Building2, Trash2,
+  Keyboard, Building2, Trash2, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import OriginalContactReveal from "@/components/admin/OriginalContactReveal";
