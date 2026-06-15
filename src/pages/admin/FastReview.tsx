@@ -849,6 +849,8 @@ function ReviewCard({
   const [aiCleaning, setAiCleaning] = useState(false);
   const [images, setImages] = useState<string[]>(row.images ?? []);
   const [deletingIdx, setDeletingIdx] = useState<number | null>(null);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+
 
   useEffect(() => { setImages(row.images ?? []); }, [row.images]);
 
