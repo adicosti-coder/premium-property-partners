@@ -21,6 +21,7 @@ const DEWATERMARK_URL = "https://platform.dewatermark.ai/api/object_removal/v2/e
 
 const BUCKET = "property-images";
 const MAX_IMAGES = 12;
+const DEFAULT_BATCH_SIZE = 4; // process at most this many per invocation to stay within compute limits
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB cap per source image
 
 // Sources where the watermark is predictably in the bottom strip / corners.
@@ -48,11 +49,21 @@ function pickMode(platform: string, forceAi = false): Mode {
   return "bottom_crop";
 }
 
+// Rewrite well-known CDN URLs to request a smaller variant — keeps decode memory low.
+function smallerVariant(url: string): string {
+  // OLX apollo CDN: ...image;s=WIDTHxHEIGHT  → cap to 1024x768
+  if (/olxcdn\.com/.test(url)) {
+    return url.replace(/;s=\d+x\d+/i, ";s=1024x768");
+  }
+  // Storia/imobiliare often expose width via querystring (?w=) — keep as-is.
+  return url;
+}
+
 async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
   try {
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), 15000);
-    const res = await fetch(url, { signal: ctl.signal });
+    const res = await fetch(smallerVariant(url), { signal: ctl.signal });
     clearTimeout(t);
     if (!res.ok) return null;
     const buf = new Uint8Array(await res.arrayBuffer());
@@ -65,8 +76,13 @@ async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
 
 async function bottomCrop(bytes: Uint8Array, cropRatio = 0.10): Promise<Uint8Array> {
   const img = await Image.decode(bytes);
-  const newH = Math.max(1, Math.floor(img.height * (1 - cropRatio)));
-  const cropped = img.crop(0, 0, img.width, newH);
+  // Downscale large images first to keep worker memory under the compute limit.
+  if (img.width > 1600) {
+    const newH = Math.round((1600 / img.width) * img.height);
+    img.resize(1600, newH);
+  }
+  const newH2 = Math.max(1, Math.floor(img.height * (1 - cropRatio)));
+  const cropped = img.crop(0, 0, img.width, newH2);
   return await cropped.encodeJPEG(85);
 }
 
@@ -208,10 +224,12 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-  let body: { property_id?: string; force_ai?: boolean };
+  let body: { property_id?: string; force_ai?: boolean; offset?: number; limit?: number };
   try { body = await req.json(); } catch { body = {}; }
   const propertyId = body.property_id;
   const forceAi = body.force_ai === true;
+  const offset = Math.max(0, Number(body.offset) || 0);
+  const limit = Math.max(1, Math.min(DEFAULT_BATCH_SIZE, Number(body.limit) || DEFAULT_BATCH_SIZE));
 
   if (!propertyId || typeof propertyId !== "string") {
     return new Response(JSON.stringify({ error: "property_id required" }), {
@@ -231,7 +249,8 @@ Deno.serve(async (req) => {
     });
   }
 
-  const sources: string[] = Array.isArray(prop.images) ? prop.images.slice(0, MAX_IMAGES) : [];
+  const allSources: string[] = Array.isArray(prop.images) ? prop.images.slice(0, MAX_IMAGES) : [];
+  const sources = allSources.slice(offset, offset + limit);
   if (sources.length === 0) {
     await supabase.from("properties").update({
       images_processing_status: "skipped",
@@ -344,12 +363,21 @@ Deno.serve(async (req) => {
   else if (unsalvagedAi > 0) status = "fallback_failed";
   else status = "completed";
 
+  // Merge processed batch back into the full image list (preserves untouched indices outside batch window)
+  const mergedImages = [...allSources];
+  for (let k = 0; k < finalUrls.length; k++) {
+    mergedImages[offset + k] = finalUrls[k];
+  }
+  const isLastBatch = offset + sources.length >= allSources.length;
+  const reportedStatus = isLastBatch ? status : "processing";
+
   await supabase.from("properties").update({
-    images: finalUrls,
-    images_processing_status: status,
+    images: mergedImages,
+    images_processing_status: reportedStatus,
     images_processed_at: new Date().toISOString(),
     images_processing_log: {
       mode,
+      batch: { offset, limit, total: allSources.length, is_last: isLastBatch },
       ai_circuit_opened: aiCircuitOpen,
       source_platform: prop.source_platform,
       total: sources.length,
@@ -366,6 +394,8 @@ Deno.serve(async (req) => {
   return new Response(JSON.stringify({
     ok: true, property_id: propertyId, mode, processed: okCount,
     ai_failures: aiFailures, total_retries: totalRetries,
-    total: sources.length, status,
+    batch: { offset, limit, total: allSources.length, is_last: isLastBatch },
+    next_offset: isLastBatch ? null : offset + sources.length,
+    total: sources.length, status: reportedStatus,
   }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });

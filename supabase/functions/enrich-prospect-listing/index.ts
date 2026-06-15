@@ -226,22 +226,9 @@ async function processImage(
     // Light auto-enhance
     try { img.contrast(1.08); img.saturation(1.05); } catch (_) { /* ignore */ }
 
-    // Watermark
-    if (font) {
-      try {
-        const label = Image.renderText(font, 30, "REALTRUST", 0xffffffe6);
-        const padX = 18;
-        const padY = 18;
-        // Semi-transparent dark plate
-        const plateW = label.width + 24;
-        const plateH = label.height + 16;
-        const plate = new Image(plateW, plateH).fill(0x000000aa);
-        const px = img.width - plateW - padX;
-        const py = img.height - plateH - padY;
-        img.composite(plate, px, py);
-        img.composite(label, px + 12, py + 8);
-      } catch (e) { console.warn("watermark fail", e); }
-    }
+    // NOTE: RealTrust watermark overlay intentionally removed — published listings
+    // must not display any watermark (user policy).
+    void font;
 
     return await img.encodeJPEG(82);
   } catch (e) {

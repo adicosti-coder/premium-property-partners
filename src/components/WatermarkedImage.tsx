@@ -28,7 +28,7 @@ export default function WatermarkedImage({
   height = 450,
   className,
   imgClassName,
-  watermark = true,
+  watermark = false,
   priority = false,
   aspectRatio = "16/9",
 }: Props) {
