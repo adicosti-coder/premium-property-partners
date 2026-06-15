@@ -49,11 +49,21 @@ function pickMode(platform: string, forceAi = false): Mode {
   return "bottom_crop";
 }
 
+// Rewrite well-known CDN URLs to request a smaller variant — keeps decode memory low.
+function smallerVariant(url: string): string {
+  // OLX apollo CDN: ...image;s=WIDTHxHEIGHT  → cap to 1024x768
+  if (/olxcdn\.com/.test(url)) {
+    return url.replace(/;s=\d+x\d+/i, ";s=1024x768");
+  }
+  // Storia/imobiliare often expose width via querystring (?w=) — keep as-is.
+  return url;
+}
+
 async function fetchImageBytes(url: string): Promise<Uint8Array | null> {
   try {
     const ctl = new AbortController();
     const t = setTimeout(() => ctl.abort(), 15000);
-    const res = await fetch(url, { signal: ctl.signal });
+    const res = await fetch(smallerVariant(url), { signal: ctl.signal });
     clearTimeout(t);
     if (!res.ok) return null;
     const buf = new Uint8Array(await res.arrayBuffer());
