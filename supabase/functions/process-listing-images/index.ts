@@ -21,6 +21,7 @@ const DEWATERMARK_URL = "https://platform.dewatermark.ai/api/object_removal/v2/e
 
 const BUCKET = "property-images";
 const MAX_IMAGES = 12;
+const DEFAULT_BATCH_SIZE = 4; // process at most this many per invocation to stay within compute limits
 const MAX_BYTES = 8 * 1024 * 1024; // 8MB cap per source image
 
 // Sources where the watermark is predictably in the bottom strip / corners.
