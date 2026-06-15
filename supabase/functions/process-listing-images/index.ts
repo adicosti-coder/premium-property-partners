@@ -239,7 +239,8 @@ Deno.serve(async (req) => {
     });
   }
 
-  const sources: string[] = Array.isArray(prop.images) ? prop.images.slice(0, MAX_IMAGES) : [];
+  const allSources: string[] = Array.isArray(prop.images) ? prop.images.slice(0, MAX_IMAGES) : [];
+  const sources = allSources.slice(offset, offset + limit);
   if (sources.length === 0) {
     await supabase.from("properties").update({
       images_processing_status: "skipped",
