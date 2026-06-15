@@ -68,9 +68,9 @@ function buildPropertyData(
     compartimentare: data.compartimentare || null,
     source_url: url,
     source_platform: platform,
-    contact_name: data.contact_name || null,
-    contact_phone: data.contact_phone || null,
-    contact_email: data.contact_email || null,
+    // contact_name / contact_phone / contact_email are intentionally omitted —
+    // those columns do not exist on public.properties (contact info lives on
+    // prospect_listings / property owner records, not the published property).
     latitude: data.latitude ? Number(data.latitude) : null,
     longitude: data.longitude ? Number(data.longitude) : null,
   };
