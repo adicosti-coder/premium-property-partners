@@ -34,13 +34,19 @@ const RealEstateListings = () => {
   const { data: listings, isLoading } = useQuery({
     queryKey: ["real-estate-listings"],
     queryFn: async () => {
+      // TTFB: only the columns rendered in the card. Descriptions stay on
+      // the detail page query.
       const { data, error } = await supabase
         .from("properties")
-        .select("id, slug, name, location, listing_type, capital_necesar, image_path, images, description_ro, description_en, size, bedrooms, property_images(image_path, is_primary, display_order)")
+        .select("id, slug, name, location, listing_type, capital_necesar, image_path, images, size, bedrooms, property_images(image_path, is_primary, display_order)")
         .in("listing_type", ["vanzare", "inchiriere"])
         .eq("is_active", true)
         .order("display_order");
-      if (error) throw error;
+      if (error) {
+        const { reportError } = await import("@/lib/errorReporting");
+        reportError(error, { scope: "listings:real-estate", meta: { activeTab } });
+        throw error;
+      }
       return (data || []) as ListingProperty[];
     },
     staleTime: 1000 * 60 * 5,
