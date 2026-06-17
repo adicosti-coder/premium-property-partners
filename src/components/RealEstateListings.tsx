@@ -160,13 +160,16 @@ const RealEstateListings = () => {
                   className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
                   onClick={() => navigate(propertyPath)}
                 >
-                  {/* Image */}
-                  <div className="relative h-52 overflow-hidden">
+                  {/* Image — fixed aspect container (h-52) prevents CLS */}
+                  <div className="relative h-52 overflow-hidden bg-muted">
                     <img
                       src={getImageUrl(listing)}
                       alt={listing.name}
+                      width={400}
+                      height={208}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
+                      decoding="async"
                     />
                     <Badge
                       variant={listing.listing_type === "vanzare" ? "default" : "secondary"}
