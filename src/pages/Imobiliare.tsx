@@ -383,8 +383,12 @@ const Imobiliare = () => {
         </div>
       </section>
 
-      {/* Real Estate Listings - Vânzări & Închirieri */}
-      <RealEstateListings />
+      {/* Real Estate Listings - Vânzări & Închirieri (isolated in QueryBoundary
+          so a Supabase outage degrades only this section, not the whole page) */}
+      <QueryBoundary scope="listings:imobiliare">
+        <RealEstateListings />
+      </QueryBoundary>
+
 
       {/* Market Analysis + Evaluation + Consulting Section */}
       <section className="relative py-20 md:py-28 bg-muted/20 overflow-hidden">
