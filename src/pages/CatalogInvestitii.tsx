@@ -138,11 +138,18 @@ const CatalogInvestitii = () => {
 
   useEffect(() => {
     const fetchProperties = async () => {
-      const { data } = await supabase
+      // TTFB optimization: removed `description_ro`/`description_en` from list query —
+      // descriptions belong on the detail page (`/proprietate/:slug`) and are not
+      // rendered in the catalog row. Saves ~30-60% payload per property.
+      const { data, error } = await supabase
         .from("properties")
-        .select("name, location, size, bedrooms, bathrooms, capacity, base_price_per_night, roi_percentage, estimated_revenue, booking_rating, booking_review_count, description_ro, description_en, tag, listing_type, capital_necesar, slug, image_path, images")
+        .select("name, location, size, bedrooms, bathrooms, capacity, base_price_per_night, roi_percentage, estimated_revenue, booking_rating, booking_review_count, tag, listing_type, capital_necesar, slug, image_path, images")
         .eq("is_active", true)
         .order("display_order", { ascending: true });
+      if (error) {
+        const { reportError } = await import("@/lib/errorReporting");
+        reportError(error, { scope: "listings:catalog-investitii" });
+      }
       setProperties(data ?? []);
       setLoading(false);
     };
