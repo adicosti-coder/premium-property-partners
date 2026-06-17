@@ -18,8 +18,6 @@ interface ListingProperty {
   capital_necesar: number | null;
   image_path: string | null;
   images: string[] | null;
-  description_ro: string;
-  description_en: string;
   size: number | null;
   bedrooms: number | null;
   property_images: { image_path: string; is_primary: boolean; display_order: number }[];
@@ -34,13 +32,19 @@ const RealEstateListings = () => {
   const { data: listings, isLoading } = useQuery({
     queryKey: ["real-estate-listings"],
     queryFn: async () => {
+      // TTFB: only the columns rendered in the card. Descriptions stay on
+      // the detail page query.
       const { data, error } = await supabase
         .from("properties")
-        .select("id, slug, name, location, listing_type, capital_necesar, image_path, images, description_ro, description_en, size, bedrooms, property_images(image_path, is_primary, display_order)")
+        .select("id, slug, name, location, listing_type, capital_necesar, image_path, images, size, bedrooms, property_images(image_path, is_primary, display_order)")
         .in("listing_type", ["vanzare", "inchiriere"])
         .eq("is_active", true)
         .order("display_order");
-      if (error) throw error;
+      if (error) {
+        const { reportError } = await import("@/lib/errorReporting");
+        reportError(error, { scope: "listings:real-estate", meta: { activeTab } });
+        throw error;
+      }
       return (data || []) as ListingProperty[];
     },
     staleTime: 1000 * 60 * 5,
@@ -160,13 +164,16 @@ const RealEstateListings = () => {
                   className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
                   onClick={() => navigate(propertyPath)}
                 >
-                  {/* Image */}
-                  <div className="relative h-52 overflow-hidden">
+                  {/* Image — fixed aspect container (h-52) prevents CLS */}
+                  <div className="relative h-52 overflow-hidden bg-muted">
                     <img
                       src={getImageUrl(listing)}
                       alt={listing.name}
+                      width={400}
+                      height={208}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
+                      decoding="async"
                     />
                     <Badge
                       variant={listing.listing_type === "vanzare" ? "default" : "secondary"}
