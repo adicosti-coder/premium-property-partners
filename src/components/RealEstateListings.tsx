@@ -18,8 +18,6 @@ interface ListingProperty {
   capital_necesar: number | null;
   image_path: string | null;
   images: string[] | null;
-  description_ro: string;
-  description_en: string;
   size: number | null;
   bedrooms: number | null;
   property_images: { image_path: string; is_primary: boolean; display_order: number }[];
