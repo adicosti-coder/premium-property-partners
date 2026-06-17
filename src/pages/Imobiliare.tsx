@@ -38,6 +38,7 @@ const RealEstateContactForm = lazy(() => import("@/components/RealEstateContactF
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const RealEstateListings = lazy(() => import("@/components/RealEstateListings"));
 const SEOFooterText = lazy(() => import("@/components/SEOFooterText"));
+import QueryBoundary from "@/components/QueryBoundary";
 
 const Imobiliare = () => {
   const { t, language } = useLanguage();
