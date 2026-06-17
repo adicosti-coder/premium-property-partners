@@ -35,8 +35,8 @@ interface Property {
   estimated_revenue: string | null;
   booking_rating: number | null;
   booking_review_count: number | null;
-  description_ro: string;
-  description_en: string;
+  description_ro?: string;
+  description_en?: string;
   tag: string;
   listing_type: string | null;
   capital_necesar: number | null;
