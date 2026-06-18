@@ -13,9 +13,10 @@ const ShimmerBox = ({ className = "" }: { className?: string }) => (
 );
 
 const BlogCardSkeleton = () => (
-  <Card className="overflow-hidden h-full">
-    {/* Image */}
-    <div className="h-48 w-full relative overflow-hidden bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60">
+  <Card className="overflow-hidden h-full" style={{ contain: "layout paint" }}>
+    {/* Image — aspect-ratio locked, identical to BlogCard, prevents CLS */}
+    <div className="w-full relative overflow-hidden bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60" style={{ aspectRatio: "16 / 10" }}>
+
       <div 
         className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_ease-in-out_infinite]"
         style={{
