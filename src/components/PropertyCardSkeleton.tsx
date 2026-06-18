@@ -14,9 +14,12 @@ const ShimmerBox = ({ className = "" }: { className?: string }) => (
 
 const PropertyCardSkeleton = () => {
   return (
-    <div className="bg-card rounded-2xl overflow-hidden border border-border">
-      {/* Image skeleton with premium shimmer */}
-      <div className="h-48 w-full relative overflow-hidden bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60">
+    // aspect-ratio locked on the card itself so the overall card height is
+    // reserved BEFORE any child paints — guarantees CLS=0 on mobile + desktop.
+    <div className="bg-card rounded-2xl overflow-hidden border border-border" style={{ contain: "layout paint" }}>
+      {/* Image skeleton — fixed aspect-ratio (16/10) matches the real card thumb */}
+      <div className="w-full relative overflow-hidden bg-gradient-to-br from-muted/60 via-muted/40 to-muted/60" style={{ aspectRatio: "16 / 10" }}>
+
         {/* Shimmer overlay */}
         <div 
           className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_ease-in-out_infinite]"
