@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
+import { fetchWithRetry } from "@/lib/supabaseRetry";
+import { LISTING_CARD_COLUMNS } from "@/lib/listingQueries";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,14 +34,18 @@ const RealEstateListings = () => {
   const { data: listings, isLoading } = useQuery({
     queryKey: ["real-estate-listings"],
     queryFn: async () => {
-      // TTFB: only the columns rendered in the card. Descriptions stay on
-      // the detail page query.
-      const { data, error } = await supabase
-        .from("properties")
-        .select("id, slug, name, location, listing_type, capital_necesar, image_path, images, size, bedrooms, property_images(image_path, is_primary, display_order)")
-        .in("listing_type", ["vanzare", "inchiriere"])
-        .eq("is_active", true)
-        .order("display_order");
+      // Parametrized minimum-card select; descriptions stay on detail page.
+      const selectCols =
+        LISTING_CARD_COLUMNS.join(", ") +
+        ", property_images(image_path, is_primary, display_order)";
+      const { data, error } = await fetchWithRetry<ListingProperty[]>(() =>
+        supabase
+          .from("properties")
+          .select(selectCols)
+          .in("listing_type", ["vanzare", "inchiriere"])
+          .eq("is_active", true)
+          .order("display_order") as unknown as PromiseLike<{ data: ListingProperty[] | null; error: { message?: string } | null }>,
+      );
       if (error) {
         const { reportError } = await import("@/lib/errorReporting");
         reportError(error, { scope: "listings:real-estate", meta: { activeTab } });
@@ -48,6 +54,10 @@ const RealEstateListings = () => {
       return (data || []) as ListingProperty[];
     },
     staleTime: 1000 * 60 * 5,
+    // Exponential backoff in addition to fetchWithRetry — covers React Query
+    // boundary errors (e.g. RPC-shaped throws after retries exhaust).
+    retry: 2,
+    retryDelay: (attempt) => Math.min(2000, 400 * 3 ** attempt),
   });
 
   const filtered = listings?.filter(l => l.listing_type === activeTab) || [];
