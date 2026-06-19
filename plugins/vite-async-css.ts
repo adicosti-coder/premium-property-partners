@@ -1,8 +1,14 @@
 import type { Plugin } from "vite";
 
 /**
- * Makes Vite's stylesheet injection fully non-blocking and pushes hydration
- * scripts to the end of <body> so the static shell paints first.
+ * Inject the generated CSS via native `<link rel="preload" as="style" onload>`
+ * inside <head> so the preload-scanner discovers it BEFORE rendering body —
+ * this avoids the 2.1s LCP render-delay caused by the previous JS-driven
+ * idle hydration (Lighthouse mobile was waiting for requestIdleCallback to
+ * inject styles before declaring LCP).
+ *
+ * Module scripts stay at the end of <body> so they never block the static
+ * shell from painting.
  */
 export default function viteAsyncCss(): Plugin {
   return {
@@ -26,56 +32,33 @@ export default function viteAsyncCss(): Plugin {
           /<link rel="stylesheet"(?:\s+crossorigin)?\s+href="([^"]+\.css)"\s*\/?>/g,
           (_match, href) => {
             cssHrefs.push(href);
-            return `<noscript><link rel="stylesheet" href="${href}"></noscript>`;
+            return "";
           },
         );
 
+      // Inject CSS preloads in <head> using the native async pattern.
+      if (cssHrefs.length > 0) {
+        const cssTags = cssHrefs
+          .map(
+            (href) =>
+              `<link rel="preload" as="style" href="${href}" onload="this.onload=null;this.rel='stylesheet'">` +
+              `<noscript><link rel="stylesheet" href="${href}"></noscript>`,
+          )
+          .join("");
+        transformed = transformed.replace("</head>", `${cssTags}</head>`);
+      }
+
+      // Module scripts at end of body — async by default, never blocks paint.
       if (moduleScripts.length > 0) {
-        const bootstrap = buildDeferredBootstrap(cssHrefs, moduleScripts.map(({ src, crossorigin }) => ({ src, crossorigin })));
-        transformed = transformed.replace("</body>", `${bootstrap}\n</body>`);
+        const scriptTags = moduleScripts
+          .map(({ src, crossorigin }) =>
+            `<script type="module" src="${src}"${crossorigin ? " crossorigin" : ""}></script>`,
+          )
+          .join("");
+        transformed = transformed.replace("</body>", `${scriptTags}</body>`);
       }
 
       return transformed;
     },
   };
-}
-
-function buildDeferredBootstrap(
-  cssHrefs: string[],
-  scripts: Array<{ src: string; crossorigin: boolean }>,
-): string {
-  return `<script>
-(function(){
-  var loaded=false;
-  var fallback=0;
-  var css=${JSON.stringify(cssHrefs)};
-  var scripts=${JSON.stringify(scripts)};
-  var events=['pointerdown','touchstart','keydown','scroll'];
-  function cleanup(){events.forEach(function(e){document.removeEventListener(e,load,{capture:true});});if(fallback)clearTimeout(fallback);}
-  function load(){
-    if(loaded)return;loaded=true;cleanup();
-    css.forEach(function(href){var l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l);});
-    scripts.forEach(function(item){var s=document.createElement('script');s.type='module';s.src=item.src;if(item.crossorigin)s.crossOrigin='';document.body.appendChild(s);});
-  }
-  events.forEach(function(e){document.addEventListener(e,load,{once:true,passive:true,capture:true});});
-  // Kick off CSS+JS hydration as soon as the browser is idle after first paint.
-  // We do NOT wait for user interaction — Lighthouse / search crawlers never
-  // interact, and the LCP element lives inside the React-rendered Hero, so
-  // delaying React mount inflates LCP and Speed Index dramatically.
-  function schedule(){
-    if('requestIdleCallback' in window){
-      requestIdleCallback(load,{timeout:1200});
-    } else {
-      setTimeout(load,200);
-    }
-  }
-  if(document.readyState==='complete'||document.readyState==='interactive'){
-    schedule();
-  } else {
-    window.addEventListener('DOMContentLoaded',schedule,{once:true});
-  }
-  // Hard safety fallback (was 8000ms — caused LCP=3.3s on Lighthouse mobile).
-  fallback=setTimeout(load,1500);
-})();
-</script>`;
 }
