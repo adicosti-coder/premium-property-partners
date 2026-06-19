@@ -58,7 +58,24 @@ function buildDeferredBootstrap(
     scripts.forEach(function(item){var s=document.createElement('script');s.type='module';s.src=item.src;if(item.crossorigin)s.crossOrigin='';document.body.appendChild(s);});
   }
   events.forEach(function(e){document.addEventListener(e,load,{once:true,passive:true,capture:true});});
-  fallback=setTimeout(load,8000);
+  // Kick off CSS+JS hydration as soon as the browser is idle after first paint.
+  // We do NOT wait for user interaction — Lighthouse / search crawlers never
+  // interact, and the LCP element lives inside the React-rendered Hero, so
+  // delaying React mount inflates LCP and Speed Index dramatically.
+  function schedule(){
+    if('requestIdleCallback' in window){
+      requestIdleCallback(load,{timeout:1200});
+    } else {
+      setTimeout(load,200);
+    }
+  }
+  if(document.readyState==='complete'||document.readyState==='interactive'){
+    schedule();
+  } else {
+    window.addEventListener('DOMContentLoaded',schedule,{once:true});
+  }
+  // Hard safety fallback (was 8000ms — caused LCP=3.3s on Lighthouse mobile).
+  fallback=setTimeout(load,1500);
 })();
 </script>`;
 }
