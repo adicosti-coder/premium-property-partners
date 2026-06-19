@@ -86,6 +86,7 @@
     "vaul": "^0.9.9",
     "vite-plugin-image-optimizer": "^2.0.3",
     "vite-plugin-pwa": "0.21.1",
+    "web-vitals": "^5.3.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
