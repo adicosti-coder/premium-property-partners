@@ -16,6 +16,8 @@ const mountApp = () => {
     import("./lib/sentry").then(m => m.initSentry()).catch(() => {});
     // PWA service worker
     import("./hooks/usePWA").then(m => m.registerServiceWorker()).catch(() => {});
+    // Core Web Vitals RUM (LCP/CLS/INP/FCP/TTFB → GA4 + webhook)
+    import("./lib/webVitals").then(m => m.initWebVitals()).catch(() => {});
 
     // Clean up all listeners after first trigger
     events.forEach(e => document.removeEventListener(e, loadNonCritical));
