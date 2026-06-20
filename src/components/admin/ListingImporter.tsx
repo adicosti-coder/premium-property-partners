@@ -16,7 +16,26 @@ import {
 } from "lucide-react";
 import ImageOptimizationPanel from "./ImageOptimizationPanel";
 import MapLocationPicker from "./MapLocationPicker";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, Terminal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+
+interface ImportErrorDetails {
+  message: string;
+  status: number | null;
+  logs: string[];
+}
+
+const isValidHttpUrl = (value: string): boolean => {
+  const v = value.trim();
+  if (!v) return false;
+  try {
+    const u = new URL(v);
+    return (u.protocol === "http:" || u.protocol === "https:") && !!u.hostname && u.hostname.includes(".");
+  } catch {
+    return false;
+  }
+};
 
 interface ExtractedData {
   title: string | null;
