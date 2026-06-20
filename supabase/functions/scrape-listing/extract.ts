@@ -60,65 +60,115 @@ export interface ExtractedListing {
   source_platform: string;
 }
 
-/** Call Firecrawl to scrape a URL */
-export async function scrapeWithFirecrawl(url: string, firecrawlKey: string) {
-  console.log('[Firecrawl] Calling scrape API...');
+/** Convert raw HTML into clean text + extract <img>/<a> URLs. */
+function htmlToTextAndLinks(html: string, baseUrl: string): { text: string; images: string[]; links: string[] } {
+  if (!html) return { text: '', images: [], links: [] };
 
-  const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${firecrawlKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url,
-      formats: ['markdown', 'links', 'extract'],
-      extract: {
-        prompt: EXTRACTION_PROMPT,
-      },
-      waitFor: 5000,
-    }),
-  });
+  const images: string[] = [];
+  const links: string[] = [];
 
-  const scrapeData = await scrapeResponse.json().catch(() => ({} as any));
+  const absolutize = (u: string): string | null => {
+    try {
+      if (!u) return null;
+      if (u.startsWith('//')) return `https:${u}`;
+      return new URL(u, baseUrl).toString();
+    } catch { return null; }
+  };
 
-  // Hard-fail on Firecrawl billing / auth / rate-limit errors so the admin UI
-  // shows a clear, actionable message instead of an empty preview.
-  if (!scrapeResponse.ok || scrapeData?.success === false) {
-    const apiErr = scrapeData?.error || scrapeData?.message || `HTTP ${scrapeResponse.status}`;
-    let friendly: string;
-    if (scrapeResponse.status === 402) {
-      friendly = `Firecrawl: credite epuizate sau plan expirat (402). Reîncarcă creditele pe firecrawl.dev/app/billing sau înlocuiește secretul FIRECRAWL_API_KEY. Detalii: ${apiErr}`;
-    } else if (scrapeResponse.status === 401 || scrapeResponse.status === 403) {
-      friendly = `Firecrawl: cheie API invalidă (${scrapeResponse.status}). Înlocuiește secretul FIRECRAWL_API_KEY. Detalii: ${apiErr}`;
-    } else if (scrapeResponse.status === 429) {
-      friendly = `Firecrawl: rate-limit atins (429). Reîncearcă în câteva secunde. Detalii: ${apiErr}`;
-    } else {
-      friendly = `Firecrawl error ${scrapeResponse.status}: ${apiErr}`;
+  const imgRe = /<img\b[^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = imgRe.exec(html)) !== null) {
+    const tag = m[0];
+    const srcMatch = tag.match(/\b(?:data-src|data-original|src)\s*=\s*["']([^"']+)["']/i);
+    if (srcMatch) {
+      const abs = absolutize(srcMatch[1]);
+      if (abs) images.push(abs);
     }
-    console.error(`[Firecrawl] ${friendly}`);
+    const srcsetMatch = tag.match(/\bsrcset\s*=\s*["']([^"']+)["']/i);
+    if (srcsetMatch) {
+      for (const part of srcsetMatch[1].split(',')) {
+        const u = part.trim().split(/\s+/)[0];
+        const abs = absolutize(u);
+        if (abs) images.push(abs);
+      }
+    }
+  }
+
+  const aRe = /<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>/gi;
+  while ((m = aRe.exec(html)) !== null) {
+    const abs = absolutize(m[1]);
+    if (abs) links.push(abs);
+  }
+
+  let text = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6]|\/tr)\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n\s*\n\s*\n+/g, '\n\n')
+    .trim();
+
+  if (images.length) {
+    text += '\n\n' + [...new Set(images)].map((u) => `![](${u})`).join('\n');
+  }
+
+  return { text, images: [...new Set(images)], links: [...new Set(links)] };
+}
+
+/** Call Scrape.do to fetch JS-rendered HTML, then convert to text + links. */
+export async function scrapeWithScrapeDo(url: string, scrapeDoKey: string) {
+  console.log('[Scrape.do] Fetching rendered HTML...');
+
+  const endpoint = `https://api.scrape.do/?token=${encodeURIComponent(scrapeDoKey)}&url=${encodeURIComponent(url)}&render=true&super=true&geoCode=ro`;
+
+  const resp = await fetch(endpoint, { method: 'GET' });
+  const bodyText = await resp.text();
+
+  if (!resp.ok) {
+    let friendly: string;
+    if (resp.status === 401 || resp.status === 403) {
+      friendly = `Scrape.do: cheie API invalidă (${resp.status}). Înlocuiește secretul SCRAPE_DO_API_KEY. Detalii: ${bodyText.slice(0, 200)}`;
+    } else if (resp.status === 402) {
+      friendly = `Scrape.do: credite epuizate sau plan expirat (402). Reîncarcă pe scrape.do/dashboard. Detalii: ${bodyText.slice(0, 200)}`;
+    } else if (resp.status === 429) {
+      friendly = `Scrape.do: rate-limit atins (429). Reîncearcă în câteva secunde.`;
+    } else {
+      friendly = `Scrape.do error ${resp.status}: ${bodyText.slice(0, 300)}`;
+    }
+    console.error(`[Scrape.do] ${friendly}`);
     const err = new Error(friendly) as Error & { firecrawl_status?: number; firecrawl_raw?: unknown };
-    err.firecrawl_status = scrapeResponse.status;
-    err.firecrawl_raw = scrapeData;
+    // Reuse firecrawl_* fields so existing UI error handling still works.
+    err.firecrawl_status = resp.status;
+    err.firecrawl_raw = bodyText.slice(0, 500);
     throw err;
   }
 
-  const topKeys = Object.keys(scrapeData || {});
-  const dataKeys = Object.keys(scrapeData?.data || {});
-  console.log(`[Firecrawl] Response status: ${scrapeResponse.status}, top keys: [${topKeys}], data keys: [${dataKeys}]`);
+  const { text, images, links } = htmlToTextAndLinks(bodyText, url);
+  console.log(`[Scrape.do] HTML length: ${bodyText.length}, text length: ${text.length}, images: ${images.length}, links: ${links.length}`);
 
-  const jsonData = scrapeData?.data?.extract || scrapeData?.data?.json || scrapeData?.extract || scrapeData?.json || {};
-  const markdown = scrapeData?.data?.markdown || scrapeData?.markdown || '';
-  const pageLinks = scrapeData?.data?.links || scrapeData?.links || [];
-
-  const jsonFieldCount = Object.values(jsonData).filter(v => v !== null && v !== undefined && v !== '').length;
-  console.log(`[Firecrawl] Structured fields found: ${jsonFieldCount}, markdown length: ${markdown.length}, links: ${pageLinks.length}`);
-
-  if (markdown.length > 0) {
-    console.log(`[Firecrawl] Markdown preview (first 300 chars): ${markdown.substring(0, 300)}`);
+  if (text.length > 0) {
+    console.log(`[Scrape.do] Text preview (first 300 chars): ${text.substring(0, 300)}`);
   }
 
-  return { jsonData, markdown, pageLinks };
+  // Mirror Firecrawl return shape: empty jsonData → AI extraction takes over.
+  return { jsonData: {} as Record<string, any>, markdown: text, pageLinks: links };
+}
+
+/** @deprecated kept for backward-compat call sites — now uses Scrape.do. */
+export async function scrapeWithFirecrawl(url: string, _key: string) {
+  const scrapeDoKey = Deno.env.get('SCRAPE_DO_API_KEY');
+  if (!scrapeDoKey) throw new Error('SCRAPE_DO_API_KEY not configured');
+  return scrapeWithScrapeDo(url, scrapeDoKey);
 }
 
 /** Extract from markdown using AI (Lovable AI) as fallback */

@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import {
-  scrapeWithFirecrawl,
+  scrapeWithScrapeDo,
   extractFromMarkdownWithAI,
   collectImages,
   buildExtracted,
@@ -142,18 +142,18 @@ Deno.serve(async (req) => {
     }
 
     // ── MODE: PREVIEW ──
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!firecrawlKey) {
+    const scrapeDoKey = Deno.env.get('SCRAPE_DO_API_KEY');
+    if (!scrapeDoKey) {
       return new Response(
-        JSON.stringify({ success: false, error: 'FIRECRAWL_API_KEY not configured' }),
+        JSON.stringify({ success: false, error: 'SCRAPE_DO_API_KEY not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     console.log(`[Preview] Scraping listing from ${platform}: ${url}`);
 
-    // Step 1: Scrape with Firecrawl
-    const { jsonData, markdown, pageLinks } = await scrapeWithFirecrawl(url, firecrawlKey);
+    // Step 1: Fetch JS-rendered HTML via Scrape.do
+    const { jsonData, markdown, pageLinks } = await scrapeWithScrapeDo(url, scrapeDoKey);
 
     // Step 2: Check if structured extraction returned data
     const hasStructuredData = Object.values(jsonData).some(v => v !== null && v !== undefined && v !== '');
