@@ -104,6 +104,30 @@ const ListingImporter = () => {
   const [saveResult, setSaveResult] = useState<any>(null);
   const [error, setError] = useState<ImportErrorDetails | null>(null);
   const [lastImportUrl, setLastImportUrl] = useState<string>("");
+  const [importLogs, setImportLogs] = useState<string[]>([]);
+  const [importAttempts, setImportAttempts] = useState<number | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+
+  // Tick elapsed time while loading so the retry-progress UI can show
+  // "Reîncercare X/4..." based on the server-side backoff schedule.
+  useEffect(() => {
+    if (!isLoading) { setElapsedMs(0); return; }
+    const start = Date.now();
+    const id = setInterval(() => setElapsedMs(Date.now() - start), 250);
+    return () => clearInterval(id);
+  }, [isLoading]);
+
+  // Backoff schedule mirrors fetchWithRetry(server): 500/1000/2000ms + jitter.
+  // Cumulative wait BEFORE attempt N (approx, network time excluded):
+  //   attempt 1 → 0ms, 2 → ~600ms, 3 → ~1700ms, 4 → ~3800ms.
+  // We add ~2000ms padding per attempt to account for Scrape.do response time.
+  const retryStage = (() => {
+    if (!isLoading) return { attempt: 0, total: 4 };
+    if (elapsedMs < 2500) return { attempt: 1, total: 4 };
+    if (elapsedMs < 5500) return { attempt: 2, total: 4 };
+    if (elapsedMs < 9500) return { attempt: 3, total: 4 };
+    return { attempt: 4, total: 4 };
+  })();
 
   // Rewrite state
   const [isRewriting, setIsRewriting] = useState(false);
