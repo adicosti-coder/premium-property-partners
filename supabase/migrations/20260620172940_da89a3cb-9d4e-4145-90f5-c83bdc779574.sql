@@ -1,0 +1,1 @@
+DELETE FROM public.advisor_cache WHERE language='en';

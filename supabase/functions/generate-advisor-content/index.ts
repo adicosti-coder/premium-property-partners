@@ -59,6 +59,45 @@ Generează exact 5 FAQ-uri relevante pentru un potențial chiriaș (tipuri de ch
 investmentMetrics trebuie lăsat gol (string-uri goale) — NU genera metrici de investiție.
 IMPORTANT: Răspunde DOAR cu JSON valid, fără markdown, fără backticks, fără explicații.`;
 
+const SYSTEM_PROMPT_DEFAULT_EN = `You are a premium real-estate consultant in Timișoara, Romania, writing as a "High-End Investment Advisor".
+You MUST write all output in ENGLISH ONLY. Do NOT use Romanian. Local place names (Iulius Town, Piața Unirii, Bastionul Theresia, Fabric, Iosefin, Calea Aradului, etc.) stay in their original form, but every other word — including the expertInsight body and FAQ questions/answers — must be natural, professional English.
+
+RULES:
+- Elegant, expert tone, no hype.
+- Naturally weave in local Timișoara landmarks: Parcul Rozelor, Iulius Town, ISHO, Piața Unirii, Piața Victoriei, Parcul Botanic, West University, Polytechnic University, Old Town, Bastionul Theresia, Fabric, Iosefin, Dâmbovița, Giroc, Student Complex, Calea Aradului, Shopping City, Bega, Amazonia Aquapark.
+- Do NOT invent specific statistics — use phrasing like "strong potential", "upward trend", "premium area".
+
+Return a JSON object with EXACTLY this structure (no markdown, valid JSON only):
+{
+  "expertInsight": "~500 words analyzing lifestyle, build quality, and the area's growth potential.",
+  "investmentMetrics": { "netYield": "X.X%", "rentMultiplier": "XXx", "zoneSafetyScore": "X/10" },
+  "faqs": [ { "question": "Premium buyer question?", "answer": "Concise, clear answer." } ]
+}
+
+Generate exactly 5 FAQs relevant to a premium buyer.
+For investmentMetrics: if a "roi" field is provided, use EXACTLY that value for "netYield" — do not estimate a different ROI.
+IMPORTANT: Respond with VALID JSON ONLY, no markdown, no backticks, no commentary. ENGLISH ONLY.`;
+
+const SYSTEM_PROMPT_RENTAL_EN = `You are a premium real-estate consultant in Timișoara, Romania, specialized in long-term rentals.
+You MUST write all output in ENGLISH ONLY. Do NOT use Romanian. Local place names stay in original form; everything else must be natural professional English.
+
+STRICT RULES:
+- Do NOT mention hotel regime, Booking, Airbnb, dynamic pricing, smart lock, or passive income.
+- Do NOT mention investment yield, ROI, or investment potential.
+- Focus EXCLUSIVELY on long-term rental: comfort, location, amenities, lifestyle.
+- Elegant, expert tone, no hype.
+
+Return JSON with EXACTLY this structure:
+{
+  "expertInsight": "~400 words about living quality, neighborhood advantages for tenants, comfort and lifestyle.",
+  "investmentMetrics": { "netYield": "", "rentMultiplier": "", "zoneSafetyScore": "" },
+  "faqs": [ { "question": "Relevant tenant question?", "answer": "Concise answer." } ]
+}
+
+Generate exactly 5 FAQs relevant to a prospective tenant.
+investmentMetrics must be left empty (empty strings).
+IMPORTANT: Respond with VALID JSON ONLY, no markdown, no backticks, no commentary. ENGLISH ONLY.`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -135,7 +174,26 @@ serve(async (req) => {
       });
     }
 
-    const userPrompt = `Generează conținut "The Advisor" pentru această proprietate${lang === "en" ? " (răspunde în engleză)" : ""}:
+    const userPrompt = lang === "en"
+      ? `Generate "The Advisor" content for this property. RESPOND IN ENGLISH ONLY.
+
+Property: ${propertyName}
+Location: ${location}, Timișoara, Romania
+Size: ${size || "N/A"} sqm
+Bedrooms: ${bedrooms || "N/A"} | Bathrooms: ${bathrooms || "N/A"} | Capacity: ${capacity || "N/A"} guests
+Floor: ${floor || "N/A"}
+Year built: ${yearBuilt || "N/A"}
+Energy class: ${energyClass || "N/A"}
+Price/night: ${pricePerNight || "N/A"} EUR
+Estimated ROI: ${roi || "N/A"}
+Listing type: ${listingType || "cazare"}
+Amenities: ${(amenities || []).join(", ") || "standard"}
+Verified local context: ${propertyContext?.positioning || "Use only the provided location and keep local references coherent."}
+Nearby POI / landmarks: ${propertyContext?.poiContext || "Pick only landmarks plausible for the exact position of the property."}
+Buyer context: ${propertyContext?.buyerProfile || "Maintain a premium tone and mature investment logic."}
+
+Respond with VALID JSON ONLY. ENGLISH ONLY.`
+      : `Generează conținut "The Advisor" pentru această proprietate:
 
 Proprietate: ${propertyName}
 Locație: ${location}, Timișoara
@@ -163,7 +221,9 @@ Răspunde DOAR cu JSON valid.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL : SYSTEM_PROMPT_DEFAULT },
+          { role: "system", content: lang === "en"
+              ? (listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL_EN : SYSTEM_PROMPT_DEFAULT_EN)
+              : (listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL : SYSTEM_PROMPT_DEFAULT) },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
