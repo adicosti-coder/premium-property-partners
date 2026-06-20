@@ -131,7 +131,28 @@ export async function scrapeWithScrapeDo(url: string, scrapeDoKey: string) {
 
   const endpoint = `https://api.scrape.do/?token=${encodeURIComponent(scrapeDoKey)}&url=${encodeURIComponent(url)}&render=true&super=true&geoCode=ro`;
 
-  const resp = await fetch(endpoint, { method: 'GET' });
+  // Retry with exponential backoff on transient failures (429 + 5xx + network)
+  const maxAttempts = 4;
+  let resp!: Response;
+  let lastErr: unknown = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      resp = await fetch(endpoint, { method: 'GET' });
+      const transient = resp.status === 429 || (resp.status >= 500 && resp.status < 600);
+      if (!transient) break;
+      if (attempt === maxAttempts) break;
+      const delay = Math.min(8000, 500 * 2 ** (attempt - 1)) + Math.floor(Math.random() * 250);
+      console.warn(`[Scrape.do] Transient ${resp.status} on attempt ${attempt}/${maxAttempts}, retrying in ${delay}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+    } catch (e) {
+      lastErr = e;
+      if (attempt === maxAttempts) throw e;
+      const delay = Math.min(8000, 500 * 2 ** (attempt - 1)) + Math.floor(Math.random() * 250);
+      console.warn(`[Scrape.do] Network error on attempt ${attempt}/${maxAttempts}: ${(e as Error).message}, retrying in ${delay}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  if (!resp) throw (lastErr instanceof Error ? lastErr : new Error('Scrape.do: no response'));
   const bodyText = await resp.text();
 
   if (!resp.ok) {
