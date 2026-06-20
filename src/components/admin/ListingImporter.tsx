@@ -197,6 +197,8 @@ const ListingImporter = () => {
       if (data.extracted.listing_type_hint) {
         setListingType(data.extracted.listing_type_hint);
       }
+      setImportLogs(Array.isArray(data?.logs) ? data.logs : []);
+      setImportAttempts(typeof data?.attempts === "number" ? data.attempts : null);
       setStep(1); // Auto-advance to edit step
       toast({ title: "✅ Date extrase!", description: "Verifică și editează înainte de salvare." });
     } catch (err: any) {
