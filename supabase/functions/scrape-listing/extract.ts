@@ -125,34 +125,112 @@ function htmlToTextAndLinks(html: string, baseUrl: string): { text: string; imag
   return { text, images: [...new Set(images)], links: [...new Set(links)] };
 }
 
-/** Call Scrape.do to fetch JS-rendered HTML, then convert to text + links. */
-export async function scrapeWithScrapeDo(url: string, scrapeDoKey: string) {
-  console.log('[Scrape.do] Fetching rendered HTML...');
+/** Schedule a backoff delay (exposed for tests). */
+export function computeBackoffDelay(
+  attempt: number,
+  opts: { baseMs?: number; capMs?: number; jitterMs?: number; rand?: () => number } = {},
+): number {
+  const base = opts.baseMs ?? 500;
+  const cap = opts.capMs ?? 8000;
+  const jitterMs = opts.jitterMs ?? 250;
+  const rand = opts.rand ?? Math.random;
+  return Math.min(cap, base * 2 ** (attempt - 1)) + Math.floor(rand() * jitterMs);
+}
 
-  const endpoint = `https://api.scrape.do/?token=${encodeURIComponent(scrapeDoKey)}&url=${encodeURIComponent(url)}&render=true&super=true&geoCode=ro`;
+export interface RetryFetchResult {
+  response: Response;
+  attempts: number;
+  delays: number[]; // delays slept between attempts (length = attempts - 1)
+}
 
-  // Retry with exponential backoff on transient failures (429 + 5xx + network)
-  const maxAttempts = 4;
-  let resp!: Response;
+export interface RetryFetchOptions {
+  maxAttempts?: number;
+  baseMs?: number;
+  capMs?: number;
+  jitterMs?: number;
+  rand?: () => number;
+  fetchFn?: typeof fetch;
+  sleepFn?: (ms: number) => Promise<void>;
+  onRetry?: (info: { attempt: number; status: number | null; delay: number; error?: Error }) => void;
+}
+
+/**
+ * Fetch with exponential-backoff retry on 429 + 5xx + network errors.
+ * Exported separately so unit tests can inject fake fetch/sleep/random.
+ */
+export async function fetchWithRetry(
+  endpoint: string,
+  init: RequestInit,
+  opts: RetryFetchOptions = {},
+): Promise<RetryFetchResult> {
+  const maxAttempts = opts.maxAttempts ?? 4;
+  const fetchFn = opts.fetchFn ?? fetch;
+  const sleepFn = opts.sleepFn ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const delays: number[] = [];
   let lastErr: unknown = null;
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      resp = await fetch(endpoint, { method: 'GET' });
+      const resp = await fetchFn(endpoint, init);
       const transient = resp.status === 429 || (resp.status >= 500 && resp.status < 600);
-      if (!transient) break;
-      if (attempt === maxAttempts) break;
-      const delay = Math.min(8000, 500 * 2 ** (attempt - 1)) + Math.floor(Math.random() * 250);
-      console.warn(`[Scrape.do] Transient ${resp.status} on attempt ${attempt}/${maxAttempts}, retrying in ${delay}ms`);
-      await new Promise((r) => setTimeout(r, delay));
+      if (!transient || attempt === maxAttempts) {
+        return { response: resp, attempts: attempt, delays };
+      }
+      const delay = computeBackoffDelay(attempt, opts);
+      delays.push(delay);
+      opts.onRetry?.({ attempt, status: resp.status, delay });
+      await sleepFn(delay);
     } catch (e) {
       lastErr = e;
       if (attempt === maxAttempts) throw e;
-      const delay = Math.min(8000, 500 * 2 ** (attempt - 1)) + Math.floor(Math.random() * 250);
-      console.warn(`[Scrape.do] Network error on attempt ${attempt}/${maxAttempts}: ${(e as Error).message}, retrying in ${delay}ms`);
-      await new Promise((r) => setTimeout(r, delay));
+      const delay = computeBackoffDelay(attempt, opts);
+      delays.push(delay);
+      opts.onRetry?.({ attempt, status: null, delay, error: e as Error });
+      await sleepFn(delay);
     }
   }
-  if (!resp) throw (lastErr instanceof Error ? lastErr : new Error('Scrape.do: no response'));
+  throw (lastErr instanceof Error ? lastErr : new Error('fetchWithRetry: exhausted'));
+}
+
+export interface ScrapeDoResult {
+  jsonData: Record<string, any>;
+  markdown: string;
+  pageLinks: string[];
+  logs: string[];
+  attempts: number;
+}
+
+/** Call Scrape.do to fetch JS-rendered HTML, then convert to text + links. */
+export async function scrapeWithScrapeDo(
+  url: string,
+  scrapeDoKey: string,
+  opts: RetryFetchOptions = {},
+): Promise<ScrapeDoResult> {
+  const logs: string[] = [];
+  const log = (msg: string) => {
+    const line = `[${new Date().toISOString()}] [Scrape.do] ${msg}`;
+    logs.push(line);
+    console.log(line);
+  };
+
+  log('Fetching rendered HTML (render=true, super=true, geoCode=ro)...');
+
+  const endpoint = `https://api.scrape.do/?token=${encodeURIComponent(scrapeDoKey)}&url=${encodeURIComponent(url)}&render=true&super=true&geoCode=ro`;
+
+  const { response: resp, attempts, delays } = await fetchWithRetry(
+    endpoint,
+    { method: 'GET' },
+    {
+      ...opts,
+      onRetry: (info) => {
+        const reason = info.error ? `network error (${info.error.message})` : `HTTP ${info.status}`;
+        log(`Transient ${reason} on attempt ${info.attempt}/${opts.maxAttempts ?? 4}, retrying in ${info.delay}ms`);
+        opts.onRetry?.(info);
+      },
+    },
+  );
+
+  if (attempts > 1) log(`Succeeded/finished after ${attempts} attempts (delays=${delays.join(',')}ms)`);
   const bodyText = await resp.text();
 
   if (!resp.ok) {
@@ -162,27 +240,25 @@ export async function scrapeWithScrapeDo(url: string, scrapeDoKey: string) {
     } else if (resp.status === 402) {
       friendly = `Scrape.do: credite epuizate sau plan expirat (402). Reîncarcă pe scrape.do/dashboard. Detalii: ${bodyText.slice(0, 200)}`;
     } else if (resp.status === 429) {
-      friendly = `Scrape.do: rate-limit atins (429). Reîncearcă în câteva secunde.`;
+      friendly = `Scrape.do: rate-limit atins (429) după ${attempts} încercări. Reîncearcă în câteva secunde.`;
     } else {
       friendly = `Scrape.do error ${resp.status}: ${bodyText.slice(0, 300)}`;
     }
-    console.error(`[Scrape.do] ${friendly}`);
-    const err = new Error(friendly) as Error & { firecrawl_status?: number; firecrawl_raw?: unknown };
-    // Reuse firecrawl_* fields so existing UI error handling still works.
+    log(friendly);
+    const err = new Error(friendly) as Error & {
+      firecrawl_status?: number; firecrawl_raw?: unknown; logs?: string[]; attempts?: number;
+    };
     err.firecrawl_status = resp.status;
     err.firecrawl_raw = bodyText.slice(0, 500);
+    err.logs = logs;
+    err.attempts = attempts;
     throw err;
   }
 
   const { text, images, links } = htmlToTextAndLinks(bodyText, url);
-  console.log(`[Scrape.do] HTML length: ${bodyText.length}, text length: ${text.length}, images: ${images.length}, links: ${links.length}`);
+  log(`HTML length: ${bodyText.length}, text length: ${text.length}, images: ${images.length}, links: ${links.length}`);
 
-  if (text.length > 0) {
-    console.log(`[Scrape.do] Text preview (first 300 chars): ${text.substring(0, 300)}`);
-  }
-
-  // Mirror Firecrawl return shape: empty jsonData → AI extraction takes over.
-  return { jsonData: {} as Record<string, any>, markdown: text, pageLinks: links };
+  return { jsonData: {}, markdown: text, pageLinks: links, logs, attempts };
 }
 
 /** @deprecated kept for backward-compat call sites — now uses Scrape.do. */
