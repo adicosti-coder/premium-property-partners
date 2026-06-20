@@ -233,8 +233,10 @@ Deno.serve(async (req) => {
         error: error.message,
         firecrawl_status: firecrawlStatus,
         logs: [
+          ...(Array.isArray(error?.logs) ? error.logs : []),
           `[${new Date().toISOString()}] ${error.name || 'Error'}: ${error.message}`,
-          firecrawlStatus ? `Firecrawl HTTP status: ${firecrawlStatus}` : null,
+          firecrawlStatus ? `Scrape.do HTTP status: ${firecrawlStatus}` : null,
+          typeof error?.attempts === 'number' ? `Attempts: ${error.attempts}` : null,
           error?.stack ? `Stack: ${String(error.stack).split('\n').slice(0, 5).join(' | ')}` : null,
         ].filter(Boolean),
       }),
