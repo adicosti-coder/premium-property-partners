@@ -476,6 +476,61 @@ const ListingImporter = () => {
                 )}
               </Button>
 
+              {/* Retry progress: visible only during loading */}
+              {isLoading && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="mt-3 rounded-md border bg-muted/40 p-3 space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-2 font-medium">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      {retryStage.attempt <= 1
+                        ? "Se descarcă pagina prin Scrape.do…"
+                        : `Reîncercare ${retryStage.attempt}/${retryStage.total}…`}
+                    </span>
+                    <span className="text-muted-foreground tabular-nums">
+                      {(elapsedMs / 1000).toFixed(1)}s
+                    </span>
+                  </div>
+                  <div
+                    className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                    aria-hidden="true"
+                  >
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${(retryStage.attempt / retryStage.total) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Backoff exponențial (500ms · 1s · 2s + jitter). Sistemul reîncearcă automat la 429 / 5xx.
+                  </p>
+                </div>
+              )}
+
+              {/* Import logs accordion: visible after a successful preview */}
+              {!isLoading && importLogs.length > 0 && (
+                <Collapsible>
+                  <CollapsibleTrigger className="mt-3 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group">
+                    <Terminal className="w-3.5 h-3.5" />
+                    <span>Loguri pentru import anunț</span>
+                    {importAttempts && importAttempts > 1 && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {importAttempts} încercări
+                      </Badge>
+                    )}
+                    <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2">
+                    <pre className="text-[11px] bg-muted/50 border rounded p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">
+{importLogs.join("\n")}
+{lastImportUrl ? `\n\nURL: ${lastImportUrl}` : ""}
+                    </pre>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+
             </CardContent>
           </Card>
 
