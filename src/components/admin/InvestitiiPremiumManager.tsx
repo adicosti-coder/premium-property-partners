@@ -713,7 +713,7 @@ export default function InvestitiiPremiumManager() {
       </div>
 
       {/* Table */}
-      <div className="bg-card rounded-xl border border-border overflow-x-auto">
+      <div className="bg-card rounded-xl border border-border w-full max-w-full overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
