@@ -97,7 +97,10 @@ export async function scrapeWithFirecrawl(url: string, firecrawlKey: string) {
       friendly = `Firecrawl error ${scrapeResponse.status}: ${apiErr}`;
     }
     console.error(`[Firecrawl] ${friendly}`);
-    throw new Error(friendly);
+    const err = new Error(friendly) as Error & { firecrawl_status?: number; firecrawl_raw?: unknown };
+    err.firecrawl_status = scrapeResponse.status;
+    err.firecrawl_raw = scrapeData;
+    throw err;
   }
 
   const topKeys = Object.keys(scrapeData || {});
