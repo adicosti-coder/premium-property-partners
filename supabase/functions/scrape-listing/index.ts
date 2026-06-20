@@ -153,24 +153,27 @@ Deno.serve(async (req) => {
     console.log(`[Preview] Scraping listing from ${platform}: ${url}`);
 
     // Step 1: Fetch JS-rendered HTML via Scrape.do
-    const { jsonData, markdown, pageLinks } = await scrapeWithScrapeDo(url, scrapeDoKey);
+    const { jsonData, markdown, pageLinks, logs: scrapeLogs, attempts } = await scrapeWithScrapeDo(url, scrapeDoKey);
+    const logs = [...scrapeLogs];
+    const pushLog = (m: string) => { const l = `[${new Date().toISOString()}] ${m}`; logs.push(l); console.log(l); };
 
     // Step 2: Check if structured extraction returned data
     const hasStructuredData = Object.values(jsonData).some(v => v !== null && v !== undefined && v !== '');
     let finalJsonData = jsonData;
 
     if (!hasStructuredData && markdown.length > 50) {
-      console.log('[Preview] Structured extraction empty — falling back to AI extraction from markdown');
+      pushLog('[Preview] Structured extraction empty — running AI extraction on markdown');
       const aiExtracted = await extractFromMarkdownWithAI(markdown, url);
       finalJsonData = { ...jsonData, ...aiExtracted };
+      pushLog(`[Preview] AI extraction returned ${Object.keys(aiExtracted).length} fields`);
     } else if (!hasStructuredData) {
-      console.log('[Preview] Both structured and markdown extraction empty. The page may be blocked or require JS.');
+      pushLog('[Preview] Both structured and markdown extraction empty. The page may be blocked or require JS.');
     }
 
     // Step 2.5: If contact info is missing, try AI extraction specifically for contacts
     const hasContactInfo = finalJsonData.contact_name || finalJsonData.contact_phone || finalJsonData.contact_email;
     if (!hasContactInfo && markdown.length > 50) {
-      console.log('[Preview] Contact info missing — running targeted AI extraction for contacts');
+      pushLog('[Preview] Contact info missing — targeted AI extraction for contacts');
       const contactData = await extractFromMarkdownWithAI(markdown, url);
       if (contactData.contact_name) finalJsonData.contact_name = contactData.contact_name;
       if (contactData.contact_phone) finalJsonData.contact_phone = contactData.contact_phone;
@@ -179,14 +182,14 @@ Deno.serve(async (req) => {
 
     // Step 3: Collect images from all sources
     const imageUrls = collectImages(finalJsonData, pageLinks, markdown, url);
-    console.log(`[Preview] Total images collected: ${imageUrls.length}`);
+    pushLog(`[Preview] Total images collected: ${imageUrls.length}`);
 
     // Build result
     const extracted = buildExtracted(finalJsonData, imageUrls, url, platform);
 
     if (mode === 'preview') {
       return new Response(
-        JSON.stringify({ success: true, extracted }),
+        JSON.stringify({ success: true, extracted, logs, attempts }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -230,8 +233,10 @@ Deno.serve(async (req) => {
         error: error.message,
         firecrawl_status: firecrawlStatus,
         logs: [
+          ...(Array.isArray(error?.logs) ? error.logs : []),
           `[${new Date().toISOString()}] ${error.name || 'Error'}: ${error.message}`,
-          firecrawlStatus ? `Firecrawl HTTP status: ${firecrawlStatus}` : null,
+          firecrawlStatus ? `Scrape.do HTTP status: ${firecrawlStatus}` : null,
+          typeof error?.attempts === 'number' ? `Attempts: ${error.attempts}` : null,
           error?.stack ? `Stack: ${String(error.stack).split('\n').slice(0, 5).join(' | ')}` : null,
         ].filter(Boolean),
       }),

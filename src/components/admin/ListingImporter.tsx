@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,6 +104,30 @@ const ListingImporter = () => {
   const [saveResult, setSaveResult] = useState<any>(null);
   const [error, setError] = useState<ImportErrorDetails | null>(null);
   const [lastImportUrl, setLastImportUrl] = useState<string>("");
+  const [importLogs, setImportLogs] = useState<string[]>([]);
+  const [importAttempts, setImportAttempts] = useState<number | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+
+  // Tick elapsed time while loading so the retry-progress UI can show
+  // "Reîncercare X/4..." based on the server-side backoff schedule.
+  useEffect(() => {
+    if (!isLoading) { setElapsedMs(0); return; }
+    const start = Date.now();
+    const id = setInterval(() => setElapsedMs(Date.now() - start), 250);
+    return () => clearInterval(id);
+  }, [isLoading]);
+
+  // Backoff schedule mirrors fetchWithRetry(server): 500/1000/2000ms + jitter.
+  // Cumulative wait BEFORE attempt N (approx, network time excluded):
+  //   attempt 1 → 0ms, 2 → ~600ms, 3 → ~1700ms, 4 → ~3800ms.
+  // We add ~2000ms padding per attempt to account for Scrape.do response time.
+  const retryStage = (() => {
+    if (!isLoading) return { attempt: 0, total: 4 };
+    if (elapsedMs < 2500) return { attempt: 1, total: 4 };
+    if (elapsedMs < 5500) return { attempt: 2, total: 4 };
+    if (elapsedMs < 9500) return { attempt: 3, total: 4 };
+    return { attempt: 4, total: 4 };
+  })();
 
   // Rewrite state
   const [isRewriting, setIsRewriting] = useState(false);
@@ -145,6 +169,8 @@ const ListingImporter = () => {
     setRewritten(null);
     setAppliedRewrite(false);
     setLastImportUrl(extractUrl);
+    setImportLogs([]);
+    setImportAttempts(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
@@ -171,6 +197,8 @@ const ListingImporter = () => {
       if (data.extracted.listing_type_hint) {
         setListingType(data.extracted.listing_type_hint);
       }
+      setImportLogs(Array.isArray(data?.logs) ? data.logs : []);
+      setImportAttempts(typeof data?.attempts === "number" ? data.attempts : null);
       setStep(1); // Auto-advance to edit step
       toast({ title: "✅ Date extrase!", description: "Verifică și editează înainte de salvare." });
     } catch (err: any) {
@@ -447,6 +475,61 @@ const ListingImporter = () => {
                   <><Eye className="w-4 h-4 mr-2" />Previzualizează &amp; Extrage Date</>
                 )}
               </Button>
+
+              {/* Retry progress: visible only during loading */}
+              {isLoading && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="mt-3 rounded-md border bg-muted/40 p-3 space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-2 font-medium">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      {retryStage.attempt <= 1
+                        ? "Se descarcă pagina prin Scrape.do…"
+                        : `Reîncercare ${retryStage.attempt}/${retryStage.total}…`}
+                    </span>
+                    <span className="text-muted-foreground tabular-nums">
+                      {(elapsedMs / 1000).toFixed(1)}s
+                    </span>
+                  </div>
+                  <div
+                    className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                    aria-hidden="true"
+                  >
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{ width: `${(retryStage.attempt / retryStage.total) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Backoff exponențial (500ms · 1s · 2s + jitter). Sistemul reîncearcă automat la 429 / 5xx.
+                  </p>
+                </div>
+              )}
+
+              {/* Import logs accordion: visible after a successful preview */}
+              {!isLoading && importLogs.length > 0 && (
+                <Collapsible>
+                  <CollapsibleTrigger className="mt-3 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group">
+                    <Terminal className="w-3.5 h-3.5" />
+                    <span>Loguri pentru import anunț</span>
+                    {importAttempts && importAttempts > 1 && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {importAttempts} încercări
+                      </Badge>
+                    )}
+                    <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2">
+                    <pre className="text-[11px] bg-muted/50 border rounded p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">
+{importLogs.join("\n")}
+{lastImportUrl ? `\n\nURL: ${lastImportUrl}` : ""}
+                    </pre>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
 
             </CardContent>
           </Card>
