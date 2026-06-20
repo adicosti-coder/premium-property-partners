@@ -102,7 +102,8 @@ const ListingImporter = () => {
   const [editData, setEditData] = useState<ExtractedData | null>(null);
   const [allOriginalImages, setAllOriginalImages] = useState<string[]>([]);
   const [saveResult, setSaveResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ImportErrorDetails | null>(null);
+  const [lastImportUrl, setLastImportUrl] = useState<string>("");
 
   // Rewrite state
   const [isRewriting, setIsRewriting] = useState(false);
