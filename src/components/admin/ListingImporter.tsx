@@ -16,7 +16,26 @@ import {
 } from "lucide-react";
 import ImageOptimizationPanel from "./ImageOptimizationPanel";
 import MapLocationPicker from "./MapLocationPicker";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, Terminal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+
+interface ImportErrorDetails {
+  message: string;
+  status: number | null;
+  logs: string[];
+}
+
+const isValidHttpUrl = (value: string): boolean => {
+  const v = value.trim();
+  if (!v) return false;
+  try {
+    const u = new URL(v);
+    return (u.protocol === "http:" || u.protocol === "https:") && !!u.hostname && u.hostname.includes(".");
+  } catch {
+    return false;
+  }
+};
 
 interface ExtractedData {
   title: string | null;
@@ -83,7 +102,8 @@ const ListingImporter = () => {
   const [editData, setEditData] = useState<ExtractedData | null>(null);
   const [allOriginalImages, setAllOriginalImages] = useState<string[]>([]);
   const [saveResult, setSaveResult] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ImportErrorDetails | null>(null);
+  const [lastImportUrl, setLastImportUrl] = useState<string>("");
 
   // Rewrite state
   const [isRewriting, setIsRewriting] = useState(false);
@@ -113,8 +133,8 @@ const ListingImporter = () => {
   // Step 1: Preview / extract
   const handlePreview = async (targetUrl?: string) => {
     const extractUrl = targetUrl || url.trim();
-    if (!extractUrl) {
-      toast({ title: "Eroare", description: "Introdu un URL valid", variant: "destructive" });
+    if (!isValidHttpUrl(extractUrl)) {
+      toast({ title: "URL invalid", description: "Introdu un link complet (http:// sau https://)", variant: "destructive" });
       return;
     }
     setIsLoading(true);
@@ -124,13 +144,26 @@ const ListingImporter = () => {
     setError(null);
     setRewritten(null);
     setAppliedRewrite(false);
+    setLastImportUrl(extractUrl);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
         body: { url: extractUrl, listing_type: listingType, mode: "preview" },
       });
-      if (fnError) throw new Error(fnError.message);
-      if (!data?.success) throw new Error(data?.error || "Extracție eșuată");
+
+      // Edge function returned non-2xx → data may still contain body with our structured error
+      if (fnError && !data) {
+        throw Object.assign(new Error(fnError.message || "Eroare necunoscută la edge function"), {
+          status: null,
+          logs: [`Edge function invoke error: ${fnError.message}`],
+        });
+      }
+      if (!data?.success) {
+        throw Object.assign(new Error(data?.error || "Extracție eșuată"), {
+          status: data?.firecrawl_status ?? null,
+          logs: Array.isArray(data?.logs) ? data.logs : [],
+        });
+      }
 
       setExtracted(data.extracted);
       setEditData({ ...data.extracted });
@@ -141,12 +174,18 @@ const ListingImporter = () => {
       setStep(1); // Auto-advance to edit step
       toast({ title: "✅ Date extrase!", description: "Verifică și editează înainte de salvare." });
     } catch (err: any) {
-      setError(err.message);
-      toast({ title: "Eroare", description: err.message, variant: "destructive" });
+      const details: ImportErrorDetails = {
+        message: err?.message || "Eroare necunoscută",
+        status: typeof err?.status === "number" ? err.status : null,
+        logs: Array.isArray(err?.logs) ? err.logs : [`[${new Date().toISOString()}] ${err?.message || err}`],
+      };
+      setError(details);
+      toast({ title: "Eroare import", description: details.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handlePickScraperLead = (lead: any) => {
     setUrl(lead.source_url);
@@ -365,9 +404,15 @@ const ListingImporter = () => {
                   value={url}
                   onChange={(e) => { setUrl(e.target.value); setExtracted(null); setEditData(null); }}
                   placeholder="https://www.olx.ro/d/oferta/..."
-                  className="mt-1"
+                  className={`mt-1 ${url && !isValidHttpUrl(url) ? "border-destructive focus-visible:ring-destructive" : ""}`}
                   disabled={isLoading}
+                  aria-invalid={url ? !isValidHttpUrl(url) : undefined}
                 />
+                {url && !isValidHttpUrl(url) && (
+                  <p className="text-xs text-destructive mt-1">
+                    URL invalid. Trebuie să înceapă cu http:// sau https:// și să conțină un domeniu (ex: olx.ro).
+                  </p>
+                )}
               </div>
 
               <div>
@@ -393,7 +438,7 @@ const ListingImporter = () => {
 
               <Button
                 onClick={() => handlePreview()}
-                disabled={isLoading || !url.trim()}
+                disabled={isLoading || !isValidHttpUrl(url)}
                 className="w-full"
               >
                 {isLoading ? (
@@ -402,6 +447,7 @@ const ListingImporter = () => {
                   <><Eye className="w-4 h-4 mr-2" />Previzualizează &amp; Extrage Date</>
                 )}
               </Button>
+
             </CardContent>
           </Card>
 
@@ -448,21 +494,74 @@ const ListingImporter = () => {
           )}
 
           {/* Error */}
-          {error && (
-            <Card className="border-destructive">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
-                  <div>
-                    <p className="font-medium text-destructive">Eroare la extragere</p>
-                    <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          {error && (() => {
+            const s = error.status;
+            let headline = "Eroare la extragere";
+            let hint: string | null = null;
+            if (s === 401) { headline = "Cheie invalidă"; hint = "Verifică FIRECRAWL_API_KEY în secretele backend-ului."; }
+            else if (s === 402) { headline = "Credite epuizate"; hint = "Reîncarcă contul Firecrawl (firecrawl.dev/app/billing) sau înlocuiește cheia."; }
+            else if (s === 429) { headline = "Rate-limit atins"; hint = "Prea multe cereri către Firecrawl. Așteaptă câteva secunde și reîncearcă."; }
+            else if (s === 403) { headline = "Acces refuzat"; hint = "Cheia FIRECRAWL_API_KEY nu are permisiuni suficiente."; }
+            return (
+              <Card className="border-destructive">
+                <CardContent className="pt-6 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-destructive">{headline}</p>
+                        {s && <Badge variant="outline" className="text-[10px] border-destructive text-destructive">HTTP {s}</Badge>}
+                      </div>
+                      {hint && <p className="text-sm text-foreground mt-1">{hint}</p>}
+                      <p className="text-xs text-muted-foreground mt-1 break-words">{error.message}</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {s === 429 && (
+                      <Button
+                        size="sm"
+                        onClick={() => handlePreview(lastImportUrl || url)}
+                        disabled={isLoading}
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                        Reîncercare import
+                      </Button>
+                    )}
+                    {s !== 429 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handlePreview(lastImportUrl || url)}
+                        disabled={isLoading || !isValidHttpUrl(lastImportUrl || url)}
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                        Încearcă din nou
+                      </Button>
+                    )}
+                  </div>
+
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group">
+                      <Terminal className="w-3.5 h-3.5" />
+                      <span>Loguri pentru import anunț</span>
+                      <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                      <pre className="text-[11px] bg-muted/50 border rounded p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">
+{error.logs.length > 0 ? error.logs.join("\n") : "Nu sunt loguri suplimentare disponibile."}
+{lastImportUrl ? `\n\nURL: ${lastImportUrl}` : ""}
+{s ? `\nFirecrawl status: ${s}` : ""}
+                      </pre>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </CardContent>
+              </Card>
+            );
+          })()}
         </>
       )}
+
 
       {/* ═══ STEP 1: EDIT ═══ */}
       {step === 1 && editData && (

@@ -223,8 +223,18 @@ Deno.serve(async (req) => {
     );
   } catch (error: any) {
     console.error('[Error] Scrape listing error:', error);
+    const firecrawlStatus = error?.firecrawl_status ?? null;
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        firecrawl_status: firecrawlStatus,
+        logs: [
+          `[${new Date().toISOString()}] ${error.name || 'Error'}: ${error.message}`,
+          firecrawlStatus ? `Firecrawl HTTP status: ${firecrawlStatus}` : null,
+          error?.stack ? `Stack: ${String(error.stack).split('\n').slice(0, 5).join(' | ')}` : null,
+        ].filter(Boolean),
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
