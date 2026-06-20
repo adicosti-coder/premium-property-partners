@@ -133,8 +133,8 @@ const ListingImporter = () => {
   // Step 1: Preview / extract
   const handlePreview = async (targetUrl?: string) => {
     const extractUrl = targetUrl || url.trim();
-    if (!extractUrl) {
-      toast({ title: "Eroare", description: "Introdu un URL valid", variant: "destructive" });
+    if (!isValidHttpUrl(extractUrl)) {
+      toast({ title: "URL invalid", description: "Introdu un link complet (http:// sau https://)", variant: "destructive" });
       return;
     }
     setIsLoading(true);
@@ -144,13 +144,26 @@ const ListingImporter = () => {
     setError(null);
     setRewritten(null);
     setAppliedRewrite(false);
+    setLastImportUrl(extractUrl);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
         body: { url: extractUrl, listing_type: listingType, mode: "preview" },
       });
-      if (fnError) throw new Error(fnError.message);
-      if (!data?.success) throw new Error(data?.error || "Extracție eșuată");
+
+      // Edge function returned non-2xx → data may still contain body with our structured error
+      if (fnError && !data) {
+        throw Object.assign(new Error(fnError.message || "Eroare necunoscută la edge function"), {
+          status: null,
+          logs: [`Edge function invoke error: ${fnError.message}`],
+        });
+      }
+      if (!data?.success) {
+        throw Object.assign(new Error(data?.error || "Extracție eșuată"), {
+          status: data?.firecrawl_status ?? null,
+          logs: Array.isArray(data?.logs) ? data.logs : [],
+        });
+      }
 
       setExtracted(data.extracted);
       setEditData({ ...data.extracted });
@@ -161,12 +174,18 @@ const ListingImporter = () => {
       setStep(1); // Auto-advance to edit step
       toast({ title: "✅ Date extrase!", description: "Verifică și editează înainte de salvare." });
     } catch (err: any) {
-      setError(err.message);
-      toast({ title: "Eroare", description: err.message, variant: "destructive" });
+      const details: ImportErrorDetails = {
+        message: err?.message || "Eroare necunoscută",
+        status: typeof err?.status === "number" ? err.status : null,
+        logs: Array.isArray(err?.logs) ? err.logs : [`[${new Date().toISOString()}] ${err?.message || err}`],
+      };
+      setError(details);
+      toast({ title: "Eroare import", description: details.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handlePickScraperLead = (lead: any) => {
     setUrl(lead.source_url);
