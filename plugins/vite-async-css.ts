@@ -1,64 +1,71 @@
 import type { Plugin } from "vite";
 
 /**
- * Inject the generated CSS via native `<link rel="preload" as="style" onload>`
- * inside <head> so the preload-scanner discovers it BEFORE rendering body —
- * this avoids the 2.1s LCP render-delay caused by the previous JS-driven
- * idle hydration (Lighthouse mobile was waiting for requestIdleCallback to
- * inject styles before declaring LCP).
+ * Convert Vite's render-blocking `<link rel="stylesheet">` into the native
+ * preload-swap pattern so CSS never blocks the first paint, and move
+ * module scripts to the end of <body>.
  *
- * Module scripts stay at the end of <body> so they never block the static
- * shell from painting.
+ * Uses `transformIndexHtml.order = 'post'` so this runs AFTER Vite's
+ * internal CSS-injection hook (otherwise the stylesheet tag is re-added).
  */
 export default function viteAsyncCss(): Plugin {
   return {
     name: "vite-async-css",
     apply: "build",
-    enforce: "post",
-    transformIndexHtml(html) {
-      const cssHrefs: string[] = [];
-      const moduleScripts = Array.from(
-        html.matchAll(/<script\s+type="module"([^>]*)\s+src="([^"]+)"([^>]*)><\/script>/g),
-        ([match, beforeSrc, src, afterSrc]) => ({
-          match,
-          src,
-          crossorigin: /\scrossorigin(?:=|\s|>|$)/.test(`${beforeSrc} ${afterSrc}`),
-        }),
-      );
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        const cssHrefs: string[] = [];
+        const moduleScripts: { src: string; crossorigin: boolean }[] = [];
 
-      let transformed = html
-        .replace(/<script\s+type="module"[^>]*><\/script>\s*/g, "")
-        .replace(
-          /<link rel="stylesheet"(?:\s+crossorigin)?\s+href="([^"]+\.css)"\s*\/?>/g,
-          (_match, href) => {
-            cssHrefs.push(href);
+        // Capture & strip module script tags (any attr order).
+        let transformed = html.replace(
+          /<script\b([^>]*\btype="module"[^>]*)><\/script>\s*/g,
+          (match, attrs) => {
+            const srcMatch = attrs.match(/\bsrc="([^"]+)"/);
+            if (!srcMatch) return match;
+            moduleScripts.push({
+              src: srcMatch[1],
+              crossorigin: /\bcrossorigin\b/.test(attrs),
+            });
             return "";
           },
         );
 
-      // Inject CSS preloads in <head> using the native async pattern.
-      if (cssHrefs.length > 0) {
-        const cssTags = cssHrefs
-          .map(
-            (href) =>
-              `<link rel="preload" as="style" href="${href}" onload="this.onload=null;this.rel='stylesheet'">` +
-              `<noscript><link rel="stylesheet" href="${href}"></noscript>`,
-          )
-          .join("");
-        transformed = transformed.replace("</head>", `${cssTags}</head>`);
-      }
+        // Capture & strip stylesheet link tags (any attr order).
+        transformed = transformed.replace(
+          /<link\b([^>]*\brel="stylesheet"[^>]*)\s*\/?>/g,
+          (match, attrs) => {
+            const hrefMatch = attrs.match(/\bhref="([^"]+\.css)"/);
+            if (!hrefMatch) return match;
+            cssHrefs.push(hrefMatch[1]);
+            return "";
+          },
+        );
 
-      // Module scripts at end of body — async by default, never blocks paint.
-      if (moduleScripts.length > 0) {
-        const scriptTags = moduleScripts
-          .map(({ src, crossorigin }) =>
-            `<script type="module" src="${src}"${crossorigin ? " crossorigin" : ""}></script>`,
-          )
-          .join("");
-        transformed = transformed.replace("</body>", `${scriptTags}</body>`);
-      }
+        if (cssHrefs.length > 0) {
+          const cssTags = cssHrefs
+            .map(
+              (href) =>
+                `<link rel="preload" as="style" href="${href}" onload="this.onload=null;this.rel='stylesheet'">` +
+                `<noscript><link rel="stylesheet" href="${href}"></noscript>`,
+            )
+            .join("");
+          transformed = transformed.replace("</head>", `${cssTags}</head>`);
+        }
 
-      return transformed;
+        if (moduleScripts.length > 0) {
+          const scriptTags = moduleScripts
+            .map(
+              ({ src, crossorigin }) =>
+                `<script type="module" src="${src}"${crossorigin ? " crossorigin" : ""}></script>`,
+            )
+            .join("");
+          transformed = transformed.replace("</body>", `${scriptTags}</body>`);
+        }
+
+        return transformed;
+      },
     },
   };
 }
