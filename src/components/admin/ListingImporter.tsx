@@ -494,21 +494,74 @@ const ListingImporter = () => {
           )}
 
           {/* Error */}
-          {error && (
-            <Card className="border-destructive">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
-                  <div>
-                    <p className="font-medium text-destructive">Eroare la extragere</p>
-                    <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          {error && (() => {
+            const s = error.status;
+            let headline = "Eroare la extragere";
+            let hint: string | null = null;
+            if (s === 401) { headline = "Cheie invalidă"; hint = "Verifică FIRECRAWL_API_KEY în secretele backend-ului."; }
+            else if (s === 402) { headline = "Credite epuizate"; hint = "Reîncarcă contul Firecrawl (firecrawl.dev/app/billing) sau înlocuiește cheia."; }
+            else if (s === 429) { headline = "Rate-limit atins"; hint = "Prea multe cereri către Firecrawl. Așteaptă câteva secunde și reîncearcă."; }
+            else if (s === 403) { headline = "Acces refuzat"; hint = "Cheia FIRECRAWL_API_KEY nu are permisiuni suficiente."; }
+            return (
+              <Card className="border-destructive">
+                <CardContent className="pt-6 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-destructive">{headline}</p>
+                        {s && <Badge variant="outline" className="text-[10px] border-destructive text-destructive">HTTP {s}</Badge>}
+                      </div>
+                      {hint && <p className="text-sm text-foreground mt-1">{hint}</p>}
+                      <p className="text-xs text-muted-foreground mt-1 break-words">{error.message}</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
+                  <div className="flex flex-wrap gap-2">
+                    {s === 429 && (
+                      <Button
+                        size="sm"
+                        onClick={() => handlePreview(lastImportUrl || url)}
+                        disabled={isLoading}
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                        Reîncercare import
+                      </Button>
+                    )}
+                    {s !== 429 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handlePreview(lastImportUrl || url)}
+                        disabled={isLoading || !isValidHttpUrl(lastImportUrl || url)}
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                        Încearcă din nou
+                      </Button>
+                    )}
+                  </div>
+
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group">
+                      <Terminal className="w-3.5 h-3.5" />
+                      <span>Loguri pentru import anunț</span>
+                      <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=open]:rotate-180" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                      <pre className="text-[11px] bg-muted/50 border rounded p-3 overflow-auto max-h-64 whitespace-pre-wrap break-words">
+{error.logs.length > 0 ? error.logs.join("\n") : "Nu sunt loguri suplimentare disponibile."}
+{lastImportUrl ? `\n\nURL: ${lastImportUrl}` : ""}
+{s ? `\nFirecrawl status: ${s}` : ""}
+                      </pre>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </CardContent>
+              </Card>
+            );
+          })()}
         </>
       )}
+
 
       {/* ═══ STEP 1: EDIT ═══ */}
       {step === 1 && editData && (
