@@ -202,7 +202,9 @@ Răspunde DOAR cu JSON valid.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL : SYSTEM_PROMPT_DEFAULT },
+          { role: "system", content: lang === "en"
+              ? (listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL_EN : SYSTEM_PROMPT_DEFAULT_EN)
+              : (listingType === "inchiriere" ? SYSTEM_PROMPT_RENTAL : SYSTEM_PROMPT_DEFAULT) },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
