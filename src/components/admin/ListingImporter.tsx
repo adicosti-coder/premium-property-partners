@@ -169,6 +169,8 @@ const ListingImporter = () => {
     setRewritten(null);
     setAppliedRewrite(false);
     setLastImportUrl(extractUrl);
+    setImportLogs([]);
+    setImportAttempts(null);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
