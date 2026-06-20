@@ -174,7 +174,26 @@ serve(async (req) => {
       });
     }
 
-    const userPrompt = `Generează conținut "The Advisor" pentru această proprietate${lang === "en" ? " (răspunde în engleză)" : ""}:
+    const userPrompt = lang === "en"
+      ? `Generate "The Advisor" content for this property. RESPOND IN ENGLISH ONLY.
+
+Property: ${propertyName}
+Location: ${location}, Timișoara, Romania
+Size: ${size || "N/A"} sqm
+Bedrooms: ${bedrooms || "N/A"} | Bathrooms: ${bathrooms || "N/A"} | Capacity: ${capacity || "N/A"} guests
+Floor: ${floor || "N/A"}
+Year built: ${yearBuilt || "N/A"}
+Energy class: ${energyClass || "N/A"}
+Price/night: ${pricePerNight || "N/A"} EUR
+Estimated ROI: ${roi || "N/A"}
+Listing type: ${listingType || "cazare"}
+Amenities: ${(amenities || []).join(", ") || "standard"}
+Verified local context: ${propertyContext?.positioning || "Use only the provided location and keep local references coherent."}
+Nearby POI / landmarks: ${propertyContext?.poiContext || "Pick only landmarks plausible for the exact position of the property."}
+Buyer context: ${propertyContext?.buyerProfile || "Maintain a premium tone and mature investment logic."}
+
+Respond with VALID JSON ONLY. ENGLISH ONLY.`
+      : `Generează conținut "The Advisor" pentru această proprietate:
 
 Proprietate: ${propertyName}
 Locație: ${location}, Timișoara
