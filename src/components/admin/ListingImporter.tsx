@@ -404,9 +404,15 @@ const ListingImporter = () => {
                   value={url}
                   onChange={(e) => { setUrl(e.target.value); setExtracted(null); setEditData(null); }}
                   placeholder="https://www.olx.ro/d/oferta/..."
-                  className="mt-1"
+                  className={`mt-1 ${url && !isValidHttpUrl(url) ? "border-destructive focus-visible:ring-destructive" : ""}`}
                   disabled={isLoading}
+                  aria-invalid={url ? !isValidHttpUrl(url) : undefined}
                 />
+                {url && !isValidHttpUrl(url) && (
+                  <p className="text-xs text-destructive mt-1">
+                    URL invalid. Trebuie să înceapă cu http:// sau https:// și să conțină un domeniu (ex: olx.ro).
+                  </p>
+                )}
               </div>
 
               <div>
@@ -432,7 +438,7 @@ const ListingImporter = () => {
 
               <Button
                 onClick={() => handlePreview()}
-                disabled={isLoading || !url.trim()}
+                disabled={isLoading || !isValidHttpUrl(url)}
                 className="w-full"
               >
                 {isLoading ? (
@@ -441,6 +447,7 @@ const ListingImporter = () => {
                   <><Eye className="w-4 h-4 mr-2" />Previzualizează &amp; Extrage Date</>
                 )}
               </Button>
+
             </CardContent>
           </Card>
 
