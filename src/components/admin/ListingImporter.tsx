@@ -498,10 +498,10 @@ const ListingImporter = () => {
             const s = error.status;
             let headline = "Eroare la extragere";
             let hint: string | null = null;
-            if (s === 401) { headline = "Cheie invalidă"; hint = "Verifică FIRECRAWL_API_KEY în secretele backend-ului."; }
-            else if (s === 402) { headline = "Credite epuizate"; hint = "Reîncarcă contul Firecrawl (firecrawl.dev/app/billing) sau înlocuiește cheia."; }
-            else if (s === 429) { headline = "Rate-limit atins"; hint = "Prea multe cereri către Firecrawl. Așteaptă câteva secunde și reîncearcă."; }
-            else if (s === 403) { headline = "Acces refuzat"; hint = "Cheia FIRECRAWL_API_KEY nu are permisiuni suficiente."; }
+            if (s === 401) { headline = "Cheie invalidă"; hint = "Verifică SCRAPE_DO_API_KEY în secretele backend-ului."; }
+            else if (s === 402) { headline = "Credite epuizate"; hint = "Reîncarcă contul Scrape.do (scrape.do/dashboard) sau înlocuiește cheia."; }
+            else if (s === 429) { headline = "Rate-limit atins"; hint = "Prea multe cereri către Scrape.do. Așteaptă câteva secunde și reîncearcă."; }
+            else if (s === 403) { headline = "Acces refuzat"; hint = "Cheia SCRAPE_DO_API_KEY nu are permisiuni suficiente."; }
             return (
               <Card className="border-destructive">
                 <CardContent className="pt-6 space-y-3">
