@@ -80,14 +80,30 @@ export async function scrapeWithFirecrawl(url: string, firecrawlKey: string) {
     }),
   });
 
-  const scrapeData = await scrapeResponse.json();
-  
-  // Log the response structure for debugging
+  const scrapeData = await scrapeResponse.json().catch(() => ({} as any));
+
+  // Hard-fail on Firecrawl billing / auth / rate-limit errors so the admin UI
+  // shows a clear, actionable message instead of an empty preview.
+  if (!scrapeResponse.ok || scrapeData?.success === false) {
+    const apiErr = scrapeData?.error || scrapeData?.message || `HTTP ${scrapeResponse.status}`;
+    let friendly: string;
+    if (scrapeResponse.status === 402) {
+      friendly = `Firecrawl: credite epuizate sau plan expirat (402). Reîncarcă creditele pe firecrawl.dev/app/billing sau înlocuiește secretul FIRECRAWL_API_KEY. Detalii: ${apiErr}`;
+    } else if (scrapeResponse.status === 401 || scrapeResponse.status === 403) {
+      friendly = `Firecrawl: cheie API invalidă (${scrapeResponse.status}). Înlocuiește secretul FIRECRAWL_API_KEY. Detalii: ${apiErr}`;
+    } else if (scrapeResponse.status === 429) {
+      friendly = `Firecrawl: rate-limit atins (429). Reîncearcă în câteva secunde. Detalii: ${apiErr}`;
+    } else {
+      friendly = `Firecrawl error ${scrapeResponse.status}: ${apiErr}`;
+    }
+    console.error(`[Firecrawl] ${friendly}`);
+    throw new Error(friendly);
+  }
+
   const topKeys = Object.keys(scrapeData || {});
   const dataKeys = Object.keys(scrapeData?.data || {});
   console.log(`[Firecrawl] Response status: ${scrapeResponse.status}, top keys: [${topKeys}], data keys: [${dataKeys}]`);
-  
-  // Extract structured data - try multiple possible paths
+
   const jsonData = scrapeData?.data?.extract || scrapeData?.data?.json || scrapeData?.extract || scrapeData?.json || {};
   const markdown = scrapeData?.data?.markdown || scrapeData?.markdown || '';
   const pageLinks = scrapeData?.data?.links || scrapeData?.links || [];
