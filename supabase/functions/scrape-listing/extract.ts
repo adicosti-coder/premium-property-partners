@@ -201,12 +201,22 @@ export interface ScrapeDoResult {
 }
 
 export interface ScrapeDoRequestOptions extends RetryFetchOptions {
-  /** Country code for residential proxy geolocation, e.g. "ro", "us". Default: "ro". */
+  /** Country code for residential proxy geolocation, e.g. "ro", "us". Default inferred from URL TLD. */
   geoCode?: string;
-  /** Extra wait (ms) after page load for JS-heavy sites. Default: 5000. */
+  /** Extra wait (ms) after page load for JS-heavy sites. Default: 5000. Max: 30000. */
   customWait?: number;
-  /** Custom request headers forwarded to the target site (requires customHeaders=true). */
+  /** Custom request headers forwarded to the target (requires customHeaders=true). */
   customHeaders?: Record<string, string>;
+  /** waitUntil strategy for headless browser. Default: "networkidle0" (full load incl. lazy assets). */
+  waitUntil?: 'load' | 'domcontentloaded' | 'networkidle0' | 'networkidle2';
+  /** CSS selector to wait for before returning HTML. */
+  waitSelector?: string;
+  /** Block CSS/images/fonts in the headless browser. Default: false (we want lazy-loaded images). */
+  blockResources?: boolean;
+  /** Device profile. Default: "desktop". */
+  device?: 'desktop' | 'mobile' | 'tablet';
+  /** Total request timeout in ms. Default: 90000. */
+  timeoutMs?: number;
 }
 
 /** Infer a sensible proxy geo code from the URL's TLD. */
@@ -242,31 +252,42 @@ export async function scrapeWithScrapeDo(
 
   const geoCode = (opts.geoCode ?? inferGeoCode(url)).toLowerCase();
   const customWait = Math.max(0, Math.min(30000, opts.customWait ?? 5000));
+  const waitUntil = opts.waitUntil ?? 'networkidle0';
+  const blockResources = opts.blockResources ?? false; // CRITICAL: false so lazy <img> resolve
+  const device = opts.device ?? 'desktop';
+  const timeoutMs = Math.max(10000, Math.min(180000, opts.timeoutMs ?? 90000));
   const customHeaders = opts.customHeaders ?? {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     'accept-language': 'ro-RO,ro;q=0.9,en-US;q=0.8,en;q=0.7',
   };
   const hasCustomHeaders = customHeaders && Object.keys(customHeaders).length > 0;
 
-  // Build query string with strict encoding for every parameter.
+  // Build query string with strict encoding for every parameter (URLSearchParams handles it).
   const params = new URLSearchParams();
   params.set('token', scrapeDoKey);
-  params.set('url', url); // URLSearchParams handles percent-encoding
+  params.set('url', url);
   params.set('render', 'true');
   params.set('super', 'true');
   params.set('geoCode', geoCode);
   params.set('customWait', String(customWait));
+  params.set('waitUntil', waitUntil);
+  if (opts.waitSelector) params.set('waitSelector', opts.waitSelector);
+  params.set('blockResources', String(blockResources));
+  params.set('device', device);
+  params.set('timeout', String(timeoutMs));
   if (hasCustomHeaders) params.set('customHeaders', 'true');
 
   const endpoint = `https://api.scrape.do/?${params.toString()}`;
 
-  // When customHeaders=true, Scrape.do forwards request headers verbatim to the target.
   const fetchInit: RequestInit = {
     method: 'GET',
     headers: hasCustomHeaders ? customHeaders : undefined,
   };
 
-  log(`Fetching (render=true, super=true, geoCode=${geoCode}, customWait=${customWait}, customHeaders=${hasCustomHeaders})...`);
+  log(
+    `Fetching (render=true, super=true, geoCode=${geoCode}, waitUntil=${waitUntil}, customWait=${customWait}ms, ` +
+    `blockResources=${blockResources}, device=${device}, timeout=${timeoutMs}ms, customHeaders=${hasCustomHeaders})`,
+  );
 
   const { response: resp, attempts, delays } = await fetchWithRetry(
     endpoint,
