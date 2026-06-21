@@ -200,11 +200,38 @@ export interface ScrapeDoResult {
   attempts: number;
 }
 
+export interface ScrapeDoRequestOptions extends RetryFetchOptions {
+  /** Country code for residential proxy geolocation, e.g. "ro", "us". Default: "ro". */
+  geoCode?: string;
+  /** Extra wait (ms) after page load for JS-heavy sites. Default: 5000. */
+  customWait?: number;
+  /** Custom request headers forwarded to the target site (requires customHeaders=true). */
+  customHeaders?: Record<string, string>;
+}
+
+/** Infer a sensible proxy geo code from the URL's TLD. */
+function inferGeoCode(url: string): string {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host.endsWith('.ro')) return 'ro';
+    if (host.endsWith('.hu')) return 'hu';
+    if (host.endsWith('.de') || host.endsWith('.at')) return 'de';
+    if (host.endsWith('.it')) return 'it';
+    if (host.endsWith('.fr')) return 'fr';
+    if (host.endsWith('.es')) return 'es';
+    if (host.endsWith('.uk') || host.endsWith('.co.uk')) return 'gb';
+    if (host.endsWith('.com') || host.endsWith('.net') || host.endsWith('.org')) return 'us';
+    return 'ro';
+  } catch {
+    return 'ro';
+  }
+}
+
 /** Call Scrape.do to fetch JS-rendered HTML, then convert to text + links. */
 export async function scrapeWithScrapeDo(
   url: string,
   scrapeDoKey: string,
-  opts: RetryFetchOptions = {},
+  opts: ScrapeDoRequestOptions = {},
 ): Promise<ScrapeDoResult> {
   const logs: string[] = [];
   const log = (msg: string) => {
@@ -213,18 +240,42 @@ export async function scrapeWithScrapeDo(
     console.log(line);
   };
 
-  log('Fetching rendered HTML (render=true, super=true, geoCode=ro)...');
+  const geoCode = (opts.geoCode ?? inferGeoCode(url)).toLowerCase();
+  const customWait = Math.max(0, Math.min(30000, opts.customWait ?? 5000));
+  const customHeaders = opts.customHeaders ?? {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'accept-language': 'ro-RO,ro;q=0.9,en-US;q=0.8,en;q=0.7',
+  };
+  const hasCustomHeaders = customHeaders && Object.keys(customHeaders).length > 0;
 
-  const endpoint = `https://api.scrape.do/?token=${encodeURIComponent(scrapeDoKey)}&url=${encodeURIComponent(url)}&render=true&super=true&geoCode=ro`;
+  // Build query string with strict encoding for every parameter.
+  const params = new URLSearchParams();
+  params.set('token', scrapeDoKey);
+  params.set('url', url); // URLSearchParams handles percent-encoding
+  params.set('render', 'true');
+  params.set('super', 'true');
+  params.set('geoCode', geoCode);
+  params.set('customWait', String(customWait));
+  if (hasCustomHeaders) params.set('customHeaders', 'true');
+
+  const endpoint = `https://api.scrape.do/?${params.toString()}`;
+
+  // When customHeaders=true, Scrape.do forwards request headers verbatim to the target.
+  const fetchInit: RequestInit = {
+    method: 'GET',
+    headers: hasCustomHeaders ? customHeaders : undefined,
+  };
+
+  log(`Fetching (render=true, super=true, geoCode=${geoCode}, customWait=${customWait}, customHeaders=${hasCustomHeaders})...`);
 
   const { response: resp, attempts, delays } = await fetchWithRetry(
     endpoint,
-    { method: 'GET' },
+    fetchInit,
     {
       ...opts,
       onRetry: (info) => {
         const reason = info.error ? `network error (${info.error.message})` : `HTTP ${info.status}`;
-        log(`Transient ${reason} on attempt ${info.attempt}/${opts.maxAttempts ?? 4}, retrying in ${info.delay}ms`);
+        log(`Transient ${reason} on attempt ${info.attempt}/${opts.maxAttempts ?? 4}, retrying in ${info.delay}ms (target URL re-sent encoded)`);
         opts.onRetry?.(info);
       },
     },
