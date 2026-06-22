@@ -3,9 +3,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import {
   Building2, Compass, Eye, Thermometer, Zap, ShieldCheck,
   Ruler, Euro, Calendar, Layers, ParkingCircle, Sofa,
+  Languages, Loader2,
 } from "lucide-react";
 
 export interface PremiumFieldsData {
@@ -85,9 +87,11 @@ export const defaultPremiumFields: PremiumFieldsData = {
 interface Props {
   data: PremiumFieldsData;
   onChange: <K extends keyof PremiumFieldsData>(key: K, value: PremiumFieldsData[K]) => void;
+  onTranslateLongToEN?: () => void | Promise<void>;
+  isTranslatingLong?: boolean;
 }
 
-export default function PropertyPremiumFields({ data, onChange }: Props) {
+export default function PropertyPremiumFields({ data, onChange, onTranslateLongToEN, isTranslatingLong }: Props) {
   return (
     <div className="space-y-6">
       {/* Despre Proprietate - Descrieri extinse */}
@@ -106,7 +110,22 @@ export default function PropertyPremiumFields({ data, onChange }: Props) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Descriere detaliată (EN)</Label>
+          <div className="flex items-center justify-between">
+            <Label>Descriere detaliată (EN)</Label>
+            {onTranslateLongToEN && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => onTranslateLongToEN()}
+                disabled={isTranslatingLong || !data.long_description_ro}
+                className="gap-1.5 h-7 text-xs"
+              >
+                {isTranslatingLong ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                Traducere Auto
+              </Button>
+            )}
+          </div>
           <Textarea
             value={data.long_description_en || ""}
             onChange={(e) => onChange("long_description_en", e.target.value || null)}

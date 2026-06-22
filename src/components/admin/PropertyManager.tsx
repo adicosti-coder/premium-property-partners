@@ -183,6 +183,7 @@ export default function PropertyManager() {
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
   const [premiumFields, setPremiumFields] = useState<PremiumFieldsData>({ ...defaultPremiumFields });
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslatingLong, setIsTranslatingLong] = useState(false);
   const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
 
   // Filters
@@ -1144,6 +1145,30 @@ export default function PropertyManager() {
       <PropertyPremiumFields
         data={premiumFields}
         onChange={(key, value) => setPremiumFields(prev => ({ ...prev, [key]: value }))}
+        isTranslatingLong={isTranslatingLong}
+        onTranslateLongToEN={async () => {
+          if (!premiumFields.long_description_ro) {
+            toast({ title: "Completează mai întâi Descrierea detaliată RO", variant: "destructive" });
+            return;
+          }
+          setIsTranslatingLong(true);
+          try {
+            const { data, error } = await supabase.functions.invoke("translate-text", {
+              body: { text: premiumFields.long_description_ro, sourceLang: "Romanian", targetLang: "English" },
+            });
+            if (error) throw new Error(error.message);
+            if (data?.translated) {
+              setPremiumFields(prev => ({ ...prev, long_description_en: data.translated }));
+              toast({ title: "✅ Descriere detaliată tradusă în engleză!" });
+            } else {
+              throw new Error("No translation returned");
+            }
+          } catch (err: any) {
+            toast({ title: "Eroare la traducere", description: err.message, variant: "destructive" });
+          } finally {
+            setIsTranslatingLong(false);
+          }
+        }}
       />
 
       <div className="flex items-center gap-3">
