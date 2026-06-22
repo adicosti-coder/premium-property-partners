@@ -183,6 +183,7 @@ export default function PropertyManager() {
   const [propertyImages, setPropertyImages] = useState<PropertyImage[]>([]);
   const [premiumFields, setPremiumFields] = useState<PremiumFieldsData>({ ...defaultPremiumFields });
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslatingLong, setIsTranslatingLong] = useState(false);
   const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
 
   // Filters
