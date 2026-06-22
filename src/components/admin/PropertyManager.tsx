@@ -899,6 +899,7 @@ export default function PropertyManager() {
                       energyClass: premiumFields.energy_class,
                       roi: formData.roi_percentage,
                       language: lang,
+                      forceRegenerate: true,
                     },
                   });
                   if (error) throw error;

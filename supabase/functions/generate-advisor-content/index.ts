@@ -114,7 +114,7 @@ serve(async (req) => {
   }
 
   try {
-    const { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi, language } = await req.json();
+    const { propertyName, propertySlug, location, size, bedrooms, bathrooms, capacity, floor, pricePerNight, amenities, listingType, yearBuilt, energyClass, roi, language, forceRegenerate } = await req.json();
 
     const lang = language === "en" ? "en" : "ro";
     const cacheSlug = propertySlug || propertyName;
@@ -124,23 +124,27 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, supabaseServiceKey);
 
-    // --- Check cache first ---
-    try {
-      const { data: cached } = await sb
-        .from("advisor_cache")
-        .select("content")
-        .eq("property_slug", cacheSlug)
-        .eq("language", lang)
-        .maybeSingle();
+    // --- Check cache first (unless forceRegenerate=true from admin) ---
+    if (!forceRegenerate) {
+      try {
+        const { data: cached } = await sb
+          .from("advisor_cache")
+          .select("content")
+          .eq("property_slug", cacheSlug)
+          .eq("language", lang)
+          .maybeSingle();
 
-      if (cached?.content) {
-        console.log("Cache HIT for", cacheSlug, lang);
-        return new Response(JSON.stringify(cached.content), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (cached?.content) {
+          console.log("Cache HIT for", cacheSlug, lang);
+          return new Response(JSON.stringify(cached.content), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } catch (cacheErr) {
+        console.warn("Cache read failed, continuing to AI:", cacheErr);
       }
-    } catch (cacheErr) {
-      console.warn("Cache read failed, continuing to AI:", cacheErr);
+    } else {
+      console.log("Force regenerate for", cacheSlug, lang, "— bypassing cache");
     }
 
     console.log("Cache MISS for", cacheSlug, lang);
