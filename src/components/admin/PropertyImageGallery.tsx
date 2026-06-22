@@ -14,6 +14,8 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
+  ArrowRight,
   ZoomIn,
   Check,
   AlertCircle,
@@ -73,9 +75,13 @@ interface SortableImageItemProps {
   onDelete: (image: PropertyImage) => void;
   onPreview: (image: PropertyImage) => void;
   onToggleSelect: (image: PropertyImage) => void;
+  onMove: (image: PropertyImage, direction: -1 | 1) => void;
   deletingId: string | null;
+  isReordering: boolean;
   isSelectionMode: boolean;
   isSelected: boolean;
+  canMoveLeft: boolean;
+  canMoveRight: boolean;
   t: any;
 }
 
@@ -86,9 +92,13 @@ function SortableImageItem({
   onDelete, 
   onPreview,
   onToggleSelect,
+  onMove,
   deletingId,
+  isReordering,
   isSelectionMode,
   isSelected,
+  canMoveLeft,
+  canMoveRight,
   t 
 }: SortableImageItemProps) {
   const {
@@ -155,6 +165,36 @@ function SortableImageItem({
         className="w-full h-24 object-cover cursor-pointer"
         onClick={handleClick}
       />
+
+      {!isSelectionMode && (
+        <div className="flex items-center justify-between gap-1 border-t border-border bg-background px-1 py-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onMove(image, -1)}
+            disabled={!canMoveLeft || isReordering}
+            title="Mută imaginea la stânga"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <span className="text-xs font-medium text-muted-foreground tabular-nums">
+            #{image.display_order + 1}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onMove(image, 1)}
+            disabled={!canMoveRight || isReordering}
+            title="Mută imaginea la dreapta"
+          >
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
       
       {/* Overlay with actions */}
       {!isSelectionMode && (
