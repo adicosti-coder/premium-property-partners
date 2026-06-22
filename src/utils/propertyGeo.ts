@@ -238,6 +238,20 @@ const profiles: GeoProfile[] = [
       { name: 'Centrul Vechi', nameEn: 'Old Town Center', lng: 21.2265, lat: 45.7571, category: 'tourist', emoji: '🏛️', minutes: 10, mode: 'drive' },
     ],
   },
+  {
+    key: 'buziasului',
+    aliases: ['buziasului', 'calea buziasului', 'zona buziasului', 'garsoniera calea buziasului', 'buziaș'],
+    center: { lng: 21.2608, lat: 45.7303 },
+    scores: { transport: 8.6, education: 8.0, lifestyle: 8.4, overallLabelRo: 'Foarte Bun', overallLabelEn: 'Very Good' },
+    pois: [
+      { name: 'Real Park / Auchan Sud', nameEn: 'Real Park / Auchan South', lng: 21.2625, lat: 45.7275, category: 'mall', emoji: '🛍️', minutes: 4, mode: 'drive' },
+      { name: 'Kaufland Buziașului', nameEn: 'Kaufland Buziașului', lng: 21.2585, lat: 45.7320, category: 'supermarket', emoji: '🛒', minutes: 4, mode: 'walk' },
+      { name: 'Stație tramvai Buziașului', nameEn: 'Buziașului tram stop', lng: 21.2598, lat: 45.7305, category: 'transport', emoji: '🚋', minutes: 3, mode: 'walk' },
+      { name: 'Restaurante zona Soarelui', nameEn: 'Soarelui-area restaurants', lng: 21.2570, lat: 45.7290, category: 'restaurant', emoji: '🍽️', minutes: 5, mode: 'walk' },
+      { name: 'Parcul Lidia', nameEn: 'Lidia Park', lng: 21.2540, lat: 45.7345, category: 'park', emoji: '🌳', minutes: 6, mode: 'walk' },
+      { name: 'Iulius Town', nameEn: 'Iulius Town', lng: 21.227, lat: 45.7695, category: 'mall', emoji: '🛍️', minutes: 12, mode: 'drive' },
+    ],
+  },
 ];
 
 const fallbackProfile: GeoProfile = {
