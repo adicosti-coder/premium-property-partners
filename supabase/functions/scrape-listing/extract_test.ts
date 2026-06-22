@@ -7,8 +7,28 @@ import {
 import {
   computeBackoffDelay,
   fetchWithRetry,
+  inferGeoCode,
   scrapeWithScrapeDo,
 } from "./extract.ts";
+
+// Deterministic RNG → always returns 0.5 so jitter = floor(0.5 * jitterMs).
+const rand = () => 0.5;
+
+Deno.test("inferGeoCode: maps TLDs to expected proxy country", () => {
+  assertEquals(inferGeoCode("https://www.olx.ro/d/oferta/123"), "ro");
+  assertEquals(inferGeoCode("https://example.hu/listing"), "hu");
+  assertEquals(inferGeoCode("https://immo.de/x"), "de");
+  assertEquals(inferGeoCode("https://immo.at/x"), "de");
+  assertEquals(inferGeoCode("https://casa.it/x"), "it");
+  assertEquals(inferGeoCode("https://immo.fr/x"), "fr");
+  assertEquals(inferGeoCode("https://piso.es/x"), "es");
+  assertEquals(inferGeoCode("https://site.co.uk/x"), "gb");
+  assertEquals(inferGeoCode("https://site.uk/x"), "gb");
+  assertEquals(inferGeoCode("https://airbnb.com/rooms/1"), "us");
+  assertEquals(inferGeoCode("https://foo.net/x"), "us");
+  assertEquals(inferGeoCode("https://unknown.xyz/x"), "ro"); // fallback
+  assertEquals(inferGeoCode("not a url"), "ro");             // parse failure fallback
+});
 
 // Deterministic RNG → always returns 0.5 so jitter = floor(0.5 * jitterMs).
 const rand = () => 0.5;
