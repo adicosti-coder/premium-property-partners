@@ -192,3 +192,48 @@ Deno.test("scrapeWithScrapeDo: 401 throws with firecrawl_status + logs", async (
   assertEquals(e.firecrawl_status, 401);
   assert(Array.isArray(e.logs) && e.logs.length > 0);
 });
+
+Deno.test("scrapeWithScrapeDo: integration — encodes URL + forwards advanced params", async () => {
+  let capturedUrl = "";
+  let capturedHeaders: HeadersInit | undefined;
+  const fakeFetch = ((u: string, init?: RequestInit) => {
+    capturedUrl = u;
+    capturedHeaders = init?.headers;
+    return new Response("<html><body><h1>OK</h1></body></html>", { status: 200 });
+  }) as unknown as typeof fetch;
+
+  const targetUrl = "https://www.publi24.ro/anunturi/imobiliare/listing?id=42&ref=a b";
+  const result = await scrapeWithScrapeDo(targetUrl, "tkn-123", {
+    fetchFn: fakeFetch,
+    sleepFn: async () => {},
+    rand,
+    waitSelector: ".gallery img",
+    customWait: 7500,
+    geoCode: "RO",
+  });
+
+  assertEquals(result.attempts, 1);
+  // Endpoint must be the scrape.do API with strictly-encoded params.
+  assert(capturedUrl.startsWith("https://api.scrape.do/?"));
+  const qs = new URLSearchParams(capturedUrl.split("?")[1]);
+  assertEquals(qs.get("token"), "tkn-123");
+  assertEquals(qs.get("url"), targetUrl); // URLSearchParams round-trips decoded
+  assertEquals(qs.get("render"), "true");
+  assertEquals(qs.get("super"), "true");
+  assertEquals(qs.get("geoCode"), "ro"); // lowercased
+  assertEquals(qs.get("waitUntil"), "networkidle0");
+  assertEquals(qs.get("customWait"), "7500");
+  assertEquals(qs.get("waitSelector"), ".gallery img");
+  assertEquals(qs.get("blockResources"), "false");
+  assertEquals(qs.get("device"), "desktop");
+  assertEquals(qs.get("customHeaders"), "true");
+  // The space character must be percent-encoded in the raw endpoint string.
+  assert(capturedUrl.includes("ref%3Da%20b") || capturedUrl.includes("ref%3Da+b"));
+  // Default UA + accept-language headers forwarded.
+  assert(capturedHeaders && (capturedHeaders as Record<string, string>)["User-Agent"]?.includes("Chrome"));
+
+  // Request logging captures both params and redacted endpoint.
+  assert(result.logs.some((l) => l.includes("Request params") && l.includes("waitSelector")));
+  assert(result.logs.some((l) => l.includes("Encoded endpoint") && l.includes("token=***")));
+  assert(result.logs.some((l) => l.includes("Forwarded headers")));
+});
