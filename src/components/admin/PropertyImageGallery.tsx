@@ -738,12 +738,15 @@ export default function PropertyImageGallery({
         throw new Error(failed[0].error?.message || 'Update failed');
       }
 
-      // Sync primary image_path on properties when the primary image moves
+      // Sync properties.images array (used by public page) + primary image_path
       const primary = reorderedImages.find((img) => img.is_primary) || reorderedImages[0];
-      if (primary && reorderedImages[0]?.property_id) {
+      if (reorderedImages[0]?.property_id) {
         await supabase
           .from('properties')
-          .update({ image_path: primary.image_path })
+          .update({
+            images: reorderedImages.map((i) => i.image_path),
+            image_path: primary?.image_path || reorderedImages[0].image_path,
+          })
           .eq('id', reorderedImages[0].property_id);
       }
 
