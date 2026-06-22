@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
   if (!auth.ok) return auth.response!;
 
   try {
-    const { url, listing_type, mode, editedData } = await req.json();
+    const { url, listing_type, mode, editedData, wait_selector, geo_code, custom_wait } = await req.json();
 
     if (!url) {
       return new Response(
