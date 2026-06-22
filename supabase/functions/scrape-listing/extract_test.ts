@@ -30,8 +30,6 @@ Deno.test("inferGeoCode: maps TLDs to expected proxy country", () => {
   assertEquals(inferGeoCode("not a url"), "ro");             // parse failure fallback
 });
 
-// Deterministic RNG → always returns 0.5 so jitter = floor(0.5 * jitterMs).
-const rand = () => 0.5;
 
 Deno.test("computeBackoffDelay: exponential 500/1000/2000/4000 + jitter", () => {
   assertEquals(computeBackoffDelay(1, { rand }), 500 + 125);
