@@ -259,6 +259,7 @@ export default function PropertyImageGallery({
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Draft images state
@@ -376,6 +377,44 @@ export default function PropertyImageGallery({
   };
 
   const sortedImages = [...images].sort((a, b) => a.display_order - b.display_order);
+
+  const persistImageOrder = async (nextImages: PropertyImage[]) => {
+    if (nextImages.length === 0) return;
+
+    const normalizedImages = nextImages.map((img, index) => ({
+      ...img,
+      display_order: index,
+      is_primary: index === 0,
+    }));
+
+    const results = await Promise.all(
+      normalizedImages.map((img) =>
+        supabase
+          .from('property_images')
+          .update({ display_order: img.display_order, is_primary: img.is_primary })
+          .eq('id', img.id)
+          .eq('property_id', propertyId)
+      )
+    );
+
+    const failed = results.filter((r: any) => r?.error);
+    if (failed.length > 0) {
+      console.error('Reorder errors:', failed.map((r: any) => r.error));
+      throw new Error(failed[0].error?.message || 'Update failed');
+    }
+
+    const { error: propertyError } = await supabase
+      .from('properties')
+      .update({
+        images: normalizedImages.map((i) => i.image_path),
+        image_path: normalizedImages[0].image_path,
+      })
+      .eq('id', propertyId);
+
+    if (propertyError) throw propertyError;
+
+    onImagesChange(normalizedImages);
+  };
 
   const handlePreview = (image: PropertyImage) => {
     setPreviewImage(image);
