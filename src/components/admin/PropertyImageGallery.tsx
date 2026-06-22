@@ -14,6 +14,8 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
+  ArrowRight,
   ZoomIn,
   Check,
   AlertCircle,
@@ -73,9 +75,13 @@ interface SortableImageItemProps {
   onDelete: (image: PropertyImage) => void;
   onPreview: (image: PropertyImage) => void;
   onToggleSelect: (image: PropertyImage) => void;
+  onMove: (image: PropertyImage, direction: -1 | 1) => void;
   deletingId: string | null;
+  isReordering: boolean;
   isSelectionMode: boolean;
   isSelected: boolean;
+  canMoveLeft: boolean;
+  canMoveRight: boolean;
   t: any;
 }
 
@@ -86,9 +92,13 @@ function SortableImageItem({
   onDelete, 
   onPreview,
   onToggleSelect,
+  onMove,
   deletingId,
+  isReordering,
   isSelectionMode,
   isSelected,
+  canMoveLeft,
+  canMoveRight,
   t 
 }: SortableImageItemProps) {
   const {
@@ -155,6 +165,36 @@ function SortableImageItem({
         className="w-full h-24 object-cover cursor-pointer"
         onClick={handleClick}
       />
+
+      {!isSelectionMode && (
+        <div className="flex items-center justify-between gap-1 border-t border-border bg-background px-1 py-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onMove(image, -1)}
+            disabled={!canMoveLeft || isReordering}
+            title="Mută imaginea la stânga"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <span className="text-xs font-medium text-muted-foreground tabular-nums">
+            #{image.display_order + 1}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onMove(image, 1)}
+            disabled={!canMoveRight || isReordering}
+            title="Mută imaginea la dreapta"
+          >
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
       
       {/* Overlay with actions */}
       {!isSelectionMode && (
@@ -219,6 +259,7 @@ export default function PropertyImageGallery({
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Draft images state
@@ -336,6 +377,44 @@ export default function PropertyImageGallery({
   };
 
   const sortedImages = [...images].sort((a, b) => a.display_order - b.display_order);
+
+  const persistImageOrder = async (nextImages: PropertyImage[]) => {
+    if (nextImages.length === 0) return;
+
+    const normalizedImages = nextImages.map((img, index) => ({
+      ...img,
+      display_order: index,
+      is_primary: index === 0,
+    }));
+
+    const results = await Promise.all(
+      normalizedImages.map((img) =>
+        supabase
+          .from('property_images')
+          .update({ display_order: img.display_order, is_primary: img.is_primary })
+          .eq('id', img.id)
+          .eq('property_id', propertyId)
+      )
+    );
+
+    const failed = results.filter((r: any) => r?.error);
+    if (failed.length > 0) {
+      console.error('Reorder errors:', failed.map((r: any) => r.error));
+      throw new Error(failed[0].error?.message || 'Update failed');
+    }
+
+    const { error: propertyError } = await supabase
+      .from('properties')
+      .update({
+        images: normalizedImages.map((i) => i.image_path),
+        image_path: normalizedImages[0].image_path,
+      })
+      .eq('id', propertyId);
+
+    if (propertyError) throw propertyError;
+
+    onImagesChange(normalizedImages);
+  };
 
   const handlePreview = (image: PropertyImage) => {
     setPreviewImage(image);
@@ -705,7 +784,7 @@ export default function PropertyImageGallery({
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over || active.id === over.id) return;
+    if (!over || active.id === over.id || isReordering) return;
 
     // Use sortedImages (the displayed order) for correct drag-and-drop
     const oldIndex = sortedImages.findIndex(img => img.id === active.id);
@@ -720,44 +799,49 @@ export default function PropertyImageGallery({
       })
     );
 
-    onImagesChange(reorderedImages);
+    onImagesChange(reorderedImages.map((img, index) => ({ ...img, display_order: index, is_primary: index === 0 })));
+    setIsReordering(true);
 
     try {
-      const results = await Promise.all(
-        reorderedImages.map((img) =>
-          supabase
-            .from('property_images')
-            .update({ display_order: img.display_order })
-            .eq('id', img.id)
-        )
-      );
-
-      const failed = results.filter((r: any) => r?.error);
-      if (failed.length > 0) {
-        console.error('Reorder errors:', failed.map((r: any) => r.error));
-        throw new Error(failed[0].error?.message || 'Update failed');
-      }
-
-      // Sync properties.images array (used by public page) + primary image_path
-      const primary = reorderedImages.find((img) => img.is_primary) || reorderedImages[0];
-      if (reorderedImages[0]?.property_id) {
-        await supabase
-          .from('properties')
-          .update({
-            images: reorderedImages.map((i) => i.image_path),
-            image_path: primary?.image_path || reorderedImages[0].image_path,
-          })
-          .eq('id', reorderedImages[0].property_id);
-      }
-
+      await persistImageOrder(reorderedImages);
       toast({ title: "✅ " + (t.admin.properties?.orderUpdated || "Ordine actualizată") });
     } catch (error: any) {
       console.error("Error updating order:", error);
+      onImagesChange(sortedImages);
       toast({
         title: t.admin.error || "Eroare",
         description: error?.message || t.admin.properties?.updateError || "Nu s-a putut actualiza ordinea",
         variant: "destructive",
       });
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
+  const handleMoveImage = async (image: PropertyImage, direction: -1 | 1) => {
+    if (isReordering) return;
+
+    const currentIndex = sortedImages.findIndex((img) => img.id === image.id);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex === -1 || nextIndex < 0 || nextIndex >= sortedImages.length) return;
+
+    const reorderedImages = arrayMove(sortedImages, currentIndex, nextIndex);
+    onImagesChange(reorderedImages.map((img, index) => ({ ...img, display_order: index, is_primary: index === 0 })));
+    setIsReordering(true);
+
+    try {
+      await persistImageOrder(reorderedImages);
+      toast({ title: "✅ " + (t.admin.properties?.orderUpdated || "Ordine actualizată") });
+    } catch (error: any) {
+      console.error("Error moving image:", error);
+      onImagesChange(sortedImages);
+      toast({
+        title: t.admin.error || "Eroare",
+        description: error?.message || t.admin.properties?.updateError || "Nu s-a putut actualiza ordinea",
+        variant: "destructive",
+      });
+    } finally {
+      setIsReordering(false);
     }
   };
 
@@ -912,7 +996,7 @@ export default function PropertyImageGallery({
             strategy={rectSortingStrategy}
           >
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {sortedImages.map((image) => (
+              {sortedImages.map((image, index) => (
                 <SortableImageItem
                   key={image.id}
                   image={image}
@@ -921,9 +1005,13 @@ export default function PropertyImageGallery({
                   onDelete={handleDeleteImage}
                   onPreview={handlePreview}
                   onToggleSelect={handleToggleSelect}
+                  onMove={handleMoveImage}
                   deletingId={deletingId}
+                  isReordering={isReordering}
                   isSelectionMode={isSelectionMode}
                   isSelected={selectedImages.has(image.id)}
+                  canMoveLeft={index > 0}
+                  canMoveRight={index < sortedImages.length - 1}
                   t={t}
                 />
               ))}
