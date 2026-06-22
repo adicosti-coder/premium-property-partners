@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
   if (!auth.ok) return auth.response!;
 
   try {
-    const { url, listing_type, mode, editedData } = await req.json();
+    const { url, listing_type, mode, editedData, wait_selector, geo_code, custom_wait } = await req.json();
 
     if (!url) {
       return new Response(
@@ -153,7 +153,11 @@ Deno.serve(async (req) => {
     console.log(`[Preview] Scraping listing from ${platform}: ${url}`);
 
     // Step 1: Fetch JS-rendered HTML via Scrape.do
-    const { jsonData, markdown, pageLinks, logs: scrapeLogs, attempts } = await scrapeWithScrapeDo(url, scrapeDoKey);
+    const scrapeOpts: Record<string, unknown> = {};
+    if (typeof wait_selector === 'string' && wait_selector.trim()) scrapeOpts.waitSelector = wait_selector.trim();
+    if (typeof geo_code === 'string' && geo_code.trim()) scrapeOpts.geoCode = geo_code.trim();
+    if (typeof custom_wait === 'number' && Number.isFinite(custom_wait)) scrapeOpts.customWait = custom_wait;
+    const { jsonData, markdown, pageLinks, logs: scrapeLogs, attempts } = await scrapeWithScrapeDo(url, scrapeDoKey, scrapeOpts);
     const logs = [...scrapeLogs];
     const pushLog = (m: string) => { const l = `[${new Date().toISOString()}] ${m}`; logs.push(l); console.log(l); };
 

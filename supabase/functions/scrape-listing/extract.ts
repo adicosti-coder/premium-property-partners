@@ -219,17 +219,17 @@ export interface ScrapeDoRequestOptions extends RetryFetchOptions {
   timeoutMs?: number;
 }
 
-/** Infer a sensible proxy geo code from the URL's TLD. */
-function inferGeoCode(url: string): string {
+/** Infer a sensible proxy geo code from the URL's TLD. Exported for unit tests. */
+export function inferGeoCode(url: string): string {
   try {
     const host = new URL(url).hostname.toLowerCase();
+    if (host.endsWith('.co.uk') || host.endsWith('.uk')) return 'gb';
     if (host.endsWith('.ro')) return 'ro';
     if (host.endsWith('.hu')) return 'hu';
     if (host.endsWith('.de') || host.endsWith('.at')) return 'de';
     if (host.endsWith('.it')) return 'it';
     if (host.endsWith('.fr')) return 'fr';
     if (host.endsWith('.es')) return 'es';
-    if (host.endsWith('.uk') || host.endsWith('.co.uk')) return 'gb';
     if (host.endsWith('.com') || host.endsWith('.net') || host.endsWith('.org')) return 'us';
     return 'ro';
   } catch {
@@ -284,10 +284,17 @@ export async function scrapeWithScrapeDo(
     headers: hasCustomHeaders ? customHeaders : undefined,
   };
 
+  // Redact token before logging the full endpoint for traceability.
+  const redactedEndpoint = endpoint.replace(/token=[^&]+/, 'token=***');
   log(
-    `Fetching (render=true, super=true, geoCode=${geoCode}, waitUntil=${waitUntil}, customWait=${customWait}ms, ` +
-    `blockResources=${blockResources}, device=${device}, timeout=${timeoutMs}ms, customHeaders=${hasCustomHeaders})`,
+    `Request params: render=true super=true geoCode=${geoCode} waitUntil=${waitUntil} customWait=${customWait}ms ` +
+    `blockResources=${blockResources} device=${device} timeout=${timeoutMs}ms customHeaders=${hasCustomHeaders}` +
+    (opts.waitSelector ? ` waitSelector=${JSON.stringify(opts.waitSelector)}` : ''),
   );
+  log(`Encoded endpoint: ${redactedEndpoint}`);
+  if (hasCustomHeaders) {
+    log(`Forwarded headers: ${Object.keys(customHeaders).join(', ')}`);
+  }
 
   const { response: resp, attempts, delays } = await fetchWithRetry(
     endpoint,

@@ -7,11 +7,29 @@ import {
 import {
   computeBackoffDelay,
   fetchWithRetry,
+  inferGeoCode,
   scrapeWithScrapeDo,
 } from "./extract.ts";
 
 // Deterministic RNG → always returns 0.5 so jitter = floor(0.5 * jitterMs).
 const rand = () => 0.5;
+
+Deno.test("inferGeoCode: maps TLDs to expected proxy country", () => {
+  assertEquals(inferGeoCode("https://www.olx.ro/d/oferta/123"), "ro");
+  assertEquals(inferGeoCode("https://example.hu/listing"), "hu");
+  assertEquals(inferGeoCode("https://immo.de/x"), "de");
+  assertEquals(inferGeoCode("https://immo.at/x"), "de");
+  assertEquals(inferGeoCode("https://casa.it/x"), "it");
+  assertEquals(inferGeoCode("https://immo.fr/x"), "fr");
+  assertEquals(inferGeoCode("https://piso.es/x"), "es");
+  assertEquals(inferGeoCode("https://site.co.uk/x"), "gb");
+  assertEquals(inferGeoCode("https://site.uk/x"), "gb");
+  assertEquals(inferGeoCode("https://airbnb.com/rooms/1"), "us");
+  assertEquals(inferGeoCode("https://foo.net/x"), "us");
+  assertEquals(inferGeoCode("https://unknown.xyz/x"), "ro"); // fallback
+  assertEquals(inferGeoCode("not a url"), "ro");             // parse failure fallback
+});
+
 
 Deno.test("computeBackoffDelay: exponential 500/1000/2000/4000 + jitter", () => {
   assertEquals(computeBackoffDelay(1, { rand }), 500 + 125);
@@ -171,4 +189,49 @@ Deno.test("scrapeWithScrapeDo: 401 throws with firecrawl_status + logs", async (
   const e = err as any;
   assertEquals(e.firecrawl_status, 401);
   assert(Array.isArray(e.logs) && e.logs.length > 0);
+});
+
+Deno.test("scrapeWithScrapeDo: integration — encodes URL + forwards advanced params", async () => {
+  let capturedUrl = "";
+  let capturedHeaders: HeadersInit | undefined;
+  const fakeFetch = ((u: string, init?: RequestInit) => {
+    capturedUrl = u;
+    capturedHeaders = init?.headers;
+    return new Response("<html><body><h1>OK</h1></body></html>", { status: 200 });
+  }) as unknown as typeof fetch;
+
+  const targetUrl = "https://www.publi24.ro/anunturi/imobiliare/listing?id=42&ref=a b";
+  const result = await scrapeWithScrapeDo(targetUrl, "tkn-123", {
+    fetchFn: fakeFetch,
+    sleepFn: async () => {},
+    rand,
+    waitSelector: ".gallery img",
+    customWait: 7500,
+    geoCode: "RO",
+  });
+
+  assertEquals(result.attempts, 1);
+  // Endpoint must be the scrape.do API with strictly-encoded params.
+  assert(capturedUrl.startsWith("https://api.scrape.do/?"));
+  const qs = new URLSearchParams(capturedUrl.split("?")[1]);
+  assertEquals(qs.get("token"), "tkn-123");
+  assertEquals(qs.get("url"), targetUrl); // URLSearchParams round-trips decoded
+  assertEquals(qs.get("render"), "true");
+  assertEquals(qs.get("super"), "true");
+  assertEquals(qs.get("geoCode"), "ro"); // lowercased
+  assertEquals(qs.get("waitUntil"), "networkidle0");
+  assertEquals(qs.get("customWait"), "7500");
+  assertEquals(qs.get("waitSelector"), ".gallery img");
+  assertEquals(qs.get("blockResources"), "false");
+  assertEquals(qs.get("device"), "desktop");
+  assertEquals(qs.get("customHeaders"), "true");
+  // The space character must be percent-encoded in the raw endpoint string.
+  assert(capturedUrl.includes("ref%3Da%20b") || capturedUrl.includes("ref%3Da+b"));
+  // Default UA + accept-language headers forwarded.
+  assert(capturedHeaders && (capturedHeaders as Record<string, string>)["User-Agent"]?.includes("Chrome"));
+
+  // Request logging captures both params and redacted endpoint.
+  assert(result.logs.some((l) => l.includes("Request params") && l.includes("waitSelector")));
+  assert(result.logs.some((l) => l.includes("Encoded endpoint") && l.includes("token=***")));
+  assert(result.logs.some((l) => l.includes("Forwarded headers")));
 });
