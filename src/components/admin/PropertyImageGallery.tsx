@@ -723,20 +723,36 @@ export default function PropertyImageGallery({
     onImagesChange(reorderedImages);
 
     try {
-      const updates = reorderedImages.map(img =>
-        supabase
-          .from('property_images')
-          .update({ display_order: img.display_order })
-          .eq('id', img.id)
+      const results = await Promise.all(
+        reorderedImages.map((img) =>
+          supabase
+            .from('property_images')
+            .update({ display_order: img.display_order })
+            .eq('id', img.id)
+        )
       );
 
-      await Promise.all(updates);
-      toast({ title: t.admin.properties?.orderUpdated || "Order updated" });
-    } catch (error) {
+      const failed = results.filter((r: any) => r?.error);
+      if (failed.length > 0) {
+        console.error('Reorder errors:', failed.map((r: any) => r.error));
+        throw new Error(failed[0].error?.message || 'Update failed');
+      }
+
+      // Sync primary image_path on properties when the primary image moves
+      const primary = reorderedImages.find((img) => img.is_primary) || reorderedImages[0];
+      if (primary && reorderedImages[0]?.property_id) {
+        await supabase
+          .from('properties')
+          .update({ image_path: primary.image_path })
+          .eq('id', reorderedImages[0].property_id);
+      }
+
+      toast({ title: "✅ " + (t.admin.properties?.orderUpdated || "Ordine actualizată") });
+    } catch (error: any) {
       console.error("Error updating order:", error);
       toast({
-        title: t.admin.error,
-        description: t.admin.properties?.updateError || "Could not update order",
+        title: t.admin.error || "Eroare",
+        description: error?.message || t.admin.properties?.updateError || "Nu s-a putut actualiza ordinea",
         variant: "destructive",
       });
     }
