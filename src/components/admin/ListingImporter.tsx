@@ -473,6 +473,58 @@ const ListingImporter = () => {
                 </div>
               </div>
 
+              <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition"
+                  >
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+                    Opțiuni avansate Scrape.do
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3 grid gap-3 md:grid-cols-3">
+                  <div>
+                    <Label className="text-xs">Wait selector (CSS)</Label>
+                    <Input
+                      value={waitSelector}
+                      onChange={(e) => setWaitSelector(e.target.value)}
+                      placeholder="ex: .listing-images img"
+                      disabled={isLoading}
+                      className="mt-1 h-9 text-xs"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">Așteaptă acest selector înainte de a returna HTML-ul.</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Geo code proxy</Label>
+                    <Input
+                      value={geoCodeOverride}
+                      onChange={(e) => setGeoCodeOverride(e.target.value)}
+                      placeholder="auto (ex: ro, us, de)"
+                      disabled={isLoading}
+                      maxLength={4}
+                      className="mt-1 h-9 text-xs"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">Lasă gol pentru auto-inferare din TLD.</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Custom wait (ms)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="30000"
+                      value={customWaitMs}
+                      onChange={(e) => setCustomWaitMs(e.target.value)}
+                      placeholder="default 5000"
+                      disabled={isLoading}
+                      className="mt-1 h-9 text-xs"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">Întârziere suplimentară după load (max 30000).</p>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+
               <Button
                 onClick={() => handlePreview()}
                 disabled={isLoading || !isValidHttpUrl(url)}
