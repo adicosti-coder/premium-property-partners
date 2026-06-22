@@ -177,8 +177,13 @@ const ListingImporter = () => {
     setImportAttempts(null);
 
     try {
+      const body: Record<string, unknown> = { url: extractUrl, listing_type: listingType, mode: "preview" };
+      if (waitSelector.trim()) body.wait_selector = waitSelector.trim();
+      if (geoCodeOverride.trim()) body.geo_code = geoCodeOverride.trim().toLowerCase();
+      const cw = Number(customWaitMs);
+      if (Number.isFinite(cw) && cw > 0) body.custom_wait = Math.min(30000, Math.max(0, cw));
       const { data, error: fnError } = await supabase.functions.invoke("scrape-listing", {
-        body: { url: extractUrl, listing_type: listingType, mode: "preview" },
+        body,
       });
 
       // Edge function returned non-2xx → data may still contain body with our structured error
