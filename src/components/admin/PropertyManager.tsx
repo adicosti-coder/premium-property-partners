@@ -870,85 +870,66 @@ export default function PropertyManager() {
         </div>
         <p className="text-xs text-muted-foreground">Generează automat sau completează manual textul Expert Insight (The Advisor).</p>
 
-        <Button
-          type="button"
-          onClick={async () => {
-            if (!formData.name) {
-              toast({ title: "Completează numele proprietății", variant: "destructive" });
-              return;
-            }
-            setIsGeneratingInsight(true);
-            try {
-              // Generate RO
-              const { data: roData, error: roErr } = await supabase.functions.invoke("generate-advisor-content", {
-                body: {
-                  propertyName: formData.name,
-                  propertySlug: (editingProperty as any)?.slug || formData.name,
-                  location: formData.location,
-                  size: premiumFields.usable_area || premiumFields.built_area,
-                  bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-                  bathrooms: null,
-                  capacity: formData.capacity ? parseInt(formData.capacity) : null,
-                  floor: premiumFields.floor,
-                  pricePerNight: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
-                  amenities: formData.features ? formData.features.split(",").map(f => f.trim()) : [],
-                  listingType: formData.listing_type || "cazare",
-                  yearBuilt: premiumFields.renovation_year,
-                  energyClass: premiumFields.energy_class,
-                  roi: formData.roi_percentage,
-                  language: "ro",
-                },
-              });
-              if (roErr) throw roErr;
-
-              // Generate EN
-              const { data: enData, error: enErr } = await supabase.functions.invoke("generate-advisor-content", {
-                body: {
-                  propertyName: formData.name,
-                  propertySlug: (editingProperty as any)?.slug || formData.name,
-                  location: formData.location,
-                  size: premiumFields.usable_area || premiumFields.built_area,
-                  bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-                  bathrooms: null,
-                  capacity: formData.capacity ? parseInt(formData.capacity) : null,
-                  floor: premiumFields.floor,
-                  pricePerNight: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
-                  amenities: formData.features ? formData.features.split(",").map(f => f.trim()) : [],
-                  listingType: formData.listing_type || "cazare",
-                  yearBuilt: premiumFields.renovation_year,
-                  energyClass: premiumFields.energy_class,
-                  roi: formData.roi_percentage,
-                  language: "en",
-                },
-              });
-              if (enErr) throw enErr;
-
-              const roInsight = roData?.expertInsight || "";
-              const enInsight = enData?.expertInsight || "";
-
-              setFormData(prev => ({
-                ...prev,
-                expert_insight_ro: roInsight,
-                expert_insight_en: enInsight,
-              }));
-
-              toast({ title: "✅ Expert Insight generat cu succes!" });
-            } catch (err: any) {
-              console.error("Expert Insight generation error:", err);
-              toast({ title: "Eroare la generare", description: err.message, variant: "destructive" });
-            } finally {
-              setIsGeneratingInsight(false);
-            }
-          }}
-          disabled={isGeneratingInsight}
-          className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
-        >
-          {isGeneratingInsight ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează Expert Insight...</>
-          ) : (
-            <><Sparkles className="w-4 h-4 mr-2" />Generează Expert Insight AI</>
-          )}
-        </Button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {(["ro", "en"] as const).map((lang) => (
+            <Button
+              key={lang}
+              type="button"
+              onClick={async () => {
+                if (!formData.name) {
+                  toast({ title: "Completează numele proprietății", variant: "destructive" });
+                  return;
+                }
+                setIsGeneratingInsight(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("generate-advisor-content", {
+                    body: {
+                      propertyName: formData.name,
+                      propertySlug: (editingProperty as any)?.slug || formData.name,
+                      location: formData.location,
+                      size: premiumFields.usable_area || premiumFields.built_area,
+                      bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+                      bathrooms: null,
+                      capacity: formData.capacity ? parseInt(formData.capacity) : null,
+                      floor: premiumFields.floor,
+                      pricePerNight: formData.base_price_per_night ? parseFloat(formData.base_price_per_night) : null,
+                      amenities: formData.features ? formData.features.split(",").map((f) => f.trim()) : [],
+                      listingType: formData.listing_type || "cazare",
+                      yearBuilt: premiumFields.renovation_year,
+                      energyClass: premiumFields.energy_class,
+                      roi: formData.roi_percentage,
+                      language: lang,
+                    },
+                  });
+                  if (error) throw error;
+                  const insight = data?.expertInsight || "";
+                  setFormData((prev) => ({
+                    ...prev,
+                    ...(lang === "ro" ? { expert_insight_ro: insight } : { expert_insight_en: insight }),
+                  }));
+                  toast({ title: `✅ Expert Insight ${lang.toUpperCase()} generat!` });
+                } catch (err: any) {
+                  console.error("Expert Insight generation error:", err);
+                  toast({ title: "Eroare la generare", description: err.message, variant: "destructive" });
+                } finally {
+                  setIsGeneratingInsight(false);
+                }
+              }}
+              disabled={isGeneratingInsight}
+              className={
+                lang === "ro"
+                  ? "w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white"
+                  : "w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white"
+              }
+            >
+              {isGeneratingInsight ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Se generează...</>
+              ) : (
+                <><Sparkles className="w-4 h-4 mr-2" />Generează Expert Insight ({lang.toUpperCase()})</>
+              )}
+            </Button>
+          ))}
+        </div>
 
         <div className="space-y-2">
           <Label>Expert Insight (RO)</Label>
