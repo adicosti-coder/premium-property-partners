@@ -996,7 +996,7 @@ export default function PropertyImageGallery({
             strategy={rectSortingStrategy}
           >
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {sortedImages.map((image) => (
+              {sortedImages.map((image, index) => (
                 <SortableImageItem
                   key={image.id}
                   image={image}
@@ -1005,9 +1005,13 @@ export default function PropertyImageGallery({
                   onDelete={handleDeleteImage}
                   onPreview={handlePreview}
                   onToggleSelect={handleToggleSelect}
+                  onMove={handleMoveImage}
                   deletingId={deletingId}
+                  isReordering={isReordering}
                   isSelectionMode={isSelectionMode}
                   isSelected={selectedImages.has(image.id)}
+                  canMoveLeft={index > 0}
+                  canMoveRight={index < sortedImages.length - 1}
                   t={t}
                 />
               ))}
