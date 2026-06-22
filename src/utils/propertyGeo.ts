@@ -67,6 +67,7 @@ const exactCoordinatesBySlug: Record<string, [number, number]> = {
   'city-of-mara-apartament-cu-2-camere': [21.2148126, 45.753754],
   'ultra-central-piata-unirii-ideal-investitie': [21.2298369, 45.7579403],
   'studio-premium-2025-zona-sagului-utilitati-incluse-management-realtrust': [21.2402, 45.7293],
+  'garsoniera-calea-buziasului-investitie-cu-randament-ridicat-si-management-realtr': [21.260844, 45.730332],
 };
 
 const profiles: GeoProfile[] = [
