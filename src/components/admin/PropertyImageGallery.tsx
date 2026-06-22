@@ -784,7 +784,7 @@ export default function PropertyImageGallery({
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over || active.id === over.id) return;
+    if (!over || active.id === over.id || isReordering) return;
 
     // Use sortedImages (the displayed order) for correct drag-and-drop
     const oldIndex = sortedImages.findIndex(img => img.id === active.id);
@@ -799,44 +799,49 @@ export default function PropertyImageGallery({
       })
     );
 
-    onImagesChange(reorderedImages);
+    onImagesChange(reorderedImages.map((img, index) => ({ ...img, display_order: index, is_primary: index === 0 })));
+    setIsReordering(true);
 
     try {
-      const results = await Promise.all(
-        reorderedImages.map((img) =>
-          supabase
-            .from('property_images')
-            .update({ display_order: img.display_order })
-            .eq('id', img.id)
-        )
-      );
-
-      const failed = results.filter((r: any) => r?.error);
-      if (failed.length > 0) {
-        console.error('Reorder errors:', failed.map((r: any) => r.error));
-        throw new Error(failed[0].error?.message || 'Update failed');
-      }
-
-      // Sync properties.images array (used by public page) + primary image_path
-      const primary = reorderedImages.find((img) => img.is_primary) || reorderedImages[0];
-      if (reorderedImages[0]?.property_id) {
-        await supabase
-          .from('properties')
-          .update({
-            images: reorderedImages.map((i) => i.image_path),
-            image_path: primary?.image_path || reorderedImages[0].image_path,
-          })
-          .eq('id', reorderedImages[0].property_id);
-      }
-
+      await persistImageOrder(reorderedImages);
       toast({ title: "✅ " + (t.admin.properties?.orderUpdated || "Ordine actualizată") });
     } catch (error: any) {
       console.error("Error updating order:", error);
+      onImagesChange(sortedImages);
       toast({
         title: t.admin.error || "Eroare",
         description: error?.message || t.admin.properties?.updateError || "Nu s-a putut actualiza ordinea",
         variant: "destructive",
       });
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
+  const handleMoveImage = async (image: PropertyImage, direction: -1 | 1) => {
+    if (isReordering) return;
+
+    const currentIndex = sortedImages.findIndex((img) => img.id === image.id);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex === -1 || nextIndex < 0 || nextIndex >= sortedImages.length) return;
+
+    const reorderedImages = arrayMove(sortedImages, currentIndex, nextIndex);
+    onImagesChange(reorderedImages.map((img, index) => ({ ...img, display_order: index, is_primary: index === 0 })));
+    setIsReordering(true);
+
+    try {
+      await persistImageOrder(reorderedImages);
+      toast({ title: "✅ " + (t.admin.properties?.orderUpdated || "Ordine actualizată") });
+    } catch (error: any) {
+      console.error("Error moving image:", error);
+      onImagesChange(sortedImages);
+      toast({
+        title: t.admin.error || "Eroare",
+        description: error?.message || t.admin.properties?.updateError || "Nu s-a putut actualiza ordinea",
+        variant: "destructive",
+      });
+    } finally {
+      setIsReordering(false);
     }
   };
 
