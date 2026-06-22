@@ -184,6 +184,7 @@ export default function PropertyManager() {
   const [premiumFields, setPremiumFields] = useState<PremiumFieldsData>({ ...defaultPremiumFields });
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslatingLong, setIsTranslatingLong] = useState(false);
+  const [isTranslatingInsight, setIsTranslatingInsight] = useState(false);
   const [isGeneratingInsight, setIsGeneratingInsight] = useState(false);
 
   // Filters
@@ -942,7 +943,42 @@ export default function PropertyManager() {
           />
         </div>
         <div className="space-y-2">
-          <Label>Expert Insight (EN)</Label>
+          <div className="flex items-center justify-between">
+            <Label>Expert Insight (EN)</Label>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                if (!formData.expert_insight_ro) {
+                  toast({ title: "Completează mai întâi Expert Insight (RO)", variant: "destructive" });
+                  return;
+                }
+                setIsTranslatingInsight(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("translate-text", {
+                    body: { text: formData.expert_insight_ro, sourceLang: "Romanian", targetLang: "English" },
+                  });
+                  if (error) throw new Error(error.message);
+                  if (data?.translated) {
+                    setFormData((prev) => ({ ...prev, expert_insight_en: data.translated }));
+                    toast({ title: "✅ Expert Insight tradus în engleză!" });
+                  } else {
+                    throw new Error("No translation returned");
+                  }
+                } catch (err: any) {
+                  toast({ title: "Eroare la traducere", description: err.message, variant: "destructive" });
+                } finally {
+                  setIsTranslatingInsight(false);
+                }
+              }}
+              disabled={isTranslatingInsight || !formData.expert_insight_ro}
+              className="gap-1.5 h-7 text-xs"
+            >
+              {isTranslatingInsight ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+              Traducere Auto
+            </Button>
+          </div>
           <Textarea
             value={formData.expert_insight_en}
             onChange={(e) => setFormData({ ...formData, expert_insight_en: e.target.value })}
