@@ -95,6 +95,10 @@ const STEPS = [
 const ListingImporter = () => {
   const [step, setStep] = useState(0);
   const [url, setUrl] = useState("");
+  const [waitSelector, setWaitSelector] = useState("");
+  const [geoCodeOverride, setGeoCodeOverride] = useState("");
+  const [customWaitMs, setCustomWaitMs] = useState<string>("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [listingType, setListingType] = useState("vanzare");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
