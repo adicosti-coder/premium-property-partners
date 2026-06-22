@@ -284,10 +284,17 @@ export async function scrapeWithScrapeDo(
     headers: hasCustomHeaders ? customHeaders : undefined,
   };
 
+  // Redact token before logging the full endpoint for traceability.
+  const redactedEndpoint = endpoint.replace(/token=[^&]+/, 'token=***');
   log(
-    `Fetching (render=true, super=true, geoCode=${geoCode}, waitUntil=${waitUntil}, customWait=${customWait}ms, ` +
-    `blockResources=${blockResources}, device=${device}, timeout=${timeoutMs}ms, customHeaders=${hasCustomHeaders})`,
+    `Request params: render=true super=true geoCode=${geoCode} waitUntil=${waitUntil} customWait=${customWait}ms ` +
+    `blockResources=${blockResources} device=${device} timeout=${timeoutMs}ms customHeaders=${hasCustomHeaders}` +
+    (opts.waitSelector ? ` waitSelector=${JSON.stringify(opts.waitSelector)}` : ''),
   );
+  log(`Encoded endpoint: ${redactedEndpoint}`);
+  if (hasCustomHeaders) {
+    log(`Forwarded headers: ${Object.keys(customHeaders).join(', ')}`);
+  }
 
   const { response: resp, attempts, delays } = await fetchWithRetry(
     endpoint,
