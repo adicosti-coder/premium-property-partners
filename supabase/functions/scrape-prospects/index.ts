@@ -517,7 +517,8 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
 }
 
 async function duckduckgoSearch(query: string, max: number): Promise<FreeResult[]> {
-  const { ok, html } = await fetchHtml(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, 10000);
+  const simple = simplifyForWebEngine(query, 6) || query;
+  const { ok, html } = await fetchHtml(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(simple)}`, 10000);
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
