@@ -725,10 +725,69 @@ const ProspectManager = () => {
               <LayoutList className="w-4 h-4 mr-1" /> Listă
             </Button>
           </div>
-          <Button onClick={handleScrape} disabled={isScraping}>
-            {isScraping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
-            {isScraping ? 'Se scanează...' : 'Scanează acum'}
-          </Button>
+          <div className="flex flex-col gap-2 min-w-[260px]">
+            <div className="flex items-center gap-2">
+              <Button onClick={handleScrape} disabled={isScraping} className="flex-1">
+                {isScraping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+                {isScraping ? 'Se scanează…' : 'Scanează acum'}
+              </Button>
+              <div className="flex flex-col items-end gap-0.5 min-w-[110px]">
+                <label htmlFor="query-limit-slider" className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Pachet: <span className="font-bold text-foreground">{queryLimit}</span> kw
+                </label>
+                <Slider
+                  id="query-limit-slider"
+                  value={[queryLimit]}
+                  onValueChange={(v) => setQueryLimit(v[0])}
+                  min={1}
+                  max={30}
+                  step={1}
+                  disabled={isScraping}
+                  className="w-[100px]"
+                  aria-label="Numărul de cuvinte-cheie procesate pe scanare"
+                />
+              </div>
+            </div>
+            {activeJob && (
+              <div className="rounded-md border border-border bg-muted/40 p-2 text-xs space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">
+                    {activeJob.status === 'completed'
+                      ? '✅ Finalizat'
+                      : activeJob.status === 'failed'
+                        ? '❌ Eșuat'
+                        : activeJob.status === 'running'
+                          ? '⚙️ Scanare în fundal'
+                          : '⏳ În așteptare'}
+                  </span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {activeJob.processed_queries}/{activeJob.total_queries || queryLimit}
+                  </span>
+                </div>
+                <Progress
+                  value={activeJob.total_queries > 0
+                    ? Math.min(100, Math.round((activeJob.processed_queries / activeJob.total_queries) * 100))
+                    : (activeJob.status === 'running' ? 5 : 0)}
+                  className="h-1.5"
+                />
+                {activeJob.current_keyword && activeJob.status === 'running' && (
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    <span className="text-foreground/70">{activeJob.current_platform}</span>
+                    {' · '}
+                    <span className="italic">"{activeJob.current_keyword}"</span>
+                  </div>
+                )}
+                {activeJob.new_listings > 0 && (
+                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                    {activeJob.new_listings} anunțuri noi colectate
+                  </div>
+                )}
+                {activeJob.error_message && (
+                  <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
