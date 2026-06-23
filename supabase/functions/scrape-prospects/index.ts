@@ -723,6 +723,8 @@ Deno.serve(async (req) => {
     // edge budget, which caused "Scanează acum" to hang silently. Manual scans
     // process a rotated slice; full coverage comes from repeated cron runs.
     let queryLimit = 8;
+    let jobId: string | null = null;
+    let asyncMode = false;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -733,7 +735,37 @@ Deno.serve(async (req) => {
       if (typeof body?.query_limit === 'number') {
         queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 30);
       }
+      if (typeof body?.job_id === 'string' && body.job_id.length > 0) jobId = body.job_id;
+      if (body?.async_mode === true) asyncMode = true;
     } catch { /* no body */ }
+
+    // ── Structured logging helpers (Sentry-friendly) ─────────────────────
+    function logScrapeError(
+      where: string,
+      err: unknown,
+      ctx: Record<string, unknown> = {},
+    ) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      // Structured single-line log → easy to forward to Sentry/Logflare.
+      console.error(JSON.stringify({
+        kind: 'scrape_prospects_error',
+        where,
+        message: e.message,
+        stack: e.stack?.split('\n').slice(0, 5).join(' | '),
+        job_id: jobId,
+        ...ctx,
+      }));
+    }
+
+    const jobErrors: Array<Record<string, unknown>> = [];
+    async function updateJob(patch: Record<string, unknown>) {
+      if (!jobId) return;
+      try {
+        await supabase.from('prospect_scan_jobs').update(patch).eq('id', jobId);
+      } catch (e) {
+        console.warn('updateJob failed', (e as Error).message);
+      }
+    }
 
     const results: any[] = [];
     const errors: string[] = [];
