@@ -282,7 +282,9 @@ const ProspectManager = () => {
     current_platform: string | null;
     new_listings: number;
     error_message: string | null;
+    errors?: Array<Record<string, any>> | null;
   } | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   // Persist slider value
   useEffect(() => {
