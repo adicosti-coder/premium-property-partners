@@ -1026,39 +1026,38 @@ Deno.serve(async (req) => {
       const batchPromises = batch.map(async ({ platform, query }) => {
         console.log(`Searching ${platform}: ${query}`);
         try {
-          const searchResp = await fetch('https://api.firecrawl.dev/v1/search', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${firecrawlKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query,
-              limit: maxResults,
-              lang: 'ro',
-              country: 'ro',
-              scrapeOptions: { formats: ['markdown'] },
-            }),
+          const outcome = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
+            maxAttempts: 3,
+            logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
           });
 
-          if (!searchResp.ok) {
-            const errBody = await searchResp.text().catch(() => '');
-            const errObj = new Error(`Firecrawl HTTP ${searchResp.status}: ${errBody.slice(0, 300)}`);
-            // Surface 402 (credits), 401 (key), 429 (rate-limit) clearly.
-            logScrapeError('firecrawl_search_http', errObj, {
-              platform, keyword: query, http_status: searchResp.status,
+          if (!outcome.ok) {
+            const msg = `${outcome.errorMessage || 'Firecrawl failed'} (after ${outcome.attempts} attempts)`;
+            logScrapeError('firecrawl_search_http', new Error(msg), {
+              platform, keyword: query, http_status: outcome.status, attempts: outcome.attempts,
             });
             jobErrors.push({
-              platform, keyword: query, http_status: searchResp.status,
-              message: errObj.message, phase: 'firecrawl_search',
+              platform, keyword: query, http_status: outcome.status ?? null,
+              message: msg, phase: 'firecrawl_search', retryable: true, attempts: outcome.attempts,
             });
-            errors.push(`${platform} [${query.slice(0, 60)}]: HTTP ${searchResp.status}`);
+            errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
             return;
           }
 
-          const searchData = await searchResp.json();
-          const searchResults = searchData?.data || [];
-          console.log(`Found ${searchResults.length} results from ${platform}`);
+          if (outcome.source === 'fallback_duckduckgo') {
+            console.warn(JSON.stringify({
+              kind: 'firecrawl_fallback_used', platform, keyword: query.slice(0, 120),
+              results: outcome.results.length, last_status: outcome.status,
+            }));
+            jobErrors.push({
+              platform, keyword: query, http_status: outcome.status ?? null,
+              message: `Firecrawl indisponibil — fallback DuckDuckGo (${outcome.results.length} URL-uri)`,
+              phase: 'firecrawl_search', retryable: true, attempts: outcome.attempts, fallback: true,
+            });
+          }
+
+          const searchResults = outcome.results;
+          console.log(`Found ${searchResults.length} results from ${platform} (source=${outcome.source})`);
 
           for (const result of searchResults) {
             const url = result.url;
