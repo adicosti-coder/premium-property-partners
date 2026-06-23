@@ -1742,15 +1742,6 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     setRecentScanPulse(true);
     try {
       const isRescan = mode === "rescan";
-      const { data, error } = await supabase.functions.invoke("scrape-prospects", {
-        body: { max_results: isRescan ? 20 : 10, only_new_sources: isRescan, preserve_agency_filter: true, query_limit: 8 },
-      });
-  const handleScrape = async (mode: "scan" | "rescan" = "scan") => {
-    setIsScraping(true);
-    setActiveScanMode(mode);
-    setRecentScanPulse(true);
-    try {
-      const isRescan = mode === "rescan";
       const { data: userRes } = await supabase.auth.getUser();
       const userId = userRes?.user?.id;
       if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
