@@ -2034,6 +2034,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             new_listings: row.new_listings ?? 0,
             error_message: row.error_message,
             updated_at: row.updated_at ?? new Date().toISOString(),
+            pending_queries: Array.isArray(row.pending_queries) ? row.pending_queries : [],
           } : prev);
 
           if (row.status === "completed") {
