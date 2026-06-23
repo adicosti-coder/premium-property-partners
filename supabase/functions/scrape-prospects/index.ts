@@ -917,6 +917,21 @@ Deno.serve(async (req) => {
             }),
           });
 
+          if (!searchResp.ok) {
+            const errBody = await searchResp.text().catch(() => '');
+            const errObj = new Error(`Firecrawl HTTP ${searchResp.status}: ${errBody.slice(0, 300)}`);
+            // Surface 402 (credits), 401 (key), 429 (rate-limit) clearly.
+            logScrapeError('firecrawl_search_http', errObj, {
+              platform, keyword: query, http_status: searchResp.status,
+            });
+            jobErrors.push({
+              platform, keyword: query, http_status: searchResp.status,
+              message: errObj.message, phase: 'firecrawl_search',
+            });
+            errors.push(`${platform} [${query.slice(0, 60)}]: HTTP ${searchResp.status}`);
+            return;
+          }
+
           const searchData = await searchResp.json();
           const searchResults = searchData?.data || [];
           console.log(`Found ${searchResults.length} results from ${platform}`);
