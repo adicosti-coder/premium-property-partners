@@ -270,8 +270,8 @@ const ProspectManager = () => {
   // ── Scan-job state ───────────────────────────────────────────────────
   const [queryLimit, setQueryLimit] = useState<number>(() => {
     const stored = typeof window !== 'undefined' ? window.localStorage.getItem('prospect_scan_query_limit') : null;
-    const n = stored ? parseInt(stored, 10) : 8;
-    return Number.isFinite(n) && n >= 1 && n <= 30 ? n : 8;
+    const n = stored ? parseInt(stored, 10) : 25;
+    return Number.isFinite(n) && n >= 1 && n <= 100 ? n : 25;
   });
   const [activeJob, setActiveJob] = useState<{
     id: string;
@@ -813,7 +813,7 @@ const ProspectManager = () => {
                   value={[queryLimit]}
                   onValueChange={(v) => setQueryLimit(v[0])}
                   min={1}
-                  max={30}
+                  max={100}
                   step={1}
                   disabled={isScraping}
                   className="w-[100px]"

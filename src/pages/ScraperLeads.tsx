@@ -1747,7 +1747,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
 
       // Create job row to enable async-mode + realtime progress tracking.
-      const queryLimit = isRescan ? 12 : 8;
+      const queryLimit = isRescan ? 40 : 25;
       const { data: jobRow, error: jobErr } = await supabase
         .from("prospect_scan_jobs")
         .insert({
