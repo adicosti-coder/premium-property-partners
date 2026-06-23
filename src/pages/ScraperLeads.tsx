@@ -1971,6 +1971,48 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     }
   };
 
+  const closeStuckJob = useCallback(async (job: NonNullable<typeof activeJob>) => {
+    if (!job || !["pending", "running"].includes(job.status) || locallyClosedJobsRef.current.has(job.id)) return;
+    locallyClosedJobsRef.current.add(job.id);
+    const message = "Scanarea nu a mai raportat progres și a fost oprită automat ca să nu rămână blocată.";
+    try {
+      await supabase.from("prospect_scan_jobs").update({
+        status: "failed",
+        error_message: message,
+        finished_at: new Date().toISOString(),
+      } as any).eq("id", job.id);
+    } catch {
+      // UI fallback still closes the stuck state even if DB update is blocked.
+    }
+    setActiveJob((prev) => prev?.id === job.id ? { ...prev, status: "failed", error_message: message, updated_at: new Date().toISOString() } : prev);
+    setIsScraping(false);
+    setActiveScanMode(null);
+    toast.error(message, { description: "Poți porni din nou scanarea; istoricul păstrează detaliile sesiunii." });
+    recordScanEntry({
+      status: "failed",
+      total_queries: job.total_queries ?? 0,
+      processed_queries: job.processed_queries ?? 0,
+      batches_total: Math.max(1, Math.ceil((job.total_queries ?? 0) / 25)),
+      batches_done: Math.max(0, Math.floor((job.processed_queries ?? 0) / 25)),
+      new_listings: job.new_listings ?? 0,
+      duplicate_skipped: 0,
+      blacklisted_skipped: 0,
+      error_message: message,
+      error_details: JSON.stringify({ job_id: job.id, last_update: job.updated_at, guard_ms: SCAN_STUCK_AFTER_MS }, null, 2),
+    });
+  }, [recordScanEntry]);
+
+  useEffect(() => {
+    if (!activeJob || !["pending", "running"].includes(activeJob.status)) return;
+    const check = () => {
+      const lastUpdate = new Date(activeJob.updated_at || Date.now()).getTime();
+      if (Date.now() - lastUpdate > SCAN_STUCK_AFTER_MS) void closeStuckJob(activeJob);
+    };
+    check();
+    const timer = window.setInterval(check, 10_000);
+    return () => window.clearInterval(timer);
+  }, [activeJob, closeStuckJob]);
+
   // Realtime subscription to active scan job.
   useEffect(() => {
     if (!activeJob?.id) return;
