@@ -1367,6 +1367,7 @@ Deno.serve(async (req) => {
       (globalThis as any).EdgeRuntime?.waitUntil?.((async () => {
         try {
           const payload = await runScan();
+          if (timedOut) return;
           await updateJob({
             status: 'completed',
             finished_at: new Date().toISOString(),
