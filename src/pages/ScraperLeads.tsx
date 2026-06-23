@@ -716,6 +716,17 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   useEffect(() => {
     try { localStorage.setItem("prospect_auto_fallback", autoFallback ? "1" : "0"); } catch {}
   }, [autoFallback]);
+  const [autoFallbackThreshold, setAutoFallbackThreshold] = useState<number>(() => {
+    if (typeof window === "undefined") return 1;
+    const n = parseInt(window.localStorage.getItem("prospect_auto_fallback_threshold") || "1", 10);
+    return Number.isFinite(n) ? Math.min(Math.max(0, n), 20) : 1;
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_auto_fallback_threshold", String(autoFallbackThreshold)); } catch {}
+  }, [autoFallbackThreshold]);
+  // Marker used to scope "session CSV" + retry actions to the current scan
+  const sessionStartRef = useRef<number>(Date.now());
+
 
   const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>(() => getScanHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
