@@ -16,6 +16,8 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -662,6 +664,12 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [importingLeadId, setImportingLeadId] = useState<string | null>(null);
   const [bulkImportingSmart, setBulkImportingSmart] = useState(false);
   const [bulkImportingHospitality, setBulkImportingHospitality] = useState(false);
+  const [queryLimit, setQueryLimit] = useState<number>(() => {
+    if (typeof window === "undefined") return 25;
+    const v = parseInt(window.localStorage.getItem("prospect_scan_query_limit") || "25", 10);
+    return Number.isFinite(v) && v >= 1 && v <= 100 ? v : 25;
+  });
+  const [keywordsPreviewOpen, setKeywordsPreviewOpen] = useState(false);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -671,6 +679,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   useEffect(() => { localStorage.setItem("scraper:sortBy", sortBy); }, [sortBy]);
   useEffect(() => { localStorage.setItem("scraper:sortDir", sortDir); }, [sortDir]);
   useEffect(() => { localStorage.setItem("scraper:viewMode", viewMode); }, [viewMode]);
+  useEffect(() => { localStorage.setItem("prospect_scan_query_limit", String(queryLimit)); }, [queryLimit]);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
@@ -1736,7 +1745,41 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     onStatusChange: (status) => selectedLead && handleStatusChange(selectedLead.id, status),
   });
 
+  // ── Active keywords + duplicate detection for current scan ────────────
+  const activeKeywords = useMemo(
+    () => (searchKeywords || []).filter((k) => k.is_active),
+    [searchKeywords],
+  );
+  const duplicateKeywords = useMemo(() => {
+    const seen = new Map<string, number>();
+    for (const k of activeKeywords) {
+      const key = `${(k.keyword || "").trim().toLowerCase()}::${k.platform}`;
+      seen.set(key, (seen.get(key) ?? 0) + 1);
+    }
+    return Array.from(seen.entries())
+      .filter(([, n]) => n > 1)
+      .map(([key, n]) => {
+        const [keyword, platform] = key.split("::");
+        return { keyword, platform, count: n };
+      });
+  }, [activeKeywords]);
+  const uniqueActiveKeywords = useMemo(() => {
+    const seen = new Set<string>();
+    const out: SearchKeyword[] = [];
+    for (const k of activeKeywords) {
+      const key = `${(k.keyword || "").trim().toLowerCase()}::${k.platform}`;
+      if (!seen.has(key)) { seen.add(key); out.push(k); }
+    }
+    return out;
+  }, [activeKeywords]);
+
   const handleScrape = async (mode: "scan" | "rescan" = "scan") => {
+    if (duplicateKeywords.length > 0) {
+      toast.warning(
+        `${duplicateKeywords.length} cuvinte cheie duplicate detectate — vor fi scanate o singură dată.`,
+        { description: duplicateKeywords.slice(0, 3).map((d) => `"${d.keyword}" (${d.platform}) ×${d.count}`).join(", ") },
+      );
+    }
     setIsScraping(true);
     setActiveScanMode(mode);
     setRecentScanPulse(true);
@@ -1747,12 +1790,12 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
 
       // Create job row to enable async-mode + realtime progress tracking.
-      const queryLimit = isRescan ? 40 : 25;
+      const effectiveLimit = isRescan ? Math.min(100, Math.max(queryLimit, 40)) : queryLimit;
       const { data: jobRow, error: jobErr } = await supabase
         .from("prospect_scan_jobs")
         .insert({
           created_by: userId,
-          query_limit: queryLimit,
+          query_limit: effectiveLimit,
           max_results: isRescan ? 20 : 10,
           triggered_by: isRescan ? "manual_rescan_ui" : "manual_scan_ui",
         } as any)
@@ -1776,7 +1819,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           max_results: isRescan ? 20 : 10,
           only_new_sources: isRescan,
           preserve_agency_filter: true,
-          query_limit: queryLimit,
+          query_limit: effectiveLimit,
           job_id: (jobRow as any).id,
           async_mode: true,
         },
@@ -2565,6 +2608,63 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             </div>
           </div>
 
+          {/* ── Scan Controls: query limit slider + duplicates + active keywords ── */}
+          <div className="mb-3 rounded-md border border-border bg-muted/30 p-3 text-xs space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 min-w-[260px] flex-1">
+                <span className="text-muted-foreground whitespace-nowrap">
+                  Pachet scanare: <span className="font-bold text-foreground tabular-nums">{queryLimit}</span> kw
+                </span>
+                <Slider
+                  className="flex-1 max-w-[260px]"
+                  value={[queryLimit]}
+                  min={1}
+                  max={100}
+                  step={1}
+                  onValueChange={(v) => setQueryLimit(v[0] ?? 25)}
+                  disabled={isScraping}
+                />
+              </div>
+              <span className="text-muted-foreground">
+                {uniqueActiveKeywords.length} kw active · {Math.max(1, Math.ceil(Math.min(uniqueActiveKeywords.length, queryLimit) / 25))} loturi (×25)
+              </span>
+            </div>
+
+            {duplicateKeywords.length > 0 && (
+              <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300">
+                ⚠️ {duplicateKeywords.length} duplicat(e) detectat(e): {duplicateKeywords.slice(0, 4).map((d) => `"${d.keyword}" (${d.platform}) ×${d.count}`).join(", ")}
+                {duplicateKeywords.length > 4 ? "…" : ""}. Vor fi scanate o singură dată.
+              </div>
+            )}
+
+            <Collapsible open={keywordsPreviewOpen} onOpenChange={setKeywordsPreviewOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
+                  {keywordsPreviewOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  Vezi cuvintele cheie active incluse ({uniqueActiveKeywords.length})
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                {uniqueActiveKeywords.length === 0 ? (
+                  <div className="text-[11px] text-muted-foreground italic">Nu există cuvinte cheie active.</div>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                    {uniqueActiveKeywords.slice(0, queryLimit).map((k) => (
+                      <Badge key={k.id} variant="outline" className={cn("text-[10px] font-normal", sourceColors[k.platform] || sourceColors["General"])}>
+                        {k.keyword} <span className="opacity-60 ml-1">· {k.platform}</span>
+                      </Badge>
+                    ))}
+                    {uniqueActiveKeywords.length > queryLimit && (
+                      <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
+                        +{uniqueActiveKeywords.length - queryLimit} excluse de limită
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+
           {activeJob && (
             <div className="mb-4 rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1.5">
               <div className="flex items-center justify-between gap-2">
@@ -2587,6 +2687,35 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   : (activeJob.status === "running" ? 5 : 0)}
                 className="h-2"
               />
+              {/* Batch breakdown (groups of 25) */}
+              {activeJob.total_queries > 0 && (() => {
+                const BATCH = 25;
+                const totalBatches = Math.max(1, Math.ceil(activeJob.total_queries / BATCH));
+                const done = activeJob.processed_queries;
+                return (
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {Array.from({ length: totalBatches }).map((_, i) => {
+                      const start = i * BATCH;
+                      const end = Math.min(activeJob.total_queries, start + BATCH);
+                      const size = end - start;
+                      const batchDone = Math.min(size, Math.max(0, done - start));
+                      const status =
+                        batchDone === 0 ? "pending"
+                        : batchDone >= size ? "done"
+                        : "running";
+                      const cls =
+                        status === "done" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                        : status === "running" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 animate-pulse"
+                        : "bg-muted text-muted-foreground border-border";
+                      return (
+                        <Badge key={i} variant="outline" className={cn("text-[10px] font-normal", cls)}>
+                          Lotul {i + 1} ({size} kw) · {status === "done" ? "Finalizat" : status === "running" ? `${batchDone}/${size}` : "În așteptare"}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
               {activeJob.current_keyword && activeJob.status === "running" && (
                 <div className="text-[11px] text-muted-foreground truncate">
                   <span className="text-foreground/70">{activeJob.current_platform || "—"}</span>
