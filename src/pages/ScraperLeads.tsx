@@ -1,4 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import {
+  appendScanHistory,
+  clearScanHistory,
+  exportScanReportPdf,
+  getScanHistory,
+  type ScanHistoryEntry,
+} from "@/lib/scanHistory";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -670,6 +677,40 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     return Number.isFinite(v) && v >= 1 && v <= 100 ? v : 25;
   });
   const [keywordsPreviewOpen, setKeywordsPreviewOpen] = useState(false);
+
+  // ── Scan history, Safe Mode & timing ────────────────────────────────
+  const [safeMode, setSafeMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("prospect_scan_safe_mode") === "1";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_scan_safe_mode", safeMode ? "1" : "0"); } catch {}
+  }, [safeMode]);
+  const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>(() => getScanHistory());
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const scanContextRef = useRef<{
+    startedAt: number;
+    mode: "scan" | "rescan" | "simulated";
+    queryLimit: number;
+    simulated: boolean;
+  } | null>(null);
+  const recordScanEntry = useCallback((partial: Omit<ScanHistoryEntry,
+    "id" | "started_at" | "ended_at" | "duration_ms" | "mode" | "query_limit">) => {
+    const ctx = scanContextRef.current;
+    if (!ctx) return;
+    const endedAt = Date.now();
+    const entry = appendScanHistory({
+      started_at: new Date(ctx.startedAt).toISOString(),
+      ended_at: new Date(endedAt).toISOString(),
+      duration_ms: endedAt - ctx.startedAt,
+      mode: ctx.mode,
+      query_limit: ctx.queryLimit,
+      ...partial,
+    });
+    setScanHistory((prev) => [entry, ...prev].slice(0, 50));
+    scanContextRef.current = null;
+  }, []);
+  const simulationTimerRef = useRef<number | null>(null);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -1773,6 +1814,69 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     return out;
   }, [activeKeywords]);
 
+  const runSimulatedScan = useCallback((mode: "scan" | "rescan", effectiveLimit: number) => {
+    const total = Math.max(1, Math.min(uniqueActiveKeywords.length || effectiveLimit, effectiveLimit));
+    const fakeId = `sim-${Date.now()}`;
+    scanContextRef.current = {
+      startedAt: Date.now(),
+      mode: "simulated",
+      queryLimit: effectiveLimit,
+      simulated: true,
+    };
+    setIsScraping(true);
+    setActiveScanMode(mode);
+    setRecentScanPulse(true);
+    setActiveJob({
+      id: fakeId,
+      status: "running",
+      processed_queries: 0,
+      total_queries: total,
+      current_keyword: null,
+      current_platform: null,
+      new_listings: 0,
+      error_message: null,
+    });
+    let processed = 0;
+    let fakeFound = 0;
+    const tick = () => {
+      processed += 1;
+      if (Math.random() < 0.35) fakeFound += 1;
+      const kw = uniqueActiveKeywords[processed - 1];
+      setActiveJob((prev) => prev && prev.id === fakeId ? {
+        ...prev,
+        processed_queries: processed,
+        new_listings: fakeFound,
+        current_keyword: kw?.keyword ?? `sim-keyword-${processed}`,
+        current_platform: kw?.platform ?? "Simulat",
+      } : prev);
+      if (processed >= total) {
+        setActiveJob((prev) => prev && prev.id === fakeId ? { ...prev, status: "completed" } : prev);
+        setIsScraping(false);
+        setActiveScanMode(null);
+        toast.success(`Simulare completă — ${fakeFound} prospecți simulați (fără credite consumate).`);
+        recordScanEntry({
+          status: "simulated",
+          total_queries: total,
+          processed_queries: processed,
+          batches_total: Math.max(1, Math.ceil(total / 25)),
+          batches_done: Math.max(1, Math.ceil(total / 25)),
+          new_listings: fakeFound,
+          duplicate_skipped: 0,
+          blacklisted_skipped: 0,
+        });
+        setTimeout(() => { setActiveJob(null); setRecentScanPulse(false); }, 3500);
+        simulationTimerRef.current = null;
+        return;
+      }
+      simulationTimerRef.current = window.setTimeout(tick, 120 + Math.random() * 180);
+    };
+    simulationTimerRef.current = window.setTimeout(tick, 200);
+  }, [uniqueActiveKeywords, recordScanEntry]);
+
+  useEffect(() => () => {
+    if (simulationTimerRef.current) window.clearTimeout(simulationTimerRef.current);
+  }, []);
+
   const handleScrape = async (mode: "scan" | "rescan" = "scan") => {
     if (duplicateKeywords.length > 0) {
       toast.warning(
@@ -1780,17 +1884,29 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         { description: duplicateKeywords.slice(0, 3).map((d) => `"${d.keyword}" (${d.platform}) ×${d.count}`).join(", ") },
       );
     }
+    const isRescan = mode === "rescan";
+    const effectiveLimit = isRescan ? Math.min(100, Math.max(queryLimit, 40)) : queryLimit;
+
+    if (safeMode) {
+      toast.info("Mod Simulare activ — nu consumă credite Firecrawl.");
+      runSimulatedScan(mode, effectiveLimit);
+      return;
+    }
+
     setIsScraping(true);
     setActiveScanMode(mode);
     setRecentScanPulse(true);
+    scanContextRef.current = {
+      startedAt: Date.now(),
+      mode,
+      queryLimit: effectiveLimit,
+      simulated: false,
+    };
     try {
-      const isRescan = mode === "rescan";
       const { data: userRes } = await supabase.auth.getUser();
       const userId = userRes?.user?.id;
       if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
 
-      // Create job row to enable async-mode + realtime progress tracking.
-      const effectiveLimit = isRescan ? Math.min(100, Math.max(queryLimit, 40)) : queryLimit;
       const { data: jobRow, error: jobErr } = await supabase
         .from("prospect_scan_jobs")
         .insert({
@@ -1829,7 +1945,20 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       toast.success(`${isRescan ? "Rescan" : "Scanare"} pornit în fundal — vezi bara de progres.`);
     } catch (err: any) {
       console.error("[ScraperLeads] handleScrape failed", err);
-      toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${err.message || "Necunoscută"}`);
+      const msg = err?.message || "Necunoscută";
+      toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${msg}`);
+      recordScanEntry({
+        status: "failed",
+        total_queries: 0,
+        processed_queries: 0,
+        batches_total: 0,
+        batches_done: 0,
+        new_listings: 0,
+        duplicate_skipped: 0,
+        blacklisted_skipped: 0,
+        error_message: msg,
+        error_details: (() => { try { return JSON.stringify(err, Object.getOwnPropertyNames(err)).slice(0, 2000); } catch { return String(err); } })(),
+      });
       setIsScraping(false);
       setActiveScanMode(null);
     }
@@ -1879,17 +2008,44 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
             queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
             queryClient.invalidateQueries({ queryKey: ["scraper-search-keywords"] });
+            recordScanEntry({
+              status: "completed",
+              total_queries: row.total_queries ?? 0,
+              processed_queries: row.processed_queries ?? 0,
+              batches_total: Math.max(1, Math.ceil((row.total_queries ?? 0) / 25)),
+              batches_done: Math.max(1, Math.ceil((row.processed_queries ?? 0) / 25)),
+              new_listings: found,
+              duplicate_skipped: row.duplicate_skipped ?? 0,
+              blacklisted_skipped: row.blacklisted_skipped ?? 0,
+            });
             setTimeout(() => { setActiveJob(null); setRecentScanPulse(false); }, 4000);
           } else if (row.status === "failed") {
             toast.error(`Scanare eșuată: ${row.error_message || "necunoscut"}`);
             setIsScraping(false);
             setActiveScanMode(null);
+            recordScanEntry({
+              status: "failed",
+              total_queries: row.total_queries ?? 0,
+              processed_queries: row.processed_queries ?? 0,
+              batches_total: Math.max(1, Math.ceil((row.total_queries ?? 0) / 25)),
+              batches_done: Math.max(0, Math.floor((row.processed_queries ?? 0) / 25)),
+              new_listings: row.new_listings ?? 0,
+              duplicate_skipped: row.duplicate_skipped ?? 0,
+              blacklisted_skipped: row.blacklisted_skipped ?? 0,
+              error_message: row.error_message || "necunoscut",
+              error_details: JSON.stringify({
+                failed_batches: row.failed_batches ?? null,
+                last_error_at: row.last_error_at ?? null,
+                current_keyword: row.current_keyword ?? null,
+                current_platform: row.current_platform ?? null,
+              }, null, 2),
+            });
           }
         },
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [activeJob?.id, queryClient]);
+  }, [activeJob?.id, queryClient, recordScanEntry]);
 
   // Resume tracking any running job on mount.
   useEffect(() => {
@@ -2628,7 +2784,54 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <span className="text-muted-foreground">
                 {uniqueActiveKeywords.length} kw active · {Math.max(1, Math.ceil(Math.min(uniqueActiveKeywords.length, queryLimit) / 25))} loturi (×25)
               </span>
+              <div className="flex items-center gap-1.5 ml-auto">
+                <Badge variant="outline" className="text-[10px] font-normal bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300" title="prospect_listings.source_url are constraint UNIQUE — duplicatele nu pot fi inserate la nivel de DB">
+                  🛡 Dedup DB · UNIQUE(source_url)
+                </Badge>
+                <label className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors">
+                  <Switch checked={safeMode} onCheckedChange={setSafeMode} disabled={isScraping} />
+                  <span className="text-[11px] font-medium">Mod Simulare</span>
+                </label>
+                <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-[11px]" onClick={() => setHistoryOpen(true)}>
+                  <History className="w-3.5 h-3.5" /> Istoric ({scanHistory.length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 gap-1 text-[11px]"
+                  disabled={!scanHistory.length && !activeJob}
+                  onClick={() => exportScanReportPdf(
+                    activeJob ? {
+                      id: activeJob.id,
+                      started_at: new Date(scanContextRef.current?.startedAt ?? Date.now()).toISOString(),
+                      ended_at: new Date().toISOString(),
+                      duration_ms: Date.now() - (scanContextRef.current?.startedAt ?? Date.now()),
+                      mode: (scanContextRef.current?.mode ?? "scan"),
+                      status: activeJob.status === "completed" ? "completed" : activeJob.status === "failed" ? "failed" : "simulated",
+                      query_limit: scanContextRef.current?.queryLimit ?? queryLimit,
+                      total_queries: activeJob.total_queries,
+                      processed_queries: activeJob.processed_queries,
+                      batches_total: Math.max(1, Math.ceil(activeJob.total_queries / 25)),
+                      batches_done: Math.max(0, Math.floor(activeJob.processed_queries / 25)),
+                      new_listings: activeJob.new_listings,
+                      duplicate_skipped: 0,
+                      blacklisted_skipped: 0,
+                      error_message: activeJob.error_message,
+                    } as ScanHistoryEntry : null,
+                    scanHistory,
+                  )}
+                >
+                  <FileText className="w-3.5 h-3.5" /> Export PDF
+                </Button>
+              </div>
             </div>
+
+            {safeMode && (
+              <div className="rounded border border-sky-500/40 bg-sky-500/10 px-2 py-1.5 text-[11px] text-sky-700 dark:text-sky-300">
+                🧪 Mod Simulare activ — următoarea „Scanează acum” va parcurge loturile vizual, fără request-uri reale și fără consum de credite Firecrawl.
+              </div>
+            )}
+
 
             {duplicateKeywords.length > 0 && (
               <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300">
@@ -3834,6 +4037,95 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
       {/* Blacklist Modal */}
       <BlacklistModal open={blacklistOpen} onOpenChange={setBlacklistOpen} />
+
+      {/* Scan History Dialog */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-4 h-4" /> Istoric scanări ({scanHistory.length})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+            <p className="text-xs text-muted-foreground">
+              Stocat local (browser). Maxim 50 înregistrări. Include și sesiuni de simulare și erori detaliate.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!scanHistory.length}
+                onClick={() => exportScanReportPdf(null, scanHistory)}
+                className="gap-1.5"
+              >
+                <FileText className="w-3.5 h-3.5" /> Export PDF
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={!scanHistory.length}
+                onClick={() => {
+                  if (!confirm("Ștergi tot istoricul local de scanări?")) return;
+                  clearScanHistory();
+                  setScanHistory([]);
+                  toast.success("Istoric șters.");
+                }}
+                className="gap-1.5 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Șterge
+              </Button>
+            </div>
+          </div>
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            {scanHistory.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-12">
+                Niciun istoric — pornește o scanare sau o simulare pentru a popula lista.
+              </div>
+            ) : (
+              <div className="space-y-2 py-2">
+                {scanHistory.map((e) => {
+                  const statusCls =
+                    e.status === "completed" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
+                    : e.status === "failed" ? "bg-destructive/10 border-destructive/30 text-destructive"
+                    : "bg-sky-500/10 border-sky-500/30 text-sky-700 dark:text-sky-300";
+                  return (
+                    <div key={e.id} className="rounded-md border border-border bg-card p-3 text-xs space-y-1.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={cn("text-[10px]", statusCls)}>
+                            {e.status === "completed" ? "✅ Completă" : e.status === "failed" ? "❌ Eșuată" : "🧪 Simulată"}
+                          </Badge>
+                          <span className="text-muted-foreground">{new Date(e.started_at).toLocaleString("ro-RO")}</span>
+                          <span className="text-muted-foreground">· {e.mode}</span>
+                        </div>
+                        <span className="text-muted-foreground tabular-nums">
+                          {Math.round(e.duration_ms / 1000)}s
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                        <div><span className="text-muted-foreground">Procesate:</span> <span className="font-mono">{e.processed_queries}/{e.total_queries}</span></div>
+                        <div><span className="text-muted-foreground">Loturi:</span> <span className="font-mono">{e.batches_done}/{e.batches_total}</span></div>
+                        <div><span className="text-muted-foreground">Noi:</span> <span className="font-mono text-emerald-600">{e.new_listings}</span></div>
+                        <div><span className="text-muted-foreground">Dup. ignorate:</span> <span className="font-mono">{e.duplicate_skipped}</span></div>
+                      </div>
+                      {e.error_message && (
+                        <div className="text-[11px] text-destructive">⚠ {e.error_message}</div>
+                      )}
+                      {e.error_details && (
+                        <details className="text-[10px]">
+                          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Detalii tehnice</summary>
+                          <pre className="mt-1 p-2 bg-muted/50 rounded overflow-x-auto whitespace-pre-wrap break-all max-h-40">{e.error_details}</pre>
+                        </details>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
 
       <Footer />
     </>
