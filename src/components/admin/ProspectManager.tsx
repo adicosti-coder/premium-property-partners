@@ -313,18 +313,31 @@ const ProspectManager = () => {
 
   const handleScrape = async () => {
     setIsScraping(true);
+    toast({
+      title: "Scanare pornită…",
+      description: "Verific ~8 cuvinte-cheie rotite. Durează ~30-90s.",
+    });
     try {
       const { data, error } = await supabase.functions.invoke('scrape-prospects', {
-        body: { max_results: 10 },
+        body: { max_results: 10, query_limit: 8 },
       });
       if (error) throw error;
+      if (data && data.success === false) {
+        throw new Error(data.error || 'Scanarea a eșuat');
+      }
+      const found = data?.new_listings ?? data?.count ?? 0;
+      const errs = data?.errors?.length ?? 0;
       toast({
-        title: "Scanare completă!",
-        description: `${data?.new_listings || 0} anunțuri noi găsite.${data?.errors?.length ? ` ${data.errors.length} erori.` : ''}`,
+        title: found > 0 ? "Scanare completă! 🎯" : "Scanare completă",
+        description: `${found} anunțuri noi.${errs ? ` ${errs} erori.` : ''}${data?.archived_skipped ? ` ${data.archived_skipped} filtrate.` : ''}`,
       });
       fetchListings();
     } catch (err: any) {
-      toast({ title: "Eroare scanare", description: err.message, variant: "destructive" });
+      toast({
+        title: "Eroare scanare",
+        description: err?.message || "Edge function nu a răspuns. Reîncearcă cu mai puține keyword-uri.",
+        variant: "destructive",
+      });
     } finally {
       setIsScraping(false);
     }

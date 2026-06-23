@@ -719,6 +719,10 @@ Deno.serve(async (req) => {
     let onlyNewSources = false;
     let preserveAgencyFilter = true;
     let discoveryMode = false;
+    // Cap queries per invocation — 78 active keywords × ~15s/Firecrawl >> 150s
+    // edge budget, which caused "Scanează acum" to hang silently. Manual scans
+    // process a rotated slice; full coverage comes from repeated cron runs.
+    let queryLimit = 8;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -726,6 +730,9 @@ Deno.serve(async (req) => {
       onlyNewSources = body?.only_new_sources === true;
       preserveAgencyFilter = body?.preserve_agency_filter !== false;
       discoveryMode = body?.discovery_mode === true;
+      if (typeof body?.query_limit === 'number') {
+        queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 30);
+      }
     } catch { /* no body */ }
 
     const results: any[] = [];
@@ -784,7 +791,15 @@ Deno.serve(async (req) => {
       platform: q.platform,
       query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
     }));
-    console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries`);
+    // Rotate + slice to fit within edge-function runtime
+    if (!customQuery && queries.length > queryLimit) {
+      for (let k = queries.length - 1; k > 0; k--) {
+        const j = Math.floor(Math.random() * (k + 1));
+        [queries[k], queries[j]] = [queries[j], queries[k]];
+      }
+      queries = queries.slice(0, queryLimit);
+    }
+    console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries (cap=${queryLimit})`);
 
     if (onlyNewSources || preserveAgencyFilter) {
       const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
