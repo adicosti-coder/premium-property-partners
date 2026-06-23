@@ -3385,9 +3385,47 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                         );
                       })}
                     </div>
+                    {/* ── Cost-share chart: Free (DDG+Bing+OLX) vs Firecrawl ── */}
+                    {(() => {
+                      const freeUrls = (es.duckduckgo?.urls ?? 0) + (es.bing?.urls ?? 0) + (es.olx_direct?.urls ?? 0);
+                      const fcUrls = es.firecrawl?.urls ?? 0;
+                      const total = freeUrls + fcUrls;
+                      if (total === 0) return null;
+                      const freePct = Math.round((freeUrls / total) * 100);
+                      const fcPct = 100 - freePct;
+                      return (
+                        <div className="mt-2 space-y-1">
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                            <span>💰 Telecomandă cost — repartiție URL-uri</span>
+                            <span className="tabular-nums">
+                              🆓 {freeUrls} ({freePct}%) · 🔥 {fcUrls} ({fcPct}%)
+                            </span>
+                          </div>
+                          <div className="flex h-2 w-full overflow-hidden rounded bg-muted">
+                            <div
+                              className="bg-emerald-500 transition-all"
+                              style={{ width: `${freePct}%` }}
+                              title={`Free: ${freeUrls} URL (${freePct}%)`}
+                            />
+                            <div
+                              className="bg-amber-500 transition-all"
+                              style={{ width: `${fcPct}%` }}
+                              title={`Firecrawl: ${fcUrls} URL (${fcPct}%)`}
+                            />
+                          </div>
+                          {typeof activeJob.auto_fallback_enabled === "boolean" && (
+                            <div className="text-[10px] text-muted-foreground">
+                              Prag fallback: &lt; <span className="font-mono tabular-nums">{autoFallbackThreshold}</span> URL pe query
+                              {activeJob.auto_fallback_enabled ? "" : " · (auto-fallback OFF)"}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })()}
+
 
               {/* ── Blocked / Cloudflare alerts ── */}
               {(activeJob.blocked_alerts?.length ?? 0) > 0 && (
