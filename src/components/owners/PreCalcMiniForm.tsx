@@ -235,13 +235,14 @@ const PreCalcMiniForm = ({
     const range = (MONTHLY_NET_RANGE[data.apartmentType] ?? [2000, 3000]) as [number, number];
 
     try {
-      const { error } = await supabase.from("leads").insert({
+      const result = await submitLead({
         name: data.name,
         whatsapp_number: "PRECALC_NO_PHONE", // sentinel — real number captured downstream
         property_type: data.apartmentType,
         property_area: 0,
         message: `[${source}] Oraș: ${data.city} · Tip: ${data.apartmentType}`,
         source,
+        allowSentinelPhone: true,
         simulation_data: {
           city: data.city,
           apartment_type: data.apartmentType,
@@ -249,11 +250,12 @@ const PreCalcMiniForm = ({
           estimated_monthly_max: range[1],
           generated_message: message,
           language,
-        },
+        } as never,
       });
 
-      if (error) {
-        console.error("[PreCalcMiniForm] insert error:", error.message);
+      if (!result.ok) {
+        // reportError already fired inside the helper; keep UX moving
+        console.warn("[PreCalcMiniForm] submitLead failed", result);
       }
     } catch (err) {
       console.error("[PreCalcMiniForm] unexpected error:", err);
