@@ -1315,7 +1315,16 @@ Deno.serve(async (req) => {
         archived_skipped: archivedSkipped,
         duplicate_skipped: duplicateSkipped,
         blacklisted_skipped: blacklistedSkipped,
+        result: {
+          partial: true,
+          scan_mode: scanMode,
+          auto_fallback_enabled: enableAutoFallback,
+          engine_stats: engineStats,
+          blocked_alerts: blockedAlerts.slice(-20),
+          session_deduped: sessionDedupedSkipped,
+        },
       });
+
 
       
       const batchPromises = batch.map(async ({ platform, query }) => {
