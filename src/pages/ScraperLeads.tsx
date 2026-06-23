@@ -3161,6 +3161,29 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   />
                   <span className="text-[11px] font-medium">Auto-fallback FC</span>
                 </label>
+                {/* ── Auto-fallback threshold (URLs minimum from free engines) ── */}
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-background",
+                    (!autoFallback || scanModeOverride === "firecrawl") && "opacity-50",
+                  )}
+                  title="Dacă motorul gratuit returnează mai puține URL-uri decât pragul, scanner-ul reia acel cuvânt prin Firecrawl. 0 = doar la eșec total."
+                >
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">Prag&nbsp;FC&nbsp;&lt;</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={autoFallbackThreshold}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value || "0", 10);
+                      setAutoFallbackThreshold(Number.isFinite(n) ? Math.min(Math.max(0, n), 20) : 0);
+                    }}
+                    disabled={isScraping || !autoFallback || scanModeOverride === "firecrawl"}
+                    className="h-6 w-12 px-1.5 text-[11px] tabular-nums"
+                  />
+                  <span className="text-[10px] text-muted-foreground">URL</span>
+                </div>
                 <label className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors">
                   <Switch checked={safeMode} onCheckedChange={setSafeMode} disabled={isScraping} />
                   <span className="text-[11px] font-medium">Mod Simulare</span>
@@ -3169,6 +3192,16 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-[11px]" onClick={() => setHistoryOpen(true)}>
                   <History className="w-3.5 h-3.5" /> Istoric ({scanHistory.length})
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 gap-1 text-[11px]"
+                  onClick={exportSessionCSV}
+                  title="Descarcă CSV cu prospecții ingerați în sesiunea curentă (filtrele aplicate contează)"
+                >
+                  <FileText className="w-3.5 h-3.5" /> Export CSV sesiune
+                </Button>
+
                 <Button
                   size="sm"
                   variant="ghost"
