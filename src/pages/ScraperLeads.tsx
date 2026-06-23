@@ -2419,6 +2419,18 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               duplicate_skipped: row.duplicate_skipped ?? 0,
               blacklisted_skipped: row.blacklisted_skipped ?? 0,
             });
+            // Final scan summary card — opens automatically for the restricted "scan only new" run,
+            // and is silently available for any scan via "Vezi rezumat" if needed later.
+            setScanSummary({
+              total_queries: row.total_queries ?? 0,
+              processed_queries: row.processed_queries ?? 0,
+              new_listings: found,
+              archived_skipped: row.archived_skipped ?? 0,
+              duplicate_skipped: row.duplicate_skipped ?? 0,
+              blacklisted_skipped: row.blacklisted_skipped ?? 0,
+              scope: lastScanWasSessionOnlyRef.current ? "session" : "full",
+              finished_at: new Date().toISOString(),
+            });
             setTimeout(() => { setActiveJob(null); setRecentScanPulse(false); }, 4000);
           } else if (row.status === "failed") {
             toast.error(`Scanare eșuată: ${row.error_message || "necunoscut"}`);
