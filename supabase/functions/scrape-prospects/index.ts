@@ -1084,6 +1084,7 @@ Deno.serve(async (req) => {
     let retryBatches: Array<{ platform: string; query: string }> | null = null;
     let scanModeOverride: 'free' | 'firecrawl' | 'auto' | null = null;
     let autoFallbackOpt = true;
+    let autoFallbackThreshold = 1; // min URLs to consider "enough" — below this, escalate to Firecrawl
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -1105,7 +1106,11 @@ Deno.serve(async (req) => {
         scanModeOverride = body.scan_mode;
       }
       if (body?.auto_fallback === false) autoFallbackOpt = false;
+      if (typeof body?.auto_fallback_threshold === 'number') {
+        autoFallbackThreshold = Math.min(Math.max(0, Math.floor(body.auto_fallback_threshold)), 20);
+      }
     } catch { /* no body */ }
+
 
     // Resolve effective scan mode (UI override > env default > free)
     const scanMode: 'free' | 'firecrawl' =
@@ -1318,7 +1323,7 @@ Deno.serve(async (req) => {
         result: {
           partial: true,
           scan_mode: scanMode,
-          auto_fallback_enabled: enableAutoFallback,
+          auto_fallback_enabled: enableAutoFallback, auto_fallback_threshold: autoFallbackThreshold,
           engine_stats: engineStats,
           blocked_alerts: blockedAlerts.slice(-20),
           session_deduped: sessionDedupedSkipped,
@@ -1359,24 +1364,28 @@ Deno.serve(async (req) => {
                 blockedAlerts,
               });
 
-          // ── Auto-fallback: if FREE mode returned nothing and Firecrawl is
-          //    available + enabled, retry this single query via Firecrawl.
-          if (!outcome.ok && enableAutoFallback && firecrawlKey) {
+          // ── Auto-fallback: if FREE mode returned fewer than `autoFallbackThreshold`
+          //    URLs (or failed) and Firecrawl is available + enabled, retry this
+          //    single query via Firecrawl.
+          const freeUrlCount = outcome.ok ? outcome.results.length : 0;
+          const belowThreshold = freeUrlCount < autoFallbackThreshold;
+          if (belowThreshold && enableAutoFallback && firecrawlKey) {
             const t0 = Date.now();
             engineStats.firecrawl.hits++;
             const fc = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
               maxAttempts: 1, timeoutMs: 9_000,
-              logger: (ev) => console.warn(JSON.stringify({ ...ev, platform, auto_fallback: true })),
+              logger: (ev) => console.warn(JSON.stringify({ ...ev, platform, auto_fallback: true, threshold: autoFallbackThreshold, free_urls: freeUrlCount })),
             });
             engineStats.firecrawl.ms += Date.now() - t0;
             if (fc.ok && fc.results.length > 0) {
               engineStats.firecrawl.urls += fc.results.length;
               outcome = fc;
-              console.log(`[auto-fallback] firecrawl rescued ${platform} [${query.slice(0, 60)}] → ${fc.results.length} URL`);
+              console.log(`[auto-fallback] firecrawl rescued ${platform} [${query.slice(0, 60)}] free=${freeUrlCount}<${autoFallbackThreshold} → ${fc.results.length} URL`);
             } else {
               engineStats.firecrawl.errors++;
             }
           }
+
 
           if (!outcome.ok) {
             const msg = `${outcome.errorMessage || 'search failed'} (after ${outcome.attempts} attempts, mode=${scanMode}${enableAutoFallback ? '+autofallback' : ''})`;
@@ -1654,7 +1663,7 @@ Deno.serve(async (req) => {
       success: true,
       scan_mode: scanMode,
       scan_mode_override: scanModeOverride,
-      auto_fallback_enabled: enableAutoFallback,
+      auto_fallback_enabled: enableAutoFallback, auto_fallback_threshold: autoFallbackThreshold,
       new_listings: results.length,
       count: results.length,
       blacklisted_skipped: blacklistedSkipped,

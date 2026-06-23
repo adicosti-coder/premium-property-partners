@@ -660,6 +660,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const [isClearingPending, setIsClearingPending] = useState(false);
+  const [isRetryingBlocked, setIsRetryingBlocked] = useState(false);
   const [resumeRemainingAfter, setResumeRemainingAfter] = useState<number>(0);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
@@ -716,6 +717,17 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   useEffect(() => {
     try { localStorage.setItem("prospect_auto_fallback", autoFallback ? "1" : "0"); } catch {}
   }, [autoFallback]);
+  const [autoFallbackThreshold, setAutoFallbackThreshold] = useState<number>(() => {
+    if (typeof window === "undefined") return 1;
+    const n = parseInt(window.localStorage.getItem("prospect_auto_fallback_threshold") || "1", 10);
+    return Number.isFinite(n) ? Math.min(Math.max(0, n), 20) : 1;
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_auto_fallback_threshold", String(autoFallbackThreshold)); } catch {}
+  }, [autoFallbackThreshold]);
+  // Marker used to scope "session CSV" + retry actions to the current scan
+  const sessionStartRef = useRef<number>(Date.now());
+
 
   const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>(() => getScanHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -1928,6 +1940,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     }
 
     setIsScraping(true);
+    sessionStartRef.current = Date.now();
     setActiveScanMode(mode);
     setRecentScanPulse(true);
     scanContextRef.current = {
@@ -1975,6 +1988,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           async_mode: true,
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
+          auto_fallback_threshold: autoFallbackThreshold,
         },
       });
 
@@ -2075,6 +2089,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           retry_batches: slice,
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
+          auto_fallback_threshold: autoFallbackThreshold,
         },
       });
 
@@ -2116,6 +2131,109 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       setIsClearingPending(false);
     }
   };
+
+
+  // ── Retry exclusively on keywords reported as blocked (Cloudflare/empty engines) ──
+  const handleRetryBlocked = async () => {
+    if (isRetryingBlocked || isScraping) return;
+    const alerts = activeJob?.blocked_alerts ?? [];
+    if (!alerts.length) {
+      toast.info("Nu există cuvinte blocate de reluat.");
+      return;
+    }
+    setIsRetryingBlocked(true);
+    try {
+      // Dedup (platform|query); cap to 30 to respect edge function batch limit
+      const seen = new Set<string>();
+      const slice: Array<{ platform: string; query: string }> = [];
+      for (const a of alerts) {
+        const k = `${a.platform}|${a.keyword}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        slice.push({ platform: a.platform, query: a.keyword });
+        if (slice.length >= 30) break;
+      }
+      // Small IP-cooldown delay before re-firing the same engines
+      await new Promise((r) => setTimeout(r, 1500));
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("prospect_scan_jobs")
+        .insert({ status: "pending", total_queries: slice.length, processed_queries: 0, new_listings: 0 } as any)
+        .select()
+        .single();
+      if (jobErr) throw jobErr;
+      sessionStartRef.current = Date.now();
+      setActiveJob({
+        id: (jobRow as any).id,
+        status: "pending",
+        processed_queries: 0,
+        total_queries: slice.length,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+        updated_at: (jobRow as any).updated_at ?? new Date().toISOString(),
+        pending_queries: [],
+        scan_mode: "firecrawl",
+        auto_fallback_enabled: false,
+        engine_stats: null,
+        blocked_alerts: [],
+        session_deduped: 0,
+      });
+      setIsScraping(true);
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          max_results: 15,
+          preserve_agency_filter: true,
+          job_id: (jobRow as any).id,
+          async_mode: true,
+          retry_batches: slice,
+          scan_mode: "firecrawl", // force premium for blocked keywords
+          auto_fallback: false,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Reiau ${slice.length} cuvinte blocate prin Firecrawl (cu cooldown anti-IP-ban).`);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleRetryBlocked failed", err);
+      toast.error(`Retry blocate eșuat: ${err?.message || "eroare necunoscută"}`);
+      setIsScraping(false);
+    } finally {
+      setIsRetryingBlocked(false);
+    }
+  };
+
+  // ── Export only the prospects ingested in the current session (CSV) ──
+  const exportSessionCSV = () => {
+    const since = sessionStartRef.current;
+    const rows = (filteredLeads as any[]).filter((l) => {
+      const t = l.created_at ? new Date(l.created_at).getTime() : 0;
+      return t >= since;
+    });
+    if (!rows.length) {
+      toast.info("Niciun prospect nou în sesiunea curentă (criteriu: created_at ≥ start scanare).");
+      return;
+    }
+    const headers = ["Titlu", "Platformă", "Tip", "Preț", "Telefon", "Contact", "Status", "URL", "Created"];
+    const csvRows = rows.map((l) => [
+      cleanTitleStatic(l.title),
+      normalizePlatformLabel(l.source),
+      (l._prospect_type || l.prospect_category || "proprietar"),
+      l.original_price ?? "",
+      l.phone || "",
+      getLeadContactName(l),
+      l.status,
+      l.url,
+      l.created_at?.slice(0, 19) ?? "",
+    ]);
+    const csv = [headers.join(","), ...csvRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `prospecti-sesiune-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+    link.click();
+    toast.success(`${rows.length} prospecți din sesiune exportați în CSV`);
+  };
+
 
 
   const closeStuckJob = useCallback(async (job: NonNullable<typeof activeJob>) => {
@@ -3043,6 +3161,29 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   />
                   <span className="text-[11px] font-medium">Auto-fallback FC</span>
                 </label>
+                {/* ── Auto-fallback threshold (URLs minimum from free engines) ── */}
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-background",
+                    (!autoFallback || scanModeOverride === "firecrawl") && "opacity-50",
+                  )}
+                  title="Dacă motorul gratuit returnează mai puține URL-uri decât pragul, scanner-ul reia acel cuvânt prin Firecrawl. 0 = doar la eșec total."
+                >
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">Prag&nbsp;FC&nbsp;&lt;</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={autoFallbackThreshold}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value || "0", 10);
+                      setAutoFallbackThreshold(Number.isFinite(n) ? Math.min(Math.max(0, n), 20) : 0);
+                    }}
+                    disabled={isScraping || !autoFallback || scanModeOverride === "firecrawl"}
+                    className="h-6 w-12 px-1.5 text-[11px] tabular-nums"
+                  />
+                  <span className="text-[10px] text-muted-foreground">URL</span>
+                </div>
                 <label className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors">
                   <Switch checked={safeMode} onCheckedChange={setSafeMode} disabled={isScraping} />
                   <span className="text-[11px] font-medium">Mod Simulare</span>
@@ -3051,6 +3192,16 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-[11px]" onClick={() => setHistoryOpen(true)}>
                   <History className="w-3.5 h-3.5" /> Istoric ({scanHistory.length})
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 gap-1 text-[11px]"
+                  onClick={exportSessionCSV}
+                  title="Descarcă CSV cu prospecții ingerați în sesiunea curentă (filtrele aplicate contează)"
+                >
+                  <FileText className="w-3.5 h-3.5" /> Export CSV sesiune
+                </Button>
+
                 <Button
                   size="sm"
                   variant="ghost"
@@ -3234,15 +3385,65 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                         );
                       })}
                     </div>
+                    {/* ── Cost-share chart: Free (DDG+Bing+OLX) vs Firecrawl ── */}
+                    {(() => {
+                      const freeUrls = (es.duckduckgo?.urls ?? 0) + (es.bing?.urls ?? 0) + (es.olx_direct?.urls ?? 0);
+                      const fcUrls = es.firecrawl?.urls ?? 0;
+                      const total = freeUrls + fcUrls;
+                      if (total === 0) return null;
+                      const freePct = Math.round((freeUrls / total) * 100);
+                      const fcPct = 100 - freePct;
+                      return (
+                        <div className="mt-2 space-y-1">
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                            <span>💰 Telecomandă cost — repartiție URL-uri</span>
+                            <span className="tabular-nums">
+                              🆓 {freeUrls} ({freePct}%) · 🔥 {fcUrls} ({fcPct}%)
+                            </span>
+                          </div>
+                          <div className="flex h-2 w-full overflow-hidden rounded bg-muted">
+                            <div
+                              className="bg-emerald-500 transition-all"
+                              style={{ width: `${freePct}%` }}
+                              title={`Free: ${freeUrls} URL (${freePct}%)`}
+                            />
+                            <div
+                              className="bg-amber-500 transition-all"
+                              style={{ width: `${fcPct}%` }}
+                              title={`Firecrawl: ${fcUrls} URL (${fcPct}%)`}
+                            />
+                          </div>
+                          {typeof activeJob.auto_fallback_enabled === "boolean" && (
+                            <div className="text-[10px] text-muted-foreground">
+                              Prag fallback: &lt; <span className="font-mono tabular-nums">{autoFallbackThreshold}</span> URL pe query
+                              {activeJob.auto_fallback_enabled ? "" : " · (auto-fallback OFF)"}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })()}
 
+
               {/* ── Blocked / Cloudflare alerts ── */}
               {(activeJob.blocked_alerts?.length ?? 0) > 0 && (
-                <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 space-y-0.5">
-                  <div className="font-semibold">
-                    🚧 {activeJob.blocked_alerts!.length} alertă/blocaj motor (scanarea continuă)
+                <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="font-semibold">
+                      🚧 {activeJob.blocked_alerts!.length} alertă/blocaj motor (scanarea continuă)
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 px-2 gap-1 text-[11px] border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20"
+                      onClick={handleRetryBlocked}
+                      disabled={isRetryingBlocked || isScraping}
+                      title="Reîncearcă exclusiv cuvintele blocate prin Firecrawl, cu cooldown anti-IP-ban"
+                    >
+                      {isRetryingBlocked ? "⏳ Repornesc…" : `🔁 Retry blocate (${Math.min(activeJob.blocked_alerts!.length, 30)})`}
+                    </Button>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {activeJob.blocked_alerts!.slice(-6).map((a, idx) => (
@@ -3253,6 +3454,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   </div>
                 </div>
               )}
+
 
               {/* Live resume context: shown while a resume job is running */}
               {(activeJob.status === "running" || activeJob.status === "pending") && resumeRemainingAfter > 0 && (
