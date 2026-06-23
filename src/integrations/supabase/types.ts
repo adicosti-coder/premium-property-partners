@@ -4507,6 +4507,87 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_scan_jobs: {
+        Row: {
+          archived_skipped: number
+          blacklisted_skipped: number
+          created_at: string
+          created_by: string | null
+          current_keyword: string | null
+          current_platform: string | null
+          custom_query: string | null
+          discovery_mode: boolean
+          duplicate_skipped: number
+          error_message: string | null
+          errors: Json
+          finished_at: string | null
+          id: string
+          max_results: number
+          new_listings: number
+          only_new_sources: boolean
+          processed_queries: number
+          query_limit: number
+          result: Json | null
+          started_at: string | null
+          status: string
+          total_queries: number
+          triggered_by: string
+          updated_at: string
+        }
+        Insert: {
+          archived_skipped?: number
+          blacklisted_skipped?: number
+          created_at?: string
+          created_by?: string | null
+          current_keyword?: string | null
+          current_platform?: string | null
+          custom_query?: string | null
+          discovery_mode?: boolean
+          duplicate_skipped?: number
+          error_message?: string | null
+          errors?: Json
+          finished_at?: string | null
+          id?: string
+          max_results?: number
+          new_listings?: number
+          only_new_sources?: boolean
+          processed_queries?: number
+          query_limit?: number
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          total_queries?: number
+          triggered_by?: string
+          updated_at?: string
+        }
+        Update: {
+          archived_skipped?: number
+          blacklisted_skipped?: number
+          created_at?: string
+          created_by?: string | null
+          current_keyword?: string | null
+          current_platform?: string | null
+          custom_query?: string | null
+          discovery_mode?: boolean
+          duplicate_skipped?: number
+          error_message?: string | null
+          errors?: Json
+          finished_at?: string | null
+          id?: string
+          max_results?: number
+          new_listings?: number
+          only_new_sources?: boolean
+          processed_queries?: number
+          query_limit?: number
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          total_queries?: number
+          triggered_by?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       public_site_settings: {
         Row: {
           hero_badge_en: string | null
