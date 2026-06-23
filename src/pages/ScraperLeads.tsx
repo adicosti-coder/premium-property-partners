@@ -678,6 +678,40 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   });
   const [keywordsPreviewOpen, setKeywordsPreviewOpen] = useState(false);
 
+  // ── Scan history, Safe Mode & timing ────────────────────────────────
+  const [safeMode, setSafeMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("prospect_scan_safe_mode") === "1";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_scan_safe_mode", safeMode ? "1" : "0"); } catch {}
+  }, [safeMode]);
+  const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>(() => getScanHistory());
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const scanContextRef = useRef<{
+    startedAt: number;
+    mode: "scan" | "rescan" | "simulated";
+    queryLimit: number;
+    simulated: boolean;
+  } | null>(null);
+  const recordScanEntry = useCallback((partial: Omit<ScanHistoryEntry,
+    "id" | "started_at" | "ended_at" | "duration_ms" | "mode" | "query_limit">) => {
+    const ctx = scanContextRef.current;
+    if (!ctx) return;
+    const endedAt = Date.now();
+    const entry = appendScanHistory({
+      started_at: new Date(ctx.startedAt).toISOString(),
+      ended_at: new Date(endedAt).toISOString(),
+      duration_ms: endedAt - ctx.startedAt,
+      mode: ctx.mode,
+      query_limit: ctx.queryLimit,
+      ...partial,
+    });
+    setScanHistory((prev) => [entry, ...prev].slice(0, 50));
+    scanContextRef.current = null;
+  }, []);
+  const simulationTimerRef = useRef<number | null>(null);
+
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
 
