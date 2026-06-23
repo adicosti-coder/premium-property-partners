@@ -413,6 +413,130 @@ function normalizeFirecrawlDoc(data: any) {
   };
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Firecrawl search with exponential backoff + basic DuckDuckGo fallback.
+// Retries only on transient signals (network / 408 / 429 / 5xx). Hard errors
+// (401/402/400) are returned immediately so we can route to fallback or fail.
+// ────────────────────────────────────────────────────────────────────────────
+const TRANSIENT_HTTP = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+interface FcSearchResult { url: string; title?: string; markdown?: string; description?: string }
+interface FcSearchOutcome {
+  ok: boolean;
+  results: FcSearchResult[];
+  status?: number;
+  errorBody?: string;
+  errorMessage?: string;
+  attempts: number;
+  source: 'firecrawl' | 'fallback_duckduckgo' | 'none';
+}
+
+async function firecrawlSearchOnce(query: string, key: string, maxResults: number, timeoutMs = 35000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query, limit: maxResults, lang: 'ro', country: 'ro',
+        scrapeOptions: { formats: ['markdown'] },
+      }),
+    });
+    return resp;
+  } finally { clearTimeout(timer); }
+}
+
+async function basicFallbackSearch(query: string, maxResults: number): Promise<FcSearchResult[]> {
+  // DuckDuckGo HTML endpoint — no JS, no API key. Best-effort: returns plain URLs/titles.
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    const resp = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+      signal: ctrl.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
+        'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.5',
+      },
+    });
+    clearTimeout(t);
+    if (!resp.ok) return [];
+    const html = await resp.text();
+    const out: FcSearchResult[] = [];
+    // Capture result anchors: <a class="result__a" href="...">Title</a>
+    const re = /<a[^>]+class="[^"]*result__a[^"]*"[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < maxResults) {
+      let href = m[1];
+      // DuckDuckGo wraps in /l/?uddg=ENCODED
+      const wrap = href.match(/[?&]uddg=([^&]+)/);
+      if (wrap) { try { href = decodeURIComponent(wrap[1]); } catch { /* keep */ } }
+      const title = m[2].replace(/<[^>]+>/g, '').trim();
+      if (/^https?:\/\//i.test(href)) out.push({ url: href, title, markdown: title });
+    }
+    return out;
+  } catch (e) {
+    console.warn(JSON.stringify({ kind: 'fallback_search_error', message: (e as Error).message }));
+    return [];
+  }
+}
+
+async function firecrawlSearchWithRetry(
+  query: string, key: string, maxResults: number,
+  opts: { maxAttempts?: number; logger?: (ev: Record<string, unknown>) => void } = {},
+): Promise<FcSearchOutcome> {
+  const maxAttempts = opts.maxAttempts ?? 3;
+  let lastStatus: number | undefined;
+  let lastBody = '';
+  let lastMsg = '';
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const resp = await firecrawlSearchOnce(query, key, maxResults);
+      lastStatus = resp.status;
+      if (resp.ok) {
+        const json = await resp.json().catch(() => ({}));
+        return {
+          ok: true,
+          results: (json?.data || []) as FcSearchResult[],
+          attempts: attempt,
+          source: 'firecrawl',
+        };
+      }
+      lastBody = await resp.text().catch(() => '');
+      lastMsg = `Firecrawl HTTP ${resp.status}`;
+      opts.logger?.({ kind: 'firecrawl_attempt_failed', attempt, status: resp.status, body: lastBody.slice(0, 200), query: query.slice(0, 120) });
+      // Hard failures — break immediately, hand off to fallback / surface error
+      if (!TRANSIENT_HTTP.has(resp.status)) break;
+    } catch (e) {
+      lastMsg = (e as Error)?.message || String(e);
+      opts.logger?.({ kind: 'firecrawl_attempt_exception', attempt, message: lastMsg, query: query.slice(0, 120) });
+      // network / abort — treat as transient
+    }
+    if (attempt < maxAttempts) {
+      const delay = Math.min(9000, 1000 * Math.pow(3, attempt - 1)) + Math.floor(Math.random() * 250);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+
+  // Attempt fallback when Firecrawl is fully unusable (key/quota/persistent failure)
+  const shouldFallback = lastStatus === 401 || lastStatus === 402 || lastStatus === undefined ||
+    (typeof lastStatus === 'number' && TRANSIENT_HTTP.has(lastStatus));
+  if (shouldFallback) {
+    opts.logger?.({ kind: 'firecrawl_fallback_invoked', last_status: lastStatus, query: query.slice(0, 120) });
+    const fallback = await basicFallbackSearch(query, maxResults);
+    if (fallback.length > 0) {
+      return { ok: true, results: fallback, attempts: maxAttempts, source: 'fallback_duckduckgo', status: lastStatus, errorMessage: lastMsg };
+    }
+  }
+
+  return {
+    ok: false, results: [], attempts: maxAttempts, source: 'none',
+    status: lastStatus, errorBody: lastBody, errorMessage: lastMsg,
+  };
+}
+
 async function scrapePhoneHydrationOnce(url: string, firecrawlKey: string, mode: 'js' | 'native'): Promise<string[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), mode === 'native' ? 24000 : 42000);
@@ -725,6 +849,7 @@ Deno.serve(async (req) => {
     let queryLimit = 8;
     let jobId: string | null = null;
     let asyncMode = false;
+    let retryBatches: Array<{ platform: string; query: string }> | null = null;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -737,6 +862,11 @@ Deno.serve(async (req) => {
       }
       if (typeof body?.job_id === 'string' && body.job_id.length > 0) jobId = body.job_id;
       if (body?.async_mode === true) asyncMode = true;
+      if (Array.isArray(body?.retry_batches)) {
+        retryBatches = body.retry_batches
+          .filter((b: any) => b && typeof b.platform === 'string' && typeof b.query === 'string')
+          .slice(0, 30);
+      }
     } catch { /* no body */ }
 
     // ── Structured logging helpers (Sentry-friendly) ─────────────────────
@@ -798,7 +928,11 @@ Deno.serve(async (req) => {
 
     // Load keywords from DB, fallback to hardcoded defaults
     let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
-    if (customQuery) {
+    if (retryBatches && retryBatches.length > 0) {
+      // Retry path — use the exact failed batches verbatim, skip expansion/owner filter.
+      queries = retryBatches.map((b) => ({ platform: b.platform, query: b.query }));
+      console.log(`Retry mode: re-running ${queries.length} failed batches`);
+    } else if (customQuery) {
       queries = [{ platform: 'Custom', query: customQuery }];
     } else {
       const { data: dbKeywords } = await supabase
@@ -814,22 +948,24 @@ Deno.serve(async (req) => {
         : DEFAULT_SEARCH_QUERIES;
     }
 
-    // Expand keywords with diacritics-free variants for fuzzy matching
-    queries = expandKeywordsWithoutDiacritics(queries);
+    if (!retryBatches) {
+      // Expand keywords with diacritics-free variants for fuzzy matching
+      queries = expandKeywordsWithoutDiacritics(queries);
 
-    // Default path stays owner-focused. Keyword Radar can use discovery mode
-    // for broader URL discovery, then agency/geo gates keep the queue clean.
-    queries = queries.map((q) => ({
-      platform: q.platform,
-      query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
-    }));
-    // Rotate + slice to fit within edge-function runtime
-    if (!customQuery && queries.length > queryLimit) {
-      for (let k = queries.length - 1; k > 0; k--) {
-        const j = Math.floor(Math.random() * (k + 1));
-        [queries[k], queries[j]] = [queries[j], queries[k]];
+      // Default path stays owner-focused. Keyword Radar can use discovery mode
+      // for broader URL discovery, then agency/geo gates keep the queue clean.
+      queries = queries.map((q) => ({
+        platform: q.platform,
+        query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
+      }));
+      // Rotate + slice to fit within edge-function runtime
+      if (!customQuery && queries.length > queryLimit) {
+        for (let k = queries.length - 1; k > 0; k--) {
+          const j = Math.floor(Math.random() * (k + 1));
+          [queries[k], queries[j]] = [queries[j], queries[k]];
+        }
+        queries = queries.slice(0, queryLimit);
       }
-      queries = queries.slice(0, queryLimit);
     }
     console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries (cap=${queryLimit})`);
 
@@ -902,39 +1038,38 @@ Deno.serve(async (req) => {
       const batchPromises = batch.map(async ({ platform, query }) => {
         console.log(`Searching ${platform}: ${query}`);
         try {
-          const searchResp = await fetch('https://api.firecrawl.dev/v1/search', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${firecrawlKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query,
-              limit: maxResults,
-              lang: 'ro',
-              country: 'ro',
-              scrapeOptions: { formats: ['markdown'] },
-            }),
+          const outcome = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
+            maxAttempts: 3,
+            logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
           });
 
-          if (!searchResp.ok) {
-            const errBody = await searchResp.text().catch(() => '');
-            const errObj = new Error(`Firecrawl HTTP ${searchResp.status}: ${errBody.slice(0, 300)}`);
-            // Surface 402 (credits), 401 (key), 429 (rate-limit) clearly.
-            logScrapeError('firecrawl_search_http', errObj, {
-              platform, keyword: query, http_status: searchResp.status,
+          if (!outcome.ok) {
+            const msg = `${outcome.errorMessage || 'Firecrawl failed'} (after ${outcome.attempts} attempts)`;
+            logScrapeError('firecrawl_search_http', new Error(msg), {
+              platform, keyword: query, http_status: outcome.status, attempts: outcome.attempts,
             });
             jobErrors.push({
-              platform, keyword: query, http_status: searchResp.status,
-              message: errObj.message, phase: 'firecrawl_search',
+              platform, keyword: query, http_status: outcome.status ?? null,
+              message: msg, phase: 'firecrawl_search', retryable: true, attempts: outcome.attempts,
             });
-            errors.push(`${platform} [${query.slice(0, 60)}]: HTTP ${searchResp.status}`);
+            errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
             return;
           }
 
-          const searchData = await searchResp.json();
-          const searchResults = searchData?.data || [];
-          console.log(`Found ${searchResults.length} results from ${platform}`);
+          if (outcome.source === 'fallback_duckduckgo') {
+            console.warn(JSON.stringify({
+              kind: 'firecrawl_fallback_used', platform, keyword: query.slice(0, 120),
+              results: outcome.results.length, last_status: outcome.status,
+            }));
+            jobErrors.push({
+              platform, keyword: query, http_status: outcome.status ?? null,
+              message: `Firecrawl indisponibil — fallback DuckDuckGo (${outcome.results.length} URL-uri)`,
+              phase: 'firecrawl_search', retryable: true, attempts: outcome.attempts, fallback: true,
+            });
+          }
+
+          const searchResults = outcome.results;
+          console.log(`Found ${searchResults.length} results from ${platform} (source=${outcome.source})`);
 
           for (const result of searchResults) {
             const url = result.url;

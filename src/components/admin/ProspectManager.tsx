@@ -282,7 +282,9 @@ const ProspectManager = () => {
     current_platform: string | null;
     new_listings: number;
     error_message: string | null;
+    errors?: Array<Record<string, any>> | null;
   } | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   // Persist slider value
   useEffect(() => {
@@ -312,6 +314,7 @@ const ProspectManager = () => {
         current_platform: data.current_platform,
         new_listings: data.new_listings ?? 0,
         error_message: data.error_message,
+        errors: Array.isArray(data.errors) ? (data.errors as any[]) : null,
       });
       setIsScraping(true);
     })();
@@ -338,18 +341,23 @@ const ProspectManager = () => {
             current_platform: row.current_platform,
             new_listings: row.new_listings ?? 0,
             error_message: row.error_message,
+            errors: Array.isArray(row.errors) ? row.errors : null,
           } : prev);
 
           if (row.status === 'completed') {
             const found = row.new_listings ?? 0;
             const errCount = Array.isArray(row.errors) ? row.errors.length : 0;
+            const retryable = Array.isArray(row.errors)
+              ? row.errors.filter((e: any) => e?.retryable && !e?.fallback).length
+              : 0;
             toast({
               title: found > 0 ? 'Scanare completă! 🎯' : 'Scanare completă',
-              description: `${found} anunțuri noi.${errCount ? ` ${errCount} erori — vezi consola.` : ''}`,
+              description: `${found} anunțuri noi.${errCount ? ` ${errCount} erori${retryable ? ` (${retryable} reîncercabile)` : ''}.` : ''}`,
             });
             setIsScraping(false);
             fetchListingsRef.current?.();
-            setTimeout(() => setActiveJob(null), 4000);
+            // Keep job visible if there are retryable batches so the user can act.
+            if (retryable === 0) setTimeout(() => setActiveJob(null), 4000);
           } else if (row.status === 'failed') {
             console.error('[ProspectManager] scan job failed', row);
             toast({
@@ -358,7 +366,7 @@ const ProspectManager = () => {
               variant: 'destructive',
             });
             setIsScraping(false);
-            setTimeout(() => setActiveJob(null), 6000);
+            // Don't auto-clear — user may want to inspect / retry failed batches.
           }
         },
       )
@@ -469,6 +477,71 @@ const ProspectManager = () => {
         variant: 'destructive',
       });
       setIsScraping(false);
+    }
+  };
+
+  const handleRetryFailedBatches = async () => {
+    const failed = (activeJob?.errors || []).filter(
+      (e: any) => e?.retryable && !e?.fallback && e?.platform && e?.keyword,
+    );
+    if (failed.length === 0) {
+      toast({ title: 'Nimic de reîncercat', description: 'Nu există pachete eșuate marcate ca reîncercabile.' });
+      return;
+    }
+    setIsRetrying(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error('Trebuie să fii autentificat ca admin.');
+
+      const { data: jobRow, error: jobErr } = await supabase
+        .from('prospect_scan_jobs')
+        .insert({
+          created_by: userId,
+          query_limit: failed.length,
+          max_results: 10,
+          triggered_by: 'manual_retry',
+        })
+        .select('*')
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error('Nu am putut crea job-ul de retry.');
+
+      setActiveJob({
+        id: jobRow.id,
+        status: 'pending',
+        processed_queries: 0,
+        total_queries: failed.length,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+        errors: null,
+      });
+      setIsScraping(true);
+
+      const { error: invokeErr } = await supabase.functions.invoke('scrape-prospects', {
+        body: {
+          max_results: 10,
+          job_id: jobRow.id,
+          async_mode: true,
+          retry_batches: failed.map((e: any) => ({ platform: e.platform, query: e.keyword })),
+        },
+      });
+      if (invokeErr) throw invokeErr;
+
+      toast({
+        title: 'Reîncercare pornită 🔁',
+        description: `${failed.length} pachete eșuate sunt rerulate în fundal.`,
+      });
+    } catch (err: any) {
+      console.error('[ProspectManager] handleRetryFailedBatches failed', err);
+      toast({
+        title: 'Eroare la reîncercare',
+        description: err?.message || 'Edge function nu a răspuns.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -785,6 +858,54 @@ const ProspectManager = () => {
                 {activeJob.error_message && (
                   <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
                 )}
+                {(() => {
+                  const failed = (activeJob.errors || []).filter(
+                    (e: any) => e?.retryable && !e?.fallback,
+                  );
+                  const fallbackUsed = (activeJob.errors || []).filter((e: any) => e?.fallback);
+                  if (failed.length === 0 && fallbackUsed.length === 0) return null;
+                  return (
+                    <div className="mt-1 space-y-1 border-t border-border/60 pt-1.5">
+                      {fallbackUsed.length > 0 && (
+                        <div className="text-[11px] text-amber-600 dark:text-amber-400">
+                          ⚠️ Firecrawl indisponibil pe {fallbackUsed.length} pachet(e) — am folosit fallback DuckDuckGo.
+                        </div>
+                      )}
+                      {failed.length > 0 && (
+                        <>
+                          <div className="text-[11px] font-medium text-destructive">
+                            ❌ {failed.length} pachet(e) eșuate definitiv:
+                          </div>
+                          <ul className="text-[10px] text-muted-foreground space-y-0.5 max-h-20 overflow-y-auto">
+                            {failed.slice(0, 5).map((e: any, idx: number) => (
+                              <li key={idx} className="truncate">
+                                <span className="text-foreground/80">{e.platform}</span>
+                                {e.http_status ? ` (HTTP ${e.http_status})` : ''} —{' '}
+                                <span className="italic">"{(e.keyword || '').slice(0, 50)}"</span>
+                              </li>
+                            ))}
+                            {failed.length > 5 && (
+                              <li className="text-muted-foreground/70">…și încă {failed.length - 5}</li>
+                            )}
+                          </ul>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs w-full mt-1"
+                            disabled={isRetrying || isScraping}
+                            onClick={handleRetryFailedBatches}
+                          >
+                            {isRetrying ? (
+                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Se reîncearcă…</>
+                            ) : (
+                              <><RotateCcw className="w-3 h-3 mr-1" /> Reîncearcă scanarea pachetului eșuat</>
+                            )}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
