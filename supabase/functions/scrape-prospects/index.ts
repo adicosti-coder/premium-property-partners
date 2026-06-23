@@ -846,7 +846,7 @@ Deno.serve(async (req) => {
     // Cap queries per invocation — 78 active keywords × ~15s/Firecrawl >> 150s
     // edge budget, which caused "Scanează acum" to hang silently. Manual scans
     // process a rotated slice; full coverage comes from repeated cron runs.
-    let queryLimit = 8;
+    let queryLimit = 25;
     let jobId: string | null = null;
     let asyncMode = false;
     let retryBatches: Array<{ platform: string; query: string }> | null = null;
