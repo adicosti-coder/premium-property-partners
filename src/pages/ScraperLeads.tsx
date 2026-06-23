@@ -2608,6 +2608,63 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             </div>
           </div>
 
+          {/* ── Scan Controls: query limit slider + duplicates + active keywords ── */}
+          <div className="mb-3 rounded-md border border-border bg-muted/30 p-3 text-xs space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 min-w-[260px] flex-1">
+                <span className="text-muted-foreground whitespace-nowrap">
+                  Pachet scanare: <span className="font-bold text-foreground tabular-nums">{queryLimit}</span> kw
+                </span>
+                <Slider
+                  className="flex-1 max-w-[260px]"
+                  value={[queryLimit]}
+                  min={1}
+                  max={100}
+                  step={1}
+                  onValueChange={(v) => setQueryLimit(v[0] ?? 25)}
+                  disabled={isScraping}
+                />
+              </div>
+              <span className="text-muted-foreground">
+                {uniqueActiveKeywords.length} kw active · {Math.max(1, Math.ceil(Math.min(uniqueActiveKeywords.length, queryLimit) / 25))} loturi (×25)
+              </span>
+            </div>
+
+            {duplicateKeywords.length > 0 && (
+              <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300">
+                ⚠️ {duplicateKeywords.length} duplicat(e) detectat(e): {duplicateKeywords.slice(0, 4).map((d) => `"${d.keyword}" (${d.platform}) ×${d.count}`).join(", ")}
+                {duplicateKeywords.length > 4 ? "…" : ""}. Vor fi scanate o singură dată.
+              </div>
+            )}
+
+            <Collapsible open={keywordsPreviewOpen} onOpenChange={setKeywordsPreviewOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
+                  {keywordsPreviewOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  Vezi cuvintele cheie active incluse ({uniqueActiveKeywords.length})
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                {uniqueActiveKeywords.length === 0 ? (
+                  <div className="text-[11px] text-muted-foreground italic">Nu există cuvinte cheie active.</div>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                    {uniqueActiveKeywords.slice(0, queryLimit).map((k) => (
+                      <Badge key={k.id} variant="outline" className={cn("text-[10px] font-normal", sourceColors[k.platform] || sourceColors["General"])}>
+                        {k.keyword} <span className="opacity-60 ml-1">· {k.platform}</span>
+                      </Badge>
+                    ))}
+                    {uniqueActiveKeywords.length > queryLimit && (
+                      <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground">
+                        +{uniqueActiveKeywords.length - queryLimit} excluse de limită
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+
           {activeJob && (
             <div className="mb-4 rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1.5">
               <div className="flex items-center justify-between gap-2">
@@ -2630,6 +2687,35 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   : (activeJob.status === "running" ? 5 : 0)}
                 className="h-2"
               />
+              {/* Batch breakdown (groups of 25) */}
+              {activeJob.total_queries > 0 && (() => {
+                const BATCH = 25;
+                const totalBatches = Math.max(1, Math.ceil(activeJob.total_queries / BATCH));
+                const done = activeJob.processed_queries;
+                return (
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {Array.from({ length: totalBatches }).map((_, i) => {
+                      const start = i * BATCH;
+                      const end = Math.min(activeJob.total_queries, start + BATCH);
+                      const size = end - start;
+                      const batchDone = Math.min(size, Math.max(0, done - start));
+                      const status =
+                        batchDone === 0 ? "pending"
+                        : batchDone >= size ? "done"
+                        : "running";
+                      const cls =
+                        status === "done" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                        : status === "running" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 animate-pulse"
+                        : "bg-muted text-muted-foreground border-border";
+                      return (
+                        <Badge key={i} variant="outline" className={cn("text-[10px] font-normal", cls)}>
+                          Lotul {i + 1} ({size} kw) · {status === "done" ? "Finalizat" : status === "running" ? `${batchDone}/${size}` : "În așteptare"}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
               {activeJob.current_keyword && activeJob.status === "running" && (
                 <div className="text-[11px] text-muted-foreground truncate">
                   <span className="text-foreground/70">{activeJob.current_platform || "—"}</span>
