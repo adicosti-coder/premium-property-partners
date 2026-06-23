@@ -484,16 +484,17 @@ async function basicFallbackSearch(query: string, maxResults: number): Promise<F
 
 async function firecrawlSearchWithRetry(
   query: string, key: string, maxResults: number,
-  opts: { maxAttempts?: number; logger?: (ev: Record<string, unknown>) => void } = {},
+  opts: { maxAttempts?: number; timeoutMs?: number; logger?: (ev: Record<string, unknown>) => void } = {},
 ): Promise<FcSearchOutcome> {
   const maxAttempts = opts.maxAttempts ?? 3;
+  const timeoutMs = opts.timeoutMs ?? 35000;
   let lastStatus: number | undefined;
   let lastBody = '';
   let lastMsg = '';
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const resp = await firecrawlSearchOnce(query, key, maxResults);
+      const resp = await firecrawlSearchOnce(query, key, maxResults, timeoutMs);
       lastStatus = resp.status;
       if (resp.ok) {
         const json = await resp.json().catch(() => ({}));
