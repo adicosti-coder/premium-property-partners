@@ -723,6 +723,8 @@ Deno.serve(async (req) => {
     // edge budget, which caused "Scanează acum" to hang silently. Manual scans
     // process a rotated slice; full coverage comes from repeated cron runs.
     let queryLimit = 8;
+    let jobId: string | null = null;
+    let asyncMode = false;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -733,7 +735,37 @@ Deno.serve(async (req) => {
       if (typeof body?.query_limit === 'number') {
         queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 30);
       }
+      if (typeof body?.job_id === 'string' && body.job_id.length > 0) jobId = body.job_id;
+      if (body?.async_mode === true) asyncMode = true;
     } catch { /* no body */ }
+
+    // ── Structured logging helpers (Sentry-friendly) ─────────────────────
+    function logScrapeError(
+      where: string,
+      err: unknown,
+      ctx: Record<string, unknown> = {},
+    ) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      // Structured single-line log → easy to forward to Sentry/Logflare.
+      console.error(JSON.stringify({
+        kind: 'scrape_prospects_error',
+        where,
+        message: e.message,
+        stack: e.stack?.split('\n').slice(0, 5).join(' | '),
+        job_id: jobId,
+        ...ctx,
+      }));
+    }
+
+    const jobErrors: Array<Record<string, unknown>> = [];
+    async function updateJob(patch: Record<string, unknown>) {
+      if (!jobId) return;
+      try {
+        await supabase.from('prospect_scan_jobs').update(patch).eq('id', jobId);
+      } catch (e) {
+        console.warn('updateJob failed', (e as Error).message);
+      }
+    }
 
     const results: any[] = [];
     const errors: string[] = [];
@@ -801,6 +833,16 @@ Deno.serve(async (req) => {
     }
     console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries (cap=${queryLimit})`);
 
+    // Initial job state (best-effort)
+    await updateJob({
+      status: 'running',
+      started_at: new Date().toISOString(),
+      total_queries: queries.length,
+      processed_queries: 0,
+    });
+
+    // Wrap the heavy work so we can fire-and-forget under async mode.
+    const runScan = async () => {
     if (onlyNewSources || preserveAgencyFilter) {
       const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
         supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
@@ -844,6 +886,18 @@ Deno.serve(async (req) => {
     const BATCH_SIZE = customQuery ? 1 : 2;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
       const batch = queries.slice(i, i + BATCH_SIZE);
+
+      // ── progress update (best-effort) ────────────────────────────────
+      await updateJob({
+        processed_queries: i,
+        current_keyword: batch[0]?.query?.slice(0, 200) ?? null,
+        current_platform: batch[0]?.platform ?? null,
+        new_listings: results.length,
+        archived_skipped: archivedSkipped,
+        duplicate_skipped: duplicateSkipped,
+        blacklisted_skipped: blacklistedSkipped,
+      });
+
       
       const batchPromises = batch.map(async ({ platform, query }) => {
         console.log(`Searching ${platform}: ${query}`);
@@ -862,6 +916,21 @@ Deno.serve(async (req) => {
               scrapeOptions: { formats: ['markdown'] },
             }),
           });
+
+          if (!searchResp.ok) {
+            const errBody = await searchResp.text().catch(() => '');
+            const errObj = new Error(`Firecrawl HTTP ${searchResp.status}: ${errBody.slice(0, 300)}`);
+            // Surface 402 (credits), 401 (key), 429 (rate-limit) clearly.
+            logScrapeError('firecrawl_search_http', errObj, {
+              platform, keyword: query, http_status: searchResp.status,
+            });
+            jobErrors.push({
+              platform, keyword: query, http_status: searchResp.status,
+              message: errObj.message, phase: 'firecrawl_search',
+            });
+            errors.push(`${platform} [${query.slice(0, 60)}]: HTTP ${searchResp.status}`);
+            return;
+          }
 
           const searchData = await searchResp.json();
           const searchResults = searchData?.data || [];
@@ -1090,8 +1159,12 @@ Deno.serve(async (req) => {
             }
           }
         } catch (err: any) {
-          console.error(`Platform ${platform} error:`, err);
-          errors.push(`${platform}: ${err.message}`);
+          logScrapeError('platform_loop', err, { platform, keyword: query });
+          jobErrors.push({
+            platform, keyword: query, message: String(err?.message ?? err),
+            phase: 'platform_loop',
+          });
+          errors.push(`${platform} [${(query || '').slice(0, 60)}]: ${err.message}`);
         }
       });
 
@@ -1102,31 +1175,96 @@ Deno.serve(async (req) => {
       }
     }
 
+    const payload = {
+      success: true,
+      new_listings: results.length,
+      count: results.length,
+      blacklisted_skipped: blacklistedSkipped,
+      blacklisted_reviewed: blacklistedReviewed,
+      spam_shield_permissive_mode: permissiveSpamShield,
+      discovery_mode: discoveryMode,
+      archived_skipped: archivedSkipped,
+      duplicate_skipped: duplicateSkipped,
+      existing_sources_checked: existingUrls.size,
+      agency_filter: {
+        blocked_phones: blockedPhones.size,
+        blocked_domains: blockedDomains.size,
+        whitelisted_phones: whitelistedPhones.size,
+        whitelisted_domains: whitelistedDomains.size,
+      },
+      listings: results,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+    return payload;
+    }; // ── end runScan ──
+
+    if (asyncMode && jobId) {
+      // Fire-and-forget; UI polls the job row for progress.
+      // @ts-ignore — EdgeRuntime is a Deno Deploy global.
+      (globalThis as any).EdgeRuntime?.waitUntil?.((async () => {
+        try {
+          const payload = await runScan();
+          await updateJob({
+            status: 'completed',
+            finished_at: new Date().toISOString(),
+            processed_queries: queries.length,
+            current_keyword: null,
+            current_platform: null,
+            new_listings: payload.new_listings ?? 0,
+            archived_skipped: payload.archived_skipped ?? 0,
+            duplicate_skipped: payload.duplicate_skipped ?? 0,
+            blacklisted_skipped: payload.blacklisted_skipped ?? 0,
+            errors: jobErrors,
+            result: payload,
+          });
+        } catch (e) {
+          logScrapeError('async_runScan', e, { phase: 'async_root' });
+          await updateJob({
+            status: 'failed',
+            finished_at: new Date().toISOString(),
+            error_message: (e as Error)?.message ?? String(e),
+            errors: jobErrors,
+          });
+        }
+      })());
+      return new Response(
+        JSON.stringify({
+          success: true,
+          accepted: true,
+          job_id: jobId,
+          total_queries: queries.length,
+          message: 'Scan started in background',
+        }),
+        { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Sync mode
+    const syncPayload = await runScan();
+    if (jobId) {
+      await updateJob({
+        status: 'completed',
+        finished_at: new Date().toISOString(),
+        processed_queries: queries.length,
+        new_listings: syncPayload.new_listings ?? 0,
+        archived_skipped: syncPayload.archived_skipped ?? 0,
+        duplicate_skipped: syncPayload.duplicate_skipped ?? 0,
+        blacklisted_skipped: syncPayload.blacklisted_skipped ?? 0,
+        errors: jobErrors,
+        result: syncPayload,
+      });
+    }
     return new Response(
-      JSON.stringify({
-        success: true,
-        new_listings: results.length,
-        count: results.length,
-        blacklisted_skipped: blacklistedSkipped,
-        blacklisted_reviewed: blacklistedReviewed,
-        spam_shield_permissive_mode: permissiveSpamShield,
-        discovery_mode: discoveryMode,
-        archived_skipped: archivedSkipped,
-        duplicate_skipped: duplicateSkipped,
-        existing_sources_checked: existingUrls.size,
-        agency_filter: {
-          blocked_phones: blockedPhones.size,
-          blocked_domains: blockedDomains.size,
-          whitelisted_phones: whitelistedPhones.size,
-          whitelisted_domains: whitelistedDomains.size,
-        },
-        listings: results,
-        errors: errors.length > 0 ? errors : undefined,
-      }),
+      JSON.stringify(syncPayload),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Scrape prospects error:', error);
+    console.error(JSON.stringify({
+      kind: 'scrape_prospects_error',
+      where: 'outer_handler',
+      message: error?.message ?? String(error),
+      stack: error?.stack?.split('\n').slice(0, 5).join(' | '),
+    }));
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

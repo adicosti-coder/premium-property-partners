@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
 import {
   Loader2, Search, RefreshCw, ExternalLink, MapPin, Ruler, DoorOpen,
   Euro, Star, Phone, Eye, CheckCircle, MessageSquare, TrendingUp,
@@ -265,6 +267,105 @@ const ProspectManager = () => {
   const [activeQuickReply, setActiveQuickReply] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
 
+  // ── Scan-job state ───────────────────────────────────────────────────
+  const [queryLimit, setQueryLimit] = useState<number>(() => {
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('prospect_scan_query_limit') : null;
+    const n = stored ? parseInt(stored, 10) : 8;
+    return Number.isFinite(n) && n >= 1 && n <= 30 ? n : 8;
+  });
+  const [activeJob, setActiveJob] = useState<{
+    id: string;
+    status: string;
+    processed_queries: number;
+    total_queries: number;
+    current_keyword: string | null;
+    current_platform: string | null;
+    new_listings: number;
+    error_message: string | null;
+  } | null>(null);
+
+  // Persist slider value
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('prospect_scan_query_limit', String(queryLimit));
+    }
+  }, [queryLimit]);
+
+  // On mount: resume tracking any running job (so reload / re-open keeps progress)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('prospect_scan_jobs')
+        .select('*')
+        .in('status', ['pending', 'running'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setActiveJob({
+        id: data.id,
+        status: data.status,
+        processed_queries: data.processed_queries ?? 0,
+        total_queries: data.total_queries ?? 0,
+        current_keyword: data.current_keyword,
+        current_platform: data.current_platform,
+        new_listings: data.new_listings ?? 0,
+        error_message: data.error_message,
+      });
+      setIsScraping(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Realtime subscription to active job
+  const fetchListingsRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    if (!activeJob?.id) return;
+    const channel = supabase
+      .channel(`prospect_scan_job_${activeJob.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'prospect_scan_jobs', filter: `id=eq.${activeJob.id}` },
+        (payload) => {
+          const row = payload.new as any;
+          setActiveJob((prev) => prev && prev.id === row.id ? {
+            id: row.id,
+            status: row.status,
+            processed_queries: row.processed_queries ?? 0,
+            total_queries: row.total_queries ?? 0,
+            current_keyword: row.current_keyword,
+            current_platform: row.current_platform,
+            new_listings: row.new_listings ?? 0,
+            error_message: row.error_message,
+          } : prev);
+
+          if (row.status === 'completed') {
+            const found = row.new_listings ?? 0;
+            const errCount = Array.isArray(row.errors) ? row.errors.length : 0;
+            toast({
+              title: found > 0 ? 'Scanare completă! 🎯' : 'Scanare completă',
+              description: `${found} anunțuri noi.${errCount ? ` ${errCount} erori — vezi consola.` : ''}`,
+            });
+            setIsScraping(false);
+            fetchListingsRef.current?.();
+            setTimeout(() => setActiveJob(null), 4000);
+          } else if (row.status === 'failed') {
+            console.error('[ProspectManager] scan job failed', row);
+            toast({
+              title: 'Scanare eșuată',
+              description: row.error_message || 'Eroare necunoscută. Vezi consola.',
+              variant: 'destructive',
+            });
+            setIsScraping(false);
+            setTimeout(() => setActiveJob(null), 6000);
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeJob?.id]);
+
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -295,6 +396,7 @@ const ProspectManager = () => {
   }, []);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
+  useEffect(() => { fetchListingsRef.current = fetchListings; }, [fetchListings]);
 
   // Apply filters
   useEffect(() => {
@@ -313,32 +415,59 @@ const ProspectManager = () => {
 
   const handleScrape = async () => {
     setIsScraping(true);
-    toast({
-      title: "Scanare pornită…",
-      description: "Verific ~8 cuvinte-cheie rotite. Durează ~30-90s.",
-    });
     try {
-      const { data, error } = await supabase.functions.invoke('scrape-prospects', {
-        body: { max_results: 10, query_limit: 8 },
+      // 1. Get current user (admin)
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error('Trebuie să fii autentificat ca admin.');
+
+      // 2. Create job row
+      const { data: jobRow, error: jobErr } = await supabase
+        .from('prospect_scan_jobs')
+        .insert({
+          created_by: userId,
+          query_limit: queryLimit,
+          max_results: 10,
+          triggered_by: 'manual_ui',
+        })
+        .select('*')
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error('Nu am putut crea job-ul.');
+
+      setActiveJob({
+        id: jobRow.id,
+        status: 'pending',
+        processed_queries: 0,
+        total_queries: 0,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
       });
-      if (error) throw error;
-      if (data && data.success === false) {
-        throw new Error(data.error || 'Scanarea a eșuat');
-      }
-      const found = data?.new_listings ?? data?.count ?? 0;
-      const errs = data?.errors?.length ?? 0;
+
+      // 3. Kick the async scan
+      const { error: invokeErr } = await supabase.functions.invoke('scrape-prospects', {
+        body: {
+          max_results: 10,
+          query_limit: queryLimit,
+          job_id: jobRow.id,
+          async_mode: true,
+        },
+      });
+      if (invokeErr) throw invokeErr;
+
       toast({
-        title: found > 0 ? "Scanare completă! 🎯" : "Scanare completă",
-        description: `${found} anunțuri noi.${errs ? ` ${errs} erori.` : ''}${data?.archived_skipped ? ` ${data.archived_skipped} filtrate.` : ''}`,
+        title: 'Scanare pornită în fundal ⚙️',
+        description: `${queryLimit} cuvinte-cheie. Poți naviga în aplicație — progresul rămâne live.`,
       });
-      fetchListings();
     } catch (err: any) {
+      // Console log captured by Sentry (errorReporting bridge)
+      console.error('[ProspectManager] handleScrape failed', err);
       toast({
-        title: "Eroare scanare",
-        description: err?.message || "Edge function nu a răspuns. Reîncearcă cu mai puține keyword-uri.",
-        variant: "destructive",
+        title: 'Eroare la pornire scanare',
+        description: err?.message || 'Edge function nu a răspuns.',
+        variant: 'destructive',
       });
-    } finally {
       setIsScraping(false);
     }
   };
@@ -596,10 +725,69 @@ const ProspectManager = () => {
               <LayoutList className="w-4 h-4 mr-1" /> Listă
             </Button>
           </div>
-          <Button onClick={handleScrape} disabled={isScraping}>
-            {isScraping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
-            {isScraping ? 'Se scanează...' : 'Scanează acum'}
-          </Button>
+          <div className="flex flex-col gap-2 min-w-[260px]">
+            <div className="flex items-center gap-2">
+              <Button onClick={handleScrape} disabled={isScraping} className="flex-1">
+                {isScraping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
+                {isScraping ? 'Se scanează…' : 'Scanează acum'}
+              </Button>
+              <div className="flex flex-col items-end gap-0.5 min-w-[110px]">
+                <label htmlFor="query-limit-slider" className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Pachet: <span className="font-bold text-foreground">{queryLimit}</span> kw
+                </label>
+                <Slider
+                  id="query-limit-slider"
+                  value={[queryLimit]}
+                  onValueChange={(v) => setQueryLimit(v[0])}
+                  min={1}
+                  max={30}
+                  step={1}
+                  disabled={isScraping}
+                  className="w-[100px]"
+                  aria-label="Numărul de cuvinte-cheie procesate pe scanare"
+                />
+              </div>
+            </div>
+            {activeJob && (
+              <div className="rounded-md border border-border bg-muted/40 p-2 text-xs space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">
+                    {activeJob.status === 'completed'
+                      ? '✅ Finalizat'
+                      : activeJob.status === 'failed'
+                        ? '❌ Eșuat'
+                        : activeJob.status === 'running'
+                          ? '⚙️ Scanare în fundal'
+                          : '⏳ În așteptare'}
+                  </span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {activeJob.processed_queries}/{activeJob.total_queries || queryLimit}
+                  </span>
+                </div>
+                <Progress
+                  value={activeJob.total_queries > 0
+                    ? Math.min(100, Math.round((activeJob.processed_queries / activeJob.total_queries) * 100))
+                    : (activeJob.status === 'running' ? 5 : 0)}
+                  className="h-1.5"
+                />
+                {activeJob.current_keyword && activeJob.status === 'running' && (
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    <span className="text-foreground/70">{activeJob.current_platform}</span>
+                    {' · '}
+                    <span className="italic">"{activeJob.current_keyword}"</span>
+                  </div>
+                )}
+                {activeJob.new_listings > 0 && (
+                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                    {activeJob.new_listings} anunțuri noi colectate
+                  </div>
+                )}
+                {activeJob.error_message && (
+                  <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
