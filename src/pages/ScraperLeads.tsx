@@ -2027,6 +2027,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .single();
       if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
 
+      lastScanWasSessionOnlyRef.current = false;
       setActiveJob({
         id: (jobRow as any).id,
         status: "pending",
