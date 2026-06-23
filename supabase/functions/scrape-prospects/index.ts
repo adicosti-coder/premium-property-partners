@@ -1364,24 +1364,28 @@ Deno.serve(async (req) => {
                 blockedAlerts,
               });
 
-          // ── Auto-fallback: if FREE mode returned nothing and Firecrawl is
-          //    available + enabled, retry this single query via Firecrawl.
-          if (!outcome.ok && enableAutoFallback && firecrawlKey) {
+          // ── Auto-fallback: if FREE mode returned fewer than `autoFallbackThreshold`
+          //    URLs (or failed) and Firecrawl is available + enabled, retry this
+          //    single query via Firecrawl.
+          const freeUrlCount = outcome.ok ? outcome.results.length : 0;
+          const belowThreshold = freeUrlCount < autoFallbackThreshold;
+          if (belowThreshold && enableAutoFallback && firecrawlKey) {
             const t0 = Date.now();
             engineStats.firecrawl.hits++;
             const fc = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
               maxAttempts: 1, timeoutMs: 9_000,
-              logger: (ev) => console.warn(JSON.stringify({ ...ev, platform, auto_fallback: true })),
+              logger: (ev) => console.warn(JSON.stringify({ ...ev, platform, auto_fallback: true, threshold: autoFallbackThreshold, free_urls: freeUrlCount })),
             });
             engineStats.firecrawl.ms += Date.now() - t0;
             if (fc.ok && fc.results.length > 0) {
               engineStats.firecrawl.urls += fc.results.length;
               outcome = fc;
-              console.log(`[auto-fallback] firecrawl rescued ${platform} [${query.slice(0, 60)}] → ${fc.results.length} URL`);
+              console.log(`[auto-fallback] firecrawl rescued ${platform} [${query.slice(0, 60)}] free=${freeUrlCount}<${autoFallbackThreshold} → ${fc.results.length} URL`);
             } else {
               engineStats.firecrawl.errors++;
             }
           }
+
 
           if (!outcome.ok) {
             const msg = `${outcome.errorMessage || 'search failed'} (after ${outcome.attempts} attempts, mode=${scanMode}${enableAutoFallback ? '+autofallback' : ''})`;
