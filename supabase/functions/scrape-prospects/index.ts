@@ -928,7 +928,11 @@ Deno.serve(async (req) => {
 
     // Load keywords from DB, fallback to hardcoded defaults
     let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
-    if (customQuery) {
+    if (retryBatches && retryBatches.length > 0) {
+      // Retry path — use the exact failed batches verbatim, skip expansion/owner filter.
+      queries = retryBatches.map((b) => ({ platform: b.platform, query: b.query }));
+      console.log(`Retry mode: re-running ${queries.length} failed batches`);
+    } else if (customQuery) {
       queries = [{ platform: 'Custom', query: customQuery }];
     } else {
       const { data: dbKeywords } = await supabase
