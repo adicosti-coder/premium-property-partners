@@ -1153,6 +1153,9 @@ Deno.serve(async (req) => {
     const blockedAlerts: BlockedAlert[] = [];
     const sessionSeen = new Set<string>();
     let sessionDedupedSkipped = 0;
+    // Auto-disable Firecrawl for the rest of the scan when it returns 402
+    // (insufficient credits) or other hard-fail codes — saves seconds per query.
+    let firecrawlDisabled = false;
 
 
     // ── Structured logging helpers (Sentry-friendly) ─────────────────────
