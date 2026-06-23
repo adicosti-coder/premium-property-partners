@@ -484,16 +484,17 @@ async function basicFallbackSearch(query: string, maxResults: number): Promise<F
 
 async function firecrawlSearchWithRetry(
   query: string, key: string, maxResults: number,
-  opts: { maxAttempts?: number; logger?: (ev: Record<string, unknown>) => void } = {},
+  opts: { maxAttempts?: number; timeoutMs?: number; logger?: (ev: Record<string, unknown>) => void } = {},
 ): Promise<FcSearchOutcome> {
   const maxAttempts = opts.maxAttempts ?? 3;
+  const timeoutMs = opts.timeoutMs ?? 35000;
   let lastStatus: number | undefined;
   let lastBody = '';
   let lastMsg = '';
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const resp = await firecrawlSearchOnce(query, key, maxResults);
+      const resp = await firecrawlSearchOnce(query, key, maxResults, timeoutMs);
       lastStatus = resp.status;
       if (resp.ok) {
         const json = await resp.json().catch(() => ({}));
@@ -539,7 +540,7 @@ async function firecrawlSearchWithRetry(
 
 async function scrapePhoneHydrationOnce(url: string, firecrawlKey: string, mode: 'js' | 'native'): Promise<string[]> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), mode === 'native' ? 24000 : 42000);
+  const timer = setTimeout(() => controller.abort(), mode === 'native' ? 7000 : 9000);
   try {
     const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
@@ -549,8 +550,8 @@ async function scrapePhoneHydrationOnce(url: string, firecrawlKey: string, mode:
         url,
         formats: ['markdown', 'html', 'rawHtml'],
         onlyMainContent: false,
-        waitFor: mode === 'native' ? 2600 : 3600,
-        timeout: mode === 'native' ? 22000 : 40000,
+        waitFor: mode === 'native' ? 1200 : 1800,
+        timeout: mode === 'native' ? 6500 : 8500,
         maxAge: 0,
         proxy: 'stealth',
         actions: buildPhoneHydrationActions(url, mode),
@@ -903,6 +904,27 @@ Deno.serve(async (req) => {
     let blacklistedReviewed = 0;
     let archivedSkipped = 0;
     let duplicateSkipped = 0;
+    let timedOut = false;
+    const scanStartedAt = Date.now();
+    const MAX_BACKGROUND_RUNTIME_MS = 42_000;
+    const markTimedOut = async (processed: number, total: number) => {
+      timedOut = true;
+      const message = `Scanarea a fost oprită automat după ${Math.round((Date.now() - scanStartedAt) / 1000)}s ca să nu rămână blocată. Repornește scanarea pentru restul cuvintelor.`;
+      jobErrors.push({ phase: 'runtime_guard', message, retryable: true, processed, total });
+      await updateJob({
+        status: 'failed',
+        finished_at: new Date().toISOString(),
+        processed_queries: processed,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: results.length,
+        archived_skipped: archivedSkipped,
+        duplicate_skipped: duplicateSkipped,
+        blacklisted_skipped: blacklistedSkipped,
+        error_message: message,
+        errors: jobErrors,
+      });
+    };
     const existingUrls = new Set<string>();
     const blockedPhones = new Set<string>();
     const blockedDomains = new Set<string>();
@@ -1021,6 +1043,10 @@ Deno.serve(async (req) => {
     // exhausting the search quota and returning successful cron runs with 0 real imports.
     const BATCH_SIZE = customQuery ? 1 : 2;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
+      if (Date.now() - scanStartedAt > MAX_BACKGROUND_RUNTIME_MS) {
+        await markTimedOut(i, queries.length);
+        break;
+      }
       const batch = queries.slice(i, i + BATCH_SIZE);
 
       // ── progress update (best-effort) ────────────────────────────────
@@ -1039,7 +1065,8 @@ Deno.serve(async (req) => {
         console.log(`Searching ${platform}: ${query}`);
         try {
           const outcome = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
-            maxAttempts: 3,
+            maxAttempts: 1,
+            timeoutMs: 9_000,
             logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
           });
 
@@ -1072,6 +1099,10 @@ Deno.serve(async (req) => {
           console.log(`Found ${searchResults.length} results from ${platform} (source=${outcome.source})`);
 
           for (const result of searchResults) {
+            if (Date.now() - scanStartedAt > MAX_BACKGROUND_RUNTIME_MS) {
+              await markTimedOut(Math.min(i + BATCH_SIZE, queries.length), queries.length);
+              return;
+            }
             const url = result.url;
             if (!url) continue;
 
@@ -1107,7 +1138,8 @@ Deno.serve(async (req) => {
             const phoneFromSearchPayload = normalizeRoPhone(extracted.contactPhone) ??
               extractPhonesFromText(`${markdown}\n${result.title || ''}\n${result.description || ''}`).find(Boolean) ??
               null;
-            extracted.contactPhone = phoneFromSearchPayload || await hydratePhoneFromListingUrl(url, firecrawlKey);
+            const canHydratePhone = Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 12_000;
+            extracted.contactPhone = phoneFromSearchPayload || (canHydratePhone ? await hydratePhoneFromListingUrl(url, firecrawlKey) : null);
 
             let price = extracted.price;
             if (price && extracted.currency === 'RON') {
@@ -1304,6 +1336,7 @@ Deno.serve(async (req) => {
       });
 
       await Promise.all(batchPromises);
+      if (timedOut) break;
       // Brief pause between batches
       if (i + BATCH_SIZE < queries.length) {
         await new Promise(r => setTimeout(r, 300));
@@ -1339,6 +1372,7 @@ Deno.serve(async (req) => {
       (globalThis as any).EdgeRuntime?.waitUntil?.((async () => {
         try {
           const payload = await runScan();
+          if (timedOut) return;
           await updateJob({
             status: 'completed',
             finished_at: new Date().toISOString(),

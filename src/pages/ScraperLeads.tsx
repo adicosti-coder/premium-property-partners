@@ -616,6 +616,8 @@ const IMPORT_WORKFLOW_LABELS: Record<ImportWorkflow, string> = {
   active: "Import activ",
 };
 
+const SCAN_STUCK_AFTER_MS = 90_000;
+
 const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -646,6 +648,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     current_platform: string | null;
     new_listings: number;
     error_message: string | null;
+    updated_at: string | null;
   } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
@@ -711,6 +714,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     scanContextRef.current = null;
   }, []);
   const simulationTimerRef = useRef<number | null>(null);
+  const locallyClosedJobsRef = useRef<Set<string>>(new Set());
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -1835,6 +1839,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       current_platform: null,
       new_listings: 0,
       error_message: null,
+      updated_at: new Date().toISOString(),
     });
     let processed = 0;
     let fakeFound = 0;
@@ -1848,6 +1853,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         new_listings: fakeFound,
         current_keyword: kw?.keyword ?? `sim-keyword-${processed}`,
         current_platform: kw?.platform ?? "Simulat",
+        updated_at: new Date().toISOString(),
       } : prev);
       if (processed >= total) {
         setActiveJob((prev) => prev && prev.id === fakeId ? { ...prev, status: "completed" } : prev);
@@ -1928,6 +1934,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         current_platform: null,
         new_listings: 0,
         error_message: null,
+        updated_at: (jobRow as any).updated_at ?? new Date().toISOString(),
       });
 
       const { error } = await supabase.functions.invoke("scrape-prospects", {
@@ -1964,6 +1971,48 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     }
   };
 
+  const closeStuckJob = useCallback(async (job: NonNullable<typeof activeJob>) => {
+    if (!job || !["pending", "running"].includes(job.status) || locallyClosedJobsRef.current.has(job.id)) return;
+    locallyClosedJobsRef.current.add(job.id);
+    const message = "Scanarea nu a mai raportat progres și a fost oprită automat ca să nu rămână blocată.";
+    try {
+      await supabase.from("prospect_scan_jobs").update({
+        status: "failed",
+        error_message: message,
+        finished_at: new Date().toISOString(),
+      } as any).eq("id", job.id);
+    } catch {
+      // UI fallback still closes the stuck state even if DB update is blocked.
+    }
+    setActiveJob((prev) => prev?.id === job.id ? { ...prev, status: "failed", error_message: message, updated_at: new Date().toISOString() } : prev);
+    setIsScraping(false);
+    setActiveScanMode(null);
+    toast.error(message, { description: "Poți porni din nou scanarea; istoricul păstrează detaliile sesiunii." });
+    recordScanEntry({
+      status: "failed",
+      total_queries: job.total_queries ?? 0,
+      processed_queries: job.processed_queries ?? 0,
+      batches_total: Math.max(1, Math.ceil((job.total_queries ?? 0) / 25)),
+      batches_done: Math.max(0, Math.floor((job.processed_queries ?? 0) / 25)),
+      new_listings: job.new_listings ?? 0,
+      duplicate_skipped: 0,
+      blacklisted_skipped: 0,
+      error_message: message,
+      error_details: JSON.stringify({ job_id: job.id, last_update: job.updated_at, guard_ms: SCAN_STUCK_AFTER_MS }, null, 2),
+    });
+  }, [recordScanEntry]);
+
+  useEffect(() => {
+    if (!activeJob || !["pending", "running"].includes(activeJob.status)) return;
+    const check = () => {
+      const lastUpdate = new Date(activeJob.updated_at || Date.now()).getTime();
+      if (Date.now() - lastUpdate > SCAN_STUCK_AFTER_MS) void closeStuckJob(activeJob);
+    };
+    check();
+    const timer = window.setInterval(check, 10_000);
+    return () => window.clearInterval(timer);
+  }, [activeJob, closeStuckJob]);
+
   // Realtime subscription to active scan job.
   useEffect(() => {
     if (!activeJob?.id) return;
@@ -1983,6 +2032,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             current_platform: row.current_platform,
             new_listings: row.new_listings ?? 0,
             error_message: row.error_message,
+            updated_at: row.updated_at ?? new Date().toISOString(),
           } : prev);
 
           if (row.status === "completed") {
@@ -2069,6 +2119,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         current_platform: row.current_platform,
         new_listings: row.new_listings ?? 0,
         error_message: row.error_message,
+        updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
       });
       setIsScraping(true);
       setActiveScanMode("scan");
