@@ -2099,19 +2099,34 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     return () => { supabase.removeChannel(channel); };
   }, [activeJob?.id, queryClient, recordScanEntry]);
 
-  // Resume tracking any running job on mount.
+  // Resume tracking any running OR recently-failed-with-pending job on mount.
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      // 1) running/pending wins
+      const running = await supabase
         .from("prospect_scan_jobs")
         .select("*")
         .in("status", ["pending", "running"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (cancelled || !data) return;
-      const row = data as any;
+      let row: any = running.data;
+      let isLive = !!row;
+      // 2) otherwise, surface latest failed job that still has pending queries (resume affordance)
+      if (!row) {
+        const failed = await supabase
+          .from("prospect_scan_jobs")
+          .select("*")
+          .eq("status", "failed")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (failed.data && Array.isArray((failed.data as any).pending_queries) && (failed.data as any).pending_queries.length > 0) {
+          row = failed.data;
+        }
+      }
+      if (cancelled || !row) return;
       setActiveJob({
         id: row.id,
         status: row.status,
@@ -2124,8 +2139,10 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
         pending_queries: Array.isArray(row.pending_queries) ? row.pending_queries : [],
       });
-      setIsScraping(true);
-      setActiveScanMode("scan");
+      if (isLive) {
+        setIsScraping(true);
+        setActiveScanMode("scan");
+      }
     })();
     return () => { cancelled = true; };
   }, []);
