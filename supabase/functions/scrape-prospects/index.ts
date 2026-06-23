@@ -1019,13 +1019,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!firecrawlKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'FIRECRAWL_API_KEY not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // FREE MODE by default — zero external API cost. Firecrawl is opt-in
+    // and only used if SCRAPER_USE_FIRECRAWL=true AND a key is configured.
+    const useFirecrawl = (Deno.env.get('SCRAPER_USE_FIRECRAWL') || '').toLowerCase() === 'true';
+    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY') || '';
+    const scanMode: 'free' | 'firecrawl' = useFirecrawl && firecrawlKey ? 'firecrawl' : 'free';
+    console.log(`🔎 scrape-prospects scan_mode=${scanMode}`);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
