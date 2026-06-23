@@ -1987,16 +1987,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       toast.info("Mod Simulare activ — dezactivează-l ca să reiei scanarea reală.");
       return;
     }
+    if (isResuming || isScraping) return; // hard guard against double-clicks
+    setIsResuming(true);
     setIsScraping(true);
     setActiveScanMode("scan");
     setRecentScanPulse(true);
     const slice = pending.slice(0, 30); // edge function caps retry_batches at 30
+    const remainingAfter = Math.max(0, pending.length - slice.length);
+    setResumeRemainingAfter(remainingAfter);
     scanContextRef.current = {
       startedAt: Date.now(),
       mode: "scan",
       queryLimit: slice.length,
       simulated: false,
     };
+    const previousJobId = activeJob.id;
     try {
       const { data: userRes } = await supabase.auth.getUser();
       const userId = userRes?.user?.id;
@@ -2013,6 +2018,13 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .select("*")
         .single();
       if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
+
+      // Clear pending on the previous failed job so we don't loop on it.
+      try {
+        await supabase.from("prospect_scan_jobs")
+          .update({ pending_queries: remainingAfter > 0 ? pending.slice(slice.length) : [] } as any)
+          .eq("id", previousJobId);
+      } catch { /* non-fatal */ }
 
       setActiveJob({
         id: (jobRow as any).id,
@@ -2037,14 +2049,44 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         },
       });
       if (error) throw error;
-      toast.success(`Reiau scanarea pentru ${slice.length} cuvinte-cheie rămase.`);
+      toast.success(`Reiau scanarea pentru ${slice.length} cuvinte-cheie${remainingAfter > 0 ? ` (${remainingAfter} vor rămâne pentru un nou ciclu)` : ""}.`);
     } catch (err: any) {
       console.error("[ScraperLeads] handleResume failed", err);
       toast.error(`Eroare la repornire: ${err?.message || "necunoscută"}`);
       setIsScraping(false);
       setActiveScanMode(null);
+      setResumeRemainingAfter(0);
+    } finally {
+      setIsResuming(false);
     }
   };
+
+  // Clear pending_queries on the failed job (DB + UI), so the resume CTA disappears
+  // and the user fully abandons the interrupted batch.
+  const handleClearPending = async () => {
+    if (!activeJob) return;
+    if (isClearingPending) return;
+    setIsClearingPending(true);
+    const jobId = activeJob.id;
+    try {
+      const { error } = await supabase
+        .from("prospect_scan_jobs")
+        .update({ pending_queries: [] } as any)
+        .eq("id", jobId);
+      if (error) throw error;
+      setActiveJob((prev) => prev?.id === jobId ? { ...prev, pending_queries: [] } : prev);
+      setResumeRemainingAfter(0);
+      toast.success("Coada a fost golită. Poți porni o scanare nouă oricând.");
+      // Collapse panel after a beat so the success state is visible.
+      setTimeout(() => setActiveJob((prev) => prev?.id === jobId ? null : prev), 600);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleClearPending failed", err);
+      toast.error(`Nu am putut curăța coada: ${err?.message || "eroare necunoscută"}`);
+    } finally {
+      setIsClearingPending(false);
+    }
+  };
+
 
   const closeStuckJob = useCallback(async (job: NonNullable<typeof activeJob>) => {
     if (!job || !["pending", "running"].includes(job.status) || locallyClosedJobsRef.current.has(job.id)) return;
