@@ -448,8 +448,31 @@ async function fetchHtml(url: string, timeoutMs = 9000, referer?: string): Promi
 }
 
 function stripQueryOperators(q: string): string {
-  return q.replace(/site:\S+/gi, '').replace(/inurl:\S+/gi, '').replace(/intitle:\S+/gi, '')
-    .replace(/-\S+/g, '').replace(/\s+/g, ' ').trim();
+  return q
+    .replace(/site:\S+/gi, '')
+    .replace(/inurl:\S+/gi, '')
+    .replace(/intitle:\S+/gi, '')
+    .replace(/-\S+/g, '')                 // -agentie, -inurl:...
+    .replace(/[()"']+/g, ' ')             // strip parens & quotes
+    .replace(/\bOR\b/gi, ' ')             // boolean OR
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// For free engines — short, simple keyword form. Long boolean queries return
+// 0 hits on DDG/Bing/OLX-direct, so we trim to the most meaningful tokens.
+function simplifyForFreeEngine(q: string, maxWords = 6): string {
+  const cleaned = stripQueryOperators(q);
+  const stop = new Set(['de', 'la', 'cu', 'in', 'în', 'pe', 'si', 'și', 'sau', 'a', 'al', 'ale']);
+  const words = cleaned.split(/\s+/).filter((w) => w.length > 1 && !stop.has(w.toLowerCase()));
+  return words.slice(0, maxWords).join(' ').trim();
+}
+
+// For DDG/Bing we keep `site:` so results stay on-portal, but drop the noise.
+function simplifyForWebEngine(q: string, maxWords = 6): string {
+  const siteMatch = q.match(/site:\S+/i);
+  const base = simplifyForFreeEngine(q, maxWords);
+  return siteMatch ? `${base} ${siteMatch[0]}`.trim() : base;
 }
 
 function extractDomainFromSiteOperator(q: string): string | null {
@@ -473,7 +496,7 @@ function platformToDomain(platform: string, query: string): string | null {
 interface FreeResult { url: string; title?: string; markdown?: string; description?: string }
 
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
-  const clean = stripQueryOperators(query);
+  const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
   const slug = encodeURIComponent(clean.replace(/\s+/g, '-'));
   const url = `https://www.olx.ro/d/imobiliare/q-${slug}/?search%5Border%5D=created_at:desc`;
@@ -494,7 +517,8 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
 }
 
 async function duckduckgoSearch(query: string, max: number): Promise<FreeResult[]> {
-  const { ok, html } = await fetchHtml(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, 10000);
+  const simple = simplifyForWebEngine(query, 6) || query;
+  const { ok, html } = await fetchHtml(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(simple)}`, 10000);
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -513,7 +537,8 @@ async function duckduckgoSearch(query: string, max: number): Promise<FreeResult[
 }
 
 async function bingSearch(query: string, max: number): Promise<FreeResult[]> {
-  const { ok, html } = await fetchHtml(`https://www.bing.com/search?q=${encodeURIComponent(query)}&setlang=ro&cc=RO`, 10000);
+  const simple = simplifyForWebEngine(query, 6) || query;
+  const { ok, html } = await fetchHtml(`https://www.bing.com/search?q=${encodeURIComponent(simple)}&setlang=ro&cc=RO`, 10000);
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -1128,6 +1153,9 @@ Deno.serve(async (req) => {
     const blockedAlerts: BlockedAlert[] = [];
     const sessionSeen = new Set<string>();
     let sessionDedupedSkipped = 0;
+    // Auto-disable Firecrawl for the rest of the scan when it returns 402
+    // (insufficient credits) or other hard-fail codes — saves seconds per query.
+    let firecrawlDisabled = false;
 
 
     // ── Structured logging helpers (Sentry-friendly) ─────────────────────
@@ -1369,7 +1397,7 @@ Deno.serve(async (req) => {
           //    single query via Firecrawl.
           const freeUrlCount = outcome.ok ? outcome.results.length : 0;
           const belowThreshold = freeUrlCount < autoFallbackThreshold;
-          if (belowThreshold && enableAutoFallback && firecrawlKey) {
+          if (belowThreshold && enableAutoFallback && firecrawlKey && !firecrawlDisabled) {
             const t0 = Date.now();
             engineStats.firecrawl.hits++;
             const fc = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
@@ -1383,6 +1411,10 @@ Deno.serve(async (req) => {
               console.log(`[auto-fallback] firecrawl rescued ${platform} [${query.slice(0, 60)}] free=${freeUrlCount}<${autoFallbackThreshold} → ${fc.results.length} URL`);
             } else {
               engineStats.firecrawl.errors++;
+              if (fc.status === 402 || fc.status === 401 || fc.status === 403) {
+                firecrawlDisabled = true;
+                console.warn(`[auto-fallback] firecrawl disabled for rest of scan (status=${fc.status})`);
+              }
             }
           }
 
