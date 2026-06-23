@@ -1159,8 +1159,12 @@ Deno.serve(async (req) => {
             }
           }
         } catch (err: any) {
-          console.error(`Platform ${platform} error:`, err);
-          errors.push(`${platform}: ${err.message}`);
+          logScrapeError('platform_loop', err, { platform, keyword: query });
+          jobErrors.push({
+            platform, keyword: query, message: String(err?.message ?? err),
+            phase: 'platform_loop',
+          });
+          errors.push(`${platform} [${(query || '').slice(0, 60)}]: ${err.message}`);
         }
       });
 
@@ -1171,27 +1175,87 @@ Deno.serve(async (req) => {
       }
     }
 
+    const payload = {
+      success: true,
+      new_listings: results.length,
+      count: results.length,
+      blacklisted_skipped: blacklistedSkipped,
+      blacklisted_reviewed: blacklistedReviewed,
+      spam_shield_permissive_mode: permissiveSpamShield,
+      discovery_mode: discoveryMode,
+      archived_skipped: archivedSkipped,
+      duplicate_skipped: duplicateSkipped,
+      existing_sources_checked: existingUrls.size,
+      agency_filter: {
+        blocked_phones: blockedPhones.size,
+        blocked_domains: blockedDomains.size,
+        whitelisted_phones: whitelistedPhones.size,
+        whitelisted_domains: whitelistedDomains.size,
+      },
+      listings: results,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+    return payload;
+    }; // ── end runScan ──
+
+    if (asyncMode && jobId) {
+      // Fire-and-forget; UI polls the job row for progress.
+      // @ts-ignore — EdgeRuntime is a Deno Deploy global.
+      (globalThis as any).EdgeRuntime?.waitUntil?.((async () => {
+        try {
+          const payload = await runScan();
+          await updateJob({
+            status: 'completed',
+            finished_at: new Date().toISOString(),
+            processed_queries: queries.length,
+            current_keyword: null,
+            current_platform: null,
+            new_listings: payload.new_listings ?? 0,
+            archived_skipped: payload.archived_skipped ?? 0,
+            duplicate_skipped: payload.duplicate_skipped ?? 0,
+            blacklisted_skipped: payload.blacklisted_skipped ?? 0,
+            errors: jobErrors,
+            result: payload,
+          });
+        } catch (e) {
+          logScrapeError('async_runScan', e, { phase: 'async_root' });
+          await updateJob({
+            status: 'failed',
+            finished_at: new Date().toISOString(),
+            error_message: (e as Error)?.message ?? String(e),
+            errors: jobErrors,
+          });
+        }
+      })());
+      return new Response(
+        JSON.stringify({
+          success: true,
+          accepted: true,
+          job_id: jobId,
+          total_queries: queries.length,
+          message: 'Scan started in background',
+        }),
+        { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    // Sync mode
+    const syncPayload = await runScan();
+    if (jobId) {
+      await updateJob({
+        status: 'completed',
+        finished_at: new Date().toISOString(),
+        processed_queries: queries.length,
+        new_listings: syncPayload.new_listings ?? 0,
+        archived_skipped: syncPayload.archived_skipped ?? 0,
+        duplicate_skipped: syncPayload.duplicate_skipped ?? 0,
+        blacklisted_skipped: syncPayload.blacklisted_skipped ?? 0,
+        errors: jobErrors,
+        result: syncPayload,
+      });
+    }
     return new Response(
-      JSON.stringify({
-        success: true,
-        new_listings: results.length,
-        count: results.length,
-        blacklisted_skipped: blacklistedSkipped,
-        blacklisted_reviewed: blacklistedReviewed,
-        spam_shield_permissive_mode: permissiveSpamShield,
-        discovery_mode: discoveryMode,
-        archived_skipped: archivedSkipped,
-        duplicate_skipped: duplicateSkipped,
-        existing_sources_checked: existingUrls.size,
-        agency_filter: {
-          blocked_phones: blockedPhones.size,
-          blocked_domains: blockedDomains.size,
-          whitelisted_phones: whitelistedPhones.size,
-          whitelisted_domains: whitelistedDomains.size,
-        },
-        listings: results,
-        errors: errors.length > 0 ? errors : undefined,
-      }),
+      JSON.stringify(syncPayload),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
