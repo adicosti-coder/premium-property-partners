@@ -1653,6 +1653,8 @@ Deno.serve(async (req) => {
     const payload = {
       success: true,
       scan_mode: scanMode,
+      scan_mode_override: scanModeOverride,
+      auto_fallback_enabled: enableAutoFallback,
       new_listings: results.length,
       count: results.length,
       blacklisted_skipped: blacklistedSkipped,
@@ -1662,6 +1664,9 @@ Deno.serve(async (req) => {
       archived_skipped: archivedSkipped,
       duplicate_skipped: duplicateSkipped,
       existing_sources_checked: existingUrls.size,
+      session_deduped_skipped: sessionDedupedSkipped,
+      engine_stats: engineStats,
+      blocked_alerts: blockedAlerts,
       agency_filter: {
         blocked_phones: blockedPhones.size,
         blocked_domains: blockedDomains.size,
@@ -1671,6 +1676,7 @@ Deno.serve(async (req) => {
       listings: results,
       errors: errors.length > 0 ? errors : undefined,
     };
+
     return payload;
     }; // ── end runScan ──
 
