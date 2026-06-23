@@ -540,7 +540,7 @@ async function firecrawlSearchWithRetry(
 
 async function scrapePhoneHydrationOnce(url: string, firecrawlKey: string, mode: 'js' | 'native'): Promise<string[]> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), mode === 'native' ? 24000 : 42000);
+  const timer = setTimeout(() => controller.abort(), mode === 'native' ? 7000 : 9000);
   try {
     const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
@@ -550,8 +550,8 @@ async function scrapePhoneHydrationOnce(url: string, firecrawlKey: string, mode:
         url,
         formats: ['markdown', 'html', 'rawHtml'],
         onlyMainContent: false,
-        waitFor: mode === 'native' ? 2600 : 3600,
-        timeout: mode === 'native' ? 22000 : 40000,
+        waitFor: mode === 'native' ? 1200 : 1800,
+        timeout: mode === 'native' ? 6500 : 8500,
         maxAge: 0,
         proxy: 'stealth',
         actions: buildPhoneHydrationActions(url, mode),
