@@ -4847,6 +4847,53 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       {/* Blacklist Modal */}
       <BlacklistModal open={blacklistOpen} onOpenChange={setBlacklistOpen} />
 
+      {/* Bulk add keywords */}
+      <Dialog open={bulkOpen} onOpenChange={(o) => { if (!bulkSaving) setBulkOpen(o); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListPlus className="w-4 h-4" /> Bulk-add cuvinte cheie
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Adaugă rapid zone, cartiere sau complexe nemonitorizate. Un cuvânt cheie pe linie.
+              Acestea apar imediat în panoul „cuvinte noi în sesiune” și pot fi scanate restrâns.
+            </p>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Platformă</label>
+              <Input
+                value={bulkPlatform}
+                onChange={(e) => setBulkPlatform(e.target.value)}
+                placeholder="General | OLX | Storia | imobiliare.ro"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Cuvinte cheie (unul per linie)</label>
+              <Textarea
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                rows={8}
+                placeholder={`apartament proprietar dumbravita\ngarsoniera iosefin proprietar\nIsho residence proprietar`}
+                className="font-mono text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {bulkText.split(/\r?\n/).filter((s) => s.trim()).length} cuvinte detectate · duplicatele sunt eliminate automat.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setBulkOpen(false)} disabled={bulkSaving}>Anulează</Button>
+              <Button size="sm" onClick={handleBulkAddKeywords} disabled={bulkSaving} className="gap-1">
+                {bulkSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                Adaugă toate
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       {/* Scan History Dialog */}
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
