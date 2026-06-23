@@ -3011,14 +3011,43 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <span className="text-muted-foreground">
                 {uniqueActiveKeywords.length} kw active · {Math.max(1, Math.ceil(Math.min(uniqueActiveKeywords.length, queryLimit) / 25))} loturi (×25)
               </span>
-              <div className="flex items-center gap-1.5 ml-auto">
+              <div className="flex items-center gap-1.5 ml-auto flex-wrap justify-end">
                 <Badge variant="outline" className="text-[10px] font-normal bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300" title="prospect_listings.source_url are constraint UNIQUE — duplicatele nu pot fi inserate la nivel de DB">
                   🛡 Dedup DB · UNIQUE(source_url)
                 </Badge>
+                {/* ── Scan-mode override + auto-fallback ── */}
+                <div className="flex items-center gap-1 px-2 py-1 rounded border border-border bg-background">
+                  <span className="text-[10px] text-muted-foreground">Motor:</span>
+                  <Select value={scanModeOverride} onValueChange={(v) => setScanModeOverride(v as any)} disabled={isScraping}>
+                    <SelectTrigger className="h-6 px-2 text-[11px] w-[120px] border-0 bg-transparent gap-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free" className="text-xs">🆓 Free (DDG)</SelectItem>
+                      <SelectItem value="auto" className="text-xs">⚡ Auto-fallback</SelectItem>
+                      <SelectItem value="firecrawl" className="text-xs">💎 Premium (FC)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <label
+                  className={cn(
+                    "flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors",
+                    scanModeOverride === "firecrawl" && "opacity-50",
+                  )}
+                  title="Dacă motorul gratuit returnează 0 rezultate pentru un cuvânt cheie, scanner-ul reia automat acel singur query prin Firecrawl."
+                >
+                  <Switch
+                    checked={autoFallback}
+                    onCheckedChange={setAutoFallback}
+                    disabled={isScraping || scanModeOverride === "firecrawl"}
+                  />
+                  <span className="text-[11px] font-medium">Auto-fallback FC</span>
+                </label>
                 <label className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors">
                   <Switch checked={safeMode} onCheckedChange={setSafeMode} disabled={isScraping} />
                   <span className="text-[11px] font-medium">Mod Simulare</span>
                 </label>
+
                 <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-[11px]" onClick={() => setHistoryOpen(true)}>
                   <History className="w-3.5 h-3.5" /> Istoric ({scanHistory.length})
                 </Button>
