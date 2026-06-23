@@ -289,6 +289,80 @@ const ProspectManager = () => {
     }
   }, [queryLimit]);
 
+  // On mount: resume tracking any running job (so reload / re-open keeps progress)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('prospect_scan_jobs')
+        .select('*')
+        .in('status', ['pending', 'running'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setActiveJob({
+        id: data.id,
+        status: data.status,
+        processed_queries: data.processed_queries ?? 0,
+        total_queries: data.total_queries ?? 0,
+        current_keyword: data.current_keyword,
+        current_platform: data.current_platform,
+        new_listings: data.new_listings ?? 0,
+        error_message: data.error_message,
+      });
+      setIsScraping(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Realtime subscription to active job
+  useEffect(() => {
+    if (!activeJob?.id) return;
+    const channel = supabase
+      .channel(`prospect_scan_job_${activeJob.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'prospect_scan_jobs', filter: `id=eq.${activeJob.id}` },
+        (payload) => {
+          const row = payload.new as any;
+          setActiveJob((prev) => prev && prev.id === row.id ? {
+            id: row.id,
+            status: row.status,
+            processed_queries: row.processed_queries ?? 0,
+            total_queries: row.total_queries ?? 0,
+            current_keyword: row.current_keyword,
+            current_platform: row.current_platform,
+            new_listings: row.new_listings ?? 0,
+            error_message: row.error_message,
+          } : prev);
+
+          if (row.status === 'completed') {
+            const found = row.new_listings ?? 0;
+            const errCount = Array.isArray(row.errors) ? row.errors.length : 0;
+            toast({
+              title: found > 0 ? 'Scanare completă! 🎯' : 'Scanare completă',
+              description: `${found} anunțuri noi.${errCount ? ` ${errCount} erori — vezi consola.` : ''}`,
+            });
+            setIsScraping(false);
+            fetchListings();
+            setTimeout(() => setActiveJob(null), 4000);
+          } else if (row.status === 'failed') {
+            console.error('[ProspectManager] scan job failed', row);
+            toast({
+              title: 'Scanare eșuată',
+              description: row.error_message || 'Eroare necunoscută. Vezi consola.',
+              variant: 'destructive',
+            });
+            setIsScraping(false);
+            setTimeout(() => setActiveJob(null), 6000);
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeJob?.id, fetchListings]);
+
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
     try {
