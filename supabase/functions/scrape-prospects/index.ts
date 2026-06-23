@@ -1259,7 +1259,12 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
-    console.error('Scrape prospects error:', error);
+    console.error(JSON.stringify({
+      kind: 'scrape_prospects_error',
+      where: 'outer_handler',
+      message: error?.message ?? String(error),
+      stack: error?.stack?.split('\n').slice(0, 5).join(' | '),
+    }));
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
