@@ -337,32 +337,59 @@ const ProspectManager = () => {
 
   const handleScrape = async () => {
     setIsScraping(true);
-    toast({
-      title: "Scanare pornită…",
-      description: "Verific ~8 cuvinte-cheie rotite. Durează ~30-90s.",
-    });
     try {
-      const { data, error } = await supabase.functions.invoke('scrape-prospects', {
-        body: { max_results: 10, query_limit: 8 },
+      // 1. Get current user (admin)
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error('Trebuie să fii autentificat ca admin.');
+
+      // 2. Create job row
+      const { data: jobRow, error: jobErr } = await supabase
+        .from('prospect_scan_jobs')
+        .insert({
+          created_by: userId,
+          query_limit: queryLimit,
+          max_results: 10,
+          triggered_by: 'manual_ui',
+        })
+        .select('*')
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error('Nu am putut crea job-ul.');
+
+      setActiveJob({
+        id: jobRow.id,
+        status: 'pending',
+        processed_queries: 0,
+        total_queries: 0,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
       });
-      if (error) throw error;
-      if (data && data.success === false) {
-        throw new Error(data.error || 'Scanarea a eșuat');
-      }
-      const found = data?.new_listings ?? data?.count ?? 0;
-      const errs = data?.errors?.length ?? 0;
+
+      // 3. Kick the async scan
+      const { error: invokeErr } = await supabase.functions.invoke('scrape-prospects', {
+        body: {
+          max_results: 10,
+          query_limit: queryLimit,
+          job_id: jobRow.id,
+          async_mode: true,
+        },
+      });
+      if (invokeErr) throw invokeErr;
+
       toast({
-        title: found > 0 ? "Scanare completă! 🎯" : "Scanare completă",
-        description: `${found} anunțuri noi.${errs ? ` ${errs} erori.` : ''}${data?.archived_skipped ? ` ${data.archived_skipped} filtrate.` : ''}`,
+        title: 'Scanare pornită în fundal ⚙️',
+        description: `${queryLimit} cuvinte-cheie. Poți naviga în aplicație — progresul rămâne live.`,
       });
-      fetchListings();
     } catch (err: any) {
+      // Console log captured by Sentry (errorReporting bridge)
+      console.error('[ProspectManager] handleScrape failed', err);
       toast({
-        title: "Eroare scanare",
-        description: err?.message || "Edge function nu a răspuns. Reîncearcă cu mai puține keyword-uri.",
-        variant: "destructive",
+        title: 'Eroare la pornire scanare',
+        description: err?.message || 'Edge function nu a răspuns.',
+        variant: 'destructive',
       });
-    } finally {
       setIsScraping(false);
     }
   };
