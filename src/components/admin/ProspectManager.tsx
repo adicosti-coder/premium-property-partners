@@ -265,6 +265,30 @@ const ProspectManager = () => {
   const [activeQuickReply, setActiveQuickReply] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
 
+  // ── Scan-job state ───────────────────────────────────────────────────
+  const [queryLimit, setQueryLimit] = useState<number>(() => {
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('prospect_scan_query_limit') : null;
+    const n = stored ? parseInt(stored, 10) : 8;
+    return Number.isFinite(n) && n >= 1 && n <= 30 ? n : 8;
+  });
+  const [activeJob, setActiveJob] = useState<{
+    id: string;
+    status: string;
+    processed_queries: number;
+    total_queries: number;
+    current_keyword: string | null;
+    current_platform: string | null;
+    new_listings: number;
+    error_message: string | null;
+  } | null>(null);
+
+  // Persist slider value
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('prospect_scan_query_limit', String(queryLimit));
+    }
+  }, [queryLimit]);
+
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
     try {
