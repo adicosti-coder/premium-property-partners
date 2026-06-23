@@ -1319,20 +1319,58 @@ Deno.serve(async (req) => {
 
       
       const batchPromises = batch.map(async ({ platform, query }) => {
+        // ── In-session dedupe: skip if same (platform,query) was already scanned
+        //    in this invocation (saves network + dedup before DB layer).
+        const dedupeKey = `${platform.toLowerCase()}|${(query || '').toLowerCase().trim()}`;
+        if (sessionSeen.has(dedupeKey)) {
+          sessionDedupedSkipped++;
+          console.log(`[session-dedupe] skipping repeated ${dedupeKey}`);
+          return;
+        }
+        sessionSeen.add(dedupeKey);
+
         console.log(`Searching ${platform}: ${query}`);
         try {
-          const outcome = scanMode === 'firecrawl'
-            ? await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
-                maxAttempts: 1,
-                timeoutMs: 9_000,
-                logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
-              })
+          let outcome = scanMode === 'firecrawl'
+            ? await (async () => {
+                const t0 = Date.now();
+                engineStats.firecrawl.hits++;
+                const res = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
+                  maxAttempts: 1, timeoutMs: 9_000,
+                  logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
+                });
+                engineStats.firecrawl.ms += Date.now() - t0;
+                if (res.ok) engineStats.firecrawl.urls += res.results.length;
+                else engineStats.firecrawl.errors++;
+                return res;
+              })()
             : await freeSearchWithRetry(platform, query, maxResults, {
                 logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
+                stats: engineStats,
+                blockedAlerts,
               });
 
+          // ── Auto-fallback: if FREE mode returned nothing and Firecrawl is
+          //    available + enabled, retry this single query via Firecrawl.
+          if (!outcome.ok && enableAutoFallback && firecrawlKey) {
+            const t0 = Date.now();
+            engineStats.firecrawl.hits++;
+            const fc = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
+              maxAttempts: 1, timeoutMs: 9_000,
+              logger: (ev) => console.warn(JSON.stringify({ ...ev, platform, auto_fallback: true })),
+            });
+            engineStats.firecrawl.ms += Date.now() - t0;
+            if (fc.ok && fc.results.length > 0) {
+              engineStats.firecrawl.urls += fc.results.length;
+              outcome = fc;
+              console.log(`[auto-fallback] firecrawl rescued ${platform} [${query.slice(0, 60)}] → ${fc.results.length} URL`);
+            } else {
+              engineStats.firecrawl.errors++;
+            }
+          }
+
           if (!outcome.ok) {
-            const msg = `${outcome.errorMessage || 'search failed'} (after ${outcome.attempts} attempts, mode=${scanMode})`;
+            const msg = `${outcome.errorMessage || 'search failed'} (after ${outcome.attempts} attempts, mode=${scanMode}${enableAutoFallback ? '+autofallback' : ''})`;
             logScrapeError('search_http', new Error(msg), {
               platform, keyword: query, http_status: outcome.status, attempts: outcome.attempts, scan_mode: scanMode,
             });
@@ -1343,6 +1381,7 @@ Deno.serve(async (req) => {
             errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
             return;
           }
+
 
           if (outcome.source !== 'firecrawl' && outcome.source !== 'free_direct') {
             console.warn(JSON.stringify({
