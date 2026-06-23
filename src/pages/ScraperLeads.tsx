@@ -2466,12 +2466,123 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const handleAddKeyword = async () => {
     const kw = newKeyword.trim();
     if (!kw) return;
-    const { error } = await supabase.from("scraper_search_keywords").insert({ keyword: kw, platform: newPlatform } as any);
+    const { data, error } = await supabase
+      .from("scraper_search_keywords")
+      .insert({ keyword: kw, platform: newPlatform } as any)
+      .select("id, keyword, platform")
+      .single();
     if (error) { toast.error("Eroare la adăugare"); return; }
+    if (data) {
+      setRecentlyAddedKeywords((prev) => [
+        { id: (data as any).id, keyword: (data as any).keyword, platform: (data as any).platform },
+        ...prev.filter((k) => k.id !== (data as any).id),
+      ].slice(0, 50));
+    }
     setNewKeyword("");
     setNewPlatform("General");
     refetchKeywords();
     toast.success("Cuvânt cheie adăugat");
+  };
+
+  // Bulk add: one keyword per line, single platform. Persists, dedupes by text.
+  const handleBulkAddKeywords = async () => {
+    if (bulkSaving) return;
+    const lines = bulkText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const unique = Array.from(new Set(lines));
+    if (!unique.length) { toast.info("Adaugă cel puțin un cuvânt cheie."); return; }
+    setBulkSaving(true);
+    try {
+      const rows = unique.map((keyword) => ({ keyword, platform: bulkPlatform } as any));
+      const { data, error } = await supabase
+        .from("scraper_search_keywords")
+        .insert(rows)
+        .select("id, keyword, platform");
+      if (error) throw error;
+      const added = (data ?? []) as Array<{ id: string; keyword: string; platform: string }>;
+      setRecentlyAddedKeywords((prev) => {
+        const merged = [...added, ...prev];
+        const seen = new Set<string>();
+        return merged.filter((k) => { if (seen.has(k.id)) return false; seen.add(k.id); return true; }).slice(0, 50);
+      });
+      refetchKeywords();
+      toast.success(`${added.length} cuvinte cheie adăugate. Poți porni o scanare doar pentru ele.`);
+      setBulkText("");
+      setBulkOpen(false);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleBulkAddKeywords failed", err);
+      toast.error(`Bulk-add eșuat: ${err?.message || "eroare necunoscută"}`);
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  // Restricted manual scan — only the keywords just added in this session.
+  const handleScanNewKeywords = async () => {
+    if (isScanningNew || isScraping) return;
+    if (!recentlyAddedKeywords.length) { toast.info("Nu există cuvinte cheie noi în sesiune."); return; }
+    setIsScanningNew(true);
+    try {
+      const slice = recentlyAddedKeywords.slice(0, 30).map((k) => ({
+        platform: k.platform || "General",
+        query: k.keyword,
+      }));
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("prospect_scan_jobs")
+        .insert({
+          created_by: userId,
+          query_limit: slice.length,
+          max_results: 12,
+          triggered_by: "manual_new_keywords_ui",
+        } as any)
+        .select("*")
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
+      sessionStartRef.current = Date.now();
+      prevNewListingsRef.current = 0;
+      setActiveJob({
+        id: (jobRow as any).id,
+        status: "pending",
+        processed_queries: 0,
+        total_queries: slice.length,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+        updated_at: (jobRow as any).updated_at ?? new Date().toISOString(),
+        pending_queries: [],
+        scan_mode: scanModeOverride,
+        auto_fallback_enabled: autoFallback,
+        engine_stats: null,
+        blocked_alerts: [],
+        session_deduped: 0,
+      });
+      setIsScraping(true);
+      setActiveScanMode("scan");
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          max_results: 12,
+          preserve_agency_filter: true,
+          job_id: (jobRow as any).id,
+          async_mode: true,
+          retry_batches: slice,
+          scan_mode: scanModeOverride,
+          auto_fallback: autoFallback,
+          auto_fallback_threshold: autoFallbackThreshold,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Scanare restrânsă pornită pentru ${slice.length} cuvinte cheie noi.`);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleScanNewKeywords failed", err);
+      toast.error(`Scanare nouă eșuată: ${err?.message || "eroare necunoscută"}`);
+      setIsScraping(false);
+      setActiveScanMode(null);
+    } finally {
+      setIsScanningNew(false);
+    }
   };
 
   const handleToggleKeyword = async (id: string, isActive: boolean) => {
