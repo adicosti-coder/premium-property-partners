@@ -1972,6 +1972,77 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     }
   };
 
+  // Resume a previously interrupted scan by replaying the persisted pending queries
+  // via the edge function's retry_batches contract.
+  const handleResume = async () => {
+    const pending = activeJob?.pending_queries ?? [];
+    if (!activeJob || pending.length === 0) {
+      toast.info("Nu există cuvinte-cheie rămase de scanat.");
+      return;
+    }
+    if (safeMode) {
+      toast.info("Mod Simulare activ — dezactivează-l ca să reiei scanarea reală.");
+      return;
+    }
+    setIsScraping(true);
+    setActiveScanMode("scan");
+    setRecentScanPulse(true);
+    const slice = pending.slice(0, 30); // edge function caps retry_batches at 30
+    scanContextRef.current = {
+      startedAt: Date.now(),
+      mode: "scan",
+      queryLimit: slice.length,
+      simulated: false,
+    };
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
+
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("prospect_scan_jobs")
+        .insert({
+          created_by: userId,
+          query_limit: slice.length,
+          max_results: 10,
+          triggered_by: "manual_resume_ui",
+        } as any)
+        .select("*")
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
+
+      setActiveJob({
+        id: (jobRow as any).id,
+        status: "pending",
+        processed_queries: 0,
+        total_queries: slice.length,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+        updated_at: (jobRow as any).updated_at ?? new Date().toISOString(),
+        pending_queries: [],
+      });
+
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          max_results: 10,
+          preserve_agency_filter: true,
+          job_id: (jobRow as any).id,
+          async_mode: true,
+          retry_batches: slice,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Reiau scanarea pentru ${slice.length} cuvinte-cheie rămase.`);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleResume failed", err);
+      toast.error(`Eroare la repornire: ${err?.message || "necunoscută"}`);
+      setIsScraping(false);
+      setActiveScanMode(null);
+    }
+  };
+
   const closeStuckJob = useCallback(async (job: NonNullable<typeof activeJob>) => {
     if (!job || !["pending", "running"].includes(job.status) || locallyClosedJobsRef.current.has(job.id)) return;
     locallyClosedJobsRef.current.add(job.id);
