@@ -909,8 +909,9 @@ Deno.serve(async (req) => {
     const MAX_BACKGROUND_RUNTIME_MS = 42_000;
     const markTimedOut = async (processed: number, total: number) => {
       timedOut = true;
+      const remaining = (queries ?? []).slice(processed).map((q) => ({ platform: q.platform, query: q.query }));
       const message = `Scanarea a fost oprită automat după ${Math.round((Date.now() - scanStartedAt) / 1000)}s ca să nu rămână blocată. Repornește scanarea pentru restul cuvintelor.`;
-      jobErrors.push({ phase: 'runtime_guard', message, retryable: true, processed, total });
+      jobErrors.push({ phase: 'runtime_guard', message, retryable: true, processed, total, remaining: remaining.length });
       await updateJob({
         status: 'failed',
         finished_at: new Date().toISOString(),
@@ -923,6 +924,7 @@ Deno.serve(async (req) => {
         blacklisted_skipped: blacklistedSkipped,
         error_message: message,
         errors: jobErrors,
+        pending_queries: remaining,
       });
     };
     const existingUrls = new Set<string>();
