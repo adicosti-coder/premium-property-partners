@@ -2565,6 +2565,46 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             </div>
           </div>
 
+          {activeJob && (
+            <div className="mb-4 rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-medium">
+                  {activeJob.status === "completed"
+                    ? "✅ Scanare finalizată"
+                    : activeJob.status === "failed"
+                      ? "❌ Scanare eșuată"
+                      : activeJob.status === "running"
+                        ? "⚙️ Scanare în fundal (Firecrawl)"
+                        : "⏳ Se inițializează…"}
+                </span>
+                <span className="text-muted-foreground tabular-nums">
+                  {activeJob.processed_queries}/{activeJob.total_queries || "?"} cuvinte-cheie
+                </span>
+              </div>
+              <Progress
+                value={activeJob.total_queries > 0
+                  ? Math.min(100, Math.round((activeJob.processed_queries / activeJob.total_queries) * 100))
+                  : (activeJob.status === "running" ? 5 : 0)}
+                className="h-2"
+              />
+              {activeJob.current_keyword && activeJob.status === "running" && (
+                <div className="text-[11px] text-muted-foreground truncate">
+                  <span className="text-foreground/70">{activeJob.current_platform || "—"}</span>
+                  {" · "}
+                  <span className="italic">"{activeJob.current_keyword}"</span>
+                </div>
+              )}
+              {activeJob.new_listings > 0 && (
+                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  🎯 {activeJob.new_listings} anunțuri noi colectate până acum
+                </div>
+              )}
+              {activeJob.error_message && (
+                <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
+              )}
+            </div>
+          )}
+
           {/* Listing Type Tabs */}
           <div className="flex items-center gap-1 mb-4 p-1 bg-muted/50 rounded-lg w-fit">
             {([["all", "Toate", leads?.length || 0], ["vanzare", "Vânzare", leads?.filter((l) => l.listing_type === "vanzare").length || 0], ["inchiriere", "Închiriere", leads?.filter((l) => l.listing_type === "inchiriere").length || 0]] as [string, string, number][]).map(([val, label, count]) => (
