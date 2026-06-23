@@ -1732,9 +1732,10 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     try {
       const isRescan = mode === "rescan";
       const { data, error } = await supabase.functions.invoke("scrape-prospects", {
-        body: { max_results: isRescan ? 20 : 10, only_new_sources: isRescan, preserve_agency_filter: true },
+        body: { max_results: isRescan ? 20 : 10, only_new_sources: isRescan, preserve_agency_filter: true, query_limit: 8 },
       });
       if (error) throw error;
+      if (data && data.success === false) throw new Error(data.error || 'Scanarea a eșuat');
       const result = {
         count: data?.new_listings || data?.count || 0,
         blacklisted_skipped: data?.blacklisted_skipped || 0,
