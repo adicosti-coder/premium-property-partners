@@ -649,6 +649,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     new_listings: number;
     error_message: string | null;
     updated_at: string | null;
+    pending_queries?: Array<{ platform: string; query: string }>;
   } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
