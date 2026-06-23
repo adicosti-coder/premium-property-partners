@@ -76,7 +76,7 @@ const QuickContactForm = () => {
         source: "pagina_contact",
       });
 
-      if (!result.ok) {
+      if (result.ok === false) {
         if (result.reason === "validation") {
           toast.error(result.errors.whatsapp_number ? t.invalidPhone : t.invalid);
         } else {
