@@ -1,0 +1,1 @@
+ALTER TABLE public.prospect_scan_jobs ADD COLUMN IF NOT EXISTS pending_queries JSONB NOT NULL DEFAULT '[]'::jsonb;

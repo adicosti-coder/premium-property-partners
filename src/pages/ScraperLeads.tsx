@@ -649,6 +649,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     new_listings: number;
     error_message: string | null;
     updated_at: string | null;
+    pending_queries?: Array<{ platform: string; query: string }>;
   } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
@@ -1971,6 +1972,77 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     }
   };
 
+  // Resume a previously interrupted scan by replaying the persisted pending queries
+  // via the edge function's retry_batches contract.
+  const handleResume = async () => {
+    const pending = activeJob?.pending_queries ?? [];
+    if (!activeJob || pending.length === 0) {
+      toast.info("Nu există cuvinte-cheie rămase de scanat.");
+      return;
+    }
+    if (safeMode) {
+      toast.info("Mod Simulare activ — dezactivează-l ca să reiei scanarea reală.");
+      return;
+    }
+    setIsScraping(true);
+    setActiveScanMode("scan");
+    setRecentScanPulse(true);
+    const slice = pending.slice(0, 30); // edge function caps retry_batches at 30
+    scanContextRef.current = {
+      startedAt: Date.now(),
+      mode: "scan",
+      queryLimit: slice.length,
+      simulated: false,
+    };
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
+
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("prospect_scan_jobs")
+        .insert({
+          created_by: userId,
+          query_limit: slice.length,
+          max_results: 10,
+          triggered_by: "manual_resume_ui",
+        } as any)
+        .select("*")
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
+
+      setActiveJob({
+        id: (jobRow as any).id,
+        status: "pending",
+        processed_queries: 0,
+        total_queries: slice.length,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+        updated_at: (jobRow as any).updated_at ?? new Date().toISOString(),
+        pending_queries: [],
+      });
+
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          max_results: 10,
+          preserve_agency_filter: true,
+          job_id: (jobRow as any).id,
+          async_mode: true,
+          retry_batches: slice,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Reiau scanarea pentru ${slice.length} cuvinte-cheie rămase.`);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleResume failed", err);
+      toast.error(`Eroare la repornire: ${err?.message || "necunoscută"}`);
+      setIsScraping(false);
+      setActiveScanMode(null);
+    }
+  };
+
   const closeStuckJob = useCallback(async (job: NonNullable<typeof activeJob>) => {
     if (!job || !["pending", "running"].includes(job.status) || locallyClosedJobsRef.current.has(job.id)) return;
     locallyClosedJobsRef.current.add(job.id);
@@ -2033,6 +2105,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             new_listings: row.new_listings ?? 0,
             error_message: row.error_message,
             updated_at: row.updated_at ?? new Date().toISOString(),
+            pending_queries: Array.isArray(row.pending_queries) ? row.pending_queries : [],
           } : prev);
 
           if (row.status === "completed") {
@@ -2097,19 +2170,34 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     return () => { supabase.removeChannel(channel); };
   }, [activeJob?.id, queryClient, recordScanEntry]);
 
-  // Resume tracking any running job on mount.
+  // Resume tracking any running OR recently-failed-with-pending job on mount.
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      // 1) running/pending wins
+      const running = await supabase
         .from("prospect_scan_jobs")
         .select("*")
         .in("status", ["pending", "running"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (cancelled || !data) return;
-      const row = data as any;
+      let row: any = running.data;
+      let isLive = !!row;
+      // 2) otherwise, surface latest failed job that still has pending queries (resume affordance)
+      if (!row) {
+        const failed = await supabase
+          .from("prospect_scan_jobs")
+          .select("*")
+          .eq("status", "failed")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (failed.data && Array.isArray((failed.data as any).pending_queries) && (failed.data as any).pending_queries.length > 0) {
+          row = failed.data;
+        }
+      }
+      if (cancelled || !row) return;
       setActiveJob({
         id: row.id,
         status: row.status,
@@ -2120,9 +2208,12 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         new_listings: row.new_listings ?? 0,
         error_message: row.error_message,
         updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+        pending_queries: Array.isArray(row.pending_queries) ? row.pending_queries : [],
       });
-      setIsScraping(true);
-      setActiveScanMode("scan");
+      if (isLive) {
+        setIsScraping(true);
+        setActiveScanMode("scan");
+      }
     })();
     return () => { cancelled = true; };
   }, []);
@@ -2984,6 +3075,31 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               )}
               {activeJob.error_message && (
                 <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
+              )}
+              {activeJob.status === "failed" && (activeJob.pending_queries?.length ?? 0) > 0 && (
+                <div className="flex flex-wrap items-center gap-2 pt-1.5">
+                  <Button
+                    size="sm"
+                    onClick={handleResume}
+                    disabled={isScraping || safeMode}
+                    className="h-7 gap-1.5 text-xs"
+                  >
+                    🔁 Repornește scanarea ({Math.min(30, activeJob.pending_queries!.length)} din {activeJob.pending_queries!.length} rămase)
+                  </Button>
+                  {activeJob.pending_queries!.length > 30 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      Se reia în loturi de 30 — repetă după ce se finalizează.
+                    </span>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setActiveJob(null)}
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Renunță
+                  </Button>
+                </div>
               )}
             </div>
           )}
