@@ -3187,6 +3187,73 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   🎯 {activeJob.new_listings} anunțuri noi colectate până acum
                 </div>
               )}
+
+              {/* ── Engine stats widget (live) ── */}
+              {activeJob.engine_stats && (() => {
+                const es = activeJob.engine_stats!;
+                const rows: Array<{ key: string; label: string; emoji: string }> = [
+                  { key: "duckduckgo", label: "DuckDuckGo", emoji: "🦆" },
+                  { key: "bing", label: "Bing", emoji: "🅱️" },
+                  { key: "olx_direct", label: "OLX direct", emoji: "🟧" },
+                  { key: "firecrawl", label: "Firecrawl", emoji: "🔥" },
+                ];
+                const visible = rows.filter((r) => (es[r.key]?.hits ?? 0) > 0);
+                if (!visible.length) return null;
+                return (
+                  <div className="rounded border border-border bg-background/60 p-2 mt-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-semibold text-foreground/80">📊 Motoare de căutare</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        mod: <span className="font-mono">{activeJob.scan_mode ?? scanModeOverride}</span>
+                        {activeJob.auto_fallback_enabled ? " · auto-fallback ON" : ""}
+                        {(activeJob.session_deduped ?? 0) > 0 ? ` · ${activeJob.session_deduped} dedup sesiune` : ""}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                      {visible.map((r) => {
+                        const s = es[r.key];
+                        const avg = s.hits > 0 ? Math.round(s.ms / s.hits) : 0;
+                        const ok = s.urls > 0;
+                        return (
+                          <div
+                            key={r.key}
+                            className={cn(
+                              "rounded border px-2 py-1 text-[10px]",
+                              ok
+                                ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300"
+                                : "border-rose-500/30 bg-rose-500/5 text-rose-700 dark:text-rose-300",
+                            )}
+                          >
+                            <div className="font-medium">{r.emoji} {r.label}</div>
+                            <div className="tabular-nums opacity-80">
+                              {s.urls} URL · {s.hits} req · ~{avg}ms
+                              {s.blocked > 0 ? ` · ⚠️ ${s.blocked} gol` : ""}
+                              {s.errors > 0 ? ` · ✖ ${s.errors}` : ""}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── Blocked / Cloudflare alerts ── */}
+              {(activeJob.blocked_alerts?.length ?? 0) > 0 && (
+                <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 space-y-0.5">
+                  <div className="font-semibold">
+                    🚧 {activeJob.blocked_alerts!.length} alertă/blocaj motor (scanarea continuă)
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {activeJob.blocked_alerts!.slice(-6).map((a, idx) => (
+                      <Badge key={idx} variant="outline" className="text-[10px] font-normal border-amber-500/40 bg-amber-500/10">
+                        {a.engine} · {a.platform} · "{a.keyword.slice(0, 28)}{a.keyword.length > 28 ? "…" : ""}"
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Live resume context: shown while a resume job is running */}
               {(activeJob.status === "running" || activeJob.status === "pending") && resumeRemainingAfter > 0 && (
                 <div className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
