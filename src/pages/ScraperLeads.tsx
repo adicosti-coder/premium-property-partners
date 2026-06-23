@@ -4649,11 +4649,22 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <History className="w-4 h-4" /> Istoric scanări ({scanHistory.length})
             </DialogTitle>
           </DialogHeader>
-          <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-border flex-wrap">
             <p className="text-xs text-muted-foreground">
               Stocat local (browser). Maxim 50 înregistrări. Include și sesiuni de simulare și erori detaliate.
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center flex-wrap">
+              <label
+                className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors"
+                title="Afișează doar înregistrările din sesiunea curentă (started_at ≥ start scanare)"
+              >
+                <Checkbox
+                  checked={historyOnlyCurrent}
+                  onCheckedChange={(v) => setHistoryOnlyCurrent(v === true)}
+                  className="h-3.5 w-3.5"
+                />
+                <span className="text-[11px] font-medium">Doar sesiunea curentă</span>
+              </label>
               <Button
                 size="sm"
                 variant="outline"
@@ -4680,13 +4691,22 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             </div>
           </div>
           <ScrollArea className="flex-1 -mx-6 px-6">
-            {scanHistory.length === 0 ? (
-              <div className="text-center text-sm text-muted-foreground py-12">
-                Niciun istoric — pornește o scanare sau o simulare pentru a popula lista.
-              </div>
-            ) : (
+            {(() => {
+              const filteredHistory = historyOnlyCurrent
+                ? scanHistory.filter((e) => new Date(e.started_at).getTime() >= sessionStartRef.current)
+                : scanHistory;
+              if (!filteredHistory.length) {
+                return (
+                  <div className="text-center text-sm text-muted-foreground py-12">
+                    {historyOnlyCurrent
+                      ? "Nicio înregistrare în sesiunea curentă — pornește o scanare nouă."
+                      : "Niciun istoric — pornește o scanare sau o simulare pentru a popula lista."}
+                  </div>
+                );
+              }
+              return (
               <div className="space-y-2 py-2">
-                {scanHistory.map((e) => {
+                {filteredHistory.map((e) => {
                   const statusCls =
                     e.status === "completed" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
                     : e.status === "failed" ? "bg-destructive/10 border-destructive/30 text-destructive"
