@@ -699,6 +699,24 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   useEffect(() => {
     try { localStorage.setItem("prospect_scan_safe_mode", safeMode ? "1" : "0"); } catch {}
   }, [safeMode]);
+
+  // ── Scan mode override (free / firecrawl / auto) + auto-fallback toggle ──
+  const [scanModeOverride, setScanModeOverride] = useState<"free" | "firecrawl" | "auto">(() => {
+    if (typeof window === "undefined") return "free";
+    const v = window.localStorage.getItem("prospect_scan_mode") as any;
+    return v === "free" || v === "firecrawl" || v === "auto" ? v : "free";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_scan_mode", scanModeOverride); } catch {}
+  }, [scanModeOverride]);
+  const [autoFallback, setAutoFallback] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem("prospect_auto_fallback") !== "0";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_auto_fallback", autoFallback ? "1" : "0"); } catch {}
+  }, [autoFallback]);
+
   const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>(() => getScanHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
   const scanContextRef = useRef<{
