@@ -849,6 +849,7 @@ Deno.serve(async (req) => {
     let queryLimit = 8;
     let jobId: string | null = null;
     let asyncMode = false;
+    let retryBatches: Array<{ platform: string; query: string }> | null = null;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -861,6 +862,11 @@ Deno.serve(async (req) => {
       }
       if (typeof body?.job_id === 'string' && body.job_id.length > 0) jobId = body.job_id;
       if (body?.async_mode === true) asyncMode = true;
+      if (Array.isArray(body?.retry_batches)) {
+        retryBatches = body.retry_batches
+          .filter((b: any) => b && typeof b.platform === 'string' && typeof b.query === 'string')
+          .slice(0, 30);
+      }
     } catch { /* no body */ }
 
     // ── Structured logging helpers (Sentry-friendly) ─────────────────────
