@@ -1084,6 +1084,7 @@ Deno.serve(async (req) => {
     let retryBatches: Array<{ platform: string; query: string }> | null = null;
     let scanModeOverride: 'free' | 'firecrawl' | 'auto' | null = null;
     let autoFallbackOpt = true;
+    let autoFallbackThreshold = 1; // min URLs to consider "enough" — below this, escalate to Firecrawl
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -1105,7 +1106,11 @@ Deno.serve(async (req) => {
         scanModeOverride = body.scan_mode;
       }
       if (body?.auto_fallback === false) autoFallbackOpt = false;
+      if (typeof body?.auto_fallback_threshold === 'number') {
+        autoFallbackThreshold = Math.min(Math.max(0, Math.floor(body.auto_fallback_threshold)), 20);
+      }
     } catch { /* no body */ }
+
 
     // Resolve effective scan mode (UI override > env default > free)
     const scanMode: 'free' | 'firecrawl' =
