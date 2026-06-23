@@ -4744,7 +4744,8 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   );
                 })}
               </div>
-            )}
+              );
+            })()}
           </ScrollArea>
         </DialogContent>
       </Dialog>
