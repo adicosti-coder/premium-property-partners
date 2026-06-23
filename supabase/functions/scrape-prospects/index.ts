@@ -1258,39 +1258,38 @@ Deno.serve(async (req) => {
       const batchPromises = batch.map(async ({ platform, query }) => {
         console.log(`Searching ${platform}: ${query}`);
         try {
-          const outcome = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
-            maxAttempts: 1,
-            timeoutMs: 9_000,
-            logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
-          });
+          const outcome = scanMode === 'firecrawl'
+            ? await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
+                maxAttempts: 1,
+                timeoutMs: 9_000,
+                logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
+              })
+            : await freeSearchWithRetry(platform, query, maxResults, {
+                logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
+              });
 
           if (!outcome.ok) {
-            const msg = `${outcome.errorMessage || 'Firecrawl failed'} (after ${outcome.attempts} attempts)`;
-            logScrapeError('firecrawl_search_http', new Error(msg), {
-              platform, keyword: query, http_status: outcome.status, attempts: outcome.attempts,
+            const msg = `${outcome.errorMessage || 'search failed'} (after ${outcome.attempts} attempts, mode=${scanMode})`;
+            logScrapeError('search_http', new Error(msg), {
+              platform, keyword: query, http_status: outcome.status, attempts: outcome.attempts, scan_mode: scanMode,
             });
             jobErrors.push({
               platform, keyword: query, http_status: outcome.status ?? null,
-              message: msg, phase: 'firecrawl_search', retryable: true, attempts: outcome.attempts,
+              message: msg, phase: `${scanMode}_search`, retryable: true, attempts: outcome.attempts,
             });
             errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
             return;
           }
 
-          if (outcome.source === 'fallback_duckduckgo') {
+          if (outcome.source !== 'firecrawl' && outcome.source !== 'free_direct') {
             console.warn(JSON.stringify({
-              kind: 'firecrawl_fallback_used', platform, keyword: query.slice(0, 120),
-              results: outcome.results.length, last_status: outcome.status,
+              kind: 'search_fallback_used', platform, keyword: query.slice(0, 120),
+              source: outcome.source, results: outcome.results.length, last_status: outcome.status,
             }));
-            jobErrors.push({
-              platform, keyword: query, http_status: outcome.status ?? null,
-              message: `Firecrawl indisponibil — fallback DuckDuckGo (${outcome.results.length} URL-uri)`,
-              phase: 'firecrawl_search', retryable: true, attempts: outcome.attempts, fallback: true,
-            });
           }
 
           const searchResults = outcome.results;
-          console.log(`Found ${searchResults.length} results from ${platform} (source=${outcome.source})`);
+          console.log(`Found ${searchResults.length} results from ${platform} (source=${outcome.source}, mode=${scanMode})`);
 
           for (const result of searchResults) {
             if (Date.now() - scanStartedAt > MAX_BACKGROUND_RUNTIME_MS) {
