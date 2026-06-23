@@ -3429,9 +3429,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
               {/* ── Blocked / Cloudflare alerts ── */}
               {(activeJob.blocked_alerts?.length ?? 0) > 0 && (
-                <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 space-y-0.5">
-                  <div className="font-semibold">
-                    🚧 {activeJob.blocked_alerts!.length} alertă/blocaj motor (scanarea continuă)
+                <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 space-y-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="font-semibold">
+                      🚧 {activeJob.blocked_alerts!.length} alertă/blocaj motor (scanarea continuă)
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 px-2 gap-1 text-[11px] border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20"
+                      onClick={handleRetryBlocked}
+                      disabled={isRetryingBlocked || isScraping}
+                      title="Reîncearcă exclusiv cuvintele blocate prin Firecrawl, cu cooldown anti-IP-ban"
+                    >
+                      {isRetryingBlocked ? "⏳ Repornesc…" : `🔁 Retry blocate (${Math.min(activeJob.blocked_alerts!.length, 30)})`}
+                    </Button>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {activeJob.blocked_alerts!.slice(-6).map((a, idx) => (
@@ -3442,6 +3454,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   </div>
                 </div>
               )}
+
 
               {/* Live resume context: shown while a resume job is running */}
               {(activeJob.status === "running" || activeJob.status === "pending") && resumeRemainingAfter > 0 && (
