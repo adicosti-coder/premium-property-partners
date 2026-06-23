@@ -2784,7 +2784,54 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <span className="text-muted-foreground">
                 {uniqueActiveKeywords.length} kw active · {Math.max(1, Math.ceil(Math.min(uniqueActiveKeywords.length, queryLimit) / 25))} loturi (×25)
               </span>
+              <div className="flex items-center gap-1.5 ml-auto">
+                <Badge variant="outline" className="text-[10px] font-normal bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300" title="prospect_listings.source_url are constraint UNIQUE — duplicatele nu pot fi inserate la nivel de DB">
+                  🛡 Dedup DB · UNIQUE(source_url)
+                </Badge>
+                <label className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors">
+                  <Switch checked={safeMode} onCheckedChange={setSafeMode} disabled={isScraping} />
+                  <span className="text-[11px] font-medium">Mod Simulare</span>
+                </label>
+                <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-[11px]" onClick={() => setHistoryOpen(true)}>
+                  <History className="w-3.5 h-3.5" /> Istoric ({scanHistory.length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 gap-1 text-[11px]"
+                  disabled={!scanHistory.length && !activeJob}
+                  onClick={() => exportScanReportPdf(
+                    activeJob ? {
+                      id: activeJob.id,
+                      started_at: new Date(scanContextRef.current?.startedAt ?? Date.now()).toISOString(),
+                      ended_at: new Date().toISOString(),
+                      duration_ms: Date.now() - (scanContextRef.current?.startedAt ?? Date.now()),
+                      mode: (scanContextRef.current?.mode ?? "scan"),
+                      status: activeJob.status === "completed" ? "completed" : activeJob.status === "failed" ? "failed" : "simulated",
+                      query_limit: scanContextRef.current?.queryLimit ?? queryLimit,
+                      total_queries: activeJob.total_queries,
+                      processed_queries: activeJob.processed_queries,
+                      batches_total: Math.max(1, Math.ceil(activeJob.total_queries / 25)),
+                      batches_done: Math.max(0, Math.floor(activeJob.processed_queries / 25)),
+                      new_listings: activeJob.new_listings,
+                      duplicate_skipped: 0,
+                      blacklisted_skipped: 0,
+                      error_message: activeJob.error_message,
+                    } as ScanHistoryEntry : null,
+                    scanHistory,
+                  )}
+                >
+                  <FileText className="w-3.5 h-3.5" /> Export PDF
+                </Button>
+              </div>
             </div>
+
+            {safeMode && (
+              <div className="rounded border border-sky-500/40 bg-sky-500/10 px-2 py-1.5 text-[11px] text-sky-700 dark:text-sky-300">
+                🧪 Mod Simulare activ — următoarea „Scanează acum” va parcurge loturile vizual, fără request-uri reale și fără consum de credite Firecrawl.
+              </div>
+            )}
+
 
             {duplicateKeywords.length > 0 && (
               <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300">
