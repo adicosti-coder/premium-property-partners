@@ -529,9 +529,26 @@ async function bingSearch(query: string, max: number): Promise<FreeResult[]> {
   return out;
 }
 
+export interface EngineStat { hits: number; urls: number; ms: number; errors: number; blocked: number }
+export type EngineStats = Record<'olx_direct' | 'duckduckgo' | 'bing' | 'firecrawl', EngineStat>;
+export interface BlockedAlert { platform: string; engine: string; reason: string; keyword: string }
+
+export function emptyEngineStats(): EngineStats {
+  return {
+    olx_direct: { hits: 0, urls: 0, ms: 0, errors: 0, blocked: 0 },
+    duckduckgo: { hits: 0, urls: 0, ms: 0, errors: 0, blocked: 0 },
+    bing: { hits: 0, urls: 0, ms: 0, errors: 0, blocked: 0 },
+    firecrawl: { hits: 0, urls: 0, ms: 0, errors: 0, blocked: 0 },
+  };
+}
+
 async function freeSearchWithRetry(
   platform: string, query: string, maxResults: number,
-  opts: { logger?: (ev: Record<string, unknown>) => void } = {},
+  opts: {
+    logger?: (ev: Record<string, unknown>) => void;
+    stats?: EngineStats;
+    blockedAlerts?: BlockedAlert[];
+  } = {},
 ): Promise<FcSearchOutcome> {
   const domain = platformToDomain(platform, query);
   const aggregated: FreeResult[] = [];
@@ -539,41 +556,64 @@ async function freeSearchWithRetry(
   const pushAll = (arr: FreeResult[]) => {
     for (const r of arr) { if (r.url && !seen.has(r.url)) { seen.add(r.url); aggregated.push(r); } }
   };
+  const stats = opts.stats;
+  const blocked = opts.blockedAlerts;
+  const kwShort = query.slice(0, 80);
 
   let attempts = 0;
   let primarySource: FcSearchOutcome['source'] = 'none';
 
   if (domain && domain.includes('olx.ro')) {
     attempts++;
+    const t0 = Date.now();
     try {
       const direct = await directOlxSearch(query, maxResults);
-      opts.logger?.({ kind: 'free_direct_olx', platform, results: direct.length });
+      const dt = Date.now() - t0;
+      if (stats) { stats.olx_direct.hits++; stats.olx_direct.ms += dt; stats.olx_direct.urls += direct.length; }
+      opts.logger?.({ kind: 'free_direct_olx', platform, results: direct.length, ms: dt });
       if (direct.length > 0) { pushAll(direct); primarySource = 'free_direct'; }
+      else if (stats && blocked) {
+        stats.olx_direct.blocked++;
+        blocked.push({ platform, engine: 'olx_direct', reason: '0 carduri (probabil Cloudflare/anti-bot)', keyword: kwShort });
+      }
     } catch (e) {
+      if (stats) { stats.olx_direct.hits++; stats.olx_direct.errors++; stats.olx_direct.ms += Date.now() - t0; }
       opts.logger?.({ kind: 'free_direct_olx_error', platform, message: (e as Error).message });
     }
   }
 
   if (aggregated.length < maxResults) {
     attempts++;
+    const t0 = Date.now();
     try {
       const ddg = await duckduckgoSearch(query, maxResults);
-      opts.logger?.({ kind: 'free_ddg', platform, results: ddg.length });
+      const dt = Date.now() - t0;
+      if (stats) { stats.duckduckgo.hits++; stats.duckduckgo.ms += dt; stats.duckduckgo.urls += ddg.length; }
+      opts.logger?.({ kind: 'free_ddg', platform, results: ddg.length, ms: dt });
       pushAll(ddg);
       if (primarySource === 'none' && ddg.length > 0) primarySource = 'fallback_duckduckgo';
+      else if (ddg.length === 0 && stats && blocked) {
+        stats.duckduckgo.blocked++;
+      }
     } catch (e) {
+      if (stats) { stats.duckduckgo.hits++; stats.duckduckgo.errors++; stats.duckduckgo.ms += Date.now() - t0; }
       opts.logger?.({ kind: 'free_ddg_error', platform, message: (e as Error).message });
     }
   }
 
   if (aggregated.length < Math.min(3, maxResults)) {
     attempts++;
+    const t0 = Date.now();
     try {
       const bing = await bingSearch(query, maxResults);
-      opts.logger?.({ kind: 'free_bing', platform, results: bing.length });
+      const dt = Date.now() - t0;
+      if (stats) { stats.bing.hits++; stats.bing.ms += dt; stats.bing.urls += bing.length; }
+      opts.logger?.({ kind: 'free_bing', platform, results: bing.length, ms: dt });
       pushAll(bing);
       if (primarySource === 'none' && bing.length > 0) primarySource = 'fallback_bing';
+      else if (bing.length === 0 && stats) { stats.bing.blocked++; }
     } catch (e) {
+      if (stats) { stats.bing.hits++; stats.bing.errors++; stats.bing.ms += Date.now() - t0; }
       opts.logger?.({ kind: 'free_bing_error', platform, message: (e as Error).message });
     }
   }
