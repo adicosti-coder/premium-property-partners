@@ -705,6 +705,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   // Visual flash + toast when new_listings increases during an active scan
   const [newListingsFlash, setNewListingsFlash] = useState(false);
   const prevNewListingsRef = useRef(0);
+  useEffect(() => {
+    const current = activeJob?.new_listings ?? 0;
+    const prev = prevNewListingsRef.current;
+    if (current > prev) {
+      prevNewListingsRef.current = current;
+      setNewListingsFlash(true);
+      const delta = current - prev;
+      toast.success(`🆕 ${delta} anunț${delta === 1 ? "" : "uri"} nou${delta === 1 ? "" : "i"} colectat${delta === 1 ? "" : "e"}!`, {
+        description: activeJob?.current_keyword ? `Sursa: ${activeJob.current_keyword}` : undefined,
+      });
+      const t = window.setTimeout(() => setNewListingsFlash(false), 2200);
+      return () => window.clearTimeout(t);
+    }
+    if (!activeJob) prevNewListingsRef.current = 0;
+  }, [activeJob?.new_listings, activeJob?.current_keyword]);
 
   // ── Scan history, Safe Mode & timing ────────────────────────────────
   const [safeMode, setSafeMode] = useState<boolean>(() => {
