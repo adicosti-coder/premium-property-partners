@@ -341,18 +341,23 @@ const ProspectManager = () => {
             current_platform: row.current_platform,
             new_listings: row.new_listings ?? 0,
             error_message: row.error_message,
+            errors: Array.isArray(row.errors) ? row.errors : null,
           } : prev);
 
           if (row.status === 'completed') {
             const found = row.new_listings ?? 0;
             const errCount = Array.isArray(row.errors) ? row.errors.length : 0;
+            const retryable = Array.isArray(row.errors)
+              ? row.errors.filter((e: any) => e?.retryable && !e?.fallback).length
+              : 0;
             toast({
               title: found > 0 ? 'Scanare completă! 🎯' : 'Scanare completă',
-              description: `${found} anunțuri noi.${errCount ? ` ${errCount} erori — vezi consola.` : ''}`,
+              description: `${found} anunțuri noi.${errCount ? ` ${errCount} erori${retryable ? ` (${retryable} reîncercabile)` : ''}.` : ''}`,
             });
             setIsScraping(false);
             fetchListingsRef.current?.();
-            setTimeout(() => setActiveJob(null), 4000);
+            // Keep job visible if there are retryable batches so the user can act.
+            if (retryable === 0) setTimeout(() => setActiveJob(null), 4000);
           } else if (row.status === 'failed') {
             console.error('[ProspectManager] scan job failed', row);
             toast({
@@ -361,7 +366,7 @@ const ProspectManager = () => {
               variant: 'destructive',
             });
             setIsScraping(false);
-            setTimeout(() => setActiveJob(null), 6000);
+            // Don't auto-clear — user may want to inspect / retry failed batches.
           }
         },
       )
