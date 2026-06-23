@@ -2008,11 +2008,38 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
             queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
             queryClient.invalidateQueries({ queryKey: ["scraper-search-keywords"] });
+            recordScanEntry({
+              status: "completed",
+              total_queries: row.total_queries ?? 0,
+              processed_queries: row.processed_queries ?? 0,
+              batches_total: Math.max(1, Math.ceil((row.total_queries ?? 0) / 25)),
+              batches_done: Math.max(1, Math.ceil((row.processed_queries ?? 0) / 25)),
+              new_listings: found,
+              duplicate_skipped: row.duplicate_skipped ?? 0,
+              blacklisted_skipped: row.blacklisted_skipped ?? 0,
+            });
             setTimeout(() => { setActiveJob(null); setRecentScanPulse(false); }, 4000);
           } else if (row.status === "failed") {
             toast.error(`Scanare eșuată: ${row.error_message || "necunoscut"}`);
             setIsScraping(false);
             setActiveScanMode(null);
+            recordScanEntry({
+              status: "failed",
+              total_queries: row.total_queries ?? 0,
+              processed_queries: row.processed_queries ?? 0,
+              batches_total: Math.max(1, Math.ceil((row.total_queries ?? 0) / 25)),
+              batches_done: Math.max(0, Math.floor((row.processed_queries ?? 0) / 25)),
+              new_listings: row.new_listings ?? 0,
+              duplicate_skipped: row.duplicate_skipped ?? 0,
+              blacklisted_skipped: row.blacklisted_skipped ?? 0,
+              error_message: row.error_message || "necunoscut",
+              error_details: JSON.stringify({
+                failed_batches: row.failed_batches ?? null,
+                last_error_at: row.last_error_at ?? null,
+                current_keyword: row.current_keyword ?? null,
+                current_platform: row.current_platform ?? null,
+              }, null, 2),
+            });
           }
         },
       )
