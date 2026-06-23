@@ -1332,7 +1332,10 @@ Deno.serve(async (req) => {
               extractPhonesFromText(`${markdown}\n${result.title || ''}\n${result.description || ''}`).find(Boolean) ??
               null;
             const canHydratePhone = Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 12_000;
-            extracted.contactPhone = phoneFromSearchPayload || (canHydratePhone ? await hydratePhoneFromListingUrl(url, firecrawlKey) : null);
+            const hydrate = scanMode === 'firecrawl'
+              ? () => hydratePhoneFromListingUrl(url, firecrawlKey)
+              : () => freeHydratePhoneFromUrl(url);
+            extracted.contactPhone = phoneFromSearchPayload || (canHydratePhone ? await hydrate() : null);
 
             let price = extracted.price;
             if (price && extracted.currency === 'RON') {
