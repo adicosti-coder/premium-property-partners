@@ -2073,8 +2073,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           job_id: (jobRow as any).id,
           async_mode: true,
           retry_batches: slice,
+          scan_mode: scanModeOverride,
+          auto_fallback: autoFallback,
         },
       });
+
       if (error) throw error;
       toast.success(`Reiau scanarea pentru ${slice.length} cuvinte-cheie${remainingAfter > 0 ? ` (${remainingAfter} vor rămâne pentru un nou ciclu)` : ""}.`);
     } catch (err: any) {
