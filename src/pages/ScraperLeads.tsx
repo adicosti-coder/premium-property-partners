@@ -1745,7 +1745,41 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     onStatusChange: (status) => selectedLead && handleStatusChange(selectedLead.id, status),
   });
 
+  // ── Active keywords + duplicate detection for current scan ────────────
+  const activeKeywords = useMemo(
+    () => (searchKeywords || []).filter((k) => k.is_active),
+    [searchKeywords],
+  );
+  const duplicateKeywords = useMemo(() => {
+    const seen = new Map<string, number>();
+    for (const k of activeKeywords) {
+      const key = `${(k.keyword || "").trim().toLowerCase()}::${k.platform}`;
+      seen.set(key, (seen.get(key) ?? 0) + 1);
+    }
+    return Array.from(seen.entries())
+      .filter(([, n]) => n > 1)
+      .map(([key, n]) => {
+        const [keyword, platform] = key.split("::");
+        return { keyword, platform, count: n };
+      });
+  }, [activeKeywords]);
+  const uniqueActiveKeywords = useMemo(() => {
+    const seen = new Set<string>();
+    const out: SearchKeyword[] = [];
+    for (const k of activeKeywords) {
+      const key = `${(k.keyword || "").trim().toLowerCase()}::${k.platform}`;
+      if (!seen.has(key)) { seen.add(key); out.push(k); }
+    }
+    return out;
+  }, [activeKeywords]);
+
   const handleScrape = async (mode: "scan" | "rescan" = "scan") => {
+    if (duplicateKeywords.length > 0) {
+      toast.warning(
+        `${duplicateKeywords.length} cuvinte cheie duplicate detectate — vor fi scanate o singură dată.`,
+        { description: duplicateKeywords.slice(0, 3).map((d) => `"${d.keyword}" (${d.platform}) ×${d.count}`).join(", ") },
+      );
+    }
     setIsScraping(true);
     setActiveScanMode(mode);
     setRecentScanPulse(true);
