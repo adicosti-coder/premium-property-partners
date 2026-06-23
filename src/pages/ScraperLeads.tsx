@@ -1839,6 +1839,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       current_platform: null,
       new_listings: 0,
       error_message: null,
+      updated_at: new Date().toISOString(),
     });
     let processed = 0;
     let fakeFound = 0;
@@ -1852,6 +1853,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         new_listings: fakeFound,
         current_keyword: kw?.keyword ?? `sim-keyword-${processed}`,
         current_platform: kw?.platform ?? "Simulat",
+        updated_at: new Date().toISOString(),
       } : prev);
       if (processed >= total) {
         setActiveJob((prev) => prev && prev.id === fakeId ? { ...prev, status: "completed" } : prev);
@@ -1932,6 +1934,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         current_platform: null,
         new_listings: 0,
         error_message: null,
+        updated_at: (jobRow as any).updated_at ?? new Date().toISOString(),
       });
 
       const { error } = await supabase.functions.invoke("scrape-prospects", {
