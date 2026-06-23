@@ -858,6 +858,54 @@ const ProspectManager = () => {
                 {activeJob.error_message && (
                   <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
                 )}
+                {(() => {
+                  const failed = (activeJob.errors || []).filter(
+                    (e: any) => e?.retryable && !e?.fallback,
+                  );
+                  const fallbackUsed = (activeJob.errors || []).filter((e: any) => e?.fallback);
+                  if (failed.length === 0 && fallbackUsed.length === 0) return null;
+                  return (
+                    <div className="mt-1 space-y-1 border-t border-border/60 pt-1.5">
+                      {fallbackUsed.length > 0 && (
+                        <div className="text-[11px] text-amber-600 dark:text-amber-400">
+                          ⚠️ Firecrawl indisponibil pe {fallbackUsed.length} pachet(e) — am folosit fallback DuckDuckGo.
+                        </div>
+                      )}
+                      {failed.length > 0 && (
+                        <>
+                          <div className="text-[11px] font-medium text-destructive">
+                            ❌ {failed.length} pachet(e) eșuate definitiv:
+                          </div>
+                          <ul className="text-[10px] text-muted-foreground space-y-0.5 max-h-20 overflow-y-auto">
+                            {failed.slice(0, 5).map((e: any, idx: number) => (
+                              <li key={idx} className="truncate">
+                                <span className="text-foreground/80">{e.platform}</span>
+                                {e.http_status ? ` (HTTP ${e.http_status})` : ''} —{' '}
+                                <span className="italic">"{(e.keyword || '').slice(0, 50)}"</span>
+                              </li>
+                            ))}
+                            {failed.length > 5 && (
+                              <li className="text-muted-foreground/70">…și încă {failed.length - 5}</li>
+                            )}
+                          </ul>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs w-full mt-1"
+                            disabled={isRetrying || isScraping}
+                            onClick={handleRetryFailedBatches}
+                          >
+                            {isRetrying ? (
+                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Se reîncearcă…</>
+                            ) : (
+                              <><RotateCcw className="w-3 h-3 mr-1" /> Reîncearcă scanarea pachetului eșuat</>
+                            )}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
