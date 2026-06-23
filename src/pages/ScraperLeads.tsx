@@ -660,6 +660,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const [isClearingPending, setIsClearingPending] = useState(false);
+  const [isRetryingBlocked, setIsRetryingBlocked] = useState(false);
   const [resumeRemainingAfter, setResumeRemainingAfter] = useState<number>(0);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
