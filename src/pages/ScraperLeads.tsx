@@ -26,7 +26,7 @@ import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
@@ -768,6 +768,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     try { localStorage.setItem("prospect_csv_include_blocked", csvIncludeBlocked ? "1" : "0"); } catch {}
   }, [csvIncludeBlocked]);
   const [historyOnlyCurrent, setHistoryOnlyCurrent] = useState<boolean>(false);
+  // Quick filter: show only leads ingested in the current session
+  const [sessionOnlyResults, setSessionOnlyResults] = useState<boolean>(false);
+  // Tracks if the most recent scan was the "scan only new keywords" restricted run
+  const lastScanWasSessionOnlyRef = useRef<boolean>(false);
+  // Post-scan summary dialog
+  const [scanSummary, setScanSummary] = useState<null | {
+    total_queries: number;
+    processed_queries: number;
+    new_listings: number;
+    archived_skipped: number;
+    duplicate_skipped: number;
+    blacklisted_skipped: number;
+    scope: "session" | "full";
+    finished_at: string;
+  }>(null);
   const scanContextRef = useRef<{
     startedAt: number;
     mode: "scan" | "rescan" | "simulated";
@@ -1164,6 +1179,15 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       result = result.filter((l) => new Date(l.created_at) <= to);
     }
 
+    // Quick session filter: only leads ingested since the current scan started
+    if (sessionOnlyResults) {
+      const since = sessionStartRef.current;
+      result = result.filter((l) => {
+        const t = l.created_at ? new Date(l.created_at).getTime() : 0;
+        return t >= since;
+      });
+    }
+
     // Sort based on user selection
     const dir = sortDir === "desc" ? -1 : 1;
     result = [...result].sort((a, b) => {
@@ -1173,7 +1197,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed, hideSearchPages, hideAgencies]);
+  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed, hideSearchPages, hideAgencies, sessionOnlyResults]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
@@ -2003,6 +2027,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .single();
       if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
 
+      lastScanWasSessionOnlyRef.current = false;
       setActiveJob({
         id: (jobRow as any).id,
         status: "pending",
@@ -2394,6 +2419,18 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               duplicate_skipped: row.duplicate_skipped ?? 0,
               blacklisted_skipped: row.blacklisted_skipped ?? 0,
             });
+            // Final scan summary card — opens automatically for the restricted "scan only new" run,
+            // and is silently available for any scan via "Vezi rezumat" if needed later.
+            setScanSummary({
+              total_queries: row.total_queries ?? 0,
+              processed_queries: row.processed_queries ?? 0,
+              new_listings: found,
+              archived_skipped: row.archived_skipped ?? 0,
+              duplicate_skipped: row.duplicate_skipped ?? 0,
+              blacklisted_skipped: row.blacklisted_skipped ?? 0,
+              scope: lastScanWasSessionOnlyRef.current ? "session" : "full",
+              finished_at: new Date().toISOString(),
+            });
             setTimeout(() => { setActiveJob(null); setRecentScanPulse(false); }, 4000);
           } else if (row.status === "failed") {
             toast.error(`Scanare eșuată: ${row.error_message || "necunoscut"}`);
@@ -2557,6 +2594,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
       sessionStartRef.current = Date.now();
       prevNewListingsRef.current = 0;
+      lastScanWasSessionOnlyRef.current = true;
       setActiveJob({
         id: (jobRow as any).id,
         status: "pending",
@@ -3247,6 +3285,25 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <Button size="sm" variant="outline" onClick={exportContactsCSV} className="gap-1.5" disabled={!filteredLeads.length}>
                 <Phone className="w-4 h-4" /> Contacte
               </Button>
+              {/* Quick session filter toggle (Tab-like) */}
+              <div className="flex border border-border rounded-lg overflow-hidden" title="Filtrează lista de rezultate">
+                <Button
+                  size="sm"
+                  variant={!sessionOnlyResults ? "default" : "ghost"}
+                  onClick={() => setSessionOnlyResults(false)}
+                  className="rounded-none gap-1.5"
+                >
+                  Toate ({(leads || []).length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant={sessionOnlyResults ? "default" : "ghost"}
+                  onClick={() => setSessionOnlyResults(true)}
+                  className="rounded-none gap-1.5"
+                >
+                  Doar sesiunea
+                </Button>
+              </div>
               {/* Compare Button */}
               {compareIds.length >= 2 && (
                 <Button size="sm" variant="secondary" onClick={() => setCompareOpen(true)} className="gap-1.5">
@@ -5003,9 +5060,61 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         </DialogContent>
       </Dialog>
 
+      {/* ── Final scan summary (auto-opens after restricted "scan only new" jobs) ── */}
+      <Dialog
+        open={!!scanSummary && scanSummary.scope === "session"}
+        onOpenChange={(open) => { if (!open) setScanSummary(null); }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BellRing className="w-4 h-4 text-emerald-500" />
+              Rezumat scanare restrânsă
+            </DialogTitle>
+            <DialogDescription>
+              Sinteza activității pentru cuvintele cheie nou adăugate în sesiunea curentă.
+            </DialogDescription>
+          </DialogHeader>
+          {scanSummary && (
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <div className="text-[11px] text-muted-foreground">Cuvinte procesate</div>
+                <div className="text-xl font-bold tabular-nums">{scanSummary.processed_queries}<span className="text-xs text-muted-foreground"> / {scanSummary.total_queries}</span></div>
+              </div>
+              <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3">
+                <div className="text-[11px] text-emerald-700 dark:text-emerald-300">Anunțuri noi</div>
+                <div className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{scanSummary.new_listings}</div>
+              </div>
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <div className="text-[11px] text-muted-foreground">Duplicate (archived)</div>
+                <div className="text-xl font-bold tabular-nums">{scanSummary.archived_skipped}</div>
+              </div>
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <div className="text-[11px] text-muted-foreground">Duplicate (run)</div>
+                <div className="text-xl font-bold tabular-nums">{scanSummary.duplicate_skipped}</div>
+              </div>
+              <div className="rounded-md border border-border bg-muted/30 p-3 col-span-2">
+                <div className="text-[11px] text-muted-foreground">Blocate (blacklist)</div>
+                <div className="text-xl font-bold tabular-nums">{scanSummary.blacklisted_skipped}</div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setSessionOnlyResults(true); setScanSummary(null); }}
+            >
+              Vezi doar sesiunea
+            </Button>
+            <Button size="sm" onClick={() => setScanSummary(null)}>Închide</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </>
+
   );
 };
 
