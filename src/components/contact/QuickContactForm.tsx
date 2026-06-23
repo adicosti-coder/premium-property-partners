@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,16 +12,7 @@ import {
   isValidWhatsAppNumber,
   formatPhoneInput,
 } from "@/lib/conversionTracking";
-
-const contactSchema = z.object({
-  name: z.string().trim().min(2, "min").max(100, "max"),
-  whatsapp_number: z
-    .string()
-    .trim()
-    .refine((v) => isValidWhatsAppNumber(v), { message: "invalid_whatsapp" }),
-  email: z.string().trim().email("email").max(255).optional().or(z.literal("")),
-  message: z.string().trim().min(5, "min").max(1000, "max"),
-});
+import { submitLead } from "@/lib/leadSubmission";
 
 const QuickContactForm = () => {
   const { language } = useLanguage();
