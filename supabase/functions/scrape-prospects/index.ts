@@ -948,22 +948,24 @@ Deno.serve(async (req) => {
         : DEFAULT_SEARCH_QUERIES;
     }
 
-    // Expand keywords with diacritics-free variants for fuzzy matching
-    queries = expandKeywordsWithoutDiacritics(queries);
+    if (!retryBatches) {
+      // Expand keywords with diacritics-free variants for fuzzy matching
+      queries = expandKeywordsWithoutDiacritics(queries);
 
-    // Default path stays owner-focused. Keyword Radar can use discovery mode
-    // for broader URL discovery, then agency/geo gates keep the queue clean.
-    queries = queries.map((q) => ({
-      platform: q.platform,
-      query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
-    }));
-    // Rotate + slice to fit within edge-function runtime
-    if (!customQuery && queries.length > queryLimit) {
-      for (let k = queries.length - 1; k > 0; k--) {
-        const j = Math.floor(Math.random() * (k + 1));
-        [queries[k], queries[j]] = [queries[j], queries[k]];
+      // Default path stays owner-focused. Keyword Radar can use discovery mode
+      // for broader URL discovery, then agency/geo gates keep the queue clean.
+      queries = queries.map((q) => ({
+        platform: q.platform,
+        query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
+      }));
+      // Rotate + slice to fit within edge-function runtime
+      if (!customQuery && queries.length > queryLimit) {
+        for (let k = queries.length - 1; k > 0; k--) {
+          const j = Math.floor(Math.random() * (k + 1));
+          [queries[k], queries[j]] = [queries[j], queries[k]];
+        }
+        queries = queries.slice(0, queryLimit);
       }
-      queries = queries.slice(0, queryLimit);
     }
     console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries (cap=${queryLimit})`);
 
