@@ -650,7 +650,13 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     error_message: string | null;
     updated_at: string | null;
     pending_queries?: Array<{ platform: string; query: string }>;
+    scan_mode?: 'free' | 'firecrawl' | null;
+    auto_fallback_enabled?: boolean;
+    engine_stats?: Record<string, { hits: number; urls: number; ms: number; errors: number; blocked: number }> | null;
+    blocked_alerts?: Array<{ platform: string; engine: string; reason: string; keyword: string }>;
+    session_deduped?: number;
   } | null>(null);
+
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const [isClearingPending, setIsClearingPending] = useState(false);
