@@ -731,6 +731,14 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
   const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>(() => getScanHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [csvIncludeBlocked, setCsvIncludeBlocked] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("prospect_csv_include_blocked") === "1";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_csv_include_blocked", csvIncludeBlocked ? "1" : "0"); } catch {}
+  }, [csvIncludeBlocked]);
+  const [historyOnlyCurrent, setHistoryOnlyCurrent] = useState<boolean>(false);
   const scanContextRef = useRef<{
     startedAt: number;
     mode: "scan" | "rescan" | "simulated";
@@ -2209,7 +2217,10 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       const t = l.created_at ? new Date(l.created_at).getTime() : 0;
       return t >= since;
     });
-    if (!rows.length) {
+    const blockedRows = csvIncludeBlocked
+      ? ((activeJob?.blocked_alerts ?? []) as Array<{ platform: string; engine: string; reason: string; keyword: string }>)
+      : [];
+    if (!rows.length && !blockedRows.length) {
       toast.info("Niciun prospect nou în sesiunea curentă (criteriu: created_at ≥ start scanare).");
       return;
     }
@@ -2225,13 +2236,28 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       l.url,
       l.created_at?.slice(0, 19) ?? "",
     ]);
-    const csv = [headers.join(","), ...csvRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blockedCsvRows = blockedRows.map((b) => [
+      `[BLOCAJ] ${b.keyword}`,
+      b.platform,
+      "blocaj",
+      "",
+      "",
+      "",
+      `BLOCKED:${b.engine}:${b.reason || "unknown"}`,
+      "",
+      new Date().toISOString().slice(0, 19),
+    ]);
+    const allRows = [...csvRows, ...blockedCsvRows];
+    const csv = [headers.join(","), ...allRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `prospecti-sesiune-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
     link.click();
-    toast.success(`${rows.length} prospecți din sesiune exportați în CSV`);
+    const blockedMsg = blockedRows.length ? ` + ${blockedRows.length} blocaje` : "";
+    toast.success(`Export realizat cu succes! ${rows.length} lead-uri descărcate${blockedMsg}`, {
+      description: `Fișier: ${link.download}`,
+    });
   };
 
 
@@ -3201,6 +3227,17 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 >
                   <FileText className="w-3.5 h-3.5" /> Export CSV sesiune
                 </Button>
+                <label
+                  className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors"
+                  title="Include în CSV și cuvintele/loturile blocate (marcate cu status BLOCKED:engine:reason)"
+                >
+                  <Checkbox
+                    checked={csvIncludeBlocked}
+                    onCheckedChange={(v) => setCsvIncludeBlocked(v === true)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <span className="text-[11px] font-medium">CSV include blocaje</span>
+                </label>
 
                 <Button
                   size="sm"
@@ -3445,6 +3482,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                       {isRetryingBlocked ? "⏳ Repornesc…" : `🔁 Retry blocate (${Math.min(activeJob.blocked_alerts!.length, 30)})`}
                     </Button>
                   </div>
+                  {isRetryingBlocked && (
+                    <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300 animate-pulse">
+                      ⏳ Se reîncearcă lotul blocat… alertele se resetează doar pentru cuvintele care reușesc.
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-1">
                     {activeJob.blocked_alerts!.slice(-6).map((a, idx) => (
                       <Badge key={idx} variant="outline" className="text-[10px] font-normal border-amber-500/40 bg-amber-500/10">
@@ -4607,11 +4649,22 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <History className="w-4 h-4" /> Istoric scanări ({scanHistory.length})
             </DialogTitle>
           </DialogHeader>
-          <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-border flex-wrap">
             <p className="text-xs text-muted-foreground">
               Stocat local (browser). Maxim 50 înregistrări. Include și sesiuni de simulare și erori detaliate.
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center flex-wrap">
+              <label
+                className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors"
+                title="Afișează doar înregistrările din sesiunea curentă (started_at ≥ start scanare)"
+              >
+                <Checkbox
+                  checked={historyOnlyCurrent}
+                  onCheckedChange={(v) => setHistoryOnlyCurrent(v === true)}
+                  className="h-3.5 w-3.5"
+                />
+                <span className="text-[11px] font-medium">Doar sesiunea curentă</span>
+              </label>
               <Button
                 size="sm"
                 variant="outline"
@@ -4638,13 +4691,22 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             </div>
           </div>
           <ScrollArea className="flex-1 -mx-6 px-6">
-            {scanHistory.length === 0 ? (
-              <div className="text-center text-sm text-muted-foreground py-12">
-                Niciun istoric — pornește o scanare sau o simulare pentru a popula lista.
-              </div>
-            ) : (
+            {(() => {
+              const filteredHistory = historyOnlyCurrent
+                ? scanHistory.filter((e) => new Date(e.started_at).getTime() >= sessionStartRef.current)
+                : scanHistory;
+              if (!filteredHistory.length) {
+                return (
+                  <div className="text-center text-sm text-muted-foreground py-12">
+                    {historyOnlyCurrent
+                      ? "Nicio înregistrare în sesiunea curentă — pornește o scanare nouă."
+                      : "Niciun istoric — pornește o scanare sau o simulare pentru a popula lista."}
+                  </div>
+                );
+              }
+              return (
               <div className="space-y-2 py-2">
-                {scanHistory.map((e) => {
+                {filteredHistory.map((e) => {
                   const statusCls =
                     e.status === "completed" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
                     : e.status === "failed" ? "bg-destructive/10 border-destructive/30 text-destructive"
@@ -4682,7 +4744,8 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   );
                 })}
               </div>
-            )}
+              );
+            })()}
           </ScrollArea>
         </DialogContent>
       </Dialog>
