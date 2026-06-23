@@ -1541,6 +1541,7 @@ Deno.serve(async (req) => {
 
     const payload = {
       success: true,
+      scan_mode: scanMode,
       new_listings: results.length,
       count: results.length,
       blacklisted_skipped: blacklistedSkipped,
