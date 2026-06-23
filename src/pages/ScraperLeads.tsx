@@ -2045,7 +2045,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [activeJob?.id, queryClient]);
+  }, [activeJob?.id, queryClient, recordScanEntry]);
 
   // Resume tracking any running job on mount.
   useEffect(() => {
