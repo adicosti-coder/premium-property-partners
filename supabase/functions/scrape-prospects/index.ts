@@ -621,7 +621,7 @@ interface FcSearchOutcome {
   errorBody?: string;
   errorMessage?: string;
   attempts: number;
-  source: 'firecrawl' | 'fallback_duckduckgo' | 'none';
+  source: 'firecrawl' | 'fallback_duckduckgo' | 'fallback_bing' | 'free_direct' | 'none';
 }
 
 async function firecrawlSearchOnce(query: string, key: string, maxResults: number, timeoutMs = 35000) {
