@@ -36,6 +36,7 @@ import {
   Search, Loader2, Handshake, Calendar, MapPin, Filter, ChevronRight, Ban, Archive,
   Shield, Database, Sparkles, Crown, FileText, ArrowUpDown, Plus, Trash2, Save, Tags,
   ChevronDown, ChevronUp, Pencil, Building2, Check, X, RefreshCw, ClipboardList, Hotel,
+  Info, BellRing, Rocket, ListPlus,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -650,7 +651,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     error_message: string | null;
     updated_at: string | null;
     pending_queries?: Array<{ platform: string; query: string }>;
-    scan_mode?: 'free' | 'firecrawl' | null;
+    scan_mode?: 'free' | 'firecrawl' | 'auto' | null;
     auto_fallback_enabled?: boolean;
     engine_stats?: Record<string, { hits: number; urls: number; ms: number; errors: number; blocked: number }> | null;
     blocked_alerts?: Array<{ platform: string; engine: string; reason: string; keyword: string }>;
@@ -691,6 +692,34 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     return Number.isFinite(v) && v >= 1 && v <= 100 ? v : 25;
   });
   const [keywordsPreviewOpen, setKeywordsPreviewOpen] = useState(false);
+
+  // ── Recently added keywords (this session) + bulk add modal ──
+  type RecentKeyword = { id: string; keyword: string; platform: string };
+  const [recentlyAddedKeywords, setRecentlyAddedKeywords] = useState<RecentKeyword[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const [bulkPlatform, setBulkPlatform] = useState("General");
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [isScanningNew, setIsScanningNew] = useState(false);
+
+  // Visual flash + toast when new_listings increases during an active scan
+  const [newListingsFlash, setNewListingsFlash] = useState(false);
+  const prevNewListingsRef = useRef(0);
+  useEffect(() => {
+    const current = activeJob?.new_listings ?? 0;
+    const prev = prevNewListingsRef.current;
+    if (current > prev) {
+      prevNewListingsRef.current = current;
+      setNewListingsFlash(true);
+      const delta = current - prev;
+      toast.success(`🆕 ${delta} anunț${delta === 1 ? "" : "uri"} nou${delta === 1 ? "" : "i"} colectat${delta === 1 ? "" : "e"}!`, {
+        description: activeJob?.current_keyword ? `Sursa: ${activeJob.current_keyword}` : undefined,
+      });
+      const t = window.setTimeout(() => setNewListingsFlash(false), 2200);
+      return () => window.clearTimeout(t);
+    }
+    if (!activeJob) prevNewListingsRef.current = 0;
+  }, [activeJob?.new_listings, activeJob?.current_keyword]);
 
   // ── Scan history, Safe Mode & timing ────────────────────────────────
   const [safeMode, setSafeMode] = useState<boolean>(() => {
@@ -2452,12 +2481,123 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const handleAddKeyword = async () => {
     const kw = newKeyword.trim();
     if (!kw) return;
-    const { error } = await supabase.from("scraper_search_keywords").insert({ keyword: kw, platform: newPlatform } as any);
+    const { data, error } = await supabase
+      .from("scraper_search_keywords")
+      .insert({ keyword: kw, platform: newPlatform } as any)
+      .select("id, keyword, platform")
+      .single();
     if (error) { toast.error("Eroare la adăugare"); return; }
+    if (data) {
+      setRecentlyAddedKeywords((prev) => [
+        { id: (data as any).id, keyword: (data as any).keyword, platform: (data as any).platform },
+        ...prev.filter((k) => k.id !== (data as any).id),
+      ].slice(0, 50));
+    }
     setNewKeyword("");
     setNewPlatform("General");
     refetchKeywords();
     toast.success("Cuvânt cheie adăugat");
+  };
+
+  // Bulk add: one keyword per line, single platform. Persists, dedupes by text.
+  const handleBulkAddKeywords = async () => {
+    if (bulkSaving) return;
+    const lines = bulkText.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const unique = Array.from(new Set(lines));
+    if (!unique.length) { toast.info("Adaugă cel puțin un cuvânt cheie."); return; }
+    setBulkSaving(true);
+    try {
+      const rows = unique.map((keyword) => ({ keyword, platform: bulkPlatform } as any));
+      const { data, error } = await supabase
+        .from("scraper_search_keywords")
+        .insert(rows)
+        .select("id, keyword, platform");
+      if (error) throw error;
+      const added = (data ?? []) as Array<{ id: string; keyword: string; platform: string }>;
+      setRecentlyAddedKeywords((prev) => {
+        const merged = [...added, ...prev];
+        const seen = new Set<string>();
+        return merged.filter((k) => { if (seen.has(k.id)) return false; seen.add(k.id); return true; }).slice(0, 50);
+      });
+      refetchKeywords();
+      toast.success(`${added.length} cuvinte cheie adăugate. Poți porni o scanare doar pentru ele.`);
+      setBulkText("");
+      setBulkOpen(false);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleBulkAddKeywords failed", err);
+      toast.error(`Bulk-add eșuat: ${err?.message || "eroare necunoscută"}`);
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  // Restricted manual scan — only the keywords just added in this session.
+  const handleScanNewKeywords = async () => {
+    if (isScanningNew || isScraping) return;
+    if (!recentlyAddedKeywords.length) { toast.info("Nu există cuvinte cheie noi în sesiune."); return; }
+    setIsScanningNew(true);
+    try {
+      const slice = recentlyAddedKeywords.slice(0, 30).map((k) => ({
+        platform: k.platform || "General",
+        query: k.keyword,
+      }));
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("prospect_scan_jobs")
+        .insert({
+          created_by: userId,
+          query_limit: slice.length,
+          max_results: 12,
+          triggered_by: "manual_new_keywords_ui",
+        } as any)
+        .select("*")
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
+      sessionStartRef.current = Date.now();
+      prevNewListingsRef.current = 0;
+      setActiveJob({
+        id: (jobRow as any).id,
+        status: "pending",
+        processed_queries: 0,
+        total_queries: slice.length,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+        updated_at: (jobRow as any).updated_at ?? new Date().toISOString(),
+        pending_queries: [],
+        scan_mode: scanModeOverride,
+        auto_fallback_enabled: autoFallback,
+        engine_stats: null,
+        blocked_alerts: [],
+        session_deduped: 0,
+      });
+      setIsScraping(true);
+      setActiveScanMode("scan");
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          max_results: 12,
+          preserve_agency_filter: true,
+          job_id: (jobRow as any).id,
+          async_mode: true,
+          retry_batches: slice,
+          scan_mode: scanModeOverride,
+          auto_fallback: autoFallback,
+          auto_fallback_threshold: autoFallbackThreshold,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Scanare restrânsă pornită pentru ${slice.length} cuvinte cheie noi.`);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleScanNewKeywords failed", err);
+      toast.error(`Scanare nouă eșuată: ${err?.message || "eroare necunoscută"}`);
+      setIsScraping(false);
+      setActiveScanMode(null);
+    } finally {
+      setIsScanningNew(false);
+    }
   };
 
   const handleToggleKeyword = async (id: string, isActive: boolean) => {
@@ -3371,8 +3511,18 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 </div>
               )}
               {activeJob.new_listings > 0 && (
-                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <div
+                  className={cn(
+                    "text-[11px] font-medium flex items-center gap-1 transition-all rounded px-1.5 py-0.5 -mx-1.5",
+                    newListingsFlash
+                      ? "text-white bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+                      : "text-emerald-600 dark:text-emerald-400"
+                  )}
+                  aria-live="polite"
+                >
+                  <BellRing className="w-3 h-3" />
                   🎯 {activeJob.new_listings} anunțuri noi colectate până acum
+                  {newListingsFlash && <span className="ml-1 text-[10px] uppercase tracking-wide">nou!</span>}
                 </div>
               )}
 
@@ -3671,10 +3821,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 <div className="p-2 rounded-lg bg-amber-500/15">
                   <Archive className="w-4 h-4 text-amber-500" />
                 </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Arhivate</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    Arhivate
+                    <span
+                      title={`Modul: Skip · Motiv: URL deja existent în baza ta de surse (${phoneIntelCount.toLocaleString("ro-RO")} telefoane / 1275+ surse cunoscute). Sistemul nu re-importă duplicatele — economisește resurse și păstrează pipeline-ul curat.`}
+                      className="inline-flex items-center cursor-help text-muted-foreground/70 hover:text-foreground transition-colors"
+                      aria-label="Explicație skip"
+                    >
+                      <Info className="w-3 h-3" />
+                    </span>
+                  </p>
                   <p className="text-xl font-bold font-mono">{lastIngestResult?.archived_skipped ?? (lastScanLog as any)?.archived_skipped ?? archivedCount}</p>
-                  <p className="text-[10px] text-muted-foreground">ignorate la re-import</p>
+                  <p className="text-[10px] text-muted-foreground" title="Aceste URL-uri au fost recunoscute ca fiind deja prezente în pipeline. Treci cu mouse-ul peste „i” pentru detalii.">
+                    ignorate la re-import (URL deja în DB)
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -4031,7 +4192,52 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     <Button size="sm" onClick={handleAddKeyword} className="h-8 gap-1">
                       <Plus className="w-3 h-3" /> Adaugă
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} className="h-8 gap-1">
+                      <ListPlus className="w-3 h-3" /> Bulk-add
+                    </Button>
                   </div>
+
+                  {/* Recently added (this session) + restricted scan */}
+                  {recentlyAddedKeywords.length > 0 && (
+                    <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {recentlyAddedKeywords.length} cuvinte cheie noi în sesiune
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs"
+                            onClick={() => setRecentlyAddedKeywords([])}
+                            disabled={isScanningNew || isScraping}
+                          >
+                            Golește
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleScanNewKeywords}
+                            disabled={isScanningNew || isScraping}
+                            className="h-7 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          >
+                            {isScanningNew ? <Loader2 className="w-3 h-3 animate-spin" /> : <Rocket className="w-3 h-3" />}
+                            Scanează doar noile
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {recentlyAddedKeywords.slice(0, 20).map((k) => (
+                          <Badge key={k.id} variant="secondary" className="text-[10px] font-mono">
+                            {k.platform}: {k.keyword}
+                          </Badge>
+                        ))}
+                        {recentlyAddedKeywords.length > 20 && (
+                          <Badge variant="outline" className="text-[10px]">+{recentlyAddedKeywords.length - 20}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Keywords list */}
                   <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
@@ -4640,6 +4846,53 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
       {/* Blacklist Modal */}
       <BlacklistModal open={blacklistOpen} onOpenChange={setBlacklistOpen} />
+
+      {/* Bulk add keywords */}
+      <Dialog open={bulkOpen} onOpenChange={(o) => { if (!bulkSaving) setBulkOpen(o); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ListPlus className="w-4 h-4" /> Bulk-add cuvinte cheie
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Adaugă rapid zone, cartiere sau complexe nemonitorizate. Un cuvânt cheie pe linie.
+              Acestea apar imediat în panoul „cuvinte noi în sesiune” și pot fi scanate restrâns.
+            </p>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Platformă</label>
+              <Input
+                value={bulkPlatform}
+                onChange={(e) => setBulkPlatform(e.target.value)}
+                placeholder="General | OLX | Storia | imobiliare.ro"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Cuvinte cheie (unul per linie)</label>
+              <Textarea
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                rows={8}
+                placeholder={`apartament proprietar dumbravita\ngarsoniera iosefin proprietar\nIsho residence proprietar`}
+                className="font-mono text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {bulkText.split(/\r?\n/).filter((s) => s.trim()).length} cuvinte detectate · duplicatele sunt eliminate automat.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setBulkOpen(false)} disabled={bulkSaving}>Anulează</Button>
+              <Button size="sm" onClick={handleBulkAddKeywords} disabled={bulkSaving} className="gap-1">
+                {bulkSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                Adaugă toate
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Scan History Dialog */}
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
