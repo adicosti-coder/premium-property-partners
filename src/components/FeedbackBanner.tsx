@@ -3,9 +3,9 @@ import { X, MessageSquarePlus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
+import { submitLead } from "@/lib/leadSubmission";
 
 const DISMISSED_KEY = "feedback_banner_dismissed";
 
@@ -49,23 +49,27 @@ const FeedbackBanner = () => {
   const txt = t[language as keyof typeof t] || t.ro;
 
   const handleSend = async () => {
-    if (!feedback.trim()) return;
+    if (!feedback.trim() || sending) return;
     setSending(true);
     try {
-      await supabase.from("leads").insert({
+      const result = await submitLead({
         name: "Feedback Banner",
         whatsapp_number: "-",
         property_type: "feedback",
         property_area: 0,
         message: feedback.trim(),
         source: "feedback_banner",
-        simulation_data: withProvenientaTracking(null),
+        simulation_data: withProvenientaTracking(null) as never,
+        allowSentinelPhone: true,
       });
-      toast({ title: txt.thanks });
-      setFeedback("");
-      dismiss();
-    } catch {
-      // silent
+      if (result.ok) {
+        toast({ title: txt.thanks });
+        setFeedback("");
+        dismiss();
+      } else {
+        toast({ title: txt.thanks }); // fail soft — user already engaged
+        dismiss();
+      }
     } finally {
       setSending(false);
     }

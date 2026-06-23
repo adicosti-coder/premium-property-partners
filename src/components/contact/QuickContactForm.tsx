@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { z } from "zod";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,16 +12,7 @@ import {
   isValidWhatsAppNumber,
   formatPhoneInput,
 } from "@/lib/conversionTracking";
-
-const contactSchema = z.object({
-  name: z.string().trim().min(2, "min").max(100, "max"),
-  whatsapp_number: z
-    .string()
-    .trim()
-    .refine((v) => isValidWhatsAppNumber(v), { message: "invalid_whatsapp" }),
-  email: z.string().trim().email("email").max(255).optional().or(z.literal("")),
-  message: z.string().trim().min(5, "min").max(1000, "max"),
-});
+import { submitLead } from "@/lib/leadSubmission";
 
 const QuickContactForm = () => {
   const { language } = useLanguage();
@@ -67,44 +56,48 @@ const QuickContactForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = contactSchema.safeParse({
-      name,
-      whatsapp_number: phone,
-      email,
-      message,
-    });
-    if (!parsed.success) {
-      const phoneIssue = parsed.error.issues.find((i) => i.path[0] === "whatsapp_number");
-      toast.error(phoneIssue ? t.invalidPhone : t.invalid);
+    if (loading) return; // guard against double-click
+
+    // Quick client-side phone validation for a precise toast
+    if (!isValidWhatsAppNumber(phone)) {
+      toast.error(t.invalidPhone);
       return;
     }
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("leads").insert({
-        name: parsed.data.name,
-        whatsapp_number: parsed.data.whatsapp_number.replace(/\s/g, ""),
-        email: parsed.data.email || null,
-        message: parsed.data.message,
+      const result = await submitLead({
+        name,
+        whatsapp_number: phone,
+        email,
+        message,
         property_type: "general",
         property_area: 0,
         source: "pagina_contact",
       });
-      if (error) throw error;
 
-      // Push conversion event to dataLayer + GA4
-      trackConversion({
-        event: "contact_form_submit",
-        source: "pagina_contact",
-      });
+      if (result.ok === false) {
+        if (result.reason === "validation") {
+          toast.error(result.errors.whatsapp_number ? t.invalidPhone : t.invalid);
+        } else {
+          toast.error(t.error);
+        }
+        return;
+      }
 
+      if (result.duplicate) {
+        toast.success(isRo
+          ? "Am primit deja un mesaj de la tine. Te contactăm în scurt timp!"
+          : "We already received a message from you. We'll reach out shortly!");
+      }
+
+      trackConversion({ event: "contact_form_submit", source: "pagina_contact" });
       navigate("/multumim");
-    } catch {
-      toast.error(t.error);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="bg-card border rounded-2xl p-6 sm:p-8 space-y-4">
