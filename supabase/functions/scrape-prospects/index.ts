@@ -1397,7 +1397,7 @@ Deno.serve(async (req) => {
           //    single query via Firecrawl.
           const freeUrlCount = outcome.ok ? outcome.results.length : 0;
           const belowThreshold = freeUrlCount < autoFallbackThreshold;
-          if (belowThreshold && enableAutoFallback && firecrawlKey) {
+          if (belowThreshold && enableAutoFallback && firecrawlKey && !firecrawlDisabled) {
             const t0 = Date.now();
             engineStats.firecrawl.hits++;
             const fc = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
@@ -1411,6 +1411,10 @@ Deno.serve(async (req) => {
               console.log(`[auto-fallback] firecrawl rescued ${platform} [${query.slice(0, 60)}] free=${freeUrlCount}<${autoFallbackThreshold} → ${fc.results.length} URL`);
             } else {
               engineStats.firecrawl.errors++;
+              if (fc.status === 402 || fc.status === 401 || fc.status === 403) {
+                firecrawlDisabled = true;
+                console.warn(`[auto-fallback] firecrawl disabled for rest of scan (status=${fc.status})`);
+              }
             }
           }
 
