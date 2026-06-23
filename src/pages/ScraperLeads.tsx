@@ -3496,8 +3496,18 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 </div>
               )}
               {activeJob.new_listings > 0 && (
-                <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <div
+                  className={cn(
+                    "text-[11px] font-medium flex items-center gap-1 transition-all rounded px-1.5 py-0.5 -mx-1.5",
+                    newListingsFlash
+                      ? "text-white bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+                      : "text-emerald-600 dark:text-emerald-400"
+                  )}
+                  aria-live="polite"
+                >
+                  <BellRing className="w-3 h-3" />
                   🎯 {activeJob.new_listings} anunțuri noi colectate până acum
+                  {newListingsFlash && <span className="ml-1 text-[10px] uppercase tracking-wide">nou!</span>}
                 </div>
               )}
 
