@@ -904,6 +904,27 @@ Deno.serve(async (req) => {
     let blacklistedReviewed = 0;
     let archivedSkipped = 0;
     let duplicateSkipped = 0;
+    let timedOut = false;
+    const scanStartedAt = Date.now();
+    const MAX_BACKGROUND_RUNTIME_MS = 50_000;
+    const markTimedOut = async (processed: number, total: number) => {
+      timedOut = true;
+      const message = `Scanarea a fost oprită automat după ${Math.round((Date.now() - scanStartedAt) / 1000)}s ca să nu rămână blocată. Repornește scanarea pentru restul cuvintelor.`;
+      jobErrors.push({ phase: 'runtime_guard', message, retryable: true, processed, total });
+      await updateJob({
+        status: 'failed',
+        finished_at: new Date().toISOString(),
+        processed_queries: processed,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: results.length,
+        archived_skipped: archivedSkipped,
+        duplicate_skipped: duplicateSkipped,
+        blacklisted_skipped: blacklistedSkipped,
+        error_message: message,
+        errors: jobErrors,
+      });
+    };
     const existingUrls = new Set<string>();
     const blockedPhones = new Set<string>();
     const blockedDomains = new Set<string>();
