@@ -1745,39 +1745,147 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       const { data, error } = await supabase.functions.invoke("scrape-prospects", {
         body: { max_results: isRescan ? 20 : 10, only_new_sources: isRescan, preserve_agency_filter: true, query_limit: 8 },
       });
+  const handleScrape = async (mode: "scan" | "rescan" = "scan") => {
+    setIsScraping(true);
+    setActiveScanMode(mode);
+    setRecentScanPulse(true);
+    try {
+      const isRescan = mode === "rescan";
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
+
+      // Create job row to enable async-mode + realtime progress tracking.
+      const queryLimit = isRescan ? 12 : 8;
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("prospect_scan_jobs")
+        .insert({
+          created_by: userId,
+          query_limit: queryLimit,
+          max_results: isRescan ? 20 : 10,
+          triggered_by: isRescan ? "manual_rescan_ui" : "manual_scan_ui",
+        } as any)
+        .select("*")
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
+
+      setActiveJob({
+        id: (jobRow as any).id,
+        status: "pending",
+        processed_queries: 0,
+        total_queries: 0,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+      });
+
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          max_results: isRescan ? 20 : 10,
+          only_new_sources: isRescan,
+          preserve_agency_filter: true,
+          query_limit: queryLimit,
+          job_id: (jobRow as any).id,
+          async_mode: true,
+        },
+      });
       if (error) throw error;
-      if (data && data.success === false) throw new Error(data.error || 'Scanarea a eșuat');
-      const result = {
-        count: data?.new_listings || data?.count || 0,
-        blacklisted_skipped: data?.blacklisted_skipped || 0,
-        archived_skipped: data?.archived_skipped || 0,
-        duplicate_skipped: data?.duplicate_skipped || 0,
-        existing_sources_checked: data?.existing_sources_checked || 0,
-      };
-      setLastIngestResult(result);
-      // Persist scan log
-      await supabase.from("scraper_scan_logs").insert({
-        new_count: result.count,
-        blacklisted_skipped: result.blacklisted_skipped,
-        archived_skipped: result.archived_skipped,
-        total_processed: result.count + result.blacklisted_skipped + result.archived_skipped,
-      } as any);
-      toast.success(`${isRescan ? "Rescan complet" : "Scanare completă"}! ${result.count} noi · ${result.duplicate_skipped} duplicate · ${result.blacklisted_skipped} agenții blocate.`);
-      // Force full data refresh
-      await queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
-      await queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
-      await queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
-      await queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
-      await queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
-      await queryClient.invalidateQueries({ queryKey: ["scraper-search-keywords"] });
+
+      toast.success(`${isRescan ? "Rescan" : "Scanare"} pornit în fundal — vezi bara de progres.`);
     } catch (err: any) {
+      console.error("[ScraperLeads] handleScrape failed", err);
       toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${err.message || "Necunoscută"}`);
-    } finally {
       setIsScraping(false);
       setActiveScanMode(null);
-      setTimeout(() => setRecentScanPulse(false), 5000);
     }
   };
+
+  // Realtime subscription to active scan job.
+  useEffect(() => {
+    if (!activeJob?.id) return;
+    const channel = supabase
+      .channel(`scraperleads_scan_job_${activeJob.id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "prospect_scan_jobs", filter: `id=eq.${activeJob.id}` },
+        (payload) => {
+          const row = payload.new as any;
+          setActiveJob((prev) => prev && prev.id === row.id ? {
+            id: row.id,
+            status: row.status,
+            processed_queries: row.processed_queries ?? 0,
+            total_queries: row.total_queries ?? 0,
+            current_keyword: row.current_keyword,
+            current_platform: row.current_platform,
+            new_listings: row.new_listings ?? 0,
+            error_message: row.error_message,
+          } : prev);
+
+          if (row.status === "completed") {
+            const found = row.new_listings ?? 0;
+            toast.success(`Scanare completă! ${found} anunțuri noi.`);
+            setIsScraping(false);
+            setActiveScanMode(null);
+            setLastIngestResult({
+              count: found,
+              blacklisted_skipped: row.blacklisted_skipped ?? 0,
+              archived_skipped: row.archived_skipped ?? 0,
+              duplicate_skipped: row.duplicate_skipped ?? 0,
+            });
+            void supabase.from("scraper_scan_logs").insert({
+              new_count: found,
+              blacklisted_skipped: row.blacklisted_skipped ?? 0,
+              archived_skipped: row.archived_skipped ?? 0,
+              total_processed: (found || 0) + (row.blacklisted_skipped ?? 0) + (row.archived_skipped ?? 0),
+            } as any);
+            queryClient.invalidateQueries({ queryKey: ["scraper-leads"] });
+            queryClient.invalidateQueries({ queryKey: ["phone-intel-count"] });
+            queryClient.invalidateQueries({ queryKey: ["scraper-archived-count"] });
+            queryClient.invalidateQueries({ queryKey: ["last-scan-log"] });
+            queryClient.invalidateQueries({ queryKey: ["scraper-trend-7d"] });
+            queryClient.invalidateQueries({ queryKey: ["scraper-search-keywords"] });
+            setTimeout(() => { setActiveJob(null); setRecentScanPulse(false); }, 4000);
+          } else if (row.status === "failed") {
+            toast.error(`Scanare eșuată: ${row.error_message || "necunoscut"}`);
+            setIsScraping(false);
+            setActiveScanMode(null);
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeJob?.id, queryClient]);
+
+  // Resume tracking any running job on mount.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("prospect_scan_jobs")
+        .select("*")
+        .in("status", ["pending", "running"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const row = data as any;
+      setActiveJob({
+        id: row.id,
+        status: row.status,
+        processed_queries: row.processed_queries ?? 0,
+        total_queries: row.total_queries ?? 0,
+        current_keyword: row.current_keyword,
+        current_platform: row.current_platform,
+        new_listings: row.new_listings ?? 0,
+        error_message: row.error_message,
+      });
+      setIsScraping(true);
+      setActiveScanMode("scan");
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
 
   // ── Keyword CRUD ──────────────────────────────────
   const handleAddKeyword = async () => {
