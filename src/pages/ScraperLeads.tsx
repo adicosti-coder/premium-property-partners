@@ -1179,6 +1179,15 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       result = result.filter((l) => new Date(l.created_at) <= to);
     }
 
+    // Quick session filter: only leads ingested since the current scan started
+    if (sessionOnlyResults) {
+      const since = sessionStartRef.current;
+      result = result.filter((l) => {
+        const t = l.created_at ? new Date(l.created_at).getTime() : 0;
+        return t >= since;
+      });
+    }
+
     // Sort based on user selection
     const dir = sortDir === "desc" ? -1 : 1;
     result = [...result].sort((a, b) => {
@@ -1188,7 +1197,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       return dir * (b.lead_score - a.lead_score);
     });
     return result;
-  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed, hideSearchPages, hideAgencies]);
+  }, [leads, hotOnly, listingTab, filterType, platformFilter, debouncedSearch, smartFilter, sortBy, sortDir, appliedFilters, hideSnoozed, hideSearchPages, hideAgencies, sessionOnlyResults]);
 
   // Stats based on filtered leads
   const profitStats = useMemo(() => {
