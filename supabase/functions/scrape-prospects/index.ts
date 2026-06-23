@@ -1099,6 +1099,10 @@ Deno.serve(async (req) => {
           console.log(`Found ${searchResults.length} results from ${platform} (source=${outcome.source})`);
 
           for (const result of searchResults) {
+            if (Date.now() - scanStartedAt > MAX_BACKGROUND_RUNTIME_MS) {
+              await markTimedOut(Math.min(i + BATCH_SIZE, queries.length), queries.length);
+              return;
+            }
             const url = result.url;
             if (!url) continue;
 
@@ -1134,7 +1138,8 @@ Deno.serve(async (req) => {
             const phoneFromSearchPayload = normalizeRoPhone(extracted.contactPhone) ??
               extractPhonesFromText(`${markdown}\n${result.title || ''}\n${result.description || ''}`).find(Boolean) ??
               null;
-            extracted.contactPhone = phoneFromSearchPayload || await hydratePhoneFromListingUrl(url, firecrawlKey);
+            const canHydratePhone = Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 12_000;
+            extracted.contactPhone = phoneFromSearchPayload || (canHydratePhone ? await hydratePhoneFromListingUrl(url, firecrawlKey) : null);
 
             let price = extracted.price;
             if (price && extracted.currency === 'RON') {
