@@ -3133,7 +3133,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     : activeJob.status === "failed"
                       ? "❌ Scanare eșuată"
                       : activeJob.status === "running"
-                        ? "⚙️ Scanare în fundal (Firecrawl)"
+                        ? `⚙️ Scanare în fundal (${(activeJob.scan_mode ?? scanModeOverride) === "firecrawl" ? "Firecrawl 💎" : "Free 🆓"}${activeJob.auto_fallback_enabled ? " + auto-fallback" : ""})`
                         : "⏳ Se inițializează…"}
                 </span>
                 <span className="text-muted-foreground tabular-nums">
