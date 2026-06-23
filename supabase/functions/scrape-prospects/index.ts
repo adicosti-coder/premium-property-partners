@@ -414,9 +414,202 @@ function normalizeFirecrawlDoc(data: any) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// FREE SCRAPING PATH — zero external API cost.
+// Direct site search on OLX + DuckDuckGo + Bing HTML fallbacks. Phone
+// hydration via plain fetch + regex. Firecrawl path stays opt-in only via
+// SCRAPER_USE_FIRECRAWL=true.
+// ────────────────────────────────────────────────────────────────────────────
+const BROWSER_UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+const BROWSER_HEADERS: Record<string, string> = {
+  'User-Agent': BROWSER_UA,
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'ro-RO,ro;q=0.9,en-US;q=0.6,en;q=0.4',
+  'Cache-Control': 'no-cache',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Upgrade-Insecure-Requests': '1',
+};
+
+async function fetchHtml(url: string, timeoutMs = 9000, referer?: string): Promise<{ ok: boolean; status: number; html: string }> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const headers: Record<string, string> = { ...BROWSER_HEADERS };
+    if (referer) headers['Referer'] = referer;
+    const resp = await fetch(url, { signal: ctrl.signal, headers, redirect: 'follow' });
+    const html = resp.ok ? await resp.text() : '';
+    return { ok: resp.ok, status: resp.status, html };
+  } catch (_e) {
+    return { ok: false, status: 0, html: '' };
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function stripQueryOperators(q: string): string {
+  return q.replace(/site:\S+/gi, '').replace(/inurl:\S+/gi, '').replace(/intitle:\S+/gi, '')
+    .replace(/-\S+/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function extractDomainFromSiteOperator(q: string): string | null {
+  const m = q.match(/site:([a-z0-9.\-]+(?:\/[a-z0-9._\-/]*)?)/i);
+  return m ? m[1].toLowerCase() : null;
+}
+
+function platformToDomain(platform: string, query: string): string | null {
+  const fromQuery = extractDomainFromSiteOperator(query);
+  if (fromQuery) return fromQuery;
+  const p = (platform || '').toLowerCase();
+  if (p.includes('olx')) return 'olx.ro';
+  if (p.includes('storia')) return 'storia.ro';
+  if (p.includes('imobiliare')) return 'imobiliare.ro';
+  if (p.includes('publi24')) return 'publi24.ro';
+  if (p.includes('bursa')) return 'bursaimobiliara.ro';
+  if (p.includes('facebook')) return 'facebook.com';
+  return null;
+}
+
+interface FreeResult { url: string; title?: string; markdown?: string; description?: string }
+
+async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = stripQueryOperators(query);
+  if (!clean) return [];
+  const slug = encodeURIComponent(clean.replace(/\s+/g, '-'));
+  const url = `https://www.olx.ro/d/imobiliare/q-${slug}/?search%5Border%5D=created_at:desc`;
+  const { ok, html } = await fetchHtml(url, 9000, 'https://www.olx.ro/');
+  if (!ok || !html) return [];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  const re = /<a[^>]+href="(\/d\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) && out.length < max) {
+    const href = `https://www.olx.ro${m[1]}`;
+    if (seen.has(href)) continue;
+    seen.add(href);
+    const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (title) out.push({ url: href, title, markdown: title });
+  }
+  return out;
+}
+
+async function duckduckgoSearch(query: string, max: number): Promise<FreeResult[]> {
+  const { ok, html } = await fetchHtml(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, 10000);
+  if (!ok || !html) return [];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  const re = /<a[^>]+class="[^"]*result__a[^"]*"[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) && out.length < max) {
+    let href = m[1];
+    const wrap = href.match(/[?&]uddg=([^&]+)/);
+    if (wrap) { try { href = decodeURIComponent(wrap[1]); } catch { /* keep */ } }
+    if (seen.has(href) || !/^https?:\/\//i.test(href)) continue;
+    seen.add(href);
+    const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    out.push({ url: href, title, markdown: title });
+  }
+  return out;
+}
+
+async function bingSearch(query: string, max: number): Promise<FreeResult[]> {
+  const { ok, html } = await fetchHtml(`https://www.bing.com/search?q=${encodeURIComponent(query)}&setlang=ro&cc=RO`, 10000);
+  if (!ok || !html) return [];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  const re = /<li[^>]*class="b_algo"[^>]*>[\s\S]*?<h2[^>]*><a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) && out.length < max) {
+    const href = m[1];
+    if (seen.has(href) || !/^https?:\/\//i.test(href)) continue;
+    seen.add(href);
+    const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    out.push({ url: href, title, markdown: title });
+  }
+  return out;
+}
+
+async function freeSearchWithRetry(
+  platform: string, query: string, maxResults: number,
+  opts: { logger?: (ev: Record<string, unknown>) => void } = {},
+): Promise<FcSearchOutcome> {
+  const domain = platformToDomain(platform, query);
+  const aggregated: FreeResult[] = [];
+  const seen = new Set<string>();
+  const pushAll = (arr: FreeResult[]) => {
+    for (const r of arr) { if (r.url && !seen.has(r.url)) { seen.add(r.url); aggregated.push(r); } }
+  };
+
+  let attempts = 0;
+  let primarySource: FcSearchOutcome['source'] = 'none';
+
+  if (domain && domain.includes('olx.ro')) {
+    attempts++;
+    try {
+      const direct = await directOlxSearch(query, maxResults);
+      opts.logger?.({ kind: 'free_direct_olx', platform, results: direct.length });
+      if (direct.length > 0) { pushAll(direct); primarySource = 'free_direct'; }
+    } catch (e) {
+      opts.logger?.({ kind: 'free_direct_olx_error', platform, message: (e as Error).message });
+    }
+  }
+
+  if (aggregated.length < maxResults) {
+    attempts++;
+    try {
+      const ddg = await duckduckgoSearch(query, maxResults);
+      opts.logger?.({ kind: 'free_ddg', platform, results: ddg.length });
+      pushAll(ddg);
+      if (primarySource === 'none' && ddg.length > 0) primarySource = 'fallback_duckduckgo';
+    } catch (e) {
+      opts.logger?.({ kind: 'free_ddg_error', platform, message: (e as Error).message });
+    }
+  }
+
+  if (aggregated.length < Math.min(3, maxResults)) {
+    attempts++;
+    try {
+      const bing = await bingSearch(query, maxResults);
+      opts.logger?.({ kind: 'free_bing', platform, results: bing.length });
+      pushAll(bing);
+      if (primarySource === 'none' && bing.length > 0) primarySource = 'fallback_bing';
+    } catch (e) {
+      opts.logger?.({ kind: 'free_bing_error', platform, message: (e as Error).message });
+    }
+  }
+
+  let filtered = aggregated;
+  if (domain) {
+    const host = domain.split('/')[0];
+    const matches = aggregated.filter((r) => {
+      try { return new URL(r.url).hostname.toLowerCase().endsWith(host); } catch { return false; }
+    });
+    if (matches.length > 0) filtered = matches;
+  }
+
+  return {
+    ok: filtered.length > 0,
+    results: filtered.slice(0, maxResults),
+    attempts,
+    source: filtered.length > 0 ? primarySource : 'none',
+    errorMessage: filtered.length === 0 ? 'no results across free engines (ddg/bing/olx-direct)' : undefined,
+  };
+}
+
+async function freeHydratePhoneFromUrl(url: string): Promise<string | null> {
+  try {
+    const referer = (() => { try { return new URL(url).origin + '/'; } catch { return undefined; } })();
+    const { ok, html } = await fetchHtml(url, 9000, referer);
+    if (!ok || !html) return null;
+    const phones = extractPhonesFromPayload('', html, html, null);
+    return phones[0] ?? null;
+  } catch { return null; }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Firecrawl search with exponential backoff + basic DuckDuckGo fallback.
-// Retries only on transient signals (network / 408 / 429 / 5xx). Hard errors
-// (401/402/400) are returned immediately so we can route to fallback or fail.
+// Opt-in only via SCRAPER_USE_FIRECRAWL=true. Retries only on transient
+// signals (network/408/429/5xx); hard errors (401/402/400) return immediately.
 // ────────────────────────────────────────────────────────────────────────────
 const TRANSIENT_HTTP = new Set([408, 425, 429, 500, 502, 503, 504]);
 
