@@ -480,6 +480,71 @@ const ProspectManager = () => {
     }
   };
 
+  const handleRetryFailedBatches = async () => {
+    const failed = (activeJob?.errors || []).filter(
+      (e: any) => e?.retryable && !e?.fallback && e?.platform && e?.keyword,
+    );
+    if (failed.length === 0) {
+      toast({ title: 'Nimic de reîncercat', description: 'Nu există pachete eșuate marcate ca reîncercabile.' });
+      return;
+    }
+    setIsRetrying(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const userId = userRes?.user?.id;
+      if (!userId) throw new Error('Trebuie să fii autentificat ca admin.');
+
+      const { data: jobRow, error: jobErr } = await supabase
+        .from('prospect_scan_jobs')
+        .insert({
+          created_by: userId,
+          query_limit: failed.length,
+          max_results: 10,
+          triggered_by: 'manual_retry',
+        })
+        .select('*')
+        .single();
+      if (jobErr || !jobRow) throw jobErr || new Error('Nu am putut crea job-ul de retry.');
+
+      setActiveJob({
+        id: jobRow.id,
+        status: 'pending',
+        processed_queries: 0,
+        total_queries: failed.length,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+        errors: null,
+      });
+      setIsScraping(true);
+
+      const { error: invokeErr } = await supabase.functions.invoke('scrape-prospects', {
+        body: {
+          max_results: 10,
+          job_id: jobRow.id,
+          async_mode: true,
+          retry_batches: failed.map((e: any) => ({ platform: e.platform, query: e.keyword })),
+        },
+      });
+      if (invokeErr) throw invokeErr;
+
+      toast({
+        title: 'Reîncercare pornită 🔁',
+        description: `${failed.length} pachete eșuate sunt rerulate în fundal.`,
+      });
+    } catch (err: any) {
+      console.error('[ProspectManager] handleRetryFailedBatches failed', err);
+      toast({
+        title: 'Eroare la reîncercare',
+        description: err?.message || 'Edge function nu a răspuns.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
       .from('prospect_listings')
