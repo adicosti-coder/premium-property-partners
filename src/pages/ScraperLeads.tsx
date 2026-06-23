@@ -693,6 +693,19 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   });
   const [keywordsPreviewOpen, setKeywordsPreviewOpen] = useState(false);
 
+  // ── Recently added keywords (this session) + bulk add modal ──
+  type RecentKeyword = { id: string; keyword: string; platform: string };
+  const [recentlyAddedKeywords, setRecentlyAddedKeywords] = useState<RecentKeyword[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const [bulkPlatform, setBulkPlatform] = useState("General");
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [isScanningNew, setIsScanningNew] = useState(false);
+
+  // Visual flash + toast when new_listings increases during an active scan
+  const [newListingsFlash, setNewListingsFlash] = useState(false);
+  const prevNewListingsRef = useRef(0);
+
   // ── Scan history, Safe Mode & timing ────────────────────────────────
   const [safeMode, setSafeMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
