@@ -906,7 +906,7 @@ Deno.serve(async (req) => {
     let duplicateSkipped = 0;
     let timedOut = false;
     const scanStartedAt = Date.now();
-    const MAX_BACKGROUND_RUNTIME_MS = 50_000;
+    const MAX_BACKGROUND_RUNTIME_MS = 42_000;
     const markTimedOut = async (processed: number, total: number) => {
       timedOut = true;
       const message = `Scanarea a fost oprită automat după ${Math.round((Date.now() - scanStartedAt) / 1000)}s ca să nu rămână blocată. Repornește scanarea pentru restul cuvintelor.`;
@@ -1066,7 +1066,7 @@ Deno.serve(async (req) => {
         try {
           const outcome = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
             maxAttempts: 1,
-            timeoutMs: 12_000,
+            timeoutMs: 9_000,
             logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
           });
 
