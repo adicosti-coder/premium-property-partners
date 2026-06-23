@@ -1323,7 +1323,7 @@ Deno.serve(async (req) => {
         result: {
           partial: true,
           scan_mode: scanMode,
-          auto_fallback_enabled: enableAutoFallback,
+          auto_fallback_enabled: enableAutoFallback, auto_fallback_threshold: autoFallbackThreshold,
           engine_stats: engineStats,
           blocked_alerts: blockedAlerts.slice(-20),
           session_deduped: sessionDedupedSkipped,
@@ -1663,7 +1663,7 @@ Deno.serve(async (req) => {
       success: true,
       scan_mode: scanMode,
       scan_mode_override: scanModeOverride,
-      auto_fallback_enabled: enableAutoFallback,
+      auto_fallback_enabled: enableAutoFallback, auto_fallback_threshold: autoFallbackThreshold,
       new_listings: results.length,
       count: results.length,
       blacklisted_skipped: blacklistedSkipped,
