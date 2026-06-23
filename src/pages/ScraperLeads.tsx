@@ -1990,6 +1990,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             current_platform: row.current_platform,
             new_listings: row.new_listings ?? 0,
             error_message: row.error_message,
+            updated_at: row.updated_at ?? new Date().toISOString(),
           } : prev);
 
           if (row.status === "completed") {
@@ -2076,6 +2077,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         current_platform: row.current_platform,
         new_listings: row.new_listings ?? 0,
         error_message: row.error_message,
+        updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
       });
       setIsScraping(true);
       setActiveScanMode("scan");
