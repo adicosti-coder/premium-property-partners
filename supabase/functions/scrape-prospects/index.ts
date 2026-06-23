@@ -413,6 +413,130 @@ function normalizeFirecrawlDoc(data: any) {
   };
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Firecrawl search with exponential backoff + basic DuckDuckGo fallback.
+// Retries only on transient signals (network / 408 / 429 / 5xx). Hard errors
+// (401/402/400) are returned immediately so we can route to fallback or fail.
+// ────────────────────────────────────────────────────────────────────────────
+const TRANSIENT_HTTP = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+interface FcSearchResult { url: string; title?: string; markdown?: string; description?: string }
+interface FcSearchOutcome {
+  ok: boolean;
+  results: FcSearchResult[];
+  status?: number;
+  errorBody?: string;
+  errorMessage?: string;
+  attempts: number;
+  source: 'firecrawl' | 'fallback_duckduckgo' | 'none';
+}
+
+async function firecrawlSearchOnce(query: string, key: string, maxResults: number, timeoutMs = 35000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query, limit: maxResults, lang: 'ro', country: 'ro',
+        scrapeOptions: { formats: ['markdown'] },
+      }),
+    });
+    return resp;
+  } finally { clearTimeout(timer); }
+}
+
+async function basicFallbackSearch(query: string, maxResults: number): Promise<FcSearchResult[]> {
+  // DuckDuckGo HTML endpoint — no JS, no API key. Best-effort: returns plain URLs/titles.
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    const resp = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+      signal: ctrl.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
+        'Accept-Language': 'ro-RO,ro;q=0.9,en;q=0.5',
+      },
+    });
+    clearTimeout(t);
+    if (!resp.ok) return [];
+    const html = await resp.text();
+    const out: FcSearchResult[] = [];
+    // Capture result anchors: <a class="result__a" href="...">Title</a>
+    const re = /<a[^>]+class="[^"]*result__a[^"]*"[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < maxResults) {
+      let href = m[1];
+      // DuckDuckGo wraps in /l/?uddg=ENCODED
+      const wrap = href.match(/[?&]uddg=([^&]+)/);
+      if (wrap) { try { href = decodeURIComponent(wrap[1]); } catch { /* keep */ } }
+      const title = m[2].replace(/<[^>]+>/g, '').trim();
+      if (/^https?:\/\//i.test(href)) out.push({ url: href, title, markdown: title });
+    }
+    return out;
+  } catch (e) {
+    console.warn(JSON.stringify({ kind: 'fallback_search_error', message: (e as Error).message }));
+    return [];
+  }
+}
+
+async function firecrawlSearchWithRetry(
+  query: string, key: string, maxResults: number,
+  opts: { maxAttempts?: number; logger?: (ev: Record<string, unknown>) => void } = {},
+): Promise<FcSearchOutcome> {
+  const maxAttempts = opts.maxAttempts ?? 3;
+  let lastStatus: number | undefined;
+  let lastBody = '';
+  let lastMsg = '';
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const resp = await firecrawlSearchOnce(query, key, maxResults);
+      lastStatus = resp.status;
+      if (resp.ok) {
+        const json = await resp.json().catch(() => ({}));
+        return {
+          ok: true,
+          results: (json?.data || []) as FcSearchResult[],
+          attempts: attempt,
+          source: 'firecrawl',
+        };
+      }
+      lastBody = await resp.text().catch(() => '');
+      lastMsg = `Firecrawl HTTP ${resp.status}`;
+      opts.logger?.({ kind: 'firecrawl_attempt_failed', attempt, status: resp.status, body: lastBody.slice(0, 200), query: query.slice(0, 120) });
+      // Hard failures — break immediately, hand off to fallback / surface error
+      if (!TRANSIENT_HTTP.has(resp.status)) break;
+    } catch (e) {
+      lastMsg = (e as Error)?.message || String(e);
+      opts.logger?.({ kind: 'firecrawl_attempt_exception', attempt, message: lastMsg, query: query.slice(0, 120) });
+      // network / abort — treat as transient
+    }
+    if (attempt < maxAttempts) {
+      const delay = Math.min(9000, 1000 * Math.pow(3, attempt - 1)) + Math.floor(Math.random() * 250);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+
+  // Attempt fallback when Firecrawl is fully unusable (key/quota/persistent failure)
+  const shouldFallback = lastStatus === 401 || lastStatus === 402 || lastStatus === undefined ||
+    (typeof lastStatus === 'number' && TRANSIENT_HTTP.has(lastStatus));
+  if (shouldFallback) {
+    opts.logger?.({ kind: 'firecrawl_fallback_invoked', last_status: lastStatus, query: query.slice(0, 120) });
+    const fallback = await basicFallbackSearch(query, maxResults);
+    if (fallback.length > 0) {
+      return { ok: true, results: fallback, attempts: maxAttempts, source: 'fallback_duckduckgo', status: lastStatus, errorMessage: lastMsg };
+    }
+  }
+
+  return {
+    ok: false, results: [], attempts: maxAttempts, source: 'none',
+    status: lastStatus, errorBody: lastBody, errorMessage: lastMsg,
+  };
+}
+
 async function scrapePhoneHydrationOnce(url: string, firecrawlKey: string, mode: 'js' | 'native'): Promise<string[]> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), mode === 'native' ? 24000 : 42000);
