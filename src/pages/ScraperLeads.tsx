@@ -3471,6 +3471,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                       {isRetryingBlocked ? "⏳ Repornesc…" : `🔁 Retry blocate (${Math.min(activeJob.blocked_alerts!.length, 30)})`}
                     </Button>
                   </div>
+                  {isRetryingBlocked && (
+                    <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300 animate-pulse">
+                      ⏳ Se reîncearcă lotul blocat… alertele se resetează doar pentru cuvintele care reușesc.
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-1">
                     {activeJob.blocked_alerts!.slice(-6).map((a, idx) => (
                       <Badge key={idx} variant="outline" className="text-[10px] font-normal border-amber-500/40 bg-amber-500/10">
