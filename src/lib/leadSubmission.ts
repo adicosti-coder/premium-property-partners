@@ -38,8 +38,7 @@ export const leadInputSchema = z.object({
 export type LeadInput = z.infer<typeof leadInputSchema>;
 
 export type LeadSubmissionResult =
-  | { ok: true; duplicate: false }
-  | { ok: true; duplicate: true }
+  | { ok: true; duplicate: boolean }
   | { ok: false; reason: "validation"; errors: Record<string, string> }
   | { ok: false; reason: "network" | "unknown"; message: string };
 
