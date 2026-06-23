@@ -496,7 +496,7 @@ function platformToDomain(platform: string, query: string): string | null {
 interface FreeResult { url: string; title?: string; markdown?: string; description?: string }
 
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
-  const clean = stripQueryOperators(query);
+  const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
   const slug = encodeURIComponent(clean.replace(/\s+/g, '-'));
   const url = `https://www.olx.ro/d/imobiliare/q-${slug}/?search%5Border%5D=created_at:desc`;
