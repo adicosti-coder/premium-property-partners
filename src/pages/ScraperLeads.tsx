@@ -1973,8 +1973,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           query_limit: effectiveLimit,
           job_id: (jobRow as any).id,
           async_mode: true,
+          scan_mode: scanModeOverride,
+          auto_fallback: autoFallback,
         },
       });
+
       if (error) throw error;
 
       toast.success(`${isRescan ? "Rescan" : "Scanare"} pornit în fundal — vezi bara de progres.`);
