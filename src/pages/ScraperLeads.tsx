@@ -3227,6 +3227,17 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 >
                   <FileText className="w-3.5 h-3.5" /> Export CSV sesiune
                 </Button>
+                <label
+                  className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors"
+                  title="Include în CSV și cuvintele/loturile blocate (marcate cu status BLOCKED:engine:reason)"
+                >
+                  <Checkbox
+                    checked={csvIncludeBlocked}
+                    onCheckedChange={(v) => setCsvIncludeBlocked(v === true)}
+                    className="h-3.5 w-3.5"
+                  />
+                  <span className="text-[11px] font-medium">CSV include blocaje</span>
+                </label>
 
                 <Button
                   size="sm"
