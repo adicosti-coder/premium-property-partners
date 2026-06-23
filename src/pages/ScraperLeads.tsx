@@ -616,6 +616,8 @@ const IMPORT_WORKFLOW_LABELS: Record<ImportWorkflow, string> = {
   active: "Import activ",
 };
 
+const SCAN_STUCK_AFTER_MS = 90_000;
+
 const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -646,6 +648,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     current_platform: string | null;
     new_listings: number;
     error_message: string | null;
+    updated_at: string | null;
   } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
@@ -711,6 +714,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     scanContextRef.current = null;
   }, []);
   const simulationTimerRef = useRef<number | null>(null);
+  const locallyClosedJobsRef = useRef<Set<string>>(new Set());
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
