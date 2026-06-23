@@ -314,6 +314,7 @@ const ProspectManager = () => {
         current_platform: data.current_platform,
         new_listings: data.new_listings ?? 0,
         error_message: data.error_message,
+        errors: Array.isArray(data.errors) ? data.errors : null,
       });
       setIsScraping(true);
     })();
