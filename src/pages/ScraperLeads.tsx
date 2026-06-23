@@ -1939,6 +1939,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     }
 
     setIsScraping(true);
+    sessionStartRef.current = Date.now();
     setActiveScanMode(mode);
     setRecentScanPulse(true);
     scanContextRef.current = {
