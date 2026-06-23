@@ -833,6 +833,16 @@ Deno.serve(async (req) => {
     }
     console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries (cap=${queryLimit})`);
 
+    // Initial job state (best-effort)
+    await updateJob({
+      status: 'running',
+      started_at: new Date().toISOString(),
+      total_queries: queries.length,
+      processed_queries: 0,
+    });
+
+    // Wrap the heavy work so we can fire-and-forget under async mode.
+    const runScan = async () => {
     if (onlyNewSources || preserveAgencyFilter) {
       const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
         supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
