@@ -1785,7 +1785,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           max_results: isRescan ? 20 : 10,
           only_new_sources: isRescan,
           preserve_agency_filter: true,
-          query_limit: queryLimit,
+          query_limit: effectiveLimit,
           job_id: (jobRow as any).id,
           async_mode: true,
         },
