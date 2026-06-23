@@ -3806,10 +3806,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                 <div className="p-2 rounded-lg bg-amber-500/15">
                   <Archive className="w-4 h-4 text-amber-500" />
                 </div>
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Arhivate</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    Arhivate
+                    <span
+                      title={`Modul: Skip · Motiv: URL deja existent în baza ta de surse (${phoneIntelCount.toLocaleString("ro-RO")} telefoane / 1275+ surse cunoscute). Sistemul nu re-importă duplicatele — economisește resurse și păstrează pipeline-ul curat.`}
+                      className="inline-flex items-center cursor-help text-muted-foreground/70 hover:text-foreground transition-colors"
+                      aria-label="Explicație skip"
+                    >
+                      <Info className="w-3 h-3" />
+                    </span>
+                  </p>
                   <p className="text-xl font-bold font-mono">{lastIngestResult?.archived_skipped ?? (lastScanLog as any)?.archived_skipped ?? archivedCount}</p>
-                  <p className="text-[10px] text-muted-foreground">ignorate la re-import</p>
+                  <p className="text-[10px] text-muted-foreground" title="Aceste URL-uri au fost recunoscute ca fiind deja prezente în pipeline. Treci cu mouse-ul peste „i” pentru detalii.">
+                    ignorate la re-import (URL deja în DB)
+                  </p>
                 </div>
               </CardContent>
             </Card>
