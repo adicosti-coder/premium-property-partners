@@ -2289,6 +2289,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         error_message: row.error_message,
         updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
         pending_queries: Array.isArray(row.pending_queries) ? row.pending_queries : [],
+        scan_mode: (row as any).result?.scan_mode ?? null,
+        auto_fallback_enabled: (row as any).result?.auto_fallback_enabled,
+        engine_stats: (row as any).result?.engine_stats ?? null,
+        blocked_alerts: Array.isArray((row as any).result?.blocked_alerts) ? (row as any).result.blocked_alerts : [],
+        session_deduped: (row as any).result?.session_deduped ?? 0,
       });
       if (isLive) {
         setIsScraping(true);
