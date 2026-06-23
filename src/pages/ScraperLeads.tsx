@@ -4038,6 +4038,95 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       {/* Blacklist Modal */}
       <BlacklistModal open={blacklistOpen} onOpenChange={setBlacklistOpen} />
 
+      {/* Scan History Dialog */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-4 h-4" /> Istoric scanări ({scanHistory.length})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+            <p className="text-xs text-muted-foreground">
+              Stocat local (browser). Maxim 50 înregistrări. Include și sesiuni de simulare și erori detaliate.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!scanHistory.length}
+                onClick={() => exportScanReportPdf(null, scanHistory)}
+                className="gap-1.5"
+              >
+                <FileText className="w-3.5 h-3.5" /> Export PDF
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={!scanHistory.length}
+                onClick={() => {
+                  if (!confirm("Ștergi tot istoricul local de scanări?")) return;
+                  clearScanHistory();
+                  setScanHistory([]);
+                  toast.success("Istoric șters.");
+                }}
+                className="gap-1.5 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Șterge
+              </Button>
+            </div>
+          </div>
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            {scanHistory.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-12">
+                Niciun istoric — pornește o scanare sau o simulare pentru a popula lista.
+              </div>
+            ) : (
+              <div className="space-y-2 py-2">
+                {scanHistory.map((e) => {
+                  const statusCls =
+                    e.status === "completed" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
+                    : e.status === "failed" ? "bg-destructive/10 border-destructive/30 text-destructive"
+                    : "bg-sky-500/10 border-sky-500/30 text-sky-700 dark:text-sky-300";
+                  return (
+                    <div key={e.id} className="rounded-md border border-border bg-card p-3 text-xs space-y-1.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={cn("text-[10px]", statusCls)}>
+                            {e.status === "completed" ? "✅ Completă" : e.status === "failed" ? "❌ Eșuată" : "🧪 Simulată"}
+                          </Badge>
+                          <span className="text-muted-foreground">{new Date(e.started_at).toLocaleString("ro-RO")}</span>
+                          <span className="text-muted-foreground">· {e.mode}</span>
+                        </div>
+                        <span className="text-muted-foreground tabular-nums">
+                          {Math.round(e.duration_ms / 1000)}s
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                        <div><span className="text-muted-foreground">Procesate:</span> <span className="font-mono">{e.processed_queries}/{e.total_queries}</span></div>
+                        <div><span className="text-muted-foreground">Loturi:</span> <span className="font-mono">{e.batches_done}/{e.batches_total}</span></div>
+                        <div><span className="text-muted-foreground">Noi:</span> <span className="font-mono text-emerald-600">{e.new_listings}</span></div>
+                        <div><span className="text-muted-foreground">Dup. ignorate:</span> <span className="font-mono">{e.duplicate_skipped}</span></div>
+                      </div>
+                      {e.error_message && (
+                        <div className="text-[11px] text-destructive">⚠ {e.error_message}</div>
+                      )}
+                      {e.error_details && (
+                        <details className="text-[10px]">
+                          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Detalii tehnice</summary>
+                          <pre className="mt-1 p-2 bg-muted/50 rounded overflow-x-auto whitespace-pre-wrap break-all max-h-40">{e.error_details}</pre>
+                        </details>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+
       <Footer />
     </>
   );
