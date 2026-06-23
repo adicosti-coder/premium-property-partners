@@ -537,7 +537,8 @@ async function duckduckgoSearch(query: string, max: number): Promise<FreeResult[
 }
 
 async function bingSearch(query: string, max: number): Promise<FreeResult[]> {
-  const { ok, html } = await fetchHtml(`https://www.bing.com/search?q=${encodeURIComponent(query)}&setlang=ro&cc=RO`, 10000);
+  const simple = simplifyForWebEngine(query, 6) || query;
+  const { ok, html } = await fetchHtml(`https://www.bing.com/search?q=${encodeURIComponent(simple)}&setlang=ro&cc=RO`, 10000);
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
