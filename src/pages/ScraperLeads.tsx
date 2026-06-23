@@ -5041,9 +5041,61 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         </DialogContent>
       </Dialog>
 
+      {/* ── Final scan summary (auto-opens after restricted "scan only new" jobs) ── */}
+      <Dialog
+        open={!!scanSummary && scanSummary.scope === "session"}
+        onOpenChange={(open) => { if (!open) setScanSummary(null); }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BellRing className="w-4 h-4 text-emerald-500" />
+              Rezumat scanare restrânsă
+            </DialogTitle>
+            <DialogDescription>
+              Sinteza activității pentru cuvintele cheie nou adăugate în sesiunea curentă.
+            </DialogDescription>
+          </DialogHeader>
+          {scanSummary && (
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <div className="text-[11px] text-muted-foreground">Cuvinte procesate</div>
+                <div className="text-xl font-bold tabular-nums">{scanSummary.processed_queries}<span className="text-xs text-muted-foreground"> / {scanSummary.total_queries}</span></div>
+              </div>
+              <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3">
+                <div className="text-[11px] text-emerald-700 dark:text-emerald-300">Anunțuri noi</div>
+                <div className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{scanSummary.new_listings}</div>
+              </div>
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <div className="text-[11px] text-muted-foreground">Duplicate (archived)</div>
+                <div className="text-xl font-bold tabular-nums">{scanSummary.archived_skipped}</div>
+              </div>
+              <div className="rounded-md border border-border bg-muted/30 p-3">
+                <div className="text-[11px] text-muted-foreground">Duplicate (run)</div>
+                <div className="text-xl font-bold tabular-nums">{scanSummary.duplicate_skipped}</div>
+              </div>
+              <div className="rounded-md border border-border bg-muted/30 p-3 col-span-2">
+                <div className="text-[11px] text-muted-foreground">Blocate (blacklist)</div>
+                <div className="text-xl font-bold tabular-nums">{scanSummary.blacklisted_skipped}</div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setSessionOnlyResults(true); setScanSummary(null); }}
+            >
+              Vezi doar sesiunea
+            </Button>
+            <Button size="sm" onClick={() => setScanSummary(null)}>Închide</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </>
+
   );
 };
 
