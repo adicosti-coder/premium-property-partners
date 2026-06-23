@@ -652,6 +652,9 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     pending_queries?: Array<{ platform: string; query: string }>;
   } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
+  const [isResuming, setIsResuming] = useState(false);
+  const [isClearingPending, setIsClearingPending] = useState(false);
+  const [resumeRemainingAfter, setResumeRemainingAfter] = useState<number>(0);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"score" | "date">(() => (localStorage.getItem("scraper:sortBy") as any) || "score");
