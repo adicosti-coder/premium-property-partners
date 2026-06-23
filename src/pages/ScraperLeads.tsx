@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -627,6 +628,16 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [isScraping, setIsScraping] = useState(false);
   const [activeScanMode, setActiveScanMode] = useState<"scan" | "rescan" | null>(null);
   const [lastIngestResult, setLastIngestResult] = useState<{ count: number; blacklisted_skipped: number; archived_skipped: number; duplicate_skipped?: number; existing_sources_checked?: number } | null>(null);
+  const [activeJob, setActiveJob] = useState<{
+    id: string;
+    status: string;
+    processed_queries: number;
+    total_queries: number;
+    current_keyword: string | null;
+    current_platform: string | null;
+    new_listings: number;
+    error_message: string | null;
+  } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
