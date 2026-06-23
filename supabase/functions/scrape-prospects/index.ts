@@ -791,7 +791,15 @@ Deno.serve(async (req) => {
       platform: q.platform,
       query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
     }));
-    console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries`);
+    // Rotate + slice to fit within edge-function runtime
+    if (!customQuery && queries.length > queryLimit) {
+      for (let k = queries.length - 1; k > 0; k--) {
+        const j = Math.floor(Math.random() * (k + 1));
+        [queries[k], queries[j]] = [queries[j], queries[k]];
+      }
+      queries = queries.slice(0, queryLimit);
+    }
+    console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries (cap=${queryLimit})`);
 
     if (onlyNewSources || preserveAgencyFilter) {
       const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
