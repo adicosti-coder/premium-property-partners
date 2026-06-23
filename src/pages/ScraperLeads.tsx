@@ -3118,6 +3118,12 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   🎯 {activeJob.new_listings} anunțuri noi colectate până acum
                 </div>
               )}
+              {/* Live resume context: shown while a resume job is running */}
+              {(activeJob.status === "running" || activeJob.status === "pending") && resumeRemainingAfter > 0 && (
+                <div className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                  🔁 Se procesează lotul curent · {resumeRemainingAfter} cuvinte rămase după acest lot
+                </div>
+              )}
               {activeJob.error_message && (
                 <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
               )}
@@ -3126,10 +3132,12 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   <Button
                     size="sm"
                     onClick={handleResume}
-                    disabled={isScraping || safeMode}
+                    disabled={isScraping || safeMode || isResuming || isClearingPending}
                     className="h-7 gap-1.5 text-xs"
                   >
-                    🔁 Repornește scanarea ({Math.min(30, activeJob.pending_queries!.length)} din {activeJob.pending_queries!.length} rămase)
+                    {isResuming
+                      ? `⏳ Repornesc… (${Math.min(30, activeJob.pending_queries!.length)} kw)`
+                      : `🔁 Repornește scanarea (${Math.min(30, activeJob.pending_queries!.length)} din ${activeJob.pending_queries!.length} rămase)`}
                   </Button>
                   {activeJob.pending_queries!.length > 30 && (
                     <span className="text-[10px] text-muted-foreground">
@@ -3139,13 +3147,16 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setActiveJob(null)}
+                    onClick={handleClearPending}
+                    disabled={isClearingPending || isResuming}
                     className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                    title="Șterge cuvintele rămase din baza de date și resetează panoul"
                   >
-                    Renunță
+                    {isClearingPending ? "Curăț…" : "Anulează / Curăță coada"}
                   </Button>
                 </div>
               )}
+
             </div>
           )}
 
