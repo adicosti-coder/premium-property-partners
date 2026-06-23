@@ -448,8 +448,31 @@ async function fetchHtml(url: string, timeoutMs = 9000, referer?: string): Promi
 }
 
 function stripQueryOperators(q: string): string {
-  return q.replace(/site:\S+/gi, '').replace(/inurl:\S+/gi, '').replace(/intitle:\S+/gi, '')
-    .replace(/-\S+/g, '').replace(/\s+/g, ' ').trim();
+  return q
+    .replace(/site:\S+/gi, '')
+    .replace(/inurl:\S+/gi, '')
+    .replace(/intitle:\S+/gi, '')
+    .replace(/-\S+/g, '')                 // -agentie, -inurl:...
+    .replace(/[()"']+/g, ' ')             // strip parens & quotes
+    .replace(/\bOR\b/gi, ' ')             // boolean OR
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// For free engines — short, simple keyword form. Long boolean queries return
+// 0 hits on DDG/Bing/OLX-direct, so we trim to the most meaningful tokens.
+function simplifyForFreeEngine(q: string, maxWords = 6): string {
+  const cleaned = stripQueryOperators(q);
+  const stop = new Set(['de', 'la', 'cu', 'in', 'în', 'pe', 'si', 'și', 'sau', 'a', 'al', 'ale']);
+  const words = cleaned.split(/\s+/).filter((w) => w.length > 1 && !stop.has(w.toLowerCase()));
+  return words.slice(0, maxWords).join(' ').trim();
+}
+
+// For DDG/Bing we keep `site:` so results stay on-portal, but drop the noise.
+function simplifyForWebEngine(q: string, maxWords = 6): string {
+  const siteMatch = q.match(/site:\S+/i);
+  const base = simplifyForFreeEngine(q, maxWords);
+  return siteMatch ? `${base} ${siteMatch[0]}`.trim() : base;
 }
 
 function extractDomainFromSiteOperator(q: string): string | null {
