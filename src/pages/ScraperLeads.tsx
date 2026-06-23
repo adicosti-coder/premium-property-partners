@@ -2181,6 +2181,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             error_message: row.error_message,
             updated_at: row.updated_at ?? new Date().toISOString(),
             pending_queries: Array.isArray(row.pending_queries) ? row.pending_queries : [],
+            scan_mode: row.result?.scan_mode ?? prev.scan_mode ?? null,
+            auto_fallback_enabled: row.result?.auto_fallback_enabled ?? prev.auto_fallback_enabled,
+            engine_stats: row.result?.engine_stats ?? prev.engine_stats ?? null,
+            blocked_alerts: Array.isArray(row.result?.blocked_alerts) ? row.result.blocked_alerts : (prev.blocked_alerts ?? []),
+            session_deduped: row.result?.session_deduped ?? prev.session_deduped ?? 0,
           } : prev);
 
           if (row.status === "completed") {
