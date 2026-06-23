@@ -529,9 +529,26 @@ async function bingSearch(query: string, max: number): Promise<FreeResult[]> {
   return out;
 }
 
+export interface EngineStat { hits: number; urls: number; ms: number; errors: number; blocked: number }
+export type EngineStats = Record<'olx_direct' | 'duckduckgo' | 'bing' | 'firecrawl', EngineStat>;
+export interface BlockedAlert { platform: string; engine: string; reason: string; keyword: string }
+
+export function emptyEngineStats(): EngineStats {
+  return {
+    olx_direct: { hits: 0, urls: 0, ms: 0, errors: 0, blocked: 0 },
+    duckduckgo: { hits: 0, urls: 0, ms: 0, errors: 0, blocked: 0 },
+    bing: { hits: 0, urls: 0, ms: 0, errors: 0, blocked: 0 },
+    firecrawl: { hits: 0, urls: 0, ms: 0, errors: 0, blocked: 0 },
+  };
+}
+
 async function freeSearchWithRetry(
   platform: string, query: string, maxResults: number,
-  opts: { logger?: (ev: Record<string, unknown>) => void } = {},
+  opts: {
+    logger?: (ev: Record<string, unknown>) => void;
+    stats?: EngineStats;
+    blockedAlerts?: BlockedAlert[];
+  } = {},
 ): Promise<FcSearchOutcome> {
   const domain = platformToDomain(platform, query);
   const aggregated: FreeResult[] = [];
@@ -539,41 +556,64 @@ async function freeSearchWithRetry(
   const pushAll = (arr: FreeResult[]) => {
     for (const r of arr) { if (r.url && !seen.has(r.url)) { seen.add(r.url); aggregated.push(r); } }
   };
+  const stats = opts.stats;
+  const blocked = opts.blockedAlerts;
+  const kwShort = query.slice(0, 80);
 
   let attempts = 0;
   let primarySource: FcSearchOutcome['source'] = 'none';
 
   if (domain && domain.includes('olx.ro')) {
     attempts++;
+    const t0 = Date.now();
     try {
       const direct = await directOlxSearch(query, maxResults);
-      opts.logger?.({ kind: 'free_direct_olx', platform, results: direct.length });
+      const dt = Date.now() - t0;
+      if (stats) { stats.olx_direct.hits++; stats.olx_direct.ms += dt; stats.olx_direct.urls += direct.length; }
+      opts.logger?.({ kind: 'free_direct_olx', platform, results: direct.length, ms: dt });
       if (direct.length > 0) { pushAll(direct); primarySource = 'free_direct'; }
+      else if (stats && blocked) {
+        stats.olx_direct.blocked++;
+        blocked.push({ platform, engine: 'olx_direct', reason: '0 carduri (probabil Cloudflare/anti-bot)', keyword: kwShort });
+      }
     } catch (e) {
+      if (stats) { stats.olx_direct.hits++; stats.olx_direct.errors++; stats.olx_direct.ms += Date.now() - t0; }
       opts.logger?.({ kind: 'free_direct_olx_error', platform, message: (e as Error).message });
     }
   }
 
   if (aggregated.length < maxResults) {
     attempts++;
+    const t0 = Date.now();
     try {
       const ddg = await duckduckgoSearch(query, maxResults);
-      opts.logger?.({ kind: 'free_ddg', platform, results: ddg.length });
+      const dt = Date.now() - t0;
+      if (stats) { stats.duckduckgo.hits++; stats.duckduckgo.ms += dt; stats.duckduckgo.urls += ddg.length; }
+      opts.logger?.({ kind: 'free_ddg', platform, results: ddg.length, ms: dt });
       pushAll(ddg);
       if (primarySource === 'none' && ddg.length > 0) primarySource = 'fallback_duckduckgo';
+      else if (ddg.length === 0 && stats && blocked) {
+        stats.duckduckgo.blocked++;
+      }
     } catch (e) {
+      if (stats) { stats.duckduckgo.hits++; stats.duckduckgo.errors++; stats.duckduckgo.ms += Date.now() - t0; }
       opts.logger?.({ kind: 'free_ddg_error', platform, message: (e as Error).message });
     }
   }
 
   if (aggregated.length < Math.min(3, maxResults)) {
     attempts++;
+    const t0 = Date.now();
     try {
       const bing = await bingSearch(query, maxResults);
-      opts.logger?.({ kind: 'free_bing', platform, results: bing.length });
+      const dt = Date.now() - t0;
+      if (stats) { stats.bing.hits++; stats.bing.ms += dt; stats.bing.urls += bing.length; }
+      opts.logger?.({ kind: 'free_bing', platform, results: bing.length, ms: dt });
       pushAll(bing);
       if (primarySource === 'none' && bing.length > 0) primarySource = 'fallback_bing';
+      else if (bing.length === 0 && stats) { stats.bing.blocked++; }
     } catch (e) {
+      if (stats) { stats.bing.hits++; stats.bing.errors++; stats.bing.ms += Date.now() - t0; }
       opts.logger?.({ kind: 'free_bing_error', platform, message: (e as Error).message });
     }
   }
@@ -1020,11 +1060,10 @@ Deno.serve(async (req) => {
 
   try {
     // FREE MODE by default — zero external API cost. Firecrawl is opt-in
-    // and only used if SCRAPER_USE_FIRECRAWL=true AND a key is configured.
-    const useFirecrawl = (Deno.env.get('SCRAPER_USE_FIRECRAWL') || '').toLowerCase() === 'true';
+    // and only used if SCRAPER_USE_FIRECRAWL=true AND a key is configured,
+    // OR if the caller explicitly passes scan_mode='firecrawl'/'auto'.
+    const envUseFirecrawl = (Deno.env.get('SCRAPER_USE_FIRECRAWL') || '').toLowerCase() === 'true';
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY') || '';
-    const scanMode: 'free' | 'firecrawl' = useFirecrawl && firecrawlKey ? 'firecrawl' : 'free';
-    console.log(`🔎 scrape-prospects scan_mode=${scanMode}`);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -1043,6 +1082,8 @@ Deno.serve(async (req) => {
     let jobId: string | null = null;
     let asyncMode = false;
     let retryBatches: Array<{ platform: string; query: string }> | null = null;
+    let scanModeOverride: 'free' | 'firecrawl' | 'auto' | null = null;
+    let autoFallbackOpt = true;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -1060,7 +1101,29 @@ Deno.serve(async (req) => {
           .filter((b: any) => b && typeof b.platform === 'string' && typeof b.query === 'string')
           .slice(0, 30);
       }
+      if (body?.scan_mode === 'free' || body?.scan_mode === 'firecrawl' || body?.scan_mode === 'auto') {
+        scanModeOverride = body.scan_mode;
+      }
+      if (body?.auto_fallback === false) autoFallbackOpt = false;
     } catch { /* no body */ }
+
+    // Resolve effective scan mode (UI override > env default > free)
+    const scanMode: 'free' | 'firecrawl' =
+      scanModeOverride === 'firecrawl' && firecrawlKey ? 'firecrawl'
+      : scanModeOverride === 'free' ? 'free'
+      : scanModeOverride === 'auto' ? 'free'  // 'auto' = start free, escalate per-query
+      : envUseFirecrawl && firecrawlKey ? 'firecrawl' : 'free';
+    const enableAutoFallback =
+      autoFallbackOpt && !!firecrawlKey && scanMode === 'free' &&
+      (scanModeOverride === 'auto' || scanModeOverride === 'free' || !scanModeOverride);
+    console.log(`🔎 scrape-prospects scan_mode=${scanMode} override=${scanModeOverride ?? 'none'} auto_fallback=${enableAutoFallback}`);
+
+    // Per-scan engine telemetry + alerts + in-session keyword dedupe
+    const engineStats = emptyEngineStats();
+    const blockedAlerts: BlockedAlert[] = [];
+    const sessionSeen = new Set<string>();
+    let sessionDedupedSkipped = 0;
+
 
     // ── Structured logging helpers (Sentry-friendly) ─────────────────────
     function logScrapeError(
@@ -1252,24 +1315,71 @@ Deno.serve(async (req) => {
         archived_skipped: archivedSkipped,
         duplicate_skipped: duplicateSkipped,
         blacklisted_skipped: blacklistedSkipped,
+        result: {
+          partial: true,
+          scan_mode: scanMode,
+          auto_fallback_enabled: enableAutoFallback,
+          engine_stats: engineStats,
+          blocked_alerts: blockedAlerts.slice(-20),
+          session_deduped: sessionDedupedSkipped,
+        },
       });
+
 
       
       const batchPromises = batch.map(async ({ platform, query }) => {
+        // ── In-session dedupe: skip if same (platform,query) was already scanned
+        //    in this invocation (saves network + dedup before DB layer).
+        const dedupeKey = `${platform.toLowerCase()}|${(query || '').toLowerCase().trim()}`;
+        if (sessionSeen.has(dedupeKey)) {
+          sessionDedupedSkipped++;
+          console.log(`[session-dedupe] skipping repeated ${dedupeKey}`);
+          return;
+        }
+        sessionSeen.add(dedupeKey);
+
         console.log(`Searching ${platform}: ${query}`);
         try {
-          const outcome = scanMode === 'firecrawl'
-            ? await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
-                maxAttempts: 1,
-                timeoutMs: 9_000,
-                logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
-              })
+          let outcome = scanMode === 'firecrawl'
+            ? await (async () => {
+                const t0 = Date.now();
+                engineStats.firecrawl.hits++;
+                const res = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
+                  maxAttempts: 1, timeoutMs: 9_000,
+                  logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
+                });
+                engineStats.firecrawl.ms += Date.now() - t0;
+                if (res.ok) engineStats.firecrawl.urls += res.results.length;
+                else engineStats.firecrawl.errors++;
+                return res;
+              })()
             : await freeSearchWithRetry(platform, query, maxResults, {
                 logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
+                stats: engineStats,
+                blockedAlerts,
               });
 
+          // ── Auto-fallback: if FREE mode returned nothing and Firecrawl is
+          //    available + enabled, retry this single query via Firecrawl.
+          if (!outcome.ok && enableAutoFallback && firecrawlKey) {
+            const t0 = Date.now();
+            engineStats.firecrawl.hits++;
+            const fc = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
+              maxAttempts: 1, timeoutMs: 9_000,
+              logger: (ev) => console.warn(JSON.stringify({ ...ev, platform, auto_fallback: true })),
+            });
+            engineStats.firecrawl.ms += Date.now() - t0;
+            if (fc.ok && fc.results.length > 0) {
+              engineStats.firecrawl.urls += fc.results.length;
+              outcome = fc;
+              console.log(`[auto-fallback] firecrawl rescued ${platform} [${query.slice(0, 60)}] → ${fc.results.length} URL`);
+            } else {
+              engineStats.firecrawl.errors++;
+            }
+          }
+
           if (!outcome.ok) {
-            const msg = `${outcome.errorMessage || 'search failed'} (after ${outcome.attempts} attempts, mode=${scanMode})`;
+            const msg = `${outcome.errorMessage || 'search failed'} (after ${outcome.attempts} attempts, mode=${scanMode}${enableAutoFallback ? '+autofallback' : ''})`;
             logScrapeError('search_http', new Error(msg), {
               platform, keyword: query, http_status: outcome.status, attempts: outcome.attempts, scan_mode: scanMode,
             });
@@ -1280,6 +1390,7 @@ Deno.serve(async (req) => {
             errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
             return;
           }
+
 
           if (outcome.source !== 'firecrawl' && outcome.source !== 'free_direct') {
             console.warn(JSON.stringify({
@@ -1542,6 +1653,8 @@ Deno.serve(async (req) => {
     const payload = {
       success: true,
       scan_mode: scanMode,
+      scan_mode_override: scanModeOverride,
+      auto_fallback_enabled: enableAutoFallback,
       new_listings: results.length,
       count: results.length,
       blacklisted_skipped: blacklistedSkipped,
@@ -1551,6 +1664,9 @@ Deno.serve(async (req) => {
       archived_skipped: archivedSkipped,
       duplicate_skipped: duplicateSkipped,
       existing_sources_checked: existingUrls.size,
+      session_deduped_skipped: sessionDedupedSkipped,
+      engine_stats: engineStats,
+      blocked_alerts: blockedAlerts,
       agency_filter: {
         blocked_phones: blockedPhones.size,
         blocked_domains: blockedDomains.size,
@@ -1560,6 +1676,7 @@ Deno.serve(async (req) => {
       listings: results,
       errors: errors.length > 0 ? errors : undefined,
     };
+
     return payload;
     }; // ── end runScan ──
 

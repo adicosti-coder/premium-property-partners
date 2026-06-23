@@ -650,7 +650,13 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     error_message: string | null;
     updated_at: string | null;
     pending_queries?: Array<{ platform: string; query: string }>;
+    scan_mode?: 'free' | 'firecrawl' | null;
+    auto_fallback_enabled?: boolean;
+    engine_stats?: Record<string, { hits: number; urls: number; ms: number; errors: number; blocked: number }> | null;
+    blocked_alerts?: Array<{ platform: string; engine: string; reason: string; keyword: string }>;
+    session_deduped?: number;
   } | null>(null);
+
   const [recentScanPulse, setRecentScanPulse] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const [isClearingPending, setIsClearingPending] = useState(false);
@@ -693,6 +699,24 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   useEffect(() => {
     try { localStorage.setItem("prospect_scan_safe_mode", safeMode ? "1" : "0"); } catch {}
   }, [safeMode]);
+
+  // ── Scan mode override (free / firecrawl / auto) + auto-fallback toggle ──
+  const [scanModeOverride, setScanModeOverride] = useState<"free" | "firecrawl" | "auto">(() => {
+    if (typeof window === "undefined") return "free";
+    const v = window.localStorage.getItem("prospect_scan_mode") as any;
+    return v === "free" || v === "firecrawl" || v === "auto" ? v : "free";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_scan_mode", scanModeOverride); } catch {}
+  }, [scanModeOverride]);
+  const [autoFallback, setAutoFallback] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem("prospect_auto_fallback") !== "0";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_auto_fallback", autoFallback ? "1" : "0"); } catch {}
+  }, [autoFallback]);
+
   const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>(() => getScanHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
   const scanContextRef = useRef<{
@@ -1949,8 +1973,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           query_limit: effectiveLimit,
           job_id: (jobRow as any).id,
           async_mode: true,
+          scan_mode: scanModeOverride,
+          auto_fallback: autoFallback,
         },
       });
+
       if (error) throw error;
 
       toast.success(`${isRescan ? "Rescan" : "Scanare"} pornit în fundal — vezi bara de progres.`);
@@ -2046,8 +2073,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           job_id: (jobRow as any).id,
           async_mode: true,
           retry_batches: slice,
+          scan_mode: scanModeOverride,
+          auto_fallback: autoFallback,
         },
       });
+
       if (error) throw error;
       toast.success(`Reiau scanarea pentru ${slice.length} cuvinte-cheie${remainingAfter > 0 ? ` (${remainingAfter} vor rămâne pentru un nou ciclu)` : ""}.`);
     } catch (err: any) {
@@ -2151,6 +2181,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
             error_message: row.error_message,
             updated_at: row.updated_at ?? new Date().toISOString(),
             pending_queries: Array.isArray(row.pending_queries) ? row.pending_queries : [],
+            scan_mode: row.result?.scan_mode ?? prev.scan_mode ?? null,
+            auto_fallback_enabled: row.result?.auto_fallback_enabled ?? prev.auto_fallback_enabled,
+            engine_stats: row.result?.engine_stats ?? prev.engine_stats ?? null,
+            blocked_alerts: Array.isArray(row.result?.blocked_alerts) ? row.result.blocked_alerts : (prev.blocked_alerts ?? []),
+            session_deduped: row.result?.session_deduped ?? prev.session_deduped ?? 0,
           } : prev);
 
           if (row.status === "completed") {
@@ -2254,6 +2289,11 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         error_message: row.error_message,
         updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
         pending_queries: Array.isArray(row.pending_queries) ? row.pending_queries : [],
+        scan_mode: (row as any).result?.scan_mode ?? null,
+        auto_fallback_enabled: (row as any).result?.auto_fallback_enabled,
+        engine_stats: (row as any).result?.engine_stats ?? null,
+        blocked_alerts: Array.isArray((row as any).result?.blocked_alerts) ? (row as any).result.blocked_alerts : [],
+        session_deduped: (row as any).result?.session_deduped ?? 0,
       });
       if (isLive) {
         setIsScraping(true);
@@ -2971,14 +3011,43 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <span className="text-muted-foreground">
                 {uniqueActiveKeywords.length} kw active · {Math.max(1, Math.ceil(Math.min(uniqueActiveKeywords.length, queryLimit) / 25))} loturi (×25)
               </span>
-              <div className="flex items-center gap-1.5 ml-auto">
+              <div className="flex items-center gap-1.5 ml-auto flex-wrap justify-end">
                 <Badge variant="outline" className="text-[10px] font-normal bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300" title="prospect_listings.source_url are constraint UNIQUE — duplicatele nu pot fi inserate la nivel de DB">
                   🛡 Dedup DB · UNIQUE(source_url)
                 </Badge>
+                {/* ── Scan-mode override + auto-fallback ── */}
+                <div className="flex items-center gap-1 px-2 py-1 rounded border border-border bg-background">
+                  <span className="text-[10px] text-muted-foreground">Motor:</span>
+                  <Select value={scanModeOverride} onValueChange={(v) => setScanModeOverride(v as any)} disabled={isScraping}>
+                    <SelectTrigger className="h-6 px-2 text-[11px] w-[120px] border-0 bg-transparent gap-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free" className="text-xs">🆓 Free (DDG)</SelectItem>
+                      <SelectItem value="auto" className="text-xs">⚡ Auto-fallback</SelectItem>
+                      <SelectItem value="firecrawl" className="text-xs">💎 Premium (FC)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <label
+                  className={cn(
+                    "flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors",
+                    scanModeOverride === "firecrawl" && "opacity-50",
+                  )}
+                  title="Dacă motorul gratuit returnează 0 rezultate pentru un cuvânt cheie, scanner-ul reia automat acel singur query prin Firecrawl."
+                >
+                  <Switch
+                    checked={autoFallback}
+                    onCheckedChange={setAutoFallback}
+                    disabled={isScraping || scanModeOverride === "firecrawl"}
+                  />
+                  <span className="text-[11px] font-medium">Auto-fallback FC</span>
+                </label>
                 <label className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1 rounded border border-border bg-background hover:border-foreground/40 transition-colors">
                   <Switch checked={safeMode} onCheckedChange={setSafeMode} disabled={isScraping} />
                   <span className="text-[11px] font-medium">Mod Simulare</span>
                 </label>
+
                 <Button size="sm" variant="ghost" className="h-7 px-2 gap-1 text-[11px]" onClick={() => setHistoryOpen(true)}>
                   <History className="w-3.5 h-3.5" /> Istoric ({scanHistory.length})
                 </Button>
@@ -3064,7 +3133,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     : activeJob.status === "failed"
                       ? "❌ Scanare eșuată"
                       : activeJob.status === "running"
-                        ? "⚙️ Scanare în fundal (Firecrawl)"
+                        ? `⚙️ Scanare în fundal (${(activeJob.scan_mode ?? scanModeOverride) === "firecrawl" ? "Firecrawl 💎" : "Free 🆓"}${activeJob.auto_fallback_enabled ? " + auto-fallback" : ""})`
                         : "⏳ Se inițializează…"}
                 </span>
                 <span className="text-muted-foreground tabular-nums">
@@ -3118,6 +3187,73 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   🎯 {activeJob.new_listings} anunțuri noi colectate până acum
                 </div>
               )}
+
+              {/* ── Engine stats widget (live) ── */}
+              {activeJob.engine_stats && (() => {
+                const es = activeJob.engine_stats!;
+                const rows: Array<{ key: string; label: string; emoji: string }> = [
+                  { key: "duckduckgo", label: "DuckDuckGo", emoji: "🦆" },
+                  { key: "bing", label: "Bing", emoji: "🅱️" },
+                  { key: "olx_direct", label: "OLX direct", emoji: "🟧" },
+                  { key: "firecrawl", label: "Firecrawl", emoji: "🔥" },
+                ];
+                const visible = rows.filter((r) => (es[r.key]?.hits ?? 0) > 0);
+                if (!visible.length) return null;
+                return (
+                  <div className="rounded border border-border bg-background/60 p-2 mt-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-semibold text-foreground/80">📊 Motoare de căutare</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        mod: <span className="font-mono">{activeJob.scan_mode ?? scanModeOverride}</span>
+                        {activeJob.auto_fallback_enabled ? " · auto-fallback ON" : ""}
+                        {(activeJob.session_deduped ?? 0) > 0 ? ` · ${activeJob.session_deduped} dedup sesiune` : ""}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                      {visible.map((r) => {
+                        const s = es[r.key];
+                        const avg = s.hits > 0 ? Math.round(s.ms / s.hits) : 0;
+                        const ok = s.urls > 0;
+                        return (
+                          <div
+                            key={r.key}
+                            className={cn(
+                              "rounded border px-2 py-1 text-[10px]",
+                              ok
+                                ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300"
+                                : "border-rose-500/30 bg-rose-500/5 text-rose-700 dark:text-rose-300",
+                            )}
+                          >
+                            <div className="font-medium">{r.emoji} {r.label}</div>
+                            <div className="tabular-nums opacity-80">
+                              {s.urls} URL · {s.hits} req · ~{avg}ms
+                              {s.blocked > 0 ? ` · ⚠️ ${s.blocked} gol` : ""}
+                              {s.errors > 0 ? ` · ✖ ${s.errors}` : ""}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* ── Blocked / Cloudflare alerts ── */}
+              {(activeJob.blocked_alerts?.length ?? 0) > 0 && (
+                <div className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-[11px] text-amber-700 dark:text-amber-300 space-y-0.5">
+                  <div className="font-semibold">
+                    🚧 {activeJob.blocked_alerts!.length} alertă/blocaj motor (scanarea continuă)
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {activeJob.blocked_alerts!.slice(-6).map((a, idx) => (
+                      <Badge key={idx} variant="outline" className="text-[10px] font-normal border-amber-500/40 bg-amber-500/10">
+                        {a.engine} · {a.platform} · "{a.keyword.slice(0, 28)}{a.keyword.length > 28 ? "…" : ""}"
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Live resume context: shown while a resume job is running */}
               {(activeJob.status === "running" || activeJob.status === "pending") && resumeRemainingAfter > 0 && (
                 <div className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
