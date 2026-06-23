@@ -1043,6 +1043,10 @@ Deno.serve(async (req) => {
     // exhausting the search quota and returning successful cron runs with 0 real imports.
     const BATCH_SIZE = customQuery ? 1 : 2;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
+      if (Date.now() - scanStartedAt > MAX_BACKGROUND_RUNTIME_MS) {
+        await markTimedOut(i, queries.length);
+        break;
+      }
       const batch = queries.slice(i, i + BATCH_SIZE);
 
       // ── progress update (best-effort) ────────────────────────────────
@@ -1061,7 +1065,8 @@ Deno.serve(async (req) => {
         console.log(`Searching ${platform}: ${query}`);
         try {
           const outcome = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
-            maxAttempts: 3,
+            maxAttempts: 1,
+            timeoutMs: 12_000,
             logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
           });
 
@@ -1326,6 +1331,7 @@ Deno.serve(async (req) => {
       });
 
       await Promise.all(batchPromises);
+      if (timedOut) break;
       // Brief pause between batches
       if (i + BATCH_SIZE < queries.length) {
         await new Promise(r => setTimeout(r, 300));
