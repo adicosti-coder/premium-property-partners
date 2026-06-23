@@ -768,6 +768,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     try { localStorage.setItem("prospect_csv_include_blocked", csvIncludeBlocked ? "1" : "0"); } catch {}
   }, [csvIncludeBlocked]);
   const [historyOnlyCurrent, setHistoryOnlyCurrent] = useState<boolean>(false);
+  // Quick filter: show only leads ingested in the current session
+  const [sessionOnlyResults, setSessionOnlyResults] = useState<boolean>(false);
+  // Tracks if the most recent scan was the "scan only new keywords" restricted run
+  const lastScanWasSessionOnlyRef = useRef<boolean>(false);
+  // Post-scan summary dialog
+  const [scanSummary, setScanSummary] = useState<null | {
+    total_queries: number;
+    processed_queries: number;
+    new_listings: number;
+    archived_skipped: number;
+    duplicate_skipped: number;
+    blacklisted_skipped: number;
+    scope: "session" | "full";
+    finished_at: string;
+  }>(null);
   const scanContextRef = useRef<{
     startedAt: number;
     mode: "scan" | "rescan" | "simulated";
