@@ -317,6 +317,7 @@ const ProspectManager = () => {
   }, []);
 
   // Realtime subscription to active job
+  const fetchListingsRef = useRef<() => void>(() => {});
   useEffect(() => {
     if (!activeJob?.id) return;
     const channel = supabase
@@ -345,7 +346,7 @@ const ProspectManager = () => {
               description: `${found} anunțuri noi.${errCount ? ` ${errCount} erori — vezi consola.` : ''}`,
             });
             setIsScraping(false);
-            fetchListings();
+            fetchListingsRef.current?.();
             setTimeout(() => setActiveJob(null), 4000);
           } else if (row.status === 'failed') {
             console.error('[ProspectManager] scan job failed', row);
@@ -361,7 +362,7 @@ const ProspectManager = () => {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [activeJob?.id, fetchListings]);
+  }, [activeJob?.id]);
 
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
