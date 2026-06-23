@@ -1,4 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import {
+  appendScanHistory,
+  clearScanHistory,
+  exportScanReportPdf,
+  getScanHistory,
+  type ScanHistoryEntry,
+} from "@/lib/scanHistory";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
