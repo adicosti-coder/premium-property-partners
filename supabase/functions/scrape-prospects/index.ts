@@ -1060,11 +1060,10 @@ Deno.serve(async (req) => {
 
   try {
     // FREE MODE by default — zero external API cost. Firecrawl is opt-in
-    // and only used if SCRAPER_USE_FIRECRAWL=true AND a key is configured.
-    const useFirecrawl = (Deno.env.get('SCRAPER_USE_FIRECRAWL') || '').toLowerCase() === 'true';
+    // and only used if SCRAPER_USE_FIRECRAWL=true AND a key is configured,
+    // OR if the caller explicitly passes scan_mode='firecrawl'/'auto'.
+    const envUseFirecrawl = (Deno.env.get('SCRAPER_USE_FIRECRAWL') || '').toLowerCase() === 'true';
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY') || '';
-    const scanMode: 'free' | 'firecrawl' = useFirecrawl && firecrawlKey ? 'firecrawl' : 'free';
-    console.log(`🔎 scrape-prospects scan_mode=${scanMode}`);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -1083,6 +1082,8 @@ Deno.serve(async (req) => {
     let jobId: string | null = null;
     let asyncMode = false;
     let retryBatches: Array<{ platform: string; query: string }> | null = null;
+    let scanModeOverride: 'free' | 'firecrawl' | 'auto' | null = null;
+    let autoFallbackOpt = true;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -1100,7 +1101,29 @@ Deno.serve(async (req) => {
           .filter((b: any) => b && typeof b.platform === 'string' && typeof b.query === 'string')
           .slice(0, 30);
       }
+      if (body?.scan_mode === 'free' || body?.scan_mode === 'firecrawl' || body?.scan_mode === 'auto') {
+        scanModeOverride = body.scan_mode;
+      }
+      if (body?.auto_fallback === false) autoFallbackOpt = false;
     } catch { /* no body */ }
+
+    // Resolve effective scan mode (UI override > env default > free)
+    const scanMode: 'free' | 'firecrawl' =
+      scanModeOverride === 'firecrawl' && firecrawlKey ? 'firecrawl'
+      : scanModeOverride === 'free' ? 'free'
+      : scanModeOverride === 'auto' ? 'free'  // 'auto' = start free, escalate per-query
+      : envUseFirecrawl && firecrawlKey ? 'firecrawl' : 'free';
+    const enableAutoFallback =
+      autoFallbackOpt && !!firecrawlKey && scanMode === 'free' &&
+      (scanModeOverride === 'auto' || scanModeOverride === 'free' || !scanModeOverride);
+    console.log(`🔎 scrape-prospects scan_mode=${scanMode} override=${scanModeOverride ?? 'none'} auto_fallback=${enableAutoFallback}`);
+
+    // Per-scan engine telemetry + alerts + in-session keyword dedupe
+    const engineStats = emptyEngineStats();
+    const blockedAlerts: BlockedAlert[] = [];
+    const sessionSeen = new Set<string>();
+    let sessionDedupedSkipped = 0;
+
 
     // ── Structured logging helpers (Sentry-friendly) ─────────────────────
     function logScrapeError(
