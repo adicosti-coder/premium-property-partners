@@ -652,6 +652,9 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     pending_queries?: Array<{ platform: string; query: string }>;
   } | null>(null);
   const [recentScanPulse, setRecentScanPulse] = useState(false);
+  const [isResuming, setIsResuming] = useState(false);
+  const [isClearingPending, setIsClearingPending] = useState(false);
+  const [resumeRemainingAfter, setResumeRemainingAfter] = useState<number>(0);
   const [smartFilter, setSmartFilter] = useState<string>(() => localStorage.getItem("scraper:smartFilter") || "all");
   const [blacklistOpen, setBlacklistOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"score" | "date">(() => (localStorage.getItem("scraper:sortBy") as any) || "score");
@@ -1984,16 +1987,21 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       toast.info("Mod Simulare activ — dezactivează-l ca să reiei scanarea reală.");
       return;
     }
+    if (isResuming || isScraping) return; // hard guard against double-clicks
+    setIsResuming(true);
     setIsScraping(true);
     setActiveScanMode("scan");
     setRecentScanPulse(true);
     const slice = pending.slice(0, 30); // edge function caps retry_batches at 30
+    const remainingAfter = Math.max(0, pending.length - slice.length);
+    setResumeRemainingAfter(remainingAfter);
     scanContextRef.current = {
       startedAt: Date.now(),
       mode: "scan",
       queryLimit: slice.length,
       simulated: false,
     };
+    const previousJobId = activeJob.id;
     try {
       const { data: userRes } = await supabase.auth.getUser();
       const userId = userRes?.user?.id;
@@ -2010,6 +2018,13 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .select("*")
         .single();
       if (jobErr || !jobRow) throw jobErr || new Error("Nu am putut crea job-ul.");
+
+      // Clear pending on the previous failed job so we don't loop on it.
+      try {
+        await supabase.from("prospect_scan_jobs")
+          .update({ pending_queries: remainingAfter > 0 ? pending.slice(slice.length) : [] } as any)
+          .eq("id", previousJobId);
+      } catch { /* non-fatal */ }
 
       setActiveJob({
         id: (jobRow as any).id,
@@ -2034,14 +2049,44 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         },
       });
       if (error) throw error;
-      toast.success(`Reiau scanarea pentru ${slice.length} cuvinte-cheie rămase.`);
+      toast.success(`Reiau scanarea pentru ${slice.length} cuvinte-cheie${remainingAfter > 0 ? ` (${remainingAfter} vor rămâne pentru un nou ciclu)` : ""}.`);
     } catch (err: any) {
       console.error("[ScraperLeads] handleResume failed", err);
       toast.error(`Eroare la repornire: ${err?.message || "necunoscută"}`);
       setIsScraping(false);
       setActiveScanMode(null);
+      setResumeRemainingAfter(0);
+    } finally {
+      setIsResuming(false);
     }
   };
+
+  // Clear pending_queries on the failed job (DB + UI), so the resume CTA disappears
+  // and the user fully abandons the interrupted batch.
+  const handleClearPending = async () => {
+    if (!activeJob) return;
+    if (isClearingPending) return;
+    setIsClearingPending(true);
+    const jobId = activeJob.id;
+    try {
+      const { error } = await supabase
+        .from("prospect_scan_jobs")
+        .update({ pending_queries: [] } as any)
+        .eq("id", jobId);
+      if (error) throw error;
+      setActiveJob((prev) => prev?.id === jobId ? { ...prev, pending_queries: [] } : prev);
+      setResumeRemainingAfter(0);
+      toast.success("Coada a fost golită. Poți porni o scanare nouă oricând.");
+      // Collapse panel after a beat so the success state is visible.
+      setTimeout(() => setActiveJob((prev) => prev?.id === jobId ? null : prev), 600);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleClearPending failed", err);
+      toast.error(`Nu am putut curăța coada: ${err?.message || "eroare necunoscută"}`);
+    } finally {
+      setIsClearingPending(false);
+    }
+  };
+
 
   const closeStuckJob = useCallback(async (job: NonNullable<typeof activeJob>) => {
     if (!job || !["pending", "running"].includes(job.status) || locallyClosedJobsRef.current.has(job.id)) return;
@@ -3073,6 +3118,12 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   🎯 {activeJob.new_listings} anunțuri noi colectate până acum
                 </div>
               )}
+              {/* Live resume context: shown while a resume job is running */}
+              {(activeJob.status === "running" || activeJob.status === "pending") && resumeRemainingAfter > 0 && (
+                <div className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                  🔁 Se procesează lotul curent · {resumeRemainingAfter} cuvinte rămase după acest lot
+                </div>
+              )}
               {activeJob.error_message && (
                 <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
               )}
@@ -3081,10 +3132,12 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   <Button
                     size="sm"
                     onClick={handleResume}
-                    disabled={isScraping || safeMode}
+                    disabled={isScraping || safeMode || isResuming || isClearingPending}
                     className="h-7 gap-1.5 text-xs"
                   >
-                    🔁 Repornește scanarea ({Math.min(30, activeJob.pending_queries!.length)} din {activeJob.pending_queries!.length} rămase)
+                    {isResuming
+                      ? `⏳ Repornesc… (${Math.min(30, activeJob.pending_queries!.length)} kw)`
+                      : `🔁 Repornește scanarea (${Math.min(30, activeJob.pending_queries!.length)} din ${activeJob.pending_queries!.length} rămase)`}
                   </Button>
                   {activeJob.pending_queries!.length > 30 && (
                     <span className="text-[10px] text-muted-foreground">
@@ -3094,13 +3147,16 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => setActiveJob(null)}
+                    onClick={handleClearPending}
+                    disabled={isClearingPending || isResuming}
                     className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                    title="Șterge cuvintele rămase din baza de date și resetează panoul"
                   >
-                    Renunță
+                    {isClearingPending ? "Curăț…" : "Anulează / Curăță coada"}
                   </Button>
                 </div>
               )}
+
             </div>
           )}
 
