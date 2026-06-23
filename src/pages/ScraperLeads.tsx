@@ -2133,6 +2133,109 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   };
 
 
+  // ── Retry exclusively on keywords reported as blocked (Cloudflare/empty engines) ──
+  const handleRetryBlocked = async () => {
+    if (isRetryingBlocked || isScraping) return;
+    const alerts = activeJob?.blocked_alerts ?? [];
+    if (!alerts.length) {
+      toast.info("Nu există cuvinte blocate de reluat.");
+      return;
+    }
+    setIsRetryingBlocked(true);
+    try {
+      // Dedup (platform|query); cap to 30 to respect edge function batch limit
+      const seen = new Set<string>();
+      const slice: Array<{ platform: string; query: string }> = [];
+      for (const a of alerts) {
+        const k = `${a.platform}|${a.keyword}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        slice.push({ platform: a.platform, query: a.keyword });
+        if (slice.length >= 30) break;
+      }
+      // Small IP-cooldown delay before re-firing the same engines
+      await new Promise((r) => setTimeout(r, 1500));
+      const { data: jobRow, error: jobErr } = await supabase
+        .from("prospect_scan_jobs")
+        .insert({ status: "pending", total_queries: slice.length, processed_queries: 0, new_listings: 0 } as any)
+        .select()
+        .single();
+      if (jobErr) throw jobErr;
+      sessionStartRef.current = Date.now();
+      setActiveJob({
+        id: (jobRow as any).id,
+        status: "pending",
+        processed_queries: 0,
+        total_queries: slice.length,
+        current_keyword: null,
+        current_platform: null,
+        new_listings: 0,
+        error_message: null,
+        updated_at: (jobRow as any).updated_at ?? new Date().toISOString(),
+        pending_queries: [],
+        scan_mode: "firecrawl",
+        auto_fallback_enabled: false,
+        engine_stats: null,
+        blocked_alerts: [],
+        session_deduped: 0,
+      });
+      setIsScraping(true);
+      const { error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          max_results: 15,
+          preserve_agency_filter: true,
+          job_id: (jobRow as any).id,
+          async_mode: true,
+          retry_batches: slice,
+          scan_mode: "firecrawl", // force premium for blocked keywords
+          auto_fallback: false,
+        },
+      });
+      if (error) throw error;
+      toast.success(`Reiau ${slice.length} cuvinte blocate prin Firecrawl (cu cooldown anti-IP-ban).`);
+    } catch (err: any) {
+      console.error("[ScraperLeads] handleRetryBlocked failed", err);
+      toast.error(`Retry blocate eșuat: ${err?.message || "eroare necunoscută"}`);
+      setIsScraping(false);
+    } finally {
+      setIsRetryingBlocked(false);
+    }
+  };
+
+  // ── Export only the prospects ingested in the current session (CSV) ──
+  const exportSessionCSV = () => {
+    const since = sessionStartRef.current;
+    const rows = (filteredLeads as any[]).filter((l) => {
+      const t = l.created_at ? new Date(l.created_at).getTime() : 0;
+      return t >= since;
+    });
+    if (!rows.length) {
+      toast.info("Niciun prospect nou în sesiunea curentă (criteriu: created_at ≥ start scanare).");
+      return;
+    }
+    const headers = ["Titlu", "Platformă", "Tip", "Preț", "Telefon", "Contact", "Status", "URL", "Created"];
+    const csvRows = rows.map((l) => [
+      cleanTitleStatic(l.title),
+      normalizePlatformLabel(l.source),
+      (l._prospect_type || l.prospect_category || "proprietar"),
+      l.original_price ?? "",
+      l.phone || "",
+      getLeadContactName(l),
+      l.status,
+      l.url,
+      l.created_at?.slice(0, 19) ?? "",
+    ]);
+    const csv = [headers.join(","), ...csvRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `prospecti-sesiune-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+    link.click();
+    toast.success(`${rows.length} prospecți din sesiune exportați în CSV`);
+  };
+
+
+
   const closeStuckJob = useCallback(async (job: NonNullable<typeof activeJob>) => {
     if (!job || !["pending", "running"].includes(job.status) || locallyClosedJobsRef.current.has(job.id)) return;
     locallyClosedJobsRef.current.add(job.id);
