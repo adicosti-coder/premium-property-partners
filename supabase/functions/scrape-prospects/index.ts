@@ -858,7 +858,7 @@ Deno.serve(async (req) => {
       preserveAgencyFilter = body?.preserve_agency_filter !== false;
       discoveryMode = body?.discovery_mode === true;
       if (typeof body?.query_limit === 'number') {
-        queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 30);
+        queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 100);
       }
       if (typeof body?.job_id === 'string' && body.job_id.length > 0) jobId = body.job_id;
       if (body?.async_mode === true) asyncMode = true;
