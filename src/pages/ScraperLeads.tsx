@@ -2087,6 +2087,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           retry_batches: slice,
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
+          auto_fallback_threshold: autoFallbackThreshold,
         },
       });
 
