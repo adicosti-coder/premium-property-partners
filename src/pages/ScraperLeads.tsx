@@ -3285,6 +3285,25 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               <Button size="sm" variant="outline" onClick={exportContactsCSV} className="gap-1.5" disabled={!filteredLeads.length}>
                 <Phone className="w-4 h-4" /> Contacte
               </Button>
+              {/* Quick session filter toggle (Tab-like) */}
+              <div className="flex border border-border rounded-lg overflow-hidden" title="Filtrează lista de rezultate">
+                <Button
+                  size="sm"
+                  variant={!sessionOnlyResults ? "default" : "ghost"}
+                  onClick={() => setSessionOnlyResults(false)}
+                  className="rounded-none gap-1.5"
+                >
+                  Toate ({(leads || []).length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant={sessionOnlyResults ? "default" : "ghost"}
+                  onClick={() => setSessionOnlyResults(true)}
+                  className="rounded-none gap-1.5"
+                >
+                  Doar sesiunea
+                </Button>
+              </div>
               {/* Compare Button */}
               {compareIds.length >= 2 && (
                 <Button size="sm" variant="secondary" onClick={() => setCompareOpen(true)} className="gap-1.5">
