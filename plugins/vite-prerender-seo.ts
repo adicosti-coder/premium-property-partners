@@ -992,8 +992,19 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `${seoBlock}\n    <div id="root">`
   );
 
-  // Keep the main stylesheet render-blocking.
-  // Previous preload-swap optimization caused unstyled first paint and score instability.
+  // Deduplicate CSS links: if a preload-swap tag already exists for the same
+  // href, strip the render-blocking <link rel="stylesheet"> Vite injected.
+  // Critical CSS is inlined in index.html, so no FOUC occurs.
+  const preloadedHrefs = new Set<string>();
+  const preloadRe = /<link\b[^>]*\brel="preload"[^>]*\bas="style"[^>]*\bhref="([^"]+\.css)"[^>]*>/gi;
+  let pm: RegExpExecArray | null;
+  while ((pm = preloadRe.exec(html)) !== null) preloadedHrefs.add(pm[1]);
+  if (preloadedHrefs.size > 0) {
+    html = html.replace(
+      /<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+\.css)"[^>]*>\s*/gi,
+      (match, href) => (preloadedHrefs.has(href) ? '' : match)
+    );
+  }
 
   return ensureProtectedHeadNodes(html, protectedHeadNodes);
 }

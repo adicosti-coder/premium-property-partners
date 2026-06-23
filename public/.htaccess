@@ -94,6 +94,16 @@
     Header set Cache-Control "public, max-age=300, stale-while-revalidate=86400"
   </FilesMatch>
 
+  # Hashed build assets — immutable, cache 1 year
+  <FilesMatch "\.(?:js|mjs|css|woff2?|ttf|otf|eot|webp|avif|jpg|jpeg|png|gif|svg|ico|mp4|webm)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Service workers must always revalidate
+  <FilesMatch "^(sw|pwa-sw)\.js$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+
   # Cross-Origin policies
   Header always set Cross-Origin-Opener-Policy "same-origin"
   Header always set Cross-Origin-Resource-Policy "same-origin"
