@@ -664,6 +664,12 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [importingLeadId, setImportingLeadId] = useState<string | null>(null);
   const [bulkImportingSmart, setBulkImportingSmart] = useState(false);
   const [bulkImportingHospitality, setBulkImportingHospitality] = useState(false);
+  const [queryLimit, setQueryLimit] = useState<number>(() => {
+    if (typeof window === "undefined") return 25;
+    const v = parseInt(window.localStorage.getItem("prospect_scan_query_limit") || "25", 10);
+    return Number.isFinite(v) && v >= 1 && v <= 100 ? v : 25;
+  });
+  const [keywordsPreviewOpen, setKeywordsPreviewOpen] = useState(false);
 
   // Debounced search to reduce filter recalcs
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -673,6 +679,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   useEffect(() => { localStorage.setItem("scraper:sortBy", sortBy); }, [sortBy]);
   useEffect(() => { localStorage.setItem("scraper:sortDir", sortDir); }, [sortDir]);
   useEffect(() => { localStorage.setItem("scraper:viewMode", viewMode); }, [viewMode]);
+  useEffect(() => { localStorage.setItem("prospect_scan_query_limit", String(queryLimit)); }, [queryLimit]);
 
   // ── Phone Intelligence Count ──────────────────────
   const { data: phoneIntelCount = 0 } = useQuery({
