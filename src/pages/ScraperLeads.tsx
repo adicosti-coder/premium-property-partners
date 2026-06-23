@@ -731,6 +731,14 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
   const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>(() => getScanHistory());
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [csvIncludeBlocked, setCsvIncludeBlocked] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("prospect_csv_include_blocked") === "1";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("prospect_csv_include_blocked", csvIncludeBlocked ? "1" : "0"); } catch {}
+  }, [csvIncludeBlocked]);
+  const [historyOnlyCurrent, setHistoryOnlyCurrent] = useState<boolean>(false);
   const scanContextRef = useRef<{
     startedAt: number;
     mode: "scan" | "rescan" | "simulated";
