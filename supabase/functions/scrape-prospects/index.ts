@@ -886,6 +886,18 @@ Deno.serve(async (req) => {
     const BATCH_SIZE = customQuery ? 1 : 2;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
       const batch = queries.slice(i, i + BATCH_SIZE);
+
+      // ── progress update (best-effort) ────────────────────────────────
+      await updateJob({
+        processed_queries: i,
+        current_keyword: batch[0]?.query?.slice(0, 200) ?? null,
+        current_platform: batch[0]?.platform ?? null,
+        new_listings: results.length,
+        archived_skipped: archivedSkipped,
+        duplicate_skipped: duplicateSkipped,
+        blacklisted_skipped: blacklistedSkipped,
+      });
+
       
       const batchPromises = batch.map(async ({ platform, query }) => {
         console.log(`Searching ${platform}: ${query}`);
