@@ -3076,6 +3076,31 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
               {activeJob.error_message && (
                 <div className="text-[11px] text-destructive line-clamp-2">{activeJob.error_message}</div>
               )}
+              {activeJob.status === "failed" && (activeJob.pending_queries?.length ?? 0) > 0 && (
+                <div className="flex flex-wrap items-center gap-2 pt-1.5">
+                  <Button
+                    size="sm"
+                    onClick={handleResume}
+                    disabled={isScraping || safeMode}
+                    className="h-7 gap-1.5 text-xs"
+                  >
+                    🔁 Repornește scanarea ({Math.min(30, activeJob.pending_queries!.length)} din {activeJob.pending_queries!.length} rămase)
+                  </Button>
+                  {activeJob.pending_queries!.length > 30 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      Se reia în loturi de 30 — repetă după ce se finalizează.
+                    </span>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setActiveJob(null)}
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Renunță
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
