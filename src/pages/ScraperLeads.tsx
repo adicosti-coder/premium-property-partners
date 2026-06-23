@@ -2217,7 +2217,10 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       const t = l.created_at ? new Date(l.created_at).getTime() : 0;
       return t >= since;
     });
-    if (!rows.length) {
+    const blockedRows = csvIncludeBlocked
+      ? ((activeJob?.blocked_alerts ?? []) as Array<{ platform: string; engine: string; reason: string; keyword: string }>)
+      : [];
+    if (!rows.length && !blockedRows.length) {
       toast.info("Niciun prospect nou în sesiunea curentă (criteriu: created_at ≥ start scanare).");
       return;
     }
@@ -2233,13 +2236,28 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       l.url,
       l.created_at?.slice(0, 19) ?? "",
     ]);
-    const csv = [headers.join(","), ...csvRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blockedCsvRows = blockedRows.map((b) => [
+      `[BLOCAJ] ${b.keyword}`,
+      b.platform,
+      "blocaj",
+      "",
+      "",
+      "",
+      `BLOCKED:${b.engine}:${b.reason || "unknown"}`,
+      "",
+      new Date().toISOString().slice(0, 19),
+    ]);
+    const allRows = [...csvRows, ...blockedCsvRows];
+    const csv = [headers.join(","), ...allRows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `prospecti-sesiune-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
     link.click();
-    toast.success(`${rows.length} prospecți din sesiune exportați în CSV`);
+    const blockedMsg = blockedRows.length ? ` + ${blockedRows.length} blocaje` : "";
+    toast.success(`Export realizat cu succes! ${rows.length} lead-uri descărcate${blockedMsg}`, {
+      description: `Fișier: ${link.download}`,
+    });
   };
 
 
