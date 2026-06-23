@@ -394,6 +394,7 @@ const ProspectManager = () => {
   }, []);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
+  useEffect(() => { fetchListingsRef.current = fetchListings; }, [fetchListings]);
 
   // Apply filters
   useEffect(() => {
