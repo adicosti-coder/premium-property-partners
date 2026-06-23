@@ -4525,6 +4525,7 @@ export type Database = {
           max_results: number
           new_listings: number
           only_new_sources: boolean
+          pending_queries: Json
           processed_queries: number
           query_limit: number
           result: Json | null
@@ -4551,6 +4552,7 @@ export type Database = {
           max_results?: number
           new_listings?: number
           only_new_sources?: boolean
+          pending_queries?: Json
           processed_queries?: number
           query_limit?: number
           result?: Json | null
@@ -4577,6 +4579,7 @@ export type Database = {
           max_results?: number
           new_listings?: number
           only_new_sources?: boolean
+          pending_queries?: Json
           processed_queries?: number
           query_limit?: number
           result?: Json | null
