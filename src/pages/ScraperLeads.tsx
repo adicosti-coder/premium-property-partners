@@ -1986,6 +1986,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           async_mode: true,
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
+          auto_fallback_threshold: autoFallbackThreshold,
         },
       });
 
