@@ -4192,7 +4192,52 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                     <Button size="sm" onClick={handleAddKeyword} className="h-8 gap-1">
                       <Plus className="w-3 h-3" /> Adaugă
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} className="h-8 gap-1">
+                      <ListPlus className="w-3 h-3" /> Bulk-add
+                    </Button>
                   </div>
+
+                  {/* Recently added (this session) + restricted scan */}
+                  {recentlyAddedKeywords.length > 0 && (
+                    <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {recentlyAddedKeywords.length} cuvinte cheie noi în sesiune
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs"
+                            onClick={() => setRecentlyAddedKeywords([])}
+                            disabled={isScanningNew || isScraping}
+                          >
+                            Golește
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleScanNewKeywords}
+                            disabled={isScanningNew || isScraping}
+                            className="h-7 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          >
+                            {isScanningNew ? <Loader2 className="w-3 h-3 animate-spin" /> : <Rocket className="w-3 h-3" />}
+                            Scanează doar noile
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {recentlyAddedKeywords.slice(0, 20).map((k) => (
+                          <Badge key={k.id} variant="secondary" className="text-[10px] font-mono">
+                            {k.platform}: {k.keyword}
+                          </Badge>
+                        ))}
+                        {recentlyAddedKeywords.length > 20 && (
+                          <Badge variant="outline" className="text-[10px]">+{recentlyAddedKeywords.length - 20}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Keywords list */}
                   <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
