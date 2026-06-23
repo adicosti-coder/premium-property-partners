@@ -1814,6 +1814,69 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     return out;
   }, [activeKeywords]);
 
+  const runSimulatedScan = useCallback((mode: "scan" | "rescan", effectiveLimit: number) => {
+    const total = Math.max(1, Math.min(uniqueActiveKeywords.length || effectiveLimit, effectiveLimit));
+    const fakeId = `sim-${Date.now()}`;
+    scanContextRef.current = {
+      startedAt: Date.now(),
+      mode: "simulated",
+      queryLimit: effectiveLimit,
+      simulated: true,
+    };
+    setIsScraping(true);
+    setActiveScanMode(mode);
+    setRecentScanPulse(true);
+    setActiveJob({
+      id: fakeId,
+      status: "running",
+      processed_queries: 0,
+      total_queries: total,
+      current_keyword: null,
+      current_platform: null,
+      new_listings: 0,
+      error_message: null,
+    });
+    let processed = 0;
+    let fakeFound = 0;
+    const tick = () => {
+      processed += 1;
+      if (Math.random() < 0.35) fakeFound += 1;
+      const kw = uniqueActiveKeywords[processed - 1];
+      setActiveJob((prev) => prev && prev.id === fakeId ? {
+        ...prev,
+        processed_queries: processed,
+        new_listings: fakeFound,
+        current_keyword: kw?.keyword ?? `sim-keyword-${processed}`,
+        current_platform: kw?.platform ?? "Simulat",
+      } : prev);
+      if (processed >= total) {
+        setActiveJob((prev) => prev && prev.id === fakeId ? { ...prev, status: "completed" } : prev);
+        setIsScraping(false);
+        setActiveScanMode(null);
+        toast.success(`Simulare completă — ${fakeFound} prospecți simulați (fără credite consumate).`);
+        recordScanEntry({
+          status: "simulated",
+          total_queries: total,
+          processed_queries: processed,
+          batches_total: Math.max(1, Math.ceil(total / 25)),
+          batches_done: Math.max(1, Math.ceil(total / 25)),
+          new_listings: fakeFound,
+          duplicate_skipped: 0,
+          blacklisted_skipped: 0,
+        });
+        setTimeout(() => { setActiveJob(null); setRecentScanPulse(false); }, 3500);
+        simulationTimerRef.current = null;
+        return;
+      }
+      simulationTimerRef.current = window.setTimeout(tick, 120 + Math.random() * 180);
+    };
+    simulationTimerRef.current = window.setTimeout(tick, 200);
+  }, [uniqueActiveKeywords, recordScanEntry]);
+
+  useEffect(() => () => {
+    if (simulationTimerRef.current) window.clearTimeout(simulationTimerRef.current);
+  }, []);
+
   const handleScrape = async (mode: "scan" | "rescan" = "scan") => {
     if (duplicateKeywords.length > 0) {
       toast.warning(
@@ -1821,17 +1884,29 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         { description: duplicateKeywords.slice(0, 3).map((d) => `"${d.keyword}" (${d.platform}) ×${d.count}`).join(", ") },
       );
     }
+    const isRescan = mode === "rescan";
+    const effectiveLimit = isRescan ? Math.min(100, Math.max(queryLimit, 40)) : queryLimit;
+
+    if (safeMode) {
+      toast.info("Mod Simulare activ — nu consumă credite Firecrawl.");
+      runSimulatedScan(mode, effectiveLimit);
+      return;
+    }
+
     setIsScraping(true);
     setActiveScanMode(mode);
     setRecentScanPulse(true);
+    scanContextRef.current = {
+      startedAt: Date.now(),
+      mode,
+      queryLimit: effectiveLimit,
+      simulated: false,
+    };
     try {
-      const isRescan = mode === "rescan";
       const { data: userRes } = await supabase.auth.getUser();
       const userId = userRes?.user?.id;
       if (!userId) throw new Error("Trebuie să fii autentificat ca admin.");
 
-      // Create job row to enable async-mode + realtime progress tracking.
-      const effectiveLimit = isRescan ? Math.min(100, Math.max(queryLimit, 40)) : queryLimit;
       const { data: jobRow, error: jobErr } = await supabase
         .from("prospect_scan_jobs")
         .insert({
@@ -1870,7 +1945,20 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       toast.success(`${isRescan ? "Rescan" : "Scanare"} pornit în fundal — vezi bara de progres.`);
     } catch (err: any) {
       console.error("[ScraperLeads] handleScrape failed", err);
-      toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${err.message || "Necunoscută"}`);
+      const msg = err?.message || "Necunoscută";
+      toast.error(`${mode === "rescan" ? "Eroare rescan" : "Eroare scanare"}: ${msg}`);
+      recordScanEntry({
+        status: "failed",
+        total_queries: 0,
+        processed_queries: 0,
+        batches_total: 0,
+        batches_done: 0,
+        new_listings: 0,
+        duplicate_skipped: 0,
+        blacklisted_skipped: 0,
+        error_message: msg,
+        error_details: (() => { try { return JSON.stringify(err, Object.getOwnPropertyNames(err)).slice(0, 2000); } catch { return String(err); } })(),
+      });
       setIsScraping(false);
       setActiveScanMode(null);
     }
