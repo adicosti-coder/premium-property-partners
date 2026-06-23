@@ -651,7 +651,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     error_message: string | null;
     updated_at: string | null;
     pending_queries?: Array<{ platform: string; query: string }>;
-    scan_mode?: 'free' | 'firecrawl' | null;
+    scan_mode?: 'free' | 'firecrawl' | 'auto' | null;
     auto_fallback_enabled?: boolean;
     engine_stats?: Record<string, { hits: number; urls: number; ms: number; errors: number; blocked: number }> | null;
     blocked_alerts?: Array<{ platform: string; engine: string; reason: string; keyword: string }>;
