@@ -1522,13 +1522,15 @@ Deno.serve(async (req) => {
               message: msg, phase: `${scanMode}_search`, retryable: true, attempts: outcome.attempts,
             });
             errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
-            // Auto-improve: înregistrează 0 rezultate pentru acest cuvânt cheie (15 consecutiv → auto-disable)
-            supabase.rpc('record_keyword_outcome', { _platform: platform || null, _keyword: query, _found: 0 })
+            // Auto-improve: înregistrează 0 rezultate pentru cuvântul original (15 consecutiv → auto-disable)
+            const trackKey = originalKeyword ?? query;
+            supabase.rpc('record_keyword_outcome', { _platform: platform || null, _keyword: trackKey, _found: 0 })
               .then(() => {}, () => {});
             return;
           }
           // Auto-improve: înregistrează succesul (resetează contorul de eșecuri)
-          supabase.rpc('record_keyword_outcome', { _platform: platform || null, _keyword: query, _found: outcome.results.length })
+          const trackKeyOk = originalKeyword ?? query;
+          supabase.rpc('record_keyword_outcome', { _platform: platform || null, _keyword: trackKeyOk, _found: outcome.results.length })
             .then(() => {}, () => {});
 
 
