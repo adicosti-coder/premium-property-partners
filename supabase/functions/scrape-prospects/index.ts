@@ -498,20 +498,97 @@ interface FreeResult { url: string; title?: string; markdown?: string; descripti
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
   const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
-  const slug = encodeURIComponent(clean.replace(/\s+/g, '-'));
-  const url = `https://www.olx.ro/d/imobiliare/q-${slug}/?search%5Border%5D=created_at:desc`;
-  const { ok, html } = await fetchHtml(url, 9000, 'https://www.olx.ro/');
+  const slug = clean.replace(/\s+/g, '-').toLowerCase();
+  // private_business=1 filtrează direct anunțurile proprietarilor (fără agenții)
+  // Probăm 2 pattern-uri URL OLX (categorie imobiliare + cautare globală) ca să prindem mai multe rezultate.
+  const urls = [
+    `https://www.olx.ro/d/imobiliare/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
+    `https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
+  ];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 9000, 'https://www.olx.ro/');
+    if (!ok || !html) continue;
+    const re = /<a[^>]+href="(\/d\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const href = `https://www.olx.ro${m[1]}`;
+      if (seen.has(href)) continue;
+      seen.add(href);
+      const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
+      if (title) out.push({ url: href, title, markdown: title });
+    }
+  }
+  return out;
+}
+
+// ── Direct scrapers pentru portalele mari (fără Google/DDG intermediar) ────
+async function directStoriaSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 5);
+  if (!clean) return [];
+  const slug = encodeURIComponent(clean.replace(/\s+/g, '-').toLowerCase());
+  // ownerTypeSingleSelect=PRIVATE = anunțuri doar de la proprietari
+  const url = `https://www.storia.ro/ro/rezultate/vanzare/apartament/timis/timisoara?ownerTypeSingleSelect=PRIVATE&viewType=listing&searchingCriteria=${slug}`;
+  const { ok, html } = await fetchHtml(url, 9000, 'https://www.storia.ro/');
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
-  const re = /<a[^>]+href="(\/d\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const re = /<a[^>]+href="(\/ro\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) && out.length < max) {
-    const href = `https://www.olx.ro${m[1]}`;
+    const href = `https://www.storia.ro${m[1]}`;
     if (seen.has(href)) continue;
     seen.add(href);
     const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
-    if (title) out.push({ url: href, title, markdown: title });
+    out.push({ url: href, title, markdown: title });
+  }
+  return out;
+}
+
+async function directImobiliareSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 5);
+  if (!clean) return [];
+  // imobiliare.ro nu permite query params arbitrari pe URL public; folosim categoriile + persoane-fizice.
+  const urls = [
+    'https://www.imobiliare.ro/vanzare-apartamente/timisoara?id=88&tip_proprietar=persoana-fizica',
+    'https://www.imobiliare.ro/inchirieri-apartamente/timisoara?id=88&tip_proprietar=persoana-fizica',
+  ];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 9000, 'https://www.imobiliare.ro/');
+    if (!ok || !html) continue;
+    const re = /<a[^>]+href="(https?:\/\/www\.imobiliare\.ro\/[^"#?]*?-X[0-9A-Z]{6,12})"/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const href = m[1];
+      if (seen.has(href)) continue;
+      seen.add(href);
+      out.push({ url: href, title: 'imobiliare.ro listing', markdown: '' });
+    }
+  }
+  return out;
+}
+
+async function directPubli24Search(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 4);
+  if (!clean) return [];
+  const slug = encodeURIComponent(clean.replace(/\s+/g, '+'));
+  const url = `https://www.publi24.ro/anunturi/imobiliare/de-vanzare/apartamente/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`;
+  const { ok, html } = await fetchHtml(url, 9000, 'https://www.publi24.ro/');
+  if (!ok || !html) return [];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  const re = /<a[^>]+href="(https?:\/\/www\.publi24\.ro\/anunturi\/[^"#?]+)"/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) && out.length < max) {
+    const href = m[1];
+    if (seen.has(href) || !/\/[a-z0-9-]+-id\d+\.html/i.test(href)) continue;
+    seen.add(href);
+    out.push({ url: href, title: 'publi24 listing', markdown: '' });
   }
   return out;
 }
@@ -588,22 +665,30 @@ async function freeSearchWithRetry(
   let attempts = 0;
   let primarySource: FcSearchOutcome['source'] = 'none';
 
-  if (domain && domain.includes('olx.ro')) {
+  // ── Direct portal scrapers (no Google intermediary). Mapăm domeniul → scraperul potrivit.
+  const directScrapers: { name: string; key: keyof EngineStats; match: (d: string) => boolean; run: () => Promise<FreeResult[]> }[] = [
+    { name: 'olx_direct',         key: 'olx_direct', match: (d) => d.includes('olx.ro'),        run: () => directOlxSearch(query, maxResults) },
+    { name: 'storia_direct',      key: 'olx_direct', match: (d) => d.includes('storia.ro'),     run: () => directStoriaSearch(query, maxResults) },
+    { name: 'imobiliare_direct',  key: 'olx_direct', match: (d) => d.includes('imobiliare.ro'), run: () => directImobiliareSearch(query, maxResults) },
+    { name: 'publi24_direct',     key: 'olx_direct', match: (d) => d.includes('publi24.ro'),    run: () => directPubli24Search(query, maxResults) },
+  ];
+  const directHit = domain ? directScrapers.find((s) => s.match(domain)) : null;
+  if (directHit) {
     attempts++;
     const t0 = Date.now();
     try {
-      const direct = await directOlxSearch(query, maxResults);
+      const direct = await directHit.run();
       const dt = Date.now() - t0;
       if (stats) { stats.olx_direct.hits++; stats.olx_direct.ms += dt; stats.olx_direct.urls += direct.length; }
-      opts.logger?.({ kind: 'free_direct_olx', platform, results: direct.length, ms: dt });
+      opts.logger?.({ kind: `free_${directHit.name}`, platform, results: direct.length, ms: dt });
       if (direct.length > 0) { pushAll(direct); primarySource = 'free_direct'; }
       else if (stats && blocked) {
         stats.olx_direct.blocked++;
-        blocked.push({ platform, engine: 'olx_direct', reason: '0 carduri (probabil Cloudflare/anti-bot)', keyword: kwShort });
+        blocked.push({ platform, engine: directHit.name, reason: '0 carduri (probabil anti-bot/HTML schimbat)', keyword: kwShort });
       }
     } catch (e) {
       if (stats) { stats.olx_direct.hits++; stats.olx_direct.errors++; stats.olx_direct.ms += Date.now() - t0; }
-      opts.logger?.({ kind: 'free_direct_olx_error', platform, message: (e as Error).message });
+      opts.logger?.({ kind: `free_${directHit.name}_error`, platform, message: (e as Error).message });
     }
   }
 
@@ -1194,7 +1279,7 @@ Deno.serve(async (req) => {
     let duplicateSkipped = 0;
     let timedOut = false;
     const scanStartedAt = Date.now();
-    const MAX_BACKGROUND_RUNTIME_MS = 42_000;
+    const MAX_BACKGROUND_RUNTIME_MS = 50_000;
     const markTimedOut = async (processed: number, total: number) => {
       timedOut = true;
       const remaining = (queries ?? []).slice(processed).map((q) => ({ platform: q.platform, query: q.query }));
@@ -1239,13 +1324,14 @@ Deno.serve(async (req) => {
 
 
     // Load keywords from DB, fallback to hardcoded defaults
-    let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
+    // `originalKeyword` = cuvântul exact din DB; folosit pentru `record_keyword_outcome` (auto-improvement).
+    let queries: { platform: string; query: string; originalKeyword?: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
     if (retryBatches && retryBatches.length > 0) {
       // Retry path — use the exact failed batches verbatim, skip expansion/owner filter.
-      queries = retryBatches.map((b) => ({ platform: b.platform, query: b.query }));
+      queries = retryBatches.map((b) => ({ platform: b.platform, query: b.query, originalKeyword: b.query }));
       console.log(`Retry mode: re-running ${queries.length} failed batches`);
     } else if (customQuery) {
-      queries = [{ platform: 'Custom', query: customQuery }];
+      queries = [{ platform: 'Custom', query: customQuery, originalKeyword: customQuery }];
     } else {
       const { data: dbKeywords } = await supabase
         .from('scraper_search_keywords')
@@ -1255,19 +1341,26 @@ Deno.serve(async (req) => {
         ? dbKeywords.map((k: any) => ({
             platform: k.platform,
             query: k.keyword,
+            originalKeyword: k.keyword,
             ownerFilters: (k.owner_filters && typeof k.owner_filters === 'object') ? k.owner_filters : undefined,
           }))
-        : DEFAULT_SEARCH_QUERIES;
+        : DEFAULT_SEARCH_QUERIES.map((q) => ({ ...q, originalKeyword: q.query }));
     }
 
     if (!retryBatches) {
       // Expand keywords with diacritics-free variants for fuzzy matching
-      queries = expandKeywordsWithoutDiacritics(queries);
+      // Păstrăm originalKeyword pe toate variantele expandate ca tracking-ul să ajungă la rândul corect.
+      const expanded = expandKeywordsWithoutDiacritics(queries);
+      queries = expanded.map((q, idx) => ({
+        ...q,
+        originalKeyword: (q as any).originalKeyword ?? queries[Math.min(idx, queries.length - 1)]?.originalKeyword,
+      }));
 
       // Default path stays owner-focused. Keyword Radar can use discovery mode
       // for broader URL discovery, then agency/geo gates keep the queue clean.
       queries = queries.map((q) => ({
         platform: q.platform,
+        originalKeyword: q.originalKeyword,
         query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
       }));
       // Rotate + slice to fit within edge-function runtime
@@ -1360,7 +1453,7 @@ Deno.serve(async (req) => {
 
 
       
-      const batchPromises = batch.map(async ({ platform, query }) => {
+      const batchPromises = batch.map(async ({ platform, query, originalKeyword }) => {
         // ── In-session dedupe: skip if same (platform,query) was already scanned
         //    in this invocation (saves network + dedup before DB layer).
         const dedupeKey = `${platform.toLowerCase()}|${(query || '').toLowerCase().trim()}`;
@@ -1429,8 +1522,28 @@ Deno.serve(async (req) => {
               message: msg, phase: `${scanMode}_search`, retryable: true, attempts: outcome.attempts,
             });
             errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
+            // Auto-improve: înregistrează 0 rezultate pentru cuvântul original (15 consecutiv → auto-disable)
+            try {
+              const { error: rpcErr } = await supabase.rpc('record_keyword_outcome', {
+                _platform: platform ?? '',
+                _keyword: originalKeyword ?? query,
+                _found: 0,
+              });
+              if (rpcErr) console.warn(`[auto-improve-fail] ${rpcErr.message} | plat="${platform}" key="${(originalKeyword ?? query).slice(0,60)}"`);
+              else console.log(`[auto-improve] fail tracked: plat="${platform}" key="${(originalKeyword ?? query).slice(0,60)}"`);
+            } catch (e) { console.warn(`[auto-improve-exc] ${(e as Error).message}`); }
             return;
           }
+          // Auto-improve: înregistrează succesul (resetează contorul de eșecuri)
+          try {
+            const { error: rpcErr } = await supabase.rpc('record_keyword_outcome', {
+              _platform: platform ?? '',
+              _keyword: originalKeyword ?? query,
+              _found: outcome.results.length,
+            });
+            if (rpcErr) console.warn(`[auto-improve-fail] ${rpcErr.message}`);
+            else console.log(`[auto-improve] success tracked: ${outcome.results.length} urls`);
+          } catch (e) { console.warn(`[auto-improve-exc] ${(e as Error).message}`); }
 
 
           if (outcome.source !== 'firecrawl' && outcome.source !== 'free_direct') {
