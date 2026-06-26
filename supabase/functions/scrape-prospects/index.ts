@@ -665,22 +665,30 @@ async function freeSearchWithRetry(
   let attempts = 0;
   let primarySource: FcSearchOutcome['source'] = 'none';
 
-  if (domain && domain.includes('olx.ro')) {
+  // ── Direct portal scrapers (no Google intermediary). Mapăm domeniul → scraperul potrivit.
+  const directScrapers: { name: string; key: keyof EngineStats; match: (d: string) => boolean; run: () => Promise<FreeResult[]> }[] = [
+    { name: 'olx_direct',         key: 'olx_direct', match: (d) => d.includes('olx.ro'),        run: () => directOlxSearch(query, maxResults) },
+    { name: 'storia_direct',      key: 'olx_direct', match: (d) => d.includes('storia.ro'),     run: () => directStoriaSearch(query, maxResults) },
+    { name: 'imobiliare_direct',  key: 'olx_direct', match: (d) => d.includes('imobiliare.ro'), run: () => directImobiliareSearch(query, maxResults) },
+    { name: 'publi24_direct',     key: 'olx_direct', match: (d) => d.includes('publi24.ro'),    run: () => directPubli24Search(query, maxResults) },
+  ];
+  const directHit = domain ? directScrapers.find((s) => s.match(domain)) : null;
+  if (directHit) {
     attempts++;
     const t0 = Date.now();
     try {
-      const direct = await directOlxSearch(query, maxResults);
+      const direct = await directHit.run();
       const dt = Date.now() - t0;
       if (stats) { stats.olx_direct.hits++; stats.olx_direct.ms += dt; stats.olx_direct.urls += direct.length; }
-      opts.logger?.({ kind: 'free_direct_olx', platform, results: direct.length, ms: dt });
+      opts.logger?.({ kind: `free_${directHit.name}`, platform, results: direct.length, ms: dt });
       if (direct.length > 0) { pushAll(direct); primarySource = 'free_direct'; }
       else if (stats && blocked) {
         stats.olx_direct.blocked++;
-        blocked.push({ platform, engine: 'olx_direct', reason: '0 carduri (probabil Cloudflare/anti-bot)', keyword: kwShort });
+        blocked.push({ platform, engine: directHit.name, reason: '0 carduri (probabil anti-bot/HTML schimbat)', keyword: kwShort });
       }
     } catch (e) {
       if (stats) { stats.olx_direct.hits++; stats.olx_direct.errors++; stats.olx_direct.ms += Date.now() - t0; }
-      opts.logger?.({ kind: 'free_direct_olx_error', platform, message: (e as Error).message });
+      opts.logger?.({ kind: `free_${directHit.name}_error`, platform, message: (e as Error).message });
     }
   }
 
