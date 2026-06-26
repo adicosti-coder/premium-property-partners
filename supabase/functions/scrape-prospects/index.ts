@@ -1324,13 +1324,14 @@ Deno.serve(async (req) => {
 
 
     // Load keywords from DB, fallback to hardcoded defaults
-    let queries: { platform: string; query: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
+    // `originalKeyword` = cuvântul exact din DB; folosit pentru `record_keyword_outcome` (auto-improvement).
+    let queries: { platform: string; query: string; originalKeyword?: string; ownerFilters?: { toggles?: string[]; text?: string; url_hint?: string } }[];
     if (retryBatches && retryBatches.length > 0) {
       // Retry path — use the exact failed batches verbatim, skip expansion/owner filter.
-      queries = retryBatches.map((b) => ({ platform: b.platform, query: b.query }));
+      queries = retryBatches.map((b) => ({ platform: b.platform, query: b.query, originalKeyword: b.query }));
       console.log(`Retry mode: re-running ${queries.length} failed batches`);
     } else if (customQuery) {
-      queries = [{ platform: 'Custom', query: customQuery }];
+      queries = [{ platform: 'Custom', query: customQuery, originalKeyword: customQuery }];
     } else {
       const { data: dbKeywords } = await supabase
         .from('scraper_search_keywords')
@@ -1340,19 +1341,26 @@ Deno.serve(async (req) => {
         ? dbKeywords.map((k: any) => ({
             platform: k.platform,
             query: k.keyword,
+            originalKeyword: k.keyword,
             ownerFilters: (k.owner_filters && typeof k.owner_filters === 'object') ? k.owner_filters : undefined,
           }))
-        : DEFAULT_SEARCH_QUERIES;
+        : DEFAULT_SEARCH_QUERIES.map((q) => ({ ...q, originalKeyword: q.query }));
     }
 
     if (!retryBatches) {
       // Expand keywords with diacritics-free variants for fuzzy matching
-      queries = expandKeywordsWithoutDiacritics(queries);
+      // Păstrăm originalKeyword pe toate variantele expandate ca tracking-ul să ajungă la rândul corect.
+      const expanded = expandKeywordsWithoutDiacritics(queries);
+      queries = expanded.map((q, idx) => ({
+        ...q,
+        originalKeyword: (q as any).originalKeyword ?? queries[Math.min(idx, queries.length - 1)]?.originalKeyword,
+      }));
 
       // Default path stays owner-focused. Keyword Radar can use discovery mode
       // for broader URL discovery, then agency/geo gates keep the queue clean.
       queries = queries.map((q) => ({
         platform: q.platform,
+        originalKeyword: q.originalKeyword,
         query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
       }));
       // Rotate + slice to fit within edge-function runtime
