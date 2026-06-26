@@ -1524,13 +1524,13 @@ Deno.serve(async (req) => {
             errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
             // Auto-improve: înregistrează 0 rezultate pentru cuvântul original (15 consecutiv → auto-disable)
             const trackKey = originalKeyword ?? query;
-            supabase.rpc('record_keyword_outcome', { _platform: platform || null, _keyword: trackKey, _found: 0 })
+            supabase.rpc('record_keyword_outcome', { _platform: platform ?? '', _keyword: trackKey, _found: 0 })
               .then(() => {}, () => {});
             return;
           }
           // Auto-improve: înregistrează succesul (resetează contorul de eșecuri)
           const trackKeyOk = originalKeyword ?? query;
-          supabase.rpc('record_keyword_outcome', { _platform: platform || null, _keyword: trackKeyOk, _found: outcome.results.length })
+          supabase.rpc('record_keyword_outcome', { _platform: platform ?? '', _keyword: trackKeyOk, _found: outcome.results.length })
             .then(() => {}, () => {});
 
 
