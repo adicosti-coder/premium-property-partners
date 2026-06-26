@@ -498,20 +498,97 @@ interface FreeResult { url: string; title?: string; markdown?: string; descripti
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
   const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
-  const slug = encodeURIComponent(clean.replace(/\s+/g, '-'));
-  const url = `https://www.olx.ro/d/imobiliare/q-${slug}/?search%5Border%5D=created_at:desc`;
-  const { ok, html } = await fetchHtml(url, 9000, 'https://www.olx.ro/');
+  const slug = clean.replace(/\s+/g, '-').toLowerCase();
+  // private_business=1 filtrează direct anunțurile proprietarilor (fără agenții)
+  // Probăm 2 pattern-uri URL OLX (categorie imobiliare + cautare globală) ca să prindem mai multe rezultate.
+  const urls = [
+    `https://www.olx.ro/d/imobiliare/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
+    `https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
+  ];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 9000, 'https://www.olx.ro/');
+    if (!ok || !html) continue;
+    const re = /<a[^>]+href="(\/d\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const href = `https://www.olx.ro${m[1]}`;
+      if (seen.has(href)) continue;
+      seen.add(href);
+      const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
+      if (title) out.push({ url: href, title, markdown: title });
+    }
+  }
+  return out;
+}
+
+// ── Direct scrapers pentru portalele mari (fără Google/DDG intermediar) ────
+async function directStoriaSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 5);
+  if (!clean) return [];
+  const slug = encodeURIComponent(clean.replace(/\s+/g, '-').toLowerCase());
+  // ownerTypeSingleSelect=PRIVATE = anunțuri doar de la proprietari
+  const url = `https://www.storia.ro/ro/rezultate/vanzare/apartament/timis/timisoara?ownerTypeSingleSelect=PRIVATE&viewType=listing&searchingCriteria=${slug}`;
+  const { ok, html } = await fetchHtml(url, 9000, 'https://www.storia.ro/');
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
-  const re = /<a[^>]+href="(\/d\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const re = /<a[^>]+href="(\/ro\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) && out.length < max) {
-    const href = `https://www.olx.ro${m[1]}`;
+    const href = `https://www.storia.ro${m[1]}`;
     if (seen.has(href)) continue;
     seen.add(href);
     const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
-    if (title) out.push({ url: href, title, markdown: title });
+    out.push({ url: href, title, markdown: title });
+  }
+  return out;
+}
+
+async function directImobiliareSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 5);
+  if (!clean) return [];
+  // imobiliare.ro nu permite query params arbitrari pe URL public; folosim categoriile + persoane-fizice.
+  const urls = [
+    'https://www.imobiliare.ro/vanzare-apartamente/timisoara?id=88&tip_proprietar=persoana-fizica',
+    'https://www.imobiliare.ro/inchirieri-apartamente/timisoara?id=88&tip_proprietar=persoana-fizica',
+  ];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 9000, 'https://www.imobiliare.ro/');
+    if (!ok || !html) continue;
+    const re = /<a[^>]+href="(https?:\/\/www\.imobiliare\.ro\/[^"#?]*?-X[0-9A-Z]{6,12})"/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const href = m[1];
+      if (seen.has(href)) continue;
+      seen.add(href);
+      out.push({ url: href, title: 'imobiliare.ro listing', markdown: '' });
+    }
+  }
+  return out;
+}
+
+async function directPubli24Search(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 4);
+  if (!clean) return [];
+  const slug = encodeURIComponent(clean.replace(/\s+/g, '+'));
+  const url = `https://www.publi24.ro/anunturi/imobiliare/de-vanzare/apartamente/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`;
+  const { ok, html } = await fetchHtml(url, 9000, 'https://www.publi24.ro/');
+  if (!ok || !html) return [];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  const re = /<a[^>]+href="(https?:\/\/www\.publi24\.ro\/anunturi\/[^"#?]+)"/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) && out.length < max) {
+    const href = m[1];
+    if (seen.has(href) || !/\/[a-z0-9-]+-id\d+\.html/i.test(href)) continue;
+    seen.add(href);
+    out.push({ url: href, title: 'publi24 listing', markdown: '' });
   }
   return out;
 }
