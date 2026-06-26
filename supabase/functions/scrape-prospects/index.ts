@@ -1453,7 +1453,7 @@ Deno.serve(async (req) => {
 
 
       
-      const batchPromises = batch.map(async ({ platform, query }) => {
+      const batchPromises = batch.map(async ({ platform, query, originalKeyword }) => {
         // ── In-session dedupe: skip if same (platform,query) was already scanned
         //    in this invocation (saves network + dedup before DB layer).
         const dedupeKey = `${platform.toLowerCase()}|${(query || '').toLowerCase().trim()}`;
