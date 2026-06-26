@@ -5156,30 +5156,48 @@ export type Database = {
       }
       scraper_search_keywords: {
         Row: {
+          auto_disabled_reason: string | null
+          consecutive_zero: number
           created_at: string
+          fail_count: number
           id: string
           is_active: boolean
           keyword: string
+          last_success_at: string | null
+          last_zero_at: string | null
           owner_filters: Json
           platform: string | null
+          success_count: number
           updated_at: string
         }
         Insert: {
+          auto_disabled_reason?: string | null
+          consecutive_zero?: number
           created_at?: string
+          fail_count?: number
           id?: string
           is_active?: boolean
           keyword: string
+          last_success_at?: string | null
+          last_zero_at?: string | null
           owner_filters?: Json
           platform?: string | null
+          success_count?: number
           updated_at?: string
         }
         Update: {
+          auto_disabled_reason?: string | null
+          consecutive_zero?: number
           created_at?: string
+          fail_count?: number
           id?: string
           is_active?: boolean
           keyword?: string
+          last_success_at?: string | null
+          last_zero_at?: string | null
           owner_filters?: Json
           platform?: string | null
+          success_count?: number
           updated_at?: string
         }
         Relationships: []
@@ -8865,6 +8883,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      record_keyword_outcome: {
+        Args: { _found: number; _keyword: string; _platform: string }
+        Returns: undefined
       }
       redeem_owner_code: { Args: { p_code: string }; Returns: Json }
       reset_prospect_invalid_status: {
