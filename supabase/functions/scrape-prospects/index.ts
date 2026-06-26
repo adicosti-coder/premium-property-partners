@@ -1279,7 +1279,7 @@ Deno.serve(async (req) => {
     let duplicateSkipped = 0;
     let timedOut = false;
     const scanStartedAt = Date.now();
-    const MAX_BACKGROUND_RUNTIME_MS = 42_000;
+    const MAX_BACKGROUND_RUNTIME_MS = 50_000;
     const markTimedOut = async (processed: number, total: number) => {
       timedOut = true;
       const remaining = (queries ?? []).slice(processed).map((q) => ({ platform: q.platform, query: q.query }));
