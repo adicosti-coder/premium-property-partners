@@ -73,6 +73,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
 
       // 🔍 Scraper Pipeline — întregul flux de prospectare imobiliară (unificat)
       { value: "prospect-pipeline", label: "Pipeline Prospecți", icon: Radar, badgeKey: "prospectPipeline", subgroup: "Scraper Pipeline", keywords: ["prospects", "scraper", "leads", "bot", "hot", "agentii", "monitoring"] },
+      { value: "scraper-monitor", label: "Monitorizare Scraper", icon: Activity, subgroup: "Scraper Pipeline", keywords: ["monitor", "keywords", "cuvinte", "reactiveaza", "stats", "scraper"] },
 
     ],
   },
