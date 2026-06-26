@@ -1524,22 +1524,26 @@ Deno.serve(async (req) => {
             errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
             // Auto-improve: înregistrează 0 rezultate pentru cuvântul original (15 consecutiv → auto-disable)
             try {
-              await supabase.rpc('record_keyword_outcome', {
+              const { error: rpcErr } = await supabase.rpc('record_keyword_outcome', {
                 _platform: platform ?? '',
                 _keyword: originalKeyword ?? query,
                 _found: 0,
               });
-            } catch { /* swallow */ }
+              if (rpcErr) console.warn(`[auto-improve-fail] ${rpcErr.message} | plat="${platform}" key="${(originalKeyword ?? query).slice(0,60)}"`);
+              else console.log(`[auto-improve] fail tracked: plat="${platform}" key="${(originalKeyword ?? query).slice(0,60)}"`);
+            } catch (e) { console.warn(`[auto-improve-exc] ${(e as Error).message}`); }
             return;
           }
           // Auto-improve: înregistrează succesul (resetează contorul de eșecuri)
           try {
-            await supabase.rpc('record_keyword_outcome', {
+            const { error: rpcErr } = await supabase.rpc('record_keyword_outcome', {
               _platform: platform ?? '',
               _keyword: originalKeyword ?? query,
               _found: outcome.results.length,
             });
-          } catch { /* swallow */ }
+            if (rpcErr) console.warn(`[auto-improve-fail] ${rpcErr.message}`);
+            else console.log(`[auto-improve] success tracked: ${outcome.results.length} urls`);
+          } catch (e) { console.warn(`[auto-improve-exc] ${(e as Error).message}`); }
 
 
           if (outcome.source !== 'firecrawl' && outcome.source !== 'free_direct') {
