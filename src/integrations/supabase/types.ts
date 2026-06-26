@@ -8876,6 +8876,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      reactivate_scraper_keyword: { Args: { _id: string }; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
