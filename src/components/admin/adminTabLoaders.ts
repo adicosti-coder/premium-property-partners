@@ -54,6 +54,7 @@ const loaders: Record<string, Loader> = {
   "system-health": () => import("@/components/admin/SystemHealthDashboard"),
   automation: () => import("@/components/admin/AutomationManager"),
   "prospect-pipeline": () => import("@/components/admin/ProspectPipelinePanel"),
+  "scraper-monitor": () => import("@/components/admin/ScraperMonitorPanel"),
 };
 
 const cache = new Map<string, LazyExoticComponent<ComponentType<unknown>>>();
