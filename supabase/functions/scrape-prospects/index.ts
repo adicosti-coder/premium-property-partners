@@ -1523,15 +1523,23 @@ Deno.serve(async (req) => {
             });
             errors.push(`${platform} [${query.slice(0, 60)}]: ${msg}`);
             // Auto-improve: înregistrează 0 rezultate pentru cuvântul original (15 consecutiv → auto-disable)
-            const trackKey = originalKeyword ?? query;
-            supabase.rpc('record_keyword_outcome', { _platform: platform ?? '', _keyword: trackKey, _found: 0 })
-              .then(() => {}, () => {});
+            try {
+              await supabase.rpc('record_keyword_outcome', {
+                _platform: platform ?? '',
+                _keyword: originalKeyword ?? query,
+                _found: 0,
+              });
+            } catch { /* swallow */ }
             return;
           }
           // Auto-improve: înregistrează succesul (resetează contorul de eșecuri)
-          const trackKeyOk = originalKeyword ?? query;
-          supabase.rpc('record_keyword_outcome', { _platform: platform ?? '', _keyword: trackKeyOk, _found: outcome.results.length })
-            .then(() => {}, () => {});
+          try {
+            await supabase.rpc('record_keyword_outcome', {
+              _platform: platform ?? '',
+              _keyword: originalKeyword ?? query,
+              _found: outcome.results.length,
+            });
+          } catch { /* swallow */ }
 
 
           if (outcome.source !== 'firecrawl' && outcome.source !== 'free_direct') {
