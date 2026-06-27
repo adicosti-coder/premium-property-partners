@@ -5164,10 +5164,13 @@ export type Database = {
           is_active: boolean
           keyword: string
           last_success_at: string | null
+          last_test_at: string | null
           last_zero_at: string | null
           owner_filters: Json
           platform: string | null
+          query_template: string | null
           success_count: number
+          unique_leads_count: number
           updated_at: string
         }
         Insert: {
@@ -5179,10 +5182,13 @@ export type Database = {
           is_active?: boolean
           keyword: string
           last_success_at?: string | null
+          last_test_at?: string | null
           last_zero_at?: string | null
           owner_filters?: Json
           platform?: string | null
+          query_template?: string | null
           success_count?: number
+          unique_leads_count?: number
           updated_at?: string
         }
         Update: {
@@ -5194,10 +5200,13 @@ export type Database = {
           is_active?: boolean
           keyword?: string
           last_success_at?: string | null
+          last_test_at?: string | null
           last_zero_at?: string | null
           owner_filters?: Json
           platform?: string | null
+          query_template?: string | null
           success_count?: number
+          unique_leads_count?: number
           updated_at?: string
         }
         Relationships: []
@@ -8830,6 +8839,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_keyword_unique_leads: {
+        Args: { _delta?: number; _id: string }
+        Returns: undefined
       }
       listing_import_record_review: {
         Args: {
