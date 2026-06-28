@@ -519,10 +519,12 @@ Deno.serve(async (req) => {
     JSON.stringify({
       ran: results.length,
       ok: results.filter((r) => r.ok).length,
-      failed: results.filter((r) => !r.ok).length,
+      failed: results.filter((r) => !r.ok && !r.skipped).length,
+      skipped: results.filter((r) => r.skipped).length,
       manual: manualJobKey,
       dry_run: dryRun,
       run_all: runAll,
+      orch_cfg: orchCfg,
       results,
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
