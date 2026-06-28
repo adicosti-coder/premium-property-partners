@@ -619,6 +619,7 @@ export type Database = {
         Row: {
           enabled: boolean
           id: boolean
+          orchestrator_config: Json
           paused_reason: string | null
           self_healing_config: Json
           updated_at: string
@@ -627,6 +628,7 @@ export type Database = {
         Insert: {
           enabled?: boolean
           id?: boolean
+          orchestrator_config?: Json
           paused_reason?: string | null
           self_healing_config?: Json
           updated_at?: string
@@ -635,6 +637,7 @@ export type Database = {
         Update: {
           enabled?: boolean
           id?: boolean
+          orchestrator_config?: Json
           paused_reason?: string | null
           self_healing_config?: Json
           updated_at?: string
@@ -8643,6 +8646,14 @@ export type Database = {
         Args: { p_prospect_id: string; p_reasons?: string[]; p_score: number }
         Returns: Json
       }
+      automation_acquire_run_lease: {
+        Args: {
+          _job_key: string
+          _lease_ttl_ms?: number
+          _triggered_by?: string
+        }
+        Returns: string
+      }
       automation_complete_run: {
         Args: {
           _duration_ms?: number
@@ -8652,6 +8663,23 @@ export type Database = {
           _status?: string
           _success: boolean
           _triggered_by?: string
+        }
+        Returns: undefined
+      }
+      automation_expire_stale_runs: {
+        Args: { _lease_ttl_ms?: number }
+        Returns: number
+      }
+      automation_finish_run: {
+        Args: {
+          _duration_ms?: number
+          _error?: string
+          _job_key: string
+          _payload?: Json
+          _retry_count?: number
+          _run_id: string
+          _status?: string
+          _success: boolean
         }
         Returns: undefined
       }

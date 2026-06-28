@@ -10,6 +10,34 @@ import { Cron } from "npm:croner@8";
 const TZ = "Europe/Bucharest";
 const DEFAULT_TIMEOUT_MS = 50_000;
 const DEFAULT_CONCURRENCY = 4;
+const DEFAULT_MAX_RETRIES = 1;
+const DEFAULT_LEASE_TTL_MS = 180_000;
+const DEFAULT_BACKOFF_JITTER_MS = 500;
+
+type OrchCfg = {
+  concurrency: number;
+  default_timeout_ms: number;
+  default_max_retries: number;
+  retry_on_timeout: boolean;
+  lease_ttl_ms: number;
+  backoff_jitter_ms: number;
+};
+
+function mergeOrchCfg(raw: unknown): OrchCfg {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const numPos = (v: unknown, d: number) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : d;
+  };
+  return {
+    concurrency: Math.max(1, Math.min(16, numPos(o.concurrency, DEFAULT_CONCURRENCY))),
+    default_timeout_ms: Math.max(1_000, Math.min(120_000, numPos(o.default_timeout_ms, DEFAULT_TIMEOUT_MS))),
+    default_max_retries: Math.max(0, Math.min(3, Number(o.default_max_retries ?? DEFAULT_MAX_RETRIES))),
+    retry_on_timeout: o.retry_on_timeout === true,
+    lease_ttl_ms: Math.max(5_000, Math.min(600_000, numPos(o.lease_ttl_ms, DEFAULT_LEASE_TTL_MS))),
+    backoff_jitter_ms: Math.max(0, Math.min(5_000, Number(o.backoff_jitter_ms ?? DEFAULT_BACKOFF_JITTER_MS))),
+  };
+}
 
 // job_key -> edge function name
 const JOB_FN: Record<string, string> = {
@@ -98,15 +126,45 @@ function isDue(schedule: string | null, lastRunAt: string | null, now: Date): bo
   }
 }
 
-async function runWithTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
-  let to: number | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    to = setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms) as unknown as number;
-  });
+/** Invoke an edge function with hard AbortController-driven timeout. */
+async function invokeFnWithAbort(
+  fnName: string,
+  body: Record<string, unknown>,
+  timeoutMs: number,
+): Promise<{ data: unknown; error: null } | { data: null; error: { message: string; status?: number } }> {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(new Error(`timeout after ${timeoutMs}ms`)), timeoutMs);
   try {
-    return await Promise.race([p, timeout]);
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/${fnName}`;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const res = await fetch(url, {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serviceKey}`,
+        "apikey": serviceKey,
+      },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    let parsed: unknown = null;
+    try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
+    if (!res.ok) {
+      const msg = typeof parsed === "object" && parsed && "error" in (parsed as Record<string, unknown>)
+        ? String((parsed as Record<string, unknown>).error)
+        : (typeof parsed === "string" ? parsed.slice(0, 300) : `HTTP ${res.status}`);
+      return { data: null, error: { message: `${res.status} ${msg}`, status: res.status } };
+    }
+    return { data: parsed, error: null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (ctrl.signal.aborted || /aborted|timeout/i.test(msg)) {
+      return { data: null, error: { message: `timeout after ${timeoutMs}ms` } };
+    }
+    return { data: null, error: { message: msg } };
   } finally {
-    if (to) clearTimeout(to);
+    clearTimeout(to);
   }
 }
 
@@ -115,7 +173,9 @@ async function runJob(
   job: Job,
   triggeredBy: string,
   dryRun: boolean,
-): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown; retries: number }> {
+  orchCfg: OrchCfg,
+): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown; retries: number; skipped?: boolean }> {
+  // Inline + no-op short paths (no lease, no retry, no external invoke).
   if (INLINE_JOB.has(job.job_key)) {
     const startedAt = Date.now();
     try {
@@ -123,12 +183,12 @@ async function runJob(
         ? await runArchiveStaleCallers(supabase, dryRun)
         : await runCanonicalConflictScan(dryRun);
       const duration = Date.now() - startedAt;
-      if (!dryRun) await completeRun(supabase, job.job_key, true, null, output, duration, "success", triggeredBy);
+      if (!dryRun) await finishRun(supabase, null, job.job_key, true, null, output, duration, "success", 0);
       return { job_key: job.job_key, ok: true, duration_ms: duration, status: "success", output, retries: 0 };
     } catch (e) {
       const duration = Date.now() - startedAt;
       const msg = errorMessage(e);
-      if (!dryRun) await completeRun(supabase, job.job_key, false, msg, {}, duration, "failed", triggeredBy);
+      if (!dryRun) await finishRun(supabase, null, job.job_key, false, msg, {}, duration, "failed", 0);
       return { job_key: job.job_key, ok: false, error: msg, duration_ms: duration, status: "failed", retries: 0 };
     }
   }
@@ -137,7 +197,7 @@ async function runJob(
     const startedAt = Date.now();
     const output = { noop: true, reason: "event-driven; declanșat automat de triggere DB / cod aplicație" };
     const duration = Date.now() - startedAt;
-    if (!dryRun) await completeRun(supabase, job.job_key, true, null, output, duration, "success", triggeredBy);
+    if (!dryRun) await finishRun(supabase, null, job.job_key, true, null, output, duration, "success", 0);
     return { job_key: job.job_key, ok: true, duration_ms: duration, status: "success", output, retries: 0 };
   }
 
@@ -145,62 +205,76 @@ async function runJob(
   if (!fnName) {
     return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped", retries: 0 };
   }
-  const cfg = (job.config ?? {}) as Record<string, unknown>;
-  const timeoutMs = Number(cfg.timeout_ms) > 0 ? Number(cfg.timeout_ms) : DEFAULT_TIMEOUT_MS;
-  const maxRetries = Math.max(0, Math.min(3, Number(cfg.max_retries ?? (dryRun ? 0 : 1))));
-  const startedAt = Date.now();
 
+  const cfg = (job.config ?? {}) as Record<string, unknown>;
+  const timeoutMs = Number(cfg.timeout_ms) > 0 ? Number(cfg.timeout_ms) : orchCfg.default_timeout_ms;
+  const maxRetries = Math.max(0, Math.min(3, Number(cfg.max_retries ?? (dryRun ? 0 : orchCfg.default_max_retries))));
+  const retryOnTimeout = cfg.retry_on_timeout === true || orchCfg.retry_on_timeout;
+
+  // Acquire run lease (skip if another orchestrator tick is still running this job).
+  let runId: string | null = null;
+  if (!dryRun) {
+    const { data: leaseId, error: leaseErr } = await supabase.rpc("automation_acquire_run_lease", {
+      _job_key: job.job_key,
+      _triggered_by: triggeredBy,
+      _lease_ttl_ms: orchCfg.lease_ttl_ms,
+    });
+    if (leaseErr) {
+      return { job_key: job.job_key, ok: false, error: `lease_error: ${leaseErr.message}`, duration_ms: 0, status: "failed", retries: 0 };
+    }
+    if (!leaseId) {
+      return { job_key: job.job_key, ok: false, error: "already_running", duration_ms: 0, status: "skipped", retries: 0, skipped: true };
+    }
+    runId = leaseId as string;
+  }
+
+  const startedAt = Date.now();
   let attempt = 0;
   let lastErr: string | null = null;
   let lastStatus: string = "failed";
   let lastData: unknown = null;
-
   const extraBody = JOB_BODY[job.job_key] ?? {};
 
   while (attempt <= maxRetries) {
-    try {
-      const { data, error } = await runWithTimeout(
-        supabase.functions.invoke(fnName, {
-          body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt, ...extraBody },
-        }),
-        timeoutMs,
-      );
-      if (error) throw error;
+    const { data, error } = await invokeFnWithAbort(
+      fnName,
+      { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt, ...extraBody },
+      timeoutMs,
+    );
+    if (!error) {
       lastData = data;
       lastStatus = "success";
       lastErr = null;
       break;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      lastErr = msg;
-      lastStatus = msg.startsWith("timeout") ? "timeout" : "failed";
-      // do not retry on timeouts (likely deterministic), retry only transient failures
-      if (lastStatus === "timeout" || attempt >= maxRetries) break;
-      // exponential backoff: 1s, 4s, 9s
-      const backoffMs = Math.min(9_000, 1_000 * Math.pow(attempt + 1, 2));
-      await new Promise((r) => setTimeout(r, backoffMs));
-      attempt++;
     }
+    lastErr = error.message;
+    lastStatus = /^timeout/i.test(error.message) ? "timeout" : "failed";
+    if (attempt >= maxRetries) break;
+    if (lastStatus === "timeout" && !retryOnTimeout) break;
+    // exponential backoff with jitter: ~1s, ~4s, ~9s ± jitter
+    const base = Math.min(9_000, 1_000 * Math.pow(attempt + 1, 2));
+    const jitter = orchCfg.backoff_jitter_ms > 0
+      ? Math.floor((Math.random() * 2 - 1) * orchCfg.backoff_jitter_ms)
+      : 0;
+    await new Promise((r) => setTimeout(r, Math.max(250, base + jitter)));
+    attempt++;
   }
 
   const duration = Date.now() - startedAt;
   const ok = lastStatus === "success";
 
   if (!dryRun) {
-    await completeRun(supabase, job.job_key, ok, ok ? null : lastErr, ok ? ((lastData ?? {}) as Record<string, unknown>) : {}, duration, lastStatus, triggeredBy);
-    // Best-effort: stamp retry_count on most recent run row
-    if (attempt > 0) {
-      const { data: lastRun } = await supabase
-        .from("automation_runs")
-        .select("id")
-        .eq("job_key", job.job_key)
-        .order("started_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lastRun?.id) {
-        await supabase.from("automation_runs").update({ retry_count: attempt }).eq("id", lastRun.id);
-      }
-    }
+    await finishRun(
+      supabase,
+      runId,
+      job.job_key,
+      ok,
+      ok ? null : lastErr,
+      ok ? ((lastData ?? {}) as Record<string, unknown>) : {},
+      duration,
+      lastStatus,
+      attempt,
+    );
   }
 
   return {
@@ -214,26 +288,29 @@ async function runJob(
   };
 }
 
-async function completeRun(
+async function finishRun(
   supabase: ReturnType<typeof createClient>,
+  runId: string | null,
   jobKey: string,
   success: boolean,
   error: string | null,
   payload: Record<string, unknown>,
   durationMs: number,
   status: string,
-  triggeredBy: string,
+  retryCount: number,
 ) {
-  await supabase.rpc("automation_complete_run", {
+  await supabase.rpc("automation_finish_run", {
+    _run_id: runId,
     _job_key: jobKey,
     _success: success,
     _payload: payload,
     _error: success ? null : (error ?? "").slice(0, 500),
     _duration_ms: durationMs,
     _status: status,
-    _triggered_by: triggeredBy,
+    _retry_count: retryCount,
   });
 }
+
 
 function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
@@ -352,14 +429,26 @@ Deno.serve(async (req) => {
     } catch { /* never throw */ }
   };
 
-  // global kill switch (bypassed for manual + dry-run)
+  // global kill switch + orchestrator config (bypassed for manual + dry-run)
   const { data: settings } = await supabase
-    .from("automation_settings").select("enabled, paused_reason").eq("id", true).maybeSingle();
+    .from("automation_settings")
+    .select("enabled, paused_reason, orchestrator_config")
+    .eq("id", true)
+    .maybeSingle();
   if (!settings?.enabled && !manualJobKey && !dryRun && !runAll) {
     return new Response(JSON.stringify({ skipped: "global_off", reason: settings?.paused_reason }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  const orchCfg = mergeOrchCfg((settings as { orchestrator_config?: unknown } | null)?.orchestrator_config);
+
+  // Janitor: clear stale "running" rows (crashed orchestrator ticks) before evaluating leases.
+  try {
+    const { data: expired } = await supabase.rpc("automation_expire_stale_runs", { _lease_ttl_ms: orchCfg.lease_ttl_ms });
+    if (Number(expired) > 0) {
+      await liveLog("warning", `Expired ${expired} stale running rows (lease > ${orchCfg.lease_ttl_ms}ms)`, { expired });
+    }
+  } catch { /* best-effort */ }
 
   const { data: jobs } = await supabase
     .from("automation_jobs")
@@ -376,7 +465,7 @@ Deno.serve(async (req) => {
   });
 
   if (runAll || manualJobKey) {
-    await liveLog("info", runAll ? `Run All start: ${candidates.length} joburi` : `Manual run: ${manualJobKey}`, { triggered_by: triggeredBy, candidates: candidates.map((c) => c.job_key) });
+    await liveLog("info", runAll ? `Run All start: ${candidates.length} joburi` : `Manual run: ${manualJobKey}`, { triggered_by: triggeredBy, candidates: candidates.map((c) => c.job_key), orch_cfg: orchCfg });
   }
 
   // granular 401 logger – captures auth failures from invoked job functions
@@ -401,10 +490,13 @@ Deno.serve(async (req) => {
     );
   };
 
-  // global concurrency cap (settings.config not yet wired → fixed default)
-  const results = await pMap(candidates, DEFAULT_CONCURRENCY, async (j) => {
+  const results = await pMap(candidates, orchCfg.concurrency, async (j) => {
     await liveLog("info", `▶ ${j.job_key}`, { triggered_by: triggeredBy }, j.job_key);
-    const res = await runJob(supabase, j, triggeredBy, dryRun);
+    const res = await runJob(supabase, j, triggeredBy, dryRun, orchCfg);
+    if (res.skipped) {
+      await liveLog("warning", `⏭ ${j.job_key} · already_running (lease held)`, { duration_ms: res.duration_ms }, j.job_key);
+      return res;
+    }
     // Detect 401 / Unauthorized in error message and log granular auth-failure entry
     if (!res.ok && res.error && /\b401\b|unauthor|invalid[_\s-]*jwt|missing[_\s-]*token|forbidden/i.test(res.error)) {
       await log401(j.job_key, JOB_FN[j.job_key], res.error);
@@ -427,10 +519,12 @@ Deno.serve(async (req) => {
     JSON.stringify({
       ran: results.length,
       ok: results.filter((r) => r.ok).length,
-      failed: results.filter((r) => !r.ok).length,
+      failed: results.filter((r) => !r.ok && !r.skipped).length,
+      skipped: results.filter((r) => r.skipped).length,
       manual: manualJobKey,
       dry_run: dryRun,
       run_all: runAll,
+      orch_cfg: orchCfg,
       results,
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
