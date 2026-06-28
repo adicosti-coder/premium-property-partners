@@ -126,15 +126,45 @@ function isDue(schedule: string | null, lastRunAt: string | null, now: Date): bo
   }
 }
 
-async function runWithTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
-  let to: number | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    to = setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms) as unknown as number;
-  });
+/** Invoke an edge function with hard AbortController-driven timeout. */
+async function invokeFnWithAbort(
+  fnName: string,
+  body: Record<string, unknown>,
+  timeoutMs: number,
+): Promise<{ data: unknown; error: null } | { data: null; error: { message: string; status?: number } }> {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(new Error(`timeout after ${timeoutMs}ms`)), timeoutMs);
   try {
-    return await Promise.race([p, timeout]);
+    const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/${fnName}`;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const res = await fetch(url, {
+      method: "POST",
+      signal: ctrl.signal,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serviceKey}`,
+        "apikey": serviceKey,
+      },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    let parsed: unknown = null;
+    try { parsed = text ? JSON.parse(text) : null; } catch { parsed = text; }
+    if (!res.ok) {
+      const msg = typeof parsed === "object" && parsed && "error" in (parsed as Record<string, unknown>)
+        ? String((parsed as Record<string, unknown>).error)
+        : (typeof parsed === "string" ? parsed.slice(0, 300) : `HTTP ${res.status}`);
+      return { data: null, error: { message: `${res.status} ${msg}`, status: res.status } };
+    }
+    return { data: parsed, error: null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (ctrl.signal.aborted || /aborted|timeout/i.test(msg)) {
+      return { data: null, error: { message: `timeout after ${timeoutMs}ms` } };
+    }
+    return { data: null, error: { message: msg } };
   } finally {
-    if (to) clearTimeout(to);
+    clearTimeout(to);
   }
 }
 
@@ -143,7 +173,9 @@ async function runJob(
   job: Job,
   triggeredBy: string,
   dryRun: boolean,
-): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown; retries: number }> {
+  orchCfg: OrchCfg,
+): Promise<{ job_key: string; ok: boolean; error?: string; duration_ms: number; status: string; output?: unknown; retries: number; skipped?: boolean }> {
+  // Inline + no-op short paths (no lease, no retry, no external invoke).
   if (INLINE_JOB.has(job.job_key)) {
     const startedAt = Date.now();
     try {
@@ -151,12 +183,12 @@ async function runJob(
         ? await runArchiveStaleCallers(supabase, dryRun)
         : await runCanonicalConflictScan(dryRun);
       const duration = Date.now() - startedAt;
-      if (!dryRun) await completeRun(supabase, job.job_key, true, null, output, duration, "success", triggeredBy);
+      if (!dryRun) await finishRun(supabase, null, job.job_key, true, null, output, duration, "success", 0);
       return { job_key: job.job_key, ok: true, duration_ms: duration, status: "success", output, retries: 0 };
     } catch (e) {
       const duration = Date.now() - startedAt;
       const msg = errorMessage(e);
-      if (!dryRun) await completeRun(supabase, job.job_key, false, msg, {}, duration, "failed", triggeredBy);
+      if (!dryRun) await finishRun(supabase, null, job.job_key, false, msg, {}, duration, "failed", 0);
       return { job_key: job.job_key, ok: false, error: msg, duration_ms: duration, status: "failed", retries: 0 };
     }
   }
@@ -165,7 +197,7 @@ async function runJob(
     const startedAt = Date.now();
     const output = { noop: true, reason: "event-driven; declanșat automat de triggere DB / cod aplicație" };
     const duration = Date.now() - startedAt;
-    if (!dryRun) await completeRun(supabase, job.job_key, true, null, output, duration, "success", triggeredBy);
+    if (!dryRun) await finishRun(supabase, null, job.job_key, true, null, output, duration, "success", 0);
     return { job_key: job.job_key, ok: true, duration_ms: duration, status: "success", output, retries: 0 };
   }
 
@@ -173,62 +205,76 @@ async function runJob(
   if (!fnName) {
     return { job_key: job.job_key, ok: false, error: "no_handler", duration_ms: 0, status: "skipped", retries: 0 };
   }
-  const cfg = (job.config ?? {}) as Record<string, unknown>;
-  const timeoutMs = Number(cfg.timeout_ms) > 0 ? Number(cfg.timeout_ms) : DEFAULT_TIMEOUT_MS;
-  const maxRetries = Math.max(0, Math.min(3, Number(cfg.max_retries ?? (dryRun ? 0 : 1))));
-  const startedAt = Date.now();
 
+  const cfg = (job.config ?? {}) as Record<string, unknown>;
+  const timeoutMs = Number(cfg.timeout_ms) > 0 ? Number(cfg.timeout_ms) : orchCfg.default_timeout_ms;
+  const maxRetries = Math.max(0, Math.min(3, Number(cfg.max_retries ?? (dryRun ? 0 : orchCfg.default_max_retries))));
+  const retryOnTimeout = cfg.retry_on_timeout === true || orchCfg.retry_on_timeout;
+
+  // Acquire run lease (skip if another orchestrator tick is still running this job).
+  let runId: string | null = null;
+  if (!dryRun) {
+    const { data: leaseId, error: leaseErr } = await supabase.rpc("automation_acquire_run_lease", {
+      _job_key: job.job_key,
+      _triggered_by: triggeredBy,
+      _lease_ttl_ms: orchCfg.lease_ttl_ms,
+    });
+    if (leaseErr) {
+      return { job_key: job.job_key, ok: false, error: `lease_error: ${leaseErr.message}`, duration_ms: 0, status: "failed", retries: 0 };
+    }
+    if (!leaseId) {
+      return { job_key: job.job_key, ok: false, error: "already_running", duration_ms: 0, status: "skipped", retries: 0, skipped: true };
+    }
+    runId = leaseId as string;
+  }
+
+  const startedAt = Date.now();
   let attempt = 0;
   let lastErr: string | null = null;
   let lastStatus: string = "failed";
   let lastData: unknown = null;
-
   const extraBody = JOB_BODY[job.job_key] ?? {};
 
   while (attempt <= maxRetries) {
-    try {
-      const { data, error } = await runWithTimeout(
-        supabase.functions.invoke(fnName, {
-          body: { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt, ...extraBody },
-        }),
-        timeoutMs,
-      );
-      if (error) throw error;
+    const { data, error } = await invokeFnWithAbort(
+      fnName,
+      { triggered_by: triggeredBy, job_key: job.job_key, dry_run: dryRun, attempt, ...extraBody },
+      timeoutMs,
+    );
+    if (!error) {
       lastData = data;
       lastStatus = "success";
       lastErr = null;
       break;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      lastErr = msg;
-      lastStatus = msg.startsWith("timeout") ? "timeout" : "failed";
-      // do not retry on timeouts (likely deterministic), retry only transient failures
-      if (lastStatus === "timeout" || attempt >= maxRetries) break;
-      // exponential backoff: 1s, 4s, 9s
-      const backoffMs = Math.min(9_000, 1_000 * Math.pow(attempt + 1, 2));
-      await new Promise((r) => setTimeout(r, backoffMs));
-      attempt++;
     }
+    lastErr = error.message;
+    lastStatus = /^timeout/i.test(error.message) ? "timeout" : "failed";
+    if (attempt >= maxRetries) break;
+    if (lastStatus === "timeout" && !retryOnTimeout) break;
+    // exponential backoff with jitter: ~1s, ~4s, ~9s ± jitter
+    const base = Math.min(9_000, 1_000 * Math.pow(attempt + 1, 2));
+    const jitter = orchCfg.backoff_jitter_ms > 0
+      ? Math.floor((Math.random() * 2 - 1) * orchCfg.backoff_jitter_ms)
+      : 0;
+    await new Promise((r) => setTimeout(r, Math.max(250, base + jitter)));
+    attempt++;
   }
 
   const duration = Date.now() - startedAt;
   const ok = lastStatus === "success";
 
   if (!dryRun) {
-    await completeRun(supabase, job.job_key, ok, ok ? null : lastErr, ok ? ((lastData ?? {}) as Record<string, unknown>) : {}, duration, lastStatus, triggeredBy);
-    // Best-effort: stamp retry_count on most recent run row
-    if (attempt > 0) {
-      const { data: lastRun } = await supabase
-        .from("automation_runs")
-        .select("id")
-        .eq("job_key", job.job_key)
-        .order("started_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lastRun?.id) {
-        await supabase.from("automation_runs").update({ retry_count: attempt }).eq("id", lastRun.id);
-      }
-    }
+    await finishRun(
+      supabase,
+      runId,
+      job.job_key,
+      ok,
+      ok ? null : lastErr,
+      ok ? ((lastData ?? {}) as Record<string, unknown>) : {},
+      duration,
+      lastStatus,
+      attempt,
+    );
   }
 
   return {
@@ -240,6 +286,29 @@ async function runJob(
     output: lastData,
     retries: attempt,
   };
+}
+
+async function finishRun(
+  supabase: ReturnType<typeof createClient>,
+  runId: string | null,
+  jobKey: string,
+  success: boolean,
+  error: string | null,
+  payload: Record<string, unknown>,
+  durationMs: number,
+  status: string,
+  retryCount: number,
+) {
+  await supabase.rpc("automation_finish_run", {
+    _run_id: runId,
+    _job_key: jobKey,
+    _success: success,
+    _payload: payload,
+    _error: success ? null : (error ?? "").slice(0, 500),
+    _duration_ms: durationMs,
+    _status: status,
+    _retry_count: retryCount,
+  });
 }
 
 async function completeRun(
