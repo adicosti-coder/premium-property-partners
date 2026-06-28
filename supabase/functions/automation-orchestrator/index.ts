@@ -311,26 +311,6 @@ async function finishRun(
   });
 }
 
-async function completeRun(
-  supabase: ReturnType<typeof createClient>,
-  jobKey: string,
-  success: boolean,
-  error: string | null,
-  payload: Record<string, unknown>,
-  durationMs: number,
-  status: string,
-  triggeredBy: string,
-) {
-  await supabase.rpc("automation_complete_run", {
-    _job_key: jobKey,
-    _success: success,
-    _payload: payload,
-    _error: success ? null : (error ?? "").slice(0, 500),
-    _duration_ms: durationMs,
-    _status: status,
-    _triggered_by: triggeredBy,
-  });
-}
 
 function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
