@@ -429,14 +429,26 @@ Deno.serve(async (req) => {
     } catch { /* never throw */ }
   };
 
-  // global kill switch (bypassed for manual + dry-run)
+  // global kill switch + orchestrator config (bypassed for manual + dry-run)
   const { data: settings } = await supabase
-    .from("automation_settings").select("enabled, paused_reason").eq("id", true).maybeSingle();
+    .from("automation_settings")
+    .select("enabled, paused_reason, orchestrator_config")
+    .eq("id", true)
+    .maybeSingle();
   if (!settings?.enabled && !manualJobKey && !dryRun && !runAll) {
     return new Response(JSON.stringify({ skipped: "global_off", reason: settings?.paused_reason }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  const orchCfg = mergeOrchCfg((settings as { orchestrator_config?: unknown } | null)?.orchestrator_config);
+
+  // Janitor: clear stale "running" rows (crashed orchestrator ticks) before evaluating leases.
+  try {
+    const { data: expired } = await supabase.rpc("automation_expire_stale_runs", { _lease_ttl_ms: orchCfg.lease_ttl_ms });
+    if (Number(expired) > 0) {
+      await liveLog("warning", `Expired ${expired} stale running rows (lease > ${orchCfg.lease_ttl_ms}ms)`, { expired });
+    }
+  } catch { /* best-effort */ }
 
   const { data: jobs } = await supabase
     .from("automation_jobs")
@@ -453,7 +465,7 @@ Deno.serve(async (req) => {
   });
 
   if (runAll || manualJobKey) {
-    await liveLog("info", runAll ? `Run All start: ${candidates.length} joburi` : `Manual run: ${manualJobKey}`, { triggered_by: triggeredBy, candidates: candidates.map((c) => c.job_key) });
+    await liveLog("info", runAll ? `Run All start: ${candidates.length} joburi` : `Manual run: ${manualJobKey}`, { triggered_by: triggeredBy, candidates: candidates.map((c) => c.job_key), orch_cfg: orchCfg });
   }
 
   // granular 401 logger – captures auth failures from invoked job functions
@@ -478,10 +490,13 @@ Deno.serve(async (req) => {
     );
   };
 
-  // global concurrency cap (settings.config not yet wired → fixed default)
-  const results = await pMap(candidates, DEFAULT_CONCURRENCY, async (j) => {
+  const results = await pMap(candidates, orchCfg.concurrency, async (j) => {
     await liveLog("info", `▶ ${j.job_key}`, { triggered_by: triggeredBy }, j.job_key);
-    const res = await runJob(supabase, j, triggeredBy, dryRun);
+    const res = await runJob(supabase, j, triggeredBy, dryRun, orchCfg);
+    if (res.skipped) {
+      await liveLog("warning", `⏭ ${j.job_key} · already_running (lease held)`, { duration_ms: res.duration_ms }, j.job_key);
+      return res;
+    }
     // Detect 401 / Unauthorized in error message and log granular auth-failure entry
     if (!res.ok && res.error && /\b401\b|unauthor|invalid[_\s-]*jwt|missing[_\s-]*token|forbidden/i.test(res.error)) {
       await log401(j.job_key, JOB_FN[j.job_key], res.error);
