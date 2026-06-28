@@ -10,6 +10,34 @@ import { Cron } from "npm:croner@8";
 const TZ = "Europe/Bucharest";
 const DEFAULT_TIMEOUT_MS = 50_000;
 const DEFAULT_CONCURRENCY = 4;
+const DEFAULT_MAX_RETRIES = 1;
+const DEFAULT_LEASE_TTL_MS = 180_000;
+const DEFAULT_BACKOFF_JITTER_MS = 500;
+
+type OrchCfg = {
+  concurrency: number;
+  default_timeout_ms: number;
+  default_max_retries: number;
+  retry_on_timeout: boolean;
+  lease_ttl_ms: number;
+  backoff_jitter_ms: number;
+};
+
+function mergeOrchCfg(raw: unknown): OrchCfg {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const numPos = (v: unknown, d: number) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : d;
+  };
+  return {
+    concurrency: Math.max(1, Math.min(16, numPos(o.concurrency, DEFAULT_CONCURRENCY))),
+    default_timeout_ms: Math.max(1_000, Math.min(120_000, numPos(o.default_timeout_ms, DEFAULT_TIMEOUT_MS))),
+    default_max_retries: Math.max(0, Math.min(3, Number(o.default_max_retries ?? DEFAULT_MAX_RETRIES))),
+    retry_on_timeout: o.retry_on_timeout === true,
+    lease_ttl_ms: Math.max(5_000, Math.min(600_000, numPos(o.lease_ttl_ms, DEFAULT_LEASE_TTL_MS))),
+    backoff_jitter_ms: Math.max(0, Math.min(5_000, Number(o.backoff_jitter_ms ?? DEFAULT_BACKOFF_JITTER_MS))),
+  };
+}
 
 // job_key -> edge function name
 const JOB_FN: Record<string, string> = {
