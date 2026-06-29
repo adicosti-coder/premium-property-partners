@@ -17,10 +17,22 @@ interface RequestBody {
   forceRefresh?: boolean;
 }
 
+// Tunables (centralized so we can adjust without spelunking)
+const CONFIG = {
+  CACHE_TTL_MS: 24 * 60 * 60 * 1000,         // re-use audit row within 24h unless forceRefresh
+  HASH_CACHE_TTL_MS: 14 * 24 * 60 * 60 * 1000, // re-use AI analysis if content_hash unchanged in 14d
+  INFLIGHT_TTL_SEC: 90,                        // lock TTL — audit + AI shouldn't exceed this
+  AI_TIMEOUT_MS: 38_000,                       // hard cap on Gemini call
+  AI_MAX_RETRIES: 2,                           // total attempts = retries + 1
+  SCRAPE_TIMEOUT_MS: 25_000,
+  SCRAPE_MAX_RETRIES: 1,
+  CRON_BATCH: 4,                               // stale URLs scheduled per cron tick
+  AI_MODEL: "google/gemini-2.5-pro",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Read body early to detect orchestrator/cron trigger
   const rawBody = await req.json().catch(() => ({} as any));
   const isCron = typeof rawBody?.triggered_by === "string" && rawBody.triggered_by.length > 0;
   const isInternal = req.headers.get("x-internal-cron") === "1";
@@ -30,30 +42,33 @@ serve(async (req) => {
     if (!auth.ok) return auth.response!;
   }
 
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
   try {
-    // Cron mode: schedule audits for stale URLs without waiting (fire-and-forget)
-    // to avoid hitting the orchestrator's 50s timeout (one audit alone can take 20–40s).
+    // ============= CRON MODE =============
     if (isCron) {
-      const sbCron = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      // Prioritize: lowest-score first, then oldest. Increases chance the cron
+      // budget is spent re-auditing pages that actually need help.
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
-      const { data: stale } = await sbCron
+      const { data: stale } = await sb
         .from("seo_audits")
-        .select("url, language, created_at")
+        .select("url, language, overall_score, created_at")
         .lt("created_at", sevenDaysAgo)
+        .order("overall_score", { ascending: true, nullsFirst: true })
         .order("created_at", { ascending: true })
-        .limit(20);
+        .limit(CONFIG.CRON_BATCH * 4);
+
       const urls = Array.from(
         new Map(
           (stale ?? [])
             .filter((r: any) => typeof r?.url === "string" && /^https?:\/\//.test(r.url))
             .map((r: any) => [r.url, { url: r.url, language: r.language || "ro" }]),
         ).values(),
-      ).slice(0, 2);
+      ).slice(0, CONFIG.CRON_BATCH);
+
       const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/seo-ai-optimizer`;
-      const dispatches = urls.map((item) => {
-        // Background dispatch: return immediately to orchestrator, but keep the
-        // edge runtime alive long enough to actually start each child audit.
-        return fetch(fnUrl, {
+      const dispatches = urls.map((item) =>
+        fetch(fnUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -61,25 +76,21 @@ serve(async (req) => {
             "x-internal-cron": "1",
           },
           body: JSON.stringify({ url: item.url, language: item.language, forceRefresh: true }),
-        }).catch((e) => console.error("seo-ai-optimizer cron dispatch failed:", item.url, e?.message));
-      });
+        }).catch((e) => console.error("seo-ai-optimizer cron dispatch failed:", item.url, e?.message))
+      );
       EdgeRuntime.waitUntil(Promise.allSettled(dispatches));
       return json({ cron: true, scheduled: urls.length, urls: urls.map((u) => u.url) });
     }
 
-
+    // ============= SINGLE AUDIT =============
     const { url, language = "ro", forceRefresh = false }: RequestBody = rawBody;
-    if (!url || !/^https?:\/\//.test(url)) {
-      return json({ error: "URL invalid" }, 400);
-    }
+    if (!url || !/^https?:\/\//.test(url)) return json({ error: "URL invalid" }, 400);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
     if (!LOVABLE_API_KEY) return json({ error: "AI not configured" }, 500);
 
-    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-
-    // Cache: re-use audit dacă <24h și forceRefresh=false
+    // Cache (24h)
     if (!forceRefresh) {
       const { data: cached } = await sb.from("seo_audits")
         .select("*").eq("url", url).eq("language", language)
@@ -87,86 +98,183 @@ serve(async (req) => {
       if (
         cached &&
         !isObviouslyInvalidCachedAudit(cached) &&
-        (Date.now() - new Date(cached.created_at).getTime()) < 24 * 60 * 60 * 1000
+        (Date.now() - new Date(cached.created_at).getTime()) < CONFIG.CACHE_TTL_MS
       ) {
-        return json({ audit: cached, cached: true });
+        return json({ audit: cached, cached: true, cache_source: "audit_row_24h" });
       }
     }
 
-    // 1. Scrape
-    const scraped = await scrapePage(url, FIRECRAWL_API_KEY, forceRefresh);
-    // Hash on full text (not the truncated 8000-char snippet) and skip the
-    // first 1500 chars which are dominated by the shared SPA shell (header,
-    // nav, hero CTAs). Otherwise two distinct pages on the same SPA share an
-    // identical hash and falsely trigger "duplicate content" warnings.
-    const hashSource = (scraped as any).fullText || scraped.markdown || "";
-    const hashBody = hashSource.length > 1500 ? hashSource.slice(1500) : hashSource;
-    const contentHash = await sha256(hashBody);
+    // Inflight lock — atomic dedup across concurrent triggers (cron + manual click)
+    const triggeredBy = isInternal ? "cron" : (rawBody?.triggered_by || "admin_ui");
+    const { data: lockAcquired } = await sb.rpc("seo_acquire_audit_lock", {
+      p_url: url,
+      p_language: language,
+      p_ttl_seconds: CONFIG.INFLIGHT_TTL_SEC,
+      p_triggered_by: triggeredBy,
+    });
 
-    // 2. Detect duplicate content vs alte audituri (only recent — last 7 days)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: duplicates } = await sb.from("seo_audits")
-      .select("url, content_hash")
-      .eq("content_hash", contentHash)
-      .neq("url", url)
-      .gte("created_at", sevenDaysAgo)
-      .limit(5);
+    if (lockAcquired === false) {
+      return json(
+        { error: "Audit already running for this URL — retry in a few seconds", inflight: true },
+        409,
+      );
+    }
 
-    // 3. Local GEO Audit (Timișoara entities + proximity signals)
-    const localGeo = analyzeLocalGeo(scraped.markdown || "");
+    try {
+      // 1. Scrape (with retry + timeout)
+      const scrapeStart = Date.now();
+      const scraped = await scrapePage(url, FIRECRAWL_API_KEY, forceRefresh);
+      const scrapeMs = Date.now() - scrapeStart;
 
-    // 4. AI analysis (now includes local geo context for better keyword suggestions)
-    const analysis = await analyzeWithAI(scraped, url, language, duplicates || [], localGeo, LOVABLE_API_KEY);
+      const hashSource = (scraped as any).fullText || scraped.markdown || "";
+      const hashBody = hashSource.length > 1500 ? hashSource.slice(1500) : hashSource;
+      const contentHash = await sha256(hashBody);
 
-    // Build a diagnostic blob so the admin UI can show "what the audit actually saw"
-    const diagnostics = {
-      scrape_source: (scraped as any).source || "unknown",
-      title_detected: scraped.title,
-      title_length: (scraped.title || "").length,
-      meta_chosen: scraped.metaDescription,
-      meta_length: (scraped.metaDescription || "").length,
-      meta_candidates: (scraped as any).metaCandidatesDebug || [],
-      h1_count: scraped.h1Count,
-      h2_count: (scraped as any).h2Count ?? null,
-      word_count: scraped.wordCount,
-      score_breakdown: analysis._score_breakdown || null,
-      ai_model: "google/gemini-2.5-pro",
-      force_refresh: forceRefresh,
-      audited_at: new Date().toISOString(),
-    };
-    const enrichedAnalysis = { ...analysis, _diagnostics: diagnostics };
+      // 2. Detect duplicate content vs other recent audits
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
+      const { data: duplicates } = await sb.from("seo_audits")
+        .select("url, content_hash")
+        .eq("content_hash", contentHash)
+        .neq("url", url)
+        .gte("created_at", sevenDaysAgo)
+        .limit(5);
 
-    // 5. Store
-    const { data: saved, error: saveErr } = await sb.from("seo_audits").insert({
-      url,
-      language,
-      page_type: detectPageType(url),
-      overall_score: analysis.overall_score,
-      title: scraped.title,
-      meta_description: scraped.metaDescription,
-      h1_count: scraped.h1Count,
-      word_count: scraped.wordCount,
-      suggested_title: analysis.suggested_title,
-      suggested_meta: analysis.suggested_meta,
-      keyword_gaps: analysis.keyword_gaps || [],
-      strengths: analysis.strengths || [],
-      issues: analysis.issues || [],
-      opportunities: analysis.opportunities || [],
-      raw_analysis: enrichedAnalysis,
-      content_hash: contentHash,
-      local_relevance_score: localGeo.score,
-      local_entities_found: localGeo.found,
-      local_entities_missing: localGeo.missing,
-      local_geo_keywords: analysis.local_geo_keywords || [],
-      local_recommendations: analysis.local_recommendations || [],
-    }).select().single();
+      // 3. Local GEO
+      const localGeo = analyzeLocalGeo(scraped.markdown || "");
 
-    if (saveErr) console.error("Save error:", saveErr);
+      // 4. Content-hash cache: if THIS url's last audit had the SAME content_hash
+      //    within 14 days, content hasn't drifted → reuse AI suggestions, only
+      //    refresh the deterministic score + diagnostics. Saves a full Gemini call.
+      let analysis: any = null;
+      let aiReused = false;
+      let aiAttempts = 0;
+      let aiError: string | null = null;
+      let aiMs = 0;
 
-    return json({ audit: saved, cached: false, duplicates: duplicates || [], diagnostics });
+      if (!forceRefresh) {
+        const hashCacheCutoff = new Date(Date.now() - CONFIG.HASH_CACHE_TTL_MS).toISOString();
+        const { data: prior } = await sb.from("seo_audits")
+          .select("raw_analysis, suggested_title, suggested_meta, keyword_gaps, strengths, issues, opportunities, local_geo_keywords, local_recommendations, created_at")
+          .eq("url", url).eq("language", language)
+          .eq("content_hash", contentHash)
+          .gte("created_at", hashCacheCutoff)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (prior?.raw_analysis) {
+          // Recompute deterministic score from current signals (cheap, no AI)
+          const { score, breakdown } = calculateDeterministicScore(scraped, localGeo, duplicates || []);
+          analysis = {
+            ...(prior.raw_analysis as any),
+            suggested_title: prior.suggested_title,
+            suggested_meta: prior.suggested_meta,
+            keyword_gaps: prior.keyword_gaps,
+            strengths: prior.strengths,
+            issues: prior.issues,
+            opportunities: prior.opportunities,
+            local_geo_keywords: prior.local_geo_keywords,
+            local_recommendations: prior.local_recommendations,
+            overall_score: score,
+            _score_breakdown: breakdown,
+          };
+          aiReused = true;
+        }
+      }
+
+      // 5. Run AI if we don't have a reusable analysis
+      if (!analysis) {
+        const aiStart = Date.now();
+        try {
+          const result = await analyzeWithAI(scraped, url, language, duplicates || [], localGeo, LOVABLE_API_KEY);
+          analysis = result.analysis;
+          aiAttempts = result.attempts;
+        } catch (err: any) {
+          aiError = err?.message || String(err);
+          aiAttempts = err?.attempts || CONFIG.AI_MAX_RETRIES + 1;
+          // Graceful fallback: produce a deterministic-only audit so the user
+          // at least sees the score & breakdown instead of a 500.
+          const { score, breakdown } = calculateDeterministicScore(scraped, localGeo, duplicates || []);
+          analysis = {
+            overall_score: score,
+            _score_breakdown: breakdown,
+            suggested_title: null,
+            suggested_meta: null,
+            keyword_gaps: [],
+            strengths: [],
+            issues: [{ severity: "warning", issue: "AI suggestions unavailable", fix: `Retry later — ${aiError}` }],
+            opportunities: [],
+            local_geo_keywords: [],
+            local_recommendations: [],
+            ai_fallback: true,
+            ai_error: aiError,
+          };
+        }
+        aiMs = Date.now() - aiStart;
+      }
+
+      const diagnostics = {
+        scrape_source: (scraped as any).source || "unknown",
+        scrape_ms: scrapeMs,
+        title_detected: scraped.title,
+        title_length: (scraped.title || "").length,
+        meta_chosen: scraped.metaDescription,
+        meta_length: (scraped.metaDescription || "").length,
+        meta_candidates: (scraped as any).metaCandidatesDebug || [],
+        h1_count: scraped.h1Count,
+        h2_count: (scraped as any).h2Count ?? null,
+        word_count: scraped.wordCount,
+        score_breakdown: analysis._score_breakdown || null,
+        ai_model: CONFIG.AI_MODEL,
+        ai_reused_from_hash: aiReused,
+        ai_attempts: aiAttempts,
+        ai_ms: aiMs,
+        ai_error: aiError,
+        force_refresh: forceRefresh,
+        audited_at: new Date().toISOString(),
+      };
+      const enrichedAnalysis = { ...analysis, _diagnostics: diagnostics };
+
+      const { data: saved, error: saveErr } = await sb.from("seo_audits").insert({
+        url,
+        language,
+        page_type: detectPageType(url),
+        overall_score: analysis.overall_score,
+        title: scraped.title,
+        meta_description: scraped.metaDescription,
+        h1_count: scraped.h1Count,
+        word_count: scraped.wordCount,
+        suggested_title: analysis.suggested_title,
+        suggested_meta: analysis.suggested_meta,
+        keyword_gaps: analysis.keyword_gaps || [],
+        strengths: analysis.strengths || [],
+        issues: analysis.issues || [],
+        opportunities: analysis.opportunities || [],
+        raw_analysis: enrichedAnalysis,
+        content_hash: contentHash,
+        local_relevance_score: localGeo.score,
+        local_entities_found: localGeo.found,
+        local_entities_missing: localGeo.missing,
+        local_geo_keywords: analysis.local_geo_keywords || [],
+        local_recommendations: analysis.local_recommendations || [],
+      }).select().single();
+
+      if (saveErr) console.error("seo-ai-optimizer save error:", saveErr);
+
+      return json({
+        audit: saved,
+        cached: false,
+        ai_reused: aiReused,
+        ai_fallback: !!analysis.ai_fallback,
+        duplicates: duplicates || [],
+        diagnostics,
+      });
+    } finally {
+      // Always release the lock — even on fallback or error path
+      await sb.rpc("seo_release_audit_lock", { p_url: url, p_language: language }).catch(() => {});
+    }
   } catch (err: any) {
-    console.error("seo-ai-optimizer error:", err);
-    return json({ error: err.message || "Unknown" }, 500);
+    console.error("seo-ai-optimizer fatal:", err);
+    return json({ error: err?.message || "Unknown" }, 500);
   }
 });
 
@@ -192,73 +300,118 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+/**
+ * fetch with timeout (AbortController) + retry on 429/5xx/network errors,
+ * exponential backoff with jitter.
+ */
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  opts: { timeoutMs: number; maxRetries: number; label: string },
+): Promise<{ res: Response; attempts: number }> {
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), opts.timeoutMs);
+    try {
+      const res = await fetch(url, { ...init, signal: ctrl.signal });
+      clearTimeout(t);
+      // Retry on 429 + 5xx
+      if ((res.status === 429 || res.status >= 500) && attempt < opts.maxRetries) {
+        const retryAfter = Number(res.headers.get("retry-after")) || 0;
+        const backoff = retryAfter > 0
+          ? Math.min(retryAfter * 1000, 8000)
+          : Math.min(800 * Math.pow(2, attempt) + Math.random() * 400, 6000);
+        console.warn(`[${opts.label}] retry ${attempt + 1}/${opts.maxRetries} after ${backoff}ms (status ${res.status})`);
+        await new Promise((r) => setTimeout(r, backoff));
+        continue;
+      }
+      return { res, attempts: attempt + 1 };
+    } catch (e: any) {
+      clearTimeout(t);
+      lastErr = e;
+      const isAbort = e?.name === "AbortError";
+      if (attempt < opts.maxRetries) {
+        const backoff = Math.min(800 * Math.pow(2, attempt) + Math.random() * 400, 6000);
+        console.warn(`[${opts.label}] ${isAbort ? "timeout" : "error"} retry ${attempt + 1}/${opts.maxRetries} in ${backoff}ms: ${e?.message}`);
+        await new Promise((r) => setTimeout(r, backoff));
+        continue;
+      }
+    }
+  }
+  const err: any = new Error(`[${opts.label}] failed after ${opts.maxRetries + 1} attempts: ${(lastErr as any)?.message || "unknown"}`);
+  err.attempts = opts.maxRetries + 1;
+  throw err;
+}
+
 async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = false) {
   const candidates: any[] = [];
   const freshUrl = forceRefresh
     ? `${url}${url.includes("?") ? "&" : "?"}seo_refresh=${Date.now()}`
     : url;
 
-  // Try Firecrawl first
   if (firecrawlKey) {
     try {
-      // SPA-aware scrape: wait for React app to hydrate and inject route-specific
-      // <title>, <meta>, <h1> via Helmet/dynamic SEO. Without JS rendering the
-      // server returns the SPA shell (homepage HTML), causing false-positive
-      // "duplicate content" and "2x H1" warnings.
-      const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: freshUrl,
-          formats: ["markdown", "rawHtml"],
-          onlyMainContent: false,
-          waitFor: 6000,
-          mobile: false,
-          blockAds: true,
-          skipTlsVerification: false,
-          location: { country: "RO", languages: ["ro-RO"] },
-          // Wait for hydrated route content before snapshotting HTML
-          actions: [
-            { type: "wait", milliseconds: 2500 },
-            { type: "scroll", direction: "down" },
-            { type: "wait", milliseconds: 1500 },
-            { type: "scroll", direction: "up" },
-            { type: "wait", milliseconds: 1500 },
-          ],
-        }),
-      });
+      const { res } = await fetchWithRetry(
+        "https://api.firecrawl.dev/v2/scrape",
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${firecrawlKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: freshUrl,
+            formats: ["markdown", "rawHtml"],
+            onlyMainContent: false,
+            waitFor: 6000,
+            mobile: false,
+            blockAds: true,
+            skipTlsVerification: false,
+            location: { country: "RO", languages: ["ro-RO"] },
+            actions: [
+              { type: "wait", milliseconds: 2500 },
+              { type: "scroll", direction: "down" },
+              { type: "wait", milliseconds: 1500 },
+              { type: "scroll", direction: "up" },
+              { type: "wait", milliseconds: 1500 },
+            ],
+          }),
+        },
+        { timeoutMs: CONFIG.SCRAPE_TIMEOUT_MS, maxRetries: CONFIG.SCRAPE_MAX_RETRIES, label: "firecrawl" },
+      );
       if (res.ok) {
         const data = await res.json();
         const md = data.markdown || data.data?.markdown || "";
-        // Prefer rawHtml (post-hydration DOM) over the cleaned `html` field
-        const html =
-          data.rawHtml || data.data?.rawHtml ||
-          data.html || data.data?.html || "";
+        const html = data.rawHtml || data.data?.rawHtml || data.html || data.data?.html || "";
         const meta = data.metadata || data.data?.metadata || {};
         const parsed = parseScraped(md, html, meta);
         (parsed as any).source = "firecrawl";
         candidates.push(parsed);
       } else {
-        console.warn("Firecrawl status", res.status, await res.text().catch(() => ""));
+        console.warn("Firecrawl non-ok", res.status, await res.text().catch(() => ""));
       }
-    } catch (e) { console.warn("Firecrawl fail, fallback:", e); }
+    } catch (e: any) {
+      console.warn("Firecrawl exhausted retries:", e?.message);
+    }
   }
 
-  // Direct fetch as fallback
+  // Direct fetch fallback (also retryable)
   try {
-    const res = await fetch(freshUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 SEO-Bot",
-        "Cache-Control": "no-cache, no-store, max-age=0",
-        Pragma: "no-cache",
+    const { res } = await fetchWithRetry(
+      freshUrl,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0 SEO-Bot",
+          "Cache-Control": "no-cache, no-store, max-age=0",
+          Pragma: "no-cache",
+        },
       },
-    });
+      { timeoutMs: 15_000, maxRetries: 1, label: "direct-fetch" },
+    );
     const html = await res.text();
     const parsed = parseScraped(htmlToText(html), html, extractMetaFromHtml(html));
     (parsed as any).source = "direct-fetch";
     candidates.push(parsed);
-  } catch (e) {
-    console.warn("Direct fetch fail:", e);
+  } catch (e: any) {
+    console.warn("Direct fetch failed:", e?.message);
   }
 
   if (candidates.length === 0) {
@@ -276,14 +429,8 @@ async function scrapePage(url: string, firecrawlKey?: string, forceRefresh = fal
 
 function parseScraped(markdown: string, html: string, meta: any) {
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-
-  // Collect ALL meta description candidates (description, og:description, twitter:description)
-  // — never trust just the first regex hit. Some pages inject 2-3 sources via React + prerender.
   const metaCandidates = collectMetaDescriptionCandidates(html, meta);
 
-  // Filter out hidden/prerender shell H1s (used for non-JS crawlers as a fallback,
-  // not a real visible heading). Pattern: <h1 data-prerender-title> or
-  // elements with hidden / aria-hidden / sr-only / display:none.
   const allH1 = html.match(/<h1\b[^>]*>[\s\S]*?<\/h1>/gi) || [];
   const allH2 = html.match(/<h2\b[^>]*>[\s\S]*?<\/h2>/gi) || [];
   const isShellHeading = (tag: string): boolean => {
@@ -304,18 +451,12 @@ function parseScraped(markdown: string, html: string, meta: any) {
     h2Count: h2Matches.length,
     wordCount: text.split(/\s+/).filter(Boolean).length,
     markdown: text.slice(0, 8000),
-    // fullText is used ONLY for content_hash so two pages that share the same
-    // SPA shell header/hero (first ~2000 chars) still produce different hashes
-    // when their unique body copy diverges further down the page.
     fullText: text,
     fullHtml: html.slice(0, 2000),
   };
 }
 
-interface MetaCandidate {
-  source: string;
-  value: string;
-}
+interface MetaCandidate { source: string; value: string; }
 
 function collectMetaDescriptionCandidates(html: string, meta: any): MetaCandidate[] {
   const found: MetaCandidate[] = [];
@@ -330,84 +471,54 @@ function collectMetaDescriptionCandidates(html: string, meta: any): MetaCandidat
     found.push({ source, value: cleaned });
   };
 
-  // Firecrawl-provided structured metadata first (most trustworthy)
   push("metadata.description", meta?.description);
   push("metadata.ogDescription", meta?.ogDescription || meta?.["og:description"]);
   push("metadata.twitterDescription", meta?.twitterDescription || meta?.["twitter:description"]);
 
-  // Now scan ALL <meta name="description"> occurrences (not just the first)
   const descRe = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/gi;
   let m: RegExpExecArray | null;
   let i = 0;
-  while ((m = descRe.exec(html)) !== null && i < 10) {
-    push(`html.meta.description[${i}]`, m[1]);
-    i++;
-  }
+  while ((m = descRe.exec(html)) !== null && i < 10) { push(`html.meta.description[${i}]`, m[1]); i++; }
 
-  // og:description
   const ogRe = /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/gi;
   i = 0;
-  while ((m = ogRe.exec(html)) !== null && i < 5) {
-    push(`html.og:description[${i}]`, m[1]);
-    i++;
-  }
+  while ((m = ogRe.exec(html)) !== null && i < 5) { push(`html.og:description[${i}]`, m[1]); i++; }
 
-  // twitter:description
   const twRe = /<meta[^>]+name=["']twitter:description["'][^>]+content=["']([^"']+)["']/gi;
   i = 0;
-  while ((m = twRe.exec(html)) !== null && i < 5) {
-    push(`html.twitter:description[${i}]`, m[1]);
-    i++;
-  }
+  while ((m = twRe.exec(html)) !== null && i < 5) { push(`html.twitter:description[${i}]`, m[1]); i++; }
 
   return found;
 }
 
-/**
- * Pick the best (most complete, most informative) meta description from
- * multiple candidates. Avoids the previous buggy behavior of splitting on
- * commas and returning a truncated fragment like "Aeroport. Calculează ROI gratuit!".
- */
 function pickBestMetaDescription(candidates: MetaCandidate[], pageTitle = ""): string {
   if (!candidates.length) return "";
   const titleTokens = meaningfulTokens(pageTitle);
   const score = (value: string) => {
     let s = 0;
-    // Strongly prefer descriptions in the SEO sweet spot (130–160 chars)
     if (value.length >= 120 && value.length <= 165) s += 10;
     else if (value.length >= 80 && value.length < 120) s += 6;
     else if (value.length > 165 && value.length <= 200) s += 4;
     else if (value.length < 60) s -= 5;
-    // Prefer descriptions with a CTA verb
     if (/(calculeaz|contacteaz|descoper|solicit|vezi|invest|află|afla|obține|obtine|cere|programeaz)/i.test(value)) s += 3;
-    // Prefer descriptions mentioning Timișoara (canonical brand keyword)
     if (/timi[șs]oara/i.test(value)) s += 2;
     const valueTokens = meaningfulTokens(value);
     const titleOverlap = titleTokens.filter((token) => valueTokens.includes(token)).length;
     s += Math.min(titleOverlap * 3, 15);
-    // Penalize meta values that look like multiple descriptions concatenated by tooling.
     if (value.length > 200) s -= 12;
     if (/[.!?],\s+[A-ZĂÂÎȘȚ]/.test(value)) s -= 8;
     if ((value.match(/\b(calcul|obțin|obtine|contact|solicit|cere|invest)/gi) || []).length > 3) s -= 4;
-    // Penalize descriptions that look like a fragment (start lowercase or with a fragment marker)
     if (/^[a-zăâîșț]/.test(value)) s -= 4;
-    // Penalize obvious concatenations (multiple sentences with dot-space-Capital + comma joins)
     const sentenceCount = (value.match(/[.!?]\s+[A-ZĂÂÎȘȚ]/g) || []).length;
     if (sentenceCount > 3) s -= 3;
-    // Prefer html.meta.description over og/twitter when scores are tied
     return s;
   };
-  const sorted = [...candidates].sort((a, b) => score(b.value) - score(a.value));
-  return sorted[0].value;
+  return [...candidates].sort((a, b) => score(b.value) - score(a.value))[0].value;
 }
 
 function meaningfulTokens(value: string): string[] {
   const stop = new Set(["realtrust", "apart", "hotel", "pentru", "prin", "din", "langa", "lângă", "sau", "care", "este", "sunt", "gratuit", "gratuita", "gratuită"]);
-  const normalized = value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s]/g, " ");
+  const normalized = value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, " ");
   return Array.from(new Set(normalized.split(/\s+/).filter((token) => token.length >= 4 && !stop.has(token))));
 }
 
@@ -428,18 +539,11 @@ function extractMetaFromHtml(html: string) {
   };
 }
 
-/**
- * Deterministic SEO score (0-100) calculated from MEASURABLE signals.
- * The AI no longer decides the score — it only suggests improvements.
- * This eliminates the "92 → 95 → 92" flip-flop pattern caused by AI variance.
- */
 function calculateDeterministicScore(scraped: any, localGeo: any, duplicates: any[]): {
   score: number;
   breakdown: Record<string, { points: number; max: number; reason: string }>;
 } {
   const breakdown: Record<string, { points: number; max: number; reason: string }> = {};
-
-  // 1. Title quality (15 pts)
   const title = scraped.title || "";
   const titleLen = title.length;
   let titlePts = 0;
@@ -449,7 +553,6 @@ function calculateDeterministicScore(scraped: any, localGeo: any, duplicates: an
   else if (titleLen > 0) titlePts = 5;
   breakdown.title = { points: titlePts, max: 15, reason: `${titleLen} chars` };
 
-  // 2. Meta description quality (15 pts)
   const meta = scraped.metaDescription || "";
   const metaLen = meta.length;
   let metaPts = 0;
@@ -460,17 +563,14 @@ function calculateDeterministicScore(scraped: any, localGeo: any, duplicates: an
   else if (metaLen > 0) metaPts = 3;
   breakdown.meta = { points: metaPts, max: 15, reason: `${metaLen} chars` };
 
-  // 3. H1 structure (10 pts) — exactly 1 is ideal
   const h1 = scraped.h1Count || 0;
   const h1Pts = h1 === 1 ? 10 : h1 === 0 ? 0 : h1 === 2 ? 5 : 3;
   breakdown.h1 = { points: h1Pts, max: 10, reason: `${h1} H1 tags` };
 
-  // 4. H2 structure (5 pts)
   const h2 = scraped.h2Count || 0;
   const h2Pts = h2 >= 5 ? 5 : h2 >= 3 ? 4 : h2 >= 1 ? 2 : 0;
   breakdown.h2 = { points: h2Pts, max: 5, reason: `${h2} H2 tags` };
 
-  // 5. Content length (15 pts)
   const wc = scraped.wordCount || 0;
   let wcPts = 0;
   if (wc >= 1500) wcPts = 15;
@@ -479,15 +579,12 @@ function calculateDeterministicScore(scraped: any, localGeo: any, duplicates: an
   else if (wc >= 200) wcPts = 4;
   breakdown.content = { points: wcPts, max: 15, reason: `${wc} words` };
 
-  // 6. Local SEO (25 pts)
   const localPts = Math.round((localGeo.score / 100) * 25);
   breakdown.local_seo = { points: localPts, max: 25, reason: `${localGeo.score}/100 local relevance` };
 
-  // 7. Proximity signals (5 pts)
   const proxPts = localGeo.has_proximity_signals ? 5 : 0;
   breakdown.proximity = { points: proxPts, max: 5, reason: localGeo.has_proximity_signals ? "present" : "missing" };
 
-  // 8. Duplicate content (10 pts)
   const dupPts = duplicates.length === 0 ? 10 : duplicates.length <= 2 ? 5 : 0;
   breakdown.duplicates = { points: dupPts, max: 10, reason: `${duplicates.length} duplicates` };
 
@@ -495,7 +592,9 @@ function calculateDeterministicScore(scraped: any, localGeo: any, duplicates: an
   return { score: Math.min(100, total), breakdown };
 }
 
-async function analyzeWithAI(scraped: any, url: string, lang: string, duplicates: any[], localGeo: any, apiKey: string) {
+async function analyzeWithAI(
+  scraped: any, url: string, lang: string, duplicates: any[], localGeo: any, apiKey: string,
+): Promise<{ analysis: any; attempts: number }> {
   const { score: deterministicScore, breakdown } = calculateDeterministicScore(scraped, localGeo, duplicates);
 
   const dupNote = duplicates.length > 0
@@ -565,34 +664,37 @@ Returnează EXCLUSIV JSON valid (fără markdown):
 
 CRITIC: Verifică keyword_gaps și local_geo_keywords împotriva textului. Dacă apar deja, OMITE-le.`;
 
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-pro",
-      messages: [
-        { role: "system", content: "Ești auditor SEO PREMIUM, senior pe piața imobiliară Timișoara. Răspunzi STABIL, CONSECVENT, NEVARIABIL. NU oscilezi între recomandări contradictorii. Răspuns exclusiv JSON valid, fără markdown code fence. Verifici DUBLU fiecare sugestie împotriva textului real înainte de a o include." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.1,
-      response_format: { type: "json_object" },
-      reasoning: { effort: "medium" },
-    }),
-  });
+  const { res, attempts } = await fetchWithRetry(
+    "https://ai.gateway.lovable.dev/v1/chat/completions",
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: CONFIG.AI_MODEL,
+        messages: [
+          { role: "system", content: "Ești auditor SEO PREMIUM, senior pe piața imobiliară Timișoara. Răspunzi STABIL, CONSECVENT, NEVARIABIL. NU oscilezi între recomandări contradictorii. Răspuns exclusiv JSON valid, fără markdown code fence. Verifici DUBLU fiecare sugestie împotriva textului real înainte de a o include." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.1,
+        response_format: { type: "json_object" },
+        reasoning: { effort: "medium" },
+      }),
+    },
+    { timeoutMs: CONFIG.AI_TIMEOUT_MS, maxRetries: CONFIG.AI_MAX_RETRIES, label: "gemini-seo" },
+  );
 
-  if (!response.ok) {
-    const t = await response.text();
-    throw new Error(`AI gateway ${response.status}: ${t}`);
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    const err: any = new Error(`AI gateway ${res.status}: ${t.slice(0, 300)}`);
+    err.attempts = attempts;
+    throw err;
   }
 
-  const data = await response.json();
+  const data = await res.json();
   const content = data.choices?.[0]?.message?.content || "{}";
   let parsed: any;
   try { parsed = JSON.parse(content); } catch { parsed = { raw: content }; }
 
-  // Penalize deterministic score based on AI-detected qualitative issues.
-  // Prevents "100/100 but still has problems" — a perfect score requires
-  // ZERO critical/warning issues from the AI auditor.
   const issues = Array.isArray(parsed.issues) ? parsed.issues : [];
   const criticalCount = issues.filter((i: any) => i?.severity === "critical").length;
   const warningCount = issues.filter((i: any) => i?.severity === "warning").length;
@@ -610,5 +712,5 @@ CRITIC: Verifică keyword_gaps și local_geo_keywords împotriva textului. Dacă
       reason: `${criticalCount} critical(-${criticalCount * 8}) + ${warningCount} warning(-${warningCount * 4}) + ${infoCount} info(-${infoCount})`,
     },
   };
-  return parsed;
+  return { analysis: parsed, attempts };
 }

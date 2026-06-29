@@ -5366,6 +5366,27 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_audit_inflight: {
+        Row: {
+          language: string
+          started_at: string
+          triggered_by: string | null
+          url: string
+        }
+        Insert: {
+          language?: string
+          started_at?: string
+          triggered_by?: string | null
+          url: string
+        }
+        Update: {
+          language?: string
+          started_at?: string
+          triggered_by?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       seo_audit_log: {
         Row: {
           action: string
@@ -8934,6 +8955,19 @@ export type Database = {
       reset_prospect_invalid_status: {
         Args: { p_prospect_id: string }
         Returns: Json
+      }
+      seo_acquire_audit_lock: {
+        Args: {
+          p_language?: string
+          p_triggered_by?: string
+          p_ttl_seconds?: number
+          p_url: string
+        }
+        Returns: boolean
+      }
+      seo_release_audit_lock: {
+        Args: { p_language?: string; p_url: string }
+        Returns: undefined
       }
       validate_chat_session: {
         Args: { p_session_id: string }
