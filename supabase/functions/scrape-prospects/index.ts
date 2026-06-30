@@ -1710,12 +1710,8 @@ Deno.serve(async (req) => {
                 skipBlacklist = true;
                 blacklistReason = 'agency_blocklist_phone';
               }
-              const { data: phoneData } = await supabase
-                .from('phone_intelligence')
-                .select('is_blacklisted')
-                .eq('phone_number', extracted.contactPhone)
-                .maybeSingle();
-              if (phoneData?.is_blacklisted) {
+              // Use preloaded set — eliminates per-result DB roundtrip (was N+1).
+              if (phoneIntelBlacklist.has(extracted.contactPhone) || (normalizedPhone && phoneIntelBlacklist.has(normalizedPhone))) {
                 skipBlacklist = true;
                 blacklistReason = blacklistReason || 'phone_intelligence_blacklist';
               }
