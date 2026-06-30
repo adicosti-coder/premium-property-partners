@@ -1490,6 +1490,8 @@ Deno.serve(async (req) => {
 
         console.log(`Searching ${platform}: ${query}`);
         try {
+          const bingHitsBefore = engineStats.bing.hits;
+          const bingUrlsBefore = engineStats.bing.urls;
           let outcome = scanMode === 'firecrawl'
             ? await (async () => {
                 const t0 = Date.now();
@@ -1509,6 +1511,20 @@ Deno.serve(async (req) => {
                 blockedAlerts,
                 skipBing: bingConsecutiveEmpty >= BING_CIRCUIT_LIMIT,
               });
+
+          // Bing circuit-breaker bookkeeping (track per-query delta).
+          if (scanMode !== 'firecrawl') {
+            const bingCalled = engineStats.bing.hits > bingHitsBefore;
+            const bingProduced = engineStats.bing.urls > bingUrlsBefore;
+            if (bingCalled) {
+              if (bingProduced) bingConsecutiveEmpty = 0;
+              else bingConsecutiveEmpty++;
+              if (bingConsecutiveEmpty === BING_CIRCUIT_LIMIT) {
+                console.warn(`🔌 Bing circuit-breaker OPEN after ${BING_CIRCUIT_LIMIT} empty hits — skipping for rest of scan.`);
+              }
+            }
+          }
+
 
           // ── Auto-fallback: if FREE mode returned fewer than `autoFallbackThreshold`
           //    URLs (or failed) and Firecrawl is available + enabled, retry this
