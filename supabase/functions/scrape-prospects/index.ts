@@ -650,6 +650,7 @@ async function freeSearchWithRetry(
     logger?: (ev: Record<string, unknown>) => void;
     stats?: EngineStats;
     blockedAlerts?: BlockedAlert[];
+    skipBing?: boolean;  // circuit-breaker: caller disables Bing after N consecutive empties
   } = {},
 ): Promise<FcSearchOutcome> {
   const domain = platformToDomain(platform, query);
