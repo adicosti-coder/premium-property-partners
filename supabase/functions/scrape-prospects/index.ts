@@ -712,7 +712,7 @@ async function freeSearchWithRetry(
     }
   }
 
-  if (aggregated.length < Math.min(3, maxResults)) {
+  if (!opts.skipBing && aggregated.length < Math.min(3, maxResults)) {
     attempts++;
     const t0 = Date.now();
     try {
