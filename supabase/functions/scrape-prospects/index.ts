@@ -1589,6 +1589,7 @@ Deno.serve(async (req) => {
 
             const markdown = result.markdown || result.description || '';
             if (isGenericSearchPage(url, result.title || '')) {
+              genericPageSkipped++;
               archivedSkipped++;
               continue;
             }
@@ -1596,11 +1597,13 @@ Deno.serve(async (req) => {
             const explicitOwnerSignal = hasExplicitOwnerSignal(result.title || '', url, markdown);
             const ownerFilterIntent = hasOwnerFilterIntent(query, url);
             if (!explicitOwnerSignal && !ownerFilterIntent && !discoveryMode) {
+              noOwnerSignalSkipped++;
               archivedSkipped++;
               continue;
             }
 
             if (hasAgencySignal(result.title || '', url, markdown)) {
+              agencySignalSkipped++;
               blacklistedSkipped++;
               continue;
             }
@@ -1638,38 +1641,35 @@ Deno.serve(async (req) => {
             const features = extracted.features;
 
             // ───── HARD GEO FILTER (Timișoara only) ─────
-            // Reject any listing whose URL/title/markdown does NOT mention
-            // Timișoara/Timiș or a known Timișoara zone. Prevents București,
-            // Cluj, Făgăraș and PDF-junk leaks reaching the dialer queue.
-            const geoBlob = (
-              (url || '') + ' ' +
+            // URL-first check (path tokens carry the city deterministically),
+            // then text body with strict word boundaries on city names so
+            // "Calea Aradului" (Timișoara street) doesn't get blocked by "arad".
+            const urlPath = (url || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const textBlob = (
               (result.title || '') + ' ' +
               (markdown || '').substring(0, 2000) + ' ' +
               (locationText || '')
             ).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const fullBlob = urlPath + ' ' + textBlob;
 
-            const TIMISOARA_TOKENS = [
-              'timisoara', 'timis', 'timi\u0219', 'timi\u0219oara',
-              'jud-timis', 'jud. timis', 'judetul timis', 'judetul-timis',
-              '300', // postal codes start with 30x for Timișoara
-            ];
-            const FORBIDDEN_GEO_TOKENS = [
-              'bucuresti', 'sector-1', 'sector-2', 'sector-3', 'sector-4',
-              'sector-5', 'sector-6', 'sector 1', 'sector 2', 'sector 3',
-              'sector 4', 'sector 5', 'sector 6', 'pipera', 'cluj-napoca',
-              'fagaras', 'sibiu', 'oradea', 'brasov', 'iasi', 'constanta',
-              'gura vaii', 'ploiesti', 'arad ', 'cluj24',
-            ];
+            // Timișoara positive signals (URL token, text token, postal code, or known zone)
+            const hasTimisoaraToken =
+              /\btimi(s|soara|s-|soara-)/i.test(fullBlob) ||
+              /\bjud(\.|etul)?[-\s]?timis\b/i.test(fullBlob) ||
+              /\b30\d{4}\b/.test(fullBlob) ||  // strict TM zip (5 digits after "30")
+              zone !== null;
 
-            const hasTimisoaraToken = TIMISOARA_TOKENS.some((t) => geoBlob.includes(t))
-              || zone !== null; // detectZone() only matches Timișoara zones
-            const hasForbiddenGeo = FORBIDDEN_GEO_TOKENS.some((t) => geoBlob.includes(t));
+            // Forbidden cities — strict word boundaries; "aradului" is OK (TM street).
+            const FORBIDDEN_CITY_RE = /\b(bucuresti|sector\s*-?[1-6]|pipera|cluj-?napoca|cluj24|fagaras|sibiu|oradea|brasov|iasi|constanta|ploiesti|gura\s*vaii|arad(?!ului))\b/i;
+            const hasForbiddenGeo = FORBIDDEN_CITY_RE.test(fullBlob);
 
             if (!hasTimisoaraToken || hasForbiddenGeo) {
+              geoFilterSkipped++;
               archivedSkipped++;
               console.log(`Geo-filter rejected ${url} (timisoara=${hasTimisoaraToken}, forbidden=${hasForbiddenGeo})`);
               continue;
             }
+
 
             const { score, breakdown } = scoreListing({
               zone, size, rooms: extracted.rooms, price, pricePerSqm,
