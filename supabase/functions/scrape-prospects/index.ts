@@ -1851,6 +1851,18 @@ Deno.serve(async (req) => {
       discovery_mode: discoveryMode,
       archived_skipped: archivedSkipped,
       duplicate_skipped: duplicateSkipped,
+      // ── Granular funnel diagnostics (where leads die) ─────
+      funnel_breakdown: {
+        generic_page: genericPageSkipped,
+        no_owner_signal: noOwnerSignalSkipped,
+        agency_signal: agencySignalSkipped,
+        geo_filter: geoFilterSkipped,
+        duplicate: duplicateSkipped,
+        blacklisted: blacklistedSkipped,
+        session_deduped: sessionDedupedSkipped,
+        accepted: results.length,
+      },
+      bing_circuit_open: bingConsecutiveEmpty >= BING_CIRCUIT_LIMIT,
       existing_sources_checked: existingUrls.size,
       session_deduped_skipped: sessionDedupedSkipped,
       engine_stats: engineStats,
