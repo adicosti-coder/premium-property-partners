@@ -1276,8 +1276,16 @@ Deno.serve(async (req) => {
     let blacklistedSkipped = 0;
     let blacklistedReviewed = 0;
     let archivedSkipped = 0;
+    // ── Split diagnostics: where exactly leads die (so admin sees the real funnel)
+    let genericPageSkipped = 0;
+    let noOwnerSignalSkipped = 0;
+    let geoFilterSkipped = 0;
+    let agencySignalSkipped = 0;
     let duplicateSkipped = 0;
     let timedOut = false;
+    // ── Bing circuit-breaker (in-session): kills the engine after N consecutive 0-result hits
+    let bingConsecutiveEmpty = 0;
+    const BING_CIRCUIT_LIMIT = 3;
     const scanStartedAt = Date.now();
     const MAX_BACKGROUND_RUNTIME_MS = 50_000;
     const markTimedOut = async (processed: number, total: number) => {
