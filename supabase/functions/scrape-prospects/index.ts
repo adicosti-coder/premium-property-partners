@@ -1817,10 +1817,7 @@ Deno.serve(async (req) => {
 
       await Promise.all(batchPromises);
       if (timedOut) break;
-      // Brief pause between batches
-      if (i + BATCH_SIZE < queries.length) {
-        await new Promise(r => setTimeout(r, 300));
-      }
+      // No inter-batch sleep: free engines hit different hosts, no shared quota.
     }
 
     const payload = {
