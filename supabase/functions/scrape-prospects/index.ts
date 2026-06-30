@@ -1517,7 +1517,7 @@ Deno.serve(async (req) => {
             const t0 = Date.now();
             engineStats.firecrawl.hits++;
             const fc = await firecrawlSearchWithRetry(query, firecrawlKey, maxResults, {
-              maxAttempts: 1, timeoutMs: 9_000,
+              maxAttempts: 2, timeoutMs: 11_000,
               logger: (ev) => console.warn(JSON.stringify({ ...ev, platform, auto_fallback: true, threshold: autoFallbackThreshold, free_urls: freeUrlCount })),
             });
             engineStats.firecrawl.ms += Date.now() - t0;
