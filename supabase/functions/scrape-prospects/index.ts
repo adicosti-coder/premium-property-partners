@@ -1507,6 +1507,7 @@ Deno.serve(async (req) => {
                 logger: (ev) => console.warn(JSON.stringify({ ...ev, platform })),
                 stats: engineStats,
                 blockedAlerts,
+                skipBing: bingConsecutiveEmpty >= BING_CIRCUIT_LIMIT,
               });
 
           // ── Auto-fallback: if FREE mode returned fewer than `autoFallbackThreshold`
