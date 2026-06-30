@@ -1430,9 +1430,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Keep Firecrawl calls deliberately paced. Parallel batches of 5 were
-    // exhausting the search quota and returning successful cron runs with 0 real imports.
-    const BATCH_SIZE = customQuery ? 1 : 2;
+    // ── Preload phone_intelligence blacklist once (kills N+1 in inner loop) ─
+    const phoneIntelBlacklist = new Set<string>();
+    try {
+      const { data: blRows } = await supabase
+        .from('phone_intelligence')
+        .select('phone_number')
+        .eq('is_blacklisted', true);
+      for (const r of blRows || []) {
+        if (r.phone_number) phoneIntelBlacklist.add(String(r.phone_number));
+      }
+      console.log(`📞 Preloaded ${phoneIntelBlacklist.size} blacklisted phones`);
+    } catch (e) {
+      console.warn('phone_intelligence preload failed', (e as Error).message);
+    }
+
+    // Parallelize free-engine batches (separate hosts → no shared quota).
+    // Manual single-query stays at 1; cron sweeps run 4-wide.
+    const BATCH_SIZE = customQuery ? 1 : 4;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
       if (Date.now() - scanStartedAt > MAX_BACKGROUND_RUNTIME_MS) {
         await markTimedOut(i, queries.length);
