@@ -6236,6 +6236,63 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_premium_plus_runs: {
+        Row: {
+          config: Json
+          created_at: string
+          error_count: number
+          error_summary: string | null
+          finished_at: string | null
+          id: string
+          mode: string
+          processed_count: number
+          results: Json
+          skipped_count: number
+          started_at: string
+          started_by: string | null
+          status: string
+          success_count: number
+          total_count: number
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          error_count?: number
+          error_summary?: string | null
+          finished_at?: string | null
+          id?: string
+          mode: string
+          processed_count?: number
+          results?: Json
+          skipped_count?: number
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          success_count?: number
+          total_count?: number
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          error_count?: number
+          error_summary?: string | null
+          finished_at?: string | null
+          id?: string
+          mode?: string
+          processed_count?: number
+          results?: Json
+          skipped_count?: number
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          success_count?: number
+          total_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seo_robots_cache: {
         Row: {
           content_hash: string | null
@@ -8964,6 +9021,20 @@ export type Database = {
           p_url: string
         }
         Returns: boolean
+      }
+      seo_normalize_url_path: { Args: { _url: string }; Returns: string }
+      seo_premium_plus_apply_override: {
+        Args: {
+          _applied_by?: string
+          _change_type?: string
+          _extra_keywords?: Json
+          _meta_description: string
+          _notes?: string
+          _source_audit_id?: string
+          _title: string
+          _url: string
+        }
+        Returns: Json
       }
       seo_release_audit_lock: {
         Args: { p_language?: string; p_url: string }

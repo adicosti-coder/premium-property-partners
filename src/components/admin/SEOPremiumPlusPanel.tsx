@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,8 +47,89 @@ const urlToPath = (full: string) => {
 
 type ScoreDelta = { before: number | null; after: number | null; status: "pending" | "running" | "done" | "error" };
 
+const PREMIUM_PLUS_CONCURRENCY = 3;
+const APPLY_RETRIES = 3;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const friendlyError = (e: any, fallback = "Operațiunea nu a putut fi finalizată.") => {
+  const status = e?.context?.status ?? e?.status;
+  const raw = (e?.message || e?.error_description || "").toString();
+  if (status === 409) return "Audit deja în rulare pentru acest URL.";
+  if (status === 429) return "Limită temporară atinsă — reîncerc automat.";
+  if (status >= 500) return "Backend temporar indisponibil.";
+  if (/network|failed to fetch|timeout/i.test(raw)) return "Conexiune instabilă.";
+  return raw || fallback;
+};
+
+const normalizeText = (value: string | null | undefined, max = 165) => {
+  const clean = (value || "")
+    .replace(/\s+/g, " ")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .trim();
+  if (clean.length <= max) return clean || null;
+  const cut = clean.slice(0, max + 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 40 ? clean.slice(0, lastSpace) : clean.slice(0, max)).replace(/[,;:.!?\-–—]+$/, "").trim() || null;
+};
+
+const normalizeKeyword = (value: unknown) => String(value || "")
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .toLowerCase()
+  .replace(/[^a-z0-9\s-]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
+
+const buildExtraKeywords = (a: AuditRow) => {
+  const candidates = [
+    ...(Array.isArray(a.local_geo_keywords) ? a.local_geo_keywords : []),
+    ...(Array.isArray(a.keyword_gaps) ? a.keyword_gaps : []),
+  ];
+  const seen = new Set<string>();
+  return candidates
+    .map((k: any) => ({ keyword: k?.keyword || (typeof k === "string" ? k : ""), reason: k?.reason || null }))
+    .map((k) => ({ ...k, keyword: normalizeText(k.keyword, 70) || "" }))
+    .filter((k) => {
+      const key = normalizeKeyword(k.keyword);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 12);
+};
+
+async function withRetry<T>(fn: () => Promise<T>, attempts = APPLY_RETRIES): Promise<T> {
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e: any) {
+      last = e;
+      const status = e?.context?.status ?? e?.status;
+      const transient = status === 408 || status === 409 || status === 429 || status >= 500 || /network|failed to fetch|timeout/i.test(e?.message || "");
+      if (!transient || i === attempts - 1) break;
+      await sleep(Math.min(2500, 350 * Math.pow(2, i)) + Math.floor(Math.random() * 180));
+    }
+  }
+  throw last;
+}
+
+async function runPool<T>(items: T[], worker: (item: T, index: number) => Promise<void>, concurrency = PREMIUM_PLUS_CONCURRENCY) {
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(concurrency, Math.max(items.length, 1)) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      await worker(items[index], index);
+    }
+  });
+  await Promise.all(workers);
+}
+
 export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const qc = useQueryClient();
+  const cancelRunRef = useRef(false);
 
   /* ============ Score deltas (before/after re-audit) ============ */
   const [scoreDeltas, setScoreDeltas] = useState<Record<string, ScoreDelta>>({});
@@ -90,53 +171,96 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
       .slice(0, 200);
   }, [history]);
 
+  const startPremiumRun = async (mode: string, total: number, config: Record<string, unknown>) => {
+    const { data, error } = await (supabase as any)
+      .from("seo_premium_plus_runs")
+      .insert({ mode, total_count: total, config, status: "running" })
+      .select("id")
+      .maybeSingle();
+    if (error) return null;
+    return data?.id as string | null;
+  };
+
+  const finishPremiumRun = async (
+    id: string | null,
+    status: "completed" | "completed_with_errors" | "cancelled" | "failed",
+    progress: { done: number; ok: number; err: number; skipped?: number },
+    results: unknown[],
+    errorSummary?: string,
+  ) => {
+    if (!id) return;
+    await (supabase as any)
+      .from("seo_premium_plus_runs")
+      .update({
+        status,
+        processed_count: progress.done,
+        success_count: progress.ok,
+        error_count: progress.err,
+        skipped_count: progress.skipped || 0,
+        results: results.slice(-250),
+        error_summary: errorSummary || null,
+        finished_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+  };
+
+  const applyPremiumOverride = async (a: AuditRow, changeType: string) => {
+    const path = urlToPath(a.url);
+    const extra_keywords = buildExtraKeywords(a);
+    const { data, error } = await (supabase as any).rpc("seo_premium_plus_apply_override", {
+      _url: path,
+      _title: normalizeText(a.suggested_title, 70),
+      _meta_description: normalizeText(a.suggested_meta, 165),
+      _extra_keywords: extra_keywords,
+      _source_audit_id: a.id,
+      _applied_by: null,
+      _change_type: changeType,
+      _notes: `SEO Premium Plus ${changeType}`,
+    });
+    if (error) throw error;
+    return data as { ok?: boolean; url_path?: string; action?: string; reason?: string };
+  };
+
   const runMaster = async () => {
+    cancelRunRef.current = false;
     setMasterRunning(true);
     setMasterProgress({ done: 0, total: targetsBelow.length, ok: 0, err: 0 });
     setMasterLog([]);
-    let ok = 0, err = 0;
-    for (let i = 0; i < targetsBelow.length; i++) {
-      const a = targetsBelow[i];
-      const path = urlToPath(a.url);
-      let before = a.overall_score ?? null;
-      let after: number | null = null;
-      try {
-        const extra_keywords = [
-          ...(Array.isArray(a.local_geo_keywords) ? a.local_geo_keywords : []),
-          ...(Array.isArray(a.keyword_gaps) ? a.keyword_gaps : []),
-        ]
-          .map((k: any) => ({ keyword: k.keyword || (typeof k === "string" ? k : ""), reason: k.reason || null }))
-          .filter((k) => k.keyword)
-          .slice(0, 12);
-
-        const { data: userRes } = await supabase.auth.getUser();
-        const { error } = await supabase.from("seo_overrides").upsert({
-          url_path: path,
-          title: a.suggested_title || null,
-          meta_description: (a.suggested_meta || "").slice(0, 160) || null,
-          extra_keywords,
-          source_audit_id: a.id,
-          applied_by: userRes.user?.id || null,
-          applied_at: new Date().toISOString(),
-          is_active: true,
-        }, { onConflict: "url_path" });
-        if (error) throw error;
-        ok++;
-        if (masterReaudit) {
-          after = await reauditAndCapture(path, before, a.language);
+    const runId = await startPremiumRun("master_one_click", targetsBelow.length, { reaudit: masterReaudit, threshold: 80, concurrency: PREMIUM_PLUS_CONCURRENCY });
+    let ok = 0, err = 0, skipped = 0, done = 0;
+    const results: typeof masterLog = [];
+    try {
+      await runPool(targetsBelow, async (a) => {
+        if (cancelRunRef.current) return;
+        const path = urlToPath(a.url);
+        const before = a.overall_score ?? null;
+        let after: number | null = null;
+        try {
+          const res = await withRetry(() => applyPremiumOverride(a, "master_one_click"));
+          if (res.action === "skipped") skipped++;
+          else ok++;
+          if (masterReaudit) after = await reauditAndCapture(path, before, a.language);
+          const row = { url: path, status: res.action === "skipped" ? "skipped" : "ok", reason: res.reason, before, after };
+          results.push(row);
+          setMasterLog((l) => [...l, row]);
+        } catch (e: any) {
+          err++;
+          const row = { url: path, status: "error", reason: friendlyError(e), before, after };
+          results.push(row);
+          setMasterLog((l) => [...l, row]);
+        } finally {
+          done++;
+          setMasterProgress({ done, total: targetsBelow.length, ok, err });
         }
-        setMasterLog((l) => [...l, { url: path, status: "ok", before, after }]);
-      } catch (e: any) {
-        err++;
-        setMasterLog((l) => [...l, { url: path, status: "error", reason: e.message, before, after }]);
-      }
-      setMasterProgress({ done: i + 1, total: targetsBelow.length, ok, err });
-      await new Promise((r) => setTimeout(r, 200));
+      });
+      await finishPremiumRun(runId, cancelRunRef.current ? "cancelled" : err ? "completed_with_errors" : "completed", { done, ok, err, skipped }, results);
+    } catch (e: any) {
+      await finishPremiumRun(runId, "failed", { done, ok, err, skipped }, results, friendlyError(e));
     }
     setMasterRunning(false);
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     qc.invalidateQueries({ queryKey: ["seo-overrides"] });
-    toast.success(`Master One-Click finalizat: ${ok} aplicate, ${err} erori`);
+    toast.success(`Master One-Click finalizat: ${ok} aplicate, ${skipped} neschimbate, ${err} erori`);
   };
 
   /* ============ 2. AI CONTENT REFRESH DETECTOR ============ */
@@ -181,12 +305,19 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     mutationFn: async () => {
       const urls = todayOverrides.map((o) => `https://${CANONICAL_HOST}${o.url_path}`);
       if (urls.length === 0) throw new Error("Niciun override aplicat în ultimele 24h");
-      const { data, error } = await supabase.functions.invoke("indexnow-notify", { body: { urls } });
-      if (error) throw error;
-      try {
-        await fetch(`https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/generate-sitemap?t=${Date.now()}`);
-      } catch {}
-      return { count: urls.length, indexnow: data };
+      const chunks: string[][] = [];
+      for (let i = 0; i < urls.length; i += 1000) chunks.push(urls.slice(i, i + 1000));
+      const results = [];
+      for (const chunk of chunks) {
+        const { data } = await withRetry(async () => {
+          const res = await supabase.functions.invoke("indexnow-notify", { body: { urls: chunk, triggered_by: "seo_premium_plus" } });
+          if (res.error) throw res.error;
+          return res;
+        });
+        results.push(data);
+      }
+      await supabase.functions.invoke("generate-sitemap").catch(() => null);
+      return { count: urls.length, indexnow: results };
     },
     onSuccess: (d) => toast.success(`${d.count} URL-uri trimise la IndexNow + sitemap regenerat`),
     onError: (e: any) => toast.error(e.message || "Eșec ping"),
@@ -210,25 +341,7 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
     mutationFn: async (a: AuditRow) => {
       const path = urlToPath(a.url);
       const before = a.overall_score ?? null;
-      const extra_keywords = [
-        ...(Array.isArray(a.local_geo_keywords) ? a.local_geo_keywords : []),
-        ...(Array.isArray(a.keyword_gaps) ? a.keyword_gaps : []),
-      ]
-        .map((k: any) => ({ keyword: k.keyword || (typeof k === "string" ? k : ""), reason: k.reason || null }))
-        .filter((k) => k.keyword)
-        .slice(0, 12);
-      const { data: userRes } = await supabase.auth.getUser();
-      const { error } = await supabase.from("seo_overrides").upsert({
-        url_path: path,
-        title: a.suggested_title || null,
-        meta_description: (a.suggested_meta || "").slice(0, 160) || null,
-        extra_keywords,
-        source_audit_id: a.id,
-        applied_by: userRes.user?.id || null,
-        applied_at: new Date().toISOString(),
-        is_active: true,
-      }, { onConflict: "url_path" });
-      if (error) throw error;
+      await withRetry(() => applyPremiumOverride(a, "priority_single"));
       // Re-audit to capture new score
       await reauditAndCapture(path, before, a.language);
       return path;
@@ -247,52 +360,44 @@ export const SEOPremiumPlusPanel = ({ history, overrides }: Props) => {
   const [priorityReaudit, setPriorityReaudit] = useState(true);
 
   const runPrioritySequence = async (items: AuditRow[], label: string) => {
+    cancelRunRef.current = false;
     setPriorityRunning(true);
     setPriorityProgress({ done: 0, total: items.length, ok: 0, err: 0 });
     setFailedTargets([]);
+    const runId = await startPremiumRun(label === "Reluare erori" ? "retry_failed" : "priority_sequence", items.length, { reaudit: priorityReaudit, concurrency: PREMIUM_PLUS_CONCURRENCY });
     const failures: AuditRow[] = [];
-    let ok = 0, err = 0;
-    for (let i = 0; i < items.length; i++) {
-      const a = items[i];
-      const path = urlToPath(a.url);
-      const before = a.overall_score ?? null;
-      try {
-        const extra_keywords = [
-          ...(Array.isArray(a.local_geo_keywords) ? a.local_geo_keywords : []),
-          ...(Array.isArray(a.keyword_gaps) ? a.keyword_gaps : []),
-        ]
-          .map((k: any) => ({ keyword: k.keyword || (typeof k === "string" ? k : ""), reason: k.reason || null }))
-          .filter((k) => k.keyword)
-          .slice(0, 12);
-        const { data: userRes } = await supabase.auth.getUser();
-        const { error } = await supabase.from("seo_overrides").upsert({
-          url_path: path,
-          title: a.suggested_title || null,
-          meta_description: (a.suggested_meta || "").slice(0, 160) || null,
-          extra_keywords,
-          source_audit_id: a.id,
-          applied_by: userRes.user?.id || null,
-          applied_at: new Date().toISOString(),
-          is_active: true,
-        }, { onConflict: "url_path" });
-        if (error) throw error;
-        ok++;
-        if (priorityReaudit) {
-          await reauditAndCapture(path, before, a.language);
+    const results: { url: string; status: string; reason?: string }[] = [];
+    let ok = 0, err = 0, skipped = 0, done = 0;
+    try {
+      await runPool(items, async (a) => {
+        if (cancelRunRef.current) return;
+        const path = urlToPath(a.url);
+        const before = a.overall_score ?? null;
+        try {
+          const res = await withRetry(() => applyPremiumOverride(a, label === "Reluare erori" ? "retry_failed" : "priority_sequence"));
+          if (res.action === "skipped") skipped++;
+          else ok++;
+          if (priorityReaudit) await reauditAndCapture(path, before, a.language);
+          results.push({ url: path, status: res.action || "ok", reason: res.reason });
+        } catch (e: any) {
+          err++;
+          failures.push(a);
+          results.push({ url: path, status: "error", reason: friendlyError(e) });
+        } finally {
+          done++;
+          setPriorityProgress({ done, total: items.length, ok, err });
         }
-      } catch {
-        err++;
-        failures.push(items[i]);
-      }
-      setPriorityProgress({ done: i + 1, total: items.length, ok, err });
-      await new Promise((r) => setTimeout(r, 200));
+      });
+      await finishPremiumRun(runId, cancelRunRef.current ? "cancelled" : err ? "completed_with_errors" : "completed", { done, ok, err, skipped }, results);
+    } catch (e: any) {
+      await finishPremiumRun(runId, "failed", { done, ok, err, skipped }, results, friendlyError(e));
     }
     setFailedTargets(failures);
     setPriorityRunning(false);
     qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     qc.invalidateQueries({ queryKey: ["seo-overrides"] });
     if (err === 0) {
-      toast.success(`${label}: ${ok} aplicate cu succes`);
+      toast.success(`${label}: ${ok} aplicate, ${skipped} neschimbate`);
     } else {
       toast.warning(`${label}: ${ok} aplicate, ${err} erori — folosește „Reluare din erori"`);
     }
