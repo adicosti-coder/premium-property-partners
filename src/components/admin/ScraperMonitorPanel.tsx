@@ -438,6 +438,143 @@ export default function ScraperMonitorPanel() {
         </CardContent>
       </Card>
 
+      {/* Recently found listings */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <ListChecks className="h-4 w-4 text-primary" /> Anunțuri găsite de scraper
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Feed live din <code className="text-[10px]">prospect_listings</code> — ce a intrat în DB prin scanări.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <Tabs value={foundWindow} onValueChange={(v) => setFoundWindow(v as typeof foundWindow)}>
+                <TabsList className="h-9">
+                  <TabsTrigger value="24h">24h</TabsTrigger>
+                  <TabsTrigger value="7d">7 zile</TabsTrigger>
+                  <TabsTrigger value="30d">30 zile</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button variant="outline" size="sm" onClick={() => refetchFound()}>
+                <RotateCcw className={`h-4 w-4 mr-1.5 ${foundLoading ? "animate-spin" : ""}`} /> Refresh
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportFoundListings} disabled={filteredFound.length === 0}>
+                <Download className="h-4 w-4 mr-1.5" /> CSV
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <Stat label={`Total (${foundWindow})`} value={foundTotals?.total ?? 0} icon={ListChecks} />
+            <Stat label="Active" value={foundTotals?.active ?? 0} icon={CheckCircle2} tone="success" />
+            <Stat label="Prioritare (≥70)" value={foundTotals?.priority ?? 0} icon={Trophy} tone="success" />
+            <Stat label="Surse distincte" value={platformBreakdown.length} icon={Building2} />
+          </div>
+
+          {platformBreakdown.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {platformBreakdown.map(([p, n]) => (
+                <Badge key={p} variant="secondary" className="text-xs">
+                  {p} <span className="ml-1 font-mono opacity-70">{n}</span>
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Caută în titlu, zonă, telefon, sursă..."
+              value={foundSearch}
+              onChange={(e) => setFoundSearch(e.target.value)}
+              className="pl-8 h-9"
+            />
+          </div>
+
+          <div className="rounded-lg border border-border/50 max-h-[520px] overflow-auto">
+            {foundLoading ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">Se încarcă…</div>
+            ) : filteredFound.length === 0 ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                Niciun anunț în fereastra selectată.
+                {" "}Verifică cuvintele cheie active și rulează o scanare.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="sticky top-0 bg-card z-10">
+                  <TableRow>
+                    <TableHead className="w-[110px]">Data</TableHead>
+                    <TableHead className="w-[110px]">Sursă</TableHead>
+                    <TableHead>Titlu</TableHead>
+                    <TableHead className="w-[140px]">Zonă</TableHead>
+                    <TableHead className="w-[110px] text-right">Preț</TableHead>
+                    <TableHead className="w-[130px]">Telefon</TableHead>
+                    <TableHead className="w-[70px] text-center">Score</TableHead>
+                    <TableHead className="w-[70px] text-center">Link</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredFound.map((l: any) => (
+                    <TableRow key={l.id} className={!l.is_active ? "opacity-60" : ""}>
+                      <TableCell className="text-xs font-mono text-muted-foreground">
+                        {l.created_at?.slice(0, 16).replace("T", " ")}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        <Badge variant="outline" className="text-[10px]">{l.source_platform || "—"}</Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[360px]">
+                        <div className="font-medium text-sm truncate" title={l.title || ""}>{l.title || "—"}</div>
+                        {(l.rooms || l.size) && (
+                          <div className="text-[11px] text-muted-foreground">
+                            {l.rooms ? `${l.rooms} cam` : ""}{l.rooms && l.size ? " · " : ""}{l.size ? `${l.size} mp` : ""}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {l.zone ? (
+                          <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3 text-muted-foreground" />{l.zone}</span>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-mono">
+                        {l.price ? `${Number(l.price).toLocaleString("ro-RO")} ${l.currency || "€"}` : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {l.contact_phone ? (
+                          <a href={`tel:${l.contact_phone}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                            <Phone className="h-3 w-3" />{l.contact_phone}
+                          </a>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {typeof l.lead_score === "number" ? (
+                          <Badge variant={l.lead_score >= 70 ? "default" : "secondary"} className="font-mono text-[11px]">
+                            {l.lead_score}
+                          </Badge>
+                        ) : <span className="text-xs text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {l.source_url ? (
+                          <a href={l.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex text-primary hover:underline" title="Deschide anunțul">
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        ) : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Afișate {filteredFound.length} din {foundListings.length} încărcate (limită 200). Restul în Pipeline Prospecți.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Filters + table */}
       <Card>
         <CardHeader className="pb-3">
