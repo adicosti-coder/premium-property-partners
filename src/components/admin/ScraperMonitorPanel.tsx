@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   Activity, Download, RotateCcw, Search, TrendingUp, Users, Building2,
   CheckCircle2, XCircle, AlertTriangle, Zap, Pencil, Save, ExternalLink, Trophy,
+  ListChecks, Phone, MapPin,
 } from "lucide-react";
 
 type Keyword = {
