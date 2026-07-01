@@ -147,6 +147,81 @@ export default function ScraperMonitorPanel() {
     refetchInterval: 60_000,
   });
 
+  // Windowed feed of listings the scraper actually inserted.
+  const [foundWindow, setFoundWindow] = useState<"24h" | "7d" | "30d">("7d");
+  const [foundSearch, setFoundSearch] = useState("");
+  const foundSince = useMemo(() => {
+    const now = Date.now();
+    const ms = foundWindow === "24h" ? 86_400_000 : foundWindow === "7d" ? 7 * 86_400_000 : 30 * 86_400_000;
+    return new Date(now - ms).toISOString();
+  }, [foundWindow]);
+
+  const { data: foundListings = [], isLoading: foundLoading, refetch: refetchFound } = useQuery({
+    queryKey: ["scraper-found-listings", foundWindow],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prospect_listings")
+        .select("id, title, source_platform, source_url, zone, price, currency, rooms, size, contact_phone, contact_name, lead_score, is_active, created_at")
+        .gte("created_at", foundSince)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+
+  const { data: foundTotals } = useQuery({
+    queryKey: ["scraper-found-totals", foundWindow],
+    queryFn: async () => {
+      const [{ count: total }, { count: active }, { count: priority }] = await Promise.all([
+        supabase.from("prospect_listings").select("id", { count: "exact", head: true }).gte("created_at", foundSince),
+        supabase.from("prospect_listings").select("id", { count: "exact", head: true }).gte("created_at", foundSince).eq("is_active", true),
+        supabase.from("prospect_listings").select("id", { count: "exact", head: true }).gte("created_at", foundSince).gte("lead_score", 70),
+      ]);
+      return { total: total ?? 0, active: active ?? 0, priority: priority ?? 0 };
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+
+  const filteredFound = useMemo(() => {
+    if (!foundSearch.trim()) return foundListings;
+    const q = foundSearch.toLowerCase();
+    return foundListings.filter((l: any) =>
+      (l.title || "").toLowerCase().includes(q) ||
+      (l.zone || "").toLowerCase().includes(q) ||
+      (l.source_platform || "").toLowerCase().includes(q) ||
+      (l.contact_phone || "").includes(q),
+    );
+  }, [foundListings, foundSearch]);
+
+  const platformBreakdown = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const l of foundListings as any[]) {
+      const p = (l.source_platform || "necunoscut").trim() || "necunoscut";
+      map.set(p, (map.get(p) ?? 0) + 1);
+    }
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [foundListings]);
+
+  const exportFoundListings = () => {
+    const header = ["created_at", "source_platform", "title", "zone", "rooms", "size", "price", "currency", "lead_score", "contact_name", "contact_phone", "is_active", "source_url"];
+    const rows: (string | number | null)[][] = [header];
+    filteredFound.forEach((l: any) => {
+      rows.push([
+        l.created_at, l.source_platform ?? "", l.title ?? "", l.zone ?? "",
+        l.rooms ?? "", l.size ?? "", l.price ?? "", l.currency ?? "",
+        l.lead_score ?? "", l.contact_name ?? "", l.contact_phone ?? "",
+        l.is_active ? "activ" : "arhivat", l.source_url ?? "",
+      ]);
+    });
+    downloadCSV(`scraper-found-${foundWindow}-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    toast({ title: "Export CSV", description: `${filteredFound.length} anunțuri descărcate.` });
+  };
+
+
   const filtered = useMemo(() => {
     let rows = keywords.filter((k) => {
       if (statusFilter === "active" && !k.is_active) return false;
