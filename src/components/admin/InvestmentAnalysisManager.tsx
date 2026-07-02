@@ -703,7 +703,7 @@ export default function InvestmentAnalysisManager() {
           ) : history.length === 0 ? (
             <EmptyState
               title="Nicio analiză salvată încă"
-              description="Completează formularul de mai sus și apasă „Generează Analiză" pentru a crea primul raport."
+              description='Completează formularul de mai sus și apasă „Generează Analiză" pentru a crea primul raport.'
             />
           ) : visibleHistory.length === 0 ? (
             <EmptyState
