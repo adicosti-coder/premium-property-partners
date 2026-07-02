@@ -1208,7 +1208,10 @@ Deno.serve(async (req) => {
       preserveAgencyFilter = body?.preserve_agency_filter !== false;
       discoveryMode = body?.discovery_mode === true;
       if (typeof body?.query_limit === 'number') {
-        queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 100);
+        // Keep one Edge run short enough to complete reliably. Larger manual
+        // batches were being closed by the UI while still burning time on
+        // duplicate URLs; repeated runs/resume cover the rest of the queue.
+        queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 35);
       }
       if (typeof body?.job_id === 'string' && body.job_id.length > 0) jobId = body.job_id;
       if (body?.async_mode === true) asyncMode = true;
@@ -1362,10 +1365,20 @@ Deno.serve(async (req) => {
         console.log(`⏸️ Auto-parked ${toAutoPark.length} dead keywords (12+ consecutive zeros)`);
       }
       const usable = (dbKeywords || []).filter((k: any) => (k.consecutive_zero ?? 0) < 8);
-      // Sort: proven winners first (highest success), so a truncated run still yields.
+      // Sort: proven winners first, but rotate away from keywords that already
+      // produced URLs in the last few hours. Otherwise every manual rerun hits
+      // the same Storia/OLX URLs and returns 0 *new* listings.
       usable.sort((a: any, b: any) => {
-        const sa = (a.success_count ?? 0) - (a.consecutive_zero ?? 0);
-        const sb = (b.success_count ?? 0) - (b.consecutive_zero ?? 0);
+        const scoreKeyword = (k: any) => {
+          const success = k.success_count ?? 0;
+          const zeros = k.consecutive_zero ?? 0;
+          const last = k.last_success_at ? new Date(k.last_success_at).getTime() : 0;
+          const hoursSinceSuccess = last ? (Date.now() - last) / 3_600_000 : 999;
+          const recentPenalty = hoursSinceSuccess < 8 ? 20 : hoursSinceSuccess < 24 ? 8 : 0;
+          return success - zeros - recentPenalty;
+        };
+        const sa = scoreKeyword(a);
+        const sb = scoreKeyword(b);
         return sb - sa;
       });
       queries = (usable.length > 0)
@@ -1631,6 +1644,15 @@ Deno.serve(async (req) => {
             const url = result.url;
             if (!url) continue;
 
+            // New-yield mode: skip already-known source URLs before any costly
+            // filters/phone hydration. The previous flow spent most of the 50s
+            // budget re-processing duplicate marketplace cards, so jobs ended
+            // with 0 new listings even when fresh keywords were still queued.
+            if (existingUrls.has(url)) {
+              duplicateSkipped++;
+              continue;
+            }
+
             const markdown = result.markdown || result.description || '';
             if (isGenericSearchPage(url, result.title || '')) {
               genericPageSkipped++;
@@ -1653,10 +1675,6 @@ Deno.serve(async (req) => {
             }
 
             const resultDomain = extractUrlDomain(url);
-            if (onlyNewSources && existingUrls.has(url)) {
-              duplicateSkipped++;
-              continue;
-            }
             if (preserveAgencyFilter && resultDomain && blockedDomains.has(resultDomain) && !whitelistedDomains.has(resultDomain)) {
               blacklistedSkipped++;
               continue;
