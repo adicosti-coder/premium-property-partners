@@ -256,6 +256,16 @@ export default function InvestmentAnalysisManager() {
     return filtered;
   }, [history, search, sortMode]);
 
+  // Reset to page 1 whenever filter/sort/history size changes
+  useEffect(() => { setPage(1); }, [search, sortMode, history.length]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleHistory.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = visibleHistory.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
