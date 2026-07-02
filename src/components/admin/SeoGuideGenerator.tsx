@@ -15,10 +15,10 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2, StopCircle, Copy, Download, Sparkles, FileText,
-  Save, History, Trash2, RefreshCcw, Globe,
+  Save, History, Trash2, RefreshCcw, Globe, Wand2, Pencil, Eye, GitBranch,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useAiEngine } from "@/hooks/useAiEngine";
+import { useAiEngine, callAiEngine } from "@/hooks/useAiEngine";
 import { TIMISOARA_LOCAL_ENTITIES } from "@/lib/timisoaraGeo";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
@@ -78,7 +78,7 @@ Reguli SEO:
 - Paragrafe scurte (max 3-4 rânduri). Bullet lists unde e natural.
 - Ton: profesionist, informativ, orientat pe date.`;
 
-const TARGET_WORDS = 900; // aproximare pentru progress bar
+const TARGET_WORDS = 900;
 
 interface EntityOption { name: string; category: string; }
 
@@ -95,6 +95,14 @@ interface SavedGuide {
   markdown: string;
   word_count: number;
   created_at: string;
+  parent_id: string | null;
+  version: number;
+}
+
+interface GuideGroup {
+  rootId: string;
+  latest: SavedGuide;
+  versions: SavedGuide[]; // sorted desc by version
 }
 
 // ---------- Helpers pentru parsare Markdown -> meta SEO ----------
@@ -115,13 +123,31 @@ function extractTitle(md: string): string {
 }
 
 function extractMetaDescription(md: string): string {
-  // Match `> **Meta descriere:** ...`
   const m = md.match(/>\s*\*\*Meta descriere:\*\*\s*(.+?)(?:\n\n|\n>|$)/is);
   if (m) return m[1].replace(/\n>?\s*/g, " ").trim();
-  // Fallback: primul paragraf după H1
   const afterH1 = md.split(/^#\s+.+$/m)[1] || "";
   const firstPara = afterH1.split(/\n\s*\n/).map(s => s.trim()).find(Boolean) || "";
   return firstPara.replace(/[#*_>`]/g, "").slice(0, 160);
+}
+
+/** Replace or insert H1 and meta descriere block in existing Markdown. */
+function replaceTitleAndMeta(md: string, newTitle: string, newMeta: string): string {
+  let out = md;
+  // Replace H1
+  if (/^\s*#\s+.+$/m.test(out)) {
+    out = out.replace(/^\s*#\s+.+$/m, `# ${newTitle}`);
+  } else {
+    out = `# ${newTitle}\n\n${out}`;
+  }
+  // Replace meta descriere block
+  const metaBlock = `> **Meta descriere:** ${newMeta}`;
+  if (/>\s*\*\*Meta descriere:\*\*[\s\S]+?(?:\n\n|\n(?!>)|$)/i.test(out)) {
+    out = out.replace(/>\s*\*\*Meta descriere:\*\*[\s\S]+?(?=\n\n|\n(?!>)|$)/i, metaBlock);
+  } else {
+    // Insert right after H1
+    out = out.replace(/^(#\s+.+)$/m, `$1\n\n${metaBlock}`);
+  }
+  return out;
 }
 
 // ---------- Google Snippet Preview ----------
@@ -159,38 +185,70 @@ export default function SeoGuideGenerator() {
   const [poiInput, setPoiInput] = useState<string>("");
   const [primaryKeyword, setPrimaryKeyword] = useState<string>("");
 
+  // Editable content — the single source of truth once anything is generated/loaded.
+  const [editedMarkdown, setEditedMarkdown] = useState<string>("");
+  const [editMode, setEditMode] = useState<"edit" | "preview">("edit");
+
+  // Versionare: dacă am încărcat un ghid din istoric, ținem rădăcina și versiunea curentă
+  const [loadedRootId, setLoadedRootId] = useState<string | null>(null);
+  const [loadedVersion, setLoadedVersion] = useState<number | null>(null);
+
   const [history, setHistory] = useState<SavedGuide[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [lastSavedId, setLastSavedId] = useState<string | null>(null);
+  const [regenMetaLoading, setRegenMetaLoading] = useState(false);
 
-  const rendered = data?.text || streamingText;
   const isBusy = loading || streaming;
+
+  // Sync streaming text into the editable textarea while generating.
+  useEffect(() => {
+    if (streaming && streamingText) setEditedMarkdown(streamingText);
+  }, [streaming, streamingText]);
+  useEffect(() => {
+    if (data?.text) setEditedMarkdown(data.text);
+  }, [data]);
 
   const pois = useMemo(
     () => poiInput.split(/[,\n]/).map(s => s.trim()).filter(Boolean),
     [poiInput],
   );
 
-  const wordCount = useMemo(() => countWords(rendered), [rendered]);
+  const wordCount = useMemo(() => countWords(editedMarkdown), [editedMarkdown]);
   const progressPct = Math.min(100, Math.round((wordCount / TARGET_WORDS) * 100));
 
-  const parsedTitle = useMemo(() => extractTitle(rendered), [rendered]);
-  const parsedMeta = useMemo(() => extractMetaDescription(rendered), [rendered]);
+  const parsedTitle = useMemo(() => extractTitle(editedMarkdown), [editedMarkdown]);
+  const parsedMeta = useMemo(() => extractMetaDescription(editedMarkdown), [editedMarkdown]);
   const previewUrl = useMemo(() => {
     const base = "https://realtrust.ro/ghid/";
     const slug = slugify(parsedTitle || selected || "ghid-timisoara");
     return `${base}${slug || "ghid-timisoara"}`;
   }, [parsedTitle, selected]);
 
-  // ---------- History ----------
+  // ---------- History (grupat pe rădăcină + versiuni) ----------
+  const grouped: GuideGroup[] = useMemo(() => {
+    const map = new Map<string, SavedGuide[]>();
+    for (const g of history) {
+      const root = g.parent_id ?? g.id;
+      const arr = map.get(root) ?? [];
+      arr.push(g);
+      map.set(root, arr);
+    }
+    const groups: GuideGroup[] = [];
+    for (const [rootId, arr] of map.entries()) {
+      arr.sort((a, b) => b.version - a.version);
+      groups.push({ rootId, latest: arr[0], versions: arr });
+    }
+    groups.sort((a, b) => new Date(b.latest.created_at).getTime() - new Date(a.latest.created_at).getTime());
+    return groups;
+  }, [history]);
+
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
     const { data: rows, error: err } = await supabase
       .from("seo_guides")
-      .select("id,title,neighborhood,primary_keyword,meta_description,markdown,word_count,created_at")
+      .select("id,title,neighborhood,primary_keyword,meta_description,markdown,word_count,created_at,parent_id,version")
       .order("created_at", { ascending: false })
-      .limit(25);
+      .limit(100);
     if (err) {
       toast.error("Nu am putut încărca istoricul ghidurilor.");
     } else {
@@ -207,7 +265,9 @@ export default function SeoGuideGenerator() {
       return;
     }
     reset();
-    setLastSavedId(null);
+    setEditedMarkdown("");
+    setLoadedRootId(null);
+    setLoadedVersion(null);
 
     const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
     const prompt = `
@@ -230,14 +290,47 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
         temperature: 0.5,
         max_tokens: 4000,
       });
-      toast.success("Ghid SEO generat cu succes.");
+      toast.success("Ghid SEO generat. Poți edita textul înainte de salvare.");
     } catch (e) {
       console.error("[SeoGuideGenerator] generate error", e);
     }
   };
 
+  const handleRegenerateMeta = async () => {
+    if (!editedMarkdown) return;
+    setRegenMetaLoading(true);
+    try {
+      const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
+      const res = await callAiEngine<{ title: string; meta: string }>({
+        model: "z-ai/glm-5.2",
+        jsonMode: true,
+        temperature: 0.6,
+        max_tokens: 400,
+        systemPrompt:
+          "Ești un expert SEO. Răspunzi STRICT cu JSON valid: {\"title\": string, \"meta\": string}. " +
+          "Title <= 60 caractere, include cuvântul cheie și 'Timișoara'. " +
+          "Meta între 140 și 160 caractere, atractivă, cu keyword-ul principal și un beneficiu clar. Limba română.",
+        prompt: `Cuvânt cheie principal: "${keyword}"\nZonă/Complex: "${selected || "Timișoara"}"\n\nGenerează un NOU titlu SEO și o NOUĂ meta descriere pentru articolul de mai jos. Nu repeta varianta actuală.\n\n--- ARTICOL ACTUAL (extras) ---\n${editedMarkdown.slice(0, 1500)}\n--- SFÂRȘIT ---`,
+      });
+      const parsed = res.json as { title?: string; meta?: string } | null;
+      const newTitle = (parsed?.title || "").trim();
+      const newMeta = (parsed?.meta || "").trim();
+      if (!newTitle || !newMeta) {
+        toast.error("AI-ul nu a returnat un titlu / meta valid. Reîncearcă.");
+        return;
+      }
+      setEditedMarkdown(md => replaceTitleAndMeta(md, newTitle, newMeta));
+      toast.success("Titlu și meta descriere regenerate.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Nu am putut regenera meta SEO.");
+    } finally {
+      setRegenMetaLoading(false);
+    }
+  };
+
   const handleSave = async () => {
-    if (!rendered || isBusy) return;
+    if (!editedMarkdown || isBusy) return;
     setSaving(true);
     try {
       const { data: userRes } = await supabase.auth.getUser();
@@ -247,23 +340,40 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
         return;
       }
       const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
+
+      // Versionare: dacă am încărcat un ghid existent, salvăm o versiune nouă cu parent_id = root
+      let parentId: string | null = null;
+      let nextVersion = 1;
+      if (loadedRootId) {
+        parentId = loadedRootId;
+        const group = grouped.find(g => g.rootId === loadedRootId);
+        const maxV = group ? Math.max(...group.versions.map(v => v.version)) : (loadedVersion ?? 1);
+        nextVersion = maxV + 1;
+      }
+
       const payload = {
         user_id: uid,
-        title: extractTitle(rendered) || `Ghid ${selected}`,
+        title: extractTitle(editedMarkdown) || `Ghid ${selected}`,
         neighborhood: selected || "Timișoara",
         primary_keyword: keyword,
-        meta_description: extractMetaDescription(rendered),
-        markdown: rendered,
-        word_count: countWords(rendered),
+        meta_description: extractMetaDescription(editedMarkdown),
+        markdown: editedMarkdown,
+        word_count: countWords(editedMarkdown),
+        parent_id: parentId,
+        version: nextVersion,
       };
       const { data: inserted, error: err } = await supabase
         .from("seo_guides")
         .insert(payload)
-        .select("id")
+        .select("id,parent_id,version")
         .single();
       if (err) throw err;
-      setLastSavedId(inserted.id);
-      toast.success("Ghid salvat în istoric.");
+
+      // După salvare, ghidul curent devine ultima versiune a rădăcinii
+      const newRoot = inserted.parent_id ?? inserted.id;
+      setLoadedRootId(newRoot);
+      setLoadedVersion(inserted.version);
+      toast.success(parentId ? `Versiune v${nextVersion} salvată.` : "Ghid salvat în istoric.");
       loadHistory();
     } catch (e: any) {
       console.error(e);
@@ -273,33 +383,38 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     }
   };
 
-  const handleLoad = (g: SavedGuide) => {
+  const handleLoadVersion = (g: SavedGuide) => {
+    reset();
+    setEditedMarkdown(g.markdown);
     setSelected(g.neighborhood);
     setPrimaryKeyword(g.primary_keyword || "");
-    // Injectăm markdown-ul salvat direct în hook-ul de streaming
-    reset();
-    // useAiEngine expune `data` doar prin run; folosim un mic hack: setăm text via streamingText nu e posibil.
-    // Soluție: afișăm ghidul într-o cheie separată prin re-run local — dar mai simplu punem în clipboard state.
-    // Pentru simplitate, îl copiem în clipboard și afișăm toast; utilizatorul îl vede în listă.
-    navigator.clipboard.writeText(g.markdown).catch(() => {});
-    toast.success("Markdown-ul ghidului a fost copiat în clipboard.");
+    setLoadedRootId(g.parent_id ?? g.id);
+    setLoadedVersion(g.version);
+    setEditMode("edit");
+    toast.success(`Am încărcat "${g.title}" (v${g.version}).`);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Ștergi definitiv acest ghid?")) return;
-    const { error: err } = await supabase.from("seo_guides").delete().eq("id", id);
-    if (err) {
-      toast.error("Nu am putut șterge ghidul.");
+  const handleDeleteGroup = async (rootId: string, title: string) => {
+    if (!confirm(`Ștergi definitiv "${title}" și toate versiunile sale?`)) return;
+    // Ștergem întâi versiunile derivate (parent_id = root), apoi rădăcina
+    const { error: e1 } = await supabase.from("seo_guides").delete().eq("parent_id", rootId);
+    const { error: e2 } = await supabase.from("seo_guides").delete().eq("id", rootId);
+    if (e1 || e2) {
+      toast.error("Nu am putut șterge ghidul complet.");
     } else {
-      toast.success("Ghid șters.");
-      setHistory(h => h.filter(g => g.id !== id));
+      toast.success("Ghid și versiuni șterse.");
+      if (loadedRootId === rootId) {
+        setLoadedRootId(null);
+        setLoadedVersion(null);
+      }
+      loadHistory();
     }
   };
 
   const handleCopy = async () => {
-    if (!rendered) return;
+    if (!editedMarkdown) return;
     try {
-      await navigator.clipboard.writeText(rendered);
+      await navigator.clipboard.writeText(editedMarkdown);
       toast.success("Markdown copiat în clipboard.");
     } catch {
       toast.error("Nu am putut copia în clipboard.");
@@ -307,10 +422,10 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
   };
 
   const handleDownload = () => {
-    if (!rendered) return;
+    if (!editedMarkdown) return;
     try {
       const slug = slugify(selected || "timisoara");
-      const blob = new Blob([rendered], { type: "text/markdown;charset=utf-8" });
+      const blob = new Blob([editedMarkdown], { type: "text/markdown;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -325,6 +440,8 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
       toast.error("Nu am putut descărca fișierul.");
     }
   };
+
+  const hasContent = !!editedMarkdown;
 
   return (
     <div className="space-y-6">
@@ -399,16 +516,16 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
                 <StopCircle className="w-4 h-4 mr-2" aria-hidden /> Oprește
               </Button>
             )}
-            {rendered && !isBusy && (
+            {hasContent && !isBusy && (
               <>
                 <Button
                   variant="default"
                   onClick={handleSave}
-                  disabled={saving || !!lastSavedId}
-                  aria-label="Salvează ghidul în baza de date"
+                  disabled={saving}
+                  aria-label={loadedRootId ? "Salvează versiune nouă" : "Salvează ghidul în baza de date"}
                 >
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> : <Save className="w-4 h-4 mr-2" aria-hidden />}
-                  {lastSavedId ? "Salvat" : "Salvează în istoric"}
+                  {loadedRootId ? "Salvează versiune nouă" : "Salvează în istoric"}
                 </Button>
                 <Button variant="outline" onClick={handleCopy} aria-label="Copiază Markdown">
                   <Copy className="w-4 h-4 mr-2" aria-hidden /> Copiază
@@ -416,12 +533,16 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
                 <Button variant="outline" onClick={handleDownload} aria-label="Descarcă fișierul Markdown">
                   <Download className="w-4 h-4 mr-2" aria-hidden /> Descarcă .md
                 </Button>
+                {loadedRootId && loadedVersion != null && (
+                  <Badge variant="secondary" className="ml-1">
+                    <GitBranch className="w-3 h-3 mr-1" aria-hidden /> Editez v{loadedVersion}
+                  </Badge>
+                )}
               </>
             )}
           </div>
 
-          {/* Progress + word counter */}
-          {(isBusy || rendered) && (
+          {(isBusy || hasContent) && (
             <div className="pt-2 space-y-1.5" aria-live="polite">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>
@@ -442,16 +563,30 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
       </Card>
 
       {/* Google Snippet Preview */}
-      {(rendered || isBusy) && (
+      {(hasContent || isBusy) && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Globe className="w-4 h-4" aria-hidden />
-              Previzualizare Google Snippet
-            </CardTitle>
-            <CardDescription>
-              Așa va apărea ghidul tău în rezultatele Google Search.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Globe className="w-4 h-4" aria-hidden />
+                Previzualizare Google Snippet
+              </CardTitle>
+              <CardDescription>
+                Așa va apărea ghidul tău în rezultatele Google Search.
+              </CardDescription>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRegenerateMeta}
+              disabled={regenMetaLoading || isBusy || !hasContent}
+              aria-label="Regenerează doar titlul și meta descriere"
+            >
+              {regenMetaLoading
+                ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" aria-hidden />
+                : <Wand2 className="w-3.5 h-3.5 mr-2" aria-hidden />}
+              Regenerează meta
+            </Button>
           </CardHeader>
           <CardContent>
             <GoogleSnippetPreview title={parsedTitle} url={previewUrl} description={parsedMeta} />
@@ -459,34 +594,74 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
         </Card>
       )}
 
-      {/* Preview articol */}
-      {(rendered || isBusy) && (
+      {/* Editor + Preview articol */}
+      {(hasContent || isBusy) && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="w-4 h-4" aria-hidden />
-              Preview articol
+              {editMode === "edit" ? "Editor Markdown" : "Previzualizare articol"}
               {streaming && <Badge variant="outline" className="ml-2 animate-pulse">streaming...</Badge>}
             </CardTitle>
+            <div className="flex items-center gap-1" role="tablist" aria-label="Mod editor">
+              <Button
+                size="sm"
+                variant={editMode === "edit" ? "default" : "outline"}
+                onClick={() => setEditMode("edit")}
+                role="tab"
+                aria-selected={editMode === "edit"}
+                aria-label="Mod editare"
+              >
+                <Pencil className="w-3.5 h-3.5 mr-1.5" aria-hidden /> Editează
+              </Button>
+              <Button
+                size="sm"
+                variant={editMode === "preview" ? "default" : "outline"}
+                onClick={() => setEditMode("preview")}
+                role="tab"
+                aria-selected={editMode === "preview"}
+                aria-label="Mod previzualizare"
+              >
+                <Eye className="w-3.5 h-3.5 mr-1.5" aria-hidden /> Preview
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Separator className="mb-4" />
-            <article
-              className="prose prose-sm sm:prose-base dark:prose-invert max-w-none prose-headings:scroll-mt-16"
-              aria-live="polite"
-              aria-busy={streaming}
-            >
-              {rendered ? (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{rendered}</ReactMarkdown>
-              ) : (
-                <p className="text-muted-foreground text-sm">Se pregătește conținutul...</p>
-              )}
-            </article>
+            {editMode === "edit" ? (
+              <div className="space-y-2">
+                <Label htmlFor="seo-editor" className="sr-only">Editor Markdown</Label>
+                <Textarea
+                  id="seo-editor"
+                  value={editedMarkdown}
+                  onChange={e => setEditedMarkdown(e.target.value)}
+                  className="font-mono text-sm min-h-[480px] leading-relaxed"
+                  spellCheck={false}
+                  aria-label="Editor Markdown pentru ghid SEO"
+                  placeholder="Conținutul ghidului va apărea aici odată generat..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Editează liber textul Markdown. Modificările sunt reflectate instant în previzualizarea Google Snippet.
+                </p>
+              </div>
+            ) : (
+              <article
+                className="prose prose-sm sm:prose-base dark:prose-invert max-w-none prose-headings:scroll-mt-16"
+                aria-live="polite"
+                aria-busy={streaming}
+              >
+                {editedMarkdown ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{editedMarkdown}</ReactMarkdown>
+                ) : (
+                  <p className="text-muted-foreground text-sm">Se pregătește conținutul...</p>
+                )}
+              </article>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Istoric ghiduri */}
+      {/* Istoric ghiduri + versiuni */}
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
           <div>
@@ -495,7 +670,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
               Istoric ghiduri salvate
             </CardTitle>
             <CardDescription>
-              Reîncarcă un ghid vechi (copiat în clipboard) sau șterge-l definitiv.
+              Comută între versiuni (v1, v2...) sau șterge un ghid împreună cu toate versiunile derivate.
             </CardDescription>
           </div>
           <Button
@@ -509,40 +684,54 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
           </Button>
         </CardHeader>
         <CardContent>
-          {historyLoading && history.length === 0 ? (
+          {historyLoading && grouped.length === 0 ? (
             <p className="text-sm text-muted-foreground">Se încarcă istoricul...</p>
-          ) : history.length === 0 ? (
+          ) : grouped.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nu ai salvat încă niciun ghid.</p>
           ) : (
-            <ScrollArea className="h-72 pr-3">
-              <ul className="space-y-2" role="list">
-                {history.map(g => (
-                  <li
-                    key={g.id}
-                    className="flex items-start justify-between gap-3 rounded-md border p-3 hover:bg-muted/40 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium text-sm truncate">{g.title}</div>
-                      <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-                        <span>{g.neighborhood}</span>
-                        {g.primary_keyword && <span>· {g.primary_keyword}</span>}
-                        <span>· {g.word_count} cuvinte</span>
-                        <span>· {formatDistanceToNow(new Date(g.created_at), { addSuffix: true, locale: ro })}</span>
+            <ScrollArea className="h-96 pr-3">
+              <ul className="space-y-3" role="list">
+                {grouped.map(group => (
+                  <li key={group.rootId} className="rounded-md border p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm truncate">{group.latest.title}</div>
+                        <div className="text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
+                          <span>{group.latest.neighborhood}</span>
+                          {group.latest.primary_keyword && <span>· {group.latest.primary_keyword}</span>}
+                          <span>· {group.versions.length} {group.versions.length === 1 ? "versiune" : "versiuni"}</span>
+                          <span>· ultima {formatDistanceToNow(new Date(group.latest.created_at), { addSuffix: true, locale: ro })}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button size="sm" variant="outline" onClick={() => handleLoad(g)} aria-label={`Copiază ghidul ${g.title}`}>
-                        <Copy className="w-3.5 h-3.5" aria-hidden />
-                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDelete(g.id)}
-                        aria-label={`Șterge ghidul ${g.title}`}
-                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteGroup(group.rootId, group.latest.title)}
+                        aria-label={`Șterge ghidul ${group.latest.title} și toate versiunile`}
+                        className="text-destructive hover:text-destructive shrink-0"
                       >
                         <Trash2 className="w-3.5 h-3.5" aria-hidden />
                       </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 pt-1 border-t">
+                      {group.versions.map(v => {
+                        const active = loadedRootId === group.rootId && loadedVersion === v.version;
+                        return (
+                          <Button
+                            key={v.id}
+                            size="sm"
+                            variant={active ? "default" : "outline"}
+                            onClick={() => handleLoadVersion(v)}
+                            className="h-7 text-xs"
+                            aria-label={`Încarcă versiunea ${v.version} din ${v.word_count} cuvinte`}
+                            aria-pressed={active}
+                          >
+                            <GitBranch className="w-3 h-3 mr-1" aria-hidden />
+                            v{v.version}
+                            <span className="ml-1.5 opacity-70">· {v.word_count}w</span>
+                          </Button>
+                        );
+                      })}
                     </div>
                   </li>
                 ))}
