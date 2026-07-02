@@ -642,17 +642,44 @@ export default function InvestmentAnalysisManager() {
               <History className="w-5 h-5 text-primary" /> Analize recente
             </CardTitle>
             <CardDescription>
-              Ultimele 15 analize salvate. Click pentru reîncărcare rapidă în formular.
+              Ultimele analize salvate. Caută, sortează sau reîncarcă rapid în formular.
             </CardDescription>
           </div>
           <Button variant="ghost" size="sm" onClick={loadHistory} disabled={loadingHistory}>
             <RotateCcw className={cn("w-4 h-4", loadingHistory && "animate-spin")} />
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Search + sort */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Caută după nume proprietate..."
+                className="pl-9"
+              />
+            </div>
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v as typeof sortMode)}>
+              <SelectTrigger className="sm:w-56">
+                <SelectValue placeholder="Sortare" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date-desc">Cele mai recente</SelectItem>
+                <SelectItem value="date-asc">Cele mai vechi</SelectItem>
+                <SelectItem value="roi-desc">ROI cel mai mare</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {history.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
               Nicio analiză salvată încă.
+            </p>
+          ) : visibleHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              Niciun rezultat pentru „{search}".
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -664,11 +691,11 @@ export default function InvestmentAnalysisManager() {
                     <TableHead className="text-right">ROI</TableHead>
                     <TableHead className="text-right">Recuperare</TableHead>
                     <TableHead className="text-right">Data</TableHead>
-                    <TableHead />
+                    <TableHead className="text-right">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {history.map((row) => (
+                  {visibleHistory.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell className="font-medium">{row.nume}</TableCell>
                       <TableCell className="text-right">{fmtEur(row.pret)}</TableCell>
@@ -682,9 +709,20 @@ export default function InvestmentAnalysisManager() {
                         {new Date(row.created_at).toLocaleDateString("ro-RO")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
-                          Reîncarcă
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
+                            Reîncarcă
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => setPendingDelete(row)}
+                            aria-label={`Șterge analiza pentru ${row.nume}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -694,6 +732,31 @@ export default function InvestmentAnalysisManager() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && !deleting && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Șterge analiza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Analiza pentru <span className="font-medium text-foreground">{pendingDelete?.nume}</span> va fi ștearsă definitiv. Această acțiune nu poate fi anulată.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Se șterge..." : "Șterge"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
