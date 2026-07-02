@@ -19,6 +19,28 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Require authenticated user (JWT). Prevents anonymous cost exhaustion.
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    const { data: claimsData, error: claimsErr } = await authClient.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
     const apiKey = Deno.env.get("OPENROUTER_API_KEY");
     if (!apiKey) {
       return new Response(
