@@ -431,9 +431,10 @@ export default function InvestmentAnalysisManager() {
       pdf.save(`analiza-investitie-${safeName}-${Date.now()}.pdf`);
       toast({ title: "PDF generat", description: "Descărcarea a început." });
     } catch (e) {
+      const raw = e instanceof Error ? e.message : String(e);
       toast({
-        title: "Eroare la export PDF",
-        description: e instanceof Error ? e.message : "Necunoscută",
+        title: "Export PDF eșuat",
+        description: friendlyErrorMessage(raw) || "Nu am putut genera PDF-ul. Te rugăm să reîncerci.",
         variant: "destructive",
       });
     } finally {
