@@ -170,7 +170,7 @@ export default function InvestmentAnalysisManager() {
         chirie: Number(form.chirie),
         amenajari: Number(form.amenajari) || 0,
         model: data.model,
-        result: analysis as unknown as Record<string, unknown>,
+        result: analysis as unknown as any,
       };
       const { error: insertErr } = await supabase
         .from("investment_analyses")
