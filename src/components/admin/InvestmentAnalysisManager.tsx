@@ -874,8 +874,12 @@ export default function InvestmentAnalysisManager() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                  <p className="text-xs text-muted-foreground">
+                <nav
+                  className="flex items-center justify-between pt-3 border-t border-border/50"
+                  role="navigation"
+                  aria-label="Paginare istoric analize"
+                >
+                  <p className="text-xs text-muted-foreground" aria-live="polite">
                     Afișez {(currentPage - 1) * PAGE_SIZE + 1}
                     {"–"}
                     {Math.min(currentPage * PAGE_SIZE, visibleHistory.length)} din {visibleHistory.length}
@@ -886,11 +890,16 @@ export default function InvestmentAnalysisManager() {
                       size="sm"
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
+                      aria-label="Pagina anterioară"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                       <span className="hidden sm:inline">Anterior</span>
                     </Button>
-                    <span className="text-xs text-muted-foreground tabular-nums">
+                    <span
+                      className="text-xs text-muted-foreground tabular-nums"
+                      aria-current="page"
+                      aria-label={`Pagina ${currentPage} din ${totalPages}`}
+                    >
                       Pag. {currentPage} / {totalPages}
                     </span>
                     <Button
@@ -898,12 +907,13 @@ export default function InvestmentAnalysisManager() {
                       size="sm"
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
+                      aria-label="Pagina următoare"
                     >
                       <span className="hidden sm:inline">Următor</span>
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </div>
-                </div>
+                </nav>
               )}
             </>
           )}
