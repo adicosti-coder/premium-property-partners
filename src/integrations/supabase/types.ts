@@ -5887,6 +5887,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_guides: {
+        Row: {
+          created_at: string
+          id: string
+          markdown: string
+          meta_description: string | null
+          neighborhood: string
+          primary_keyword: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          word_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          markdown: string
+          meta_description?: string | null
+          neighborhood: string
+          primary_keyword?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          word_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          markdown?: string
+          meta_description?: string | null
+          neighborhood?: string
+          primary_keyword?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          word_count?: number
+        }
+        Relationships: []
+      }
       seo_indexing_snapshots: {
         Row: {
           checked_pages: number
