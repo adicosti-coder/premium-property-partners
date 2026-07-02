@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -30,6 +31,32 @@ import { cn } from "@/lib/utils";
 import {
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
+
+// ---------- Filter persistence ----------
+const FILTER_STORAGE_KEY = "investment-analyses.filters";
+type SortMode = "date-desc" | "date-asc" | "roi-desc";
+const isSortMode = (v: string | null): v is SortMode =>
+  v === "date-desc" || v === "date-asc" || v === "roi-desc";
+
+// ---------- Friendly error mapping ----------
+function friendlyErrorMessage(raw: string | null | undefined): string {
+  if (!raw) return "Ceva nu a mers bine. Te rugăm să reîncerci.";
+  const msg = raw.toLowerCase();
+  if (msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("network"))
+    return "Conexiune întreruptă. Verifică internetul și reîncearcă.";
+  if (msg.includes("aborted") || msg.includes("cancel"))
+    return "Generarea a fost oprită.";
+  if (msg.includes("429") || msg.includes("rate limit") || msg.includes("too many"))
+    return "Prea multe cereri către AI. Așteaptă câteva secunde și reîncearcă.";
+  if (msg.includes("401") || msg.includes("403") || msg.includes("unauthor") || msg.includes("api key") || msg.includes("expired"))
+    return "Cheia API OpenRouter pare invalidă sau expirată. Contactează administratorul.";
+  if (msg.includes("timeout")) return "Modelul AI nu a răspuns la timp. Reîncearcă.";
+  if (msg.includes("json") || msg.includes("schema") || msg.includes("parse"))
+    return "Răspunsul AI nu a putut fi interpretat. Reîncearcă generarea.";
+  if (msg.includes("500") || msg.includes("502") || msg.includes("503"))
+    return "Serverul AI este momentan indisponibil. Reîncearcă în câteva momente.";
+  return "Nu am putut genera analiza. Te rugăm să reîncerci.";
+}
 
 // ---------- Zod schema ----------
 const analysisSchema = z.object({
