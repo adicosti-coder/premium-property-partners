@@ -808,44 +808,61 @@ export default function InvestmentAnalysisManager() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <Table>
+                <Table aria-label="Istoric analize investiții">
+                  <TableCaption className="sr-only">
+                    Lista analizelor de investiții salvate — {visibleHistory.length} rezultate.
+                  </TableCaption>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Proprietate</TableHead>
-                      <TableHead className="text-right">Preț</TableHead>
-                      <TableHead className="text-right">ROI</TableHead>
-                      <TableHead className="text-right">Recuperare</TableHead>
-                      <TableHead className="text-right">Data</TableHead>
-                      <TableHead className="text-right">Acțiuni</TableHead>
+                      <TableHead scope="col">Proprietate</TableHead>
+                      <TableHead scope="col" className="text-right">Preț</TableHead>
+                      <TableHead scope="col" className="text-right">ROI</TableHead>
+                      <TableHead scope="col" className="text-right">Recuperare</TableHead>
+                      <TableHead scope="col" className="text-right">Data</TableHead>
+                      <TableHead scope="col" className="text-right">Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {pageRows.map((row) => (
                       <TableRow key={row.id}>
-                        <TableCell className="font-medium">{row.nume}</TableCell>
-                        <TableCell className="text-right">{fmtEur(row.pret)}</TableCell>
-                        <TableCell className={cn("text-right font-semibold", roiTone(row.result.roi_procentual))}>
-                          {row.result.roi_procentual.toFixed(1)}%
+                        <TableCell className="font-medium" scope="row">{row.nume}</TableCell>
+                        <TableCell className="text-right tabular-nums">{fmtEur(row.pret)}</TableCell>
+                        <TableCell className={cn("text-right font-semibold tabular-nums", roiTone(row.result.roi_procentual))}>
+                          <span aria-label={`ROI ${row.result.roi_procentual.toFixed(1)} la sută`}>
+                            {row.result.roi_procentual.toFixed(1)}%
+                          </span>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right tabular-nums">
                           {row.result.recuperare_investitie_ani.toFixed(1)} ani
                         </TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">
-                          {new Date(row.created_at).toLocaleDateString("ro-RO")}
+                          <time dateTime={row.created_at}>
+                            {new Date(row.created_at).toLocaleDateString("ro-RO")}
+                          </time>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
+                          <div
+                            className="flex items-center justify-end gap-1"
+                            role="group"
+                            aria-label={`Acțiuni pentru analiza ${row.nume}`}
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => loadFromHistory(row)}
+                              aria-label={`Reîncarcă analiza pentru ${row.nume} în formular`}
+                            >
                               Reîncarcă
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              className="h-9 w-9 min-h-9 min-w-9 text-muted-foreground hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive"
                               onClick={() => setPendingDelete(row)}
                               aria-label={`Șterge analiza pentru ${row.nume}`}
+                              title={`Șterge analiza pentru ${row.nume}`}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4" aria-hidden="true" />
                             </Button>
                           </div>
                         </TableCell>
