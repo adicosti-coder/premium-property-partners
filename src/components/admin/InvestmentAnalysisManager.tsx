@@ -20,10 +20,11 @@ import { AiEngineLoader } from "@/components/ai/AiEngineLoader";
 import { useAiEngine, z } from "@/hooks/useAiEngine";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   TrendingUp, Calendar, Euro, ShieldAlert, CheckCircle2,
   Sparkles, XCircle, Square, BarChart3, FileDown, History, RotateCcw,
-  Trash2, Search,
+  Trash2, Search, ClipboardX, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -127,10 +128,13 @@ const fmtEur = (v: number) =>
 export default function InvestmentAnalysisManager() {
   const [form, setForm] = useState<FormState>(DEFAULTS);
   const [history, setHistory] = useState<HistoryRow[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<"date-desc" | "date-asc" | "roi-desc">("date-desc");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 5;
   const [pendingDelete, setPendingDelete] = useState<HistoryRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
@@ -159,6 +163,7 @@ export default function InvestmentAnalysisManager() {
       .order("created_at", { ascending: false })
       .limit(50);
     setLoadingHistory(false);
+    setInitialLoaded(true);
     if (err) {
       toast({ title: "Nu am putut încărca istoricul", description: err.message, variant: "destructive" });
       return;
@@ -250,6 +255,16 @@ export default function InvestmentAnalysisManager() {
     });
     return filtered;
   }, [history, search, sortMode]);
+
+  // Reset to page 1 whenever filter/sort/history size changes
+  useEffect(() => { setPage(1); }, [search, sortMode, history.length]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleHistory.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = visibleHistory.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -673,62 +688,112 @@ export default function InvestmentAnalysisManager() {
             </Select>
           </div>
 
-          {history.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              Nicio analiză salvată încă.
-            </p>
-          ) : visibleHistory.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              Niciun rezultat pentru „{search}".
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Proprietate</TableHead>
-                    <TableHead className="text-right">Preț</TableHead>
-                    <TableHead className="text-right">ROI</TableHead>
-                    <TableHead className="text-right">Recuperare</TableHead>
-                    <TableHead className="text-right">Data</TableHead>
-                    <TableHead className="text-right">Acțiuni</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visibleHistory.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell className="font-medium">{row.nume}</TableCell>
-                      <TableCell className="text-right">{fmtEur(row.pret)}</TableCell>
-                      <TableCell className={cn("text-right font-semibold", roiTone(row.result.roi_procentual))}>
-                        {row.result.roi_procentual.toFixed(1)}%
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {row.result.recuperare_investitie_ani.toFixed(1)} ani
-                      </TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground">
-                        {new Date(row.created_at).toLocaleDateString("ro-RO")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
-                            Reîncarcă
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={() => setPendingDelete(row)}
-                            aria-label={`Șterge analiza pentru ${row.nume}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          {loadingHistory && !initialLoaded ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-4 flex-1" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-14" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              ))}
             </div>
+          ) : history.length === 0 ? (
+            <EmptyState
+              title="Nicio analiză salvată încă"
+              description='Completează formularul de mai sus și apasă „Generează Analiză" pentru a crea primul raport.'
+            />
+          ) : visibleHistory.length === 0 ? (
+            <EmptyState
+              title="Niciun rezultat"
+              description={`Nu am găsit analize care să corespundă căutării "${search}". Modifică filtrele sau resetează căutarea.`}
+            />
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Proprietate</TableHead>
+                      <TableHead className="text-right">Preț</TableHead>
+                      <TableHead className="text-right">ROI</TableHead>
+                      <TableHead className="text-right">Recuperare</TableHead>
+                      <TableHead className="text-right">Data</TableHead>
+                      <TableHead className="text-right">Acțiuni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pageRows.map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell className="font-medium">{row.nume}</TableCell>
+                        <TableCell className="text-right">{fmtEur(row.pret)}</TableCell>
+                        <TableCell className={cn("text-right font-semibold", roiTone(row.result.roi_procentual))}>
+                          {row.result.roi_procentual.toFixed(1)}%
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {row.result.recuperare_investitie_ani.toFixed(1)} ani
+                        </TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground">
+                          {new Date(row.created_at).toLocaleDateString("ro-RO")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
+                              Reîncarcă
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={() => setPendingDelete(row)}
+                              aria-label={`Șterge analiza pentru ${row.nume}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                  <p className="text-xs text-muted-foreground">
+                    Afișez {(currentPage - 1) * PAGE_SIZE + 1}
+                    {"–"}
+                    {Math.min(currentPage * PAGE_SIZE, visibleHistory.length)} din {visibleHistory.length}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span className="hidden sm:inline">Anterior</span>
+                    </Button>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      Pag. {currentPage} / {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <span className="hidden sm:inline">Următor</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -757,6 +822,20 @@ export default function InvestmentAnalysisManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function EmptyState({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+      <div className="p-3 rounded-full bg-muted/60 text-muted-foreground">
+        <ClipboardX className="w-8 h-8" />
+      </div>
+      <div className="max-w-md space-y-1">
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+      </div>
     </div>
   );
 }
