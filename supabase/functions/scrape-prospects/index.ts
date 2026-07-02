@@ -1348,10 +1348,28 @@ Deno.serve(async (req) => {
     } else {
       const { data: dbKeywords } = await supabase
         .from('scraper_search_keywords')
-        .select('keyword, platform, owner_filters')
+        .select('keyword, platform, owner_filters, consecutive_zero, success_count, last_success_at')
         .eq('is_active', true);
-      queries = (dbKeywords && dbKeywords.length > 0)
-        ? dbKeywords.map((k: any) => ({
+      // Auto-park keywords with 12+ consecutive zeros so they stop burning
+      // budget every scan. Admin can re-enable manually from the UI.
+      const toAutoPark = (dbKeywords || []).filter((k: any) => (k.consecutive_zero ?? 0) >= 12);
+      if (toAutoPark.length > 0) {
+        const ids = toAutoPark.map((k: any) => k.keyword);
+        await supabase
+          .from('scraper_search_keywords')
+          .update({ is_active: false, auto_disabled_reason: 'auto_park_12_consecutive_zero' })
+          .in('keyword', ids);
+        console.log(`⏸️ Auto-parked ${toAutoPark.length} dead keywords (12+ consecutive zeros)`);
+      }
+      const usable = (dbKeywords || []).filter((k: any) => (k.consecutive_zero ?? 0) < 8);
+      // Sort: proven winners first (highest success), so a truncated run still yields.
+      usable.sort((a: any, b: any) => {
+        const sa = (a.success_count ?? 0) - (a.consecutive_zero ?? 0);
+        const sb = (b.success_count ?? 0) - (b.consecutive_zero ?? 0);
+        return sb - sa;
+      });
+      queries = (usable.length > 0)
+        ? usable.map((k: any) => ({
             platform: k.platform,
             query: k.keyword,
             originalKeyword: k.keyword,
