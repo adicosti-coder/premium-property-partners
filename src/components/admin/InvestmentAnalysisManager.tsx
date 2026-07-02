@@ -128,10 +128,13 @@ const fmtEur = (v: number) =>
 export default function InvestmentAnalysisManager() {
   const [form, setForm] = useState<FormState>(DEFAULTS);
   const [history, setHistory] = useState<HistoryRow[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [initialLoaded, setInitialLoaded] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<"date-desc" | "date-asc" | "roi-desc">("date-desc");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 5;
   const [pendingDelete, setPendingDelete] = useState<HistoryRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
