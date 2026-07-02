@@ -163,6 +163,7 @@ export default function InvestmentAnalysisManager() {
       .order("created_at", { ascending: false })
       .limit(50);
     setLoadingHistory(false);
+    setInitialLoaded(true);
     if (err) {
       toast({ title: "Nu am putut încărca istoricul", description: err.message, variant: "destructive" });
       return;
