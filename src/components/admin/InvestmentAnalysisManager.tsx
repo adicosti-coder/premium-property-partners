@@ -825,3 +825,17 @@ export default function InvestmentAnalysisManager() {
     </div>
   );
 }
+
+function EmptyState({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+      <div className="p-3 rounded-full bg-muted/60 text-muted-foreground">
+        <ClipboardX className="w-8 h-8" />
+      </div>
+      <div className="max-w-md space-y-1">
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
