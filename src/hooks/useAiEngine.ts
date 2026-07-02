@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { z, type ZodType } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 
@@ -7,7 +8,7 @@ export type AiEngineModel =
   | "google/gemini-3.1-pro-preview"
   | "google/gemini-3.1-flash-lite-preview";
 
-export interface AiEngineRequest {
+export interface AiEngineRequest<T = unknown> {
   prompt: string;
   systemPrompt?: string;
   model?: AiEngineModel;
@@ -15,6 +16,8 @@ export interface AiEngineRequest {
   stream?: boolean;
   temperature?: number;
   max_tokens?: number;
+  /** Optional Zod schema — enforced when jsonMode is true. */
+  schema?: ZodType<T>;
 }
 
 export interface AiEngineResponse<T = unknown> {
@@ -37,6 +40,8 @@ export class AiEngineError extends Error {
 
 const FUNCTION_URL = `${supabaseConfig.url}/functions/v1/openrouter-ai`;
 
+// ---------- Utilities ----------
+
 /** Safely parse JSON returned by the model; strips ```json fences if any. */
 export function safeParseJson<T = unknown>(text: string): T | null {
   if (!text) return null;
@@ -48,7 +53,6 @@ export function safeParseJson<T = unknown>(text: string): T | null {
   try {
     return JSON.parse(cleaned) as T;
   } catch {
-    // try to extract first {...} block
     const m = cleaned.match(/\{[\s\S]*\}$/);
     if (m) {
       try { return JSON.parse(m[0]) as T; } catch { /* noop */ }
@@ -57,35 +61,98 @@ export function safeParseJson<T = unknown>(text: string): T | null {
   }
 }
 
-/** Non-streaming call via supabase.functions.invoke */
-export async function callAiEngine<T = unknown>(
-  input: AiEngineRequest,
-): Promise<AiEngineResponse<T>> {
+/** Validate parsed JSON against a Zod schema; throws AiEngineError on mismatch. */
+function validateWithSchema<T>(raw: unknown, schema: ZodType<T>): T {
+  const res = schema.safeParse(raw);
+  if (!res.success) {
+    throw new AiEngineError(
+      "Răspunsul AI nu respectă schema așteptată.",
+      422,
+      res.error.flatten(),
+    );
+  }
+  return res.data;
+}
+
+const sleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) return reject(new DOMException("Aborted", "AbortError"));
+    const t = setTimeout(() => resolve(), ms);
+    signal?.addEventListener(
+      "abort",
+      () => { clearTimeout(t); reject(new DOMException("Aborted", "AbortError")); },
+      { once: true },
+    );
+  });
+
+/** Exponential backoff with jitter for 429 retries. */
+async function withRetry429<R>(
+  fn: (attempt: number) => Promise<R>,
+  opts: { maxAttempts?: number; signal?: AbortSignal } = {},
+): Promise<R> {
+  const maxAttempts = opts.maxAttempts ?? 3;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn(attempt);
+    } catch (e) {
+      lastErr = e;
+      const status = e instanceof AiEngineError ? e.status : undefined;
+      if (status !== 429 || attempt === maxAttempts) throw e;
+      const base = 500 * Math.pow(2, attempt - 1); // 500, 1000, 2000
+      const delay = base + Math.floor(Math.random() * 250);
+      await sleep(delay, opts.signal);
+    }
+  }
+  throw lastErr;
+}
+
+// ---------- Non-streaming ----------
+
+async function invokeOnce<T = unknown>(input: AiEngineRequest<T>): Promise<AiEngineResponse<T>> {
   const { data, error } = await supabase.functions.invoke<
     AiEngineResponse<T> & { error?: string; details?: unknown }
-  >("openrouter-ai", { body: { ...input, stream: false } });
+  >("openrouter-ai", { body: { ...input, schema: undefined, stream: false } });
 
   if (error) {
-    throw new AiEngineError(
-      error.message || "Eroare la apelarea motorului AI",
-      (error as any).status,
-      error,
-    );
+    const status = (error as any).status ?? (error as any).context?.status;
+    throw new AiEngineError(error.message || "Eroare la apelarea motorului AI", status, error);
   }
   if (!data) throw new AiEngineError("Răspuns gol de la motorul AI");
   if ((data as any).error) {
-    throw new AiEngineError(String((data as any).error), undefined, (data as any).details);
+    const details = (data as any).details;
+    const msg = String((data as any).error);
+    const status = /\b429\b/.test(msg) ? 429 : /\b402\b/.test(msg) ? 402 : undefined;
+    throw new AiEngineError(msg, status, details);
   }
   return data;
 }
 
-/** Streaming call — invokes the SSE endpoint and pushes deltas via onDelta. */
-export async function streamAiEngine<T = unknown>(
-  input: AiEngineRequest,
+export async function callAiEngine<T = unknown>(
+  input: AiEngineRequest<T>,
+  opts: { signal?: AbortSignal; maxRetries?: number } = {},
+): Promise<AiEngineResponse<T>> {
+  const res = await withRetry429(() => invokeOnce<T>(input), {
+    maxAttempts: opts.maxRetries ?? 3,
+    signal: opts.signal,
+  });
+
+  if (input.jsonMode && input.schema) {
+    const parsed = res.json ?? safeParseJson(res.text);
+    const validated = validateWithSchema(parsed, input.schema);
+    return { ...res, json: validated };
+  }
+  return res;
+}
+
+// ---------- Streaming ----------
+
+async function streamOnce<T = unknown>(
+  input: AiEngineRequest<T>,
   handlers: {
     onDelta?: (delta: string, accumulated: string) => void;
     signal?: AbortSignal;
-  } = {},
+  },
 ): Promise<AiEngineResponse<T>> {
   const apiKey = getSupabasePublishableKey();
   const res = await fetch(FUNCTION_URL, {
@@ -95,18 +162,14 @@ export async function streamAiEngine<T = unknown>(
       Authorization: `Bearer ${apiKey}`,
       apikey: apiKey,
     },
-    body: JSON.stringify({ ...input, stream: true }),
+    body: JSON.stringify({ ...input, schema: undefined, stream: true }),
     signal: handlers.signal,
   });
 
   if (!res.ok || !res.body) {
     let details: unknown = null;
     try { details = await res.json(); } catch { /* noop */ }
-    throw new AiEngineError(
-      `Motorul AI a răspuns cu ${res.status}`,
-      res.status,
-      details,
-    );
+    throw new AiEngineError(`Motorul AI a răspuns cu ${res.status}`, res.status, details);
   }
 
   const reader = res.body.getReader();
@@ -128,7 +191,11 @@ export async function streamAiEngine<T = unknown>(
       if (!p || p === "[DONE]") continue;
       try {
         const obj = JSON.parse(p);
-        if (obj.error) throw new AiEngineError(String(obj.error));
+        if (obj.error) {
+          const msg = String(obj.error);
+          const status = /\b429\b/.test(msg) ? 429 : /\b402\b/.test(msg) ? 402 : undefined;
+          throw new AiEngineError(msg, status);
+        }
         if (typeof obj.delta === "string" && obj.delta.length > 0) {
           acc += obj.delta;
           handlers.onDelta?.(obj.delta, acc);
@@ -140,19 +207,38 @@ export async function streamAiEngine<T = unknown>(
     }
   }
 
-  const parsedJson = input.jsonMode ? safeParseJson<T>(acc) : null;
-  return {
-    model: input.model ?? "z-ai/glm-5.2",
-    text: acc,
-    json: parsedJson,
-    usage: null,
-  };
+  return { model: input.model ?? "z-ai/glm-5.2", text: acc, json: null, usage: null };
 }
 
-/**
- * React hook — supports both streaming and non-streaming.
- * When `stream: true`, `streamingText` updates live during generation.
- */
+export async function streamAiEngine<T = unknown>(
+  input: AiEngineRequest<T>,
+  handlers: {
+    onDelta?: (delta: string, accumulated: string) => void;
+    signal?: AbortSignal;
+    maxRetries?: number;
+  } = {},
+): Promise<AiEngineResponse<T>> {
+  const res = await withRetry429(
+    () => streamOnce<T>(input, { onDelta: handlers.onDelta, signal: handlers.signal }),
+    { maxAttempts: handlers.maxRetries ?? 3, signal: handlers.signal },
+  );
+
+  if (input.jsonMode) {
+    const parsed = safeParseJson(res.text);
+    if (input.schema) {
+      const validated = validateWithSchema(parsed, input.schema);
+      return { ...res, json: validated };
+    }
+    return { ...res, json: parsed as T | null };
+  }
+  return res;
+}
+
+// ---------- React hook ----------
+
+/** UI throttle interval for streaming re-renders (ms). */
+const STREAM_UI_THROTTLE_MS = 80;
+
 export function useAiEngine<T = unknown>() {
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -161,55 +247,85 @@ export function useAiEngine<T = unknown>() {
   const [data, setData] = useState<AiEngineResponse<T> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Throttling refs for streaming UI updates
+  const lastFlushRef = useRef(0);
+  const pendingRef = useRef<string>("");
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flushStreaming = useCallback(() => {
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+    lastFlushRef.current = Date.now();
+    setStreamingText(pendingRef.current);
+  }, []);
+
+  const scheduleFlush = useCallback((acc: string) => {
+    pendingRef.current = acc;
+    const now = Date.now();
+    const elapsed = now - lastFlushRef.current;
+    if (elapsed >= STREAM_UI_THROTTLE_MS) {
+      flushStreaming();
+    } else if (!flushTimerRef.current) {
+      flushTimerRef.current = setTimeout(flushStreaming, STREAM_UI_THROTTLE_MS - elapsed);
+    }
+  }, [flushStreaming]);
+
   const friendly = (e: unknown): string =>
     e instanceof AiEngineError
       ? e.status === 429
         ? "Prea multe cereri către AI. Reîncearcă în câteva secunde."
         : e.status === 402
           ? "Credite AI epuizate. Reîncarcă pentru a continua."
-          : e.message
+          : e.status === 422
+            ? e.message
+            : e.message
       : e instanceof Error
         ? e.message
         : "Eroare necunoscută la motorul AI";
 
-  const run = useCallback(async (input: AiEngineRequest) => {
+  const run = useCallback(async (input: AiEngineRequest<T>) => {
     setLoading(true);
     setError(null);
     setStreamingText("");
+    pendingRef.current = "";
+    lastFlushRef.current = 0;
+
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
 
     try {
       if (input.stream) {
         setStreaming(true);
-        abortRef.current?.abort();
-        abortRef.current = new AbortController();
         const res = await streamAiEngine<T>(input, {
           signal: abortRef.current.signal,
-          onDelta: (_d, acc) => setStreamingText(acc),
+          onDelta: (_d, acc) => scheduleFlush(acc),
         });
-        // If jsonMode, validate at the end — errors are captured as state, not thrown.
-        if (input.jsonMode && res.json == null && res.text) {
-          setError("Răspunsul AI nu este JSON valid. Se afișează textul brut.");
-        }
+        flushStreaming();
         setData(res);
         return res;
       }
 
-      const res = await callAiEngine<T>(input);
+      const res = await callAiEngine<T>(input, { signal: abortRef.current.signal });
       setData(res);
       return res;
     } catch (e) {
-      const msg = friendly(e);
-      setError(msg);
+      setError(friendly(e));
       throw e;
     } finally {
       setLoading(false);
       setStreaming(false);
     }
-  }, []);
+  }, [flushStreaming, scheduleFlush]);
 
   const cancel = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
     setStreaming(false);
     setLoading(false);
   }, []);
@@ -218,7 +334,11 @@ export function useAiEngine<T = unknown>() {
     setError(null);
     setData(null);
     setStreamingText("");
+    pendingRef.current = "";
   }, []);
 
   return { run, cancel, reset, loading, streaming, streamingText, error, data };
 }
+
+// Re-export zod for consumers that want to build schemas inline.
+export { z };
