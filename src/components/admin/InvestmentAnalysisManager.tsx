@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,13 +6,21 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import { AiEngineLoader } from "@/components/ai/AiEngineLoader";
 import { useAiEngine, z } from "@/hooks/useAiEngine";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import {
   TrendingUp, Calendar, Euro, ShieldAlert, CheckCircle2,
-  Sparkles, XCircle, Square, BarChart3,
+  Sparkles, XCircle, Square, BarChart3, FileDown, History, RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
 
 // ---------- Zod schema ----------
 const analysisSchema = z.object({
@@ -31,6 +39,18 @@ interface FormState {
   suprafata: string;
   chirie: string;
   amenajari: string;
+}
+
+interface HistoryRow {
+  id: string;
+  nume: string;
+  pret: number;
+  suprafata: number;
+  chirie: number;
+  amenajari: number;
+  model: string;
+  result: Analysis;
+  created_at: string;
 }
 
 const DEFAULTS: FormState = {
@@ -58,12 +78,12 @@ const SYSTEM_PROMPT =
 const buildPrompt = (f: FormState) => `
 Analizează următoarea oportunitate de investiție imobiliară în Timișoara și returnează JSON cu structura:
 {
-  "roi_procentual": number,               // ROI anual net estimat (%)
-  "recuperare_investitie_ani": number,    // Ani până la recuperare investiție
-  "pret_per_mp": number,                  // €/mp
-  "analiza_piata": string,                // 2-3 fraze despre randament în Timișoara
-  "puncte_forte": string[],               // 3-5 puncte forte
-  "riscuri_potentiale": string[]          // 3-5 riscuri
+  "roi_procentual": number,
+  "recuperare_investitie_ani": number,
+  "pret_per_mp": number,
+  "analiza_piata": string,
+  "puncte_forte": string[],
+  "riscuri_potentiale": string[]
 }
 
 Date proprietate:
@@ -73,14 +93,39 @@ Date proprietate:
 - Chirie lunară estimată: ${f.chirie} €
 - Costuri amenajare: ${f.amenajari} €
 
-Aplică regula RealTrust: deducere 27% (management + taxe), ocupare 75% pentru regim hotelier dacă e cazul.
+Aplică regula RealTrust: deducere 27% (management + taxe), ocupare 75% pentru regim hotelier.
 `.trim();
 
+/** Build 5-year cashflow projection from AI ROI + form data. */
+function buildCashflow(analysis: Analysis, form: FormState) {
+  const pret = Number(form.pret) || 0;
+  const amenajari = Number(form.amenajari) || 0;
+  const annualNet = pret * (analysis.roi_procentual / 100);
+  const cumulativeInvest = pret + amenajari;
+  const rows: Array<{ an: string; net: number; cumulativ: number }> = [];
+  let cumul = -cumulativeInvest;
+  for (let year = 1; year <= 5; year++) {
+    const yearly = Math.round(annualNet * Math.pow(1.03, year - 1));
+    cumul += yearly;
+    rows.push({ an: `An ${year}`, net: yearly, cumulativ: Math.round(cumul) });
+  }
+  return rows;
+}
+
+const fmtEur = (v: number) =>
+  `${Math.round(v).toLocaleString("ro-RO")} €`;
+
+// ---------- Component ----------
 export default function InvestmentAnalysisManager() {
   const [form, setForm] = useState<FormState>(DEFAULTS);
+  const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
+  const savedIdsRef = useRef<Set<string>>(new Set());
+
   const { run, cancel, loading, streaming, streamingText, error, data } =
     useAiEngine<Analysis>();
-
   const analysis = data?.json ?? null;
 
   const setField = (k: keyof FormState) =>
@@ -92,6 +137,55 @@ export default function InvestmentAnalysisManager() {
     Number(form.pret) > 0 &&
     Number(form.suprafata) > 0 &&
     Number(form.chirie) > 0;
+
+  // ---- Load history ----
+  const loadHistory = useCallback(async () => {
+    setLoadingHistory(true);
+    const { data: rows, error: err } = await supabase
+      .from("investment_analyses")
+      .select("id, nume, pret, suprafata, chirie, amenajari, model, result, created_at")
+      .order("created_at", { ascending: false })
+      .limit(15);
+    setLoadingHistory(false);
+    if (err) return;
+    setHistory((rows ?? []) as unknown as HistoryRow[]);
+  }, []);
+
+  useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  // ---- Persist analysis on completion ----
+  useEffect(() => {
+    if (!analysis || !data) return;
+    const key = `${form.nume}|${form.pret}|${form.chirie}|${data.text.length}`;
+    if (savedIdsRef.current.has(key)) return;
+    savedIdsRef.current.add(key);
+
+    (async () => {
+      const { data: userRes } = await supabase.auth.getUser();
+      const payload = {
+        created_by: userRes?.user?.id ?? null,
+        nume: form.nume,
+        pret: Number(form.pret),
+        suprafata: Number(form.suprafata),
+        chirie: Number(form.chirie),
+        amenajari: Number(form.amenajari) || 0,
+        model: data.model,
+        result: analysis as unknown as Record<string, unknown>,
+      };
+      const { error: insertErr } = await supabase
+        .from("investment_analyses")
+        .insert(payload);
+      if (insertErr) {
+        toast({
+          title: "Nu am putut salva analiza",
+          description: insertErr.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      loadHistory();
+    })();
+  }, [analysis, data, form, loadHistory]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,10 +200,97 @@ export default function InvestmentAnalysisManager() {
         prompt: buildPrompt(form),
         temperature: 0.3,
       });
-    } catch {
-      /* error state handled by hook */
+    } catch { /* handled by hook */ }
+  };
+
+  const loadFromHistory = (row: HistoryRow) => {
+    setForm({
+      nume: row.nume,
+      pret: String(row.pret),
+      suprafata: String(row.suprafata),
+      chirie: String(row.chirie),
+      amenajari: String(row.amenajari),
+    });
+    toast({ title: "Analiză reîncărcată", description: row.nume });
+  };
+
+  // ---- PDF Export ----
+  const exportPdf = async () => {
+    if (!reportRef.current || !analysis) return;
+    setExporting(true);
+    try {
+      const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+        import("jspdf"),
+        import("html2canvas"),
+      ]);
+
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        logging: false,
+      });
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+
+      // Header (branded)
+      pdf.setFillColor(15, 42, 82); // deep blue
+      pdf.rect(0, 0, pageW, 22, "F");
+      pdf.setTextColor(212, 175, 55); // gold
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(16);
+      pdf.text("RealTrust", 12, 14);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text("Analiză Investiție Imobiliară — Timișoara", 12, 19);
+      pdf.setFontSize(9);
+      const dateStr = new Date().toLocaleDateString("ro-RO", {
+        year: "numeric", month: "long", day: "numeric",
+      });
+      pdf.text(dateStr, pageW - 12, 19, { align: "right" });
+
+      // Body image
+      const imgW = pageW - 20;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      const imgData = canvas.toDataURL("image/png");
+      let heightLeft = imgH;
+      let position = 26;
+      pdf.addImage(imgData, "PNG", 10, position, imgW, imgH);
+      heightLeft -= pageH - position;
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        position = 10 - (imgH - heightLeft);
+        pdf.addImage(imgData, "PNG", 10, position, imgW, imgH);
+        heightLeft -= pageH;
+      }
+
+      // Footer on last page
+      pdf.setFontSize(8);
+      pdf.setTextColor(120, 120, 120);
+      pdf.text(
+        "RealTrust • Investiții imobiliare Timișoara • www.realtrust.ro",
+        pageW / 2, pageH - 6, { align: "center" }
+      );
+
+      const safeName = form.nume.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+      pdf.save(`analiza-investitie-${safeName}-${Date.now()}.pdf`);
+      toast({ title: "PDF generat", description: "Descărcarea a început." });
+    } catch (e) {
+      toast({
+        title: "Eroare la export PDF",
+        description: e instanceof Error ? e.message : "Necunoscută",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
     }
   };
+
+  const cashflow = analysis ? buildCashflow(analysis, form) : [];
 
   return (
     <div className="space-y-6">
@@ -120,7 +301,7 @@ export default function InvestmentAnalysisManager() {
         <div>
           <h2 className="text-xl font-semibold text-foreground">Analiză Investiții AI</h2>
           <p className="text-sm text-muted-foreground">
-            Estimare ROI, riscuri și puncte forte generate de GLM 5.2, cu date din Timișoara.
+            Estimare ROI, cashflow 5 ani, riscuri și puncte forte — generate de GLM 5.2.
           </p>
         </div>
       </div>
@@ -157,7 +338,7 @@ export default function InvestmentAnalysisManager() {
               <Input id="amenajari" type="number" min={0} value={form.amenajari} onChange={setField("amenajari")} />
             </div>
 
-            <div className="md:col-span-2 flex items-center gap-3 pt-2">
+            <div className="md:col-span-2 flex flex-wrap items-center gap-3 pt-2">
               <Button type="submit" disabled={!canSubmit || loading} variant="premium">
                 <Sparkles className="w-4 h-4" />
                 Generează Analiză
@@ -166,6 +347,17 @@ export default function InvestmentAnalysisManager() {
                 <Button type="button" variant="outline" onClick={cancel}>
                   <Square className="w-4 h-4" />
                   Oprește
+                </Button>
+              )}
+              {analysis && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={exportPdf}
+                  disabled={exporting}
+                >
+                  <FileDown className="w-4 h-4" />
+                  {exporting ? "Se generează..." : "Exportă PDF"}
                 </Button>
               )}
               {streaming && (
@@ -201,9 +393,25 @@ export default function InvestmentAnalysisManager() {
         </Card>
       )}
 
-      {/* Results */}
+      {/* Results (wrapped in ref for PDF export) */}
       {analysis && (
-        <div className="space-y-6">
+        <div ref={reportRef} className="space-y-6 bg-background p-2">
+          {/* Report header for PDF context */}
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Proprietate analizată
+                </p>
+                <h3 className="text-lg font-semibold text-foreground">{form.nume}</h3>
+              </div>
+              <div className="text-right text-sm text-muted-foreground">
+                <div>{Number(form.pret).toLocaleString("ro-RO")} € • {form.suprafata} mp</div>
+                <div>Chirie estimată: {Number(form.chirie).toLocaleString("ro-RO")} €/lună</div>
+              </div>
+            </div>
+          </div>
+
           {/* KPI cards */}
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
@@ -267,6 +475,46 @@ export default function InvestmentAnalysisManager() {
             </Card>
           </div>
 
+          {/* Cashflow chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BarChart3 className="w-5 h-5 text-primary" /> Cashflow estimat — 5 ani
+              </CardTitle>
+              <CardDescription>
+                Net anual (bară) și cumulativ după investiție inițială (bară secundară).
+                Presupune creștere chirie ~3%/an.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={cashflow} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="an" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      formatter={(v: number) => fmtEur(v)}
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="net" name="Net anual" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="cumulativ" name="Cumulativ (după investiție)" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Market analysis */}
           <Card>
             <CardHeader>
@@ -321,6 +569,67 @@ export default function InvestmentAnalysisManager() {
           </div>
         </div>
       )}
+
+      {/* Recent analyses */}
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <History className="w-5 h-5 text-primary" /> Analize recente
+            </CardTitle>
+            <CardDescription>
+              Ultimele 15 analize salvate. Click pentru reîncărcare rapidă în formular.
+            </CardDescription>
+          </div>
+          <Button variant="ghost" size="sm" onClick={loadHistory} disabled={loadingHistory}>
+            <RotateCcw className={cn("w-4 h-4", loadingHistory && "animate-spin")} />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {history.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              Nicio analiză salvată încă.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Proprietate</TableHead>
+                    <TableHead className="text-right">Preț</TableHead>
+                    <TableHead className="text-right">ROI</TableHead>
+                    <TableHead className="text-right">Recuperare</TableHead>
+                    <TableHead className="text-right">Data</TableHead>
+                    <TableHead />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {history.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-medium">{row.nume}</TableCell>
+                      <TableCell className="text-right">{fmtEur(row.pret)}</TableCell>
+                      <TableCell className={cn("text-right font-semibold", roiTone(row.result.roi_procentual))}>
+                        {row.result.roi_procentual.toFixed(1)}%
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {row.result.recuperare_investitie_ani.toFixed(1)} ani
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground">
+                        {new Date(row.created_at).toLocaleDateString("ro-RO")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
+                          Reîncarcă
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
