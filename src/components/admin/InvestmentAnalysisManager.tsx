@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -30,6 +31,32 @@ import { cn } from "@/lib/utils";
 import {
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
+
+// ---------- Filter persistence ----------
+const FILTER_STORAGE_KEY = "investment-analyses.filters";
+type SortMode = "date-desc" | "date-asc" | "roi-desc";
+const isSortMode = (v: string | null): v is SortMode =>
+  v === "date-desc" || v === "date-asc" || v === "roi-desc";
+
+// ---------- Friendly error mapping ----------
+function friendlyErrorMessage(raw: string | null | undefined): string {
+  if (!raw) return "Ceva nu a mers bine. Te rugăm să reîncerci.";
+  const msg = raw.toLowerCase();
+  if (msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("network"))
+    return "Conexiune întreruptă. Verifică internetul și reîncearcă.";
+  if (msg.includes("aborted") || msg.includes("cancel"))
+    return "Generarea a fost oprită.";
+  if (msg.includes("429") || msg.includes("rate limit") || msg.includes("too many"))
+    return "Prea multe cereri către AI. Așteaptă câteva secunde și reîncearcă.";
+  if (msg.includes("401") || msg.includes("403") || msg.includes("unauthor") || msg.includes("api key") || msg.includes("expired"))
+    return "Cheia API OpenRouter pare invalidă sau expirată. Contactează administratorul.";
+  if (msg.includes("timeout")) return "Modelul AI nu a răspuns la timp. Reîncearcă.";
+  if (msg.includes("json") || msg.includes("schema") || msg.includes("parse"))
+    return "Răspunsul AI nu a putut fi interpretat. Reîncearcă generarea.";
+  if (msg.includes("500") || msg.includes("502") || msg.includes("503"))
+    return "Serverul AI este momentan indisponibil. Reîncearcă în câteva momente.";
+  return "Nu am putut genera analiza. Te rugăm să reîncerci.";
+}
 
 // ---------- Zod schema ----------
 const analysisSchema = z.object({
@@ -131,9 +158,27 @@ export default function InvestmentAnalysisManager() {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [search, setSearch] = useState("");
-  const [sortMode, setSortMode] = useState<"date-desc" | "date-asc" | "roi-desc">("date-desc");
-  const [page, setPage] = useState(1);
+
+  // ---- Filter/sort state (persisted in URL + localStorage) ----
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState<string>(() => {
+    const fromUrl = searchParams.get("q");
+    if (fromUrl !== null) return fromUrl;
+    try { return localStorage.getItem(`${FILTER_STORAGE_KEY}.q`) ?? ""; } catch { return ""; }
+  });
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
+    const fromUrl = searchParams.get("sort");
+    if (isSortMode(fromUrl)) return fromUrl;
+    try {
+      const ls = localStorage.getItem(`${FILTER_STORAGE_KEY}.sort`);
+      if (isSortMode(ls)) return ls;
+    } catch { /* ignore */ }
+    return "date-desc";
+  });
+  const [page, setPage] = useState<number>(() => {
+    const p = Number(searchParams.get("page") ?? "1");
+    return Number.isFinite(p) && p > 0 ? Math.floor(p) : 1;
+  });
   const PAGE_SIZE = 5;
   const [pendingDelete, setPendingDelete] = useState<HistoryRow | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -143,6 +188,33 @@ export default function InvestmentAnalysisManager() {
   const { run, cancel, loading, streaming, streamingText, error, data } =
     useAiEngine<Analysis>();
   const analysis = data?.json ?? null;
+
+  // ---- Persist filters to URL + localStorage ----
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (search) next.set("q", search); else next.delete("q");
+    if (sortMode !== "date-desc") next.set("sort", sortMode); else next.delete("sort");
+    if (page > 1) next.set("page", String(page)); else next.delete("page");
+    setSearchParams(next, { replace: true });
+    try {
+      localStorage.setItem(`${FILTER_STORAGE_KEY}.q`, search);
+      localStorage.setItem(`${FILTER_STORAGE_KEY}.sort`, sortMode);
+    } catch { /* ignore quota */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, sortMode, page]);
+
+  // ---- Toast on AI engine errors (network, 401/403, 429, parse, timeout) ----
+  const lastErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!error || error === lastErrorRef.current) return;
+    lastErrorRef.current = error;
+    toast({
+      title: "Analiză eșuată",
+      description: friendlyErrorMessage(error),
+      variant: "destructive",
+    });
+  }, [error]);
+  useEffect(() => { if (!error) lastErrorRef.current = null; }, [error]);
 
   const setField = (k: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -359,9 +431,10 @@ export default function InvestmentAnalysisManager() {
       pdf.save(`analiza-investitie-${safeName}-${Date.now()}.pdf`);
       toast({ title: "PDF generat", description: "Descărcarea a început." });
     } catch (e) {
+      const raw = e instanceof Error ? e.message : String(e);
       toast({
-        title: "Eroare la export PDF",
-        description: e instanceof Error ? e.message : "Necunoscută",
+        title: "Export PDF eșuat",
+        description: friendlyErrorMessage(raw) || "Nu am putut genera PDF-ul. Te rugăm să reîncerci.",
         variant: "destructive",
       });
     } finally {
@@ -660,24 +733,41 @@ export default function InvestmentAnalysisManager() {
               Ultimele analize salvate. Caută, sortează sau reîncarcă rapid în formular.
             </CardDescription>
           </div>
-          <Button variant="ghost" size="sm" onClick={loadHistory} disabled={loadingHistory}>
-            <RotateCcw className={cn("w-4 h-4", loadingHistory && "animate-spin")} />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={loadHistory}
+            disabled={loadingHistory}
+            aria-label="Reîncarcă lista de analize"
+          >
+            <RotateCcw className={cn("w-4 h-4", loadingHistory && "animate-spin")} aria-hidden="true" />
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search + sort */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div
+            className="flex flex-col sm:flex-row gap-2 sm:items-center"
+            role="search"
+            aria-label="Filtrează analizele salvate"
+          >
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Label htmlFor="history-search" className="sr-only">Caută după nume proprietate</Label>
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+                aria-hidden="true"
+              />
               <Input
+                id="history-search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Caută după nume proprietate..."
                 className="pl-9"
+                aria-label="Caută după nume proprietate"
               />
             </div>
-            <Select value={sortMode} onValueChange={(v) => setSortMode(v as typeof sortMode)}>
-              <SelectTrigger className="sm:w-56">
+            <Label htmlFor="history-sort" className="sr-only">Sortează analizele</Label>
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
+              <SelectTrigger id="history-sort" className="sm:w-56" aria-label="Sortare analize">
                 <SelectValue placeholder="Sortare" />
               </SelectTrigger>
               <SelectContent>
@@ -689,7 +779,12 @@ export default function InvestmentAnalysisManager() {
           </div>
 
           {loadingHistory && !initialLoaded ? (
-            <div className="space-y-2">
+            <div
+              className="space-y-2"
+              role="status"
+              aria-live="polite"
+              aria-label="Se încarcă analizele salvate"
+            >
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <Skeleton className="h-4 flex-1" />
@@ -713,44 +808,61 @@ export default function InvestmentAnalysisManager() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <Table>
+                <Table aria-label="Istoric analize investiții">
+                  <TableCaption className="sr-only">
+                    Lista analizelor de investiții salvate — {visibleHistory.length} rezultate.
+                  </TableCaption>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Proprietate</TableHead>
-                      <TableHead className="text-right">Preț</TableHead>
-                      <TableHead className="text-right">ROI</TableHead>
-                      <TableHead className="text-right">Recuperare</TableHead>
-                      <TableHead className="text-right">Data</TableHead>
-                      <TableHead className="text-right">Acțiuni</TableHead>
+                      <TableHead scope="col">Proprietate</TableHead>
+                      <TableHead scope="col" className="text-right">Preț</TableHead>
+                      <TableHead scope="col" className="text-right">ROI</TableHead>
+                      <TableHead scope="col" className="text-right">Recuperare</TableHead>
+                      <TableHead scope="col" className="text-right">Data</TableHead>
+                      <TableHead scope="col" className="text-right">Acțiuni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {pageRows.map((row) => (
                       <TableRow key={row.id}>
-                        <TableCell className="font-medium">{row.nume}</TableCell>
-                        <TableCell className="text-right">{fmtEur(row.pret)}</TableCell>
-                        <TableCell className={cn("text-right font-semibold", roiTone(row.result.roi_procentual))}>
-                          {row.result.roi_procentual.toFixed(1)}%
+                        <TableCell className="font-medium" scope="row">{row.nume}</TableCell>
+                        <TableCell className="text-right tabular-nums">{fmtEur(row.pret)}</TableCell>
+                        <TableCell className={cn("text-right font-semibold tabular-nums", roiTone(row.result.roi_procentual))}>
+                          <span aria-label={`ROI ${row.result.roi_procentual.toFixed(1)} la sută`}>
+                            {row.result.roi_procentual.toFixed(1)}%
+                          </span>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right tabular-nums">
                           {row.result.recuperare_investitie_ani.toFixed(1)} ani
                         </TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">
-                          {new Date(row.created_at).toLocaleDateString("ro-RO")}
+                          <time dateTime={row.created_at}>
+                            {new Date(row.created_at).toLocaleDateString("ro-RO")}
+                          </time>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
+                          <div
+                            className="flex items-center justify-end gap-1"
+                            role="group"
+                            aria-label={`Acțiuni pentru analiza ${row.nume}`}
+                          >
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => loadFromHistory(row)}
+                              aria-label={`Reîncarcă analiza pentru ${row.nume} în formular`}
+                            >
                               Reîncarcă
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              className="h-9 w-9 min-h-9 min-w-9 text-muted-foreground hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive"
                               onClick={() => setPendingDelete(row)}
                               aria-label={`Șterge analiza pentru ${row.nume}`}
+                              title={`Șterge analiza pentru ${row.nume}`}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4" aria-hidden="true" />
                             </Button>
                           </div>
                         </TableCell>
@@ -762,8 +874,12 @@ export default function InvestmentAnalysisManager() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                  <p className="text-xs text-muted-foreground">
+                <nav
+                  className="flex items-center justify-between pt-3 border-t border-border/50"
+                  role="navigation"
+                  aria-label="Paginare istoric analize"
+                >
+                  <p className="text-xs text-muted-foreground" aria-live="polite">
                     Afișez {(currentPage - 1) * PAGE_SIZE + 1}
                     {"–"}
                     {Math.min(currentPage * PAGE_SIZE, visibleHistory.length)} din {visibleHistory.length}
@@ -774,11 +890,16 @@ export default function InvestmentAnalysisManager() {
                       size="sm"
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
+                      aria-label="Pagina anterioară"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                       <span className="hidden sm:inline">Anterior</span>
                     </Button>
-                    <span className="text-xs text-muted-foreground tabular-nums">
+                    <span
+                      className="text-xs text-muted-foreground tabular-nums"
+                      aria-current="page"
+                      aria-label={`Pagina ${currentPage} din ${totalPages}`}
+                    >
                       Pag. {currentPage} / {totalPages}
                     </span>
                     <Button
@@ -786,12 +907,13 @@ export default function InvestmentAnalysisManager() {
                       size="sm"
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
+                      aria-label="Pagina următoare"
                     >
                       <span className="hidden sm:inline">Următor</span>
-                      <ChevronRight className="w-4 h-4" />
+                      <ChevronRight className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </div>
-                </div>
+                </nav>
               )}
             </>
           )}
