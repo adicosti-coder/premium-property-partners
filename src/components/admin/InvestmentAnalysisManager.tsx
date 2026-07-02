@@ -189,6 +189,33 @@ export default function InvestmentAnalysisManager() {
     useAiEngine<Analysis>();
   const analysis = data?.json ?? null;
 
+  // ---- Persist filters to URL + localStorage ----
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    if (search) next.set("q", search); else next.delete("q");
+    if (sortMode !== "date-desc") next.set("sort", sortMode); else next.delete("sort");
+    if (page > 1) next.set("page", String(page)); else next.delete("page");
+    setSearchParams(next, { replace: true });
+    try {
+      localStorage.setItem(`${FILTER_STORAGE_KEY}.q`, search);
+      localStorage.setItem(`${FILTER_STORAGE_KEY}.sort`, sortMode);
+    } catch { /* ignore quota */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, sortMode, page]);
+
+  // ---- Toast on AI engine errors (network, 401/403, 429, parse, timeout) ----
+  const lastErrorRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!error || error === lastErrorRef.current) return;
+    lastErrorRef.current = error;
+    toast({
+      title: "Analiză eșuată",
+      description: friendlyErrorMessage(error),
+      variant: "destructive",
+    });
+  }, [error]);
+  useEffect(() => { if (!error) lastErrorRef.current = null; }, [error]);
+
   const setField = (k: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((s) => ({ ...s, [k]: e.target.value }));
