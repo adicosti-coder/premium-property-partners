@@ -174,7 +174,7 @@ export default function InvestmentAnalysisManager() {
       };
       const { error: insertErr } = await supabase
         .from("investment_analyses")
-        .insert(payload);
+        .insert([payload]);
       if (insertErr) {
         toast({
           title: "Nu am putut salva analiza",
