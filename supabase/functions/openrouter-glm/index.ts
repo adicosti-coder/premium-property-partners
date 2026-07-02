@@ -1,6 +1,7 @@
 // Edge Function: openrouter-glm
 // Calls OpenRouter chat completions using the z-ai/glm-5.2 model.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "z-ai/glm-5.2";
@@ -17,6 +18,28 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Require authenticated user (JWT). Prevents anonymous cost exhaustion.
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    const { data: claimsData, error: claimsErr } = await authClient.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     const apiKey = Deno.env.get("OPENROUTER_API_KEY");
     if (!apiKey) {
@@ -58,7 +81,7 @@ Deno.serve(async (req) => {
       model: MODEL,
       messages,
       temperature: Math.max(0, Math.min(2, Number(temperature) || 0.3)),
-      ...(max_tokens ? { max_tokens: Number(max_tokens) } : {}),
+      max_tokens: Math.min(Number(max_tokens) || 4096, 8192),
       provider: { require_fp8: true },
     };
 
