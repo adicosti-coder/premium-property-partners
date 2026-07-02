@@ -1017,20 +1017,24 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
     /facebook\.com\/groups\/[^/]+\/(posts|permalink)\/\d+/i.test(u);
   if (isIndividualAd) return false;
 
-  // 4. Anything else with listing-search shape → reject
-  return u.includes('/q-') || /\/q-[^/]+\/?$/.test(u) ||
+  // 4. Reject only when URL/title *actively* signals a category/search page.
+  //    (Previously we default-rejected any unknown-shape URL — that killed
+  //    ~50% of real leads from small platforms & FB posts. Owner-signal +
+  //    phone hydration downstream will filter false-positives.)
+  const hasCategoryShape =
+    u.includes('/q-') || /\/q-[^/]+\/?$/.test(u) ||
     /olx\.ro\/imobiliare(\/|$)/.test(u) ||
     /imobiliare\.ro\/(vanzare|inchirieri)-[^/]+\/?$/.test(u) ||
     /storia\.ro\/ro\/rezultate\//.test(u) ||
     /imoradar24\.ro\/(apartamente|garsoniere|case|terenuri)-de-(vanzare|inchiriat)\//.test(u) ||
     /renaissanceestate\.ro\/apartamente-de-vanzare\//.test(u) ||
-    (/\/(apartamente|garsoniere|case)-de-(vanzare|inchiriat)(\/|$)/.test(u) && !/\/anunt\//.test(u)) ||
+    (/\/(apartamente|garsoniere|case)-de-(vanzare|inchiriat)(\/|$)/.test(u) && !/\/anunt\//.test(u));
+  const hasGenericTitle =
     GENERIC_LISTING_TITLE_SIGNALS.some((signal) => t.includes(removeDiacritics(signal.toLowerCase()))) ||
     t.endsWith('- olx.ro') ||
     t.endsWith('• olx.ro') ||
-    t.endsWith(' storia.ro') ||
-    // Default-reject: unknown domain + no individual-ad URL shape → not callable
-    true;
+    t.endsWith(' storia.ro');
+  return hasCategoryShape || hasGenericTitle;
 }
 
 function hasExplicitOwnerSignal(title: string | null | undefined, url: string | null | undefined, markdown: string | null | undefined): boolean {
