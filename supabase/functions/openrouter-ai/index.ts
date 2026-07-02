@@ -2,7 +2,7 @@
 // Multi-model OpenRouter proxy (z-ai/glm-5.2 default, Gemini alternatives).
 // Supports both JSON responses and SSE streaming.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "z-ai/glm-5.2";
