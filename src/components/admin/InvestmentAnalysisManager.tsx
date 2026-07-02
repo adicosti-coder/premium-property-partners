@@ -129,6 +129,10 @@ export default function InvestmentAnalysisManager() {
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState<"date-desc" | "date-asc" | "roi-desc">("date-desc");
+  const [pendingDelete, setPendingDelete] = useState<HistoryRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
   const savedIdsRef = useRef<Set<string>>(new Set());
 
@@ -146,17 +150,36 @@ export default function InvestmentAnalysisManager() {
     Number(form.suprafata) > 0 &&
     Number(form.chirie) > 0;
 
-  // ---- Load history ----
+  // ---- Load history (strict Zod parse of result JSON) ----
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
     const { data: rows, error: err } = await supabase
       .from("investment_analyses")
       .select("id, nume, pret, suprafata, chirie, amenajari, model, result, created_at")
       .order("created_at", { ascending: false })
-      .limit(15);
+      .limit(50);
     setLoadingHistory(false);
-    if (err) return;
-    setHistory((rows ?? []) as unknown as HistoryRow[]);
+    if (err) {
+      toast({ title: "Nu am putut încărca istoricul", description: err.message, variant: "destructive" });
+      return;
+    }
+    const parsed: HistoryRow[] = [];
+    for (const r of rows ?? []) {
+      const check = analysisSchema.safeParse(r.result);
+      if (!check.success) continue; // skip rows with malformed AI result
+      parsed.push({
+        id: r.id,
+        nume: r.nume,
+        pret: Number(r.pret),
+        suprafata: Number(r.suprafata),
+        chirie: Number(r.chirie),
+        amenajari: Number(r.amenajari ?? 0),
+        model: r.model ?? "z-ai/glm-5.2",
+        result: check.data,
+        created_at: r.created_at ?? new Date().toISOString(),
+      });
+    }
+    setHistory(parsed);
   }, []);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
@@ -178,7 +201,7 @@ export default function InvestmentAnalysisManager() {
         chirie: Number(form.chirie),
         amenajari: Number(form.amenajari) || 0,
         model: data.model,
-        result: analysis as unknown as any,
+        result: analysis as unknown as Record<string, number | string | string[]>,
       };
       const { error: insertErr } = await supabase
         .from("investment_analyses")
@@ -194,6 +217,39 @@ export default function InvestmentAnalysisManager() {
       loadHistory();
     })();
   }, [analysis, data, form, loadHistory]);
+
+  // ---- Delete ----
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    const { error: delErr } = await supabase
+      .from("investment_analyses")
+      .delete()
+      .eq("id", pendingDelete.id);
+    setDeleting(false);
+    if (delErr) {
+      toast({ title: "Ștergere eșuată", description: delErr.message, variant: "destructive" });
+      return;
+    }
+    setHistory((h) => h.filter((r) => r.id !== pendingDelete.id));
+    toast({ title: "Analiză ștearsă", description: pendingDelete.nume });
+    setPendingDelete(null);
+  };
+
+  // ---- Filter + sort ----
+  const visibleHistory = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = q
+      ? history.filter((r) => r.nume.toLowerCase().includes(q))
+      : history.slice();
+    filtered.sort((a, b) => {
+      if (sortMode === "roi-desc") return b.result.roi_procentual - a.result.roi_procentual;
+      const at = new Date(a.created_at).getTime();
+      const bt = new Date(b.created_at).getTime();
+      return sortMode === "date-asc" ? at - bt : bt - at;
+    });
+    return filtered;
+  }, [history, search, sortMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
