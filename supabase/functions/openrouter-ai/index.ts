@@ -1,5 +1,6 @@
 // Edge Function: openrouter-ai
 // Multi-model OpenRouter proxy (z-ai/glm-5.2 default, Gemini alternatives).
+// Supports both JSON responses and SSE streaming.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -16,6 +17,7 @@ interface RequestBody {
   systemPrompt?: string;
   model?: string;
   jsonMode?: boolean;
+  stream?: boolean;
   temperature?: number;
   max_tokens?: number;
 }
@@ -43,6 +45,7 @@ Deno.serve(async (req) => {
       systemPrompt,
       model: rawModel,
       jsonMode = false,
+      stream = false,
       temperature = 0.3,
       max_tokens,
     } = body;
@@ -70,6 +73,7 @@ Deno.serve(async (req) => {
       messages,
       temperature: Math.max(0, Math.min(2, Number(temperature) || 0.3)),
       ...(max_tokens ? { max_tokens: Number(max_tokens) } : {}),
+      ...(stream ? { stream: true } : {}),
     };
 
     if (jsonMode) {
@@ -90,6 +94,72 @@ Deno.serve(async (req) => {
       body: JSON.stringify(payload),
     });
 
+    // ---------- STREAMING PATH ----------
+    if (stream) {
+      if (!upstream.ok || !upstream.body) {
+        const raw = await upstream.text();
+        console.error("OpenRouter stream error", upstream.status, raw);
+        const status = upstream.status === 429 ? 429 : upstream.status === 402 ? 402 : 502;
+        return json({ error: `OpenRouter ${upstream.status}`, details: raw }, status);
+      }
+
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+
+      const readable = new ReadableStream({
+        async start(controller) {
+          const reader = upstream.body!.getReader();
+          let buffer = "";
+          const send = (obj: unknown) =>
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              let idx: number;
+              while ((idx = buffer.indexOf("\n")) !== -1) {
+                let line = buffer.slice(0, idx);
+                buffer = buffer.slice(idx + 1);
+                if (line.endsWith("\r")) line = line.slice(0, -1);
+                if (!line.startsWith("data:")) continue;
+                const payloadStr = line.slice(5).trim();
+                if (!payloadStr) continue;
+                if (payloadStr === "[DONE]") {
+                  controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+                  controller.close();
+                  return;
+                }
+                try {
+                  const chunk = JSON.parse(payloadStr);
+                  const delta: string = chunk?.choices?.[0]?.delta?.content ?? "";
+                  if (delta) send({ delta });
+                } catch { /* ignore malformed chunk */ }
+              }
+            }
+            controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+            controller.close();
+          } catch (err) {
+            console.error("stream pipe error:", err);
+            try { send({ error: String(err) }); } catch {}
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(readable, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    // ---------- NON-STREAMING PATH ----------
     const raw = await upstream.text();
     let data: any = null;
     try { data = JSON.parse(raw); } catch { /* keep raw */ }
