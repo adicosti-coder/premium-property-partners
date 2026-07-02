@@ -2263,6 +2263,48 @@ export type Database = {
         }
         Relationships: []
       }
+      investment_analyses: {
+        Row: {
+          amenajari: number
+          chirie: number
+          created_at: string
+          created_by: string | null
+          id: string
+          model: string
+          nume: string
+          pret: number
+          result: Json
+          suprafata: number
+          updated_at: string
+        }
+        Insert: {
+          amenajari?: number
+          chirie: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model?: string
+          nume: string
+          pret: number
+          result: Json
+          suprafata: number
+          updated_at?: string
+        }
+        Update: {
+          amenajari?: number
+          chirie?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model?: string
+          nume?: string
+          pret?: number
+          result?: Json
+          suprafata?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       keyword_radar_queries: {
         Row: {
           category: string
