@@ -733,24 +733,41 @@ export default function InvestmentAnalysisManager() {
               Ultimele analize salvate. Caută, sortează sau reîncarcă rapid în formular.
             </CardDescription>
           </div>
-          <Button variant="ghost" size="sm" onClick={loadHistory} disabled={loadingHistory}>
-            <RotateCcw className={cn("w-4 h-4", loadingHistory && "animate-spin")} />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={loadHistory}
+            disabled={loadingHistory}
+            aria-label="Reîncarcă lista de analize"
+          >
+            <RotateCcw className={cn("w-4 h-4", loadingHistory && "animate-spin")} aria-hidden="true" />
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search + sort */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div
+            className="flex flex-col sm:flex-row gap-2 sm:items-center"
+            role="search"
+            aria-label="Filtrează analizele salvate"
+          >
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Label htmlFor="history-search" className="sr-only">Caută după nume proprietate</Label>
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+                aria-hidden="true"
+              />
               <Input
+                id="history-search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Caută după nume proprietate..."
                 className="pl-9"
+                aria-label="Caută după nume proprietate"
               />
             </div>
-            <Select value={sortMode} onValueChange={(v) => setSortMode(v as typeof sortMode)}>
-              <SelectTrigger className="sm:w-56">
+            <Label htmlFor="history-sort" className="sr-only">Sortează analizele</Label>
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
+              <SelectTrigger id="history-sort" className="sm:w-56" aria-label="Sortare analize">
                 <SelectValue placeholder="Sortare" />
               </SelectTrigger>
               <SelectContent>
@@ -762,7 +779,12 @@ export default function InvestmentAnalysisManager() {
           </div>
 
           {loadingHistory && !initialLoaded ? (
-            <div className="space-y-2">
+            <div
+              className="space-y-2"
+              role="status"
+              aria-live="polite"
+              aria-label="Se încarcă analizele salvate"
+            >
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <Skeleton className="h-4 flex-1" />
