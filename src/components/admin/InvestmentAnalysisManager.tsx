@@ -20,10 +20,11 @@ import { AiEngineLoader } from "@/components/ai/AiEngineLoader";
 import { useAiEngine, z } from "@/hooks/useAiEngine";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   TrendingUp, Calendar, Euro, ShieldAlert, CheckCircle2,
   Sparkles, XCircle, Square, BarChart3, FileDown, History, RotateCcw,
-  Trash2, Search,
+  Trash2, Search, ClipboardX, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
