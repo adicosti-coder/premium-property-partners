@@ -112,6 +112,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "maintenance", label: "Mentenanță", icon: Wrench },
       { value: "captcha", label: "Captcha", icon: Shield },
       { value: "security", label: "Securitate", icon: ShieldCheck },
+      { value: "ai-security", label: "Securitate AI", icon: ShieldCheck, keywords: ["ai", "openrouter", "scan", "tokens", "permissions"] },
       { value: "system-health", label: "System Health", icon: Activity, keywords: ["audit", "cron", "monitor", "health", "alerts"] },
       { value: "automation", label: "Automation", icon: Sparkles, keywords: ["automation", "automatizare", "kill switch", "joburi", "approvals"] },
     ],
