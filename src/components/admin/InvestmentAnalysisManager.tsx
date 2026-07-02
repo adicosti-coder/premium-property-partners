@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { AiEngineLoader } from "@/components/ai/AiEngineLoader";
 import { useAiEngine, z } from "@/hooks/useAiEngine";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +23,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   TrendingUp, Calendar, Euro, ShieldAlert, CheckCircle2,
   Sparkles, XCircle, Square, BarChart3, FileDown, History, RotateCcw,
+  Trash2, Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -121,6 +129,10 @@ export default function InvestmentAnalysisManager() {
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState<"date-desc" | "date-asc" | "roi-desc">("date-desc");
+  const [pendingDelete, setPendingDelete] = useState<HistoryRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
   const savedIdsRef = useRef<Set<string>>(new Set());
 
@@ -138,17 +150,36 @@ export default function InvestmentAnalysisManager() {
     Number(form.suprafata) > 0 &&
     Number(form.chirie) > 0;
 
-  // ---- Load history ----
+  // ---- Load history (strict Zod parse of result JSON) ----
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
     const { data: rows, error: err } = await supabase
       .from("investment_analyses")
       .select("id, nume, pret, suprafata, chirie, amenajari, model, result, created_at")
       .order("created_at", { ascending: false })
-      .limit(15);
+      .limit(50);
     setLoadingHistory(false);
-    if (err) return;
-    setHistory((rows ?? []) as unknown as HistoryRow[]);
+    if (err) {
+      toast({ title: "Nu am putut încărca istoricul", description: err.message, variant: "destructive" });
+      return;
+    }
+    const parsed: HistoryRow[] = [];
+    for (const r of rows ?? []) {
+      const check = analysisSchema.safeParse(r.result);
+      if (!check.success) continue; // skip rows with malformed AI result
+      parsed.push({
+        id: r.id,
+        nume: r.nume,
+        pret: Number(r.pret),
+        suprafata: Number(r.suprafata),
+        chirie: Number(r.chirie),
+        amenajari: Number(r.amenajari ?? 0),
+        model: r.model ?? "z-ai/glm-5.2",
+        result: check.data,
+        created_at: r.created_at ?? new Date().toISOString(),
+      });
+    }
+    setHistory(parsed);
   }, []);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);
@@ -170,7 +201,7 @@ export default function InvestmentAnalysisManager() {
         chirie: Number(form.chirie),
         amenajari: Number(form.amenajari) || 0,
         model: data.model,
-        result: analysis as unknown as any,
+        result: analysis as unknown as Record<string, number | string | string[]>,
       };
       const { error: insertErr } = await supabase
         .from("investment_analyses")
@@ -186,6 +217,39 @@ export default function InvestmentAnalysisManager() {
       loadHistory();
     })();
   }, [analysis, data, form, loadHistory]);
+
+  // ---- Delete ----
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    const { error: delErr } = await supabase
+      .from("investment_analyses")
+      .delete()
+      .eq("id", pendingDelete.id);
+    setDeleting(false);
+    if (delErr) {
+      toast({ title: "Ștergere eșuată", description: delErr.message, variant: "destructive" });
+      return;
+    }
+    setHistory((h) => h.filter((r) => r.id !== pendingDelete.id));
+    toast({ title: "Analiză ștearsă", description: pendingDelete.nume });
+    setPendingDelete(null);
+  };
+
+  // ---- Filter + sort ----
+  const visibleHistory = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = q
+      ? history.filter((r) => r.nume.toLowerCase().includes(q))
+      : history.slice();
+    filtered.sort((a, b) => {
+      if (sortMode === "roi-desc") return b.result.roi_procentual - a.result.roi_procentual;
+      const at = new Date(a.created_at).getTime();
+      const bt = new Date(b.created_at).getTime();
+      return sortMode === "date-asc" ? at - bt : bt - at;
+    });
+    return filtered;
+  }, [history, search, sortMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -578,17 +642,44 @@ export default function InvestmentAnalysisManager() {
               <History className="w-5 h-5 text-primary" /> Analize recente
             </CardTitle>
             <CardDescription>
-              Ultimele 15 analize salvate. Click pentru reîncărcare rapidă în formular.
+              Ultimele analize salvate. Caută, sortează sau reîncarcă rapid în formular.
             </CardDescription>
           </div>
           <Button variant="ghost" size="sm" onClick={loadHistory} disabled={loadingHistory}>
             <RotateCcw className={cn("w-4 h-4", loadingHistory && "animate-spin")} />
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Search + sort */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Caută după nume proprietate..."
+                className="pl-9"
+              />
+            </div>
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v as typeof sortMode)}>
+              <SelectTrigger className="sm:w-56">
+                <SelectValue placeholder="Sortare" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date-desc">Cele mai recente</SelectItem>
+                <SelectItem value="date-asc">Cele mai vechi</SelectItem>
+                <SelectItem value="roi-desc">ROI cel mai mare</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {history.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
               Nicio analiză salvată încă.
+            </p>
+          ) : visibleHistory.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              Niciun rezultat pentru „{search}".
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -600,11 +691,11 @@ export default function InvestmentAnalysisManager() {
                     <TableHead className="text-right">ROI</TableHead>
                     <TableHead className="text-right">Recuperare</TableHead>
                     <TableHead className="text-right">Data</TableHead>
-                    <TableHead />
+                    <TableHead className="text-right">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {history.map((row) => (
+                  {visibleHistory.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell className="font-medium">{row.nume}</TableCell>
                       <TableCell className="text-right">{fmtEur(row.pret)}</TableCell>
@@ -618,9 +709,20 @@ export default function InvestmentAnalysisManager() {
                         {new Date(row.created_at).toLocaleDateString("ro-RO")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
-                          Reîncarcă
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => loadFromHistory(row)}>
+                            Reîncarcă
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => setPendingDelete(row)}
+                            aria-label={`Șterge analiza pentru ${row.nume}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -630,6 +732,31 @@ export default function InvestmentAnalysisManager() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && !deleting && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Șterge analiza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Analiza pentru <span className="font-medium text-foreground">{pendingDelete?.nume}</span> va fi ștearsă definitiv. Această acțiune nu poate fi anulată.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Se șterge..." : "Șterge"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
