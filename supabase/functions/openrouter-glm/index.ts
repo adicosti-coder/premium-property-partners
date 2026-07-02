@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
       model: MODEL,
       messages,
       temperature: Math.max(0, Math.min(2, Number(temperature) || 0.3)),
-      ...(max_tokens ? { max_tokens: Number(max_tokens) } : {}),
+      max_tokens: Math.min(Number(max_tokens) || 4096, 8192),
       provider: { require_fp8: true },
     };
 
