@@ -1394,13 +1394,17 @@ Deno.serve(async (req) => {
         originalKeyword: q.originalKeyword,
         query: discoveryMode ? q.query.trim() : applyOwnerOnlyFilter(q.platform, q.query, q.ownerFilters),
       }));
-      // Rotate + slice to fit within edge-function runtime
+      // Keep winners at the top (order preserved from success-based sort).
+      // Only shuffle the *tail* so we still explore fresh keywords over time.
       if (!customQuery && queries.length > queryLimit) {
-        for (let k = queries.length - 1; k > 0; k--) {
+        const keepTop = Math.min(Math.ceil(queryLimit * 0.6), queries.length);
+        const head = queries.slice(0, keepTop);
+        const tail = queries.slice(keepTop);
+        for (let k = tail.length - 1; k > 0; k--) {
           const j = Math.floor(Math.random() * (k + 1));
-          [queries[k], queries[j]] = [queries[j], queries[k]];
+          [tail[k], tail[j]] = [tail[j], tail[k]];
         }
-        queries = queries.slice(0, queryLimit);
+        queries = [...head, ...tail].slice(0, queryLimit);
       }
     }
     console.log(`Expanded to ${queries.length} ${discoveryMode ? 'discovery' : 'owner-only'} search queries (cap=${queryLimit})`);
