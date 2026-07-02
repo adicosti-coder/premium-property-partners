@@ -5894,10 +5894,12 @@ export type Database = {
           markdown: string
           meta_description: string | null
           neighborhood: string
+          parent_id: string | null
           primary_keyword: string | null
           title: string
           updated_at: string
           user_id: string
+          version: number
           word_count: number
         }
         Insert: {
@@ -5906,10 +5908,12 @@ export type Database = {
           markdown: string
           meta_description?: string | null
           neighborhood: string
+          parent_id?: string | null
           primary_keyword?: string | null
           title: string
           updated_at?: string
           user_id: string
+          version?: number
           word_count?: number
         }
         Update: {
@@ -5918,13 +5922,23 @@ export type Database = {
           markdown?: string
           meta_description?: string | null
           neighborhood?: string
+          parent_id?: string | null
           primary_keyword?: string | null
           title?: string
           updated_at?: string
           user_id?: string
+          version?: number
           word_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seo_guides_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "seo_guides"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seo_indexing_snapshots: {
         Row: {
