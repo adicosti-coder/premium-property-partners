@@ -71,6 +71,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "seo-optimizer", label: "SEO AI", icon: Sparkles, subgroup: "AI Tools", keywords: ["seo"] },
       { value: "ai-memory", label: "AI Memory", icon: Brain, subgroup: "AI Tools", keywords: ["memorie", "context"] },
       { value: "investment-analysis", label: "Analiză Investiții", icon: TrendingUp, subgroup: "AI Tools", keywords: ["investitii", "roi", "analiza", "glm", "ai"] },
+      { value: "seo-guide-generator", label: "Generator Ghiduri SEO", icon: FileText, subgroup: "AI Tools", keywords: ["seo", "ghid", "articol", "blog", "cartier", "complex", "glm"] },
 
       // 🔍 Scraper Pipeline — întregul flux de prospectare imobiliară (unificat)
       { value: "prospect-pipeline", label: "Pipeline Prospecți", icon: Radar, badgeKey: "prospectPipeline", subgroup: "Scraper Pipeline", keywords: ["prospects", "scraper", "leads", "bot", "hot", "agentii", "monitoring"] },
