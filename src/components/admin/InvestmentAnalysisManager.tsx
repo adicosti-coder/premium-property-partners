@@ -158,9 +158,27 @@ export default function InvestmentAnalysisManager() {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [search, setSearch] = useState("");
-  const [sortMode, setSortMode] = useState<"date-desc" | "date-asc" | "roi-desc">("date-desc");
-  const [page, setPage] = useState(1);
+
+  // ---- Filter/sort state (persisted in URL + localStorage) ----
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState<string>(() => {
+    const fromUrl = searchParams.get("q");
+    if (fromUrl !== null) return fromUrl;
+    try { return localStorage.getItem(`${FILTER_STORAGE_KEY}.q`) ?? ""; } catch { return ""; }
+  });
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
+    const fromUrl = searchParams.get("sort");
+    if (isSortMode(fromUrl)) return fromUrl;
+    try {
+      const ls = localStorage.getItem(`${FILTER_STORAGE_KEY}.sort`);
+      if (isSortMode(ls)) return ls;
+    } catch { /* ignore */ }
+    return "date-desc";
+  });
+  const [page, setPage] = useState<number>(() => {
+    const p = Number(searchParams.get("page") ?? "1");
+    return Number.isFinite(p) && p > 0 ? Math.floor(p) : 1;
+  });
   const PAGE_SIZE = 5;
   const [pendingDelete, setPendingDelete] = useState<HistoryRow | null>(null);
   const [deleting, setDeleting] = useState(false);
