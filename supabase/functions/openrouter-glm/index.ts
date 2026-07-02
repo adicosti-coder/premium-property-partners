@@ -1,6 +1,7 @@
 // Edge Function: openrouter-glm
 // Calls OpenRouter chat completions using the z-ai/glm-5.2 model.
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "z-ai/glm-5.2";
