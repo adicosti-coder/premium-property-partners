@@ -114,8 +114,72 @@ interface GuideGroup {
 function slugify(s: string): string {
   return s.toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    .slice(0, 80);
 }
+
+// Simple word-level LCS diff for the Diff View
+type DiffOp = { type: "equal" | "add" | "del"; text: string };
+function tokenize(s: string): string[] {
+  // preserve whitespace tokens so we can rebuild readable text
+  return s.split(/(\s+)/).filter(t => t.length > 0);
+}
+function diffWords(a: string, b: string): DiffOp[] {
+  const A = tokenize(a);
+  const B = tokenize(b);
+  const n = A.length, m = B.length;
+  // Guard: very large diffs -> fall back to line-level to avoid O(n*m) blowup
+  if (n * m > 400_000) {
+    return [{ type: "del", text: a }, { type: "add", text: b }];
+  }
+  const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  const ops: DiffOp[] = [];
+  let i = 0, j = 0;
+  const push = (type: DiffOp["type"], text: string) => {
+    const last = ops[ops.length - 1];
+    if (last && last.type === type) last.text += text;
+    else ops.push({ type, text });
+  };
+  while (i < n && j < m) {
+    if (A[i] === B[j]) { push("equal", A[i]); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { push("del", A[i]); i++; }
+    else { push("add", B[j]); j++; }
+  }
+  while (i < n) { push("del", A[i++]); }
+  while (j < m) { push("add", B[j++]); }
+  return ops;
+}
+
+interface Validation {
+  titleLen: number;
+  metaLen: number;
+  slug: string;
+  hasKeyword: boolean;
+  issues: string[];
+}
+function validateGuide(md: string, keyword: string, slug: string): Validation {
+  const title = extractTitle(md);
+  const meta = extractMetaDescription(md);
+  const kwNorm = keyword.trim().toLowerCase();
+  const bodyNorm = md.toLowerCase();
+  const hasKeyword = kwNorm.length > 0 && bodyNorm.includes(kwNorm);
+  const issues: string[] = [];
+  if (!title) issues.push("Lipsește titlul (H1) — adaugă o linie `# Titlu...`.");
+  else if (title.length > 60) issues.push(`Titlul are ${title.length} caractere (recomandat sub 60). Scurtează pentru un CTR mai bun în Google.`);
+  if (!meta) issues.push("Lipsește meta descrierea — adaugă `> **Meta descriere:** ...` sub titlu.");
+  else if (meta.length > 160) issues.push(`Meta descrierea are ${meta.length} caractere (max 160). Google o va trunchia.`);
+  else if (meta.length < 120) issues.push(`Meta descrierea are doar ${meta.length} caractere (recomandat 120-160).`);
+  if (kwNorm && !hasKeyword) issues.push(`Cuvântul cheie principal „${keyword}” nu apare în textul ghidului. Include-l în H1, introducere sau într-un H2.`);
+  if (!slug) issues.push("Slug-ul URL este gol. Generează unul din titlu sau completează manual.");
+  else if (slug.length > 70) issues.push(`Slug-ul are ${slug.length} caractere (recomandat sub 70).`);
+  return { titleLen: title.length, metaLen: meta.length, slug, hasKeyword, issues };
+}
+
 
 function countWords(text: string): number {
   if (!text) return 0;
