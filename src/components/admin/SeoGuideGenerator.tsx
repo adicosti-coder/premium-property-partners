@@ -266,6 +266,19 @@ export default function SeoGuideGenerator() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [regenMetaLoading, setRegenMetaLoading] = useState(false);
+  const [regenSlugLoading, setRegenSlugLoading] = useState(false);
+
+  // Slug URL (auto-derived from title, editable, optionally AI-optimized)
+  const [slug, setSlug] = useState<string>("");
+  const [slugTouched, setSlugTouched] = useState(false);
+
+  // Comparație versiuni (Diff view)
+  const [compareRootId, setCompareRootId] = useState<string | null>(null);
+  const [compareA, setCompareA] = useState<string | null>(null); // guide id
+  const [compareB, setCompareB] = useState<string | null>(null); // guide id
+
+  // Validation dialog before saving
+  const [pendingValidation, setPendingValidation] = useState<Validation | null>(null);
 
   const isBusy = loading || streaming;
 
@@ -287,11 +300,19 @@ export default function SeoGuideGenerator() {
 
   const parsedTitle = useMemo(() => extractTitle(editedMarkdown), [editedMarkdown]);
   const parsedMeta = useMemo(() => extractMetaDescription(editedMarkdown), [editedMarkdown]);
+
+  // Auto-derive slug from title unless user manually edited it
+  useEffect(() => {
+    if (slugTouched) return;
+    const auto = slugify(parsedTitle || selected || "ghid-timisoara");
+    setSlug(auto);
+  }, [parsedTitle, selected, slugTouched]);
+
   const previewUrl = useMemo(() => {
     const base = "https://realtrust.ro/ghid/";
-    const slug = slugify(parsedTitle || selected || "ghid-timisoara");
     return `${base}${slug || "ghid-timisoara"}`;
-  }, [parsedTitle, selected]);
+  }, [slug]);
+
 
   // ---------- History (grupat pe rădăcină + versiuni) ----------
   const grouped: GuideGroup[] = useMemo(() => {
