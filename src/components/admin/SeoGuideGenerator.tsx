@@ -358,6 +358,8 @@ export default function SeoGuideGenerator() {
     setEditedMarkdown("");
     setLoadedRootId(null);
     setLoadedVersion(null);
+    setSlugTouched(false);
+
 
     const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
     const prompt = `
