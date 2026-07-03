@@ -16,7 +16,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2, StopCircle, Copy, Download, Sparkles, FileText,
   Save, History, Trash2, RefreshCcw, Globe, Wand2, Pencil, Eye, GitBranch,
+  GitCompareArrows, AlertTriangle, CheckCircle2, Link2,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAiEngine, callAiEngine } from "@/hooks/useAiEngine";
 import { TIMISOARA_LOCAL_ENTITIES } from "@/lib/timisoaraGeo";
@@ -109,8 +114,72 @@ interface GuideGroup {
 function slugify(s: string): string {
   return s.toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    .slice(0, 80);
 }
+
+// Simple word-level LCS diff for the Diff View
+type DiffOp = { type: "equal" | "add" | "del"; text: string };
+function tokenize(s: string): string[] {
+  // preserve whitespace tokens so we can rebuild readable text
+  return s.split(/(\s+)/).filter(t => t.length > 0);
+}
+function diffWords(a: string, b: string): DiffOp[] {
+  const A = tokenize(a);
+  const B = tokenize(b);
+  const n = A.length, m = B.length;
+  // Guard: very large diffs -> fall back to line-level to avoid O(n*m) blowup
+  if (n * m > 400_000) {
+    return [{ type: "del", text: a }, { type: "add", text: b }];
+  }
+  const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  const ops: DiffOp[] = [];
+  let i = 0, j = 0;
+  const push = (type: DiffOp["type"], text: string) => {
+    const last = ops[ops.length - 1];
+    if (last && last.type === type) last.text += text;
+    else ops.push({ type, text });
+  };
+  while (i < n && j < m) {
+    if (A[i] === B[j]) { push("equal", A[i]); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { push("del", A[i]); i++; }
+    else { push("add", B[j]); j++; }
+  }
+  while (i < n) { push("del", A[i++]); }
+  while (j < m) { push("add", B[j++]); }
+  return ops;
+}
+
+interface Validation {
+  titleLen: number;
+  metaLen: number;
+  slug: string;
+  hasKeyword: boolean;
+  issues: string[];
+}
+function validateGuide(md: string, keyword: string, slug: string): Validation {
+  const title = extractTitle(md);
+  const meta = extractMetaDescription(md);
+  const kwNorm = keyword.trim().toLowerCase();
+  const bodyNorm = md.toLowerCase();
+  const hasKeyword = kwNorm.length > 0 && bodyNorm.includes(kwNorm);
+  const issues: string[] = [];
+  if (!title) issues.push("Lipsește titlul (H1) — adaugă o linie `# Titlu...`.");
+  else if (title.length > 60) issues.push(`Titlul are ${title.length} caractere (recomandat sub 60). Scurtează pentru un CTR mai bun în Google.`);
+  if (!meta) issues.push("Lipsește meta descrierea — adaugă `> **Meta descriere:** ...` sub titlu.");
+  else if (meta.length > 160) issues.push(`Meta descrierea are ${meta.length} caractere (max 160). Google o va trunchia.`);
+  else if (meta.length < 120) issues.push(`Meta descrierea are doar ${meta.length} caractere (recomandat 120-160).`);
+  if (kwNorm && !hasKeyword) issues.push(`Cuvântul cheie principal „${keyword}” nu apare în textul ghidului. Include-l în H1, introducere sau într-un H2.`);
+  if (!slug) issues.push("Slug-ul URL este gol. Generează unul din titlu sau completează manual.");
+  else if (slug.length > 70) issues.push(`Slug-ul are ${slug.length} caractere (recomandat sub 70).`);
+  return { titleLen: title.length, metaLen: meta.length, slug, hasKeyword, issues };
+}
+
 
 function countWords(text: string): number {
   if (!text) return 0;
@@ -197,6 +266,19 @@ export default function SeoGuideGenerator() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [regenMetaLoading, setRegenMetaLoading] = useState(false);
+  const [regenSlugLoading, setRegenSlugLoading] = useState(false);
+
+  // Slug URL (auto-derived from title, editable, optionally AI-optimized)
+  const [slug, setSlug] = useState<string>("");
+  const [slugTouched, setSlugTouched] = useState(false);
+
+  // Comparație versiuni (Diff view)
+  const [compareRootId, setCompareRootId] = useState<string | null>(null);
+  const [compareA, setCompareA] = useState<string | null>(null); // guide id
+  const [compareB, setCompareB] = useState<string | null>(null); // guide id
+
+  // Validation dialog before saving
+  const [pendingValidation, setPendingValidation] = useState<Validation | null>(null);
 
   const isBusy = loading || streaming;
 
@@ -218,11 +300,19 @@ export default function SeoGuideGenerator() {
 
   const parsedTitle = useMemo(() => extractTitle(editedMarkdown), [editedMarkdown]);
   const parsedMeta = useMemo(() => extractMetaDescription(editedMarkdown), [editedMarkdown]);
+
+  // Auto-derive slug from title unless user manually edited it
+  useEffect(() => {
+    if (slugTouched) return;
+    const auto = slugify(parsedTitle || selected || "ghid-timisoara");
+    setSlug(auto);
+  }, [parsedTitle, selected, slugTouched]);
+
   const previewUrl = useMemo(() => {
     const base = "https://realtrust.ro/ghid/";
-    const slug = slugify(parsedTitle || selected || "ghid-timisoara");
     return `${base}${slug || "ghid-timisoara"}`;
-  }, [parsedTitle, selected]);
+  }, [slug]);
+
 
   // ---------- History (grupat pe rădăcină + versiuni) ----------
   const grouped: GuideGroup[] = useMemo(() => {
@@ -268,6 +358,8 @@ export default function SeoGuideGenerator() {
     setEditedMarkdown("");
     setLoadedRootId(null);
     setLoadedVersion(null);
+    setSlugTouched(false);
+
 
     const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
     const prompt = `
@@ -301,26 +393,32 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     setRegenMetaLoading(true);
     try {
       const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
-      const res = await callAiEngine<{ title: string; meta: string }>({
+      const res = await callAiEngine<{ title: string; meta: string; slug: string }>({
         model: "z-ai/glm-5.2",
         jsonMode: true,
         temperature: 0.6,
-        max_tokens: 400,
+        max_tokens: 500,
         systemPrompt:
-          "Ești un expert SEO. Răspunzi STRICT cu JSON valid: {\"title\": string, \"meta\": string}. " +
+          "Ești un expert SEO. Răspunzi STRICT cu JSON valid: {\"title\": string, \"meta\": string, \"slug\": string}. " +
           "Title <= 60 caractere, include cuvântul cheie și 'Timișoara'. " +
-          "Meta între 140 și 160 caractere, atractivă, cu keyword-ul principal și un beneficiu clar. Limba română.",
-        prompt: `Cuvânt cheie principal: "${keyword}"\nZonă/Complex: "${selected || "Timișoara"}"\n\nGenerează un NOU titlu SEO și o NOUĂ meta descriere pentru articolul de mai jos. Nu repeta varianta actuală.\n\n--- ARTICOL ACTUAL (extras) ---\n${editedMarkdown.slice(0, 1500)}\n--- SFÂRȘIT ---`,
+          "Meta între 140 și 160 caractere, atractivă, cu keyword-ul principal și un beneficiu clar. " +
+          "Slug: doar litere mici a-z, cifre și cratime, fără diacritice, max 70 caractere, include keyword-ul principal (ex: 'ghid-investitii-isho-timisoara'). Limba română.",
+        prompt: `Cuvânt cheie principal: "${keyword}"\nZonă/Complex: "${selected || "Timișoara"}"\n\nGenerează un NOU titlu SEO, o NOUĂ meta descriere și un slug URL optimizat pentru articolul de mai jos. Nu repeta varianta actuală.\n\n--- ARTICOL ACTUAL (extras) ---\n${editedMarkdown.slice(0, 1500)}\n--- SFÂRȘIT ---`,
       });
-      const parsed = res.json as { title?: string; meta?: string } | null;
+      const parsed = res.json as { title?: string; meta?: string; slug?: string } | null;
       const newTitle = (parsed?.title || "").trim();
       const newMeta = (parsed?.meta || "").trim();
+      const newSlug = slugify((parsed?.slug || "").trim());
       if (!newTitle || !newMeta) {
         toast.error("AI-ul nu a returnat un titlu / meta valid. Reîncearcă.");
         return;
       }
       setEditedMarkdown(md => replaceTitleAndMeta(md, newTitle, newMeta));
-      toast.success("Titlu și meta descriere regenerate.");
+      if (newSlug) {
+        setSlug(newSlug);
+        setSlugTouched(true);
+      }
+      toast.success("Titlu, meta descriere și slug regenerate.");
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Nu am putut regenera meta SEO.");
@@ -329,7 +427,46 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     }
   };
 
-  const handleSave = async () => {
+  const handleRegenerateSlug = async () => {
+    if (!editedMarkdown && !parsedTitle) return;
+    setRegenSlugLoading(true);
+    try {
+      const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
+      const res = await callAiEngine<{ slug: string }>({
+        model: "z-ai/glm-5.2",
+        jsonMode: true,
+        temperature: 0.4,
+        max_tokens: 120,
+        systemPrompt:
+          "Ești un expert SEO. Răspunzi STRICT cu JSON valid: {\"slug\": string}. " +
+          "Slug: doar litere mici a-z, cifre și cratime, fără diacritice, între 30 și 70 caractere, " +
+          "include cuvântul cheie principal și zona (ex: 'ghid-investitii-imobiliare-isho-timisoara').",
+        prompt: `Titlu: "${parsedTitle}"\nCuvânt cheie: "${keyword}"\nZonă: "${selected || "Timișoara"}"\n\nGenerează un slug URL optim pentru acest ghid.`,
+      });
+      const parsed = res.json as { slug?: string } | null;
+      const newSlug = slugify((parsed?.slug || "").trim());
+      if (!newSlug) {
+        toast.error("AI-ul nu a returnat un slug valid.");
+        return;
+      }
+      setSlug(newSlug);
+      setSlugTouched(true);
+      toast.success("Slug URL optimizat de AI.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Nu am putut genera slug-ul.");
+    } finally {
+      setRegenSlugLoading(false);
+    }
+  };
+
+
+  const currentValidation = useMemo<Validation>(
+    () => validateGuide(editedMarkdown, primaryKeyword.trim() || `apartamente ${selected} Timișoara`, slug),
+    [editedMarkdown, primaryKeyword, selected, slug],
+  );
+
+  const persistGuide = async () => {
     if (!editedMarkdown || isBusy) return;
     setSaving(true);
     try {
@@ -380,7 +517,17 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
       toast.error(e?.message || "Nu am putut salva ghidul.");
     } finally {
       setSaving(false);
+      setPendingValidation(null);
     }
+  };
+
+  const handleSave = () => {
+    if (!editedMarkdown || isBusy) return;
+    if (currentValidation.issues.length > 0) {
+      setPendingValidation(currentValidation);
+      return;
+    }
+    persistGuide();
   };
 
   const handleLoadVersion = (g: SavedGuide) => {
@@ -391,8 +538,10 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     setLoadedRootId(g.parent_id ?? g.id);
     setLoadedVersion(g.version);
     setEditMode("edit");
+    setSlugTouched(false); // let slug re-derive from the loaded title
     toast.success(`Am încărcat "${g.title}" (v${g.version}).`);
   };
+
 
   const handleDeleteGroup = async (rootId: string, title: string) => {
     if (!confirm(`Ștergi definitiv "${title}" și toate versiunile sale?`)) return;
@@ -424,12 +573,12 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
   const handleDownload = () => {
     if (!editedMarkdown) return;
     try {
-      const slug = slugify(selected || "timisoara");
+      const fileSlug = slug || slugify(selected || "timisoara");
       const blob = new Blob([editedMarkdown], { type: "text/markdown;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `ghid-seo-${slug}.md`;
+      a.download = `ghid-seo-${fileSlug}.md`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -506,6 +655,56 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="seo-slug" className="flex items-center gap-1.5">
+              <Link2 className="w-3.5 h-3.5" aria-hidden /> Slug URL
+            </Label>
+            <div className="flex flex-wrap items-stretch gap-2">
+              <div className="flex-1 min-w-[240px] flex items-stretch rounded-md border bg-background overflow-hidden focus-within:ring-2 focus-within:ring-ring">
+                <span className="px-2 flex items-center text-xs text-muted-foreground bg-muted whitespace-nowrap">
+                  realtrust.ro/ghid/
+                </span>
+                <Input
+                  id="seo-slug"
+                  value={slug}
+                  onChange={e => { setSlug(slugify(e.target.value)); setSlugTouched(true); }}
+                  placeholder="ghid-investitii-isho-timisoara"
+                  className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  aria-describedby="seo-slug-help"
+                  aria-invalid={slug.length > 70 || !slug}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerateSlug}
+                disabled={regenSlugLoading || isBusy || (!parsedTitle && !editedMarkdown)}
+                aria-label="Optimizează slug-ul cu AI"
+              >
+                {regenSlugLoading
+                  ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" aria-hidden />
+                  : <Wand2 className="w-3.5 h-3.5 mr-2" aria-hidden />}
+                AI Slug
+              </Button>
+              {slugTouched && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setSlugTouched(false); }}
+                  aria-label="Regenerează slug-ul din titlu"
+                >
+                  <RefreshCcw className="w-3.5 h-3.5 mr-1" aria-hidden /> Auto
+                </Button>
+              )}
+            </div>
+            <p id="seo-slug-help" className="text-xs text-muted-foreground">
+              Generat automat din titlu. Doar litere mici, cifre și cratime · {slug.length}/70 caractere.
+            </p>
+          </div>
+
+
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <Button onClick={handleGenerate} disabled={isBusy || !selected} aria-label="Generează ghidul SEO">
               {isBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> : <Sparkles className="w-4 h-4 mr-2" aria-hidden />}
@@ -559,6 +758,46 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
               {error}
             </div>
           )}
+
+          {/* Validare SEO în timp real */}
+          {hasContent && !isBusy && (
+            <div
+              className={`rounded-md border px-3 py-2 text-xs space-y-1.5 ${
+                currentValidation.issues.length === 0
+                  ? "border-green-500/40 bg-green-500/5"
+                  : "border-amber-500/40 bg-amber-500/5"
+              }`}
+              role="status"
+              aria-live="polite"
+              aria-label="Validare SEO"
+            >
+              <div className="flex items-center gap-2 font-medium">
+                {currentValidation.issues.length === 0 ? (
+                  <><CheckCircle2 className="w-4 h-4 text-green-600" aria-hidden /> Ghidul respectă recomandările SEO.</>
+                ) : (
+                  <><AlertTriangle className="w-4 h-4 text-amber-600" aria-hidden /> {currentValidation.issues.length} recomand{currentValidation.issues.length === 1 ? "are" : "ări"} SEO</>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="outline" className={currentValidation.titleLen > 60 ? "border-destructive text-destructive" : ""}>
+                  Titlu {currentValidation.titleLen}/60
+                </Badge>
+                <Badge variant="outline" className={currentValidation.metaLen > 160 || currentValidation.metaLen < 120 ? "border-amber-500 text-amber-600" : ""}>
+                  Meta {currentValidation.metaLen}/160
+                </Badge>
+                <Badge variant="outline" className={currentValidation.hasKeyword ? "" : "border-amber-500 text-amber-600"}>
+                  {currentValidation.hasKeyword ? "Keyword ✓" : "Keyword lipsă"}
+                </Badge>
+                <Badge variant="outline">Slug {slug.length}/70</Badge>
+              </div>
+              {currentValidation.issues.length > 0 && (
+                <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                  {currentValidation.issues.map((it, i) => <li key={i}>{it}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
+
         </CardContent>
       </Card>
 
@@ -740,6 +979,219 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
           )}
         </CardContent>
       </Card>
+
+      {/* Comparație versiuni (Diff View) */}
+      <VersionDiffCard
+        groups={grouped}
+        compareRootId={compareRootId}
+        setCompareRootId={(id) => { setCompareRootId(id); setCompareA(null); setCompareB(null); }}
+        compareA={compareA}
+        setCompareA={setCompareA}
+        compareB={compareB}
+        setCompareB={setCompareB}
+      />
+
+      {/* Validation dialog before saving */}
+      <AlertDialog
+        open={!!pendingValidation}
+        onOpenChange={(open) => { if (!open) setPendingValidation(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" aria-hidden />
+              Ghidul are {pendingValidation?.issues.length ?? 0} recomand{(pendingValidation?.issues.length ?? 0) === 1 ? "are" : "ări"} SEO
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Poți salva oricum, dar ia în calcul aceste sugestii:</p>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {pendingValidation?.issues.map((it, i) => <li key={i}>{it}</li>)}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Corectez înainte</AlertDialogCancel>
+            <AlertDialogAction onClick={() => persistGuide()}>
+              Salvează oricum
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
+// ---------- Version Diff Card ----------
+interface VersionDiffCardProps {
+  groups: GuideGroup[];
+  compareRootId: string | null;
+  setCompareRootId: (id: string | null) => void;
+  compareA: string | null;
+  setCompareA: (id: string | null) => void;
+  compareB: string | null;
+  setCompareB: (id: string | null) => void;
+}
+
+function VersionDiffCard({
+  groups, compareRootId, setCompareRootId,
+  compareA, setCompareA, compareB, setCompareB,
+}: VersionDiffCardProps) {
+  const eligibleGroups = groups.filter(g => g.versions.length >= 2);
+  const activeGroup = groups.find(g => g.rootId === compareRootId) ?? null;
+  const versionA = activeGroup?.versions.find(v => v.id === compareA) ?? null;
+  const versionB = activeGroup?.versions.find(v => v.id === compareB) ?? null;
+
+  const diff = useMemo(() => {
+    if (!versionA || !versionB) return [];
+    return diffWords(versionA.markdown, versionB.markdown);
+  }, [versionA, versionB]);
+
+  const stats = useMemo(() => {
+    let added = 0, removed = 0;
+    for (const op of diff) {
+      const words = op.text.trim().split(/\s+/).filter(Boolean).length;
+      if (op.type === "add") added += words;
+      else if (op.type === "del") removed += words;
+    }
+    return { added, removed };
+  }, [diff]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <GitCompareArrows className="w-4 h-4" aria-hidden />
+          Comparație versiuni (Diff)
+        </CardTitle>
+        <CardDescription>
+          Alege un ghid cu cel puțin 2 versiuni și compară două variante. Verde = adăugat · Roz = șters.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {eligibleGroups.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nu ai încă un ghid cu mai multe versiuni. Salvează o versiune nouă a unui ghid existent pentru a activa compararea.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="diff-guide">Ghid</Label>
+                <Select
+                  value={compareRootId ?? ""}
+                  onValueChange={(v) => setCompareRootId(v || null)}
+                >
+                  <SelectTrigger id="diff-guide" aria-label="Alege ghidul de comparat">
+                    <SelectValue placeholder="Alege un ghid..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eligibleGroups.map(g => (
+                      <SelectItem key={g.rootId} value={g.rootId}>
+                        {g.latest.title} ({g.versions.length} versiuni)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="diff-a">Versiunea A (bază)</Label>
+                <Select
+                  value={compareA ?? ""}
+                  onValueChange={(v) => setCompareA(v || null)}
+                  disabled={!activeGroup}
+                >
+                  <SelectTrigger id="diff-a" aria-label="Versiunea A">
+                    <SelectValue placeholder="v?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeGroup?.versions.map(v => (
+                      <SelectItem key={v.id} value={v.id}>
+                        v{v.version} · {v.word_count}w
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="diff-b">Versiunea B (comparată)</Label>
+                <Select
+                  value={compareB ?? ""}
+                  onValueChange={(v) => setCompareB(v || null)}
+                  disabled={!activeGroup}
+                >
+                  <SelectTrigger id="diff-b" aria-label="Versiunea B">
+                    <SelectValue placeholder="v?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeGroup?.versions.map(v => (
+                      <SelectItem key={v.id} value={v.id}>
+                        v{v.version} · {v.word_count}w
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {versionA && versionB && versionA.id === versionB.id && (
+              <p className="text-xs text-amber-600">
+                Ai selectat aceeași versiune de două ori. Alege o versiune diferită pentru B.
+              </p>
+            )}
+
+            {versionA && versionB && versionA.id !== versionB.id && (
+              <>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge variant="outline" className="border-green-500 text-green-700 dark:text-green-400">
+                    +{stats.added} cuvinte adăugate
+                  </Badge>
+                  <Badge variant="outline" className="border-rose-500 text-rose-700 dark:text-rose-400">
+                    −{stats.removed} cuvinte șterse
+                  </Badge>
+                  <span className="text-muted-foreground self-center">
+                    v{versionA.version} → v{versionB.version}
+                  </span>
+                </div>
+                <ScrollArea className="h-[420px] rounded-md border bg-background">
+                  <pre
+                    className="p-4 text-sm whitespace-pre-wrap break-words font-mono leading-relaxed"
+                    aria-label={`Diff între versiunea ${versionA.version} și ${versionB.version}`}
+                  >
+                    {diff.map((op, i) => {
+                      if (op.type === "equal") {
+                        return <span key={i}>{op.text}</span>;
+                      }
+                      if (op.type === "add") {
+                        return (
+                          <span
+                            key={i}
+                            className="bg-green-500/20 text-green-800 dark:text-green-300 rounded-sm"
+                            title="Adăugat"
+                          >
+                            {op.text}
+                          </span>
+                        );
+                      }
+                      return (
+                        <span
+                          key={i}
+                          className="bg-rose-500/20 text-rose-800 dark:text-rose-300 line-through rounded-sm"
+                          title="Șters"
+                        >
+                          {op.text}
+                        </span>
+                      );
+                    })}
+                  </pre>
+                </ScrollArea>
+              </>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
