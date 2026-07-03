@@ -16,7 +16,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Loader2, StopCircle, Copy, Download, Sparkles, FileText,
   Save, History, Trash2, RefreshCcw, Globe, Wand2, Pencil, Eye, GitBranch,
+  GitCompareArrows, AlertTriangle, CheckCircle2, Link2,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAiEngine, callAiEngine } from "@/hooks/useAiEngine";
 import { TIMISOARA_LOCAL_ENTITIES } from "@/lib/timisoaraGeo";
