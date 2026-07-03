@@ -573,12 +573,12 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
   const handleDownload = () => {
     if (!editedMarkdown) return;
     try {
-      const slug = slugify(selected || "timisoara");
+      const fileSlug = slug || slugify(selected || "timisoara");
       const blob = new Blob([editedMarkdown], { type: "text/markdown;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `ghid-seo-${slug}.md`;
+      a.download = `ghid-seo-${fileSlug}.md`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
