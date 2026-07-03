@@ -461,7 +461,12 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
   };
 
 
-  const handleSave = async () => {
+  const currentValidation = useMemo<Validation>(
+    () => validateGuide(editedMarkdown, primaryKeyword.trim() || `apartamente ${selected} Timișoara`, slug),
+    [editedMarkdown, primaryKeyword, selected, slug],
+  );
+
+  const persistGuide = async () => {
     if (!editedMarkdown || isBusy) return;
     setSaving(true);
     try {
@@ -512,7 +517,17 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
       toast.error(e?.message || "Nu am putut salva ghidul.");
     } finally {
       setSaving(false);
+      setPendingValidation(null);
     }
+  };
+
+  const handleSave = () => {
+    if (!editedMarkdown || isBusy) return;
+    if (currentValidation.issues.length > 0) {
+      setPendingValidation(currentValidation);
+      return;
+    }
+    persistGuide();
   };
 
   const handleLoadVersion = (g: SavedGuide) => {
@@ -523,8 +538,10 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     setLoadedRootId(g.parent_id ?? g.id);
     setLoadedVersion(g.version);
     setEditMode("edit");
+    setSlugTouched(false); // let slug re-derive from the loaded title
     toast.success(`Am încărcat "${g.title}" (v${g.version}).`);
   };
+
 
   const handleDeleteGroup = async (rootId: string, title: string) => {
     if (!confirm(`Ștergi definitiv "${title}" și toate versiunile sale?`)) return;
