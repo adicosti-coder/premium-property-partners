@@ -758,6 +758,46 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
               {error}
             </div>
           )}
+
+          {/* Validare SEO în timp real */}
+          {hasContent && !isBusy && (
+            <div
+              className={`rounded-md border px-3 py-2 text-xs space-y-1.5 ${
+                currentValidation.issues.length === 0
+                  ? "border-green-500/40 bg-green-500/5"
+                  : "border-amber-500/40 bg-amber-500/5"
+              }`}
+              role="status"
+              aria-live="polite"
+              aria-label="Validare SEO"
+            >
+              <div className="flex items-center gap-2 font-medium">
+                {currentValidation.issues.length === 0 ? (
+                  <><CheckCircle2 className="w-4 h-4 text-green-600" aria-hidden /> Ghidul respectă recomandările SEO.</>
+                ) : (
+                  <><AlertTriangle className="w-4 h-4 text-amber-600" aria-hidden /> {currentValidation.issues.length} recomand{currentValidation.issues.length === 1 ? "are" : "ări"} SEO</>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant="outline" className={currentValidation.titleLen > 60 ? "border-destructive text-destructive" : ""}>
+                  Titlu {currentValidation.titleLen}/60
+                </Badge>
+                <Badge variant="outline" className={currentValidation.metaLen > 160 || currentValidation.metaLen < 120 ? "border-amber-500 text-amber-600" : ""}>
+                  Meta {currentValidation.metaLen}/160
+                </Badge>
+                <Badge variant="outline" className={currentValidation.hasKeyword ? "" : "border-amber-500 text-amber-600"}>
+                  {currentValidation.hasKeyword ? "Keyword ✓" : "Keyword lipsă"}
+                </Badge>
+                <Badge variant="outline">Slug {slug.length}/70</Badge>
+              </div>
+              {currentValidation.issues.length > 0 && (
+                <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                  {currentValidation.issues.map((it, i) => <li key={i}>{it}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
+
         </CardContent>
       </Card>
 
