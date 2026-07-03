@@ -655,6 +655,56 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="seo-slug" className="flex items-center gap-1.5">
+              <Link2 className="w-3.5 h-3.5" aria-hidden /> Slug URL
+            </Label>
+            <div className="flex flex-wrap items-stretch gap-2">
+              <div className="flex-1 min-w-[240px] flex items-stretch rounded-md border bg-background overflow-hidden focus-within:ring-2 focus-within:ring-ring">
+                <span className="px-2 flex items-center text-xs text-muted-foreground bg-muted whitespace-nowrap">
+                  realtrust.ro/ghid/
+                </span>
+                <Input
+                  id="seo-slug"
+                  value={slug}
+                  onChange={e => { setSlug(slugify(e.target.value)); setSlugTouched(true); }}
+                  placeholder="ghid-investitii-isho-timisoara"
+                  className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  aria-describedby="seo-slug-help"
+                  aria-invalid={slug.length > 70 || !slug}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerateSlug}
+                disabled={regenSlugLoading || isBusy || (!parsedTitle && !editedMarkdown)}
+                aria-label="Optimizează slug-ul cu AI"
+              >
+                {regenSlugLoading
+                  ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" aria-hidden />
+                  : <Wand2 className="w-3.5 h-3.5 mr-2" aria-hidden />}
+                AI Slug
+              </Button>
+              {slugTouched && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setSlugTouched(false); }}
+                  aria-label="Regenerează slug-ul din titlu"
+                >
+                  <RefreshCcw className="w-3.5 h-3.5 mr-1" aria-hidden /> Auto
+                </Button>
+              )}
+            </div>
+            <p id="seo-slug-help" className="text-xs text-muted-foreground">
+              Generat automat din titlu. Doar litere mici, cifre și cratime · {slug.length}/70 caractere.
+            </p>
+          </div>
+
+
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <Button onClick={handleGenerate} disabled={isBusy || !selected} aria-label="Generează ghidul SEO">
               {isBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden /> : <Sparkles className="w-4 h-4 mr-2" aria-hidden />}
