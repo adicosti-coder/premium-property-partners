@@ -979,6 +979,219 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
           )}
         </CardContent>
       </Card>
+
+      {/* Comparație versiuni (Diff View) */}
+      <VersionDiffCard
+        groups={grouped}
+        compareRootId={compareRootId}
+        setCompareRootId={(id) => { setCompareRootId(id); setCompareA(null); setCompareB(null); }}
+        compareA={compareA}
+        setCompareA={setCompareA}
+        compareB={compareB}
+        setCompareB={setCompareB}
+      />
+
+      {/* Validation dialog before saving */}
+      <AlertDialog
+        open={!!pendingValidation}
+        onOpenChange={(open) => { if (!open) setPendingValidation(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" aria-hidden />
+              Ghidul are {pendingValidation?.issues.length ?? 0} recomand{(pendingValidation?.issues.length ?? 0) === 1 ? "are" : "ări"} SEO
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Poți salva oricum, dar ia în calcul aceste sugestii:</p>
+                <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                  {pendingValidation?.issues.map((it, i) => <li key={i}>{it}</li>)}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Corectez înainte</AlertDialogCancel>
+            <AlertDialogAction onClick={() => persistGuide()}>
+              Salvează oricum
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
+// ---------- Version Diff Card ----------
+interface VersionDiffCardProps {
+  groups: GuideGroup[];
+  compareRootId: string | null;
+  setCompareRootId: (id: string | null) => void;
+  compareA: string | null;
+  setCompareA: (id: string | null) => void;
+  compareB: string | null;
+  setCompareB: (id: string | null) => void;
+}
+
+function VersionDiffCard({
+  groups, compareRootId, setCompareRootId,
+  compareA, setCompareA, compareB, setCompareB,
+}: VersionDiffCardProps) {
+  const eligibleGroups = groups.filter(g => g.versions.length >= 2);
+  const activeGroup = groups.find(g => g.rootId === compareRootId) ?? null;
+  const versionA = activeGroup?.versions.find(v => v.id === compareA) ?? null;
+  const versionB = activeGroup?.versions.find(v => v.id === compareB) ?? null;
+
+  const diff = useMemo(() => {
+    if (!versionA || !versionB) return [];
+    return diffWords(versionA.markdown, versionB.markdown);
+  }, [versionA, versionB]);
+
+  const stats = useMemo(() => {
+    let added = 0, removed = 0;
+    for (const op of diff) {
+      const words = op.text.trim().split(/\s+/).filter(Boolean).length;
+      if (op.type === "add") added += words;
+      else if (op.type === "del") removed += words;
+    }
+    return { added, removed };
+  }, [diff]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <GitCompareArrows className="w-4 h-4" aria-hidden />
+          Comparație versiuni (Diff)
+        </CardTitle>
+        <CardDescription>
+          Alege un ghid cu cel puțin 2 versiuni și compară două variante. Verde = adăugat · Roz = șters.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {eligibleGroups.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nu ai încă un ghid cu mai multe versiuni. Salvează o versiune nouă a unui ghid existent pentru a activa compararea.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="diff-guide">Ghid</Label>
+                <Select
+                  value={compareRootId ?? ""}
+                  onValueChange={(v) => setCompareRootId(v || null)}
+                >
+                  <SelectTrigger id="diff-guide" aria-label="Alege ghidul de comparat">
+                    <SelectValue placeholder="Alege un ghid..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eligibleGroups.map(g => (
+                      <SelectItem key={g.rootId} value={g.rootId}>
+                        {g.latest.title} ({g.versions.length} versiuni)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="diff-a">Versiunea A (bază)</Label>
+                <Select
+                  value={compareA ?? ""}
+                  onValueChange={(v) => setCompareA(v || null)}
+                  disabled={!activeGroup}
+                >
+                  <SelectTrigger id="diff-a" aria-label="Versiunea A">
+                    <SelectValue placeholder="v?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeGroup?.versions.map(v => (
+                      <SelectItem key={v.id} value={v.id}>
+                        v{v.version} · {v.word_count}w
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="diff-b">Versiunea B (comparată)</Label>
+                <Select
+                  value={compareB ?? ""}
+                  onValueChange={(v) => setCompareB(v || null)}
+                  disabled={!activeGroup}
+                >
+                  <SelectTrigger id="diff-b" aria-label="Versiunea B">
+                    <SelectValue placeholder="v?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeGroup?.versions.map(v => (
+                      <SelectItem key={v.id} value={v.id}>
+                        v{v.version} · {v.word_count}w
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {versionA && versionB && versionA.id === versionB.id && (
+              <p className="text-xs text-amber-600">
+                Ai selectat aceeași versiune de două ori. Alege o versiune diferită pentru B.
+              </p>
+            )}
+
+            {versionA && versionB && versionA.id !== versionB.id && (
+              <>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge variant="outline" className="border-green-500 text-green-700 dark:text-green-400">
+                    +{stats.added} cuvinte adăugate
+                  </Badge>
+                  <Badge variant="outline" className="border-rose-500 text-rose-700 dark:text-rose-400">
+                    −{stats.removed} cuvinte șterse
+                  </Badge>
+                  <span className="text-muted-foreground self-center">
+                    v{versionA.version} → v{versionB.version}
+                  </span>
+                </div>
+                <ScrollArea className="h-[420px] rounded-md border bg-background">
+                  <pre
+                    className="p-4 text-sm whitespace-pre-wrap break-words font-mono leading-relaxed"
+                    aria-label={`Diff între versiunea ${versionA.version} și ${versionB.version}`}
+                  >
+                    {diff.map((op, i) => {
+                      if (op.type === "equal") {
+                        return <span key={i}>{op.text}</span>;
+                      }
+                      if (op.type === "add") {
+                        return (
+                          <span
+                            key={i}
+                            className="bg-green-500/20 text-green-800 dark:text-green-300 rounded-sm"
+                            title="Adăugat"
+                          >
+                            {op.text}
+                          </span>
+                        );
+                      }
+                      return (
+                        <span
+                          key={i}
+                          className="bg-rose-500/20 text-rose-800 dark:text-rose-300 line-through rounded-sm"
+                          title="Șters"
+                        >
+                          {op.text}
+                        </span>
+                      );
+                    })}
+                  </pre>
+                </ScrollArea>
+              </>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
