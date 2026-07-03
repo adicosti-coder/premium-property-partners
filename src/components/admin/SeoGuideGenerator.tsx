@@ -393,26 +393,32 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     setRegenMetaLoading(true);
     try {
       const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
-      const res = await callAiEngine<{ title: string; meta: string }>({
+      const res = await callAiEngine<{ title: string; meta: string; slug: string }>({
         model: "z-ai/glm-5.2",
         jsonMode: true,
         temperature: 0.6,
-        max_tokens: 400,
+        max_tokens: 500,
         systemPrompt:
-          "Ești un expert SEO. Răspunzi STRICT cu JSON valid: {\"title\": string, \"meta\": string}. " +
+          "Ești un expert SEO. Răspunzi STRICT cu JSON valid: {\"title\": string, \"meta\": string, \"slug\": string}. " +
           "Title <= 60 caractere, include cuvântul cheie și 'Timișoara'. " +
-          "Meta între 140 și 160 caractere, atractivă, cu keyword-ul principal și un beneficiu clar. Limba română.",
-        prompt: `Cuvânt cheie principal: "${keyword}"\nZonă/Complex: "${selected || "Timișoara"}"\n\nGenerează un NOU titlu SEO și o NOUĂ meta descriere pentru articolul de mai jos. Nu repeta varianta actuală.\n\n--- ARTICOL ACTUAL (extras) ---\n${editedMarkdown.slice(0, 1500)}\n--- SFÂRȘIT ---`,
+          "Meta între 140 și 160 caractere, atractivă, cu keyword-ul principal și un beneficiu clar. " +
+          "Slug: doar litere mici a-z, cifre și cratime, fără diacritice, max 70 caractere, include keyword-ul principal (ex: 'ghid-investitii-isho-timisoara'). Limba română.",
+        prompt: `Cuvânt cheie principal: "${keyword}"\nZonă/Complex: "${selected || "Timișoara"}"\n\nGenerează un NOU titlu SEO, o NOUĂ meta descriere și un slug URL optimizat pentru articolul de mai jos. Nu repeta varianta actuală.\n\n--- ARTICOL ACTUAL (extras) ---\n${editedMarkdown.slice(0, 1500)}\n--- SFÂRȘIT ---`,
       });
-      const parsed = res.json as { title?: string; meta?: string } | null;
+      const parsed = res.json as { title?: string; meta?: string; slug?: string } | null;
       const newTitle = (parsed?.title || "").trim();
       const newMeta = (parsed?.meta || "").trim();
+      const newSlug = slugify((parsed?.slug || "").trim());
       if (!newTitle || !newMeta) {
         toast.error("AI-ul nu a returnat un titlu / meta valid. Reîncearcă.");
         return;
       }
       setEditedMarkdown(md => replaceTitleAndMeta(md, newTitle, newMeta));
-      toast.success("Titlu și meta descriere regenerate.");
+      if (newSlug) {
+        setSlug(newSlug);
+        setSlugTouched(true);
+      }
+      toast.success("Titlu, meta descriere și slug regenerate.");
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Nu am putut regenera meta SEO.");
@@ -420,6 +426,40 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
       setRegenMetaLoading(false);
     }
   };
+
+  const handleRegenerateSlug = async () => {
+    if (!editedMarkdown && !parsedTitle) return;
+    setRegenSlugLoading(true);
+    try {
+      const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
+      const res = await callAiEngine<{ slug: string }>({
+        model: "z-ai/glm-5.2",
+        jsonMode: true,
+        temperature: 0.4,
+        max_tokens: 120,
+        systemPrompt:
+          "Ești un expert SEO. Răspunzi STRICT cu JSON valid: {\"slug\": string}. " +
+          "Slug: doar litere mici a-z, cifre și cratime, fără diacritice, între 30 și 70 caractere, " +
+          "include cuvântul cheie principal și zona (ex: 'ghid-investitii-imobiliare-isho-timisoara').",
+        prompt: `Titlu: "${parsedTitle}"\nCuvânt cheie: "${keyword}"\nZonă: "${selected || "Timișoara"}"\n\nGenerează un slug URL optim pentru acest ghid.`,
+      });
+      const parsed = res.json as { slug?: string } | null;
+      const newSlug = slugify((parsed?.slug || "").trim());
+      if (!newSlug) {
+        toast.error("AI-ul nu a returnat un slug valid.");
+        return;
+      }
+      setSlug(newSlug);
+      setSlugTouched(true);
+      toast.success("Slug URL optimizat de AI.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Nu am putut genera slug-ul.");
+    } finally {
+      setRegenSlugLoading(false);
+    }
+  };
+
 
   const handleSave = async () => {
     if (!editedMarkdown || isBusy) return;
