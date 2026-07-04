@@ -1196,63 +1196,116 @@ async function oneClickCanonicalFix(sb: any, body: AnyBody, userId: string) {
 
   // BULK
   const threshold = body.bulk_threshold ?? 90;
+  const offset = Math.max(0, body.offset ?? 0);
+  const limit = Math.min(Math.max(1, body.limit ?? 50), 100);
+
+  // Gather candidate URLs from multiple sources so bulk still works even when
+  // seo_audits is empty (fresh project) or thin.
+  const urlSet = new Set<string>();
+
   const { data: audits } = await sb
     .from("seo_audits")
-    .select("id, url, overall_score, created_at")
+    .select("id, url, created_at")
     .order("created_at", { ascending: false })
-    .limit(200);
-
-  // dedupe to latest per url
-  const seen = new Set<string>();
-  const targets: any[] = [];
+    .limit(500);
+  const auditByPath = new Map<string, string>(); // path -> audit id
   for (const a of audits || []) {
-    if (seen.has(a.url)) continue;
-    seen.add(a.url);
-    targets.push(a);
+    const p = normalizePath(a.url);
+    if (!auditByPath.has(p)) auditByPath.set(p, a.id);
+    urlSet.add(p);
   }
 
-  const results: any[] = [];
-  for (const audit of targets) {
-    const path = normalizePath(audit.url);
+  // Also include every path that already has an override row (keeps them normalized).
+  const { data: existingOverrides } = await sb
+    .from("seo_overrides")
+    .select("url_path")
+    .limit(500);
+  for (const o of existingOverrides || []) urlSet.add(normalizePath(o.url_path));
+
+  // Optional caller-provided paths (e.g. from sitemap on the client).
+  for (const p of body.extra_paths || []) {
+    if (typeof p === "string" && p.startsWith("/")) urlSet.add(normalizePath(p));
+  }
+
+  // Fallback sitemap ingestion (server-side) when explicitly asked.
+  if (body.include_sitemap) {
+    try {
+      const res = await fetch(`${BASE_URL}/sitemap.xml`, { redirect: "follow" });
+      if (res.ok) {
+        const xml = await res.text();
+        const matches = xml.match(/<loc>([^<]+)<\/loc>/g) || [];
+        for (const m of matches) {
+          const loc = m.replace(/<\/?loc>/g, "").trim();
+          try {
+            const u = new URL(loc);
+            if (ALLOWED_HOSTS.has(u.hostname)) urlSet.add(normalizePath(u.pathname));
+          } catch { /* skip */ }
+        }
+      }
+    } catch (_e) { /* soft fail */ }
+  }
+
+  const allPaths = Array.from(urlSet).sort();
+  const total = allPaths.length;
+  const slice = allPaths.slice(offset, offset + limit);
+
+  // Preload existing overrides for this slice in ONE query (avoid N per-row selects).
+  const { data: existingRows } = await sb
+    .from("seo_overrides")
+    .select("url_path, canonical_url")
+    .in("url_path", slice);
+  const existingMap = new Map<string, string | null>(
+    (existingRows || []).map((r: any) => [r.url_path, r.canonical_url ?? null]),
+  );
+
+  // Warm robots cache once so parallel checks don't stampede.
+  try { await getRobotsCached(sb, CANONICAL_HOST); } catch (_e) { /* ignore */ }
+
+  const CONCURRENCY = 6;
+  const results: any[] = new Array(slice.length);
+
+  async function processOne(idx: number) {
+    const path = slice[idx];
     try {
       const proposed = buildCanonicalUrl(path);
-
-      // Skip if already correct
-      const { data: existing } = await sb
-        .from("seo_overrides")
-        .select("canonical_url")
-        .eq("url_path", path)
-        .maybeSingle();
-      if (existing?.canonical_url === proposed) {
-        results.push({ url_path: path, status: "skipped", reason: "already_correct" });
-        continue;
+      const existingCanonical = existingMap.get(path) ?? null;
+      if (existingCanonical === proposed) {
+        results[idx] = { url_path: path, status: "skipped", reason: "already_correct" };
+        return;
       }
 
-      const consistency = await checkCanonicalConsistency(sb, { action: "check_canonical_consistency", url_path: path, canonical_url: proposed });
+      const consistency = await checkCanonicalConsistency(sb, {
+        action: "check_canonical_consistency",
+        url_path: path,
+        canonical_url: proposed,
+      });
       if (consistency.has_critical && !overrideConflicts) {
-        results.push({
+        results[idx] = {
           url_path: path,
           status: "skipped",
           reason: "conflicts",
           conflicts: consistency.conflicts.map((c) => c.type),
-        });
-        continue;
+        };
+        return;
       }
 
+      const auditId = auditByPath.get(path);
       await applyFix(
         sb,
         {
           action: "apply_fix",
           url_path: path,
           payload: { canonical_url: proposed },
-          audit_id: audit.id,
-          notes: "Bulk one-click canonical fix",
+          audit_id: auditId,
+          notes: overrideConflicts
+            ? `Bulk one-click + override: ${body.override_reason || "no reason"}`
+            : "Bulk one-click canonical fix",
         } as AnyBody,
         userId,
       );
       await sb.from("seo_canonical_fix_log").insert({
         url_path: path,
-        previous_canonical: existing?.canonical_url || null,
+        previous_canonical: existingCanonical,
         new_canonical: proposed,
         fix_source: "one_click_bulk",
         conflicts_detected: consistency.conflicts as any,
@@ -1260,17 +1313,36 @@ async function oneClickCanonicalFix(sb: any, body: AnyBody, userId: string) {
         override_reason: overrideConflicts ? body.override_reason || null : null,
         applied_by: userId,
       });
-      results.push({ url_path: path, status: "ok", canonical: proposed });
+      results[idx] = { url_path: path, status: "ok", canonical: proposed };
     } catch (e) {
-      results.push({ url_path: path, status: "error", error: (e as Error).message });
+      results[idx] = { url_path: path, status: "error", error: (e as Error).message };
     }
-    await new Promise((r) => setTimeout(r, 200));
   }
 
+  // Simple concurrency pool.
+  let cursor = 0;
+  const workers: Promise<void>[] = [];
+  for (let w = 0; w < CONCURRENCY; w++) {
+    workers.push((async () => {
+      while (true) {
+        const i = cursor++;
+        if (i >= slice.length) return;
+        await processOne(i);
+      }
+    })());
+  }
+  await Promise.all(workers);
+
+  const nextOffset = offset + slice.length;
   return {
     ok: true,
     scope: "bulk",
     threshold,
+    total,
+    offset,
+    limit,
+    next_offset: nextOffset < total ? nextOffset : null,
+    done: nextOffset >= total,
     processed: results.length,
     applied: results.filter((r) => r.status === "ok").length,
     skipped: results.filter((r) => r.status === "skipped").length,
