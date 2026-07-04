@@ -97,6 +97,11 @@ interface AnyBody {
   scope?: "single" | "bulk";
   bulk_threshold?: number;
   apply_after_check?: boolean;
+  // bulk pagination + extra sources:
+  offset?: number;
+  limit?: number;
+  include_sitemap?: boolean;
+  extra_paths?: string[];
 }
 
 // ============================================================================
