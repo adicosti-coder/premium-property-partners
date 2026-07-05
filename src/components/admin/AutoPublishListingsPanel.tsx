@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,11 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
-import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye, Zap, ChevronDown, ChevronUp, RotateCw, AlertCircle } from "lucide-react";
+import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye, Zap, ChevronDown, ChevronUp, RotateCw, AlertCircle, Filter } from "lucide-react";
 import { EnrichmentBacklogWidget } from "./EnrichmentBacklogWidget";
 import { ProductionAlertsConfig } from "./ProductionAlertsConfig";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useUnifiedPipelineFilters } from "./UnifiedPipelinePanel";
 
 
 type Counts = {
