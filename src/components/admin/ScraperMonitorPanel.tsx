@@ -855,7 +855,7 @@ export default function ScraperMonitorPanel() {
                                 placeholder="ex: apartament {keyword} timisoara"
                                 className="h-7 text-xs font-mono"
                               />
-                              <Button size="sm" variant="default" className="h-7 px-2" disabled={savingId === k.id} onClick={() => saveEdit(k.id)}>
+                              <Button size="sm" variant="default" className="h-7 px-2" disabled={savingId === k.id} onClick={() => saveEdit(k.id, k.keyword)}>
                                 <Save className="h-3 w-3" />
                               </Button>
                               <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditingId(null)}>✕</Button>
