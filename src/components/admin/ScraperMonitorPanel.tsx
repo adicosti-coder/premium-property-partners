@@ -168,7 +168,128 @@ export default function ScraperMonitorPanel() {
     refetchInterval: 60_000,
   });
 
-  // Windowed feed of listings the scraper actually inserted.
+  // Audit trail feed — filtered to scraper-related actions.
+  const SCRAPER_AUDIT_ACTIONS = useMemo(() => [
+    "scraper_keyword_reactivate",
+    "scraper_keyword_template_edit",
+    "scraper_keyword_quicktest",
+    "scraper_force_refresh",
+    "scraper_manual_scan",
+    "scraper_parallelism_change",
+    "scraper_keyword_bulk_action",
+  ], []);
+  const { data: auditRows = [] } = useQuery({
+    queryKey: ["scraper-audit-log"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_audit_log")
+        .select("id, actor_label, actor_user_id, action, entity_type, entity_id, details, severity, created_at")
+        .in("action", SCRAPER_AUDIT_ACTIONS)
+        .order("created_at", { ascending: false })
+        .limit(40);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 15_000,
+  });
+
+  // Client-side audit helper — records the current admin's action via the RPC.
+  const logAdminAction = async (
+    action: string,
+    entity: { type?: string; id?: string } = {},
+    details: Record<string, unknown> = {},
+    severity: "info" | "warning" | "error" = "info",
+  ) => {
+    try {
+      await supabase.rpc("log_scraper_admin_action" as never, {
+        _action: action,
+        _entity_type: entity.type ?? null,
+        _entity_id: entity.id ?? null,
+        _details: details,
+        _severity: severity,
+      } as never);
+      qc.invalidateQueries({ queryKey: ["scraper-audit-log"] });
+    } catch (e) {
+      // Non-fatal — logging must never block the UI action.
+      console.warn("[audit] rpc failed", e);
+    }
+  };
+
+  // Realtime: subscribe to prospect_scan_jobs + admin_audit_log.
+  // On job UPDATE we bump a tick pulse and, on completion, fire a browser
+  // notification. Refetching is done via query invalidation.
+  useEffect(() => {
+    const channel = supabase
+      .channel("scraper-monitor-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "prospect_scan_jobs" },
+        (payload) => {
+          const row: any = payload.new || payload.old;
+          const prev = lastJobStateRef.current.get(row?.id);
+          const newListings = Number(row?.new_listings ?? 0);
+          if (payload.eventType === "UPDATE" && prev && newListings > prev.new_listings) {
+            setTickPulse((p) => p + 1);
+          }
+          if (
+            payload.eventType === "UPDATE" &&
+            prev &&
+            prev.status === "running" &&
+            row?.status &&
+            row.status !== "running"
+          ) {
+            const okay = row.status === "completed";
+            toast({
+              title: okay ? "✅ Scanare finalizată" : `⚠️ Scanare ${row.status}`,
+              description: `${newListings} anunțuri noi · ${row.processed_queries ?? 0}/${row.total_queries ?? 0} querii`,
+              variant: okay ? "default" : "destructive",
+            });
+            if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+              try {
+                new Notification(okay ? "Scraper: rulare terminată" : "Scraper: rulare eșuată", {
+                  body: `${newListings} anunțuri noi · ${row.processed_queries ?? 0}/${row.total_queries ?? 0} querii`,
+                  tag: `scraper-job-${row.id}`,
+                });
+              } catch { /* ignore */ }
+            }
+          }
+          lastJobStateRef.current.set(row?.id, {
+            status: String(row?.status ?? ""),
+            new_listings: newListings,
+          });
+          qc.invalidateQueries({ queryKey: ["scraper-jobs-monitor"] });
+          qc.invalidateQueries({ queryKey: ["scraper-found-listings", foundWindow] });
+          qc.invalidateQueries({ queryKey: ["scraper-found-totals", foundWindow] });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "admin_audit_log" },
+        (payload) => {
+          const row: any = payload.new;
+          if (SCRAPER_AUDIT_ACTIONS.includes(row?.action)) {
+            qc.invalidateQueries({ queryKey: ["scraper-audit-log"] });
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [qc, foundWindow, SCRAPER_AUDIT_ACTIONS]);
+
+  const requestNotificationPermission = async () => {
+    if (typeof Notification === "undefined") {
+      toast({ title: "Notificările nu sunt suportate în acest browser", variant: "destructive" });
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    setNotifPermission(perm);
+    toast({
+      title: perm === "granted" ? "Notificări activate" : "Notificări refuzate",
+      description: perm === "granted" ? "Vei primi alerte când o scanare se termină." : undefined,
+    });
+  };
+
+
   const [foundWindow, setFoundWindow] = useState<"24h" | "7d" | "30d">("7d");
   const [foundSearch, setFoundSearch] = useState("");
   const foundSince = useMemo(() => {
