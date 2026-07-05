@@ -1883,12 +1883,17 @@ Deno.serve(async (req) => {
                 status: 'new',
                 prospect_type: 'proprietar',
                 category,
-                lifecycle_status: suspectSpam ? 'to_review' : 'new',
-                is_active: true,
+                lifecycle_status: suspectSpam ? 'to_review' : (failedValidation ? 'to_review' : 'new'),
+                is_active: failedValidation ? false : true,
                 last_failure_reason: blacklistReason,
+                rejection_reason: validationRejectionReason,
                 search_keywords: [query],
-                tags: baseTags,
-                admin_notes: suspectSpam
+                tags: failedValidation
+                  ? [...baseTags, 'invalid-data', 'needs-manual-review']
+                  : baseTags,
+                admin_notes: failedValidation
+                  ? `⚠️ VALIDARE EȘUATĂ: ${validationIssues.join(', ')}. Anunț parcat (is_active=false) — completează datele lipsă pentru a-l publica.`
+                  : suspectSpam
                   ? `⚠️ SUSPECT SPAM (mod permisiv activ) — motiv: ${blacklistReason}. Necesită aprobare manuală din Rescue Log înainte de rutare la Andrei.`
                   : category !== 'vanzare'
                     ? `Prospect ${category === 'hotelier' ? 'regim hotelier' : 'închiriere'} de la proprietar — NU se publică pe site. Lead pentru Andrei: propunere administrare ${category === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`
