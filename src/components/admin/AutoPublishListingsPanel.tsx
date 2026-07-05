@@ -77,6 +77,34 @@ export function AutoPublishListingsPanel() {
 
   useEffect(() => { load(); }, []);
 
+  // Recompute candidate count with global filters applied (portal/zone/q).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!filters.hasActive) {
+        if (!cancelled) setFilteredCandidates(null);
+        return;
+      }
+      let q: any = supabase
+        .from("prospect_listings")
+        .select("id", { count: "exact", head: true })
+        .gte("lead_score", 55)
+        .eq("is_active", true)
+        .eq("prospect_type", "proprietar")
+        .not("source_url", "is", null);
+      if (filters.portal !== "all") q = q.ilike("source_platform", `%${filters.portal}%`);
+      if (filters.zone !== "all") q = q.ilike("zone", `%${filters.zone}%`);
+      const term = filters.q.trim().replace(/[,%()]/g, " ").trim();
+      if (term.length > 0) {
+        q = q.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
+      }
+      const { count } = await q;
+      if (!cancelled) setFilteredCandidates(count ?? 0);
+    })();
+    return () => { cancelled = true; };
+  }, [filters]);
+
+
   const runNow = async () => {
     setRunning(true);
     setLastSummary(null);
