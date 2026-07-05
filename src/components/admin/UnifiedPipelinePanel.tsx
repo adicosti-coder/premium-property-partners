@@ -92,14 +92,15 @@ const PanelFallback = () => (
 
 export default function UnifiedPipelinePanel() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const raw = searchParams.get("subtab");
+  // Outer key is `section` (subtab rămâne pentru sub-panourile interne — ex. ProspectPipelinePanel).
+  const raw = searchParams.get("section");
   const active: UnifiedTab = isTab(raw) ? raw : DEFAULT_TAB;
   const [notifiedInvalid, setNotifiedInvalid] = useState(false);
 
   useEffect(() => {
     if (raw && !isTab(raw) && !notifiedInvalid) {
       const next = new URLSearchParams(searchParams);
-      next.set("subtab", DEFAULT_TAB);
+      next.set("section", DEFAULT_TAB);
       setSearchParams(next, { replace: true });
       setNotifiedInvalid(true);
     }
@@ -108,7 +109,7 @@ export default function UnifiedPipelinePanel() {
   const handleChange = (value: string) => {
     if (!isTab(value)) return;
     const next = new URLSearchParams(searchParams);
-    next.set("subtab", value);
+    next.set("section", value);
     setSearchParams(next, { replace: true });
   };
 
