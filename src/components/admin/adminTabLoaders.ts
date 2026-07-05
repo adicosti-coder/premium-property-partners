@@ -55,6 +55,7 @@ const loaders: Record<string, Loader> = {
   automation: () => import("@/components/admin/AutomationManager"),
   "prospect-pipeline": () => import("@/components/admin/ProspectPipelinePanel"),
   "scraper-monitor": () => import("@/components/admin/ScraperMonitorPanel"),
+  "unified-pipeline": () => import("@/components/admin/UnifiedPipelinePanel"),
   "investment-analysis": () => import("@/components/admin/InvestmentAnalysisManager"),
   "ai-security": () => import("@/components/admin/AISecurityPanel"),
   "seo-guide-generator": () => import("@/components/admin/SeoGuideGenerator"),
