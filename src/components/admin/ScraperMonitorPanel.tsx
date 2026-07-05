@@ -953,6 +953,109 @@ export default function ScraperMonitorPanel() {
         </CardContent>
       </Card>
 
+      {/* Audit trail */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" /> Audit trail — acțiuni admini
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Ultimele 40 de acțiuni sensibile efectuate în panoul scraper: reactivări, editări query template, teste manuale, forțări refresh. Se actualizează în timp real.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {auditRows.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              Nicio acțiune înregistrată încă.
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border/50 max-h-[380px] overflow-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-card z-10">
+                  <TableRow>
+                    <TableHead className="w-[140px]">Timp</TableHead>
+                    <TableHead className="w-[180px]">Acțiune</TableHead>
+                    <TableHead className="w-[180px]">Actor</TableHead>
+                    <TableHead>Detalii</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditRows.map((r: any) => {
+                    const label: Record<string, string> = {
+                      scraper_keyword_reactivate: "🔁 Reactivare keyword",
+                      scraper_keyword_template_edit: "✏️ Editare template",
+                      scraper_keyword_quicktest: "⚡ Test rapid",
+                      scraper_force_refresh: "🛡️ Forțare refresh",
+                      scraper_manual_scan: "🚀 Scanare manuală",
+                      scraper_parallelism_change: "⚙️ Schimbare paralelism",
+                      scraper_keyword_bulk_action: "📦 Acțiune bulk",
+                    };
+                    const sevTone = r.severity === "error"
+                      ? "border-rose-500/50 text-rose-700 dark:text-rose-300"
+                      : r.severity === "warning"
+                        ? "border-amber-500/50 text-amber-700 dark:text-amber-300"
+                        : "border-primary/40 text-primary";
+                    const details = r.details && typeof r.details === "object"
+                      ? Object.entries(r.details).slice(0, 4).map(([k, v]) =>
+                          `${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`).join(" · ")
+                      : "";
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                          {new Date(r.created_at).toLocaleString("ro-RO", {
+                            day: "2-digit", month: "2-digit",
+                            hour: "2-digit", minute: "2-digit", second: "2-digit",
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[11px] ${sevTone}`}>
+                            {label[r.action] || r.action}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs truncate max-w-[180px]" title={r.actor_label || ""}>
+                          {r.actor_label || (r.actor_user_id ? r.actor_user_id.slice(0, 8) : "system")}
+                        </TableCell>
+                        <TableCell className="text-xs text-foreground/80 truncate max-w-[420px]" title={details}>
+                          {details || "—"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Confirm dialog for sensitive actions */}
+      <AlertDialog open={!!confirmState} onOpenChange={(o) => !o && setConfirmState(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className={`h-5 w-5 ${confirmState?.tone === "destructive" ? "text-destructive" : "text-primary"}`} />
+              {confirmState?.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{confirmState?.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmState?.tone === "destructive"
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : undefined}
+              onClick={async () => {
+                const fn = confirmState?.onConfirm;
+                setConfirmState(null);
+                if (fn) await fn();
+              }}
+            >
+              {confirmState?.actionLabel || "Confirmă"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Quick Test dialog */}
       <Dialog open={testOpen} onOpenChange={setTestOpen}>
         <DialogContent className="max-w-2xl">
