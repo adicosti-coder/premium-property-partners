@@ -1831,6 +1831,22 @@ Deno.serve(async (req) => {
               suspectSpam ? 'suspect_spam' : null,
             ].filter(Boolean) as string[];
 
+            // ───── PRE-SAVE VALIDATION (Cerință 3) ─────
+            // Reject/park anunțuri fără date esențiale pentru pipeline. Nu le
+            // publicăm live (is_active=false) ca să nu polueze coada, dar le
+            // păstrăm pentru diagnostic în panoul de reconciliere.
+            const validationIssues: string[] = [];
+            if (category === 'vanzare') {
+              if (!price || price <= 0) validationIssues.push('missing_price');
+              if (price && price < 15000) validationIssues.push('price_below_realistic');
+              if (!zone) validationIssues.push('unknown_zone');
+              if (!size || size <= 0) validationIssues.push('missing_size');
+            }
+            const failedValidation = validationIssues.length > 0;
+            const validationRejectionReason = failedValidation
+              ? `invalid_data: ${validationIssues.join(',')}`
+              : null;
+
             const { data: inserted, error: insertErr } = await supabase
               .from('prospect_listings')
               .upsert({
