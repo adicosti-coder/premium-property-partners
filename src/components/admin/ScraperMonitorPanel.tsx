@@ -559,16 +559,65 @@ export default function ScraperMonitorPanel() {
     toast({ title: "Export CSV", description: `${jobs.length} rulări descărcate.` });
   };
 
+  const runningJob = jobs.find((j) => j.status === "running") ?? null;
+  const runningPct = runningJob && runningJob.total_queries
+    ? Math.min(100, Math.round(((runningJob.processed_queries ?? 0) / runningJob.total_queries) * 100))
+    : 0;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Activity className="h-6 w-6 text-primary" /> Monitorizare Scraper
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Status cuvinte cheie, scor performanță, query templates personalizate și teste rapide pe portal.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Activity className="h-6 w-6 text-primary" /> Monitorizare Scraper
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Status cuvinte cheie, scor performanță, query templates personalizate și teste rapide pe portal.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Badge variant="outline" className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-300">
+            <Radio className="h-3 w-3 animate-pulse" /> Realtime activ
+          </Badge>
+          {notifPermission !== "granted" ? (
+            <Button variant="outline" size="sm" onClick={requestNotificationPermission}>
+              <BellOff className="h-4 w-4 mr-1.5" /> Activează notificări
+            </Button>
+          ) : (
+            <Badge variant="secondary" className="gap-1"><Bell className="h-3 w-3" /> Notificări active</Badge>
+          )}
+          <Button variant="outline" size="sm" onClick={handleForceRefresh}>
+            <ShieldAlert className="h-4 w-4 mr-1.5" /> Forțează refresh
+          </Button>
+        </div>
       </div>
+
+      {/* Live job progress */}
+      {runningJob && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Radio className="h-4 w-4 text-primary animate-pulse" />
+              Scanare în desfășurare
+              <span
+                key={tickPulse}
+                className="ml-2 inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 animate-in fade-in zoom-in duration-500"
+              >
+                <CheckCircle2 className="h-3 w-3" /> {runningJob.new_listings ?? 0} anunțuri noi
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Progress value={runningPct} className="h-2" />
+            <div className="flex justify-between text-xs text-muted-foreground font-mono">
+              <span>{runningJob.processed_queries ?? 0} / {runningJob.total_queries ?? 0} querii</span>
+              <span>{runningPct}%</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       {/* Regression alerts */}
       <div className="grid gap-2 md:grid-cols-3">
