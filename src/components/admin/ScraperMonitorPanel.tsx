@@ -888,7 +888,7 @@ export default function ScraperMonitorPanel() {
                               <Zap className="h-3.5 w-3.5 mr-1" /> Test
                             </Button>
                             {!k.is_active && (
-                              <Button size="sm" variant="outline" className="h-7 px-2" disabled={reactivatingId === k.id} onClick={() => handleReactivate(k.id)}>
+                              <Button size="sm" variant="outline" className="h-7 px-2" disabled={reactivatingId === k.id} onClick={() => handleReactivate(k)}>
                                 <RotateCcw className={`h-3.5 w-3.5 ${reactivatingId === k.id ? "animate-spin" : ""}`} />
                               </Button>
                             )}
