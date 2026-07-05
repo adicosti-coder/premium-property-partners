@@ -7,11 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  Activity, AlertTriangle, BellRing, CheckCircle2, Download, ExternalLink,
+  Activity, AlertTriangle, BellRing, CheckCircle2, Download, ExternalLink, Filter,
   Loader2, PlayCircle, RefreshCw, Rocket, TimerReset,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ro } from "date-fns/locale";
+import { matchesUnifiedFilters, useUnifiedPipelineFilters } from "./UnifiedPipelinePanel";
 
 type Stats = {
   since_hours: number;
