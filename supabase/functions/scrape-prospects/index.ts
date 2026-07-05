@@ -431,7 +431,7 @@ const BROWSER_HEADERS: Record<string, string> = {
   'Upgrade-Insecure-Requests': '1',
 };
 
-async function fetchHtml(url: string, timeoutMs = 9000, referer?: string): Promise<{ ok: boolean; status: number; html: string }> {
+async function fetchHtml(url: string, timeoutMs = 6000, referer?: string): Promise<{ ok: boolean; status: number; html: string }> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -509,7 +509,7 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   const seen = new Set<string>();
   for (const url of urls) {
     if (out.length >= max) break;
-    const { ok, html } = await fetchHtml(url, 9000, 'https://www.olx.ro/');
+    const { ok, html } = await fetchHtml(url, 5500, 'https://www.olx.ro/');
     if (!ok || !html) continue;
     const re = /<a[^>]+href="(\/d\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
     let m: RegExpExecArray | null;
@@ -531,7 +531,7 @@ async function directStoriaSearch(query: string, max: number): Promise<FreeResul
   const slug = encodeURIComponent(clean.replace(/\s+/g, '-').toLowerCase());
   // ownerTypeSingleSelect=PRIVATE = anunțuri doar de la proprietari
   const url = `https://www.storia.ro/ro/rezultate/vanzare/apartament/timis/timisoara?ownerTypeSingleSelect=PRIVATE&viewType=listing&searchingCriteria=${slug}`;
-  const { ok, html } = await fetchHtml(url, 9000, 'https://www.storia.ro/');
+  const { ok, html } = await fetchHtml(url, 5500, 'https://www.storia.ro/');
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -559,7 +559,7 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
   const seen = new Set<string>();
   for (const url of urls) {
     if (out.length >= max) break;
-    const { ok, html } = await fetchHtml(url, 9000, 'https://www.imobiliare.ro/');
+    const { ok, html } = await fetchHtml(url, 5500, 'https://www.imobiliare.ro/');
     if (!ok || !html) continue;
     const re = /<a[^>]+href="(https?:\/\/www\.imobiliare\.ro\/[^"#?]*?-X[0-9A-Z]{6,12})"/gi;
     let m: RegExpExecArray | null;
@@ -578,7 +578,7 @@ async function directPubli24Search(query: string, max: number): Promise<FreeResu
   if (!clean) return [];
   const slug = encodeURIComponent(clean.replace(/\s+/g, '+'));
   const url = `https://www.publi24.ro/anunturi/imobiliare/de-vanzare/apartamente/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`;
-  const { ok, html } = await fetchHtml(url, 9000, 'https://www.publi24.ro/');
+  const { ok, html } = await fetchHtml(url, 5500, 'https://www.publi24.ro/');
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -595,7 +595,7 @@ async function directPubli24Search(query: string, max: number): Promise<FreeResu
 
 async function duckduckgoSearch(query: string, max: number): Promise<FreeResult[]> {
   const simple = simplifyForWebEngine(query, 6) || query;
-  const { ok, html } = await fetchHtml(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(simple)}`, 10000);
+  const { ok, html } = await fetchHtml(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(simple)}`, 6500);
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -615,7 +615,7 @@ async function duckduckgoSearch(query: string, max: number): Promise<FreeResult[
 
 async function bingSearch(query: string, max: number): Promise<FreeResult[]> {
   const simple = simplifyForWebEngine(query, 6) || query;
-  const { ok, html } = await fetchHtml(`https://www.bing.com/search?q=${encodeURIComponent(simple)}&setlang=ro&cc=RO`, 10000);
+  const { ok, html } = await fetchHtml(`https://www.bing.com/search?q=${encodeURIComponent(simple)}&setlang=ro&cc=RO`, 6500);
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -750,7 +750,7 @@ async function freeSearchWithRetry(
 async function freeHydratePhoneFromUrl(url: string): Promise<string | null> {
   try {
     const referer = (() => { try { return new URL(url).origin + '/'; } catch { return undefined; } })();
-    const { ok, html } = await fetchHtml(url, 9000, referer);
+    const { ok, html } = await fetchHtml(url, 4500, referer);
     if (!ok || !html) return null;
     const phones = extractPhonesFromPayload('', html, html, null);
     return phones[0] ?? null;
@@ -979,7 +979,7 @@ const FORBIDDEN_DOMAINS = [
   'g4media.ro', 'mediafax.ro', 'prahova-online.ro', 'monitorulexpres.ro',
   // Official / institutional
   'hcl.civicul.ro', 'civicul.ro', 'gov.ro', 'just.ro', 'monitoruloficial.ro',
-  'primariatm.ro', 'cjtimis.ro',
+  'primariatm.ro', 'cjtimis.ro', 'hub.imobiliare.ro',
   // Generic aggregators / SEO spam / dating spam
   'casaldaritanatura.pt', 'flatspotter.com', 'timisoreni.ro',
   'saint-gobain.ro', 'infinity-skyline.ro', 'ateneo.ro',
@@ -998,6 +998,7 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
   // 1. Reject forbidden domains outright
   const host = extractUrlDomain(rawUrl) || '';
   if (FORBIDDEN_DOMAINS.some((d) => host === d || host.endsWith('.' + d))) return true;
+  if (/imobiliare\.ro\/imoexpert\//i.test(u)) return true;
 
   // 2. Facebook group/marketplace INDEX (no specific post/item ID) → reject
   if (/facebook\.com\/(groups\/\d+\/?$|marketplace\/\d+\/?$|marketplace\/[a-z]+\/?$)/i.test(u)) return true;
@@ -1008,7 +1009,7 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
   const isIndividualAd =
     u.includes('/d/oferta/') ||
     /storia\.ro\/ro\/oferta\//.test(u) ||
-    /imobiliare\.ro\/oferta-/.test(u) ||
+    /imobiliare\.ro\/oferta[/-]/.test(u) ||
     /imobiliare\.ro\/[^/]+\/[^/]+\/[a-z0-9]{6,}/i.test(rawUrl) ||
     /publi24\.ro\/anunturi\//.test(u) ||
     /bursaimobiliara\.ro\/.+\/[a-z0-9-]+-\d+\.html/.test(u) ||
@@ -1016,6 +1017,11 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
     /facebook\.com\/marketplace\/item\/\d+/i.test(u) ||
     /facebook\.com\/groups\/[^/]+\/(posts|permalink)\/\d+/i.test(u);
   if (isIndividualAd) return false;
+
+  // Known real-estate portals are allowed only when the URL is an actual offer.
+  // This blocks editorial/hub/category pages that search engines return for the
+  // same keywords and were polluting the import queue as fake "listings".
+  if ([...MARKETPLACE_DOMAINS].some((d) => host === d || host.endsWith('.' + d))) return true;
 
   // 4. Reject only when URL/title *actively* signals a category/search page.
   //    (Previously we default-rejected any unknown-shape URL — that killed
@@ -1058,6 +1064,28 @@ function hasOwnerFilterIntent(query: string | null | undefined, url: string | nu
   ].some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
+function titleFromListingUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const last = u.pathname.split('/').filter(Boolean).pop() || '';
+    const slug = last
+      .replace(/^oferta[-/]/i, '')
+      .replace(/-ID[A-Z0-9]+$/i, '')
+      .replace(/-X[A-Z0-9]+$/i, '')
+      .replace(/\.html?$/i, '')
+      .replace(/[-_]+/g, ' ')
+      .trim();
+    if (slug.length < 8) return null;
+    return decodeURIComponent(slug)
+      .replace(/\s+/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .slice(0, 140);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
@@ -1085,7 +1113,7 @@ function expandKeywordsWithoutDiacritics<T extends { platform: string; query: st
 }
 
 /** Extract property data from markdown text using regex patterns */
-function extractFromMarkdown(markdown: string, title: string, _url: string): {
+function extractFromMarkdown(markdown: string, title: string, url: string): {
   title: string; description: string | null; price: number | null; currency: string;
   location: string | null; size: number | null; rooms: number | null;
   floor: string | null; yearBuilt: number | null; features: string[];
@@ -1161,7 +1189,7 @@ function extractFromMarkdown(markdown: string, title: string, _url: string): {
   const desc = text.replace(/[#*\[\]()!]/g, '').trim().substring(0, 300) || null;
 
   return {
-    title: title || 'Anunț fără titlu',
+    title: title || titleFromListingUrl(url) || 'Anunț fără titlu',
     description: desc,
     price, currency, location, size, rooms, floor, yearBuilt,
     features, contactPhone, contactName: null, images,
@@ -1185,7 +1213,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse optional params
-    let maxResults = 10;
+    let maxResults = 8;
     let customQuery: string | null = null;
     let onlyNewSources = false;
     let preserveAgencyFilter = true;
@@ -1193,16 +1221,17 @@ Deno.serve(async (req) => {
     // Cap queries per invocation — 78 active keywords × ~15s/Firecrawl >> 150s
     // edge budget, which caused "Scanează acum" to hang silently. Manual scans
     // process a rotated slice; full coverage comes from repeated cron runs.
-    let queryLimit = 25;
+    let queryLimit = 12;
     let jobId: string | null = null;
     let asyncMode = false;
     let retryBatches: Array<{ platform: string; query: string }> | null = null;
     let scanModeOverride: 'free' | 'firecrawl' | 'auto' | null = null;
     let autoFallbackOpt = true;
     let autoFallbackThreshold = 1; // min URLs to consider "enough" — below this, escalate to Firecrawl
+    let hydratePhones = false;
     try {
       const body = await req.json();
-      if (body?.max_results) maxResults = Math.min(body.max_results, 30);
+      if (body?.max_results) maxResults = Math.min(body.max_results, 15);
       if (body?.custom_query) customQuery = body.custom_query;
       onlyNewSources = body?.only_new_sources === true;
       preserveAgencyFilter = body?.preserve_agency_filter !== false;
@@ -1211,7 +1240,7 @@ Deno.serve(async (req) => {
         // Keep one Edge run short enough to complete reliably. Larger manual
         // batches were being closed by the UI while still burning time on
         // duplicate URLs; repeated runs/resume cover the rest of the queue.
-        queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 35);
+        queryLimit = Math.min(Math.max(1, Math.floor(body.query_limit)), 20);
       }
       if (typeof body?.job_id === 'string' && body.job_id.length > 0) jobId = body.job_id;
       if (body?.async_mode === true) asyncMode = true;
@@ -1227,6 +1256,7 @@ Deno.serve(async (req) => {
       if (typeof body?.auto_fallback_threshold === 'number') {
         autoFallbackThreshold = Math.min(Math.max(0, Math.floor(body.auto_fallback_threshold)), 20);
       }
+      hydratePhones = body?.hydrate_phones === true;
     } catch { /* no body */ }
 
 
@@ -1295,7 +1325,7 @@ Deno.serve(async (req) => {
     let bingConsecutiveEmpty = 0;
     const BING_CIRCUIT_LIMIT = 3;
     const scanStartedAt = Date.now();
-    const MAX_BACKGROUND_RUNTIME_MS = 50_000;
+    const MAX_BACKGROUND_RUNTIME_MS = 42_000;
     const markTimedOut = async (processed: number, total: number) => {
       timedOut = true;
       const remaining = (queries ?? []).slice(processed).map((q) => ({ platform: q.platform, query: q.query }));
@@ -1487,7 +1517,7 @@ Deno.serve(async (req) => {
 
     // Parallelize free-engine batches (separate hosts → no shared quota).
     // Manual single-query stays at 1; cron sweeps run 4-wide.
-    const BATCH_SIZE = customQuery ? 1 : 4;
+    const BATCH_SIZE = customQuery ? 1 : 2;
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
       if (Date.now() - scanStartedAt > MAX_BACKGROUND_RUNTIME_MS) {
         await markTimedOut(i, queries.length);
@@ -1684,7 +1714,7 @@ Deno.serve(async (req) => {
             const phoneFromSearchPayload = normalizeRoPhone(extracted.contactPhone) ??
               extractPhonesFromText(`${markdown}\n${result.title || ''}\n${result.description || ''}`).find(Boolean) ??
               null;
-            const canHydratePhone = Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 12_000;
+            const canHydratePhone = hydratePhones && Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 10_000;
             const hydrate = scanMode === 'firecrawl'
               ? () => hydratePhoneFromListingUrl(url, firecrawlKey)
               : () => freeHydratePhoneFromUrl(url);
@@ -1710,7 +1740,8 @@ Deno.serve(async (req) => {
             const textBlob = (
               (result.title || '') + ' ' +
               (markdown || '').substring(0, 2000) + ' ' +
-              (locationText || '')
+              (locationText || '') + ' ' +
+              (query || '')
             ).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             const fullBlob = urlPath + ' ' + textBlob;
 
@@ -1879,6 +1910,15 @@ Deno.serve(async (req) => {
 
       await Promise.all(batchPromises);
       if (timedOut) break;
+      await updateJob({
+        processed_queries: Math.min(i + batch.length, queries.length),
+        current_keyword: null,
+        current_platform: null,
+        new_listings: results.length,
+        archived_skipped: archivedSkipped,
+        duplicate_skipped: duplicateSkipped,
+        blacklisted_skipped: blacklistedSkipped,
+      });
       // No inter-batch sleep: free engines hit different hosts, no shared quota.
     }
 

@@ -617,7 +617,9 @@ const IMPORT_WORKFLOW_LABELS: Record<ImportWorkflow, string> = {
   active: "Import activ",
 };
 
-const SCAN_STUCK_AFTER_MS = 90_000;
+const SCAN_STUCK_AFTER_MS = 120_000;
+const DEFAULT_SCAN_QUERY_LIMIT = 12;
+const MAX_STABLE_SCAN_QUERY_LIMIT = 20;
 
 const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { language } = useLanguage();
@@ -687,9 +689,9 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [bulkImportingSmart, setBulkImportingSmart] = useState(false);
   const [bulkImportingHospitality, setBulkImportingHospitality] = useState(false);
   const [queryLimit, setQueryLimit] = useState<number>(() => {
-    if (typeof window === "undefined") return 25;
-    const v = parseInt(window.localStorage.getItem("prospect_scan_query_limit") || "25", 10);
-    return Number.isFinite(v) && v >= 1 && v <= 100 ? v : 25;
+    if (typeof window === "undefined") return DEFAULT_SCAN_QUERY_LIMIT;
+    const v = parseInt(window.localStorage.getItem("prospect_scan_query_limit") || String(DEFAULT_SCAN_QUERY_LIMIT), 10);
+    return Number.isFinite(v) && v >= 1 && v <= MAX_STABLE_SCAN_QUERY_LIMIT ? v : DEFAULT_SCAN_QUERY_LIMIT;
   });
   const [keywordsPreviewOpen, setKeywordsPreviewOpen] = useState(false);
 
@@ -1992,7 +1994,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       );
     }
     const isRescan = mode === "rescan";
-    const effectiveLimit = isRescan ? Math.min(100, Math.max(queryLimit, 40)) : queryLimit;
+    const effectiveLimit = Math.min(MAX_STABLE_SCAN_QUERY_LIMIT, Math.max(1, queryLimit));
 
     if (safeMode) {
       toast.info("Mod Simulare activ — nu consumă credite Firecrawl.");
@@ -2020,7 +2022,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .insert({
           created_by: userId,
           query_limit: effectiveLimit,
-          max_results: isRescan ? 20 : 10,
+          max_results: isRescan ? 12 : 8,
           triggered_by: isRescan ? "manual_rescan_ui" : "manual_scan_ui",
         } as any)
         .select("*")
@@ -2042,7 +2044,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
       const { error } = await supabase.functions.invoke("scrape-prospects", {
         body: {
-          max_results: isRescan ? 20 : 10,
+          max_results: isRescan ? 12 : 8,
           only_new_sources: isRescan,
           preserve_agency_filter: true,
           query_limit: effectiveLimit,
@@ -2051,6 +2053,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
           auto_fallback_threshold: autoFallbackThreshold,
+          hydrate_phones: false,
         },
       });
 
@@ -2095,7 +2098,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     setIsScraping(true);
     setActiveScanMode("scan");
     setRecentScanPulse(true);
-    const slice = pending.slice(0, 30); // edge function caps retry_batches at 30
+    const slice = pending.slice(0, MAX_STABLE_SCAN_QUERY_LIMIT); // keep retry jobs under edge runtime budget
     const remainingAfter = Math.max(0, pending.length - slice.length);
     setResumeRemainingAfter(remainingAfter);
     scanContextRef.current = {
@@ -2115,7 +2118,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .insert({
           created_by: userId,
           query_limit: slice.length,
-          max_results: 10,
+          max_results: 8,
           triggered_by: "manual_resume_ui",
         } as any)
         .select("*")
@@ -2144,7 +2147,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
       const { error } = await supabase.functions.invoke("scrape-prospects", {
         body: {
-          max_results: 10,
+          max_results: 8,
           preserve_agency_filter: true,
           job_id: (jobRow as any).id,
           async_mode: true,
@@ -2152,6 +2155,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
           auto_fallback_threshold: autoFallbackThreshold,
+          hydrate_phones: false,
         },
       });
 
@@ -2244,7 +2248,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       setIsScraping(true);
       const { error } = await supabase.functions.invoke("scrape-prospects", {
         body: {
-          max_results: 15,
+          max_results: 10,
           preserve_agency_filter: true,
           job_id: (jobRow as any).id,
           async_mode: true,
@@ -2574,7 +2578,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     if (!recentlyAddedKeywords.length) { toast.info("Nu există cuvinte cheie noi în sesiune."); return; }
     setIsScanningNew(true);
     try {
-      const slice = recentlyAddedKeywords.slice(0, 30).map((k) => ({
+      const slice = recentlyAddedKeywords.slice(0, MAX_STABLE_SCAN_QUERY_LIMIT).map((k) => ({
         platform: k.platform || "General",
         query: k.keyword,
       }));
@@ -2586,7 +2590,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .insert({
           created_by: userId,
           query_limit: slice.length,
-          max_results: 12,
+          max_results: 8,
           triggered_by: "manual_new_keywords_ui",
         } as any)
         .select("*")
@@ -2616,13 +2620,14 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       setActiveScanMode("scan");
       const { error } = await supabase.functions.invoke("scrape-prospects", {
         body: {
-          max_results: 12,
+          max_results: 8,
           preserve_agency_filter: true,
           job_id: (jobRow as any).id,
           async_mode: true,
           retry_batches: slice,
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
+          hydrate_phones: false,
           auto_fallback_threshold: autoFallbackThreshold,
         },
       });
@@ -3343,14 +3348,14 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
                   className="flex-1 max-w-[260px]"
                   value={[queryLimit]}
                   min={1}
-                  max={100}
+                  max={MAX_STABLE_SCAN_QUERY_LIMIT}
                   step={1}
-                  onValueChange={(v) => setQueryLimit(v[0] ?? 25)}
+                  onValueChange={(v) => setQueryLimit(v[0] ?? DEFAULT_SCAN_QUERY_LIMIT)}
                   disabled={isScraping}
                 />
               </div>
               <span className="text-muted-foreground">
-                {uniqueActiveKeywords.length} kw active · {Math.max(1, Math.ceil(Math.min(uniqueActiveKeywords.length, queryLimit) / 25))} loturi (×25)
+                {uniqueActiveKeywords.length} kw active · lot stabil de max. {MAX_STABLE_SCAN_QUERY_LIMIT}
               </span>
               <div className="flex items-center gap-1.5 ml-auto flex-wrap justify-end">
                 <Badge variant="outline" className="text-[10px] font-normal bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300" title="prospect_listings.source_url are constraint UNIQUE — duplicatele nu pot fi inserate la nivel de DB">
