@@ -455,29 +455,46 @@ export default function UnifiedPipelinePanel() {
   }, [filters]);
 
   // ── Counters
-  const { data: count, isLoading: countLoading } = useActivePipelineCount(filters);
+  const {
+    data: count,
+    isLoading: countLoading,
+    isFetching: countFetching,
+  } = useActivePipelineCount(filters);
+  const isSearchDebouncing = qInput !== filters.q;
   const badgeText = useMemo(() => {
     if (countLoading || count == null) return "…";
     return count.toLocaleString("ro-RO");
   }, [count, countLoading]);
+  const badgeBusy = countFetching || isSearchDebouncing;
 
-  const { data: tabCounts } = useFilteredTabCounts(filters);
+  const { data: tabCounts, isFetching: tabCountsFetching } = useFilteredTabCounts(filters);
+  const tabCountsBusy = tabCountsFetching || isSearchDebouncing;
 
   const renderTabCount = (v: UnifiedTab) => {
     const n = tabCounts?.[v];
-    if (n == null) return null;
+    if (n == null) {
+      // Prima încărcare: skeleton discret în loc de salt vizual.
+      return (
+        <Skeleton
+          className="ml-1 h-4 w-6 rounded-full"
+          aria-label="Se încarcă numărul de rezultate"
+        />
+      );
+    }
     return (
       <Badge
         variant={filtersCtx.hasActive ? "default" : "outline"}
-        className="ml-1 h-4 min-w-4 px-1 text-[10px] tabular-nums"
-        aria-label={`${n} rezultate în această secțiune`}
+        className={`ml-1 h-4 min-w-4 px-1 text-[10px] tabular-nums transition-opacity ${
+          tabCountsBusy ? "opacity-50 animate-pulse" : "opacity-100"
+        }`}
+        aria-label={`${n} rezultate în această secțiune${tabCountsBusy ? " (se actualizează)" : ""}`}
+        aria-busy={tabCountsBusy}
       >
         {n.toLocaleString("ro-RO")}
       </Badge>
     );
   };
 
-  const isSearchDebouncing = qInput !== filters.q;
 
   return (
     <TooltipProvider delayDuration={200}>
