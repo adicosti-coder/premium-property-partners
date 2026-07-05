@@ -9090,6 +9090,16 @@ export type Database = {
         }
         Returns: number
       }
+      log_scraper_admin_action: {
+        Args: {
+          _action: string
+          _details?: Json
+          _entity_id?: string
+          _entity_type?: string
+          _severity?: string
+        }
+        Returns: string
+      }
       mark_prospect_invalid_number: {
         Args: { p_prospect_id: string; p_reason: string }
         Returns: undefined
