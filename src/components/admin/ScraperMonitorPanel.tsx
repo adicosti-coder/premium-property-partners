@@ -431,28 +431,47 @@ export default function ScraperMonitorPanel() {
     return `Ultima rulare (${lastJob.status}): ${newCount} anunțuri noi, ${dup} duplicate, ${arc} arhivate — ${proc}/${tot} querii procesate.`;
   }, [lastJob]);
 
-  const handleReactivate = async (id: string) => {
+  const doReactivate = async (id: string, keyword: string) => {
     setReactivatingId(id);
     const { error } = await supabase.rpc("reactivate_scraper_keyword" as never, { _id: id } as never);
     setReactivatingId(null);
-    if (error) { toast({ title: "Reactivare eșuată", description: error.message, variant: "destructive" }); return; }
+    if (error) {
+      toast({ title: "Reactivare eșuată", description: error.message, variant: "destructive" });
+      await logAdminAction("scraper_keyword_reactivate", { type: "scraper_keyword", id },
+        { keyword, error: error.message }, "error");
+      return;
+    }
     toast({ title: "Cuvânt cheie reactivat", description: "Contoarele au fost resetate." });
+    await logAdminAction("scraper_keyword_reactivate", { type: "scraper_keyword", id }, { keyword });
     qc.invalidateQueries({ queryKey: ["scraper-keywords-monitor"] });
+  };
+
+  const handleReactivate = (k: Keyword) => {
+    setConfirmState({
+      title: "Reactivezi cuvântul cheie?",
+      description: `Vei re-porni scraperul pentru "${k.keyword}" și vei reseta contoarele de eșec. Acțiunea se înregistrează în audit trail.`,
+      actionLabel: "Reactivează",
+      tone: "default",
+      onConfirm: () => doReactivate(k.id, k.keyword),
+    });
   };
 
   const startEdit = (k: Keyword) => {
     setEditingId(k.id);
     setEditValue(k.query_template ?? "");
   };
-  const saveEdit = async (id: string) => {
+  const saveEdit = async (id: string, keyword: string) => {
     setSavingId(id);
+    const newTemplate = editValue.trim() || null;
     const { error } = await supabase
       .from("scraper_search_keywords")
-      .update({ query_template: editValue.trim() || null })
+      .update({ query_template: newTemplate })
       .eq("id", id);
     setSavingId(null);
     if (error) { toast({ title: "Salvare eșuată", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Query template salvat" });
+    await logAdminAction("scraper_keyword_template_edit", { type: "scraper_keyword", id },
+      { keyword, new_template: newTemplate });
     setEditingId(null);
     qc.invalidateQueries({ queryKey: ["scraper-keywords-monitor"] });
   };
@@ -475,12 +494,38 @@ export default function ScraperMonitorPanel() {
       setTestResult(data);
       const n = (data as any)?.result_count ?? 0;
       toast({ title: "Test rapid finalizat", description: `${n} rezultate în ${(data as any)?.elapsed_ms ?? 0} ms` });
+      await logAdminAction("scraper_keyword_quicktest", { type: "scraper_keyword", id: testKw.id },
+        { keyword: testKw.keyword, portal: testPortal, result_count: n });
     } catch (e: any) {
       toast({ title: "Test eșuat", description: e.message, variant: "destructive" });
+      await logAdminAction("scraper_keyword_quicktest", { type: "scraper_keyword", id: testKw.id },
+        { keyword: testKw.keyword, portal: testPortal, error: e.message }, "error");
     } finally {
       setTestRunning(false);
     }
   };
+
+  // Force manual refresh — wrapped in confirm dialog to avoid double-triggering
+  // any downstream API calls (jobs are broadcast-driven, but user asked for guard).
+  const doForceRefresh = async () => {
+    await Promise.all([
+      refetchFound(),
+      qc.invalidateQueries({ queryKey: ["scraper-keywords-monitor"] }),
+      qc.invalidateQueries({ queryKey: ["scraper-jobs-monitor"] }),
+    ]);
+    toast({ title: "Date reîncărcate" });
+    await logAdminAction("scraper_force_refresh", {}, { source: "monitor_panel" });
+  };
+  const handleForceRefresh = () => {
+    setConfirmState({
+      title: "Forțezi reîncărcarea completă?",
+      description: "Vei re-executa toate interogările împotriva bazei. Nu declanșează scanare nouă, dar oprește orice request în zbor. Acțiunea se înregistrează.",
+      actionLabel: "Forțează",
+      tone: "destructive",
+      onConfirm: doForceRefresh,
+    });
+  };
+
 
   const exportKeywords = () => {
     const header = ["keyword", "platform", "vertical", "status", "score", "success", "fail", "unique_leads", "consecutive_zero", "query_template", "last_success_at", "last_test_at"];
