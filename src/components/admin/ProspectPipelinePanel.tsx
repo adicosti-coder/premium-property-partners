@@ -70,6 +70,23 @@ export default function ProspectPipelinePanel() {
         </p>
       </div>
 
+      {filters.hasActive && (
+        <Alert className="py-2">
+          <Filter className="h-4 w-4" />
+          <AlertDescription className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="font-medium">Filtre globale active:</span>
+            {activeChips.map((c) => (
+              <Badge key={c.key} variant="secondary" className="text-[10px]">
+                {c.label}
+              </Badge>
+            ))}
+            <span className="text-muted-foreground">
+              — folosește filtrele proprii din listele de leads pentru a le combina cu criteriile globale.
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Tabs value={active} onValueChange={handleChange} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto justify-start gap-1">
           {tabs.map((t) => {
