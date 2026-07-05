@@ -9046,6 +9046,32 @@ export type Database = {
         Args: { _delta?: number; _id: string }
         Returns: undefined
       }
+      list_orphan_prospects: {
+        Args: { _limit?: number; _since_hours?: number }
+        Returns: {
+          admin_notes: string
+          created_at: string
+          id: string
+          lead_score: number
+          lifecycle_status: string
+          price: number
+          rooms: number
+          source_platform: string
+          source_url: string
+          title: string
+          zone: string
+        }[]
+      }
+      list_publish_worker_failures: {
+        Args: { _limit?: number }
+        Returns: {
+          created_at: string
+          details: Json
+          entity_id: string
+          id: string
+          severity: string
+        }[]
+      }
       listing_import_record_review: {
         Args: {
           _action: string
@@ -9099,6 +9125,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      reconcile_import_pipeline: {
+        Args: { _since_hours?: number }
+        Returns: Json
       }
       record_keyword_outcome: {
         Args: { _found: number; _keyword: string; _platform: string }

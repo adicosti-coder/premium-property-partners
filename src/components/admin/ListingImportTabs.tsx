@@ -8,6 +8,7 @@ import KeywordSimulatorPanel from "./KeywordSimulatorPanel";
 import QuickKeywordSimulator from "./QuickKeywordSimulator";
 import PmLeadsPanel from "./PmLeadsPanel";
 import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
+import PipelineReconciliationPanel from "./PipelineReconciliationPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
 import { PerformanceROIPanel } from "./PerformanceROIPanel";
 import GrowthEngineDashboard from "./GrowthEngineDashboard";
@@ -81,7 +82,12 @@ const ListingImportTabs = () => {
         </div>
       </TabsContent>
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
-      <TabsContent value="auto-publish"><AutoPublishListingsPanel /></TabsContent>
+      <TabsContent value="auto-publish">
+        <div className="space-y-4">
+          <PipelineReconciliationPanel />
+          <AutoPublishListingsPanel />
+        </div>
+      </TabsContent>
       <TabsContent value="sandbox"><ListingImportHealthPanel /></TabsContent>
       <TabsContent value="performance"><PerformanceROIPanel /></TabsContent>
       <TabsContent value="growth"><GrowthEngineDashboard /></TabsContent>

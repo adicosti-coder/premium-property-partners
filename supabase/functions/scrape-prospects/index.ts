@@ -1831,6 +1831,22 @@ Deno.serve(async (req) => {
               suspectSpam ? 'suspect_spam' : null,
             ].filter(Boolean) as string[];
 
+            // ───── PRE-SAVE VALIDATION (Cerință 3) ─────
+            // Reject/park anunțuri fără date esențiale pentru pipeline. Nu le
+            // publicăm live (is_active=false) ca să nu polueze coada, dar le
+            // păstrăm pentru diagnostic în panoul de reconciliere.
+            const validationIssues: string[] = [];
+            if (category === 'vanzare') {
+              if (!price || price <= 0) validationIssues.push('missing_price');
+              if (price && price < 15000) validationIssues.push('price_below_realistic');
+              if (!zone) validationIssues.push('unknown_zone');
+              if (!size || size <= 0) validationIssues.push('missing_size');
+            }
+            const failedValidation = validationIssues.length > 0;
+            const validationRejectionReason = failedValidation
+              ? `invalid_data: ${validationIssues.join(',')}`
+              : null;
+
             const { data: inserted, error: insertErr } = await supabase
               .from('prospect_listings')
               .upsert({
@@ -1867,12 +1883,17 @@ Deno.serve(async (req) => {
                 status: 'new',
                 prospect_type: 'proprietar',
                 category,
-                lifecycle_status: suspectSpam ? 'to_review' : 'new',
-                is_active: true,
+                lifecycle_status: suspectSpam ? 'to_review' : (failedValidation ? 'to_review' : 'new'),
+                is_active: failedValidation ? false : true,
                 last_failure_reason: blacklistReason,
+                rejection_reason: validationRejectionReason,
                 search_keywords: [query],
-                tags: baseTags,
-                admin_notes: suspectSpam
+                tags: failedValidation
+                  ? [...baseTags, 'invalid-data', 'needs-manual-review']
+                  : baseTags,
+                admin_notes: failedValidation
+                  ? `⚠️ VALIDARE EȘUATĂ: ${validationIssues.join(', ')}. Anunț parcat (is_active=false) — completează datele lipsă pentru a-l publica.`
+                  : suspectSpam
                   ? `⚠️ SUSPECT SPAM (mod permisiv activ) — motiv: ${blacklistReason}. Necesită aprobare manuală din Rescue Log înainte de rutare la Andrei.`
                   : category !== 'vanzare'
                     ? `Prospect ${category === 'hotelier' ? 'regim hotelier' : 'închiriere'} de la proprietar — NU se publică pe site. Lead pentru Andrei: propunere administrare ${category === 'hotelier' ? 'regim hotelier' : 'totală/parțială'}.`
