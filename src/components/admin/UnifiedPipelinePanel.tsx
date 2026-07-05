@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -52,6 +53,7 @@ const DEFAULT_TAB: UnifiedTab = "observability";
 
 const STORAGE_KEY_SECTION = "unified-pipeline:section";
 const STORAGE_KEY_FILTERS = "unified-pipeline:filters";
+const DEBOUNCE_MS = 300;
 
 function isTab(v: string | null | undefined): v is UnifiedTab {
   return !!v && (VALID_TABS as readonly string[]).includes(v);
@@ -62,8 +64,8 @@ function isTab(v: string | null | undefined): v is UnifiedTab {
 // ────────────────────────────────────────────────────────────────
 export interface UnifiedFilters {
   q: string;
-  portal: string; // "all" | olx | storia | imobiliare | publi24 | booking | airbnb
-  zone: string;   // "all" | isho | paltim | cetate | iosefin | fabric | dumbravita | aradului | elisabetin | circumvalatiunii
+  portal: string;
+  zone: string;
 }
 
 const DEFAULT_FILTERS: UnifiedFilters = { q: "", portal: "all", zone: "all" };
@@ -80,7 +82,6 @@ const UnifiedPipelineFiltersContext = createContext<FiltersContextValue | null>(
 export function useUnifiedPipelineFilters(): FiltersContextValue {
   const ctx = useContext(UnifiedPipelineFiltersContext);
   if (!ctx) {
-    // Fallback inert când componenta e folosită în afara Pipeline Unificat.
     return {
       ...DEFAULT_FILTERS,
       setFilters: () => {},
@@ -89,6 +90,47 @@ export function useUnifiedPipelineFilters(): FiltersContextValue {
     };
   }
   return ctx;
+}
+
+/** Sanitizează termenii ilike (elimină caracterele care sparg sintaxa .or). */
+function sanitizeIlikeTerm(s: string): string {
+  return s.replace(/[,%()]/g, " ").trim();
+}
+
+/**
+ * Helper exportat pentru client-side filtering peste orice listă cu
+ * {title, source_platform, zone, source_url}. Ține sub-panourile scurte.
+ */
+export function matchesUnifiedFilters<
+  T extends {
+    title?: string | null;
+    source_platform?: string | null;
+    zone?: string | null;
+    source_url?: string | null;
+    location?: string | null;
+  },
+>(item: T, f: UnifiedFilters): boolean {
+  if (f.portal !== "all") {
+    const p = (item.source_platform || "").toLowerCase();
+    if (!p.includes(f.portal.toLowerCase())) return false;
+  }
+  if (f.zone !== "all") {
+    const z = `${item.zone || ""} ${item.location || ""}`.toLowerCase();
+    if (!z.includes(f.zone.toLowerCase())) return false;
+  }
+  const q = f.q.trim().toLowerCase();
+  if (q.length > 0) {
+    const hay = [
+      item.title || "",
+      item.source_url || "",
+      item.zone || "",
+      item.location || "",
+    ]
+      .join(" ")
+      .toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  return true;
 }
 
 const PORTAL_OPTIONS = [
@@ -115,18 +157,27 @@ const ZONE_OPTIONS = [
 ];
 
 // ────────────────────────────────────────────────────────────────
-// Live counter — exclude și `contacted` pentru a arăta doar leads noi.
+// Query helpers — filtre aplicate inline (evită conflicte de tipuri
+// generice ale PostgrestFilterBuilder pentru mai multe tabele).
 // ────────────────────────────────────────────────────────────────
-function useActivePipelineCount() {
+
+/** Header badge count — anunțuri noi (exclud contacted + statusuri finale). */
+function useActivePipelineCount(filters: UnifiedFilters) {
   const qc = useQueryClient();
   const query = useQuery({
-    queryKey: ["unified-pipeline-count"],
+    queryKey: ["unified-pipeline-count", filters],
     queryFn: async () => {
-      const { count, error } = await supabase
+      let q: any = supabase
         .from("prospect_listings")
         .select("id", { count: "exact", head: true })
-        // Exclude statusurile care NU necesită atenție primară.
         .not("status", "in", "(rejected,archived,published,duplicate,contacted)");
+      if (filters.portal !== "all") q = q.ilike("source_platform", `%${filters.portal}%`);
+      if (filters.zone !== "all") q = q.ilike("zone", `%${filters.zone}%`);
+      const term = sanitizeIlikeTerm(filters.q);
+      if (term.length > 0) {
+        q = q.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
+      }
+      const { count, error } = await q;
       if (error) throw error;
       return count ?? 0;
     },
@@ -140,7 +191,10 @@ function useActivePipelineCount() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "prospect_listings" },
-        () => qc.invalidateQueries({ queryKey: ["unified-pipeline-count"] }),
+        () => {
+          qc.invalidateQueries({ queryKey: ["unified-pipeline-count"] });
+          qc.invalidateQueries({ queryKey: ["unified-pipeline-tab-counts"] });
+        },
       )
       .subscribe();
     return () => {
@@ -149,6 +203,65 @@ function useActivePipelineCount() {
   }, [qc]);
 
   return query;
+}
+
+/**
+ * Filtered counters per tab — 3 lightweight COUNT queries în paralel.
+ * Cache-uite pe combinația de filtre.
+ */
+function useFilteredTabCounts(filters: UnifiedFilters) {
+  return useQuery({
+    queryKey: ["unified-pipeline-tab-counts", filters],
+    queryFn: async () => {
+      const term = sanitizeIlikeTerm(filters.q);
+
+      // Observability: scan jobs în ultimele 24h.
+      let obsQ: any = supabase
+        .from("prospect_scan_jobs")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
+      // Filter portal doar dacă tabela are coloană target_platform.
+      if (filters.portal !== "all") {
+        obsQ = obsQ.ilike("target_platform", `%${filters.portal}%`);
+      }
+
+      // Prospects: leads active de contactat.
+      let prospQ: any = supabase
+        .from("prospect_listings")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true)
+        .eq("prospect_type", "proprietar")
+        .not("status", "in", "(rejected,archived,published,duplicate,contacted)");
+      if (filters.portal !== "all") prospQ = prospQ.ilike("source_platform", `%${filters.portal}%`);
+      if (filters.zone !== "all") prospQ = prospQ.ilike("zone", `%${filters.zone}%`);
+      if (term.length > 0) {
+        prospQ = prospQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
+      }
+
+      // Approval: candidați pentru auto-publish.
+      let appQ: any = supabase
+        .from("prospect_listings")
+        .select("id", { count: "exact", head: true })
+        .gte("lead_score", 55)
+        .eq("is_active", true)
+        .not("source_url", "is", null);
+      if (filters.portal !== "all") appQ = appQ.ilike("source_platform", `%${filters.portal}%`);
+      if (filters.zone !== "all") appQ = appQ.ilike("zone", `%${filters.zone}%`);
+      if (term.length > 0) {
+        appQ = appQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
+      }
+
+      const [obs, prosp, app] = await Promise.all([obsQ, prospQ, appQ]);
+
+      return {
+        observability: obs.error ? null : obs.count ?? 0,
+        prospects: prosp.error ? null : prosp.count ?? 0,
+        approval: app.error ? null : app.count ?? 0,
+      };
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
 }
 
 const TAB_META: Record<
@@ -219,7 +332,6 @@ export default function UnifiedPipelinePanel() {
 
   const active: UnifiedTab = isTab(rawSection) ? rawSection : initialActive;
 
-  // Dacă URL-ul nu are `section`, hidratează-l din localStorage la prima încărcare.
   useEffect(() => {
     if (!rawSection) {
       const next = new URLSearchParams(searchParams);
@@ -235,7 +347,6 @@ export default function UnifiedPipelinePanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rawSection]);
 
-  // Persistă orice schimbare validă de secțiune.
   useEffect(() => {
     if (isTab(active)) writeStorage(STORAGE_KEY_SECTION, active);
   }, [active]);
@@ -247,13 +358,28 @@ export default function UnifiedPipelinePanel() {
     setSearchParams(next, { replace: true });
   };
 
-  // ── Filters state (persistat)
+  // ── Filters state (persistat).
   const [filters, setFiltersState] = useState<UnifiedFilters>(() =>
     readStorage<UnifiedFilters>(STORAGE_KEY_FILTERS, DEFAULT_FILTERS),
   );
   useEffect(() => {
     writeStorage(STORAGE_KEY_FILTERS, filters);
   }, [filters]);
+
+  // ── Debounced search input — `qInput` local, `filters.q` propagate după 300ms.
+  const [qInput, setQInput] = useState<string>(filters.q);
+  const debounceTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (debounceTimer.current) window.clearTimeout(debounceTimer.current);
+    if (qInput === filters.q) return;
+    debounceTimer.current = window.setTimeout(() => {
+      setFiltersState((prev) => ({ ...prev, q: qInput }));
+    }, DEBOUNCE_MS);
+    return () => {
+      if (debounceTimer.current) window.clearTimeout(debounceTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qInput]);
 
   const filtersCtx = useMemo<FiltersContextValue>(() => {
     const hasActive =
@@ -263,30 +389,50 @@ export default function UnifiedPipelinePanel() {
     return {
       ...filters,
       setFilters: (patch) => setFiltersState((prev) => ({ ...prev, ...patch })),
-      reset: () => setFiltersState(DEFAULT_FILTERS),
+      reset: () => {
+        setFiltersState(DEFAULT_FILTERS);
+        setQInput("");
+      },
       hasActive,
     };
   }, [filters]);
 
-  // ── Count badge
-  const { data: count, isLoading: countLoading } = useActivePipelineCount();
+  // ── Counters
+  const { data: count, isLoading: countLoading } = useActivePipelineCount(filters);
   const badgeText = useMemo(() => {
     if (countLoading || count == null) return "…";
     return count.toLocaleString("ro-RO");
   }, [count, countLoading]);
 
+  const { data: tabCounts } = useFilteredTabCounts(filters);
+
+  const renderTabCount = (v: UnifiedTab) => {
+    const n = tabCounts?.[v];
+    if (n == null) return null;
+    return (
+      <Badge
+        variant={filtersCtx.hasActive ? "default" : "outline"}
+        className="ml-1 h-4 min-w-4 px-1 text-[10px] tabular-nums"
+        aria-label={`${n} rezultate în această secțiune`}
+      >
+        {n.toLocaleString("ro-RO")}
+      </Badge>
+    );
+  };
+
+  const isSearchDebouncing = qInput !== filters.q;
+
   return (
     <TooltipProvider delayDuration={200}>
       <UnifiedPipelineFiltersContext.Provider value={filtersCtx}>
         <div className="space-y-4">
-          {/* Header global cu titlu + badge contor unic */}
+          {/* Header global */}
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-2xl font-bold text-foreground">Pipeline Unificat</h2>
               <p className="text-sm text-muted-foreground max-w-2xl">
-                Un singur ecran pentru scraper, prospecți și publicare — elimină confuzia de
-                duplicare între vederi. Contorul din dreapta reflectă în timp real doar
-                anunțurile care așteaptă prima procesare.
+                Un singur ecran pentru scraper, prospecți și publicare. Contorul din dreapta
+                reflectă în timp real doar anunțurile noi care așteaptă atenție.
               </p>
             </div>
             <Tooltip>
@@ -307,22 +453,26 @@ export default function UnifiedPipelinePanel() {
               <TooltipContent side="left" className="max-w-[280px]">
                 Anunțuri noi care așteaptă prima procesare sau contactare. Exclud statusurile{" "}
                 <code>rejected</code>, <code>archived</code>, <code>published</code>,{" "}
-                <code>duplicate</code> și <code>contacted</code>. Actualizat live prin Realtime.
+                <code>duplicate</code> și <code>contacted</code>. Filtre globale aplicate.
+                Realtime.
               </TooltipContent>
             </Tooltip>
           </div>
 
-          {/* Bară globală: căutare + filtre portal/zonă */}
+          {/* Bară globală de filtre */}
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/40 bg-card/30 p-3">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                value={filters.q}
-                onChange={(e) => filtersCtx.setFilters({ q: e.target.value })}
-                placeholder="Caută în pipeline: titlu, adresă, telefon, URL…"
-                className="pl-8"
-                aria-label="Căutare globală pipeline"
+                value={qInput}
+                onChange={(e) => setQInput(e.target.value)}
+                placeholder="Caută în pipeline: titlu, adresă, zonă, URL…"
+                className="pl-8 pr-8"
+                aria-label="Căutare globală pipeline (debounce 300ms)"
               />
+              {isSearchDebouncing && (
+                <Loader2 className="absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
             </div>
 
             <Select
@@ -382,6 +532,7 @@ export default function UnifiedPipelinePanel() {
                       <TabsTrigger value={v} className="gap-1.5">
                         <Icon className="h-3.5 w-3.5" />
                         <span>{meta.label}</span>
+                        {renderTabCount(v)}
                         <Info
                           className="h-3 w-3 text-muted-foreground/70"
                           aria-hidden="true"

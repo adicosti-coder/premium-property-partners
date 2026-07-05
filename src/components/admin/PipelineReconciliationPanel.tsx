@@ -7,11 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  Activity, AlertTriangle, BellRing, CheckCircle2, Download, ExternalLink,
+  Activity, AlertTriangle, BellRing, CheckCircle2, Download, ExternalLink, Filter,
   Loader2, PlayCircle, RefreshCw, Rocket, TimerReset,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ro } from "date-fns/locale";
+import { matchesUnifiedFilters, useUnifiedPipelineFilters } from "./UnifiedPipelinePanel";
 
 type Stats = {
   since_hours: number;
@@ -58,6 +59,7 @@ const newIdempotencyKey = (prefix: string) => {
 };
 
 export default function PipelineReconciliationPanel() {
+  const filters = useUnifiedPipelineFilters();
   const [win, setWin] = useState(24);
   const [stats, setStats] = useState<Stats | null>(null);
   const [orphans, setOrphans] = useState<Orphan[]>([]);
@@ -67,6 +69,12 @@ export default function PipelineReconciliationPanel() {
   const [bulkPublishing, setBulkPublishing] = useState(false);
   const [e2eRunning, setE2eRunning] = useState(false);
   const [e2eResult, setE2eResult] = useState<any>(null);
+
+  // Filtre globale aplicate client-side pe orfani.
+  const filteredOrphans = useMemo(
+    () => orphans.filter((o) => matchesUnifiedFilters(o, filters)),
+    [orphans, filters],
+  );
 
   // Idempotency + dedup: keys already dispatched this session (prevents rapid double-clicks).
   const dispatchedKeys = useRef<Set<string>>(new Set());
@@ -209,10 +217,12 @@ export default function PipelineReconciliationPanel() {
   };
 
   const handleForceAll = async () => {
-    if (orphans.length === 0) return;
-    if (!confirm(`Forțează publicarea a ${orphans.length} anunțuri orfane?`)) return;
+    const targets = filters.hasActive ? filteredOrphans : orphans;
+    if (targets.length === 0) return;
+    const suffix = filters.hasActive ? " (filtrate)" : "";
+    if (!confirm(`Forțează publicarea a ${targets.length} anunțuri orfane${suffix}?`)) return;
     setBulkPublishing(true);
-    await forcePublish(orphans.map(o => o.id), "reconciliation_panel_bulk");
+    await forcePublish(targets.map(o => o.id), "reconciliation_panel_bulk");
     setBulkPublishing(false);
   };
 
@@ -382,25 +392,40 @@ export default function PipelineReconciliationPanel() {
           <div>
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-500" />
-              Anunțuri orfane ({orphans.length})
+              Anunțuri orfane ({filteredOrphans.length}
+              {filters.hasActive && filteredOrphans.length !== orphans.length
+                ? ` din ${orphans.length}`
+                : ""}
+              )
+              {filters.hasActive && (
+                <Badge variant="outline" className="gap-1 text-[10px]">
+                  <Filter className="w-3 h-3" /> filtre active
+                </Badge>
+              )}
             </CardTitle>
-            <CardDescription>Validate dar niciodată publicate — reintroduse manual în flux.</CardDescription>
+            <CardDescription>
+              Validate dar niciodată publicate — reintroduse manual în flux.
+              {filters.hasActive && " Filtrele globale (căutare / portal / zonă) sunt aplicate."}
+            </CardDescription>
           </div>
-          {orphans.length > 0 && (
+          {filteredOrphans.length > 0 && (
             <Button size="sm" onClick={handleForceAll} disabled={bulkPublishing}>
               {bulkPublishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Rocket className="w-4 h-4 mr-1" />}
-              Forțează toate
+              Forțează {filters.hasActive ? "filtrate" : "toate"}
             </Button>
           )}
         </CardHeader>
         <CardContent>
-          {orphans.length === 0 ? (
+          {filteredOrphans.length === 0 ? (
             <div className="text-sm text-muted-foreground flex items-center gap-2 py-4">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Niciun anunț orfan — pipeline sănătos.
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              {orphans.length === 0
+                ? "Niciun anunț orfan — pipeline sănătos."
+                : "Nicio potrivire pentru filtrele curente. Resetează filtrele pentru a vedea toți orfanii."}
             </div>
           ) : (
             <div className="divide-y max-h-[420px] overflow-y-auto">
-              {orphans.map(o => (
+              {filteredOrphans.map(o => (
                 <div key={o.id} className="py-2.5 flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,11 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
-import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye, Zap, ChevronDown, ChevronUp, RotateCw, AlertCircle } from "lucide-react";
+import { Building2, Loader2, Play, Sparkles, ShieldCheck, FileText, Eye, Zap, ChevronDown, ChevronUp, RotateCw, AlertCircle, Filter } from "lucide-react";
 import { EnrichmentBacklogWidget } from "./EnrichmentBacklogWidget";
 import { ProductionAlertsConfig } from "./ProductionAlertsConfig";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useUnifiedPipelineFilters } from "./UnifiedPipelinePanel";
 
 
 type Counts = {
@@ -22,7 +23,9 @@ type Counts = {
 };
 
 export function AutoPublishListingsPanel() {
+  const filters = useUnifiedPipelineFilters();
   const [counts, setCounts] = useState<Counts>({ drafts: 0, imported_total: 0, imported_24h: 0, candidates: 0 });
+  const [filteredCandidates, setFilteredCandidates] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
@@ -73,6 +76,34 @@ export function AutoPublishListingsPanel() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Recompute candidate count with global filters applied (portal/zone/q).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!filters.hasActive) {
+        if (!cancelled) setFilteredCandidates(null);
+        return;
+      }
+      let q: any = supabase
+        .from("prospect_listings")
+        .select("id", { count: "exact", head: true })
+        .gte("lead_score", 55)
+        .eq("is_active", true)
+        .eq("prospect_type", "proprietar")
+        .not("source_url", "is", null);
+      if (filters.portal !== "all") q = q.ilike("source_platform", `%${filters.portal}%`);
+      if (filters.zone !== "all") q = q.ilike("zone", `%${filters.zone}%`);
+      const term = filters.q.trim().replace(/[,%()]/g, " ").trim();
+      if (term.length > 0) {
+        q = q.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
+      }
+      const { count } = await q;
+      if (!cancelled) setFilteredCandidates(count ?? 0);
+    })();
+    return () => { cancelled = true; };
+  }, [filters]);
+
 
   const runNow = async () => {
     setRunning(true);
@@ -345,8 +376,19 @@ export function AutoPublishListingsPanel() {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <div className="border rounded-lg p-3">
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Candidați</div>
-            <div className="text-xl font-bold">{counts.candidates}</div>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+              Candidați
+              {filters.hasActive && filteredCandidates != null && (
+                <Badge variant="outline" className="ml-auto gap-1 text-[9px] px-1 py-0">
+                  <Filter className="w-2.5 h-2.5" /> filtrat
+                </Badge>
+              )}
+            </div>
+            <div className="text-xl font-bold">
+              {filters.hasActive && filteredCandidates != null
+                ? <>{filteredCandidates}<span className="text-xs font-normal text-muted-foreground"> / {counts.candidates}</span></>
+                : counts.candidates}
+            </div>
           </div>
           <div className="border rounded-lg p-3">
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Drafturi de revizuit</div>

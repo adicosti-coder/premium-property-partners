@@ -1,13 +1,16 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Inbox, Phone, Bot, Radar, ShieldCheck, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Inbox, Phone, Bot, Radar, ShieldCheck, FileText, Filter } from "lucide-react";
 import ScraperLeads from "@/pages/ScraperLeads";
 import ProspectListings from "@/pages/ProspectListings";
 import ProspectManager from "@/components/admin/ProspectManager";
 import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import OutreachTemplatesPanelB2C from "@/components/admin/outreach/OutreachTemplatesPanelB2C";
+import { useUnifiedPipelineFilters } from "./UnifiedPipelinePanel";
 
 const VALID_SUBTABS = ["leads", "hot", "templates", "bot", "status", "agency"] as const;
 type Subtab = (typeof VALID_SUBTABS)[number];
@@ -21,6 +24,15 @@ export default function ProspectPipelinePanel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const raw = searchParams.get("subtab");
   const active: Subtab = isSubtab(raw) ? raw : DEFAULT_SUBTAB;
+  const filters = useUnifiedPipelineFilters();
+
+  const activeChips = useMemo(() => {
+    const chips: Array<{ key: string; label: string }> = [];
+    if (filters.q.trim()) chips.push({ key: "q", label: `„${filters.q.trim()}"` });
+    if (filters.portal !== "all") chips.push({ key: "portal", label: filters.portal });
+    if (filters.zone !== "all") chips.push({ key: "zone", label: filters.zone });
+    return chips;
+  }, [filters]);
 
   useEffect(() => {
     if (raw && !isSubtab(raw)) {
@@ -57,6 +69,23 @@ export default function ProspectPipelinePanel() {
           Flux unificat de prospectare: scoring AI, apelare, șabloane outreach, configurare bot, monitoring și filtre agenții.
         </p>
       </div>
+
+      {filters.hasActive && (
+        <Alert className="py-2">
+          <Filter className="h-4 w-4" />
+          <AlertDescription className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="font-medium">Filtre globale active:</span>
+            {activeChips.map((c) => (
+              <Badge key={c.key} variant="secondary" className="text-[10px]">
+                {c.label}
+              </Badge>
+            ))}
+            <span className="text-muted-foreground">
+              — folosește filtrele proprii din listele de leads pentru a le combina cu criteriile globale.
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Tabs value={active} onValueChange={handleChange} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto justify-start gap-1">
