@@ -1064,6 +1064,28 @@ function hasOwnerFilterIntent(query: string | null | undefined, url: string | nu
   ].some((signal) => blob.includes(removeDiacritics(signal.toLowerCase())));
 }
 
+function titleFromListingUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const last = u.pathname.split('/').filter(Boolean).pop() || '';
+    const slug = last
+      .replace(/^oferta[-/]/i, '')
+      .replace(/-ID[A-Z0-9]+$/i, '')
+      .replace(/-X[A-Z0-9]+$/i, '')
+      .replace(/\.html?$/i, '')
+      .replace(/[-_]+/g, ' ')
+      .trim();
+    if (slug.length < 8) return null;
+    return decodeURIComponent(slug)
+      .replace(/\s+/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .slice(0, 140);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Expand keyword list with diacritics-free variants for fuzzy matching.
  * Deduplicates by normalized form to avoid double-searching.
@@ -1091,7 +1113,7 @@ function expandKeywordsWithoutDiacritics<T extends { platform: string; query: st
 }
 
 /** Extract property data from markdown text using regex patterns */
-function extractFromMarkdown(markdown: string, title: string, _url: string): {
+function extractFromMarkdown(markdown: string, title: string, url: string): {
   title: string; description: string | null; price: number | null; currency: string;
   location: string | null; size: number | null; rooms: number | null;
   floor: string | null; yearBuilt: number | null; features: string[];
@@ -1167,7 +1189,7 @@ function extractFromMarkdown(markdown: string, title: string, _url: string): {
   const desc = text.replace(/[#*\[\]()!]/g, '').trim().substring(0, 300) || null;
 
   return {
-    title: title || 'Anunț fără titlu',
+    title: title || titleFromListingUrl(url) || 'Anunț fără titlu',
     description: desc,
     price, currency, location, size, rooms, floor, yearBuilt,
     features, contactPhone, contactName: null, images,
