@@ -82,7 +82,12 @@ const ListingImportTabs = () => {
         </div>
       </TabsContent>
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
-      <TabsContent value="auto-publish"><AutoPublishListingsPanel /></TabsContent>
+      <TabsContent value="auto-publish">
+        <div className="space-y-4">
+          <PipelineReconciliationPanel />
+          <AutoPublishListingsPanel />
+        </div>
+      </TabsContent>
       <TabsContent value="sandbox"><ListingImportHealthPanel /></TabsContent>
       <TabsContent value="performance"><PerformanceROIPanel /></TabsContent>
       <TabsContent value="growth"><GrowthEngineDashboard /></TabsContent>
