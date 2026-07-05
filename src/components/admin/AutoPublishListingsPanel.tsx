@@ -23,7 +23,9 @@ type Counts = {
 };
 
 export function AutoPublishListingsPanel() {
+  const filters = useUnifiedPipelineFilters();
   const [counts, setCounts] = useState<Counts>({ drafts: 0, imported_total: 0, imported_24h: 0, candidates: 0 });
+  const [filteredCandidates, setFilteredCandidates] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
