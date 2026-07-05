@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  Activity, AlertTriangle, CheckCircle2, ExternalLink, Loader2, RefreshCw, Rocket,
+  Activity, AlertTriangle, BellRing, CheckCircle2, Download, ExternalLink,
+  Loader2, PlayCircle, RefreshCw, Rocket, TimerReset,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -41,6 +44,19 @@ const WINDOWS = [
   { label: "7 zile", value: 168 },
 ];
 
+// Storage keys for user preferences (persistent per browser)
+const LS_AUTO_RECONCILE = "pipeline_recon.auto_enabled";
+const LS_ERROR_THRESHOLD = "pipeline_recon.error_threshold";
+const AUTO_RECONCILE_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h
+
+// Generate a UUID-ish idempotency key (crypto.randomUUID with safe fallback).
+const newIdempotencyKey = (prefix: string) => {
+  const rand = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `${prefix}:${rand}`;
+};
+
 export default function PipelineReconciliationPanel() {
   const [win, setWin] = useState(24);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -49,6 +65,25 @@ export default function PipelineReconciliationPanel() {
   const [loading, setLoading] = useState(false);
   const [forcingId, setForcingId] = useState<string | null>(null);
   const [bulkPublishing, setBulkPublishing] = useState(false);
+  const [e2eRunning, setE2eRunning] = useState(false);
+  const [e2eResult, setE2eResult] = useState<any>(null);
+
+  // Idempotency + dedup: keys already dispatched this session (prevents rapid double-clicks).
+  const dispatchedKeys = useRef<Set<string>>(new Set());
+  const inflightIds = useRef<Set<string>>(new Set());
+
+  // Auto-reconciliation & error threshold settings (persisted in localStorage).
+  const [autoEnabled, setAutoEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem(LS_AUTO_RECONCILE) === "1"; } catch { return false; }
+  });
+  const [errorThreshold, setErrorThreshold] = useState<number>(() => {
+    try {
+      const v = parseInt(localStorage.getItem(LS_ERROR_THRESHOLD) || "5", 10);
+      return Number.isFinite(v) && v > 0 ? v : 5;
+    } catch { return 5; }
+  });
+  const [lastAutoRun, setLastAutoRun] = useState<Date | null>(null);
+  const alertedRef = useRef<string | null>(null); // dedupe alert toasts per session/window
 
   const load = async () => {
     setLoading(true);
@@ -71,25 +106,105 @@ export default function PipelineReconciliationPanel() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [win]);
 
-  const forcePublish = async (ids: string[]) => {
+  // Persist settings
+  useEffect(() => {
+    try { localStorage.setItem(LS_AUTO_RECONCILE, autoEnabled ? "1" : "0"); } catch { /* noop */ }
+  }, [autoEnabled]);
+  useEffect(() => {
+    try { localStorage.setItem(LS_ERROR_THRESHOLD, String(errorThreshold)); } catch { /* noop */ }
+  }, [errorThreshold]);
+
+  // Auto-reconciliation loop (6h) — republishes orphans without user interaction.
+  useEffect(() => {
+    if (!autoEnabled) return;
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled) return;
+      try {
+        // Refresh stats + orphans first
+        const { data: orphanData } = await supabase.rpc("list_orphan_prospects", { _since_hours: 24, _limit: 100 });
+        const ids = ((orphanData as Orphan[]) || []).map(o => o.id);
+        if (ids.length > 0) {
+          const idempotency_key = newIdempotencyKey("auto-recon-bulk");
+          await supabase.functions.invoke("auto-publish-listings", {
+            body: {
+              prospect_ids: ids, force: true, use_ai_rewrite: true,
+              triggered_by: "auto_reconciliation_6h",
+              idempotency_key,
+            },
+          });
+          if (!cancelled) {
+            setLastAutoRun(new Date());
+            toast({ title: "Reconciliere automată executată", description: `${ids.length} anunțuri orfane reintroduse în flux.` });
+            setTimeout(load, 8000);
+          }
+        } else if (!cancelled) {
+          setLastAutoRun(new Date());
+        }
+      } catch (e: any) {
+        console.warn("[auto-reconcile] failed:", e?.message);
+      }
+    };
+    const interval = setInterval(tick, AUTO_RECONCILE_INTERVAL_MS);
+    // Kick off a first check ~30s after enabling (not immediately, to avoid surprise).
+    const initial = setTimeout(tick, 30_000);
+    return () => { cancelled = true; clearInterval(interval); clearTimeout(initial); };
+  }, [autoEnabled]);
+
+  // Critical error threshold alert (in-UI toast + banner).
+  const errorRateExceeded = useMemo(() => {
+    if (!stats) return false;
+    return stats.worker_failures >= errorThreshold;
+  }, [stats, errorThreshold]);
+
+  useEffect(() => {
+    if (!stats || !errorRateExceeded) return;
+    const key = `${win}:${stats.worker_failures}`;
+    if (alertedRef.current === key) return;
+    alertedRef.current = key;
+    toast({
+      title: `⚠ Prag critic depășit: ${stats.worker_failures} erori worker`,
+      description: `Praguri configurat: ${errorThreshold}. Verifică log-ul de mai jos.`,
+      variant: "destructive",
+    });
+  }, [stats, errorRateExceeded, errorThreshold, win]);
+
+  const forcePublish = async (ids: string[], reason: string) => {
+    // Dedupe: skip IDs already in-flight
+    const filtered = ids.filter(id => !inflightIds.current.has(id));
+    if (filtered.length === 0) {
+      toast({ title: "Deja în procesare", description: "Aceste anunțuri sunt deja trimise la worker." });
+      return;
+    }
+    filtered.forEach(id => inflightIds.current.add(id));
+    const idempotency_key = newIdempotencyKey(reason);
+    if (dispatchedKeys.current.has(idempotency_key)) return;
+    dispatchedKeys.current.add(idempotency_key);
     try {
       const { data, error } = await supabase.functions.invoke("auto-publish-listings", {
-        body: { prospect_ids: ids, force: true, use_ai_rewrite: true, triggered_by: "reconciliation_panel" },
+        body: {
+          prospect_ids: filtered, force: true, use_ai_rewrite: true,
+          triggered_by: reason, idempotency_key,
+        },
       });
       if (error) throw error;
       toast({
         title: "Republicare forțată dispatched",
-        description: `Worker-i lansați: ${data?.summary?.dispatched ?? ids.length}. Verifică în ~30s.`,
+        description: `Worker-i lansați: ${data?.summary?.dispatched ?? filtered.length}. Idempotency: ${idempotency_key.slice(-12)}`,
       });
       setTimeout(load, 8000);
     } catch (e: any) {
       toast({ title: "Republicare eșuată", description: e?.message, variant: "destructive" });
+    } finally {
+      // Release after 20s so retries are possible if worker crashes without updating state.
+      setTimeout(() => filtered.forEach(id => inflightIds.current.delete(id)), 20_000);
     }
   };
 
   const handleForceOne = async (id: string) => {
+    if (inflightIds.current.has(id)) return;
     setForcingId(id);
-    await forcePublish([id]);
+    await forcePublish([id], "reconciliation_panel_single");
     setForcingId(null);
   };
 
@@ -97,12 +212,77 @@ export default function PipelineReconciliationPanel() {
     if (orphans.length === 0) return;
     if (!confirm(`Forțează publicarea a ${orphans.length} anunțuri orfane?`)) return;
     setBulkPublishing(true);
-    await forcePublish(orphans.map(o => o.id));
+    await forcePublish(orphans.map(o => o.id), "reconciliation_panel_bulk");
     setBulkPublishing(false);
+  };
+
+  const runE2E = async () => {
+    setE2eRunning(true);
+    setE2eResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("system-e2e-tests", {
+        body: { mode: "manual", triggered_by: "reconciliation_panel" },
+      });
+      if (error) throw error;
+      setE2eResult(data);
+      const ok = data?.overall_passed !== false;
+      toast({
+        title: ok ? "Test E2E: succes" : "Test E2E: eșec",
+        description: ok ? "Toate verificările au trecut." : "Verifică rezultatul detaliat mai jos.",
+        variant: ok ? "default" : "destructive",
+      });
+    } catch (e: any) {
+      toast({ title: "Test E2E eșuat", description: e?.message, variant: "destructive" });
+    } finally {
+      setE2eRunning(false);
+    }
+  };
+
+  const exportCsv = () => {
+    if (!stats) return;
+    const rows = [
+      ["metric", "value"],
+      ["window_hours", stats.since_hours],
+      ["scraped_total", stats.scraped_total],
+      ["scraped_vanzare", stats.scraped_vanzare],
+      ["validated_publishable", stats.validated_publishable],
+      ["rejected_by_validation", stats.rejected_by_validation],
+      ["explicitly_rejected", stats.explicitly_rejected],
+      ["published_count", stats.published_count],
+      ["orphan_count", stats.orphan_count],
+      ["worker_failures", stats.worker_failures],
+      ["conversion_rate_pct", stats.conversion_rate],
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    a.href = url;
+    a.download = `pipeline-reconciliation-${stats.since_hours}h-${stamp}.csv`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast({ title: "Raport exportat", description: a.download });
   };
 
   return (
     <div className="space-y-4">
+      {errorRateExceeded && (
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+          <BellRing className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1 text-sm">
+            <div className="font-medium text-destructive">Rata de erori a workerului a depășit pragul critic</div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {stats?.worker_failures} erori în ultimele {stats?.since_hours}h &middot; prag setat: {errorThreshold}. Verifică log-ul mai jos și, dacă e cazul, rulează test E2E.
+            </div>
+          </div>
+          <Button size="sm" variant="outline" onClick={runE2E} disabled={e2eRunning}>
+            {e2eRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4 mr-1" />}
+            Test E2E
+          </Button>
+        </div>
+      )}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
@@ -129,6 +309,9 @@ export default function PipelineReconciliationPanel() {
             <Button size="sm" variant="outline" onClick={load} disabled={loading}>
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
+            <Button size="sm" variant="outline" onClick={exportCsv} disabled={!stats}>
+              <Download className="w-4 h-4 mr-1" /> Export CSV
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -144,6 +327,53 @@ export default function PipelineReconciliationPanel() {
               <Stat label="Fereastră" value={`${stats.since_hours}h`} tone="muted" />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Automation & alerts settings */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TimerReset className="w-4 h-4 text-primary" />
+            Automatizare & Alerte
+          </CardTitle>
+          <CardDescription>
+            Reconciliere periodică pe fundal (la 6h) + prag critic pentru notificări instantanee.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <Label htmlFor="auto-recon" className="text-sm font-medium">Reconciliere automată la 6h</Label>
+              <p className="text-xs text-muted-foreground">
+                Reintrodu automat în flux anunțurile orfane. {lastAutoRun && <>Ultima rulare: {formatDistanceToNow(lastAutoRun, { locale: ro, addSuffix: true })}.</>}
+              </p>
+            </div>
+            <Switch id="auto-recon" checked={autoEnabled} onCheckedChange={setAutoEnabled} />
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <Label htmlFor="err-threshold" className="text-sm font-medium">Prag critic erori worker</Label>
+              <p className="text-xs text-muted-foreground">Alertă în UI când numărul de erori din fereastra curentă depășește acest prag.</p>
+            </div>
+            <input
+              id="err-threshold" type="number" min={1} max={999}
+              value={errorThreshold}
+              onChange={(e) => setErrorThreshold(Math.max(1, parseInt(e.target.value || "1", 10)))}
+              className="w-20 h-9 rounded-md border bg-background px-2 text-sm text-right"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t">
+            <Button size="sm" variant="outline" onClick={runE2E} disabled={e2eRunning}>
+              {e2eRunning ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <PlayCircle className="w-4 h-4 mr-1" />}
+              Rulează test E2E complet
+            </Button>
+            {e2eResult && (
+              <Badge variant={e2eResult.overall_passed === false ? "destructive" : "secondary"} className="text-[10px]">
+                {e2eResult.overall_passed === false ? "Eșec" : "OK"} &middot; voice: {e2eResult.voice?.passed ? "✓" : "✗"} &middot; seo: {e2eResult.seo?.passed ? "✓" : "✗"}
+              </Badge>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -197,7 +427,7 @@ export default function PipelineReconciliationPanel() {
                   <Button
                     size="sm" variant="outline"
                     onClick={() => handleForceOne(o.id)}
-                    disabled={forcingId === o.id}
+                    disabled={forcingId === o.id || inflightIds.current.has(o.id)}
                   >
                     {forcingId === o.id
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -241,7 +471,7 @@ export default function PipelineReconciliationPanel() {
                   <Button
                     size="sm" variant="outline"
                     onClick={() => handleForceOne(f.entity_id)}
-                    disabled={forcingId === f.entity_id}
+                    disabled={forcingId === f.entity_id || inflightIds.current.has(f.entity_id)}
                   >
                     {forcingId === f.entity_id
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
