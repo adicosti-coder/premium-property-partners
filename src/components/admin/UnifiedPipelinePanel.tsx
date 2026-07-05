@@ -97,9 +97,45 @@ function sanitizeIlikeTerm(s: string): string {
   return s.replace(/[,%()]/g, " ").trim();
 }
 
+/** Normalize string for case+diacritic insensitive matching. */
+function normalize(s: string | null | undefined): string {
+  if (!s) return "";
+  return s
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip combining marks
+    .replace(/[ăâ]/gi, "a")
+    .replace(/[îí]/gi, "i")
+    .replace(/[șş]/gi, "s")
+    .replace(/[țţ]/gi, "t")
+    .toLowerCase()
+    .trim();
+}
+
+/** Sinonime pentru micro-zone Timișoara (utilizator caută "centru" → găsește "Cetate"). */
+const ZONE_SYNONYMS: Record<string, string[]> = {
+  cetate: ["cetate", "centru", "central", "piata unirii", "piata victoriei"],
+  centru: ["centru", "cetate", "central"],
+  iosefin: ["iosefin", "iosefini"],
+  fabric: ["fabric", "fabrica"],
+  dumbravita: ["dumbravita", "dumbrăvița"],
+  aradului: ["aradului", "calea aradului", "arad"],
+  sagului: ["sagului", "șagului", "calea sagului"],
+  elisabetin: ["elisabetin", "elisabeta"],
+  circumvalatiunii: ["circumvalatiunii", "circumvalațiunii", "circumvalatiune"],
+  isho: ["isho"],
+  paltim: ["paltim"],
+};
+
+function zoneCandidates(value: string): string[] {
+  const key = normalize(value);
+  const list = ZONE_SYNONYMS[key];
+  return list ? list.map(normalize) : [key];
+}
+
 /**
  * Helper exportat pentru client-side filtering peste orice listă cu
- * {title, source_platform, zone, source_url}. Ține sub-panourile scurte.
+ * {title, source_platform, zone, source_url}. Case + diacritic insensitive.
  */
 export function matchesUnifiedFilters<
   T extends {
@@ -111,23 +147,19 @@ export function matchesUnifiedFilters<
   },
 >(item: T, f: UnifiedFilters): boolean {
   if (f.portal !== "all") {
-    const p = (item.source_platform || "").toLowerCase();
-    if (!p.includes(f.portal.toLowerCase())) return false;
+    const p = normalize(item.source_platform);
+    if (!p.includes(normalize(f.portal))) return false;
   }
   if (f.zone !== "all") {
-    const z = `${item.zone || ""} ${item.location || ""}`.toLowerCase();
-    if (!z.includes(f.zone.toLowerCase())) return false;
+    const hay = `${normalize(item.zone)} ${normalize(item.location)} ${normalize(item.title)}`;
+    const cands = zoneCandidates(f.zone);
+    if (!cands.some((c) => c && hay.includes(c))) return false;
   }
-  const q = f.q.trim().toLowerCase();
+  const q = normalize(f.q);
   if (q.length > 0) {
-    const hay = [
-      item.title || "",
-      item.source_url || "",
-      item.zone || "",
-      item.location || "",
-    ]
-      .join(" ")
-      .toLowerCase();
+    const hay = [item.title, item.source_url, item.zone, item.location]
+      .map(normalize)
+      .join(" ");
     if (!hay.includes(q)) return false;
   }
   return true;
@@ -157,9 +189,26 @@ const ZONE_OPTIONS = [
 ];
 
 // ────────────────────────────────────────────────────────────────
-// Query helpers — filtre aplicate inline (evită conflicte de tipuri
-// generice ale PostgrestFilterBuilder pentru mai multe tabele).
+// Query helpers — filtre aplicate inline, typed via Supabase schema.
 // ────────────────────────────────────────────────────────────────
+
+/**
+ * Escape valoare `zone` folosită în interogare `.or(...)`: virgulele
+ * și parantezele sparg parserul PostgREST.
+ */
+function escapeIlikeForOr(s: string): string {
+  return s.replace(/[,()]/g, " ").trim();
+}
+
+/** Construiește o clauză `.or()` care unește toate sinonimele unei zone. */
+function buildZoneOr(zoneValue: string, column: "zone" | "location" | "title"): string | null {
+  const cands = ZONE_SYNONYMS[normalize(zoneValue)] ?? [zoneValue];
+  const parts = cands
+    .map((c) => escapeIlikeForOr(c))
+    .filter((c) => c.length > 0)
+    .map((c) => `${column}.ilike.%${c}%`);
+  return parts.length ? parts.join(",") : null;
+}
 
 /** Header badge count — anunțuri noi (exclud contacted + statusuri finale). */
 function useActivePipelineCount(filters: UnifiedFilters) {
@@ -167,12 +216,15 @@ function useActivePipelineCount(filters: UnifiedFilters) {
   const query = useQuery({
     queryKey: ["unified-pipeline-count", filters],
     queryFn: async () => {
-      let q: any = supabase
+      let q = supabase
         .from("prospect_listings")
         .select("id", { count: "exact", head: true })
         .not("status", "in", "(rejected,archived,published,duplicate,contacted)");
       if (filters.portal !== "all") q = q.ilike("source_platform", `%${filters.portal}%`);
-      if (filters.zone !== "all") q = q.ilike("zone", `%${filters.zone}%`);
+      if (filters.zone !== "all") {
+        const or = buildZoneOr(filters.zone, "zone");
+        if (or) q = q.or(or);
+      }
       const term = sanitizeIlikeTerm(filters.q);
       if (term.length > 0) {
         q = q.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
@@ -207,7 +259,6 @@ function useActivePipelineCount(filters: UnifiedFilters) {
 
 /**
  * Filtered counters per tab — 3 lightweight COUNT queries în paralel.
- * Cache-uite pe combinația de filtre.
  */
 function useFilteredTabCounts(filters: UnifiedFilters) {
   return useQuery({
@@ -216,37 +267,43 @@ function useFilteredTabCounts(filters: UnifiedFilters) {
       const term = sanitizeIlikeTerm(filters.q);
 
       // Observability: scan jobs în ultimele 24h.
-      let obsQ: any = supabase
+      // NB: prospect_scan_jobs foloseste `current_platform`, nu `target_platform`.
+      let obsQ = supabase
         .from("prospect_scan_jobs")
         .select("id", { count: "exact", head: true })
         .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
-      // Filter portal doar dacă tabela are coloană target_platform.
       if (filters.portal !== "all") {
-        obsQ = obsQ.ilike("target_platform", `%${filters.portal}%`);
+        obsQ = obsQ.ilike("current_platform", `%${filters.portal}%`);
       }
 
       // Prospects: leads active de contactat.
-      let prospQ: any = supabase
+      let prospQ = supabase
         .from("prospect_listings")
         .select("id", { count: "exact", head: true })
         .eq("is_active", true)
         .eq("prospect_type", "proprietar")
         .not("status", "in", "(rejected,archived,published,duplicate,contacted)");
       if (filters.portal !== "all") prospQ = prospQ.ilike("source_platform", `%${filters.portal}%`);
-      if (filters.zone !== "all") prospQ = prospQ.ilike("zone", `%${filters.zone}%`);
+      if (filters.zone !== "all") {
+        const or = buildZoneOr(filters.zone, "zone");
+        if (or) prospQ = prospQ.or(or);
+      }
       if (term.length > 0) {
         prospQ = prospQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
       }
 
       // Approval: candidați pentru auto-publish.
-      let appQ: any = supabase
+      let appQ = supabase
         .from("prospect_listings")
         .select("id", { count: "exact", head: true })
         .gte("lead_score", 55)
         .eq("is_active", true)
         .not("source_url", "is", null);
       if (filters.portal !== "all") appQ = appQ.ilike("source_platform", `%${filters.portal}%`);
-      if (filters.zone !== "all") appQ = appQ.ilike("zone", `%${filters.zone}%`);
+      if (filters.zone !== "all") {
+        const or = buildZoneOr(filters.zone, "zone");
+        if (or) appQ = appQ.or(or);
+      }
       if (term.length > 0) {
         appQ = appQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
       }
@@ -398,29 +455,46 @@ export default function UnifiedPipelinePanel() {
   }, [filters]);
 
   // ── Counters
-  const { data: count, isLoading: countLoading } = useActivePipelineCount(filters);
+  const {
+    data: count,
+    isLoading: countLoading,
+    isFetching: countFetching,
+  } = useActivePipelineCount(filters);
+  const isSearchDebouncing = qInput !== filters.q;
   const badgeText = useMemo(() => {
     if (countLoading || count == null) return "…";
     return count.toLocaleString("ro-RO");
   }, [count, countLoading]);
+  const badgeBusy = countFetching || isSearchDebouncing;
 
-  const { data: tabCounts } = useFilteredTabCounts(filters);
+  const { data: tabCounts, isFetching: tabCountsFetching } = useFilteredTabCounts(filters);
+  const tabCountsBusy = tabCountsFetching || isSearchDebouncing;
 
   const renderTabCount = (v: UnifiedTab) => {
     const n = tabCounts?.[v];
-    if (n == null) return null;
+    if (n == null) {
+      // Prima încărcare: skeleton discret în loc de salt vizual.
+      return (
+        <Skeleton
+          className="ml-1 h-4 w-6 rounded-full"
+          aria-label="Se încarcă numărul de rezultate"
+        />
+      );
+    }
     return (
       <Badge
         variant={filtersCtx.hasActive ? "default" : "outline"}
-        className="ml-1 h-4 min-w-4 px-1 text-[10px] tabular-nums"
-        aria-label={`${n} rezultate în această secțiune`}
+        className={`ml-1 h-4 min-w-4 px-1 text-[10px] tabular-nums transition-opacity ${
+          tabCountsBusy ? "opacity-50 animate-pulse" : "opacity-100"
+        }`}
+        aria-label={`${n} rezultate în această secțiune${tabCountsBusy ? " (se actualizează)" : ""}`}
+        aria-busy={tabCountsBusy}
       >
         {n.toLocaleString("ro-RO")}
       </Badge>
     );
   };
 
-  const isSearchDebouncing = qInput !== filters.q;
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -439,15 +513,18 @@ export default function UnifiedPipelinePanel() {
               <TooltipTrigger asChild>
                 <Badge
                   variant="secondary"
-                  className="gap-2 rounded-full px-3 py-1.5 text-sm font-semibold"
+                  className={`gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-opacity ${
+                    badgeBusy ? "opacity-70" : "opacity-100"
+                  }`}
                   aria-label={`Anunțuri noi în pipeline: ${badgeText}`}
+                  aria-busy={badgeBusy}
                 >
-                  {countLoading ? (
+                  {badgeBusy ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <Radar className="h-3.5 w-3.5" />
                   )}
-                  <span>{badgeText} în pipeline</span>
+                  <span className="tabular-nums">{badgeText} în pipeline</span>
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-[280px]">
