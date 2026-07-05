@@ -258,8 +258,8 @@ export default function ScraperMonitorPanel() {
             new_listings: newListings,
           });
           qc.invalidateQueries({ queryKey: ["scraper-jobs-monitor"] });
-          qc.invalidateQueries({ queryKey: ["scraper-found-listings", foundWindow] });
-          qc.invalidateQueries({ queryKey: ["scraper-found-totals", foundWindow] });
+          qc.invalidateQueries({ queryKey: ["scraper-found-listings"] });
+          qc.invalidateQueries({ queryKey: ["scraper-found-totals"] });
         },
       )
       .on(
@@ -274,7 +274,7 @@ export default function ScraperMonitorPanel() {
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [qc, foundWindow, SCRAPER_AUDIT_ACTIONS]);
+  }, [qc, SCRAPER_AUDIT_ACTIONS]);
 
   const requestNotificationPermission = async () => {
     if (typeof Notification === "undefined") {
