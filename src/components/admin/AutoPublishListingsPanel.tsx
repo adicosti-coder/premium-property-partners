@@ -376,8 +376,19 @@ export function AutoPublishListingsPanel() {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <div className="border rounded-lg p-3">
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Candidați</div>
-            <div className="text-xl font-bold">{counts.candidates}</div>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+              Candidați
+              {filters.hasActive && filteredCandidates != null && (
+                <Badge variant="outline" className="ml-auto gap-1 text-[9px] px-1 py-0">
+                  <Filter className="w-2.5 h-2.5" /> filtrat
+                </Badge>
+              )}
+            </div>
+            <div className="text-xl font-bold">
+              {filters.hasActive && filteredCandidates != null
+                ? <>{filteredCandidates}<span className="text-xs font-normal text-muted-foreground"> / {counts.candidates}</span></>
+                : counts.candidates}
+            </div>
           </div>
           <div className="border rounded-lg p-3">
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Drafturi de revizuit</div>
