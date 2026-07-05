@@ -513,15 +513,18 @@ export default function UnifiedPipelinePanel() {
               <TooltipTrigger asChild>
                 <Badge
                   variant="secondary"
-                  className="gap-2 rounded-full px-3 py-1.5 text-sm font-semibold"
+                  className={`gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-opacity ${
+                    badgeBusy ? "opacity-70" : "opacity-100"
+                  }`}
                   aria-label={`Anunțuri noi în pipeline: ${badgeText}`}
+                  aria-busy={badgeBusy}
                 >
-                  {countLoading ? (
+                  {badgeBusy ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
                     <Radar className="h-3.5 w-3.5" />
                   )}
-                  <span>{badgeText} în pipeline</span>
+                  <span className="tabular-nums">{badgeText} în pipeline</span>
                 </Badge>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-[280px]">
