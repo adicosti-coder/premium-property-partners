@@ -2098,7 +2098,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     setIsScraping(true);
     setActiveScanMode("scan");
     setRecentScanPulse(true);
-    const slice = pending.slice(0, 30); // edge function caps retry_batches at 30
+    const slice = pending.slice(0, MAX_STABLE_SCAN_QUERY_LIMIT); // keep retry jobs under edge runtime budget
     const remainingAfter = Math.max(0, pending.length - slice.length);
     setResumeRemainingAfter(remainingAfter);
     scanContextRef.current = {
@@ -2118,7 +2118,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .insert({
           created_by: userId,
           query_limit: slice.length,
-          max_results: 10,
+          max_results: 8,
           triggered_by: "manual_resume_ui",
         } as any)
         .select("*")
@@ -2147,7 +2147,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
 
       const { error } = await supabase.functions.invoke("scrape-prospects", {
         body: {
-          max_results: 10,
+          max_results: 8,
           preserve_agency_filter: true,
           job_id: (jobRow as any).id,
           async_mode: true,
@@ -2155,6 +2155,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
           auto_fallback_threshold: autoFallbackThreshold,
+          hydrate_phones: false,
         },
       });
 
@@ -2247,7 +2248,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       setIsScraping(true);
       const { error } = await supabase.functions.invoke("scrape-prospects", {
         body: {
-          max_results: 15,
+          max_results: 10,
           preserve_agency_filter: true,
           job_id: (jobRow as any).id,
           async_mode: true,
@@ -2577,7 +2578,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
     if (!recentlyAddedKeywords.length) { toast.info("Nu există cuvinte cheie noi în sesiune."); return; }
     setIsScanningNew(true);
     try {
-      const slice = recentlyAddedKeywords.slice(0, 30).map((k) => ({
+      const slice = recentlyAddedKeywords.slice(0, MAX_STABLE_SCAN_QUERY_LIMIT).map((k) => ({
         platform: k.platform || "General",
         query: k.keyword,
       }));
@@ -2589,7 +2590,7 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
         .insert({
           created_by: userId,
           query_limit: slice.length,
-          max_results: 12,
+          max_results: 8,
           triggered_by: "manual_new_keywords_ui",
         } as any)
         .select("*")
@@ -2619,13 +2620,14 @@ const ScraperLeads = ({ embedded = false }: { embedded?: boolean } = {}) => {
       setActiveScanMode("scan");
       const { error } = await supabase.functions.invoke("scrape-prospects", {
         body: {
-          max_results: 12,
+          max_results: 8,
           preserve_agency_filter: true,
           job_id: (jobRow as any).id,
           async_mode: true,
           retry_batches: slice,
           scan_mode: scanModeOverride,
           auto_fallback: autoFallback,
+          hydrate_phones: false,
           auto_fallback_threshold: autoFallbackThreshold,
         },
       });
