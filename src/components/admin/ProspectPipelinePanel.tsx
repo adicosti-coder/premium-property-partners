@@ -1,13 +1,16 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Inbox, Phone, Bot, Radar, ShieldCheck, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Inbox, Phone, Bot, Radar, ShieldCheck, FileText, Filter } from "lucide-react";
 import ScraperLeads from "@/pages/ScraperLeads";
 import ProspectListings from "@/pages/ProspectListings";
 import ProspectManager from "@/components/admin/ProspectManager";
 import ScraperStatusDashboard from "@/components/admin/ScraperStatusDashboard";
 import { AgencyDetectionSettings } from "@/components/admin/AgencyDetectionSettings";
 import OutreachTemplatesPanelB2C from "@/components/admin/outreach/OutreachTemplatesPanelB2C";
+import { useUnifiedPipelineFilters } from "./UnifiedPipelinePanel";
 
 const VALID_SUBTABS = ["leads", "hot", "templates", "bot", "status", "agency"] as const;
 type Subtab = (typeof VALID_SUBTABS)[number];
