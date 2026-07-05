@@ -392,25 +392,40 @@ export default function PipelineReconciliationPanel() {
           <div>
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-500" />
-              Anunțuri orfane ({orphans.length})
+              Anunțuri orfane ({filteredOrphans.length}
+              {filters.hasActive && filteredOrphans.length !== orphans.length
+                ? ` din ${orphans.length}`
+                : ""}
+              )
+              {filters.hasActive && (
+                <Badge variant="outline" className="gap-1 text-[10px]">
+                  <Filter className="w-3 h-3" /> filtre active
+                </Badge>
+              )}
             </CardTitle>
-            <CardDescription>Validate dar niciodată publicate — reintroduse manual în flux.</CardDescription>
+            <CardDescription>
+              Validate dar niciodată publicate — reintroduse manual în flux.
+              {filters.hasActive && " Filtrele globale (căutare / portal / zonă) sunt aplicate."}
+            </CardDescription>
           </div>
-          {orphans.length > 0 && (
+          {filteredOrphans.length > 0 && (
             <Button size="sm" onClick={handleForceAll} disabled={bulkPublishing}>
               {bulkPublishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Rocket className="w-4 h-4 mr-1" />}
-              Forțează toate
+              Forțează {filters.hasActive ? "filtrate" : "toate"}
             </Button>
           )}
         </CardHeader>
         <CardContent>
-          {orphans.length === 0 ? (
+          {filteredOrphans.length === 0 ? (
             <div className="text-sm text-muted-foreground flex items-center gap-2 py-4">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Niciun anunț orfan — pipeline sănătos.
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              {orphans.length === 0
+                ? "Niciun anunț orfan — pipeline sănătos."
+                : "Nicio potrivire pentru filtrele curente. Resetează filtrele pentru a vedea toți orfanii."}
             </div>
           ) : (
             <div className="divide-y max-h-[420px] overflow-y-auto">
-              {orphans.map(o => (
+              {filteredOrphans.map(o => (
                 <div key={o.id} className="py-2.5 flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
