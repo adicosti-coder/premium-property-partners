@@ -124,6 +124,22 @@ export default function ScraperMonitorPanel() {
   const [testRunning, setTestRunning] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
 
+  // Realtime + notifications
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(() =>
+    typeof Notification !== "undefined" ? Notification.permission : "denied",
+  );
+  const [tickPulse, setTickPulse] = useState(0); // increments on each new_listings bump
+  const lastJobStateRef = useRef<Map<string, { status: string; new_listings: number }>>(new Map());
+
+  // Confirm-force dialog
+  const [confirmState, setConfirmState] = useState<null | {
+    title: string;
+    description: string;
+    actionLabel: string;
+    tone: "destructive" | "default";
+    onConfirm: () => void | Promise<void>;
+  }>(null);
+
   const { data: keywords = [], isLoading: kwLoading } = useQuery({
     queryKey: ["scraper-keywords-monitor"],
     queryFn: async () => {
