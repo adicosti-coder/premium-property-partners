@@ -217,10 +217,12 @@ export default function PipelineReconciliationPanel() {
   };
 
   const handleForceAll = async () => {
-    if (orphans.length === 0) return;
-    if (!confirm(`Forțează publicarea a ${orphans.length} anunțuri orfane?`)) return;
+    const targets = filters.hasActive ? filteredOrphans : orphans;
+    if (targets.length === 0) return;
+    const suffix = filters.hasActive ? " (filtrate)" : "";
+    if (!confirm(`Forțează publicarea a ${targets.length} anunțuri orfane${suffix}?`)) return;
     setBulkPublishing(true);
-    await forcePublish(orphans.map(o => o.id), "reconciliation_panel_bulk");
+    await forcePublish(targets.map(o => o.id), "reconciliation_panel_bulk");
     setBulkPublishing(false);
   };
 
