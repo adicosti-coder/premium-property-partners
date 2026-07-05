@@ -979,7 +979,7 @@ const FORBIDDEN_DOMAINS = [
   'g4media.ro', 'mediafax.ro', 'prahova-online.ro', 'monitorulexpres.ro',
   // Official / institutional
   'hcl.civicul.ro', 'civicul.ro', 'gov.ro', 'just.ro', 'monitoruloficial.ro',
-  'primariatm.ro', 'cjtimis.ro',
+  'primariatm.ro', 'cjtimis.ro', 'hub.imobiliare.ro',
   // Generic aggregators / SEO spam / dating spam
   'casaldaritanatura.pt', 'flatspotter.com', 'timisoreni.ro',
   'saint-gobain.ro', 'infinity-skyline.ro', 'ateneo.ro',
@@ -998,6 +998,7 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
   // 1. Reject forbidden domains outright
   const host = extractUrlDomain(rawUrl) || '';
   if (FORBIDDEN_DOMAINS.some((d) => host === d || host.endsWith('.' + d))) return true;
+  if (/imobiliare\.ro\/imoexpert\//i.test(u)) return true;
 
   // 2. Facebook group/marketplace INDEX (no specific post/item ID) → reject
   if (/facebook\.com\/(groups\/\d+\/?$|marketplace\/\d+\/?$|marketplace\/[a-z]+\/?$)/i.test(u)) return true;
@@ -1008,7 +1009,7 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
   const isIndividualAd =
     u.includes('/d/oferta/') ||
     /storia\.ro\/ro\/oferta\//.test(u) ||
-    /imobiliare\.ro\/oferta-/.test(u) ||
+    /imobiliare\.ro\/oferta[/-]/.test(u) ||
     /imobiliare\.ro\/[^/]+\/[^/]+\/[a-z0-9]{6,}/i.test(rawUrl) ||
     /publi24\.ro\/anunturi\//.test(u) ||
     /bursaimobiliara\.ro\/.+\/[a-z0-9-]+-\d+\.html/.test(u) ||
@@ -1016,6 +1017,11 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
     /facebook\.com\/marketplace\/item\/\d+/i.test(u) ||
     /facebook\.com\/groups\/[^/]+\/(posts|permalink)\/\d+/i.test(u);
   if (isIndividualAd) return false;
+
+  // Known real-estate portals are allowed only when the URL is an actual offer.
+  // This blocks editorial/hub/category pages that search engines return for the
+  // same keywords and were polluting the import queue as fake "listings".
+  if ([...MARKETPLACE_DOMAINS].some((d) => host === d || host.endsWith('.' + d))) return true;
 
   // 4. Reject only when URL/title *actively* signals a category/search page.
   //    (Previously we default-rejected any unknown-shape URL — that killed
