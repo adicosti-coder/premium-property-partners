@@ -8,6 +8,7 @@ import KeywordSimulatorPanel from "./KeywordSimulatorPanel";
 import QuickKeywordSimulator from "./QuickKeywordSimulator";
 import PmLeadsPanel from "./PmLeadsPanel";
 import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
+import PipelineReconciliationPanel from "./PipelineReconciliationPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
 import { PerformanceROIPanel } from "./PerformanceROIPanel";
 import GrowthEngineDashboard from "./GrowthEngineDashboard";
