@@ -189,9 +189,26 @@ const ZONE_OPTIONS = [
 ];
 
 // ────────────────────────────────────────────────────────────────
-// Query helpers — filtre aplicate inline (evită conflicte de tipuri
-// generice ale PostgrestFilterBuilder pentru mai multe tabele).
+// Query helpers — filtre aplicate inline, typed via Supabase schema.
 // ────────────────────────────────────────────────────────────────
+
+/**
+ * Escape valoare `zone` folosită în interogare `.or(...)`: virgulele
+ * și parantezele sparg parserul PostgREST.
+ */
+function escapeIlikeForOr(s: string): string {
+  return s.replace(/[,()]/g, " ").trim();
+}
+
+/** Construiește o clauză `.or()` care unește toate sinonimele unei zone. */
+function buildZoneOr(zoneValue: string, column: "zone" | "location" | "title"): string | null {
+  const cands = ZONE_SYNONYMS[normalize(zoneValue)] ?? [zoneValue];
+  const parts = cands
+    .map((c) => escapeIlikeForOr(c))
+    .filter((c) => c.length > 0)
+    .map((c) => `${column}.ilike.%${c}%`);
+  return parts.length ? parts.join(",") : null;
+}
 
 /** Header badge count — anunțuri noi (exclud contacted + statusuri finale). */
 function useActivePipelineCount(filters: UnifiedFilters) {
@@ -199,12 +216,15 @@ function useActivePipelineCount(filters: UnifiedFilters) {
   const query = useQuery({
     queryKey: ["unified-pipeline-count", filters],
     queryFn: async () => {
-      let q: any = supabase
+      let q = supabase
         .from("prospect_listings")
         .select("id", { count: "exact", head: true })
         .not("status", "in", "(rejected,archived,published,duplicate,contacted)");
       if (filters.portal !== "all") q = q.ilike("source_platform", `%${filters.portal}%`);
-      if (filters.zone !== "all") q = q.ilike("zone", `%${filters.zone}%`);
+      if (filters.zone !== "all") {
+        const or = buildZoneOr(filters.zone, "zone");
+        if (or) q = q.or(or);
+      }
       const term = sanitizeIlikeTerm(filters.q);
       if (term.length > 0) {
         q = q.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
@@ -239,7 +259,6 @@ function useActivePipelineCount(filters: UnifiedFilters) {
 
 /**
  * Filtered counters per tab — 3 lightweight COUNT queries în paralel.
- * Cache-uite pe combinația de filtre.
  */
 function useFilteredTabCounts(filters: UnifiedFilters) {
   return useQuery({
@@ -248,37 +267,43 @@ function useFilteredTabCounts(filters: UnifiedFilters) {
       const term = sanitizeIlikeTerm(filters.q);
 
       // Observability: scan jobs în ultimele 24h.
-      let obsQ: any = supabase
+      // NB: prospect_scan_jobs foloseste `current_platform`, nu `target_platform`.
+      let obsQ = supabase
         .from("prospect_scan_jobs")
         .select("id", { count: "exact", head: true })
         .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
-      // Filter portal doar dacă tabela are coloană target_platform.
       if (filters.portal !== "all") {
-        obsQ = obsQ.ilike("target_platform", `%${filters.portal}%`);
+        obsQ = obsQ.ilike("current_platform", `%${filters.portal}%`);
       }
 
       // Prospects: leads active de contactat.
-      let prospQ: any = supabase
+      let prospQ = supabase
         .from("prospect_listings")
         .select("id", { count: "exact", head: true })
         .eq("is_active", true)
         .eq("prospect_type", "proprietar")
         .not("status", "in", "(rejected,archived,published,duplicate,contacted)");
       if (filters.portal !== "all") prospQ = prospQ.ilike("source_platform", `%${filters.portal}%`);
-      if (filters.zone !== "all") prospQ = prospQ.ilike("zone", `%${filters.zone}%`);
+      if (filters.zone !== "all") {
+        const or = buildZoneOr(filters.zone, "zone");
+        if (or) prospQ = prospQ.or(or);
+      }
       if (term.length > 0) {
         prospQ = prospQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
       }
 
       // Approval: candidați pentru auto-publish.
-      let appQ: any = supabase
+      let appQ = supabase
         .from("prospect_listings")
         .select("id", { count: "exact", head: true })
         .gte("lead_score", 55)
         .eq("is_active", true)
         .not("source_url", "is", null);
       if (filters.portal !== "all") appQ = appQ.ilike("source_platform", `%${filters.portal}%`);
-      if (filters.zone !== "all") appQ = appQ.ilike("zone", `%${filters.zone}%`);
+      if (filters.zone !== "all") {
+        const or = buildZoneOr(filters.zone, "zone");
+        if (or) appQ = appQ.or(or);
+      }
       if (term.length > 0) {
         appQ = appQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
       }
