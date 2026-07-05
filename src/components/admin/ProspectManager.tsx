@@ -270,8 +270,8 @@ const ProspectManager = () => {
   // ── Scan-job state ───────────────────────────────────────────────────
   const [queryLimit, setQueryLimit] = useState<number>(() => {
     const stored = typeof window !== 'undefined' ? window.localStorage.getItem('prospect_scan_query_limit') : null;
-    const n = stored ? parseInt(stored, 10) : 25;
-    return Number.isFinite(n) && n >= 1 && n <= 100 ? n : 25;
+    const n = stored ? parseInt(stored, 10) : 12;
+    return Number.isFinite(n) && n >= 1 && n <= 20 ? n : 12;
   });
   const [activeJob, setActiveJob] = useState<{
     id: string;
@@ -435,7 +435,7 @@ const ProspectManager = () => {
         .insert({
           created_by: userId,
           query_limit: queryLimit,
-          max_results: 10,
+          max_results: 8,
           triggered_by: 'manual_ui',
         })
         .select('*')
@@ -456,10 +456,11 @@ const ProspectManager = () => {
       // 3. Kick the async scan
       const { error: invokeErr } = await supabase.functions.invoke('scrape-prospects', {
         body: {
-          max_results: 10,
+          max_results: 8,
           query_limit: queryLimit,
           job_id: jobRow.id,
           async_mode: true,
+          hydrate_phones: false,
         },
       });
       if (invokeErr) throw invokeErr;
@@ -813,7 +814,7 @@ const ProspectManager = () => {
                   value={[queryLimit]}
                   onValueChange={(v) => setQueryLimit(v[0])}
                   min={1}
-                  max={100}
+                  max={20}
                   step={1}
                   disabled={isScraping}
                   className="w-[100px]"
