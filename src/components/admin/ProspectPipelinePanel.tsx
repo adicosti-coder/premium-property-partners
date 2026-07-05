@@ -24,6 +24,15 @@ export default function ProspectPipelinePanel() {
   const [searchParams, setSearchParams] = useSearchParams();
   const raw = searchParams.get("subtab");
   const active: Subtab = isSubtab(raw) ? raw : DEFAULT_SUBTAB;
+  const filters = useUnifiedPipelineFilters();
+
+  const activeChips = useMemo(() => {
+    const chips: Array<{ key: string; label: string }> = [];
+    if (filters.q.trim()) chips.push({ key: "q", label: `„${filters.q.trim()}"` });
+    if (filters.portal !== "all") chips.push({ key: "portal", label: filters.portal });
+    if (filters.zone !== "all") chips.push({ key: "zone", label: filters.zone });
+    return chips;
+  }, [filters]);
 
   useEffect(() => {
     if (raw && !isSubtab(raw)) {
