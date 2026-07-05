@@ -59,6 +59,7 @@ const newIdempotencyKey = (prefix: string) => {
 };
 
 export default function PipelineReconciliationPanel() {
+  const filters = useUnifiedPipelineFilters();
   const [win, setWin] = useState(24);
   const [stats, setStats] = useState<Stats | null>(null);
   const [orphans, setOrphans] = useState<Orphan[]>([]);
@@ -68,6 +69,12 @@ export default function PipelineReconciliationPanel() {
   const [bulkPublishing, setBulkPublishing] = useState(false);
   const [e2eRunning, setE2eRunning] = useState(false);
   const [e2eResult, setE2eResult] = useState<any>(null);
+
+  // Filtre globale aplicate client-side pe orfani.
+  const filteredOrphans = useMemo(
+    () => orphans.filter((o) => matchesUnifiedFilters(o, filters)),
+    [orphans, filters],
+  );
 
   // Idempotency + dedup: keys already dispatched this session (prevents rapid double-clicks).
   const dispatchedKeys = useRef<Set<string>>(new Set());
