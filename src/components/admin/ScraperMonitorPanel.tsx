@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -13,13 +14,17 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import {
   Activity, Download, RotateCcw, Search, TrendingUp, Users, Building2,
   CheckCircle2, XCircle, AlertTriangle, Zap, Pencil, Save, ExternalLink, Trophy,
-  ListChecks, Phone, MapPin,
+  ListChecks, Phone, MapPin, Radio, Bell, BellOff, History, ShieldAlert,
 } from "lucide-react";
 
 type Keyword = {
@@ -119,6 +124,22 @@ export default function ScraperMonitorPanel() {
   const [testRunning, setTestRunning] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
 
+  // Realtime + notifications
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(() =>
+    typeof Notification !== "undefined" ? Notification.permission : "denied",
+  );
+  const [tickPulse, setTickPulse] = useState(0); // increments on each new_listings bump
+  const lastJobStateRef = useRef<Map<string, { status: string; new_listings: number }>>(new Map());
+
+  // Confirm-force dialog
+  const [confirmState, setConfirmState] = useState<null | {
+    title: string;
+    description: string;
+    actionLabel: string;
+    tone: "destructive" | "default";
+    onConfirm: () => void | Promise<void>;
+  }>(null);
+
   const { data: keywords = [], isLoading: kwLoading } = useQuery({
     queryKey: ["scraper-keywords-monitor"],
     queryFn: async () => {
@@ -147,7 +168,128 @@ export default function ScraperMonitorPanel() {
     refetchInterval: 60_000,
   });
 
-  // Windowed feed of listings the scraper actually inserted.
+  // Audit trail feed — filtered to scraper-related actions.
+  const SCRAPER_AUDIT_ACTIONS = useMemo(() => [
+    "scraper_keyword_reactivate",
+    "scraper_keyword_template_edit",
+    "scraper_keyword_quicktest",
+    "scraper_force_refresh",
+    "scraper_manual_scan",
+    "scraper_parallelism_change",
+    "scraper_keyword_bulk_action",
+  ], []);
+  const { data: auditRows = [] } = useQuery({
+    queryKey: ["scraper-audit-log"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_audit_log")
+        .select("id, actor_label, actor_user_id, action, entity_type, entity_id, details, severity, created_at")
+        .in("action", SCRAPER_AUDIT_ACTIONS)
+        .order("created_at", { ascending: false })
+        .limit(40);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 15_000,
+  });
+
+  // Client-side audit helper — records the current admin's action via the RPC.
+  const logAdminAction = async (
+    action: string,
+    entity: { type?: string; id?: string } = {},
+    details: Record<string, unknown> = {},
+    severity: "info" | "warning" | "error" = "info",
+  ) => {
+    try {
+      await supabase.rpc("log_scraper_admin_action" as never, {
+        _action: action,
+        _entity_type: entity.type ?? null,
+        _entity_id: entity.id ?? null,
+        _details: details,
+        _severity: severity,
+      } as never);
+      qc.invalidateQueries({ queryKey: ["scraper-audit-log"] });
+    } catch (e) {
+      // Non-fatal — logging must never block the UI action.
+      console.warn("[audit] rpc failed", e);
+    }
+  };
+
+  // Realtime: subscribe to prospect_scan_jobs + admin_audit_log.
+  // On job UPDATE we bump a tick pulse and, on completion, fire a browser
+  // notification. Refetching is done via query invalidation.
+  useEffect(() => {
+    const channel = supabase
+      .channel("scraper-monitor-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "prospect_scan_jobs" },
+        (payload) => {
+          const row: any = payload.new || payload.old;
+          const prev = lastJobStateRef.current.get(row?.id);
+          const newListings = Number(row?.new_listings ?? 0);
+          if (payload.eventType === "UPDATE" && prev && newListings > prev.new_listings) {
+            setTickPulse((p) => p + 1);
+          }
+          if (
+            payload.eventType === "UPDATE" &&
+            prev &&
+            prev.status === "running" &&
+            row?.status &&
+            row.status !== "running"
+          ) {
+            const okay = row.status === "completed";
+            toast({
+              title: okay ? "✅ Scanare finalizată" : `⚠️ Scanare ${row.status}`,
+              description: `${newListings} anunțuri noi · ${row.processed_queries ?? 0}/${row.total_queries ?? 0} querii`,
+              variant: okay ? "default" : "destructive",
+            });
+            if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+              try {
+                new Notification(okay ? "Scraper: rulare terminată" : "Scraper: rulare eșuată", {
+                  body: `${newListings} anunțuri noi · ${row.processed_queries ?? 0}/${row.total_queries ?? 0} querii`,
+                  tag: `scraper-job-${row.id}`,
+                });
+              } catch { /* ignore */ }
+            }
+          }
+          lastJobStateRef.current.set(row?.id, {
+            status: String(row?.status ?? ""),
+            new_listings: newListings,
+          });
+          qc.invalidateQueries({ queryKey: ["scraper-jobs-monitor"] });
+          qc.invalidateQueries({ queryKey: ["scraper-found-listings"] });
+          qc.invalidateQueries({ queryKey: ["scraper-found-totals"] });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "admin_audit_log" },
+        (payload) => {
+          const row: any = payload.new;
+          if (SCRAPER_AUDIT_ACTIONS.includes(row?.action)) {
+            qc.invalidateQueries({ queryKey: ["scraper-audit-log"] });
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [qc, SCRAPER_AUDIT_ACTIONS]);
+
+  const requestNotificationPermission = async () => {
+    if (typeof Notification === "undefined") {
+      toast({ title: "Notificările nu sunt suportate în acest browser", variant: "destructive" });
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    setNotifPermission(perm);
+    toast({
+      title: perm === "granted" ? "Notificări activate" : "Notificări refuzate",
+      description: perm === "granted" ? "Vei primi alerte când o scanare se termină." : undefined,
+    });
+  };
+
+
   const [foundWindow, setFoundWindow] = useState<"24h" | "7d" | "30d">("7d");
   const [foundSearch, setFoundSearch] = useState("");
   const foundSince = useMemo(() => {
@@ -289,28 +431,47 @@ export default function ScraperMonitorPanel() {
     return `Ultima rulare (${lastJob.status}): ${newCount} anunțuri noi, ${dup} duplicate, ${arc} arhivate — ${proc}/${tot} querii procesate.`;
   }, [lastJob]);
 
-  const handleReactivate = async (id: string) => {
+  const doReactivate = async (id: string, keyword: string) => {
     setReactivatingId(id);
     const { error } = await supabase.rpc("reactivate_scraper_keyword" as never, { _id: id } as never);
     setReactivatingId(null);
-    if (error) { toast({ title: "Reactivare eșuată", description: error.message, variant: "destructive" }); return; }
+    if (error) {
+      toast({ title: "Reactivare eșuată", description: error.message, variant: "destructive" });
+      await logAdminAction("scraper_keyword_reactivate", { type: "scraper_keyword", id },
+        { keyword, error: error.message }, "error");
+      return;
+    }
     toast({ title: "Cuvânt cheie reactivat", description: "Contoarele au fost resetate." });
+    await logAdminAction("scraper_keyword_reactivate", { type: "scraper_keyword", id }, { keyword });
     qc.invalidateQueries({ queryKey: ["scraper-keywords-monitor"] });
+  };
+
+  const handleReactivate = (k: Keyword) => {
+    setConfirmState({
+      title: "Reactivezi cuvântul cheie?",
+      description: `Vei re-porni scraperul pentru "${k.keyword}" și vei reseta contoarele de eșec. Acțiunea se înregistrează în audit trail.`,
+      actionLabel: "Reactivează",
+      tone: "default",
+      onConfirm: () => doReactivate(k.id, k.keyword),
+    });
   };
 
   const startEdit = (k: Keyword) => {
     setEditingId(k.id);
     setEditValue(k.query_template ?? "");
   };
-  const saveEdit = async (id: string) => {
+  const saveEdit = async (id: string, keyword: string) => {
     setSavingId(id);
+    const newTemplate = editValue.trim() || null;
     const { error } = await supabase
       .from("scraper_search_keywords")
-      .update({ query_template: editValue.trim() || null })
+      .update({ query_template: newTemplate })
       .eq("id", id);
     setSavingId(null);
     if (error) { toast({ title: "Salvare eșuată", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Query template salvat" });
+    await logAdminAction("scraper_keyword_template_edit", { type: "scraper_keyword", id },
+      { keyword, new_template: newTemplate });
     setEditingId(null);
     qc.invalidateQueries({ queryKey: ["scraper-keywords-monitor"] });
   };
@@ -333,12 +494,38 @@ export default function ScraperMonitorPanel() {
       setTestResult(data);
       const n = (data as any)?.result_count ?? 0;
       toast({ title: "Test rapid finalizat", description: `${n} rezultate în ${(data as any)?.elapsed_ms ?? 0} ms` });
+      await logAdminAction("scraper_keyword_quicktest", { type: "scraper_keyword", id: testKw.id },
+        { keyword: testKw.keyword, portal: testPortal, result_count: n });
     } catch (e: any) {
       toast({ title: "Test eșuat", description: e.message, variant: "destructive" });
+      await logAdminAction("scraper_keyword_quicktest", { type: "scraper_keyword", id: testKw.id },
+        { keyword: testKw.keyword, portal: testPortal, error: e.message }, "error");
     } finally {
       setTestRunning(false);
     }
   };
+
+  // Force manual refresh — wrapped in confirm dialog to avoid double-triggering
+  // any downstream API calls (jobs are broadcast-driven, but user asked for guard).
+  const doForceRefresh = async () => {
+    await Promise.all([
+      refetchFound(),
+      qc.invalidateQueries({ queryKey: ["scraper-keywords-monitor"] }),
+      qc.invalidateQueries({ queryKey: ["scraper-jobs-monitor"] }),
+    ]);
+    toast({ title: "Date reîncărcate" });
+    await logAdminAction("scraper_force_refresh", {}, { source: "monitor_panel" });
+  };
+  const handleForceRefresh = () => {
+    setConfirmState({
+      title: "Forțezi reîncărcarea completă?",
+      description: "Vei re-executa toate interogările împotriva bazei. Nu declanșează scanare nouă, dar oprește orice request în zbor. Acțiunea se înregistrează.",
+      actionLabel: "Forțează",
+      tone: "destructive",
+      onConfirm: doForceRefresh,
+    });
+  };
+
 
   const exportKeywords = () => {
     const header = ["keyword", "platform", "vertical", "status", "score", "success", "fail", "unique_leads", "consecutive_zero", "query_template", "last_success_at", "last_test_at"];
@@ -372,16 +559,65 @@ export default function ScraperMonitorPanel() {
     toast({ title: "Export CSV", description: `${jobs.length} rulări descărcate.` });
   };
 
+  const runningJob = jobs.find((j) => j.status === "running") ?? null;
+  const runningPct = runningJob && runningJob.total_queries
+    ? Math.min(100, Math.round(((runningJob.processed_queries ?? 0) / runningJob.total_queries) * 100))
+    : 0;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Activity className="h-6 w-6 text-primary" /> Monitorizare Scraper
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Status cuvinte cheie, scor performanță, query templates personalizate și teste rapide pe portal.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Activity className="h-6 w-6 text-primary" /> Monitorizare Scraper
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Status cuvinte cheie, scor performanță, query templates personalizate și teste rapide pe portal.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Badge variant="outline" className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-300">
+            <Radio className="h-3 w-3 animate-pulse" /> Realtime activ
+          </Badge>
+          {notifPermission !== "granted" ? (
+            <Button variant="outline" size="sm" onClick={requestNotificationPermission}>
+              <BellOff className="h-4 w-4 mr-1.5" /> Activează notificări
+            </Button>
+          ) : (
+            <Badge variant="secondary" className="gap-1"><Bell className="h-3 w-3" /> Notificări active</Badge>
+          )}
+          <Button variant="outline" size="sm" onClick={handleForceRefresh}>
+            <ShieldAlert className="h-4 w-4 mr-1.5" /> Forțează refresh
+          </Button>
+        </div>
       </div>
+
+      {/* Live job progress */}
+      {runningJob && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Radio className="h-4 w-4 text-primary animate-pulse" />
+              Scanare în desfășurare
+              <span
+                key={tickPulse}
+                className="ml-2 inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 animate-in fade-in zoom-in duration-500"
+              >
+                <CheckCircle2 className="h-3 w-3" /> {runningJob.new_listings ?? 0} anunțuri noi
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Progress value={runningPct} className="h-2" />
+            <div className="flex justify-between text-xs text-muted-foreground font-mono">
+              <span>{runningJob.processed_queries ?? 0} / {runningJob.total_queries ?? 0} querii</span>
+              <span>{runningPct}%</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       {/* Regression alerts */}
       <div className="grid gap-2 md:grid-cols-3">
@@ -668,7 +904,7 @@ export default function ScraperMonitorPanel() {
                                 placeholder="ex: apartament {keyword} timisoara"
                                 className="h-7 text-xs font-mono"
                               />
-                              <Button size="sm" variant="default" className="h-7 px-2" disabled={savingId === k.id} onClick={() => saveEdit(k.id)}>
+                              <Button size="sm" variant="default" className="h-7 px-2" disabled={savingId === k.id} onClick={() => saveEdit(k.id, k.keyword)}>
                                 <Save className="h-3 w-3" />
                               </Button>
                               <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditingId(null)}>✕</Button>
@@ -701,7 +937,7 @@ export default function ScraperMonitorPanel() {
                               <Zap className="h-3.5 w-3.5 mr-1" /> Test
                             </Button>
                             {!k.is_active && (
-                              <Button size="sm" variant="outline" className="h-7 px-2" disabled={reactivatingId === k.id} onClick={() => handleReactivate(k.id)}>
+                              <Button size="sm" variant="outline" className="h-7 px-2" disabled={reactivatingId === k.id} onClick={() => handleReactivate(k)}>
                                 <RotateCcw className={`h-3.5 w-3.5 ${reactivatingId === k.id ? "animate-spin" : ""}`} />
                               </Button>
                             )}
@@ -716,6 +952,109 @@ export default function ScraperMonitorPanel() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Audit trail */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" /> Audit trail — acțiuni admini
+          </CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Ultimele 40 de acțiuni sensibile efectuate în panoul scraper: reactivări, editări query template, teste manuale, forțări refresh. Se actualizează în timp real.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {auditRows.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              Nicio acțiune înregistrată încă.
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border/50 max-h-[380px] overflow-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-card z-10">
+                  <TableRow>
+                    <TableHead className="w-[140px]">Timp</TableHead>
+                    <TableHead className="w-[180px]">Acțiune</TableHead>
+                    <TableHead className="w-[180px]">Actor</TableHead>
+                    <TableHead>Detalii</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditRows.map((r: any) => {
+                    const label: Record<string, string> = {
+                      scraper_keyword_reactivate: "🔁 Reactivare keyword",
+                      scraper_keyword_template_edit: "✏️ Editare template",
+                      scraper_keyword_quicktest: "⚡ Test rapid",
+                      scraper_force_refresh: "🛡️ Forțare refresh",
+                      scraper_manual_scan: "🚀 Scanare manuală",
+                      scraper_parallelism_change: "⚙️ Schimbare paralelism",
+                      scraper_keyword_bulk_action: "📦 Acțiune bulk",
+                    };
+                    const sevTone = r.severity === "error"
+                      ? "border-rose-500/50 text-rose-700 dark:text-rose-300"
+                      : r.severity === "warning"
+                        ? "border-amber-500/50 text-amber-700 dark:text-amber-300"
+                        : "border-primary/40 text-primary";
+                    const details = r.details && typeof r.details === "object"
+                      ? Object.entries(r.details).slice(0, 4).map(([k, v]) =>
+                          `${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`).join(" · ")
+                      : "";
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                          {new Date(r.created_at).toLocaleString("ro-RO", {
+                            day: "2-digit", month: "2-digit",
+                            hour: "2-digit", minute: "2-digit", second: "2-digit",
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[11px] ${sevTone}`}>
+                            {label[r.action] || r.action}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs truncate max-w-[180px]" title={r.actor_label || ""}>
+                          {r.actor_label || (r.actor_user_id ? r.actor_user_id.slice(0, 8) : "system")}
+                        </TableCell>
+                        <TableCell className="text-xs text-foreground/80 truncate max-w-[420px]" title={details}>
+                          {details || "—"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Confirm dialog for sensitive actions */}
+      <AlertDialog open={!!confirmState} onOpenChange={(o) => !o && setConfirmState(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className={`h-5 w-5 ${confirmState?.tone === "destructive" ? "text-destructive" : "text-primary"}`} />
+              {confirmState?.title}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{confirmState?.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anulează</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirmState?.tone === "destructive"
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : undefined}
+              onClick={async () => {
+                const fn = confirmState?.onConfirm;
+                setConfirmState(null);
+                if (fn) await fn();
+              }}
+            >
+              {confirmState?.actionLabel || "Confirmă"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Quick Test dialog */}
       <Dialog open={testOpen} onOpenChange={setTestOpen}>
