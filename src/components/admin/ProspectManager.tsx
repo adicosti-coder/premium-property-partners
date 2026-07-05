@@ -499,8 +499,8 @@ const ProspectManager = () => {
         .from('prospect_scan_jobs')
         .insert({
           created_by: userId,
-          query_limit: failed.length,
-          max_results: 10,
+          query_limit: Math.min(failed.length, 20),
+          max_results: 8,
           triggered_by: 'manual_retry',
         })
         .select('*')
@@ -522,10 +522,11 @@ const ProspectManager = () => {
 
       const { error: invokeErr } = await supabase.functions.invoke('scrape-prospects', {
         body: {
-          max_results: 10,
+          max_results: 8,
           job_id: jobRow.id,
           async_mode: true,
-          retry_batches: failed.map((e: any) => ({ platform: e.platform, query: e.keyword })),
+          retry_batches: failed.slice(0, 20).map((e: any) => ({ platform: e.platform, query: e.keyword })),
+          hydrate_phones: false,
         },
       });
       if (invokeErr) throw invokeErr;
