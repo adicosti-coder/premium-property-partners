@@ -467,18 +467,40 @@ export default function UnifiedPipelinePanel() {
   }, [count, countLoading]);
   const badgeBusy = countFetching || isSearchDebouncing;
 
-  const { data: tabCounts, isFetching: tabCountsFetching } = useFilteredTabCounts(filters);
+  const {
+    data: tabCounts,
+    isFetching: tabCountsFetching,
+    isLoading: tabCountsLoading,
+    isError: tabCountsError,
+  } = useFilteredTabCounts(filters);
   const tabCountsBusy = tabCountsFetching || isSearchDebouncing;
 
   const renderTabCount = (v: UnifiedTab) => {
-    const n = tabCounts?.[v];
-    if (n == null) {
-      // Prima încărcare: skeleton discret în loc de salt vizual.
+    // Prima încărcare: skeleton discret.
+    if (tabCountsLoading && !tabCounts) {
       return (
         <Skeleton
           className="ml-1 h-4 w-6 rounded-full"
           aria-label="Se încarcă numărul de rezultate"
         />
+      );
+    }
+    const n = tabCounts?.[v];
+    // Fallback pe eroare / null → semn de exclamare discret, nu blochează UI.
+    if (n == null || tabCountsError) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge
+              variant="outline"
+              className="ml-1 h-4 min-w-4 px-1 text-[10px] border-destructive/50 text-destructive"
+              aria-label="Numărul nu a putut fi calculat"
+            >
+              !
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>Numărul nu a putut fi calculat (vezi consola).</TooltipContent>
+        </Tooltip>
       );
     }
     return (
