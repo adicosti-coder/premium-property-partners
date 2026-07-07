@@ -60,15 +60,22 @@ function isTab(v: string | null | undefined): v is UnifiedTab {
 }
 
 // ────────────────────────────────────────────────────────────────
-// Filters context — propagat către sub-panouri care aleg să consume.
+// Filters — helpers extrași într-un modul dedicat (testabil).
 // ────────────────────────────────────────────────────────────────
-export interface UnifiedFilters {
-  q: string;
-  portal: string;
-  zone: string;
-}
+import {
+  DEFAULT_FILTERS,
+  ZONE_SYNONYMS,
+  buildZoneOr,
+  matchesUnifiedFilters,
+  normalize,
+  sanitizeIlikeTerm,
+  zoneCandidates,
+  type UnifiedFilters,
+} from "./unifiedPipelineFilters";
 
-const DEFAULT_FILTERS: UnifiedFilters = { q: "", portal: "all", zone: "all" };
+// Re-export pentru compatibilitate cu importurile existente în sub-panouri.
+export { matchesUnifiedFilters };
+export type { UnifiedFilters };
 
 interface FiltersContextValue extends UnifiedFilters {
   setFilters: (patch: Partial<UnifiedFilters>) => void;
@@ -92,78 +99,10 @@ export function useUnifiedPipelineFilters(): FiltersContextValue {
   return ctx;
 }
 
-/** Sanitizează termenii ilike (elimină caracterele care sparg sintaxa .or). */
-function sanitizeIlikeTerm(s: string): string {
-  return s.replace(/[,%()]/g, " ").trim();
-}
-
-/** Normalize string for case+diacritic insensitive matching. */
-function normalize(s: string | null | undefined): string {
-  if (!s) return "";
-  return s
-    .toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // strip combining marks
-    .replace(/[ăâ]/gi, "a")
-    .replace(/[îí]/gi, "i")
-    .replace(/[șş]/gi, "s")
-    .replace(/[țţ]/gi, "t")
-    .toLowerCase()
-    .trim();
-}
-
-/** Sinonime pentru micro-zone Timișoara (utilizator caută "centru" → găsește "Cetate"). */
-const ZONE_SYNONYMS: Record<string, string[]> = {
-  cetate: ["cetate", "centru", "central", "piata unirii", "piata victoriei"],
-  centru: ["centru", "cetate", "central"],
-  iosefin: ["iosefin", "iosefini"],
-  fabric: ["fabric", "fabrica"],
-  dumbravita: ["dumbravita", "dumbrăvița"],
-  aradului: ["aradului", "calea aradului", "arad"],
-  sagului: ["sagului", "șagului", "calea sagului"],
-  elisabetin: ["elisabetin", "elisabeta"],
-  circumvalatiunii: ["circumvalatiunii", "circumvalațiunii", "circumvalatiune"],
-  isho: ["isho"],
-  paltim: ["paltim"],
-};
-
-function zoneCandidates(value: string): string[] {
-  const key = normalize(value);
-  const list = ZONE_SYNONYMS[key];
-  return list ? list.map(normalize) : [key];
-}
-
-/**
- * Helper exportat pentru client-side filtering peste orice listă cu
- * {title, source_platform, zone, source_url}. Case + diacritic insensitive.
- */
-export function matchesUnifiedFilters<
-  T extends {
-    title?: string | null;
-    source_platform?: string | null;
-    zone?: string | null;
-    source_url?: string | null;
-    location?: string | null;
-  },
->(item: T, f: UnifiedFilters): boolean {
-  if (f.portal !== "all") {
-    const p = normalize(item.source_platform);
-    if (!p.includes(normalize(f.portal))) return false;
-  }
-  if (f.zone !== "all") {
-    const hay = `${normalize(item.zone)} ${normalize(item.location)} ${normalize(item.title)}`;
-    const cands = zoneCandidates(f.zone);
-    if (!cands.some((c) => c && hay.includes(c))) return false;
-  }
-  const q = normalize(f.q);
-  if (q.length > 0) {
-    const hay = [item.title, item.source_url, item.zone, item.location]
-      .map(normalize)
-      .join(" ");
-    if (!hay.includes(q)) return false;
-  }
-  return true;
-}
+// Silence unused-import warnings for helpers used doar în interogări de mai jos.
+void ZONE_SYNONYMS;
+void normalize;
+void zoneCandidates;
 
 const PORTAL_OPTIONS = [
   { value: "all", label: "Toate portalurile" },
