@@ -1,11 +1,13 @@
-import { 
-  ClipboardCheck, 
-  Settings, 
-  Globe, 
-  Users, 
-  TrendingUp, 
-  BarChart3 
+import {
+  ClipboardCheck,
+  Settings,
+  Globe,
+  Users,
+  TrendingUp,
+  BarChart3,
+  Calculator,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
 
