@@ -34,6 +34,7 @@ import {
   Info,
   Loader2,
   Radar,
+  RefreshCw,
   Search,
   X,
 } from "lucide-react";
@@ -481,6 +482,21 @@ export default function UnifiedPipelinePanel() {
   }, [count, countLoading]);
   const badgeBusy = countFetching || isSearchDebouncing || isMicroDebouncing;
 
+  // Micro-notificare vizuală: când badge-ul iese din starea "busy" spre "live",
+  // afișăm ~900ms un scurt puls de succes (ring verde + fade) ca să confirmăm
+  // sincronizarea în timp real. Nu se declanșează la prima încărcare.
+  const prevBadgeBusyRef = useRef<boolean>(badgeBusy);
+  const [justSynced, setJustSynced] = useState(false);
+  useEffect(() => {
+    if (prevBadgeBusyRef.current && !badgeBusy && count != null) {
+      setJustSynced(true);
+      const t = window.setTimeout(() => setJustSynced(false), 900);
+      prevBadgeBusyRef.current = badgeBusy;
+      return () => window.clearTimeout(t);
+    }
+    prevBadgeBusyRef.current = badgeBusy;
+  }, [badgeBusy, count]);
+
   // Text pentru tooltip-ul badge-ului — reflectă exact starea cache-ului.
   const badgeTooltipState = useMemo(() => {
     if (countLoading) return "Se calculează…";
@@ -498,8 +514,20 @@ export default function UnifiedPipelinePanel() {
     isFetching: tabCountsFetching,
     isLoading: tabCountsLoading,
     isError: tabCountsError,
+    refetch: refetchTabCounts,
   } = useFilteredTabCounts(queryFilters);
   const tabCountsBusy = tabCountsFetching || isSearchDebouncing || isMicroDebouncing;
+
+  const qc = useQueryClient();
+  const retryTabCount = (kind: UnifiedTab) => {
+    // Invalidează cache-ul local pentru toate combinațiile de tabs și forțează
+    // un refetch imediat. Query-ul re-rulează cele 3 COUNT-uri; cel eșuat
+    // (kind) va reveni cu valoare validă dacă cauza intermitentă a dispărut.
+    cacheInvalidatePrefix("tabs:");
+    qc.invalidateQueries({ queryKey: ["unified-pipeline-tab-counts"] });
+    void refetchTabCounts();
+    void kind; // marker semantic pentru viitorul refactor per-query
+  };
 
   const renderTabCount = (v: UnifiedTab) => {
     // Prima încărcare: skeleton discret.
@@ -512,7 +540,7 @@ export default function UnifiedPipelinePanel() {
       );
     }
     const n = tabCounts?.[v];
-    // Fallback pe eroare / null → semn de exclamare discret, nu blochează UI.
+    // Fallback pe eroare / null → semn de exclamare discret + acțiune de retry.
     if (n == null || tabCountsError) {
       return (
         <Tooltip>
@@ -525,7 +553,27 @@ export default function UnifiedPipelinePanel() {
               !
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>Numărul nu a putut fi calculat (vezi consola).</TooltipContent>
+          <TooltipContent className="max-w-[260px] space-y-2">
+            <p className="text-xs">
+              Numărul pentru <strong>{TAB_META[v].label}</strong> nu a putut fi
+              calculat. Celelalte secțiuni continuă să funcționeze normal.
+            </p>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                retryTabCount(v);
+              }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+              aria-label={`Reîncearcă numărătoarea pentru ${TAB_META[v].label}`}
+            >
+              <RefreshCw
+                className={`h-3 w-3 ${tabCountsFetching ? "animate-spin" : ""}`}
+              />
+              Reîncearcă acum
+            </button>
+          </TooltipContent>
         </Tooltip>
       );
     }
@@ -561,11 +609,16 @@ export default function UnifiedPipelinePanel() {
               <TooltipTrigger asChild>
                 <Badge
                   variant="secondary"
-                  className={`gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-opacity ${
+                  className={`gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-all duration-300 ${
                     badgeBusy ? "opacity-70" : "opacity-100"
+                  } ${
+                    justSynced
+                      ? "ring-2 ring-emerald-400/60 shadow-[0_0_0_4px_rgba(16,185,129,0.15)] bg-emerald-500/10"
+                      : "ring-0"
                   }`}
                   aria-label={`Anunțuri noi în pipeline: ${badgeText}`}
                   aria-busy={badgeBusy}
+                  aria-live="polite"
                 >
                   {badgeBusy ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
