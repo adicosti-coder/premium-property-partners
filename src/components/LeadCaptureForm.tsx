@@ -522,6 +522,27 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
               )}
             </div>
 
+            {submitError && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+              >
+                <p className="font-medium mb-1">
+                  {language === 'ro' ? 'Trimiterea a eșuat' : 'Submission failed'}
+                </p>
+                <p className="text-destructive/90">{submitError}</p>
+                <a
+                  href="https://wa.me/40799069256"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-primary underline underline-offset-2 hover:no-underline"
+                >
+                  {language === 'ro' ? 'Deschide WhatsApp →' : 'Open WhatsApp →'}
+                </a>
+              </div>
+            )}
+
             <Button type="submit" className="w-full" disabled={isSubmitting || !captchaToken || !turnstileSiteKey}>
               {isSubmitting ? (
                 <>
