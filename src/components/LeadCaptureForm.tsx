@@ -36,6 +36,26 @@ interface LeadCaptureFormProps {
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
+// Top Timișoara zones offered as picks in the ROI calculator lead form.
+const TIMISOARA_ZONES = [
+  "Cetate / Centru",
+  "Iosefin",
+  "Fabric",
+  "Elisabetin",
+  "Dumbrăvița",
+  "Aradului",
+  "Lipovei",
+  "Circumvalațiunii",
+  "Girocului",
+  "Șagului",
+  "Complex Studențesc",
+  "Take Ionescu",
+  "Torontalului",
+  "ISHO",
+  "City of Mara",
+  "Altă zonă din Timișoara",
+] as const;
+
 const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   isOpen,
   onClose,
@@ -49,6 +69,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
   const [propertyType, setPropertyType] = useState("");
+  const [zone, setZone] = useState("");
   const [listingUrl, setListingUrl] = useState("");
   const [listingUrlError, setListingUrlError] = useState("");
   const [phoneError, setPhoneError] = useState("");
