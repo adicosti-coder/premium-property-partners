@@ -36,6 +36,26 @@ interface LeadCaptureFormProps {
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 
+// Top Timișoara zones offered as picks in the ROI calculator lead form.
+const TIMISOARA_ZONES = [
+  "Cetate / Centru",
+  "Iosefin",
+  "Fabric",
+  "Elisabetin",
+  "Dumbrăvița",
+  "Aradului",
+  "Lipovei",
+  "Circumvalațiunii",
+  "Girocului",
+  "Șagului",
+  "Complex Studențesc",
+  "Take Ionescu",
+  "Torontalului",
+  "ISHO",
+  "City of Mara",
+  "Altă zonă din Timișoara",
+] as const;
+
 const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   isOpen,
   onClose,
@@ -49,6 +69,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
   const [propertyType, setPropertyType] = useState("");
+  const [zone, setZone] = useState("");
   const [listingUrl, setListingUrl] = useState("");
   const [listingUrlError, setListingUrlError] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -199,8 +220,10 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
           calculated_net_profit: calculatedNetProfit,
           calculated_yearly_profit: calculatedYearlyProfit,
           source: "lead_capture_form",
+          zone: zone || undefined,
           simulation_data: withProvenientaTracking({
             ...simulationData,
+            zone: zone || undefined,
             listingUrl: listingUrl.trim() || undefined,
           }),
           captcha_token: captchaToken,
@@ -218,8 +241,10 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
       setIsSuccess(true);
       toast({
-        title: t.leadForm.successToast,
-        description: t.leadForm.successToastMessage,
+        title: language === 'ro' ? "Datele au fost trimise!" : "Details sent!",
+        description: language === 'ro'
+          ? "Andrei, agentul nostru AI, sau un consultant RealTrust te va contacta pentru validare."
+          : "Andrei, our AI agent, or a RealTrust consultant will contact you for validation.",
       });
 
       setTimeout(() => {
@@ -228,11 +253,12 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         setWhatsappNumber("");
         setPropertyArea("");
         setPropertyType("");
+        setZone("");
         setListingUrl("");
         setIsSuccess(false);
         setCaptchaToken(null);
         onClose();
-      }, 2000);
+      }, 3200);
     } catch (error) {
       console.error("Error submitting lead:", error);
       toast({
@@ -261,10 +287,23 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         {isSuccess ? (
           <>
             <ConfettiEffect isActive={isSuccess} duration={3000} particleCount={40} />
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mb-4 animate-success-bounce" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">{t.leadForm.success}</h3>
-              <p className="text-muted-foreground">{t.leadForm.successMessage}</p>
+            <div
+              className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in zoom-in-95 duration-500"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="relative mb-4">
+                <span className="absolute inset-0 rounded-full bg-emerald-400/30 blur-2xl animate-pulse" aria-hidden="true" />
+                <CheckCircle className="relative w-16 h-16 text-emerald-500 animate-success-bounce" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                {language === 'ro' ? "Datele au fost trimise!" : "Details sent!"}
+              </h3>
+              <p className="text-muted-foreground max-w-sm">
+                {language === 'ro'
+                  ? "Andrei, agentul nostru AI, sau un consultant RealTrust te va contacta în cel mai scurt timp pentru validare."
+                  : "Andrei, our AI agent, or a RealTrust consultant will contact you shortly for validation."}
+              </p>
             </div>
           </>
         ) : (
@@ -346,6 +385,26 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="zone">
+                {language === 'ro' ? 'Zona din Timișoara' : 'Timișoara zone'}
+                <span className="text-muted-foreground font-normal ml-1">
+                  ({language === 'ro' ? 'opțional' : 'optional'})
+                </span>
+              </Label>
+              <Select value={zone} onValueChange={setZone}>
+                <SelectTrigger id="zone">
+                  <SelectValue placeholder={language === 'ro' ? 'Alege zona proprietății' : 'Choose the property zone'} />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {TIMISOARA_ZONES.map((z) => (
+                    <SelectItem key={z} value={z}>{z}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="listingUrl" className="flex items-center gap-1.5">
