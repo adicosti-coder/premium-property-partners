@@ -609,11 +609,16 @@ export default function UnifiedPipelinePanel() {
               <TooltipTrigger asChild>
                 <Badge
                   variant="secondary"
-                  className={`gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-opacity ${
+                  className={`gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-all duration-300 ${
                     badgeBusy ? "opacity-70" : "opacity-100"
+                  } ${
+                    justSynced
+                      ? "ring-2 ring-emerald-400/60 shadow-[0_0_0_4px_rgba(16,185,129,0.15)] bg-emerald-500/10"
+                      : "ring-0"
                   }`}
                   aria-label={`Anunțuri noi în pipeline: ${badgeText}`}
                   aria-busy={badgeBusy}
+                  aria-live="polite"
                 >
                   {badgeBusy ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
