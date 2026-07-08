@@ -482,6 +482,21 @@ export default function UnifiedPipelinePanel() {
   }, [count, countLoading]);
   const badgeBusy = countFetching || isSearchDebouncing || isMicroDebouncing;
 
+  // Micro-notificare vizuală: când badge-ul iese din starea "busy" spre "live",
+  // afișăm ~900ms un scurt puls de succes (ring verde + fade) ca să confirmăm
+  // sincronizarea în timp real. Nu se declanșează la prima încărcare.
+  const prevBadgeBusyRef = useRef<boolean>(badgeBusy);
+  const [justSynced, setJustSynced] = useState(false);
+  useEffect(() => {
+    if (prevBadgeBusyRef.current && !badgeBusy && count != null) {
+      setJustSynced(true);
+      const t = window.setTimeout(() => setJustSynced(false), 900);
+      prevBadgeBusyRef.current = badgeBusy;
+      return () => window.clearTimeout(t);
+    }
+    prevBadgeBusyRef.current = badgeBusy;
+  }, [badgeBusy, count]);
+
   // Text pentru tooltip-ul badge-ului — reflectă exact starea cache-ului.
   const badgeTooltipState = useMemo(() => {
     if (countLoading) return "Se calculează…";
