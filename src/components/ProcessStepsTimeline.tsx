@@ -16,7 +16,21 @@ const ProcessStepsTimeline = () => {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: stepsRef, isVisible: stepsVisible } = useScrollAnimation({ threshold: 0.1 });
 
-  const steps = [
+  const openCalculator = () => {
+    window.dispatchEvent(new Event("force-show-calculator"));
+  };
+
+  const steps: Array<{
+    number: number;
+    icon: typeof ClipboardCheck;
+    titleRo: string;
+    titleEn: string;
+    descriptionRo: string;
+    descriptionEn: string;
+    ctaRo?: string;
+    ctaEn?: string;
+    onCta?: () => void;
+  }> = [
     {
       number: 1,
       icon: ClipboardCheck,
@@ -24,6 +38,9 @@ const ProcessStepsTimeline = () => {
       titleEn: "Analysis & estimate in 24h",
       descriptionRo: "Îți spunem realist ce poate produce proprietatea și ce upgrade-uri merită.",
       descriptionEn: "We realistically tell you what your property can generate and which upgrades are worth it.",
+      ctaRo: "Calculează ROI acum",
+      ctaEn: "Calculate ROI now",
+      onCta: openCalculator,
     },
     {
       number: 2,
