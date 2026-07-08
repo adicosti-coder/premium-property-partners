@@ -445,12 +445,16 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
             <div className="space-y-2">
               <Label htmlFor="zone">
                 {language === 'ro' ? 'Zona din Timișoara' : 'Timișoara zone'}
-                <span className="text-muted-foreground font-normal ml-1">
-                  ({language === 'ro' ? 'opțional' : 'optional'})
-                </span>
+                <span className="text-destructive ml-0.5">*</span>
               </Label>
-              <Select value={zone} onValueChange={setZone}>
-                <SelectTrigger id="zone">
+              <Select
+                value={zone}
+                onValueChange={(v) => {
+                  setZone(v);
+                  if (zoneError) setZoneError("");
+                }}
+              >
+                <SelectTrigger id="zone" className={zoneError ? "border-destructive" : ""}>
                   <SelectValue placeholder={language === 'ro' ? 'Alege zona proprietății' : 'Choose the property zone'} />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
@@ -459,6 +463,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
                   ))}
                 </SelectContent>
               </Select>
+              {zoneError && <p className="text-sm text-destructive">{zoneError}</p>}
             </div>
 
 
