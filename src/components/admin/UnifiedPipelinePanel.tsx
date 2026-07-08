@@ -241,7 +241,7 @@ function useFilteredTabCounts(filters: UnifiedFilters) {
 
       const runCount = async (
         kind: CountQueryKind,
-        build: () => ReturnType<typeof supabase.from> extends never ? never : Promise<{ count: number | null; error: unknown }>,
+        build: () => PromiseLike<{ count: number | null; error: unknown }>,
       ): Promise<number | null> => {
         try {
           if (shouldMockCountError(kind)) throw new MockCountError(kind);
