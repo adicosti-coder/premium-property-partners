@@ -78,10 +78,17 @@ export function __setMockCountErrorForTests(v: CountQueryKind | "all" | null): v
   testOverride = v;
 }
 
+// Hard-eliminate în producție: dublă poartă (Vite tree-shake pe DEV + NODE_ENV).
+// În build-ul de producție ambele constante sunt inlined ca `false`, deci întregul
+// bloc (inclusiv accesul la `window.__unifiedPipelineForceCountError`) e eliminat
+// de bundler ca dead-code. Zero suprafață expusă utilizatorului final.
+const __MOCK_SWITCH_ENABLED__ =
+  import.meta.env.DEV && process.env.NODE_ENV !== "production";
+
 export function shouldMockCountError(kind: CountQueryKind): boolean {
   if (testOverride) return testOverride === "all" || testOverride === kind;
+  if (!__MOCK_SWITCH_ENABLED__) return false;
   if (typeof window === "undefined") return false;
-  if (!import.meta.env.DEV) return false;
   const flag = window.__unifiedPipelineForceCountError;
   return !!flag && (flag === "all" || flag === kind);
 }
