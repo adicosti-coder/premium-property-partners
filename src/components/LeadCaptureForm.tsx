@@ -70,9 +70,11 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   const [propertyArea, setPropertyArea] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [zone, setZone] = useState("");
+  const [zoneError, setZoneError] = useState("");
   const [listingUrl, setListingUrl] = useState("");
   const [listingUrlError, setListingUrlError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Honeypot field for bot detection
   const [honeypot, setHoneypot] = useState("");
