@@ -271,6 +271,25 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         currency: "EUR",
       });
 
+      // Custom conversion event for landing-page analytics/pixels
+      try {
+        window.dispatchEvent(
+          new CustomEvent("realtrust:lead-submitted", {
+            detail: {
+              source: "lead_capture_form",
+              zone,
+              propertyType,
+              propertyArea: parseInt(propertyArea) || 0,
+              calculatedNetProfit,
+              calculatedYearlyProfit,
+              at: new Date().toISOString(),
+            },
+          })
+        );
+      } catch (evtErr) {
+        console.warn("realtrust:lead-submitted dispatch failed:", evtErr);
+      }
+
       setIsSuccess(true);
       toast({
         title: language === 'ro' ? "Datele au fost trimise!" : "Details sent!",
@@ -293,9 +312,14 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
       }, 3200);
     } catch (error) {
       console.error("Error submitting lead:", error);
+      const rawMsg = (error as Error)?.message || "";
+      const friendly = language === 'ro'
+        ? "Nu am putut trimite datele acum. Verifică numărul de telefon și zona, apoi încearcă din nou — sau scrie-ne direct pe WhatsApp la 0799 069 256."
+        : "We couldn't send your details. Check the phone number and zone, then try again — or message us directly on WhatsApp at +40 799 069 256.";
+      setSubmitError(friendly);
       toast({
-        title: t.leadForm.error,
-        description: t.leadForm.errorMessage,
+        title: language === 'ro' ? "Trimiterea a eșuat" : "Submission failed",
+        description: rawMsg ? `${friendly}` : friendly,
         variant: "destructive",
       });
     } finally {
