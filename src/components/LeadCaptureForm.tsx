@@ -264,6 +264,13 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
       if (error) throw error;
 
+      // leadId returned by the edge function (used for end-to-end funnel mapping
+      // Calculator ROI → Pipeline Unificat).
+      const leadId: string | undefined =
+        (data && typeof data === "object" && "leadId" in data
+          ? (data as { leadId?: string }).leadId
+          : undefined);
+
       trackConversion({
         event: "roi_calculator_lead",
         source: "lead_capture_form",
@@ -276,6 +283,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         window.dispatchEvent(
           new CustomEvent("realtrust:lead-submitted", {
             detail: {
+              leadId,
               source: "lead_capture_form",
               zone,
               propertyType,
@@ -289,6 +297,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
       } catch (evtErr) {
         console.warn("realtrust:lead-submitted dispatch failed:", evtErr);
       }
+
 
       setIsSuccess(true);
       toast({
@@ -311,6 +320,9 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         onClose();
       }, 3200);
     } catch (error) {
+      // NOTE: intentionally do NOT reset name/phone/zone/propertyArea/propertyType
+      // on failure — user must be able to fix a single field (RO phone, zone) and retry
+      // without re-typing everything. Fields are only cleared inside the success setTimeout.
       console.error("Error submitting lead:", error);
       const rawMsg = (error as Error)?.message || "";
       const friendly = language === 'ro'

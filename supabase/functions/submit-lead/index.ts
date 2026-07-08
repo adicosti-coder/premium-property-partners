@@ -136,26 +136,32 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // --- Insert lead with service role (bypasses RLS) ---
-    const { error } = await supabase.from("leads").insert({
-      name,
-      whatsapp_number: whatsappNumber,
-      property_area: propertyArea,
-      property_type: propertyType,
-      calculated_net_profit: calculatedNetProfit,
-      calculated_yearly_profit: calculatedYearlyProfit,
-      source,
-      simulation_data: simulationData,
-      email,
-      message,
-    });
+    const { data: insertedLead, error } = await supabase
+      .from("leads")
+      .insert({
+        name,
+        whatsapp_number: whatsappNumber,
+        property_area: propertyArea,
+        property_type: propertyType,
+        calculated_net_profit: calculatedNetProfit,
+        calculated_yearly_profit: calculatedYearlyProfit,
+        source,
+        simulation_data: simulationData,
+        email,
+        message,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
+    if (error || !insertedLead) {
       console.error("Error inserting lead:", error);
       return new Response(JSON.stringify({ error: "Failed to save lead" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const leadId = insertedLead.id;
 
     // --- Mirror into prospect_listings for the Unified Pipeline (best-effort) ---
     // Only when we have a zone selected (owner ROI calculator flow).
@@ -220,7 +226,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, leadId }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
