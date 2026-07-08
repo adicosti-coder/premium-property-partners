@@ -448,26 +448,58 @@ export default function UnifiedPipelinePanel() {
     };
   }, [filters]);
 
+  // ── Micro-debounce (150ms) pe filtrele care merg în queries: previne
+  // recalculări în lanț când utilizatorul schimbă rapid portal+zonă+q în
+  // succesiune. `filters` reflectă UI-ul instant, `queryFilters` lag ușor.
+  const [queryFilters, setQueryFilters] = useState<UnifiedFilters>(filters);
+  const microDebounceTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (microDebounceTimer.current) window.clearTimeout(microDebounceTimer.current);
+    microDebounceTimer.current = window.setTimeout(() => {
+      setQueryFilters(filters);
+    }, 150);
+    return () => {
+      if (microDebounceTimer.current) window.clearTimeout(microDebounceTimer.current);
+    };
+  }, [filters]);
+  const isMicroDebouncing =
+    queryFilters.q !== filters.q ||
+    queryFilters.portal !== filters.portal ||
+    queryFilters.zone !== filters.zone;
+
   // ── Counters
   const {
     data: count,
     isLoading: countLoading,
     isFetching: countFetching,
-  } = useActivePipelineCount(filters);
+    dataUpdatedAt: countUpdatedAt,
+  } = useActivePipelineCount(queryFilters);
   const isSearchDebouncing = qInput !== filters.q;
   const badgeText = useMemo(() => {
     if (countLoading || count == null) return "…";
     return count.toLocaleString("ro-RO");
   }, [count, countLoading]);
-  const badgeBusy = countFetching || isSearchDebouncing;
+  const badgeBusy = countFetching || isSearchDebouncing || isMicroDebouncing;
+
+  // Text pentru tooltip-ul badge-ului — reflectă exact starea cache-ului.
+  const badgeTooltipState = useMemo(() => {
+    if (countLoading) return "Se calculează…";
+    if (count == null) return "Numărul nu a putut fi calculat (vezi consola).";
+    if (badgeBusy) return "Se actualizează live…";
+    if (countSourceRef.current === "cache") {
+      const ageSec = Math.max(0, Math.round((Date.now() - countUpdatedAt) / 1000));
+      return `Afișat din cache-ul local (${ageSec}s). Se reîmprospătează automat.`;
+    }
+    return "Actualizat live din baza de date.";
+  }, [count, countLoading, badgeBusy, countUpdatedAt]);
 
   const {
     data: tabCounts,
     isFetching: tabCountsFetching,
     isLoading: tabCountsLoading,
     isError: tabCountsError,
-  } = useFilteredTabCounts(filters);
-  const tabCountsBusy = tabCountsFetching || isSearchDebouncing;
+  } = useFilteredTabCounts(queryFilters);
+  const tabCountsBusy = tabCountsFetching || isSearchDebouncing || isMicroDebouncing;
 
   const renderTabCount = (v: UnifiedTab) => {
     // Prima încărcare: skeleton discret.
