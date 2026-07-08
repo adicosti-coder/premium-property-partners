@@ -129,35 +129,23 @@ const ZONE_OPTIONS = [
 
 // ────────────────────────────────────────────────────────────────
 // Query helpers — filtre aplicate inline, typed via Supabase schema.
-// (helperii de zone/normalize sunt în ./unifiedPipelineFilters)
+// Cache-ul in-memory + dev-only mock error switch trăiesc în
+// ./unifiedPipelineCache pentru a fi testabile fără DOM.
 // ────────────────────────────────────────────────────────────────
 
-/**
- * Cache in-memory pentru rezultatele COUNT — TTL 12s.
- * Reduce presiunea pe DB când utilizatorul comută rapid între taburi
- * sau ajustează filtre. Invalidat instant de evenimente Realtime.
- */
-const COUNT_CACHE_TTL_MS = 12_000;
-type CacheEntry<T> = { at: number; value: T };
-const countCache = new Map<string, CacheEntry<unknown>>();
+import {
+  cacheRead,
+  cacheSet,
+  cacheInvalidatePrefix,
+  shouldMockCountError,
+  MockCountError,
+  type CountQueryKind,
+} from "./unifiedPipelineCache";
 
-function cacheGet<T>(key: string): T | undefined {
-  const hit = countCache.get(key);
-  if (!hit) return undefined;
-  if (Date.now() - hit.at > COUNT_CACHE_TTL_MS) {
-    countCache.delete(key);
-    return undefined;
-  }
-  return hit.value as T;
-}
-function cacheSet<T>(key: string, value: T): void {
-  countCache.set(key, { at: Date.now(), value });
-}
-function cacheInvalidatePrefix(prefix: string): void {
-  for (const k of countCache.keys()) {
-    if (k.startsWith(prefix)) countCache.delete(k);
-  }
-}
+/** Sursă pentru un rezultat de count — folosită în tooltip-ul badge-ului. */
+type CountSource = "cache" | "network";
+const countSourceRef: { current: CountSource } = { current: "network" };
+const tabCountsSourceRef: { current: CountSource } = { current: "network" };
 
 /** Header badge count — anunțuri noi (exclud contacted + statusuri finale). */
 function useActivePipelineCount(filters: UnifiedFilters) {
@@ -166,10 +154,14 @@ function useActivePipelineCount(filters: UnifiedFilters) {
     queryKey: ["unified-pipeline-count", filters],
     queryFn: async () => {
       const cacheKey = `active:${JSON.stringify(filters)}`;
-      const cached = cacheGet<number>(cacheKey);
-      if (cached != null) return cached;
+      const cached = cacheRead<number>(cacheKey);
+      if (cached.hit) {
+        countSourceRef.current = "cache";
+        return cached.value;
+      }
 
       try {
+        if (shouldMockCountError("active")) throw new MockCountError("active");
         let q = supabase
           .from("prospect_listings")
           .select("id", { count: "exact", head: true })
@@ -187,6 +179,7 @@ function useActivePipelineCount(filters: UnifiedFilters) {
         if (error) throw error;
         const value = count ?? 0;
         cacheSet(cacheKey, value);
+        countSourceRef.current = "network";
         return value;
       } catch (err) {
         console.error("[UnifiedPipeline] useActivePipelineCount failed:", err);
@@ -205,7 +198,8 @@ function useActivePipelineCount(filters: UnifiedFilters) {
         "postgres_changes",
         { event: "*", schema: "public", table: "prospect_listings" },
         () => {
-          // Realtime = invalidare instant a cache-ului local + react-query.
+          // Realtime = invalidare instant a cache-ului local + react-query,
+          // chiar dacă suntem în interiorul ferestrei TTL de 12s.
           cacheInvalidatePrefix("active:");
           cacheInvalidatePrefix("tabs:");
           qc.invalidateQueries({ queryKey: ["unified-pipeline-count"] });
@@ -237,82 +231,81 @@ function useFilteredTabCounts(filters: UnifiedFilters) {
     queryKey: ["unified-pipeline-tab-counts", filters],
     queryFn: async (): Promise<TabCounts> => {
       const cacheKey = `tabs:${JSON.stringify(filters)}`;
-      const cached = cacheGet<TabCounts>(cacheKey);
-      if (cached) return cached;
+      const cached = cacheRead<TabCounts>(cacheKey);
+      if (cached.hit) {
+        tabCountsSourceRef.current = "cache";
+        return cached.value;
+      }
 
       const term = sanitizeIlikeTerm(filters.q);
 
-      const observability = async (): Promise<number | null> => {
+      const runCount = async (
+        kind: CountQueryKind,
+        build: () => ReturnType<typeof supabase.from> extends never ? never : Promise<{ count: number | null; error: unknown }>,
+      ): Promise<number | null> => {
         try {
-          let obsQ = supabase
-            .from("prospect_scan_jobs")
-            .select("id", { count: "exact", head: true })
-            .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
-          if (filters.portal !== "all") {
-            obsQ = obsQ.ilike("current_platform", `%${filters.portal}%`);
-          }
-          const { count, error } = await obsQ;
+          if (shouldMockCountError(kind)) throw new MockCountError(kind);
+          const { count, error } = await build();
           if (error) throw error;
           return count ?? 0;
         } catch (err) {
-          console.error("[UnifiedPipeline] observability count failed:", err);
+          console.error(`[UnifiedPipeline] ${kind} count failed:`, err);
           return null;
         }
       };
 
-      const prospects = async (): Promise<number | null> => {
-        try {
-          let prospQ = supabase
-            .from("prospect_listings")
-            .select("id", { count: "exact", head: true })
-            .eq("is_active", true)
-            .eq("prospect_type", "proprietar")
-            .not("status", "in", "(rejected,archived,published,duplicate,contacted)");
-          if (filters.portal !== "all") prospQ = prospQ.ilike("source_platform", `%${filters.portal}%`);
-          if (filters.zone !== "all") {
-            const or = buildZoneOr(filters.zone, "zone");
-            if (or) prospQ = prospQ.or(or);
-          }
-          if (term.length > 0) {
-            prospQ = prospQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
-          }
-          const { count, error } = await prospQ;
-          if (error) throw error;
-          return count ?? 0;
-        } catch (err) {
-          console.error("[UnifiedPipeline] prospects count failed:", err);
-          return null;
+      const observability = runCount("observability", async () => {
+        let obsQ = supabase
+          .from("prospect_scan_jobs")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
+        if (filters.portal !== "all") {
+          obsQ = obsQ.ilike("current_platform", `%${filters.portal}%`);
         }
-      };
+        return await obsQ;
+      });
 
-      const approval = async (): Promise<number | null> => {
-        try {
-          let appQ = supabase
-            .from("prospect_listings")
-            .select("id", { count: "exact", head: true })
-            .gte("lead_score", 55)
-            .eq("is_active", true)
-            .not("source_url", "is", null);
-          if (filters.portal !== "all") appQ = appQ.ilike("source_platform", `%${filters.portal}%`);
-          if (filters.zone !== "all") {
-            const or = buildZoneOr(filters.zone, "zone");
-            if (or) appQ = appQ.or(or);
-          }
-          if (term.length > 0) {
-            appQ = appQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
-          }
-          const { count, error } = await appQ;
-          if (error) throw error;
-          return count ?? 0;
-        } catch (err) {
-          console.error("[UnifiedPipeline] approval count failed:", err);
-          return null;
+      const prospects = runCount("prospects", async () => {
+        let prospQ = supabase
+          .from("prospect_listings")
+          .select("id", { count: "exact", head: true })
+          .eq("is_active", true)
+          .eq("prospect_type", "proprietar")
+          .not("status", "in", "(rejected,archived,published,duplicate,contacted)");
+        if (filters.portal !== "all") prospQ = prospQ.ilike("source_platform", `%${filters.portal}%`);
+        if (filters.zone !== "all") {
+          const or = buildZoneOr(filters.zone, "zone");
+          if (or) prospQ = prospQ.or(or);
         }
-      };
+        if (term.length > 0) {
+          prospQ = prospQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
+        }
+        return await prospQ;
+      });
 
-      const [obs, prosp, app] = await Promise.all([observability(), prospects(), approval()]);
+      const approval = runCount("approval", async () => {
+        let appQ = supabase
+          .from("prospect_listings")
+          .select("id", { count: "exact", head: true })
+          .gte("lead_score", 55)
+          .eq("is_active", true)
+          .not("source_url", "is", null);
+        if (filters.portal !== "all") appQ = appQ.ilike("source_platform", `%${filters.portal}%`);
+        if (filters.zone !== "all") {
+          const or = buildZoneOr(filters.zone, "zone");
+          if (or) appQ = appQ.or(or);
+        }
+        if (term.length > 0) {
+          appQ = appQ.or(`title.ilike.%${term}%,source_url.ilike.%${term}%,zone.ilike.%${term}%`);
+        }
+        return await appQ;
+      });
+
+      const [obs, prosp, app] = await Promise.all([observability, prospects, approval]);
       const result: TabCounts = { observability: obs, prospects: prosp, approval: app };
-      cacheSet(cacheKey, result);
+      // Cache doar dacă avem cel puțin o valoare validă (nu memoiza toate erorile)
+      if (obs != null || prosp != null || app != null) cacheSet(cacheKey, result);
+      tabCountsSourceRef.current = "network";
       return result;
     },
     staleTime: 10_000,
@@ -320,6 +313,7 @@ function useFilteredTabCounts(filters: UnifiedFilters) {
     retry: 1,
   });
 }
+
 
 const TAB_META: Record<
   UnifiedTab,
