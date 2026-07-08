@@ -320,6 +320,9 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         onClose();
       }, 3200);
     } catch (error) {
+      // NOTE: intentionally do NOT reset name/phone/zone/propertyArea/propertyType
+      // on failure — user must be able to fix a single field (RO phone, zone) and retry
+      // without re-typing everything. Fields are only cleared inside the success setTimeout.
       console.error("Error submitting lead:", error);
       const rawMsg = (error as Error)?.message || "";
       const friendly = language === 'ro'
