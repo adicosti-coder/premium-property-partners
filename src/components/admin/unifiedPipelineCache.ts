@@ -83,7 +83,7 @@ export function __setMockCountErrorForTests(v: CountQueryKind | "all" | null): v
 // bloc (inclusiv accesul la `window.__unifiedPipelineForceCountError`) e eliminat
 // de bundler ca dead-code. Zero suprafață expusă utilizatorului final.
 const __MOCK_SWITCH_ENABLED__ =
-  import.meta.env.DEV && process.env.NODE_ENV !== "production";
+  import.meta.env.DEV && import.meta.env.MODE !== "production";
 
 export function shouldMockCountError(kind: CountQueryKind): boolean {
   if (testOverride) return testOverride === "all" || testOverride === kind;
