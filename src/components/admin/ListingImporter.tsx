@@ -201,16 +201,37 @@ const ListingImporter = () => {
         });
       }
 
-      setExtracted(data.extracted);
-      setEditData({ ...data.extracted });
-      setAllOriginalImages([...(data.extracted.images || [])]);
-      if (data.extracted.listing_type_hint) {
-        setListingType(data.extracted.listing_type_hint);
+      const hint = data.extracted.listing_type_hint as string | null;
+      // Respect the admin's manual pick — never override vanzare/investitie
+      // with a rental hint from the source page.
+      const finalType = userPickedType
+        ? listingType
+        : (hint || listingType);
+      const rentalSourceForSaleTarget =
+        hint === "inchiriere" && (finalType === "vanzare" || finalType === "investitie");
+
+      const nextExtracted = { ...data.extracted } as ExtractedData;
+      if (rentalSourceForSaleTarget) {
+        // Sursa e chirie, dar salvăm ca Vânzare/Investiție → nu prelua prețul de chirie.
+        nextExtracted.price = null;
+        nextExtracted.currency = null;
+      }
+
+      setExtracted(nextExtracted);
+      setEditData({ ...nextExtracted });
+      setAllOriginalImages([...(nextExtracted.images || [])]);
+      if (hint && !userPickedType) {
+        setListingType(hint);
       }
       setImportLogs(Array.isArray(data?.logs) ? data.logs : []);
       setImportAttempts(typeof data?.attempts === "number" ? data.attempts : null);
       setStep(1); // Auto-advance to edit step
-      toast({ title: "✅ Date extrase!", description: "Verifică și editează înainte de salvare." });
+      toast({
+        title: "✅ Date extrase!",
+        description: rentalSourceForSaleTarget
+          ? "Sursa era anunț de chirie — prețul de chirie a fost eliminat. Completează manual prețul de vânzare."
+          : "Verifică și editează înainte de salvare.",
+      });
     } catch (err: any) {
       const details: ImportErrorDetails = {
         message: err?.message || "Eroare necunoscută",
