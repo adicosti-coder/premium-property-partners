@@ -144,6 +144,22 @@ const ProcessStepsTimeline = () => {
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {language === 'ro' ? step.descriptionRo : step.descriptionEn}
                     </p>
+
+                    {/* Optional inline CTA (e.g. Calculează ROI) */}
+                    {step.ctaRo && step.onCta && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={step.onCta}
+                        className="mt-3 h-auto px-2 py-1 -ml-2 text-primary hover:text-primary hover:bg-primary/10 gap-1.5"
+                      >
+                        <Calculator className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">
+                          {language === 'ro' ? step.ctaRo : step.ctaEn}
+                        </span>
+                      </Button>
+                    )}
                   </div>
                 </div>
 
