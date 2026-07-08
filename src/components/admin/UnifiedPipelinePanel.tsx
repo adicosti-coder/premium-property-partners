@@ -575,11 +575,15 @@ export default function UnifiedPipelinePanel() {
                   <span className="tabular-nums">{badgeText} în pipeline</span>
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent side="left" className="max-w-[280px]">
-                Anunțuri noi care așteaptă prima procesare sau contactare. Exclud statusurile{" "}
-                <code>rejected</code>, <code>archived</code>, <code>published</code>,{" "}
-                <code>duplicate</code> și <code>contacted</code>. Filtre globale aplicate.
-                Realtime.
+              <TooltipContent side="left" className="max-w-[280px] space-y-1">
+                <p>
+                  Anunțuri noi care așteaptă prima procesare sau contactare. Exclud statusurile{" "}
+                  <code>rejected</code>, <code>archived</code>, <code>published</code>,{" "}
+                  <code>duplicate</code> și <code>contacted</code>. Filtre globale aplicate.
+                </p>
+                <p className="text-[11px] text-muted-foreground border-t border-border/40 pt-1">
+                  {badgeTooltipState}
+                </p>
               </TooltipContent>
             </Tooltip>
           </div>
