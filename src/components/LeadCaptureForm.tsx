@@ -253,11 +253,12 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         setWhatsappNumber("");
         setPropertyArea("");
         setPropertyType("");
+        setZone("");
         setListingUrl("");
         setIsSuccess(false);
         setCaptchaToken(null);
         onClose();
-      }, 2000);
+      }, 3200);
     } catch (error) {
       console.error("Error submitting lead:", error);
       toast({
@@ -286,10 +287,23 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         {isSuccess ? (
           <>
             <ConfettiEffect isActive={isSuccess} duration={3000} particleCount={40} />
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mb-4 animate-success-bounce" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">{t.leadForm.success}</h3>
-              <p className="text-muted-foreground">{t.leadForm.successMessage}</p>
+            <div
+              className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in zoom-in-95 duration-500"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="relative mb-4">
+                <span className="absolute inset-0 rounded-full bg-emerald-400/30 blur-2xl animate-pulse" aria-hidden="true" />
+                <CheckCircle className="relative w-16 h-16 text-emerald-500 animate-success-bounce" />
+              </div>
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                {language === 'ro' ? "Datele au fost trimise!" : "Details sent!"}
+              </h3>
+              <p className="text-muted-foreground max-w-sm">
+                {language === 'ro'
+                  ? "Andrei, agentul nostru AI, sau un consultant RealTrust te va contacta în cel mai scurt timp pentru validare."
+                  : "Andrei, our AI agent, or a RealTrust consultant will contact you shortly for validation."}
+              </p>
             </div>
           </>
         ) : (
