@@ -150,7 +150,9 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
     setPhoneError("");
     setListingUrlError("");
-    
+    setZoneError("");
+    setSubmitError("");
+
     if (!name.trim() || !whatsappNumber.trim() || !propertyArea || !propertyType) {
       toast({
         title: t.leadForm.fillAllFields,
@@ -160,12 +162,40 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
       return;
     }
 
-    // Validate phone number internationally
-    if (!isValidInternationalPhone(whatsappNumber)) {
-      setPhoneError(t.leadForm.invalidPhone || "Număr de telefon invalid");
+    // Strict RO phone validation (accepts +40 / 0040 / 0-prefix, mobile & landline, 9 digits after country code)
+    const rawPhone = whatsappNumber.trim();
+    const digits = rawPhone.replace(/[^\d]/g, "");
+    const isRoMobile =
+      /^(?:\+?40|0040|0)?7\d{8}$/.test(digits) || // mobile starts with 7
+      /^(?:\+?40|0040|0)?[23]\d{8}$/.test(digits); // landline 2/3 prefix
+    if (!isValidInternationalPhone(rawPhone) || !isRoMobile) {
+      setPhoneError(
+        language === 'ro'
+          ? "Introdu un număr valid de România (ex: 0722 123 456)."
+          : "Enter a valid Romanian number (e.g. +40 722 123 456)."
+      );
       toast({
-        title: t.leadForm.invalidPhone || "Număr invalid",
-        description: t.leadForm.invalidPhoneMessage || "Verifică formatul numărului de telefon",
+        title: language === 'ro' ? "Număr invalid" : "Invalid number",
+        description: language === 'ro'
+          ? "Verifică formatul: acceptăm doar numere din România."
+          : "Please check the format — Romanian numbers only.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Zone required — needed for dedup_key (phone:zone:area) in the pipeline
+    if (!zone.trim()) {
+      setZoneError(
+        language === 'ro'
+          ? "Selectează zona din Timișoara pentru o estimare corectă."
+          : "Select the Timișoara zone for an accurate estimate."
+      );
+      toast({
+        title: language === 'ro' ? "Zonă obligatorie" : "Zone required",
+        description: language === 'ro'
+          ? "Alege zona proprietății din Timișoara."
+          : "Choose the Timișoara zone of the property.",
         variant: "destructive",
       });
       return;
