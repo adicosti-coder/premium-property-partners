@@ -387,6 +387,26 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="zone">
+                {language === 'ro' ? 'Zona din Timișoara' : 'Timișoara zone'}
+                <span className="text-muted-foreground font-normal ml-1">
+                  ({language === 'ro' ? 'opțional' : 'optional'})
+                </span>
+              </Label>
+              <Select value={zone} onValueChange={setZone}>
+                <SelectTrigger id="zone">
+                  <SelectValue placeholder={language === 'ro' ? 'Alege zona proprietății' : 'Choose the property zone'} />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {TIMISOARA_ZONES.map((z) => (
+                    <SelectItem key={z} value={z}>{z}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+
+            <div className="space-y-2">
               <Label htmlFor="listingUrl" className="flex items-center gap-1.5">
                 <Link className="w-3.5 h-3.5" />
                 {t.leadForm.listingUrl}
