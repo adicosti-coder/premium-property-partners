@@ -481,7 +481,7 @@ const ListingImporter = () => {
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => setListingType(opt.value)}
+                      onClick={() => { setListingType(opt.value); setUserPickedType(true); }}
                       disabled={isLoading}
                       className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
                         listingType === opt.value
