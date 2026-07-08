@@ -34,6 +34,7 @@ import {
   Info,
   Loader2,
   Radar,
+  RefreshCw,
   Search,
   X,
 } from "lucide-react";
