@@ -157,6 +157,47 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // --- Mirror into prospect_listings for the Unified Pipeline (best-effort) ---
+    // Only when we have a zone selected (owner ROI calculator flow).
+    const rawZone = validateString(body.zone, 120);
+    if (rawZone) {
+      try {
+        const phoneNormalized = whatsappNumber.replace(/[^\d+]/g, "");
+        const areaForKey = propertyArea || 0;
+        const dedupKey = `owner:${phoneNormalized}:${rawZone.toLowerCase()}:${areaForKey}`;
+        const now = new Date().toISOString();
+
+        const { error: plError } = await supabase.from("prospect_listings").insert({
+          source_platform: "owner_calculator",
+          source_url: `https://realtrust.ro/#calculator?utm_source=${encodeURIComponent(source)}`,
+          title: `Proprietar Timișoara — ${propertyType} ${areaForKey || ""}mp`.trim(),
+          zone: rawZone,
+          location: `Timișoara, ${rawZone}`,
+          size: areaForKey || null,
+          contact_name: name,
+          contact_phone: whatsappNumber,
+          phone_normalized: phoneNormalized || null,
+          prospect_type: "proprietar",
+          lifecycle_status: "new",
+          status: "new",
+          dedup_key: dedupKey,
+          tags: ["owner_calculator", source],
+          score_breakdown: {
+            calculated_net_profit: calculatedNetProfit,
+            calculated_yearly_profit: calculatedYearlyProfit,
+            simulation: simulationData ?? null,
+            submitted_at: now,
+          },
+        });
+
+        if (plError && plError.code !== "23505") {
+          console.error("prospect_listings insert non-fatal error:", plError);
+        }
+      } catch (mirrorErr) {
+        console.error("prospect_listings mirror failed:", mirrorErr);
+      }
+    }
+
     // --- Send notification (best-effort, don't block response) ---
     if (body.send_notification !== false) {
       try {
