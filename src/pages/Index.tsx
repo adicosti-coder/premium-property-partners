@@ -49,6 +49,7 @@ import VerifiedReviewsBadges from "@/components/VerifiedReviewsBadges";
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm"));
 const HomeRecommendedLinks = lazy(() => import("@/components/home/HomeRecommendedLinks"));
+const ProcessStepsTimeline = lazy(() => import("@/components/ProcessStepsTimeline"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -101,6 +102,9 @@ const TeaserSections = () => (
     <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
       <section id="beneficii">
         <OwnersTeaser />
+      </section>
+      <section id="cum-functioneaza" className="scroll-mt-24">
+        <ProcessStepsTimeline />
       </section>
       <PreCalcMiniForm source="homepage_owners_teaser" />
       <DIYvsProfessional />
