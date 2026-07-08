@@ -100,6 +100,7 @@ const ListingImporter = () => {
   const [customWaitMs, setCustomWaitMs] = useState<string>("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [listingType, setListingType] = useState("vanzare");
+  const [userPickedType, setUserPickedType] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
