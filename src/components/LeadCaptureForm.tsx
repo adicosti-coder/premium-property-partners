@@ -70,9 +70,11 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
   const [propertyArea, setPropertyArea] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [zone, setZone] = useState("");
+  const [zoneError, setZoneError] = useState("");
   const [listingUrl, setListingUrl] = useState("");
   const [listingUrlError, setListingUrlError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Honeypot field for bot detection
   const [honeypot, setHoneypot] = useState("");
@@ -148,7 +150,9 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
     setPhoneError("");
     setListingUrlError("");
-    
+    setZoneError("");
+    setSubmitError("");
+
     if (!name.trim() || !whatsappNumber.trim() || !propertyArea || !propertyType) {
       toast({
         title: t.leadForm.fillAllFields,
@@ -158,12 +162,40 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
       return;
     }
 
-    // Validate phone number internationally
-    if (!isValidInternationalPhone(whatsappNumber)) {
-      setPhoneError(t.leadForm.invalidPhone || "Număr de telefon invalid");
+    // Strict RO phone validation (accepts +40 / 0040 / 0-prefix, mobile & landline, 9 digits after country code)
+    const rawPhone = whatsappNumber.trim();
+    const digits = rawPhone.replace(/[^\d]/g, "");
+    const isRoMobile =
+      /^(?:\+?40|0040|0)?7\d{8}$/.test(digits) || // mobile starts with 7
+      /^(?:\+?40|0040|0)?[23]\d{8}$/.test(digits); // landline 2/3 prefix
+    if (!isValidInternationalPhone(rawPhone) || !isRoMobile) {
+      setPhoneError(
+        language === 'ro'
+          ? "Introdu un număr valid de România (ex: 0722 123 456)."
+          : "Enter a valid Romanian number (e.g. +40 722 123 456)."
+      );
       toast({
-        title: t.leadForm.invalidPhone || "Număr invalid",
-        description: t.leadForm.invalidPhoneMessage || "Verifică formatul numărului de telefon",
+        title: language === 'ro' ? "Număr invalid" : "Invalid number",
+        description: language === 'ro'
+          ? "Verifică formatul: acceptăm doar numere din România."
+          : "Please check the format — Romanian numbers only.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Zone required — needed for dedup_key (phone:zone:area) in the pipeline
+    if (!zone.trim()) {
+      setZoneError(
+        language === 'ro'
+          ? "Selectează zona din Timișoara pentru o estimare corectă."
+          : "Select the Timișoara zone for an accurate estimate."
+      );
+      toast({
+        title: language === 'ro' ? "Zonă obligatorie" : "Zone required",
+        description: language === 'ro'
+          ? "Alege zona proprietății din Timișoara."
+          : "Choose the Timișoara zone of the property.",
         variant: "destructive",
       });
       return;
@@ -239,6 +271,25 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
         currency: "EUR",
       });
 
+      // Custom conversion event for landing-page analytics/pixels
+      try {
+        window.dispatchEvent(
+          new CustomEvent("realtrust:lead-submitted", {
+            detail: {
+              source: "lead_capture_form",
+              zone,
+              propertyType,
+              propertyArea: parseInt(propertyArea) || 0,
+              calculatedNetProfit,
+              calculatedYearlyProfit,
+              at: new Date().toISOString(),
+            },
+          })
+        );
+      } catch (evtErr) {
+        console.warn("realtrust:lead-submitted dispatch failed:", evtErr);
+      }
+
       setIsSuccess(true);
       toast({
         title: language === 'ro' ? "Datele au fost trimise!" : "Details sent!",
@@ -261,9 +312,14 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
       }, 3200);
     } catch (error) {
       console.error("Error submitting lead:", error);
+      const rawMsg = (error as Error)?.message || "";
+      const friendly = language === 'ro'
+        ? "Nu am putut trimite datele acum. Verifică numărul de telefon și zona, apoi încearcă din nou — sau scrie-ne direct pe WhatsApp la 0799 069 256."
+        : "We couldn't send your details. Check the phone number and zone, then try again — or message us directly on WhatsApp at +40 799 069 256.";
+      setSubmitError(friendly);
       toast({
-        title: t.leadForm.error,
-        description: t.leadForm.errorMessage,
+        title: language === 'ro' ? "Trimiterea a eșuat" : "Submission failed",
+        description: rawMsg ? `${friendly}` : friendly,
         variant: "destructive",
       });
     } finally {
@@ -389,12 +445,16 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
             <div className="space-y-2">
               <Label htmlFor="zone">
                 {language === 'ro' ? 'Zona din Timișoara' : 'Timișoara zone'}
-                <span className="text-muted-foreground font-normal ml-1">
-                  ({language === 'ro' ? 'opțional' : 'optional'})
-                </span>
+                <span className="text-destructive ml-0.5">*</span>
               </Label>
-              <Select value={zone} onValueChange={setZone}>
-                <SelectTrigger id="zone">
+              <Select
+                value={zone}
+                onValueChange={(v) => {
+                  setZone(v);
+                  if (zoneError) setZoneError("");
+                }}
+              >
+                <SelectTrigger id="zone" className={zoneError ? "border-destructive" : ""}>
                   <SelectValue placeholder={language === 'ro' ? 'Alege zona proprietății' : 'Choose the property zone'} />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
@@ -403,6 +463,7 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
                   ))}
                 </SelectContent>
               </Select>
+              {zoneError && <p className="text-sm text-destructive">{zoneError}</p>}
             </div>
 
 
@@ -460,6 +521,27 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
                 </div>
               )}
             </div>
+
+            {submitError && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+              >
+                <p className="font-medium mb-1">
+                  {language === 'ro' ? 'Trimiterea a eșuat' : 'Submission failed'}
+                </p>
+                <p className="text-destructive/90">{submitError}</p>
+                <a
+                  href="https://wa.me/40799069256"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-primary underline underline-offset-2 hover:no-underline"
+                >
+                  {language === 'ro' ? 'Deschide WhatsApp →' : 'Open WhatsApp →'}
+                </a>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={isSubmitting || !captchaToken || !turnstileSiteKey}>
               {isSubmitting ? (
