@@ -220,8 +220,10 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
           calculated_net_profit: calculatedNetProfit,
           calculated_yearly_profit: calculatedYearlyProfit,
           source: "lead_capture_form",
+          zone: zone || undefined,
           simulation_data: withProvenientaTracking({
             ...simulationData,
+            zone: zone || undefined,
             listingUrl: listingUrl.trim() || undefined,
           }),
           captcha_token: captchaToken,
@@ -239,8 +241,10 @@ const LeadCaptureForm = forwardRef<HTMLDivElement, LeadCaptureFormProps>(({
 
       setIsSuccess(true);
       toast({
-        title: t.leadForm.successToast,
-        description: t.leadForm.successToastMessage,
+        title: language === 'ro' ? "Datele au fost trimise!" : "Details sent!",
+        description: language === 'ro'
+          ? "Andrei, agentul nostru AI, sau un consultant RealTrust te va contacta pentru validare."
+          : "Andrei, our AI agent, or a RealTrust consultant will contact you for validation.",
       });
 
       setTimeout(() => {
