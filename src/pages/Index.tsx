@@ -103,6 +103,9 @@ const TeaserSections = () => (
       <section id="beneficii">
         <OwnersTeaser />
       </section>
+      <section id="cum-functioneaza" className="scroll-mt-24">
+        <ProcessStepsTimeline />
+      </section>
       <PreCalcMiniForm source="homepage_owners_teaser" />
       <DIYvsProfessional />
       <ROICaseStudySection />
