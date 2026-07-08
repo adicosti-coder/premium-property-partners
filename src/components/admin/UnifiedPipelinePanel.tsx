@@ -499,8 +499,20 @@ export default function UnifiedPipelinePanel() {
     isFetching: tabCountsFetching,
     isLoading: tabCountsLoading,
     isError: tabCountsError,
+    refetch: refetchTabCounts,
   } = useFilteredTabCounts(queryFilters);
   const tabCountsBusy = tabCountsFetching || isSearchDebouncing || isMicroDebouncing;
+
+  const qc = useQueryClient();
+  const retryTabCount = (kind: UnifiedTab) => {
+    // Invalidează cache-ul local pentru toate combinațiile de tabs și forțează
+    // un refetch imediat. Query-ul re-rulează cele 3 COUNT-uri; cel eșuat
+    // (kind) va reveni cu valoare validă dacă cauza intermitentă a dispărut.
+    cacheInvalidatePrefix("tabs:");
+    qc.invalidateQueries({ queryKey: ["unified-pipeline-tab-counts"] });
+    void refetchTabCounts();
+    void kind; // marker semantic pentru viitorul refactor per-query
+  };
 
   const renderTabCount = (v: UnifiedTab) => {
     // Prima încărcare: skeleton discret.
@@ -513,7 +525,7 @@ export default function UnifiedPipelinePanel() {
       );
     }
     const n = tabCounts?.[v];
-    // Fallback pe eroare / null → semn de exclamare discret, nu blochează UI.
+    // Fallback pe eroare / null → semn de exclamare discret + acțiune de retry.
     if (n == null || tabCountsError) {
       return (
         <Tooltip>
@@ -526,7 +538,27 @@ export default function UnifiedPipelinePanel() {
               !
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>Numărul nu a putut fi calculat (vezi consola).</TooltipContent>
+          <TooltipContent className="max-w-[260px] space-y-2">
+            <p className="text-xs">
+              Numărul pentru <strong>{TAB_META[v].label}</strong> nu a putut fi
+              calculat. Celelalte secțiuni continuă să funcționeze normal.
+            </p>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                retryTabCount(v);
+              }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+              aria-label={`Reîncearcă numărătoarea pentru ${TAB_META[v].label}`}
+            >
+              <RefreshCw
+                className={`h-3 w-3 ${tabCountsFetching ? "animate-spin" : ""}`}
+              />
+              Reîncearcă acum
+            </button>
+          </TooltipContent>
         </Tooltip>
       );
     }
