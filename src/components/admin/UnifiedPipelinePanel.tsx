@@ -241,13 +241,13 @@ function useFilteredTabCounts(filters: UnifiedFilters) {
 
       const runCount = async (
         kind: CountQueryKind,
-        build: () => PromiseLike<{ count: number | null; error: unknown } | Record<string, unknown>>,
+        build: () => PromiseLike<unknown>,
       ): Promise<number | null> => {
         try {
           if (shouldMockCountError(kind)) throw new MockCountError(kind);
-          const { count, error } = await build();
-          if (error) throw error;
-          return count ?? 0;
+          const res = (await build()) as { count: number | null; error: unknown };
+          if (res.error) throw res.error;
+          return res.count ?? 0;
         } catch (err) {
           console.error(`[UnifiedPipeline] ${kind} count failed:`, err);
           return null;
