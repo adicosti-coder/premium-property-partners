@@ -355,7 +355,7 @@ const BlogArticlePage = () => {
   // This hook must run before any early return; otherwise articles crash after the loading state.
   const displayContent = useMemo(() => {
     if (!rawContent) return "";
-    return rawContent.replace(/<a\s+([^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
+    let html = rawContent.replace(/<a\s+([^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
       const hrefMatch = attrs.match(/href=["']([^"']+)["']/i);
       const href = hrefMatch?.[1] ?? "";
       const isInternal = href.startsWith("/") || href.startsWith("#") || href.includes("realtrust.ro");
@@ -371,6 +371,14 @@ const BlogArticlePage = () => {
       }
       return `<a ${newAttrs.trim()}>${inner}</a>`;
     });
+    // Core Web Vitals: force lazy loading + async decoding on all body images.
+    html = html.replace(/<img\b([^>]*)>/gi, (match, attrs) => {
+      let a = attrs as string;
+      if (!/\sloading=/i.test(a)) a += ' loading="lazy"';
+      if (!/\sdecoding=/i.test(a)) a += ' decoding="async"';
+      return `<img${a}>`;
+    });
+    return html;
   }, [rawContent]);
   const readingTime = Math.max(1, Math.ceil(displayContent.length / 1000));
   const coverImage = article ? getBlogCoverImage(article.slug, article.cover_image) : null;
