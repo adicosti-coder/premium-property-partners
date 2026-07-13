@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Fragment } from "react";
 import { Home } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import {
@@ -66,7 +67,7 @@ const PageBreadcrumb = ({ items, className = "" }: PageBreadcrumbProps) => {
           </BreadcrumbItem>
           
           {items.map((item, index) => (
-            <React.Fragment key={index}>
+            <Fragment key={index}>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 {item.href ? (
@@ -79,7 +80,7 @@ const PageBreadcrumb = ({ items, className = "" }: PageBreadcrumbProps) => {
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>
                 )}
               </BreadcrumbItem>
-            </React.Fragment>
+            </Fragment>
           ))}
         </BreadcrumbList>
       </Breadcrumb>
