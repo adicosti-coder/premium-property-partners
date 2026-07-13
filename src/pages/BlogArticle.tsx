@@ -647,10 +647,13 @@ const BlogArticlePage = () => {
     };
   }
 
+  // BreadcrumbList: use the clean canonical article URL (no utm_*, no ?lang=)
+  // so Google indexes a single, stable breadcrumb per article for both RO and EN.
+  const cleanArticleUrl = `https://realtrust.ro/blog/${article.slug}`;
   const breadcrumbSchemaData = generateBreadcrumbSchema([
-    { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
-    { name: "Blog", url: "https://realtrust.ro/blog" },
-    { name: displayTitle, url: articleUrl },
+    { name: language === "en" ? "Home" : "Acasă", url: "https://realtrust.ro" },
+    { name: language === "en" ? "Blog" : "Blog", url: "https://realtrust.ro/blog" },
+    { name: displayTitle, url: cleanArticleUrl },
   ]);
 
   // Add HowTo schema for guide/how-to articles
