@@ -783,7 +783,7 @@ serve(async (req) => {
           })());
         }
 
-        const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+        const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}`${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}`turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
         return xmlResponse(
           `<Response>${gatherXml(nextUrl, speakXml(fastGreeting, fastUrl))}<Redirect method="POST">${escapeXml(nextUrl)}</Redirect></Response>`
         );
@@ -830,7 +830,7 @@ serve(async (req) => {
               }
               const shouldHangup = /la revedere|închid|o zi frumoas[ăa]/i.test(quickReply);
               const nextTurn = turn + 1;
-              const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+              const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}`${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
 
               // Background: persist transcript + log
               // @ts-ignore
@@ -1384,7 +1384,7 @@ serve(async (req) => {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
     }
 
-    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}`${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
     // Put audio INSIDE <Gather> so the user can barge-in (interrupt).
     // No <Redirect> needed because actionOnEmptyResult=true on the <Gather>.
     return xmlResponse(
