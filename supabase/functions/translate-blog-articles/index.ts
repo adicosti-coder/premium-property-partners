@@ -112,6 +112,10 @@ serve(async (req: Request) => {
 
     for (const row of items) {
       try {
+        if (row.translation_locked) {
+          results.push({ id: row.id, ok: false, error: "translation_locked" });
+          continue;
+        }
         const needsContent = includeContent && !row.content_en && !!row.content;
         const out = await translate(apiKey, {
           title: row.title ?? "",
