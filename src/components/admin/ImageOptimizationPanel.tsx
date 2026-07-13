@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import {
   ImageIcon, Loader2, Sparkles, ArrowUpCircle, Minimize2, CheckCircle2,
-  Trash2, GripVertical, AlertTriangle, Download, RotateCcw, ZoomIn,
+  Trash2, GripVertical, AlertTriangle, Download, RotateCcw, RotateCw, ZoomIn,
   FileImage, HardDrive, Maximize2, Settings2, Wand2, X, ChevronDown, ChevronUp,
   Upload, Eraser
 } from "lucide-react";
