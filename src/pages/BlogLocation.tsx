@@ -104,8 +104,6 @@ const BlogLocation = () => {
     refetchOnWindowFocus: false,
   });
 
-  if (!locationSlug) return <Navigate to="/blog" replace />;
-
   const displayName =
     articles && articles.length > 0 && articles[0].geo_location
       ? articles[0].geo_location
@@ -118,6 +116,8 @@ const BlogLocation = () => {
     () => (articles ?? []).slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
     [articles, safePage]
   );
+
+  if (!locationSlug) return <Navigate to="/blog" replace />;
 
   const goToPage = (n: number) => {
     const next = new URLSearchParams(searchParams);
