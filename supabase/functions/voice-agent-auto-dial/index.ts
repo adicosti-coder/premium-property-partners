@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logAudit } from "../_shared/auditLog.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { signSessionId } from "../_shared/twimlWebhookSig.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Auto-Dial — reads from prospect_listings (lead_score>80, status=new).
@@ -363,7 +364,8 @@ serve(async (req) => {
       voice_call_session_id: session.id,
     }).eq("id", prospect.id);
 
-    const twimlUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${session.id}`;
+    const twimlSig = await signSessionId(session.id);
+    const twimlUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${session.id}&sig=${encodeURIComponent(twimlSig)}`;
     const statusUrl = `${SUPABASE_URL}/functions/v1/voice-agent-status?sessionId=${session.id}`;
 
     const twRes = await fetch(`https://connector-gateway.lovable.dev/twilio/Calls.json`, {

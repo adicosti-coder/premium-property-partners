@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { verifyTwilioRequest } from "../_shared/twilioVerify.ts";
 import { applyLexiconToText } from "../_shared/voiceLexicon.ts";
+import { signSessionId, verifySessionSig } from "../_shared/twimlWebhookSig.ts";
 
 async function logTtsError(
   supabase: any,
@@ -691,6 +692,19 @@ serve(async (req) => {
 
     if (!sessionId) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
+    // ── Auth: require HMAC signature of sessionId as query param `sig`.
+    // This replaces the (unreliable) Twilio HMAC soft-check as the real gate:
+    // a leaked sessionId alone can no longer be used to POST forged
+    // SpeechResult / AnsweredBy payloads and corrupt call state.
+    const providedSig = url.searchParams.get("sig");
+    const sigOk = await verifySessionSig(sessionId, providedSig);
+    if (!sigOk) {
+      console.warn("[voice-twiml] rejected: missing/invalid sig", { sessionId, hasSig: !!providedSig });
+      return xmlResponse(ROMANIAN_SAFE_ERROR_XML, 403);
+    }
+    const sig = providedSig!;
+    const sigQs = `&sig=${encodeURIComponent(sig)}`;
+
     // ⚡ FAST-PATH TURN 0/1/2: returnăm IMEDIAT audio cached, fără AI/KB.
     // Greeting (turn 0) e deterministic; turn 1-2 folosesc quick replies regex.
     // Target: total_handler_ms < 800ms (TTL cache permanent → instant pe hit).
@@ -769,7 +783,7 @@ serve(async (req) => {
           })());
         }
 
-        const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+        const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
         return xmlResponse(
           `<Response>${gatherXml(nextUrl, speakXml(fastGreeting, fastUrl))}<Redirect method="POST">${escapeXml(nextUrl)}</Redirect></Response>`
         );
@@ -816,7 +830,7 @@ serve(async (req) => {
               }
               const shouldHangup = /la revedere|închid|o zi frumoas[ăa]/i.test(quickReply);
               const nextTurn = turn + 1;
-              const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+              const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
 
               // Background: persist transcript + log
               // @ts-ignore
@@ -1370,7 +1384,7 @@ serve(async (req) => {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
     }
 
-    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`;
+    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
     // Put audio INSIDE <Gather> so the user can barge-in (interrupt).
     // No <Redirect> needed because actionOnEmptyResult=true on the <Gather>.
     return xmlResponse(
