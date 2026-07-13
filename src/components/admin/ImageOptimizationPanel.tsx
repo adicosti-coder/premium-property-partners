@@ -525,6 +525,77 @@ const ImageOptimizationPanel = ({
     syncImages(updated);
   };
 
+  // Rotate a single image 90° clockwise or counter-clockwise.
+  // Draws the source into a canvas at swapped dimensions and re-encodes
+  // as the current output format (WebP/JPEG), then updates url +
+  // persistedUrl so the parent form receives the rotated version on save.
+  const rotateImage = useCallback(async (index: number, direction: "cw" | "ccw" = "cw") => {
+    const current = items[index];
+    if (!current) return;
+    const updated = [...items];
+    updated[index] = { ...current, status: "optimizing" };
+    setItems([...updated]);
+
+    try {
+      const { blob } = await fetchImageBlob(current.url);
+      const bitmap = await createImageBitmap(blob);
+      const w = bitmap.width;
+      const h = bitmap.height;
+      const canvas = document.createElement("canvas");
+      canvas.width = h;
+      canvas.height = w;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas 2D nu este disponibil");
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(direction === "cw" ? Math.PI / 2 : -Math.PI / 2);
+      ctx.drawImage(bitmap, -w / 2, -h / 2);
+      bitmap.close?.();
+
+      const mime = autoWebp ? "image/webp" : "image/jpeg";
+      const rotatedBlob: Blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (b) => (b ? resolve(b) : reject(new Error("Encoding eșuat"))),
+          mime,
+          Math.min(0.95, Math.max(0.6, quality / 100)),
+        );
+      });
+
+      // Revoke previous blob URL if we created one earlier for this slot.
+      if (current.url.startsWith("blob:")) URL.revokeObjectURL(current.url);
+      const objectUrl = URL.createObjectURL(rotatedBlob);
+      const persistedUrl = await blobToDataUrl(rotatedBlob);
+
+      updated[index] = {
+        ...current,
+        url: objectUrl,
+        persistedUrl,
+        optimized: true,
+        optimizedBlob: rotatedBlob,
+        optimizedSize: rotatedBlob.size,
+        originalSize: current.originalSize || blob.size,
+        width: h,
+        height: w,
+        status: "done",
+        error: undefined,
+      };
+      setItems([...updated]);
+      syncImages(updated);
+      toast({
+        title: "Imagine rotită",
+        description: `Imaginea ${index + 1} a fost rotită ${direction === "cw" ? "la dreapta" : "la stânga"}.`,
+      });
+    } catch (err: any) {
+      updated[index] = { ...current, status: "error", error: err?.message || "Rotire eșuată" };
+      setItems([...updated]);
+      toast({
+        title: "Rotire eșuată",
+        description: err?.message || "Nu s-a putut roti imaginea",
+        variant: "destructive",
+      });
+    }
+  }, [items, autoWebp, quality]);
+
+
   // Sync with parent
   const syncImages = (updatedItems: ImageItem[]) => {
     const normalizedItems = updatedItems.map((item) => ({
