@@ -738,6 +738,7 @@ const BlogArticlePage = () => {
                 {...({ fetchpriority: "high" } as Record<string, string>)}
                 sizes="(max-width: 768px) 100vw, 800px"
                 className="w-full h-full object-cover"
+                onError={handleBlogImageError}
               />
             </div>
           )}
