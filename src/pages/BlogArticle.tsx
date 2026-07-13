@@ -522,6 +522,7 @@ const BlogArticlePage = () => {
                   decoding="async"
                   sizes="(max-width: 768px) 100vw, 800px"
                   className="w-full h-full object-cover blur-sm"
+                  onError={handleBlogImageError}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
               </div>
