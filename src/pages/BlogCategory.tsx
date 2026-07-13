@@ -76,8 +76,6 @@ const BlogCategory = () => {
     placeholderData: keepPreviousData,
   });
 
-  if (!meta) return <Navigate to="/blog" replace />;
-
   const total = articles?.length ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -85,6 +83,8 @@ const BlogCategory = () => {
     () => (articles ?? []).slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
     [articles, safePage]
   );
+
+  if (!meta) return <Navigate to="/blog" replace />;
 
   const goToPage = (n: number) => {
     const next = new URLSearchParams(searchParams);

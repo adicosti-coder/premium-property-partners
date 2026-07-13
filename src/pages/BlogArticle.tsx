@@ -348,6 +348,32 @@ const BlogArticlePage = () => {
 
   const t = translations[language] || translations.ro;
   const articleUrl = typeof window !== "undefined" ? window.location.href : "";
+  const displayTitle = article ? (language === 'en' && article.title_en ? article.title_en : article.title) : "";
+  const displayExcerpt = article ? (language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt) : "";
+  const rawContent = article ? (language === 'en' && article.content_en ? article.content_en : article.content) : "";
+  // Enhance internal anchors: ensure title attr (SEO/a11y) + force same-page nav for /internal links.
+  // This hook must run before any early return; otherwise articles crash after the loading state.
+  const displayContent = useMemo(() => {
+    if (!rawContent) return "";
+    return rawContent.replace(/<a\s+([^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
+      const hrefMatch = attrs.match(/href=["']([^"']+)["']/i);
+      const href = hrefMatch?.[1] ?? "";
+      const isInternal = href.startsWith("/") || href.startsWith("#") || href.includes("realtrust.ro");
+      let newAttrs = attrs;
+      // Strip target=_blank for internal links so the user keeps the navigation flow
+      if (isInternal) {
+        newAttrs = newAttrs.replace(/\s*target=["'][^"']*["']/gi, "").replace(/\s*rel=["'][^"']*["']/gi, "");
+      }
+      // Add title attribute if missing — use link text content
+      if (!/\stitle=/i.test(newAttrs)) {
+        const plainText = inner.replace(/<[^>]+>/g, "").replace(/"/g, "&quot;").trim().slice(0, 120);
+        if (plainText) newAttrs += ` title="${plainText}"`;
+      }
+      return `<a ${newAttrs.trim()}>${inner}</a>`;
+    });
+  }, [rawContent]);
+  const readingTime = Math.max(1, Math.ceil(displayContent.length / 1000));
+  const coverImage = article ? getBlogCoverImage(article.slug, article.cover_image) : null;
 
   // Check if this is a premium article that requires auth
   const isPremiumLocked = article?.is_premium && !user;
@@ -448,32 +474,6 @@ const BlogArticlePage = () => {
     );
   }
 
-  const displayTitle = language === 'en' && article.title_en ? article.title_en : article.title;
-  const displayExcerpt = language === 'en' && article.excerpt_en ? article.excerpt_en : article.excerpt;
-  const rawContent = language === 'en' && article.content_en ? article.content_en : article.content;
-  // Enhance internal anchors: ensure title attr (SEO/a11y) + force same-page nav for /internal links.
-  const displayContent = useMemo(() => {
-    if (!rawContent) return rawContent;
-    return rawContent.replace(/<a\s+([^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
-      const hrefMatch = attrs.match(/href=["']([^"']+)["']/i);
-      const href = hrefMatch?.[1] ?? "";
-      const isInternal = href.startsWith("/") || href.startsWith("#") || href.includes("realtrust.ro");
-      let newAttrs = attrs;
-      // Strip target=_blank for internal links so the user keeps the navigation flow
-      if (isInternal) {
-        newAttrs = newAttrs.replace(/\s*target=["'][^"']*["']/gi, "").replace(/\s*rel=["'][^"']*["']/gi, "");
-      }
-      // Add title attribute if missing — use link text content
-      if (!/\stitle=/i.test(newAttrs)) {
-        const plainText = inner.replace(/<[^>]+>/g, "").replace(/"/g, "&quot;").trim().slice(0, 120);
-        if (plainText) newAttrs += ` title="${plainText}"`;
-      }
-      return `<a ${newAttrs.trim()}>${inner}</a>`;
-    });
-  }, [rawContent]);
-  const readingTime = Math.ceil(displayContent.length / 1000);
-  const coverImage = getBlogCoverImage(article.slug, article.cover_image);
-
   // Premium locked state - show teaser
   if (isPremiumLocked) {
     return (
@@ -542,11 +542,13 @@ const BlogArticlePage = () => {
               </CardContent>
             </Card>
 
-            <RelatedArticles 
-              currentArticleId={article.id}
-              category={article.category}
-              tags={article.tags}
-            />
+            <Suspense fallback={null}>
+              <RelatedArticles 
+                currentArticleId={article.id}
+                category={article.category}
+                tags={article.tags}
+              />
+            </Suspense>
         </article>
       </main>
       <Footer />

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Fragment } from "react";
 import { Home } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import {
@@ -66,18 +67,20 @@ const PageBreadcrumb = ({ items, className = "" }: PageBreadcrumbProps) => {
           </BreadcrumbItem>
           
           {items.map((item, index) => (
-            <BreadcrumbItem key={index}>
+            <Fragment key={index}>
               <BreadcrumbSeparator />
-              {item.href ? (
-                <BreadcrumbLink asChild>
-                  <Link to={item.href} className="hover:text-primary transition-colors">
-                    {item.label}
-                  </Link>
-                </BreadcrumbLink>
-              ) : (
-                <BreadcrumbPage>{item.label}</BreadcrumbPage>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {item.href ? (
+                  <BreadcrumbLink asChild>
+                    <Link to={item.href} className="hover:text-primary transition-colors">
+                      {item.label}
+                    </Link>
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
           ))}
         </BreadcrumbList>
       </Breadcrumb>
