@@ -95,7 +95,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "email-campaigns", label: "Email Marketing", icon: Megaphone },
       { value: "newsletter", label: "Newsletter", icon: Mail },
       { value: "discount-codes", label: "Coduri Promo", icon: Euro },
-      { value: "blog", label: "Blog", icon: FileText },
+      { value: "blog", label: "Blog Manager", icon: FileText, keywords: ["blog", "manager", "articole", "articles", "posts", "content"] },
       { value: "community", label: "Comunitate", icon: PenLine },
       { value: "guest-guides", label: "Portal Oaspeți", icon: BookOpen },
       { value: "local-tips", label: "Sfaturi Locale", icon: Lightbulb },
