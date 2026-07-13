@@ -20,6 +20,7 @@ interface Row {
   title_en: string | null;
   excerpt_en: string | null;
   content_en: string | null;
+  translation_locked: boolean | null;
 }
 
 async function translate(
@@ -90,16 +91,17 @@ serve(async (req: Request) => {
     const includeContent = body.includeContent === true;
 
     // Select articles missing English translation (title_en OR excerpt_en null/empty)
+    // and NOT translation_locked (manual edits are protected)
     let query = supabase
       .from("blog_articles")
-      .select("id,title,excerpt,content,title_en,excerpt_en,content_en")
+      .select("id,title,excerpt,content,title_en,excerpt_en,content_en,translation_locked")
       .eq("is_published", true)
       .limit(limit);
 
     if (body.articleId) {
       query = query.eq("id", body.articleId);
     } else {
-      query = query.or("title_en.is.null,excerpt_en.is.null");
+      query = query.or("title_en.is.null,excerpt_en.is.null").eq("translation_locked", false);
     }
 
     const { data: rows, error } = await query;
