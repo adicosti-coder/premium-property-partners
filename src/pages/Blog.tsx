@@ -515,8 +515,22 @@ const Blog = () => {
             </div>
           </div>
 
+          {/* Subtle notice while background translation is running */}
+          {isBackgroundTranslating && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mb-4 flex items-center gap-2 text-xs text-muted-foreground animate-pulse"
+            >
+              <span className="inline-block w-2 h-2 rounded-full bg-primary/60" />
+              {language === "en"
+                ? "Translating articles to English…"
+                : "Se traduc articolele în engleză…"}
+            </div>
+          )}
+
           {/* Articles Grid */}
-          {isLoading ? (
+          {isLoading || isBackgroundTranslating ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <BlogCardSkeleton key={i} />
