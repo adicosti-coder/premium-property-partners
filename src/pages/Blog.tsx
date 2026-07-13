@@ -64,6 +64,7 @@ const Blog = () => {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 9;
   const [user, setUser] = useState<User | null>(null);
+  const [isBackgroundTranslating, setIsBackgroundTranslating] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -138,6 +139,7 @@ const Blog = () => {
     const flagKey = "blog-en-translated-batch";
     if (typeof window !== "undefined" && sessionStorage.getItem(flagKey)) return;
     if (typeof window !== "undefined") sessionStorage.setItem(flagKey, "1");
+    setIsBackgroundTranslating(true);
     supabase.functions
       .invoke("translate-blog-articles", { body: { limit: Math.min(missing.length, 20) } })
       .then((res) => {
@@ -147,6 +149,9 @@ const Blog = () => {
       })
       .catch(() => {
         // silent — best-effort
+      })
+      .finally(() => {
+        setIsBackgroundTranslating(false);
       });
   }, [language, articles, queryClient]);
 
@@ -510,8 +515,22 @@ const Blog = () => {
             </div>
           </div>
 
+          {/* Subtle notice while background translation is running */}
+          {isBackgroundTranslating && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mb-4 flex items-center gap-2 text-xs text-muted-foreground animate-pulse"
+            >
+              <span className="inline-block w-2 h-2 rounded-full bg-primary/60" />
+              {language === "en"
+                ? "Translating articles to English…"
+                : "Se traduc articolele în engleză…"}
+            </div>
+          )}
+
           {/* Articles Grid */}
-          {isLoading ? (
+          {isLoading || isBackgroundTranslating ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <BlogCardSkeleton key={i} />

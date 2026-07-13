@@ -84,6 +84,7 @@ const BlogManager = () => {
   const [deleteArticle, setDeleteArticle] = useState<BlogArticle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isBulkTranslating, setIsBulkTranslating] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"ro" | "en">("ro");
 
@@ -152,6 +153,10 @@ const BlogManager = () => {
       translating: "Se traduce...",
       translateSuccess: "Articol tradus cu succes!",
       translateError: "Eroare la traducere. Încearcă din nou.",
+      translateAllMissing: "Traduce toate lipsă (EN)",
+      translatingAllMissing: "Se traduc articolele...",
+      translateAllSuccess: (n: number) => `${n} articole procesate.`,
+      translateAllNothing: "Toate articolele au deja traducere EN.",
     },
     en: {
       title: "Blog Manager",
@@ -201,6 +206,10 @@ const BlogManager = () => {
       translating: "Translating...",
       translateSuccess: "Article translated successfully!",
       translateError: "Translation error. Please try again.",
+      translateAllMissing: "Translate all missing (EN)",
+      translatingAllMissing: "Translating articles...",
+      translateAllSuccess: (n: number) => `${n} articles processed.`,
+      translateAllNothing: "All articles already have EN translations.",
     },
   };
 
@@ -450,18 +459,55 @@ const BlogManager = () => {
     return !!(article.title_en && article.excerpt_en && article.content_en);
   };
 
+  const handleTranslateAllMissing = async () => {
+    const missing = articles.filter((a) => !a.title_en || !a.excerpt_en || !a.content_en);
+    if (missing.length === 0) {
+      toast({ title: t.translateAllNothing });
+      return;
+    }
+    setIsBulkTranslating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-blog-articles", {
+        body: { limit: Math.min(missing.length, 25), includeContent: true },
+      });
+      if (error) throw error;
+      const processed = (data as { processed?: number })?.processed ?? 0;
+      toast({ title: t.translateAllSuccess(processed) });
+      await fetchArticles();
+    } catch (err) {
+      console.error("Bulk translate error:", err);
+      toast({ title: t.translateError, variant: "destructive" });
+    } finally {
+      setIsBulkTranslating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
           {t.title}
         </h2>
-        <Button onClick={() => openDialog()}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t.addArticle}
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={handleTranslateAllMissing}
+            disabled={isBulkTranslating || isLoading}
+          >
+            {isBulkTranslating ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Languages className="w-4 h-4 mr-2" />
+            )}
+            {isBulkTranslating ? t.translatingAllMissing : t.translateAllMissing}
+          </Button>
+          <Button onClick={() => openDialog()}>
+            <Plus className="w-4 h-4 mr-2" />
+            {t.addArticle}
+          </Button>
+        </div>
       </div>
 
       {/* Articles Table */}
