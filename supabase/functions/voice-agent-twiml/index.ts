@@ -692,6 +692,19 @@ serve(async (req) => {
 
     if (!sessionId) return xmlResponse(ROMANIAN_SAFE_ERROR_XML);
 
+    // ── Auth: require HMAC signature of sessionId as query param `sig`.
+    // This replaces the (unreliable) Twilio HMAC soft-check as the real gate:
+    // a leaked sessionId alone can no longer be used to POST forged
+    // SpeechResult / AnsweredBy payloads and corrupt call state.
+    const providedSig = url.searchParams.get("sig");
+    const sigOk = await verifySessionSig(sessionId, providedSig);
+    if (!sigOk) {
+      console.warn("[voice-twiml] rejected: missing/invalid sig", { sessionId, hasSig: !!providedSig });
+      return xmlResponse(ROMANIAN_SAFE_ERROR_XML, 403);
+    }
+    const sig = providedSig!;
+    const sigQs = `&sig=${encodeURIComponent(sig)}`;
+
     // ⚡ FAST-PATH TURN 0/1/2: returnăm IMEDIAT audio cached, fără AI/KB.
     // Greeting (turn 0) e deterministic; turn 1-2 folosesc quick replies regex.
     // Target: total_handler_ms < 800ms (TTL cache permanent → instant pe hit).
