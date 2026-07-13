@@ -1384,7 +1384,7 @@ serve(async (req) => {
       return xmlResponse(`<Response>${speakXml(aiReply, audioUrl)}<Hangup/></Response>`);
     }
 
-    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}`${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
+    const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${turn + 1}${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
     // Put audio INSIDE <Gather> so the user can barge-in (interrupt).
     // No <Redirect> needed because actionOnEmptyResult=true on the <Gather>.
     return xmlResponse(
