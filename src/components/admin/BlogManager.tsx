@@ -206,6 +206,10 @@ const BlogManager = () => {
       translating: "Translating...",
       translateSuccess: "Article translated successfully!",
       translateError: "Translation error. Please try again.",
+      translateAllMissing: "Translate all missing (EN)",
+      translatingAllMissing: "Translating articles...",
+      translateAllSuccess: (n: number) => `${n} articles processed.`,
+      translateAllNothing: "All articles already have EN translations.",
     },
   };
 
