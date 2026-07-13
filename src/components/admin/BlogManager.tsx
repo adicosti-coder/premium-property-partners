@@ -71,6 +71,7 @@ interface BlogArticle {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  translation_locked: boolean;
 }
 
 const BlogManager = () => {
@@ -85,6 +86,9 @@ const BlogManager = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isBulkTranslating, setIsBulkTranslating] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+  const [translationFailures, setTranslationFailures] = useState<Record<string, string>>({});
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"ro" | "en">("ro");
 
@@ -102,6 +106,7 @@ const BlogManager = () => {
     author_name: "RealTrust",
     is_published: false,
     is_premium: false,
+    translation_locked: false,
   });
 
   const translations = {
