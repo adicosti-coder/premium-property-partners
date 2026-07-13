@@ -142,23 +142,25 @@ const BlogArticlePage = () => {
       if (error) {
         // Report 4xx-style access failures (permission denied, JWT expired, RLS)
         // so a regression in Data-API grants shows up in monitoring instead of a
-        // silent blank article page.
+        // silent blank article page. `reportError` returns a Correlation ID we
+        // surface in the UI so users can quote it in support tickets.
         const msg = (error as { message?: string }).message ?? "";
         const code = (error as { code?: string }).code ?? "";
         const isAccessDenied =
           /permission denied|JWT|401|403|not authorized/i.test(msg) ||
           code === "42501" ||
           code === "PGRST301";
-        void import("@/lib/errorReporting").then(({ reportError }) =>
-          reportError(error, {
-            scope: "blog_article_fetch",
-            meta: { slug, code, isAccessDenied },
-          }),
-        );
+        const { reportError } = await import("@/lib/errorReporting");
+        const correlationId = reportError(error, {
+          scope: "blog_article_fetch",
+          meta: { slug, code, isAccessDenied },
+        });
         const err = new Error(msg || "Failed to load article") as Error & {
           isAccessDenied?: boolean;
+          correlationId?: string;
         };
         err.isAccessDenied = isAccessDenied;
+        err.correlationId = correlationId;
         throw err;
       }
       return data as BlogArticle | null;
@@ -350,6 +352,24 @@ const BlogArticlePage = () => {
   // Check if this is a premium article that requires auth
   const isPremiumLocked = article?.is_premium && !user;
 
+  // Distinguish access-denied (401/403/RLS) from plain "not found" so the
+  // user gets a clear, actionable screen instead of a generic empty state.
+  const accessDenied = (error as { isAccessDenied?: boolean } | null)?.isAccessDenied === true;
+  const correlationId = (error as { correlationId?: string } | null)?.correlationId;
+
+  // Fire an anonymous analytics event (no PII) whenever a public 4xx screen
+  // appears, so we can correlate technical errors with conversion impact.
+  useEffect(() => {
+    if (!accessDenied) return;
+    if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+    window.gtag("event", "public_page_error", {
+      error_scope: "blog_article_fetch",
+      error_kind: "access_denied",
+      slug: slug ?? "",
+      correlation_id: correlationId ?? "",
+    });
+  }, [accessDenied, correlationId, slug]);
+
   if (isLoading || isCheckingAuth) {
     return (
       <div className="min-h-screen bg-background">
@@ -370,9 +390,6 @@ const BlogArticlePage = () => {
     );
   }
 
-  // Distinguish access-denied (401/403/RLS) from plain "not found" so the
-  // user gets a clear, actionable screen instead of a generic empty state.
-  const accessDenied = (error as { isAccessDenied?: boolean } | null)?.isAccessDenied === true;
   if (accessDenied) {
     return (
       <div className="min-h-screen bg-background">
@@ -395,6 +412,11 @@ const BlogArticlePage = () => {
                 {t.goToBlog}
               </Button>
             </div>
+            {correlationId && (
+              <p className="mt-6 text-xs text-muted-foreground/70 font-mono">
+                {language === "en" ? "Reference code:" : "Cod referință:"} {correlationId}
+              </p>
+            )}
           </div>
         </main>
         <Footer />

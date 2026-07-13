@@ -59,6 +59,7 @@ const loaders: Record<string, Loader> = {
   "investment-analysis": () => import("@/components/admin/InvestmentAnalysisManager"),
   "ai-security": () => import("@/components/admin/AISecurityPanel"),
   "seo-guide-generator": () => import("@/components/admin/SeoGuideGenerator"),
+  "blog-error-feed": () => import("@/components/admin/BlogErrorFeed"),
 };
 
 const cache = new Map<string, LazyExoticComponent<ComponentType<unknown>>>();

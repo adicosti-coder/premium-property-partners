@@ -115,6 +115,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "ai-security", label: "Securitate AI", icon: ShieldCheck, keywords: ["ai", "openrouter", "scan", "tokens", "permissions"] },
       { value: "system-health", label: "System Health", icon: Activity, keywords: ["audit", "cron", "monitor", "health", "alerts"] },
       { value: "automation", label: "Automation", icon: Sparkles, keywords: ["automation", "automatizare", "kill switch", "joburi", "approvals"] },
+      { value: "blog-error-feed", label: "Erori Frontend", icon: ShieldCheck, keywords: ["errors", "erori", "blog", "401", "403", "correlation"] },
     ],
   },
 ];
