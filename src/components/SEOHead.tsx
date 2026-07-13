@@ -59,7 +59,7 @@ const generateArticleJsonLd = (
   "@type": "Article",
   "headline": title,
   "description": description,
-  "image": absoluteImage,
+  "image": image,
   "url": url,
   "datePublished": publishedTime,
   "author": {
@@ -95,7 +95,7 @@ const generateProductJsonLd = (
   "@type": "LodgingBusiness",
   "name": name,
   "description": description,
-  "image": absoluteImage,
+  "image": image,
   "url": url,
   "address": {
     "@type": "PostalAddress",
@@ -312,7 +312,7 @@ const SEOHead = ({
         generateArticleJsonLd(
           finalTitle,
           finalDescription,
-          image,
+          absoluteImage,
           finalUrl,
           publishedTime,
           author,
@@ -328,7 +328,7 @@ const SEOHead = ({
         generateProductJsonLd(
           finalTitle,
           finalDescription,
-          image,
+          absoluteImage,
           finalUrl,
           productPrice,
           productCurrency,
