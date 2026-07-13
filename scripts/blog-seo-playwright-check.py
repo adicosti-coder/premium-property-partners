@@ -31,7 +31,7 @@ BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080")
 SLUGS = [
     "top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti",
     "ghid-turistic-timisoara-atractii-activitati",
-    "analiza-roi-apartamente-timisoara-2026",
+    "taxa-hoteliera-locala-timisoara-2026",
 ]
 
 
