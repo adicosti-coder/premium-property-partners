@@ -133,6 +133,22 @@ describe("RLS regression — anonymous access is denied", () => {
     }
   });
 
+  // Regression guard: on 2026-07-13 a migration accidentally dropped the anon
+  // SELECT grant on `blog_articles`, which returned 401 on every /blog/:slug
+  // page. This test locks in that the public blog stays reachable.
+  describe("blog_articles — anon MUST be able to read published rows", () => {
+    it("anon SELECT on published articles succeeds without error", async () => {
+      if (!online) return;
+      const { data, error } = await anon
+        .from("blog_articles")
+        .select("id, slug, title, is_published")
+        .eq("is_published", true)
+        .limit(1);
+      expect(error).toBeNull();
+      expect(Array.isArray(data)).toBe(true);
+    });
+  });
+
   // Test 10 — SEO integrity: anon cannot tamper with GSC indexing columns
   describe("indexing_status integrity", () => {
     it("anon cannot UPDATE indexing_status on prospect_listings via REST", async () => {
