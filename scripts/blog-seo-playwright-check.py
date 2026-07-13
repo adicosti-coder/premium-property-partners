@@ -197,10 +197,154 @@ async def main() -> int:
         "fail": sum(1 for r in report["results"] if r["status"] == "fail"),
     }
     Path(REPORT_PATH).parent.mkdir(parents=True, exist_ok=True)
+
+    # Diff against the previous JSON report (if any) BEFORE overwriting it.
+    prev_report = None
+    if Path(REPORT_PATH).exists():
+        try:
+            prev_report = json.loads(Path(REPORT_PATH).read_text(encoding="utf-8"))
+        except Exception:
+            prev_report = None
+    diff = compute_diff(prev_report, report)
+    report["diff"] = diff
+    print_diff(diff)
+
     Path(REPORT_PATH).write_text(json.dumps(report, indent=2), encoding="utf-8")
+    html_path = Path(REPORT_PATH).with_suffix(".html")
+    html_path.write_text(render_html_report(report, diff), encoding="utf-8")
+
     print(f"\nRegression report → {REPORT_PATH}")
+    print(f"HTML report       → {html_path}")
     print(f"Summary: {report['summary']}")
     return exit_code
+
+
+def _key(r: dict) -> str:
+    return f"{r['slug']}::{r['lang']}"
+
+
+def compute_diff(prev: dict | None, curr: dict) -> dict:
+    """Compare failure sets per (slug, lang) between runs."""
+    prev_map = {_key(r): set(r.get("failures") or []) for r in (prev or {}).get("results", [])}
+    curr_map = {_key(r): set(r.get("failures") or []) for r in curr.get("results", [])}
+    new_regressions: list[dict] = []   # was passing / absent, now failing
+    fixed: list[dict] = []             # was failing, now passing / absent
+    changed: list[dict] = []           # both failing, but failure set differs
+    for k, cur_fails in curr_map.items():
+        prev_fails = prev_map.get(k, set())
+        if cur_fails and not prev_fails:
+            new_regressions.append({"key": k, "added": sorted(cur_fails)})
+        elif not cur_fails and prev_fails:
+            fixed.append({"key": k, "removed": sorted(prev_fails)})
+        elif cur_fails != prev_fails:
+            added = sorted(cur_fails - prev_fails)
+            removed = sorted(prev_fails - cur_fails)
+            if added or removed:
+                changed.append({"key": k, "added": added, "removed": removed})
+    for k, prev_fails in prev_map.items():
+        if k not in curr_map and prev_fails:
+            fixed.append({"key": k, "removed": sorted(prev_fails)})
+    return {
+        "hadPrevious": prev is not None,
+        "newRegressions": new_regressions,
+        "fixed": fixed,
+        "changed": changed,
+    }
+
+
+def print_diff(diff: dict) -> None:
+    if not diff["hadPrevious"]:
+        print("\n[diff] no previous report — baseline established.")
+        return
+    print("\n[diff] vs previous run:")
+    if not (diff["newRegressions"] or diff["fixed"] or diff["changed"]):
+        print("   no changes.")
+        return
+    for r in diff["newRegressions"]:
+        print(f"   REGRESSION  {r['key']}")
+        for f in r["added"]:
+            print(f"      + {f}")
+    for r in diff["changed"]:
+        print(f"   CHANGED     {r['key']}")
+        for f in r.get("added", []):
+            print(f"      + {f}")
+        for f in r.get("removed", []):
+            print(f"      - {f}")
+    for r in diff["fixed"]:
+        print(f"   FIXED       {r['key']}")
+
+
+def _esc(s: str) -> str:
+    return (
+        s.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
+
+def render_html_report(report: dict, diff: dict) -> str:
+    s = report["summary"]
+    rows = []
+    for r in report["results"]:
+        color = "#16a34a" if r["status"] == "pass" else "#dc2626"
+        icon = "✅" if r["status"] == "pass" else "❌"
+        fails = (
+            "<ul style='margin:4px 0 0 18px;padding:0;color:#dc2626;'>"
+            + "".join(f"<li><code>{_esc(f)}</code></li>" for f in r["failures"])
+            + "</ul>"
+            if r["failures"]
+            else "<span style='color:#16a34a;'>OK</span>"
+        )
+        rows.append(
+            f"<tr>"
+            f"<td style='padding:8px;border-bottom:1px solid #eee;color:{color};font-weight:600;'>{icon} {r['status']}</td>"
+            f"<td style='padding:8px;border-bottom:1px solid #eee;font-family:monospace;'>{_esc(r['slug'])}</td>"
+            f"<td style='padding:8px;border-bottom:1px solid #eee;'>{r['lang']}</td>"
+            f"<td style='padding:8px;border-bottom:1px solid #eee;'>{fails}</td>"
+            f"</tr>"
+        )
+    diff_html = ""
+    if diff["hadPrevious"]:
+        parts = []
+        if diff["newRegressions"]:
+            parts.append("<h3 style='color:#dc2626;margin:12px 0 4px;'>New regressions</h3><ul>" +
+                         "".join(f"<li><b>{_esc(r['key'])}</b><ul>" +
+                                 "".join(f"<li style='color:#dc2626;'>+ <code>{_esc(f)}</code></li>" for f in r['added']) +
+                                 "</ul></li>" for r in diff["newRegressions"]) + "</ul>")
+        if diff["changed"]:
+            parts.append("<h3 style='color:#d97706;margin:12px 0 4px;'>Changed</h3><ul>" +
+                         "".join(f"<li><b>{_esc(r['key'])}</b><ul>" +
+                                 "".join(f"<li style='color:#dc2626;'>+ <code>{_esc(f)}</code></li>" for f in r.get('added', [])) +
+                                 "".join(f"<li style='color:#16a34a;'>− <code>{_esc(f)}</code></li>" for f in r.get('removed', [])) +
+                                 "</ul></li>" for r in diff["changed"]) + "</ul>")
+        if diff["fixed"]:
+            parts.append("<h3 style='color:#16a34a;margin:12px 0 4px;'>Fixed since last run</h3><ul>" +
+                         "".join(f"<li><b>{_esc(r['key'])}</b></li>" for r in diff["fixed"]) + "</ul>")
+        if not parts:
+            parts.append("<p style='color:#16a34a;'>No changes vs previous run.</p>")
+        diff_html = "<section style='margin-top:24px;'><h2>Diff vs previous run</h2>" + "".join(parts) + "</section>"
+    else:
+        diff_html = "<section style='margin-top:24px;color:#6b7280;'>No previous report — baseline established.</section>"
+
+    banner_color = "#16a34a" if s["fail"] == 0 else "#dc2626"
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Blog SEO regression report</title></head>
+<body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:1100px;margin:24px auto;padding:0 16px;color:#111;">
+  <h1 style="margin:0 0 4px;">Blog SEO regression report</h1>
+  <p style="color:#6b7280;margin:0 0 16px;">Generated {report['generatedAt']} · Base: <code>{_esc(report['baseUrl'])}</code></p>
+  <div style="padding:12px 16px;border-radius:8px;background:{banner_color};color:white;font-weight:600;">
+    {s['pass']} pass · {s['fail']} fail · {s['total']} total ({report['slugCount']} slugs × langs)
+  </div>
+  <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;">
+    <thead><tr style="background:#f9fafb;text-align:left;">
+      <th style="padding:8px;">Status</th><th style="padding:8px;">Slug</th><th style="padding:8px;">Lang</th><th style="padding:8px;">Details</th>
+    </tr></thead>
+    <tbody>{''.join(rows)}</tbody>
+  </table>
+  {diff_html}
+</body></html>"""
+
 
 
 if __name__ == "__main__":
