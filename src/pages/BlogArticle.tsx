@@ -397,6 +397,33 @@ const BlogArticlePage = () => {
   const readingTime = Math.max(1, Math.ceil(displayContent.length / 1000));
   const coverImage = article ? getBlogCoverImage(article.slug, article.cover_image) : null;
 
+  // Auto-extract Q&A pairs from article body — any <h2>/<h3>/<h4> ending
+  // with "?" becomes a Question, with the following <p>/<li> block as the
+  // Answer. Registered items enrich the centralized FAQPage JSON-LD so
+  // legislative/administrative articles earn Rich Snippets automatically.
+  const extractedFaqs = useMemo(() => {
+    if (!displayContent) return [] as { question: string; answer: string }[];
+    const stripTags = (s: string) => s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const out: { question: string; answer: string }[] = [];
+    const regex = /<(h[234])[^>]*>([\s\S]*?)<\/\1>([\s\S]*?)(?=<h[234]\b|$)/gi;
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(displayContent)) !== null) {
+      const question = stripTags(m[2]);
+      if (!question.endsWith("?") || question.length < 8 || question.length > 300) continue;
+      const answerRaw = m[3] || "";
+      const firstBlock = answerRaw.match(/<(p|ul|ol)[^>]*>[\s\S]*?<\/\1>/i);
+      const answer = stripTags(firstBlock ? firstBlock[0] : answerRaw).slice(0, 800);
+      if (answer.length < 20) continue;
+      out.push({ question, answer });
+      if (out.length >= 12) break;
+    }
+    return out;
+  }, [displayContent]);
+  useRegisterFAQs(
+    article ? `blog-article-${article.slug}` : "blog-article-empty",
+    extractedFaqs
+  );
+
   // Check if this is a premium article that requires auth
   const isPremiumLocked = article?.is_premium && !user;
 
