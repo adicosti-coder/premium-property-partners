@@ -322,6 +322,10 @@ const BlogArticlePage = () => {
       premiumDescription: "Acest articol este rezervat membrilor noștri. Autentifică-te pentru a citi conținutul complet.",
       loginToRead: "Autentifică-te pentru a citi",
       premiumBadge: "Premium",
+      accessDeniedTitle: "Articol indisponibil momentan",
+      accessDeniedDescription:
+        "Nu am putut încărca acest articol din cauza unei erori de acces. Reîncearcă sau revino la lista completă de articole.",
+      retry: "Reîncearcă",
     },
     en: {
       backToBlog: "Back to Blog",
@@ -333,6 +337,10 @@ const BlogArticlePage = () => {
       premiumDescription: "This article is reserved for our members. Login to read the full content.",
       loginToRead: "Login to read",
       premiumBadge: "Premium",
+      accessDeniedTitle: "Article temporarily unavailable",
+      accessDeniedDescription:
+        "We couldn't load this article due to an access error. Please retry or head back to the full blog.",
+      retry: "Retry",
     },
   };
 
@@ -355,6 +363,38 @@ const BlogArticlePage = () => {
             <Skeleton className="h-4 w-full mb-2" />
             <Skeleton className="h-4 w-full mb-2" />
             <Skeleton className="h-4 w-3/4" />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Distinguish access-denied (401/403/RLS) from plain "not found" so the
+  // user gets a clear, actionable screen instead of a generic empty state.
+  const accessDenied = (error as { isAccessDenied?: boolean } | null)?.isAccessDenied === true;
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-6 text-center max-w-xl">
+            <Lock className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              {t.accessDeniedTitle}
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              {t.accessDeniedDescription}
+            </p>
+            <div className="flex gap-3 justify-center flex-wrap">
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                {t.retry}
+              </Button>
+              <Button onClick={() => navigate("/blog")}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {t.goToBlog}
+              </Button>
+            </div>
           </div>
         </main>
         <Footer />
