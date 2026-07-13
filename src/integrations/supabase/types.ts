@@ -699,6 +699,7 @@ export type Database = {
           tags: string[]
           title: string
           title_en: string | null
+          translation_locked: boolean
           updated_at: string
           view_count: number
         }
@@ -723,6 +724,7 @@ export type Database = {
           tags?: string[]
           title: string
           title_en?: string | null
+          translation_locked?: boolean
           updated_at?: string
           view_count?: number
         }
@@ -747,6 +749,7 @@ export type Database = {
           tags?: string[]
           title?: string
           title_en?: string | null
+          translation_locked?: boolean
           updated_at?: string
           view_count?: number
         }
