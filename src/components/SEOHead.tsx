@@ -59,7 +59,7 @@ const generateArticleJsonLd = (
   "@type": "Article",
   "headline": title,
   "description": description,
-  "image": image,
+  "image": absoluteImage,
   "url": url,
   "datePublished": publishedTime,
   "author": {
@@ -95,7 +95,7 @@ const generateProductJsonLd = (
   "@type": "LodgingBusiness",
   "name": name,
   "description": description,
-  "image": image,
+  "image": absoluteImage,
   "url": url,
   "address": {
     "@type": "PostalAddress",
@@ -273,7 +273,7 @@ const SEOHead = ({
     "@type": "LocalBusiness",
     "@id": `${BASE_URL}/#localbusiness`,
     "name": `${BRAND.name} Timișoara`,
-    "image": image,
+    "image": absoluteImage,
     "description": finalDescription,
     "url": BASE_URL,
     "telephone": BRAND.telephone,
@@ -411,7 +411,7 @@ const SEOHead = ({
       <meta property="og:url" content={finalUrl} />
       <meta property="og:title" content={finalTitle} />
       <meta property="og:description" content={finalDescription} />
-      <meta property="og:image" content={image} />
+      <meta property="og:image" content={absoluteImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={imageAlt || finalTitle} />
@@ -424,7 +424,7 @@ const SEOHead = ({
       <meta name="twitter:url" content={finalUrl} />
       <meta name="twitter:title" content={finalTitle} />
       <meta name="twitter:description" content={finalDescription} />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:image" content={absoluteImage} />
       <meta name="twitter:image:alt" content={imageAlt || finalTitle} />
       
       {/* Article specific */}
