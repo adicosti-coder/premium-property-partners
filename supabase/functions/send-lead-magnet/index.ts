@@ -24,10 +24,16 @@ serve(async (req) => {
 
     console.log("Lead magnet request received:", { name, email, source, language });
 
-    // Validate required fields
-    if (!name || !email) {
+    // Validate required fields + email format/length to prevent flooding
+    // the newsletter_subscribers table with unverified/malformed addresses.
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (
+      !name || typeof name !== "string" || name.length > 200 ||
+      !email || typeof email !== "string" || email.length > 255 ||
+      !emailRegex.test(email.trim())
+    ) {
       return new Response(
-        JSON.stringify({ error: "Name and email are required" }),
+        JSON.stringify({ error: "Valid name and email are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
