@@ -108,11 +108,19 @@ serve(async (req: Request) => {
       <image:title>${escapeXml(a.title)}</image:title>
     </image:image>`;
       }
+      const articleLoc = `${BASE_URL}/blog/${a.slug}`;
+      // RO + EN both resolve to the same client-side URL (language is app state,
+      // not a URL segment). Declare xhtml:link hreflang alternates so Google
+      // indexes both language variants against the shared canonical.
+      const hreflangTags = `
+    <xhtml:link rel="alternate" hreflang="ro-RO" href="${articleLoc}"/>
+    <xhtml:link rel="alternate" hreflang="en-US" href="${articleLoc}"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${articleLoc}"/>`;
       xml += `  <url>
-    <loc>${BASE_URL}/blog/${a.slug}</loc>
+    <loc>${articleLoc}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>${imageTag}
+    <priority>0.7</priority>${hreflangTags}${imageTag}
   </url>
 `;
     }
