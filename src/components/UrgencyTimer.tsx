@@ -12,8 +12,9 @@ interface UrgencyTimerProps {
 const UrgencyTimer = ({ endDate, variant = "default", className }: UrgencyTimerProps) => {
   const { language } = useLanguage();
   
-  // Default to end of current month if no date provided
-  const targetDate = endDate || new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59);
+  // Default to end of current month if no date provided. Keep a primitive
+  // timestamp in effect deps so rerenders don't recreate the dependency.
+  const targetTime = endDate?.getTime() ?? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).getTime();
   
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -49,7 +50,7 @@ const UrgencyTimer = ({ endDate, variant = "default", className }: UrgencyTimerP
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = targetDate.getTime() - new Date().getTime();
+      const difference = targetTime - new Date().getTime();
       
       if (difference > 0) {
         setTimeLeft({
@@ -66,7 +67,7 @@ const UrgencyTimer = ({ endDate, variant = "default", className }: UrgencyTimerP
     calculateTimeLeft();
     const timer = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [targetTime]);
 
   const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
   const isUrgent = timeLeft.days < 3;
