@@ -1,46 +1,108 @@
 """
 Blog SEO / a11y regression check.
 
-Runs a headless browser against a local Vite dev server (default
-http://localhost:8080) and validates, for a curated set of blog article
-slugs, that each article page emits:
+Validates, for a set of blog article slugs, that each article page emits:
 
-  1. FAQPage JSON-LD (at least 3 questions).
-  2. BreadcrumbList JSON-LD with 3 items ending in the article title.
-  3. BlogPosting JSON-LD with a non-empty image URL.
-  4. A canonical <link> stripped of tracking params (utm_*, fbclid, gclid, ?lang).
+  1. FAQPage JSON-LD (>= 3 questions).
+  2. BreadcrumbList JSON-LD with 3 items.
+  3. BlogPosting JSON-LD with a non-empty image (ImageObject preferred).
+  4. Canonical <link> stripped of tracking params (utm_*, fbclid, gclid, ?lang).
   5. hreflang alternates for ro / en / x-default.
   6. Every <img> in the article body carries a non-empty alt attribute.
 
+Runs both RO and EN variants of each slug.
+
 Usage:
     python3 scripts/blog-seo-playwright-check.py
+    SAMPLE=20 python3 scripts/blog-seo-playwright-check.py       # sample 20 slugs
+    SAMPLE=all python3 scripts/blog-seo-playwright-check.py      # all published
+    SLUGS="slug-a,slug-b" python3 scripts/blog-seo-playwright-check.py
     BASE_URL=https://realtrust.ro python3 scripts/blog-seo-playwright-check.py
+    REPORT=/tmp/blog-seo-report.json python3 scripts/blog-seo-playwright-check.py
 
 Exit code 0 = all slugs pass, 1 = at least one failure.
+Writes a JSON regression report at REPORT (default scripts/blog-seo-report.json).
 """
 
 import asyncio
 import json
 import os
+import random
 import sys
+import time
+import urllib.request
+from pathlib import Path
 from playwright.async_api import async_playwright
 
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080")
+REPORT_PATH = os.environ.get(
+    "REPORT",
+    str(Path(__file__).parent / "blog-seo-report.json"),
+)
+SAMPLE = os.environ.get("SAMPLE", "3")  # "3" (default), an int, or "all"
+LANGS = ("ro", "en")
 
-# Public (non-premium) articles that exercise different content shapes.
-SLUGS = [
+# Curated fallback set (used when we can't reach Supabase to enumerate slugs).
+FALLBACK_SLUGS = [
     "top-15-restaurante-din-timisoara-in-2026-ghid-complet-pentru-oaspeti",
     "ghid-turistic-timisoara-atractii-activitati",
     "taxa-hoteliera-locala-timisoara-2026",
 ]
 
+SUPABASE_URL = "https://mvzssjyzbwccioqvhjpo.supabase.co"
+SUPABASE_ANON = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12"
+    "enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4"
+    "cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8"
+)
 
-async def check_article(page, slug: str) -> list[str]:
-    """Return a list of failure messages for the given slug. Empty = pass."""
+
+def fetch_all_slugs() -> list[str]:
+    """Pull every published, non-premium slug from the blog_posts table."""
+    url = (
+        f"{SUPABASE_URL}/rest/v1/blog_posts"
+        "?select=slug&status=eq.published&is_premium=eq.false"
+    )
+    req = urllib.request.Request(
+        url,
+        headers={"apikey": SUPABASE_ANON, "Authorization": f"Bearer {SUPABASE_ANON}"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            rows = json.loads(resp.read().decode("utf-8"))
+        return [r["slug"] for r in rows if r.get("slug")]
+    except Exception as exc:  # noqa: BLE001
+        print(f"[warn] could not fetch slug list from backend: {exc}")
+        return []
+
+
+def pick_slugs() -> list[str]:
+    env_slugs = os.environ.get("SLUGS")
+    if env_slugs:
+        return [s.strip() for s in env_slugs.split(",") if s.strip()]
+
+    all_slugs = fetch_all_slugs() or FALLBACK_SLUGS
+    if SAMPLE.lower() == "all":
+        return all_slugs
+
+    try:
+        n = int(SAMPLE)
+    except ValueError:
+        n = 3
+    n = max(1, min(n, len(all_slugs)))
+    # Seed so the same run is reproducible; different runs still get variety.
+    random.seed(int(time.time()) // 3600)
+    return random.sample(all_slugs, n)
+
+
+async def check_variant(page, slug: str, lang: str) -> list[str]:
     failures: list[str] = []
-    url = f"{BASE_URL}/blog/{slug}?utm_source=ci&fbclid=abc123"
-    await page.goto(url, wait_until="networkidle")
-    # Give Helmet + FAQSchemaProvider a beat to flush.
+    lang_qs = "" if lang == "ro" else "&lang=en"
+    url = f"{BASE_URL}/blog/{slug}?utm_source=ci&fbclid=abc123{lang_qs}"
+    try:
+        await page.goto(url, wait_until="networkidle", timeout=45_000)
+    except Exception as exc:  # noqa: BLE001
+        return [f"navigation failed: {exc}"]
     await page.wait_for_timeout(2500)
 
     result = await page.evaluate(
@@ -74,15 +136,19 @@ async def check_article(page, slug: str) -> list[str]:
 
     faq = result["faq"]
     if not faq or not isinstance(faq.get("mainEntity"), list) or len(faq["mainEntity"]) < 3:
-        failures.append(f"FAQPage schema missing or has <3 questions: {faq}")
+        failures.append(f"FAQPage schema missing or <3 questions")
 
     bc = result["bc"]
     if not bc or not isinstance(bc.get("itemListElement"), list) or len(bc["itemListElement"]) != 3:
-        failures.append(f"BreadcrumbList must have exactly 3 items: {bc}")
+        failures.append(f"BreadcrumbList must have exactly 3 items")
 
     bp = result["bp"]
     if not bp or not bp.get("image"):
-        failures.append(f"BlogPosting missing image: {bp}")
+        failures.append(f"BlogPosting missing image")
+    else:
+        img = bp.get("image")
+        if isinstance(img, dict) and img.get("@type") != "ImageObject":
+            failures.append(f"BlogPosting.image is not an ImageObject: {img.get('@type')}")
     if bp and bp.get("author", {}).get("name") != "Adrian Costi":
         failures.append(f"BlogPosting author must be 'Adrian Costi', got {bp.get('author')}")
 
@@ -95,21 +161,45 @@ async def check_article(page, slug: str) -> list[str]:
 
 
 async def main() -> int:
+    slugs = pick_slugs()
+    print(f"Testing {len(slugs)} slug(s) × {len(LANGS)} lang(s) against {BASE_URL}")
+    report: dict = {
+        "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "baseUrl": BASE_URL,
+        "slugCount": len(slugs),
+        "results": [],
+    }
     exit_code = 0
+
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
         context = await browser.new_context(viewport={"width": 1280, "height": 1800})
         page = await context.new_page()
-        for slug in SLUGS:
-            failures = await check_article(page, slug)
-            if failures:
-                exit_code = 1
-                print(f"[FAIL] {slug}")
-                for f in failures:
-                    print(f"   - {f}")
-            else:
-                print(f"[ OK ] {slug}")
+        for slug in slugs:
+            for lang in LANGS:
+                failures = await check_variant(page, slug, lang)
+                status = "pass" if not failures else "fail"
+                if failures:
+                    exit_code = 1
+                    print(f"[FAIL] {slug} [{lang}]")
+                    for f in failures:
+                        print(f"   - {f}")
+                else:
+                    print(f"[ OK ] {slug} [{lang}]")
+                report["results"].append(
+                    {"slug": slug, "lang": lang, "status": status, "failures": failures}
+                )
         await browser.close()
+
+    report["summary"] = {
+        "total": len(report["results"]),
+        "pass": sum(1 for r in report["results"] if r["status"] == "pass"),
+        "fail": sum(1 for r in report["results"] if r["status"] == "fail"),
+    }
+    Path(REPORT_PATH).parent.mkdir(parents=True, exist_ok=True)
+    Path(REPORT_PATH).write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(f"\nRegression report → {REPORT_PATH}")
+    print(f"Summary: {report['summary']}")
     return exit_code
 
 
