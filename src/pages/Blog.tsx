@@ -472,7 +472,7 @@ const Blog = () => {
                   size="sm"
                   onClick={() => setSelectedCategory(cat)}
                 >
-                  {cat}
+                  {localizedCategory(cat)}
                 </Button>
               ))}
               
