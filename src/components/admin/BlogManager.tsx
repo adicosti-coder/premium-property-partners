@@ -84,6 +84,7 @@ const BlogManager = () => {
   const [deleteArticle, setDeleteArticle] = useState<BlogArticle | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isBulkTranslating, setIsBulkTranslating] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"ro" | "en">("ro");
 
@@ -152,6 +153,10 @@ const BlogManager = () => {
       translating: "Se traduce...",
       translateSuccess: "Articol tradus cu succes!",
       translateError: "Eroare la traducere. Încearcă din nou.",
+      translateAllMissing: "Traduce toate lipsă (EN)",
+      translatingAllMissing: "Se traduc articolele...",
+      translateAllSuccess: (n: number) => `${n} articole procesate.`,
+      translateAllNothing: "Toate articolele au deja traducere EN.",
     },
     en: {
       title: "Blog Manager",
