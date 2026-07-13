@@ -353,6 +353,7 @@ const BlogManager = () => {
         author_name: article.author_name,
         is_published: article.is_published,
         is_premium: article.is_premium,
+        translation_locked: article.translation_locked ?? false,
       });
     } else {
       setEditingArticle(null);
@@ -370,6 +371,7 @@ const BlogManager = () => {
         author_name: "RealTrust",
         is_published: false,
         is_premium: false,
+        translation_locked: false,
       });
     }
     setActiveTab("ro");
