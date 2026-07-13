@@ -1970,6 +1970,42 @@ export type Database = {
           },
         ]
       }
+      frontend_error_logs: {
+        Row: {
+          correlation_id: string
+          created_at: string
+          id: string
+          level: string
+          message: string
+          meta: Json | null
+          route: string | null
+          scope: string
+          user_agent: string | null
+        }
+        Insert: {
+          correlation_id: string
+          created_at?: string
+          id?: string
+          level?: string
+          message: string
+          meta?: Json | null
+          route?: string | null
+          scope: string
+          user_agent?: string | null
+        }
+        Update: {
+          correlation_id?: string
+          created_at?: string
+          id?: string
+          level?: string
+          message?: string
+          meta?: Json | null
+          route?: string | null
+          scope?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       guest_guides: {
         Row: {
           access_instructions: string | null
