@@ -385,15 +385,31 @@ const BlogArticlePage = () => {
       }
       return `<a ${newAttrs.trim()}>${inner}</a>`;
     });
-    // Core Web Vitals: force lazy loading + async decoding on all body images.
+    // Core Web Vitals + a11y: force lazy loading, async decoding, and inject
+    // a descriptive alt on every <img> that lacks one (or has an empty alt).
+    // Alt = "{articleTitle} — imagine {index}" keeps images context-linked
+    // to the article and satisfies WCAG 1.1.1 / axe image-alt automatically.
+    let imgIndex = 0;
     html = html.replace(/<img\b([^>]*)>/gi, (match, attrs) => {
       let a = attrs as string;
       if (!/\sloading=/i.test(a)) a += ' loading="lazy"';
       if (!/\sdecoding=/i.test(a)) a += ' decoding="async"';
+      imgIndex += 1;
+      const altMatch = a.match(/\salt=(["'])(.*?)\1/i);
+      const hasMeaningfulAlt = altMatch && altMatch[2].trim().length > 0;
+      if (!hasMeaningfulAlt) {
+        const safeTitle = displayTitle.replace(/"/g, "&quot;").slice(0, 140);
+        const generated = ` alt="${safeTitle} — imagine ${imgIndex}"`;
+        if (altMatch) {
+          a = a.replace(/\salt=(["']).*?\1/i, generated);
+        } else {
+          a += generated;
+        }
+      }
       return `<img${a}>`;
     });
     return html;
-  }, [rawContent]);
+  }, [rawContent, displayTitle]);
   const readingTime = Math.max(1, Math.ceil(displayContent.length / 1000));
   const coverImage = article ? getBlogCoverImage(article.slug, article.cover_image) : null;
 
