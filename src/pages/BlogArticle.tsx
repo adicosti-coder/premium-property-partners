@@ -651,6 +651,20 @@ const BlogArticlePage = () => {
   (articleSchemaData as Record<string, unknown>).inLanguage =
     language === "en" ? "en-US" : "ro-RO";
 
+  // Expand `image` into a full ImageObject (url + dimensions + caption) so
+  // Google Rich Results doesn't warn about missing image metadata in the
+  // BlogPosting structured data.
+  if (seoImage) {
+    (articleSchemaData as Record<string, unknown>).image = {
+      "@type": "ImageObject",
+      url: seoImage,
+      contentUrl: seoImage,
+      width: 1200,
+      height: 630,
+      caption: displayTitle,
+    };
+  }
+
   // Inject GEO targeting into the BlogPosting schema
   if (geoLocation) {
     (articleSchemaData as Record<string, unknown>).contentLocation = {
