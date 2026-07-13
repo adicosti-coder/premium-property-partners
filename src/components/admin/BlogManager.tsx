@@ -71,6 +71,7 @@ interface BlogArticle {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+  translation_locked: boolean;
 }
 
 const BlogManager = () => {
@@ -85,6 +86,9 @@ const BlogManager = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isBulkTranslating, setIsBulkTranslating] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+  const [translationFailures, setTranslationFailures] = useState<Record<string, string>>({});
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"ro" | "en">("ro");
 
@@ -102,6 +106,7 @@ const BlogManager = () => {
     author_name: "RealTrust",
     is_published: false,
     is_premium: false,
+    translation_locked: false,
   });
 
   const translations = {
@@ -157,6 +162,16 @@ const BlogManager = () => {
       translatingAllMissing: "Se traduc articolele...",
       translateAllSuccess: (n: number) => `${n} articole procesate.`,
       translateAllNothing: "Toate articolele au deja traducere EN.",
+      translateSkipped: (n: number) => `${n} sărite (blocate manual).`,
+      translationCol: "Traducere EN",
+      badgeTranslated: "Tradus EN",
+      badgeManual: "Editat Manual",
+      badgeMissing: "Lipsă EN",
+      badgeFailed: "Eșec traducere",
+      retry: "Reîncearcă",
+      lockLabel: "Blochează traducerea automată",
+      lockHint: "Când e activ, funcțiile AI (individuale sau în bloc) NU vor mai suprascrie textele EN.",
+      bulkProgress: (done: number, total: number) => `Se traduc articolele... ${done}/${total}`,
     },
     en: {
       title: "Blog Manager",
@@ -210,6 +225,16 @@ const BlogManager = () => {
       translatingAllMissing: "Translating articles...",
       translateAllSuccess: (n: number) => `${n} articles processed.`,
       translateAllNothing: "All articles already have EN translations.",
+      translateSkipped: (n: number) => `${n} skipped (manually locked).`,
+      translationCol: "EN translation",
+      badgeTranslated: "EN translated",
+      badgeManual: "Manually edited",
+      badgeMissing: "Missing EN",
+      badgeFailed: "Translation failed",
+      retry: "Retry",
+      lockLabel: "Lock automatic translation",
+      lockHint: "When on, AI functions (single or bulk) will not overwrite the EN fields.",
+      bulkProgress: (done: number, total: number) => `Translating articles… ${done}/${total}`,
     },
   };
 
@@ -348,6 +373,7 @@ const BlogManager = () => {
         author_name: article.author_name,
         is_published: article.is_published,
         is_premium: article.is_premium,
+        translation_locked: article.translation_locked ?? false,
       });
     } else {
       setEditingArticle(null);
@@ -365,6 +391,7 @@ const BlogManager = () => {
         author_name: "RealTrust",
         is_published: false,
         is_premium: false,
+        translation_locked: false,
       });
     }
     setActiveTab("ro");
@@ -383,6 +410,16 @@ const BlogManager = () => {
 
     setIsSaving(true);
     try {
+      // Auto-lock translations if EN fields were manually changed vs. the loaded article.
+      // The admin can still uncheck the toggle explicitly before saving.
+      const enFieldsChanged = editingArticle
+        ? (editingArticle.title_en || "") !== (formData.title_en || "") ||
+          (editingArticle.excerpt_en || "") !== (formData.excerpt_en || "") ||
+          (editingArticle.content_en || "") !== (formData.content_en || "")
+        : !!(formData.title_en || formData.excerpt_en || formData.content_en);
+
+      const translationLocked = formData.translation_locked || enFieldsChanged;
+
       const articleData = {
         title: formData.title,
         title_en: formData.title_en || null,
@@ -397,6 +434,7 @@ const BlogManager = () => {
         author_name: formData.author_name,
         is_published: formData.is_published,
         is_premium: formData.is_premium,
+        translation_locked: translationLocked,
         published_at: formData.is_published ? new Date().toISOString() : null,
       };
 
@@ -459,26 +497,95 @@ const BlogManager = () => {
     return !!(article.title_en && article.excerpt_en && article.content_en);
   };
 
-  const handleTranslateAllMissing = async () => {
-    const missing = articles.filter((a) => !a.title_en || !a.excerpt_en || !a.content_en);
-    if (missing.length === 0) {
-      toast({ title: t.translateAllNothing });
-      return;
-    }
-    setIsBulkTranslating(true);
+  // Status shown in the table for a given article
+  type TranslationStatus = "translated" | "manual" | "missing" | "failed";
+  const getTranslationStatus = (a: BlogArticle): TranslationStatus => {
+    if (translationFailures[a.id]) return "failed";
+    if (a.translation_locked) return "manual";
+    if (hasEnglishTranslation(a)) return "translated";
+    return "missing";
+  };
+
+  // Translate ONE article via the shared edge function; returns true on success.
+  const translateOne = async (articleId: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke("translate-blog-articles", {
-        body: { limit: Math.min(missing.length, 25), includeContent: true },
+        body: { articleId, includeContent: true, limit: 1 },
       });
       if (error) throw error;
-      const processed = (data as { processed?: number })?.processed ?? 0;
-      toast({ title: t.translateAllSuccess(processed) });
-      await fetchArticles();
+      const first = (data as { results?: Array<{ ok: boolean; error?: string }> })?.results?.[0];
+      if (!first || first.ok !== true) {
+        throw new Error(first?.error || "unknown_error");
+      }
+      setTranslationFailures((prev) => {
+        const next = { ...prev };
+        delete next[articleId];
+        return next;
+      });
+      return true;
     } catch (err) {
-      console.error("Bulk translate error:", err);
-      toast({ title: t.translateError, variant: "destructive" });
+      const msg = err instanceof Error ? err.message : String(err);
+      setTranslationFailures((prev) => ({ ...prev, [articleId]: msg }));
+      return false;
+    }
+  };
+
+  const handleTranslateAllMissing = async () => {
+    // Exclude locked + already-fully-translated
+    const missing = articles.filter(
+      (a) => !a.translation_locked && (!a.title_en || !a.excerpt_en || !a.content_en),
+    );
+    const skipped = articles.filter(
+      (a) => a.translation_locked && (!a.title_en || !a.excerpt_en || !a.content_en),
+    ).length;
+
+    if (missing.length === 0) {
+      toast({
+        title: t.translateAllNothing,
+        description: skipped > 0 ? t.translateSkipped(skipped) : undefined,
+      });
+      return;
+    }
+
+    setIsBulkTranslating(true);
+    setBulkProgress({ done: 0, total: missing.length });
+    let okCount = 0;
+    let failCount = 0;
+    try {
+      for (let i = 0; i < missing.length; i++) {
+        const ok = await translateOne(missing[i].id);
+        if (ok) okCount += 1;
+        else failCount += 1;
+        setBulkProgress({ done: i + 1, total: missing.length });
+      }
+      toast({
+        title: t.translateAllSuccess(okCount),
+        description:
+          (failCount > 0
+            ? `${failCount} ${language === "en" ? "failed" : "eșuate"}. `
+            : "") + (skipped > 0 ? t.translateSkipped(skipped) : ""),
+        variant: failCount > 0 ? "destructive" : undefined,
+      });
+      await fetchArticles();
     } finally {
       setIsBulkTranslating(false);
+      setBulkProgress(null);
+    }
+  };
+
+  const handleRetryTranslation = async (articleId: string) => {
+    setRetryingId(articleId);
+    const ok = await translateOne(articleId);
+    setRetryingId(null);
+    if (ok) {
+      toast({ title: t.translateSuccess });
+      await fetchArticles();
+    } else {
+      toast({
+        title: t.translateError,
+        description: translationFailures[articleId],
+        variant: "destructive",
+      });
     }
   };
 
@@ -501,7 +608,11 @@ const BlogManager = () => {
             ) : (
               <Languages className="w-4 h-4 mr-2" />
             )}
-            {isBulkTranslating ? t.translatingAllMissing : t.translateAllMissing}
+            {isBulkTranslating
+              ? bulkProgress
+                ? t.bulkProgress(bulkProgress.done, bulkProgress.total)
+                : t.translatingAllMissing
+              : t.translateAllMissing}
           </Button>
           <Button onClick={() => openDialog()}>
             <Plus className="w-4 h-4 mr-2" />
@@ -559,17 +670,59 @@ const BlogManager = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      {hasEnglishTranslation(article) ? (
-                        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                          <Globe className="w-3 h-3 mr-1" />
-                          {t.hasTranslation}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-amber-500 border-amber-500/30">
-                          <Languages className="w-3 h-3 mr-1" />
-                          {t.noTranslation}
-                        </Badge>
-                      )}
+                      {(() => {
+                        const status = getTranslationStatus(article);
+                        const failMsg = translationFailures[article.id];
+                        const isRetrying = retryingId === article.id;
+                        return (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {status === "translated" && (
+                              <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                                <Globe className="w-3 h-3 mr-1" />
+                                {t.badgeTranslated}
+                              </Badge>
+                            )}
+                            {status === "manual" && (
+                              <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                                <Sparkles className="w-3 h-3 mr-1" />
+                                {t.badgeManual}
+                              </Badge>
+                            )}
+                            {status === "missing" && (
+                              <Badge variant="outline" className="text-muted-foreground">
+                                <Languages className="w-3 h-3 mr-1" />
+                                {t.badgeMissing}
+                              </Badge>
+                            )}
+                            {status === "failed" && (
+                              <>
+                                <Badge
+                                  variant="outline"
+                                  className="text-destructive border-destructive/40"
+                                  title={failMsg}
+                                >
+                                  <Languages className="w-3 h-3 mr-1" />
+                                  {t.badgeFailed}
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs"
+                                  disabled={isRetrying || article.translation_locked}
+                                  onClick={() => handleRetryTranslation(article.id)}
+                                >
+                                  {isRetrying ? (
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <Sparkles className="w-3 h-3 mr-1" />
+                                  )}
+                                  {t.retry}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       {article.is_published ? (
@@ -759,6 +912,22 @@ const BlogManager = () => {
                     setFormData((prev) => ({ ...prev, content_en }))
                   }
                   placeholder="Write the article content..."
+                />
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/30 p-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <Label htmlFor="translation_locked" className="cursor-pointer">
+                    {t.lockLabel}
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">{t.lockHint}</p>
+                </div>
+                <Switch
+                  id="translation_locked"
+                  checked={formData.translation_locked}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, translation_locked: checked }))
+                  }
                 />
               </div>
             </TabsContent>
