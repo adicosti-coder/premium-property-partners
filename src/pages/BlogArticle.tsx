@@ -37,7 +37,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Clock, ArrowLeft, User, Tag, Lock, Crown, LogIn, Eye, Trophy, PenLine } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
-import { getBlogCoverImage } from "@/utils/blogImageMap";
+import { getBlogCoverImage, FALLBACK_BLOG_IMAGE, handleBlogImageError } from "@/utils/blogImageMap";
 import { slugifyLocation } from "@/lib/blogLocations";
 import { MapPin } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
