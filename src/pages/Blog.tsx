@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
@@ -55,6 +55,7 @@ type AccessFilter = "all" | "public" | "premium";
 const Blog = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const dateLocale = language === "ro" ? ro : enUS;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
