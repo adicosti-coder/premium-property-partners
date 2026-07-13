@@ -139,8 +139,34 @@ const BlogArticlePage = () => {
         .eq("is_published", true)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        // Report 4xx-style access failures (permission denied, JWT expired, RLS)
+        // so a regression in Data-API grants shows up in monitoring instead of a
+        // silent blank article page.
+        const msg = (error as { message?: string }).message ?? "";
+        const code = (error as { code?: string }).code ?? "";
+        const isAccessDenied =
+          /permission denied|JWT|401|403|not authorized/i.test(msg) ||
+          code === "42501" ||
+          code === "PGRST301";
+        void import("@/lib/errorReporting").then(({ reportError }) =>
+          reportError(error, {
+            scope: "blog_article_fetch",
+            meta: { slug, code, isAccessDenied },
+          }),
+        );
+        const err = new Error(msg || "Failed to load article") as Error & {
+          isAccessDenied?: boolean;
+        };
+        err.isAccessDenied = isAccessDenied;
+        throw err;
+      }
       return data as BlogArticle | null;
+    },
+    retry: (failureCount, err) => {
+      // Do not retry on access-denied — surface the error UI immediately.
+      if ((err as { isAccessDenied?: boolean })?.isAccessDenied) return false;
+      return failureCount < 2;
     },
   });
 
