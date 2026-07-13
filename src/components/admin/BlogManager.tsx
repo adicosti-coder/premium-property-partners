@@ -914,6 +914,22 @@ const BlogManager = () => {
                   placeholder="Write the article content..."
                 />
               </div>
+
+              <div className="rounded-lg border border-border bg-muted/30 p-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <Label htmlFor="translation_locked" className="cursor-pointer">
+                    {t.lockLabel}
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">{t.lockHint}</p>
+                </div>
+                <Switch
+                  id="translation_locked"
+                  checked={formData.translation_locked}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, translation_locked: checked }))
+                  }
+                />
+              </div>
             </TabsContent>
           </Tabs>
 
