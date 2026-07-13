@@ -830,7 +830,7 @@ serve(async (req) => {
               }
               const shouldHangup = /la revedere|închid|o zi frumoas[ăa]/i.test(quickReply);
               const nextTurn = turn + 1;
-              const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}`${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}`turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
+              const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=${nextTurn}${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
 
               // Background: persist transcript + log
               // @ts-ignore
