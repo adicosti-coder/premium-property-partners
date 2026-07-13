@@ -957,6 +957,21 @@ const ImageOptimizationPanel = ({
                           </button>
                         </div>
                         <div className="flex gap-1">
+                          <button
+                            onClick={() => rotateImage(index, "ccw")}
+                            disabled={isProcessing}
+                            className="w-7 h-7 rounded-md bg-white/90 hover:bg-white flex items-center justify-center transition-colors disabled:opacity-40"
+                            title="Rotește la stânga (90°)"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-black" />
+                          </button>
+                          <button
+                            onClick={() => rotateImage(index, "cw")}
+                            disabled={isProcessing}
+                            className="w-7 h-7 rounded-md bg-white/90 hover:bg-white flex items-center justify-center transition-colors disabled:opacity-40"
+                            title="Rotește la dreapta (90°)"
+                          >
+                            <RotateCw className="w-3.5 h-3.5 text-black" />
                           {item.optimized && (
                             <button
                               onClick={() => resetImage(index)}
