@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logAudit } from "../_shared/auditLog.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { signSessionId } from "../_shared/twimlWebhookSig.ts";
 
 /* ──────────────────────────────────────────────────────────────
    Auto-Dial — reads from prospect_listings (lead_score>80, status=new).
