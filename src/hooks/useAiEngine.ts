@@ -155,11 +155,16 @@ async function streamOnce<T = unknown>(
   },
 ): Promise<AiEngineResponse<T>> {
   const apiKey = getSupabasePublishableKey();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) {
+    throw new AiEngineError("Trebuie să fii autentificat ca admin pentru a folosi motorul AI.", 401);
+  }
   const res = await fetch(FUNCTION_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${accessToken}`,
       apikey: apiKey,
     },
     body: JSON.stringify({ ...input, schema: undefined, stream: true }),
