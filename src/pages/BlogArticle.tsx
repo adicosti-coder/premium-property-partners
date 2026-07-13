@@ -37,7 +37,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Clock, ArrowLeft, User, Tag, Lock, Crown, LogIn, Eye, Trophy, PenLine } from "lucide-react";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
-import { getBlogCoverImage } from "@/utils/blogImageMap";
+import { getBlogCoverImage, FALLBACK_BLOG_IMAGE, handleBlogImageError } from "@/utils/blogImageMap";
 import { slugifyLocation } from "@/lib/blogLocations";
 import { MapPin } from "lucide-react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -244,8 +244,21 @@ const BlogArticlePage = () => {
       });
       try { sessionStorage.setItem(seenKey, JSON.stringify(seen)); } catch { /* ignore */ }
     };
-    requestAnimationFrame(() => { applyRewrite(); logImpressions(); });
-    const t = window.setTimeout(() => { applyRewrite(); logImpressions(); }, 400);
+    const applyImageFallback = () => {
+      const root = document.querySelector('[data-blog-content-root="1"]');
+      if (!root) return;
+      root.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
+        if (img.dataset.fallbackBound === '1') return;
+        img.dataset.fallbackBound = '1';
+        img.addEventListener('error', () => {
+          if (img.dataset.fallbackApplied === '1') return;
+          img.dataset.fallbackApplied = '1';
+          img.src = FALLBACK_BLOG_IMAGE;
+        });
+      });
+    };
+    requestAnimationFrame(() => { applyRewrite(); logImpressions(); applyImageFallback(); });
+    const t = window.setTimeout(() => { applyRewrite(); logImpressions(); applyImageFallback(); }, 400);
 
     // Debounce: dedupe identical clicks fired within 1500ms (double-tap, accidental re-click)
     const recentClicks = new Map<string, number>();
@@ -355,7 +368,7 @@ const BlogArticlePage = () => {
   // This hook must run before any early return; otherwise articles crash after the loading state.
   const displayContent = useMemo(() => {
     if (!rawContent) return "";
-    return rawContent.replace(/<a\s+([^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
+    let html = rawContent.replace(/<a\s+([^>]*?)>([\s\S]*?)<\/a>/gi, (match, attrs, inner) => {
       const hrefMatch = attrs.match(/href=["']([^"']+)["']/i);
       const href = hrefMatch?.[1] ?? "";
       const isInternal = href.startsWith("/") || href.startsWith("#") || href.includes("realtrust.ro");
@@ -371,6 +384,14 @@ const BlogArticlePage = () => {
       }
       return `<a ${newAttrs.trim()}>${inner}</a>`;
     });
+    // Core Web Vitals: force lazy loading + async decoding on all body images.
+    html = html.replace(/<img\b([^>]*)>/gi, (match, attrs) => {
+      let a = attrs as string;
+      if (!/\sloading=/i.test(a)) a += ' loading="lazy"';
+      if (!/\sdecoding=/i.test(a)) a += ' decoding="async"';
+      return `<img${a}>`;
+    });
+    return html;
   }, [rawContent]);
   const readingTime = Math.max(1, Math.ceil(displayContent.length / 1000));
   const coverImage = article ? getBlogCoverImage(article.slug, article.cover_image) : null;
@@ -514,6 +535,7 @@ const BlogArticlePage = () => {
                   decoding="async"
                   sizes="(max-width: 768px) 100vw, 800px"
                   className="w-full h-full object-cover blur-sm"
+                  onError={handleBlogImageError}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
               </div>
@@ -729,6 +751,7 @@ const BlogArticlePage = () => {
                 {...({ fetchpriority: "high" } as Record<string, string>)}
                 sizes="(max-width: 768px) 100vw, 800px"
                 className="w-full h-full object-cover"
+                onError={handleBlogImageError}
               />
             </div>
           )}

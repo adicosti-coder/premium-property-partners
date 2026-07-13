@@ -146,7 +146,19 @@ export const blogImageMap: Record<string, string> = {
   "cele-mai-bune-cartiere-investitii-timisoara-2026": timisoaraInvestitii,
 };
 
-export const getBlogCoverImage = (slug: string, dbCoverImage: string | null): string | null => {
+// Brand-safe fallback used when a slug has no mapping, the DB URL is
+// invalid, or an <img> fires onError at runtime. Kept as a single export so
+// the article component and any listing card can converge on the same visual.
+export const FALLBACK_BLOG_IMAGE = timisoaraInvestitii;
+
+const isValidImageUrl = (value: string | null | undefined): value is string => {
+  if (!value) return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  return /^(https?:\/\/|\/|data:image\/)/i.test(trimmed);
+};
+
+export const getBlogCoverImage = (slug: string, dbCoverImage: string | null): string => {
   // First check if we have a local image for this slug
   if (blogImageMap[slug]) {
     return blogImageMap[slug];
@@ -163,7 +175,20 @@ export const getBlogCoverImage = (slug: string, dbCoverImage: string | null): st
   if (normalized.includes("cartiere") || normalized.includes("cetate") || normalized.includes("iosefin") || normalized.includes("fabric") || normalized.includes("girocului") || normalized.includes("sagului") || normalized.includes("lipovei") || normalized.includes("aradului")) return timisoaraCartiereInvestitii2026;
   if (normalized.includes("roi") || normalized.includes("yield") || normalized.includes("randament") || normalized.includes("investit")) return analizaRoiTimisoara;
   if (normalized.includes("ghid") || normalized.includes("turistic") || normalized.includes("atractii")) return ghidTuristicTimisoara;
-  // Otherwise return the database cover image (could be a storage URL or null)
-  if (dbCoverImage && /^(https?:\/\/|\/|data:image\/)/i.test(dbCoverImage)) return dbCoverImage;
-  return timisoaraInvestitii;
+  // Otherwise return the DB cover if it looks like a real URL, else fallback.
+  if (isValidImageUrl(dbCoverImage)) return dbCoverImage;
+  return FALLBACK_BLOG_IMAGE;
+};
+
+/**
+ * onError handler for <img>: swap to the brand fallback exactly once.
+ * Prevents infinite error loops if the fallback itself somehow fails.
+ */
+export const handleBlogImageError = (
+  event: React.SyntheticEvent<HTMLImageElement, Event>
+) => {
+  const img = event.currentTarget;
+  if (img.dataset.fallbackApplied === "1") return;
+  img.dataset.fallbackApplied = "1";
+  img.src = FALLBACK_BLOG_IMAGE;
 };
