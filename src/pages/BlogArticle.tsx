@@ -658,7 +658,7 @@ const BlogArticlePage = () => {
         image={seoImage}
         jsonLd={combinedJsonLd}
         publishedTime={article.published_at || article.created_at}
-        author={article.author_name}
+        author={canonicalAuthor}
         articleTags={article.tags}
         articleCategory={article.category}
       />
