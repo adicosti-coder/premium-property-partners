@@ -352,6 +352,24 @@ const BlogArticlePage = () => {
   // Check if this is a premium article that requires auth
   const isPremiumLocked = article?.is_premium && !user;
 
+  // Distinguish access-denied (401/403/RLS) from plain "not found" so the
+  // user gets a clear, actionable screen instead of a generic empty state.
+  const accessDenied = (error as { isAccessDenied?: boolean } | null)?.isAccessDenied === true;
+  const correlationId = (error as { correlationId?: string } | null)?.correlationId;
+
+  // Fire an anonymous analytics event (no PII) whenever a public 4xx screen
+  // appears, so we can correlate technical errors with conversion impact.
+  useEffect(() => {
+    if (!accessDenied) return;
+    if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+    window.gtag("event", "public_page_error", {
+      error_scope: "blog_article_fetch",
+      error_kind: "access_denied",
+      slug: slug ?? "",
+      correlation_id: correlationId ?? "",
+    });
+  }, [accessDenied, correlationId, slug]);
+
   if (isLoading || isCheckingAuth) {
     return (
       <div className="min-h-screen bg-background">
@@ -371,24 +389,6 @@ const BlogArticlePage = () => {
       </div>
     );
   }
-
-  // Distinguish access-denied (401/403/RLS) from plain "not found" so the
-  // user gets a clear, actionable screen instead of a generic empty state.
-  const accessDenied = (error as { isAccessDenied?: boolean } | null)?.isAccessDenied === true;
-  const correlationId = (error as { correlationId?: string } | null)?.correlationId;
-
-  // Fire an anonymous analytics event (no PII) whenever a public 4xx screen
-  // appears, so we can correlate technical errors with conversion impact.
-  useEffect(() => {
-    if (!accessDenied) return;
-    if (typeof window === "undefined" || typeof window.gtag !== "function") return;
-    window.gtag("event", "public_page_error", {
-      error_scope: "blog_article_fetch",
-      error_kind: "access_denied",
-      slug: slug ?? "",
-      correlation_id: correlationId ?? "",
-    });
-  }, [accessDenied, correlationId, slug]);
 
   if (accessDenied) {
     return (
