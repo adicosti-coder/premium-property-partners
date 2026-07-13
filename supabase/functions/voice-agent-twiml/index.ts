@@ -783,7 +783,7 @@ serve(async (req) => {
           })());
         }
 
-        const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}`${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}`turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
+        const nextUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${encodeURIComponent(sessionId)}&turn=1${forceElevenLabs ? "&forceElevenLabs=1" : ""}${sigQs}`;
         return xmlResponse(
           `<Response>${gatherXml(nextUrl, speakXml(fastGreeting, fastUrl))}<Redirect method="POST">${escapeXml(nextUrl)}</Redirect></Response>`
         );
