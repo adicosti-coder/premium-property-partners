@@ -243,6 +243,22 @@ const SEOHead = ({
   };
   const finalUrl = override?.canonical_url || buildCanonical();
 
+  // og:image / twitter:image MUST be absolute URLs — Facebook, LinkedIn,
+  // WhatsApp, and X silently drop previews when the value is relative
+  // (`/images/foo.jpg`) or a bundler hash path. Normalise every source
+  // (prop, override, fallback) against BASE_URL so social crawlers always
+  // see an https://realtrust.ro/... URL.
+  const toAbsoluteImage = (src?: string | null): string => {
+    const fallback = `${BASE_URL}/images/hero-optimized-1920w.webp`;
+    const raw = (src ?? "").trim();
+    if (!raw) return fallback;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.startsWith("//")) return `https:${raw}`;
+    if (raw.startsWith("data:") || raw.startsWith("blob:")) return fallback;
+    return `${BASE_URL}${raw.startsWith("/") ? "" : "/"}${raw}`;
+  };
+  const absoluteImage = toAbsoluteImage(image);
+
   // Hreflang alternates — language is a client-side state (LanguageContext), not a URL segment.
   // Both RO and EN share the SAME canonical URL (no ?lang= param) to prevent GSC "alternative
   // page with canonical tag" duplicates. Google treats hreflang variants pointing to the same
@@ -257,7 +273,7 @@ const SEOHead = ({
     "@type": "LocalBusiness",
     "@id": `${BASE_URL}/#localbusiness`,
     "name": `${BRAND.name} Timișoara`,
-    "image": image,
+    "image": absoluteImage,
     "description": finalDescription,
     "url": BASE_URL,
     "telephone": BRAND.telephone,
@@ -296,7 +312,7 @@ const SEOHead = ({
         generateArticleJsonLd(
           finalTitle,
           finalDescription,
-          image,
+          absoluteImage,
           finalUrl,
           publishedTime,
           author,
@@ -312,7 +328,7 @@ const SEOHead = ({
         generateProductJsonLd(
           finalTitle,
           finalDescription,
-          image,
+          absoluteImage,
           finalUrl,
           productPrice,
           productCurrency,
@@ -395,7 +411,7 @@ const SEOHead = ({
       <meta property="og:url" content={finalUrl} />
       <meta property="og:title" content={finalTitle} />
       <meta property="og:description" content={finalDescription} />
-      <meta property="og:image" content={image} />
+      <meta property="og:image" content={absoluteImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={imageAlt || finalTitle} />
@@ -408,7 +424,7 @@ const SEOHead = ({
       <meta name="twitter:url" content={finalUrl} />
       <meta name="twitter:title" content={finalTitle} />
       <meta name="twitter:description" content={finalDescription} />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:image" content={absoluteImage} />
       <meta name="twitter:image:alt" content={imageAlt || finalTitle} />
       
       {/* Article specific */}

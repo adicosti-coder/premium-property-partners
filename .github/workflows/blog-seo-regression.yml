@@ -1,0 +1,123 @@
+name: Blog SEO regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/pages/BlogArticle.tsx"
+      - "src/components/SEOHead.tsx"
+      - "src/components/CanonicalHreflang.tsx"
+      - "src/hooks/useFAQSchema.tsx"
+      - "supabase/functions/generate-blog-sitemap/**"
+      - "scripts/blog-seo-playwright-check.py"
+      - ".github/workflows/blog-seo-regression.yml"
+  workflow_dispatch:
+
+jobs:
+  seo-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install app dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Install Playwright (Python)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Start Vite dev server
+        run: |
+          bun run dev > /tmp/vite.log 2>&1 &
+          echo $! > /tmp/vite.pid
+          # Wait up to 60s for the server
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080 > /dev/null; then
+              echo "Dev server up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "Dev server failed to start"; cat /tmp/vite.log; exit 1
+
+      - name: Run blog SEO regression
+        env:
+          BASE_URL: http://localhost:8080
+          SAMPLE: "15"
+          REPORT: ${{ github.workspace }}/blog-seo-report.json
+        run: python scripts/blog-seo-playwright-check.py
+        continue-on-error: true
+        id: seo
+
+      - name: Stop dev server
+        if: always()
+        run: |
+          if [ -f /tmp/vite.pid ]; then kill "$(cat /tmp/vite.pid)" || true; fi
+
+      - name: Upload regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-seo-report
+          path: blog-seo-report.json
+
+      - name: Comment report on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const reportPath = path.join(process.env.GITHUB_WORKSPACE, 'blog-seo-report.json');
+            if (!fs.existsSync(reportPath)) {
+              core.warning('No blog-seo-report.json produced');
+              return;
+            }
+            const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+            const s = report.summary || { total: 0, pass: 0, fail: 0 };
+            const emoji = s.fail === 0 ? '✅' : '❌';
+            const rows = (report.results || []).map(r => {
+              const icon = r.status === 'pass' ? '✅' : '❌';
+              const fails = r.failures?.length ? '<br>' + r.failures.map(f => `\`${f.replace(/\|/g, '\\|')}\``).join('<br>') : '';
+              return `| ${icon} | \`${r.slug}\` | \`${r.lang}\` | ${r.status}${fails} |`;
+            }).join('\n');
+            const body = [
+              `## ${emoji} Blog SEO regression`,
+              ``,
+              `**Base URL:** \`${report.baseUrl}\``,
+              `**Slugs sampled:** ${report.slugCount} · **Variants:** ${s.total} · ✅ ${s.pass} · ❌ ${s.fail}`,
+              `**Generated:** ${report.generatedAt}`,
+              ``,
+              `| | Slug | Lang | Status |`,
+              `|---|---|---|---|`,
+              rows,
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const marker = '<!-- blog-seo-regression -->';
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });
+            const existing = comments.find(c => c.body?.includes(marker));
+            const full = `${marker}\n${body}`;
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body: full });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body: full });
+            }
+
+      - name: Fail job on regression
+        if: steps.seo.outcome == 'failure'
+        run: exit 1
