@@ -66,18 +66,20 @@ const PageBreadcrumb = ({ items, className = "" }: PageBreadcrumbProps) => {
           </BreadcrumbItem>
           
           {items.map((item, index) => (
-            <BreadcrumbItem key={index}>
+            <div key={index} className="contents">
               <BreadcrumbSeparator />
-              {item.href ? (
-                <BreadcrumbLink asChild>
-                  <Link to={item.href} className="hover:text-primary transition-colors">
-                    {item.label}
-                  </Link>
-                </BreadcrumbLink>
-              ) : (
-                <BreadcrumbPage>{item.label}</BreadcrumbPage>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {item.href ? (
+                  <BreadcrumbLink asChild>
+                    <Link to={item.href} className="hover:text-primary transition-colors">
+                      {item.label}
+                    </Link>
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+            </div>
           ))}
         </BreadcrumbList>
       </Breadcrumb>
