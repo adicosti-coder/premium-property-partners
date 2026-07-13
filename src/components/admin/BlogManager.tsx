@@ -608,7 +608,11 @@ const BlogManager = () => {
             ) : (
               <Languages className="w-4 h-4 mr-2" />
             )}
-            {isBulkTranslating ? t.translatingAllMissing : t.translateAllMissing}
+            {isBulkTranslating
+              ? bulkProgress
+                ? t.bulkProgress(bulkProgress.done, bulkProgress.total)
+                : t.translatingAllMissing
+              : t.translateAllMissing}
           </Button>
           <Button onClick={() => openDialog()}>
             <Plus className="w-4 h-4 mr-2" />
