@@ -364,7 +364,8 @@ serve(async (req) => {
       voice_call_session_id: session.id,
     }).eq("id", prospect.id);
 
-    const twimlUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${session.id}`;
+    const twimlSig = await signSessionId(session.id);
+    const twimlUrl = `${SUPABASE_URL}/functions/v1/voice-agent-twiml?sessionId=${session.id}&sig=${encodeURIComponent(twimlSig)}`;
     const statusUrl = `${SUPABASE_URL}/functions/v1/voice-agent-status?sessionId=${session.id}`;
 
     const twRes = await fetch(`https://connector-gateway.lovable.dev/twilio/Calls.json`, {
