@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.kickoff-auto-publish]
 verify_jwt = false
+
+[functions.translate-blog-articles]
+verify_jwt = false

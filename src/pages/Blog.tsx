@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
@@ -55,6 +55,7 @@ type AccessFilter = "all" | "public" | "premium";
 const Blog = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const dateLocale = language === "ro" ? ro : enUS;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -102,6 +103,53 @@ const Blog = () => {
     const cats = new Set(articles.map((a) => a.category));
     return Array.from(cats);
   }, [articles]);
+
+  // English display labels for RO category names shown as filter chips
+  const categoryLabelsEn: Record<string, string> = {
+    "Investiții": "Investments",
+    "Taxe & Legislație": "Taxes & Legislation",
+    "Ghiduri Oaspeți": "Guest Guides",
+    "Cazare Oaspeți": "Guest Stays",
+    "Proprietari": "Owners",
+    "amenajare": "Interior design",
+    "ghiduri": "Guides",
+    "analize": "Market analysis",
+    "market-insights": "Market insights",
+    "Administrare Hotelieră": "Hotel Management",
+    "Operațional": "Operations",
+    "Revenue Management": "Revenue Management",
+    "Mentenanță": "Maintenance",
+    "Imobiliare": "Real Estate",
+    "Branding": "Branding",
+    "Distribuție": "Distribution",
+    "sfaturi": "Tips",
+    "tehnologie": "Technology",
+    "piață": "Market",
+  };
+  const localizedCategory = (cat: string) =>
+    language === "en" ? (categoryLabelsEn[cat] ?? cat) : cat;
+
+  // Auto-translate: when viewing in English and some articles lack title_en/excerpt_en,
+  // fire the edge function (best-effort) and refetch on success. Runs at most once per session.
+  useEffect(() => {
+    if (language !== "en" || !articles || articles.length === 0) return;
+    const missing = articles.filter((a) => !a.title_en || !a.excerpt_en);
+    if (missing.length === 0) return;
+    const flagKey = "blog-en-translated-batch";
+    if (typeof window !== "undefined" && sessionStorage.getItem(flagKey)) return;
+    if (typeof window !== "undefined") sessionStorage.setItem(flagKey, "1");
+    supabase.functions
+      .invoke("translate-blog-articles", { body: { limit: Math.min(missing.length, 20) } })
+      .then((res) => {
+        if (!res.error) {
+          queryClient.invalidateQueries({ queryKey: ["blog-articles"] });
+        }
+      })
+      .catch(() => {
+        // silent — best-effort
+      });
+  }, [language, articles, queryClient]);
+
 
   // Get top 3 trending article IDs based on view count
   const trendingArticleIds = useMemo(() => {
@@ -424,7 +472,7 @@ const Blog = () => {
                   size="sm"
                   onClick={() => setSelectedCategory(cat)}
                 >
-                  {cat}
+                  {localizedCategory(cat)}
                 </Button>
               ))}
               
