@@ -585,20 +585,27 @@ const BlogArticlePage = () => {
   const seoImage = (article as any).main_image_url?.trim() || coverImage || undefined;
   const geoLocation: string | undefined = (article as any).geo_location?.trim() || undefined;
 
-  // Generate enhanced Schema.org structured data
+  // BlogPosting schema — author normalised to canonical brand persona
+  // "Adrian Costi" so Google surfaces a single, consistent E-E-A-T entity
+  // regardless of what author_name is stored per row.
+  const canonicalAuthor = "Adrian Costi";
   const articleSchemaData = generateArticleSchema({
     headline: seoTitle,
     description: seoDescription,
     image: seoImage,
     datePublished: article.published_at || article.created_at,
     dateModified: article.published_at || article.created_at,
-    author: article.author_name,
+    author: canonicalAuthor,
     url: articleUrl,
     category: article.category,
     tags: article.tags,
     wordCount: displayContent.length,
     isAccessibleForFree: !article.is_premium,
   });
+  // Language-aware inLanguage tag so RO/EN variants are distinguishable
+  // to crawlers even though they share the canonical URL.
+  (articleSchemaData as Record<string, unknown>).inLanguage =
+    language === "en" ? "en-US" : "ro-RO";
 
   // Inject GEO targeting into the BlogPosting schema
   if (geoLocation) {
