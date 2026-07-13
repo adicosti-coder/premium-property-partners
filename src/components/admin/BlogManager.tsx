@@ -510,20 +510,6 @@ const BlogManager = () => {
         </div>
       </div>
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">
-          <FileText className="w-5 h-5 text-primary" />
-          {t.title}
-        </h2>
-        <Button onClick={() => openDialog()}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t.addArticle}
-        </Button>
-      </div>
-
       {/* Articles Table */}
       <Card>
         <CardContent className="p-0">
