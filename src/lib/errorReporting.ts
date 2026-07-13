@@ -83,15 +83,17 @@ const persistToDb = (payload: AppErrorPayload): void => {
   try {
     void supabase
       .from("frontend_error_logs")
-      .insert({
-        correlation_id: payload.correlation_id,
-        scope: payload.scope,
-        level: payload.level,
-        route: payload.route,
-        message: payload.message.slice(0, 2000),
-        user_agent: payload.user_agent?.slice(0, 500),
-        meta: payload.meta ?? null,
-      })
+      .insert([
+        {
+          correlation_id: payload.correlation_id,
+          scope: payload.scope,
+          level: payload.level,
+          route: payload.route,
+          message: payload.message.slice(0, 2000),
+          user_agent: payload.user_agent?.slice(0, 500),
+          meta: (payload.meta ?? null) as never,
+        },
+      ])
       .then(({ error }) => {
         if (error) {
           // eslint-disable-next-line no-console
