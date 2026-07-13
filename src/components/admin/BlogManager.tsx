@@ -670,17 +670,59 @@ const BlogManager = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      {hasEnglishTranslation(article) ? (
-                        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                          <Globe className="w-3 h-3 mr-1" />
-                          {t.hasTranslation}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-amber-500 border-amber-500/30">
-                          <Languages className="w-3 h-3 mr-1" />
-                          {t.noTranslation}
-                        </Badge>
-                      )}
+                      {(() => {
+                        const status = getTranslationStatus(article);
+                        const failMsg = translationFailures[article.id];
+                        const isRetrying = retryingId === article.id;
+                        return (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {status === "translated" && (
+                              <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                                <Globe className="w-3 h-3 mr-1" />
+                                {t.badgeTranslated}
+                              </Badge>
+                            )}
+                            {status === "manual" && (
+                              <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                                <Sparkles className="w-3 h-3 mr-1" />
+                                {t.badgeManual}
+                              </Badge>
+                            )}
+                            {status === "missing" && (
+                              <Badge variant="outline" className="text-muted-foreground">
+                                <Languages className="w-3 h-3 mr-1" />
+                                {t.badgeMissing}
+                              </Badge>
+                            )}
+                            {status === "failed" && (
+                              <>
+                                <Badge
+                                  variant="outline"
+                                  className="text-destructive border-destructive/40"
+                                  title={failMsg}
+                                >
+                                  <Languages className="w-3 h-3 mr-1" />
+                                  {t.badgeFailed}
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs"
+                                  disabled={isRetrying || article.translation_locked}
+                                  onClick={() => handleRetryTranslation(article.id)}
+                                >
+                                  {isRetrying ? (
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <Sparkles className="w-3 h-3 mr-1" />
+                                  )}
+                                  {t.retry}
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       {article.is_published ? (
