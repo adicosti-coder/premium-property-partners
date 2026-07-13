@@ -390,6 +390,16 @@ const BlogManager = () => {
 
     setIsSaving(true);
     try {
+      // Auto-lock translations if EN fields were manually changed vs. the loaded article.
+      // The admin can still uncheck the toggle explicitly before saving.
+      const enFieldsChanged = editingArticle
+        ? (editingArticle.title_en || "") !== (formData.title_en || "") ||
+          (editingArticle.excerpt_en || "") !== (formData.excerpt_en || "") ||
+          (editingArticle.content_en || "") !== (formData.content_en || "")
+        : !!(formData.title_en || formData.excerpt_en || formData.content_en);
+
+      const translationLocked = formData.translation_locked || enFieldsChanged;
+
       const articleData = {
         title: formData.title,
         title_en: formData.title_en || null,
@@ -404,6 +414,7 @@ const BlogManager = () => {
         author_name: formData.author_name,
         is_published: formData.is_published,
         is_premium: formData.is_premium,
+        translation_locked: translationLocked,
         published_at: formData.is_published ? new Date().toISOString() : null,
       };
 
