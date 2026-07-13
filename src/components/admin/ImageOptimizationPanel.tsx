@@ -972,6 +972,7 @@ const ImageOptimizationPanel = ({
                             title="Rotește la dreapta (90°)"
                           >
                             <RotateCw className="w-3.5 h-3.5 text-black" />
+                          </button>
                           {item.optimized && (
                             <button
                               onClick={() => resetImage(index)}
