@@ -244,8 +244,21 @@ const BlogArticlePage = () => {
       });
       try { sessionStorage.setItem(seenKey, JSON.stringify(seen)); } catch { /* ignore */ }
     };
-    requestAnimationFrame(() => { applyRewrite(); logImpressions(); });
-    const t = window.setTimeout(() => { applyRewrite(); logImpressions(); }, 400);
+    const applyImageFallback = () => {
+      const root = document.querySelector('[data-blog-content-root="1"]');
+      if (!root) return;
+      root.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
+        if (img.dataset.fallbackBound === '1') return;
+        img.dataset.fallbackBound = '1';
+        img.addEventListener('error', () => {
+          if (img.dataset.fallbackApplied === '1') return;
+          img.dataset.fallbackApplied = '1';
+          img.src = FALLBACK_BLOG_IMAGE;
+        });
+      });
+    };
+    requestAnimationFrame(() => { applyRewrite(); logImpressions(); applyImageFallback(); });
+    const t = window.setTimeout(() => { applyRewrite(); logImpressions(); applyImageFallback(); }, 400);
 
     // Debounce: dedupe identical clicks fired within 1500ms (double-tap, accidental re-click)
     const recentClicks = new Map<string, number>();
