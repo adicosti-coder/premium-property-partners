@@ -497,26 +497,95 @@ const BlogManager = () => {
     return !!(article.title_en && article.excerpt_en && article.content_en);
   };
 
-  const handleTranslateAllMissing = async () => {
-    const missing = articles.filter((a) => !a.title_en || !a.excerpt_en || !a.content_en);
-    if (missing.length === 0) {
-      toast({ title: t.translateAllNothing });
-      return;
-    }
-    setIsBulkTranslating(true);
+  // Status shown in the table for a given article
+  type TranslationStatus = "translated" | "manual" | "missing" | "failed";
+  const getTranslationStatus = (a: BlogArticle): TranslationStatus => {
+    if (translationFailures[a.id]) return "failed";
+    if (a.translation_locked) return "manual";
+    if (hasEnglishTranslation(a)) return "translated";
+    return "missing";
+  };
+
+  // Translate ONE article via the shared edge function; returns true on success.
+  const translateOne = async (articleId: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.functions.invoke("translate-blog-articles", {
-        body: { limit: Math.min(missing.length, 25), includeContent: true },
+        body: { articleId, includeContent: true, limit: 1 },
       });
       if (error) throw error;
-      const processed = (data as { processed?: number })?.processed ?? 0;
-      toast({ title: t.translateAllSuccess(processed) });
-      await fetchArticles();
+      const first = (data as { results?: Array<{ ok: boolean; error?: string }> })?.results?.[0];
+      if (!first || first.ok !== true) {
+        throw new Error(first?.error || "unknown_error");
+      }
+      setTranslationFailures((prev) => {
+        const next = { ...prev };
+        delete next[articleId];
+        return next;
+      });
+      return true;
     } catch (err) {
-      console.error("Bulk translate error:", err);
-      toast({ title: t.translateError, variant: "destructive" });
+      const msg = err instanceof Error ? err.message : String(err);
+      setTranslationFailures((prev) => ({ ...prev, [articleId]: msg }));
+      return false;
+    }
+  };
+
+  const handleTranslateAllMissing = async () => {
+    // Exclude locked + already-fully-translated
+    const missing = articles.filter(
+      (a) => !a.translation_locked && (!a.title_en || !a.excerpt_en || !a.content_en),
+    );
+    const skipped = articles.filter(
+      (a) => a.translation_locked && (!a.title_en || !a.excerpt_en || !a.content_en),
+    ).length;
+
+    if (missing.length === 0) {
+      toast({
+        title: t.translateAllNothing,
+        description: skipped > 0 ? t.translateSkipped(skipped) : undefined,
+      });
+      return;
+    }
+
+    setIsBulkTranslating(true);
+    setBulkProgress({ done: 0, total: missing.length });
+    let okCount = 0;
+    let failCount = 0;
+    try {
+      for (let i = 0; i < missing.length; i++) {
+        const ok = await translateOne(missing[i].id);
+        if (ok) okCount += 1;
+        else failCount += 1;
+        setBulkProgress({ done: i + 1, total: missing.length });
+      }
+      toast({
+        title: t.translateAllSuccess(okCount),
+        description:
+          (failCount > 0
+            ? `${failCount} ${language === "en" ? "failed" : "eșuate"}. `
+            : "") + (skipped > 0 ? t.translateSkipped(skipped) : ""),
+        variant: failCount > 0 ? "destructive" : undefined,
+      });
+      await fetchArticles();
     } finally {
       setIsBulkTranslating(false);
+      setBulkProgress(null);
+    }
+  };
+
+  const handleRetryTranslation = async (articleId: string) => {
+    setRetryingId(articleId);
+    const ok = await translateOne(articleId);
+    setRetryingId(null);
+    if (ok) {
+      toast({ title: t.translateSuccess });
+      await fetchArticles();
+    } else {
+      toast({
+        title: t.translateError,
+        description: translationFailures[articleId],
+        variant: "destructive",
+      });
     }
   };
 
