@@ -64,6 +64,7 @@ const Blog = () => {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 9;
   const [user, setUser] = useState<User | null>(null);
+  const [isBackgroundTranslating, setIsBackgroundTranslating] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -138,6 +139,7 @@ const Blog = () => {
     const flagKey = "blog-en-translated-batch";
     if (typeof window !== "undefined" && sessionStorage.getItem(flagKey)) return;
     if (typeof window !== "undefined") sessionStorage.setItem(flagKey, "1");
+    setIsBackgroundTranslating(true);
     supabase.functions
       .invoke("translate-blog-articles", { body: { limit: Math.min(missing.length, 20) } })
       .then((res) => {
@@ -147,6 +149,9 @@ const Blog = () => {
       })
       .catch(() => {
         // silent — best-effort
+      })
+      .finally(() => {
+        setIsBackgroundTranslating(false);
       });
   }, [language, articles, queryClient]);
 
