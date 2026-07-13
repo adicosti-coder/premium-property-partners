@@ -243,6 +243,22 @@ const SEOHead = ({
   };
   const finalUrl = override?.canonical_url || buildCanonical();
 
+  // og:image / twitter:image MUST be absolute URLs — Facebook, LinkedIn,
+  // WhatsApp, and X silently drop previews when the value is relative
+  // (`/images/foo.jpg`) or a bundler hash path. Normalise every source
+  // (prop, override, fallback) against BASE_URL so social crawlers always
+  // see an https://realtrust.ro/... URL.
+  const toAbsoluteImage = (src?: string | null): string => {
+    const fallback = `${BASE_URL}/images/hero-optimized-1920w.webp`;
+    const raw = (src ?? "").trim();
+    if (!raw) return fallback;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.startsWith("//")) return `https:${raw}`;
+    if (raw.startsWith("data:") || raw.startsWith("blob:")) return fallback;
+    return `${BASE_URL}${raw.startsWith("/") ? "" : "/"}${raw}`;
+  };
+  const absoluteImage = toAbsoluteImage(image);
+
   // Hreflang alternates — language is a client-side state (LanguageContext), not a URL segment.
   // Both RO and EN share the SAME canonical URL (no ?lang= param) to prevent GSC "alternative
   // page with canonical tag" duplicates. Google treats hreflang variants pointing to the same
