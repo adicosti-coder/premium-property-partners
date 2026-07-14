@@ -83,14 +83,33 @@ const BlogComments = ({ articleId }: BlogCommentsProps) => {
   const { data: comments, isLoading } = useQuery({
     queryKey: ["blog-comments", articleId],
     queryFn: async () => {
+      // Anon clients no longer have column-level SELECT on `user_id`
+      // (PII-hiding). List only the safe columns everyone can read.
       const { data, error } = await supabase
         .from("blog_comments")
-        .select("*")
+        .select("id, article_id, author_name, content, created_at")
         .eq("article_id", articleId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data as BlogComment[];
+    },
+  });
+
+  // Owner-only lookup: which of the visible comments belong to the current
+  // user? Used to gate the delete button since `user_id` is not returned in
+  // the public query above.
+  const { data: ownCommentIds } = useQuery({
+    queryKey: ["blog-comments-own", articleId, user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blog_comments")
+        .select("id")
+        .eq("article_id", articleId)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return new Set((data ?? []).map((r) => r.id));
     },
   });
 
