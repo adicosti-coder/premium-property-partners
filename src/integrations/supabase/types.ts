@@ -9251,6 +9251,10 @@ export type Database = {
         }
         Returns: Json
       }
+      seo_premium_plus_rollback_override: {
+        Args: { _applied_by?: string; _url_path: string }
+        Returns: Json
+      }
       seo_release_audit_lock: {
         Args: { p_language?: string; p_url: string }
         Returns: undefined
