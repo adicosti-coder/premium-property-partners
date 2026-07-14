@@ -120,8 +120,14 @@ function platformsForCategory(category: string): string[] {
 // gate here — matches the pattern of other internal cron functions
 // (e.g. scrape-prospects). All mutations go through service-role.
 
+import { requireAdmin } from "../_shared/adminAuth.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
