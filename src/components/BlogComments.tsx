@@ -15,7 +15,6 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 interface BlogComment {
   id: string;
   article_id: string;
-  user_id: string;
   author_name: string;
   content: string;
   created_at: string;
