@@ -678,6 +678,56 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_ai_snapshots: {
+        Row: {
+          ai_model: string | null
+          applied_changes: Json
+          article_id: string
+          confidence_score: number | null
+          created_at: string
+          id: string
+          previous_state: Json
+          rationale: string | null
+          rolled_back_at: string | null
+          rolled_back_by: string | null
+          triggered_by: string
+        }
+        Insert: {
+          ai_model?: string | null
+          applied_changes?: Json
+          article_id: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          previous_state: Json
+          rationale?: string | null
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+          triggered_by?: string
+        }
+        Update: {
+          ai_model?: string | null
+          applied_changes?: Json
+          article_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          previous_state?: Json
+          rationale?: string | null
+          rolled_back_at?: string | null
+          rolled_back_by?: string | null
+          triggered_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_ai_snapshots_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "blog_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_article_views: {
         Row: {
           article_id: string
@@ -712,6 +762,9 @@ export type Database = {
       }
       blog_articles: {
         Row: {
+          ai_confidence_score: number | null
+          ai_last_optimized_at: string | null
+          ai_pending_review: boolean
           author_name: string
           category: string
           content: string
@@ -739,6 +792,9 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          ai_confidence_score?: number | null
+          ai_last_optimized_at?: string | null
+          ai_pending_review?: boolean
           author_name?: string
           category?: string
           content: string
@@ -766,6 +822,9 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          ai_confidence_score?: number | null
+          ai_last_optimized_at?: string | null
+          ai_pending_review?: boolean
           author_name?: string
           category?: string
           content?: string
@@ -8942,6 +9001,10 @@ export type Database = {
       automation_runs_cleanup: {
         Args: { _retention_days?: number }
         Returns: number
+      }
+      blog_rollback_ai_snapshot: {
+        Args: { _snapshot_id: string }
+        Returns: Json
       }
       bulk_archive_detected_agencies: { Args: never; Returns: Json }
       check_and_award_badges: {

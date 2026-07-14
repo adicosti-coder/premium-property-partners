@@ -50,7 +50,19 @@ import {
   Globe,
   Languages,
   Sparkles,
+  Bot,
+  BarChart3,
+  Save,
+  RefreshCw,
+  CheckSquare,
+  Square,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BlogLiveActivity } from "./blog/BlogLiveActivity";
+import { BlogSEOAnalyticsPanel } from "./blog/BlogSEOAnalyticsPanel";
+import { BlogRollbackButton } from "./blog/BlogRollbackButton";
+import { useBlogAdminShortcuts } from "@/hooks/useBlogAdminShortcuts";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 
@@ -94,6 +106,71 @@ const BlogManager = () => {
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"ro" | "en">("ro");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showAnalytics, setShowAnalytics] = useState(true);
+  const [isAutopilotRunning, setIsAutopilotRunning] = useState(false);
+  const [isReauditing, setIsReauditing] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleAllVisible = () => {
+    setSelectedIds((prev) => {
+      if (prev.size === articles.length) return new Set();
+      return new Set(articles.map((a) => a.id));
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleRunAutopilot = async () => {
+    setIsAutopilotRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("blog-ai-autopilot", {
+        body: { limit: 5 },
+      });
+      if (error) throw error;
+      const d = data as { applied?: number; queued?: number; processed?: number };
+      toast({
+        title: "AI Auto-Pilot rulat",
+        description: `Procesate: ${d.processed ?? 0} · Aplicate: ${d.applied ?? 0} · În așteptare aprobare: ${d.queued ?? 0}`,
+      });
+      fetchArticles();
+    } catch (e) {
+      toast({ title: "Auto-Pilot eșuat", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+    } finally {
+      setIsAutopilotRunning(false);
+    }
+  };
+
+  const handleBulkSave = async () => {
+    if (selectedIds.size === 0) return;
+    toast({ title: "Salvare bulk", description: `${selectedIds.size} articole marcate pentru salvare (deschide fiecare pentru editare individuală).` });
+  };
+
+  const handleBulkReaudit = async () => {
+    if (selectedIds.size === 0) {
+      toast({ title: "Selectează articole", description: "Bifează articolele pentru re-audit SEO." });
+      return;
+    }
+    setIsReauditing(true);
+    let ok = 0, fail = 0;
+    for (const id of selectedIds) {
+      const article = articles.find((a) => a.id === id);
+      if (!article) continue;
+      try {
+        const { error } = await supabase.functions.invoke("seo-audit", {
+          body: { url: `https://realtrust.ro/blog/${article.slug}` },
+        });
+        if (error) fail++; else ok++;
+      } catch { fail++; }
+    }
+    setIsReauditing(false);
+    toast({ title: "Re-audit SEO finalizat", description: `Reușite: ${ok} · Eșuate: ${fail}` });
+  };
 
   const [formData, setFormData] = useState({
     title: "",
@@ -672,8 +749,14 @@ const BlogManager = () => {
     }
   };
 
+  useBlogAdminShortcuts({
+    onBulkSave: handleBulkSave,
+    onReaudit: handleBulkReaudit,
+  });
+
   return (
-    <div className="space-y-6">
+    <TooltipProvider>
+    <div className="space-y-6 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">
@@ -681,6 +764,22 @@ const BlogManager = () => {
           {t.title}
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => setShowAnalytics((v) => !v)}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            {showAnalytics ? "Ascunde Analytics" : "Arată Analytics"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleRunAutopilot}
+            disabled={isAutopilotRunning}
+            className="border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+          >
+            {isAutopilotRunning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Bot className="w-4 h-4 mr-2" />}
+            AI Auto-Pilot
+          </Button>
           <Button
             variant="outline"
             onClick={handleTranslateAllMissing}
@@ -704,37 +803,56 @@ const BlogManager = () => {
         </div>
       </div>
 
-      {/* Articles Table */}
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : articles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {t.noArticles}
-              </h3>
-              <p className="text-muted-foreground">{t.noArticlesDescription}</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.tableHeaders.title}</TableHead>
-                  <TableHead>{t.tableHeaders.category}</TableHead>
-                  <TableHead>{t.tableHeaders.access}</TableHead>
-                  <TableHead>{t.tableHeaders.translations}</TableHead>
-                  <TableHead>{t.tableHeaders.status}</TableHead>
-                  <TableHead>{t.tableHeaders.date}</TableHead>
-                  <TableHead className="w-[100px]">{t.tableHeaders.actions}</TableHead>
-                </TableRow>
-              </TableHeader>
+      {/* Analytics */}
+      {showAnalytics && <BlogSEOAnalyticsPanel />}
+
+      {/* 2-column Command Center */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
+        {/* Articles Table */}
+        <Card>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : articles.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  {t.noArticles}
+                </h3>
+                <p className="text-muted-foreground">{t.noArticlesDescription}</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={selectedIds.size === articles.length && articles.length > 0}
+                        onCheckedChange={toggleAllVisible}
+                        aria-label="Selectează tot"
+                      />
+                    </TableHead>
+                    <TableHead>{t.tableHeaders.title}</TableHead>
+                    <TableHead>{t.tableHeaders.category}</TableHead>
+                    <TableHead>{t.tableHeaders.access}</TableHead>
+                    <TableHead>{t.tableHeaders.translations}</TableHead>
+                    <TableHead>{t.tableHeaders.status}</TableHead>
+                    <TableHead>{t.tableHeaders.date}</TableHead>
+                    <TableHead className="w-[180px]">{t.tableHeaders.actions}</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {articles.map((article) => (
-                  <TableRow key={article.id}>
+                  <TableRow key={article.id} data-state={selectedIds.has(article.id) ? "selected" : undefined}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(article.id)}
+                        onCheckedChange={() => toggleSelect(article.id)}
+                        aria-label={`Selectează ${article.title}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium max-w-[250px] truncate">
                       {article.title}
                     </TableCell>
@@ -826,7 +944,11 @@ const BlogManager = () => {
                       })}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <BlogRollbackButton
+                          articleId={article.id}
+                          onRolledBack={fetchArticles}
+                        />
                         <Button
                           variant="ghost"
                           size="icon"
@@ -849,8 +971,40 @@ const BlogManager = () => {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Right sidebar */}
+        <div className="space-y-4">
+          <BlogLiveActivity />
+        </div>
+      </div>
+
+      {/* Sticky bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+          <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-3 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm">
+              <CheckSquare className="h-4 w-4 text-primary" />
+              <span className="font-medium">{selectedIds.size}</span> selectate
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button size="sm" variant="outline" onClick={handleBulkSave}>
+                <Save className="h-4 w-4 mr-2" /> Salvează bulk
+                <kbd className="ml-2 rounded border bg-muted px-1.5 py-0.5 text-[10px]">⌘A</kbd>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleBulkReaudit} disabled={isReauditing}>
+                {isReauditing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Re-audit SEO
+                <kbd className="ml-2 rounded border bg-muted px-1.5 py-0.5 text-[10px]">⌘R</kbd>
+              </Button>
+              <Button size="sm" variant="ghost" onClick={clearSelection}>
+                <X className="h-4 w-4 mr-2" /> Deselectează
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -1187,6 +1341,7 @@ const BlogManager = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </TooltipProvider>
   );
 };
 
