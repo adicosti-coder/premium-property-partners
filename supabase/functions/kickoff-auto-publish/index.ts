@@ -1,5 +1,7 @@
 // One-shot kickoff: dispatches auto-publish-listings using the runtime service-role key.
-// Public (verify_jwt=false). Rate-limited via simple in-memory cooldown and capped batch.
+// Requires an authenticated admin JWT or an internal service-role bearer /
+// x-webhook-secret. Rate-limited via in-memory cooldown and capped batch.
+import { requireAdmin } from '../_shared/adminAuth.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,6 +14,10 @@ const COOLDOWN_MS = 30_000;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
   const now = Date.now();
   if (now - lastRun < COOLDOWN_MS) {
     return new Response(JSON.stringify({ error: 'cooldown', wait_ms: COOLDOWN_MS - (now - lastRun) }), {
