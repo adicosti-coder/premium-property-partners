@@ -8749,6 +8749,44 @@ export type Database = {
       }
     }
     Views: {
+      blog_comments_public: {
+        Row: {
+          article_id: string | null
+          author_name: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          author_name?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Update: {
+          article_id?: string | null
+          author_name?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_comments_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "blog_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_availability: {
         Row: {
           check_in: string | null
@@ -8772,6 +8810,44 @@ export type Database = {
           status?: string | null
         }
         Relationships: []
+      }
+      community_article_comments_public: {
+        Row: {
+          author_name: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          submission_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          author_name?: never
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          submission_id?: string | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Update: {
+          author_name?: never
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          submission_id?: string | null
+          updated_at?: string | null
+          user_id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_article_comments_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "user_article_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_listings_public: {
         Row: {
@@ -9205,6 +9281,10 @@ export type Database = {
           p_twilio_reason: string
         }
         Returns: undefined
+      }
+      public_comment_author_name: {
+        Args: { _user_id: string }
+        Returns: string
       }
       reactivate_scraper_keyword: { Args: { _id: string }; Returns: undefined }
       read_email_batch: {
