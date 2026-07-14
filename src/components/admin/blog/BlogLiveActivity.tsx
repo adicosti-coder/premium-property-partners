@@ -31,21 +31,21 @@ export const BlogLiveActivity = () => {
       ]);
       const seed: FeedItem[] = [];
       (logs.data as any[] | null)?.forEach((r) => seed.push({
-        id: `apl-${r.id}`, source: "auto_publish",
+        id: `apl-${r.id}`, source: "auto_publish" as const,
         title: `Auto-publish · ${r.articles_published ?? 0} articole`,
         detail: r.error_message ?? `IndexNow: ${r.indexnow_status}`,
         status: r.error_message ? "error" : (r.articles_published > 0 ? "success" : "info"),
         at: r.ran_at ?? r.created_at,
       }));
       (pings.data as any[] | null)?.forEach((r) => seed.push({
-        id: `pin-${r.id}`, source: "indexnow",
+        id: `pin-${r.id}`, source: "indexnow" as const,
         title: `IndexNow · ${r.url_count ?? r.urls?.length ?? 0} URL`,
         detail: `${r.triggered_by ?? "manual"} → ${r.status_code ?? "?"}`,
         status: r.status_code && r.status_code >= 200 && r.status_code < 300 ? "success" : "warning",
         at: r.pinged_at ?? r.created_at,
       }));
       (snaps.data as any[] | null)?.forEach((r) => seed.push({
-        id: `snp-${r.id}`, source: "ai_snapshot",
+        id: `snp-${r.id}`, source: "ai_snapshot" as const,
         title: `AI Auto-Pilot · ${(r.confidence_score * 100).toFixed(0)}% încredere`,
         detail: r.rolled_back_at ? "Rollback aplicat" : (r.rationale ?? "Optimizare aplicată"),
         status: r.rolled_back_at ? "warning" : "success",
@@ -60,7 +60,7 @@ export const BlogLiveActivity = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "auto_publish_logs" }, (p: any) => {
         const r = p.new;
         setItems((prev) => [{
-          id: `apl-${r.id}`, source: "auto_publish",
+          id: `apl-${r.id}`, source: "auto_publish" as const,
           title: `Auto-publish · ${r.articles_published ?? 0} articole`,
           detail: r.error_message ?? `IndexNow: ${r.indexnow_status}`,
           status: r.error_message ? "error" : (r.articles_published > 0 ? "success" : "info"),
@@ -70,7 +70,7 @@ export const BlogLiveActivity = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "indexnow_pings" }, (p: any) => {
         const r = p.new;
         setItems((prev) => [{
-          id: `pin-${r.id}`, source: "indexnow",
+          id: `pin-${r.id}`, source: "indexnow" as const,
           title: `IndexNow · ${r.url_count ?? r.urls?.length ?? 0} URL`,
           detail: `${r.triggered_by ?? "manual"} → ${r.status_code ?? "?"}`,
           status: r.status_code && r.status_code >= 200 && r.status_code < 300 ? "success" : "warning",
@@ -80,7 +80,7 @@ export const BlogLiveActivity = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "blog_ai_snapshots" }, (p: any) => {
         const r = p.new;
         setItems((prev) => [{
-          id: `snp-${r.id}-${p.eventType}`, source: "ai_snapshot",
+          id: `snp-${r.id}-${p.eventType}`, source: "ai_snapshot" as const,
           title: `AI Auto-Pilot · ${(Number(r.confidence_score) * 100).toFixed(0)}% încredere`,
           detail: r.rolled_back_at ? "Rollback aplicat" : (r.rationale ?? "Optimizare aplicată"),
           status: r.rolled_back_at ? "warning" : "success",
