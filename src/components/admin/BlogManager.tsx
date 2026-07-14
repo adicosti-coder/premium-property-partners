@@ -845,7 +845,14 @@ const BlogManager = () => {
                 </TableHeader>
               <TableBody>
                 {articles.map((article) => (
-                  <TableRow key={article.id}>
+                  <TableRow key={article.id} data-state={selectedIds.has(article.id) ? "selected" : undefined}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(article.id)}
+                        onCheckedChange={() => toggleSelect(article.id)}
+                        aria-label={`Selectează ${article.title}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium max-w-[250px] truncate">
                       {article.title}
                     </TableCell>
