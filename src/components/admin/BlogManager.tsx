@@ -1070,6 +1070,50 @@ const BlogManager = () => {
                 <Label htmlFor="is_premium">{t.premium}</Label>
               </div>
             </div>
+
+            {/* Editorial scheduling — auto-publishes when scheduled_for <= now() */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="scheduled_for">📅 Programează publicare (opțional)</Label>
+                <Input
+                  id="scheduled_for"
+                  type="datetime-local"
+                  value={formData.scheduled_for}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, scheduled_for: e.target.value }))
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Dacă e completată în viitor, articolul rămâne draft până la data setată,
+                  apoi este publicat automat (verificare la fiecare 5 min).
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="faq_items_json">
+                  ❓ FAQ structurat (JSON, opțional)
+                </Label>
+                <Textarea
+                  id="faq_items_json"
+                  value={formData.faq_items_json}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, faq_items_json: e.target.value }));
+                    setFaqJsonError(null);
+                  }}
+                  rows={5}
+                  placeholder={`[
+  { "question": "Cum funcționează X?", "answer": "..." }
+]`}
+                  className={`font-mono text-xs ${faqJsonError ? "border-destructive" : ""}`}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Suprascrie FAQ-ul automat. Este prins de generatorul FAQPage JSON-LD
+                  pentru Rich Snippets Google.
+                </p>
+                {faqJsonError && (
+                  <p className="text-xs text-destructive">JSON invalid: {faqJsonError}</p>
+                )}
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
