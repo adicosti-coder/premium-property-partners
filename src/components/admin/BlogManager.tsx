@@ -138,7 +138,7 @@ const BlogManager = () => {
         title: "AI Auto-Pilot rulat",
         description: `Procesate: ${d.processed ?? 0} · Aplicate: ${d.applied ?? 0} · În așteptare aprobare: ${d.queued ?? 0}`,
       });
-      loadArticles();
+      fetchArticles();
     } catch (e) {
       toast({ title: "Auto-Pilot eșuat", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
     } finally {
