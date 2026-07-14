@@ -116,6 +116,9 @@ describe("RLS regression — anonymous access is denied", () => {
       "agency_blocklist",
       "voice_agent_settings",
       "automation_live_logs",
+      // auto_publish_logs: admin-only SELECT, service_role INSERT. Anon or
+      // authenticated non-admin users must never receive rows (empty or error).
+      "auto_publish_logs",
     ];
 
     for (const table of lockedTables) {

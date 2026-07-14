@@ -100,6 +100,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "guest-guides", label: "Portal Oaspeți", icon: BookOpen },
       { value: "local-tips", label: "Sfaturi Locale", icon: Lightbulb },
       { value: "video-testimonials", label: "Video", icon: Play },
+      { value: "auto-publish-logs", label: "Auto-Publish Logs", icon: FileText, keywords: ["blog", "cron", "indexnow", "logs", "auto", "publish"] },
     ],
   },
   {
