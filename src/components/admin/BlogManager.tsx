@@ -483,15 +483,18 @@ const BlogManager = () => {
         faq_items: faqItems,
       };
 
+      // Cast to any: `faq_items` + `scheduled_for` are newly added columns
+      // not yet reflected in the generated Supabase types.
+      const payload = articleData as unknown as Record<string, unknown>;
       if (editingArticle) {
         const { error } = await supabase
           .from("blog_articles")
-          .update(articleData)
+          .update(payload as never)
           .eq("id", editingArticle.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("blog_articles").insert(articleData);
+        const { error } = await supabase.from("blog_articles").insert(payload as never);
         if (error) throw error;
       }
 
