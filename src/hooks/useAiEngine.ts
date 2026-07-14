@@ -155,21 +155,47 @@ async function streamOnce<T = unknown>(
   },
 ): Promise<AiEngineResponse<T>> {
   const apiKey = getSupabasePublishableKey();
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData?.session?.access_token;
+
+  const getAccessToken = async (forceRefresh = false): Promise<string | null> => {
+    if (forceRefresh) {
+      const { data } = await supabase.auth.refreshSession();
+      return data?.session?.access_token ?? null;
+    }
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token ?? null;
+  };
+
+  let accessToken = await getAccessToken(false);
+  if (!accessToken) {
+    // No cached session — try a refresh in case the client just booted.
+    accessToken = await getAccessToken(true);
+  }
   if (!accessToken) {
     throw new AiEngineError("Trebuie să fii autentificat ca admin pentru a folosi motorul AI.", 401);
   }
-  const res = await fetch(FUNCTION_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-      apikey: apiKey,
-    },
-    body: JSON.stringify({ ...input, schema: undefined, stream: true }),
-    signal: handlers.signal,
-  });
+
+  const doFetch = (token: string) =>
+    fetch(FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        apikey: apiKey,
+      },
+      body: JSON.stringify({ ...input, schema: undefined, stream: true }),
+      signal: handlers.signal,
+    });
+
+  let res = await doFetch(accessToken);
+
+  // If auth failed, try refreshing the session once and retry.
+  if (res.status === 401) {
+    const refreshed = await getAccessToken(true);
+    if (refreshed && refreshed !== accessToken) {
+      accessToken = refreshed;
+      res = await doFetch(accessToken);
+    }
+  }
 
   if (!res.ok || !res.body) {
     let details: any = null;
