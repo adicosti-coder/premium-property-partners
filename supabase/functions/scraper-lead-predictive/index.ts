@@ -46,8 +46,14 @@ serve(async (req) => {
 
     const rawBody = await req.json().catch(() => ({} as any));
 
-    // Orchestrator/cron trigger: bypass admin (service-role JWT is already validated by gateway)
-    const isCron = typeof rawBody?.triggered_by === "string" && rawBody.triggered_by.length > 0;
+    // Only trust cron/orchestrator when the caller proves it with the shared
+    // service-role secret. `triggered_by` alone is spoofable by anyone.
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const authHdr = req.headers.get("Authorization") || "";
+    const bearer = authHdr.replace(/^Bearer\s+/i, "").trim();
+    const webhookSecret = req.headers.get("x-webhook-secret") || req.headers.get("x-cron-secret") || "";
+    const hasInternalSecret = !!serviceKey && ((bearer.length > 0 && bearer === serviceKey) || (webhookSecret.length > 0 && webhookSecret === serviceKey));
+    const isCron = hasInternalSecret && typeof rawBody?.triggered_by === "string" && rawBody.triggered_by.length > 0;
     if (!isCron) {
       const admin = await requireAdmin(req, sb);
       if (admin.error) return admin.error;
