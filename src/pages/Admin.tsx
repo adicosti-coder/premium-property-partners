@@ -169,6 +169,9 @@ const Admin = () => {
   }, [navigate]);
 
   const handleLogout = async () => {
+    // Best-effort: drop the server-side MFA session before signing out.
+    try { await supabase.rpc("revoke_admin_mfa"); } catch { /* ignore */ }
+    try { sessionStorage.removeItem("admin_otp_last_check"); } catch { /* ignore */ }
     await supabase.auth.signOut();
     navigate("/auth");
   };
