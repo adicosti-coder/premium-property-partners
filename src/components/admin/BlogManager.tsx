@@ -436,6 +436,33 @@ const BlogManager = () => {
 
       const translationLocked = formData.translation_locked || enFieldsChanged;
 
+      // Parse curated FAQ items (optional). Invalid JSON blocks save.
+      let faqItems: unknown = null;
+      if (formData.faq_items_json.trim()) {
+        try {
+          const parsed = JSON.parse(formData.faq_items_json);
+          if (!Array.isArray(parsed)) throw new Error("faq_items trebuie să fie un array JSON");
+          faqItems = parsed;
+          setFaqJsonError(null);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "JSON invalid";
+          setFaqJsonError(msg);
+          toast({ title: t.error, description: `FAQ JSON: ${msg}`, variant: "destructive" });
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Scheduling logic:
+      //   - scheduled_for in the FUTURE  → keep is_published=false, publish later via cron
+      //   - scheduled_for in the PAST/empty → normal publish flow
+      const scheduledIso = formData.scheduled_for
+        ? new Date(formData.scheduled_for).toISOString()
+        : null;
+      const isFutureScheduled =
+        !!scheduledIso && new Date(scheduledIso).getTime() > Date.now();
+      const effectivePublished = isFutureScheduled ? false : formData.is_published;
+
       const articleData = {
         title: formData.title,
         title_en: formData.title_en || null,
@@ -448,10 +475,12 @@ const BlogManager = () => {
         category: formData.category,
         tags: formData.tags,
         author_name: formData.author_name,
-        is_published: formData.is_published,
+        is_published: effectivePublished,
         is_premium: formData.is_premium,
         translation_locked: translationLocked,
-        published_at: formData.is_published ? new Date().toISOString() : null,
+        published_at: effectivePublished ? new Date().toISOString() : null,
+        scheduled_for: isFutureScheduled ? scheduledIso : null,
+        faq_items: faqItems,
       };
 
       if (editingArticle) {
