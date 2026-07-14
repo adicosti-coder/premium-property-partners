@@ -172,9 +172,10 @@ async function streamOnce<T = unknown>(
   });
 
   if (!res.ok || !res.body) {
-    let details: unknown = null;
+    let details: any = null;
     try { details = await res.json(); } catch { /* noop */ }
-    throw new AiEngineError(`Motorul AI a răspuns cu ${res.status}`, res.status, details);
+    const detailMsg = details?.error ? ` — ${details.error}` : "";
+    throw new AiEngineError(`Motorul AI a răspuns cu ${res.status}${detailMsg}`, res.status, details);
   }
 
   const reader = res.body.getReader();
