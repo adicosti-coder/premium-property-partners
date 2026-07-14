@@ -84,10 +84,6 @@ Deno.serve(async (req) => {
     if (jsonMode) {
       payload.response_format = { type: "json_object" };
     }
-    if (model.startsWith("z-ai/")) {
-      payload.provider = { require_fp8: true };
-    }
-
     const upstream = await fetch(OPENROUTER_URL, {
       method: "POST",
       headers: {
