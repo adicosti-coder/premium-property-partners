@@ -72,6 +72,8 @@ interface BlogArticle {
   created_at: string;
   updated_at: string;
   translation_locked: boolean;
+  scheduled_for?: string | null;
+  faq_items?: unknown;
 }
 
 const BlogManager = () => {
@@ -107,7 +109,10 @@ const BlogManager = () => {
     is_published: false,
     is_premium: false,
     translation_locked: false,
+    scheduled_for: "" as string, // datetime-local value, e.g. "2026-08-01T09:00"
+    faq_items_json: "" as string, // raw JSON textarea
   });
+  const [faqJsonError, setFaqJsonError] = useState<string | null>(null);
 
   const translations = {
     ro: {
@@ -359,6 +364,12 @@ const BlogManager = () => {
   const openDialog = (article?: BlogArticle) => {
     if (article) {
       setEditingArticle(article);
+      const faqJson = article.faq_items
+        ? JSON.stringify(article.faq_items, null, 2)
+        : "";
+      const scheduledLocal = article.scheduled_for
+        ? new Date(article.scheduled_for).toISOString().slice(0, 16)
+        : "";
       setFormData({
         title: article.title,
         title_en: article.title_en || "",
@@ -374,6 +385,8 @@ const BlogManager = () => {
         is_published: article.is_published,
         is_premium: article.is_premium,
         translation_locked: article.translation_locked ?? false,
+        scheduled_for: scheduledLocal,
+        faq_items_json: faqJson,
       });
     } else {
       setEditingArticle(null);
@@ -392,8 +405,11 @@ const BlogManager = () => {
         is_published: false,
         is_premium: false,
         translation_locked: false,
+        scheduled_for: "",
+        faq_items_json: "",
       });
     }
+    setFaqJsonError(null);
     setActiveTab("ro");
     setIsDialogOpen(true);
   };
@@ -420,6 +436,33 @@ const BlogManager = () => {
 
       const translationLocked = formData.translation_locked || enFieldsChanged;
 
+      // Parse curated FAQ items (optional). Invalid JSON blocks save.
+      let faqItems: unknown = null;
+      if (formData.faq_items_json.trim()) {
+        try {
+          const parsed = JSON.parse(formData.faq_items_json);
+          if (!Array.isArray(parsed)) throw new Error("faq_items trebuie să fie un array JSON");
+          faqItems = parsed;
+          setFaqJsonError(null);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "JSON invalid";
+          setFaqJsonError(msg);
+          toast({ title: t.error, description: `FAQ JSON: ${msg}`, variant: "destructive" });
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Scheduling logic:
+      //   - scheduled_for in the FUTURE  → keep is_published=false, publish later via cron
+      //   - scheduled_for in the PAST/empty → normal publish flow
+      const scheduledIso = formData.scheduled_for
+        ? new Date(formData.scheduled_for).toISOString()
+        : null;
+      const isFutureScheduled =
+        !!scheduledIso && new Date(scheduledIso).getTime() > Date.now();
+      const effectivePublished = isFutureScheduled ? false : formData.is_published;
+
       const articleData = {
         title: formData.title,
         title_en: formData.title_en || null,
@@ -432,21 +475,26 @@ const BlogManager = () => {
         category: formData.category,
         tags: formData.tags,
         author_name: formData.author_name,
-        is_published: formData.is_published,
+        is_published: effectivePublished,
         is_premium: formData.is_premium,
         translation_locked: translationLocked,
-        published_at: formData.is_published ? new Date().toISOString() : null,
+        published_at: effectivePublished ? new Date().toISOString() : null,
+        scheduled_for: isFutureScheduled ? scheduledIso : null,
+        faq_items: faqItems,
       };
 
+      // Cast to any: `faq_items` + `scheduled_for` are newly added columns
+      // not yet reflected in the generated Supabase types.
+      const payload = articleData as unknown as Record<string, unknown>;
       if (editingArticle) {
         const { error } = await supabase
           .from("blog_articles")
-          .update(articleData)
+          .update(payload as never)
           .eq("id", editingArticle.id);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("blog_articles").insert(articleData);
+        const { error } = await supabase.from("blog_articles").insert(payload as never);
         if (error) throw error;
       }
 
@@ -1020,6 +1068,50 @@ const BlogManager = () => {
                   }
                 />
                 <Label htmlFor="is_premium">{t.premium}</Label>
+              </div>
+            </div>
+
+            {/* Editorial scheduling — auto-publishes when scheduled_for <= now() */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="scheduled_for">📅 Programează publicare (opțional)</Label>
+                <Input
+                  id="scheduled_for"
+                  type="datetime-local"
+                  value={formData.scheduled_for}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, scheduled_for: e.target.value }))
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Dacă e completată în viitor, articolul rămâne draft până la data setată,
+                  apoi este publicat automat (verificare la fiecare 5 min).
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="faq_items_json">
+                  ❓ FAQ structurat (JSON, opțional)
+                </Label>
+                <Textarea
+                  id="faq_items_json"
+                  value={formData.faq_items_json}
+                  onChange={(e) => {
+                    setFormData((prev) => ({ ...prev, faq_items_json: e.target.value }));
+                    setFaqJsonError(null);
+                  }}
+                  rows={5}
+                  placeholder={`[
+  { "question": "Cum funcționează X?", "answer": "..." }
+]`}
+                  className={`font-mono text-xs ${faqJsonError ? "border-destructive" : ""}`}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Suprascrie FAQ-ul automat. Este prins de generatorul FAQPage JSON-LD
+                  pentru Rich Snippets Google.
+                </p>
+                {faqJsonError && (
+                  <p className="text-xs text-destructive">JSON invalid: {faqJsonError}</p>
+                )}
               </div>
             </div>
           </div>

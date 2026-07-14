@@ -687,6 +687,7 @@ export type Database = {
           created_at: string
           excerpt: string
           excerpt_en: string | null
+          faq_items: Json | null
           geo_location: string | null
           id: string
           is_premium: boolean
@@ -695,6 +696,7 @@ export type Database = {
           meta_description: string | null
           meta_title: string | null
           published_at: string | null
+          scheduled_for: string | null
           slug: string
           tags: string[]
           title: string
@@ -712,6 +714,7 @@ export type Database = {
           created_at?: string
           excerpt: string
           excerpt_en?: string | null
+          faq_items?: Json | null
           geo_location?: string | null
           id?: string
           is_premium?: boolean
@@ -720,6 +723,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           published_at?: string | null
+          scheduled_for?: string | null
           slug: string
           tags?: string[]
           title: string
@@ -737,6 +741,7 @@ export type Database = {
           created_at?: string
           excerpt?: string
           excerpt_en?: string | null
+          faq_items?: Json | null
           geo_location?: string | null
           id?: string
           is_premium?: boolean
@@ -745,6 +750,7 @@ export type Database = {
           meta_description?: string | null
           meta_title?: string | null
           published_at?: string | null
+          scheduled_for?: string | null
           slug?: string
           tags?: string[]
           title?: string
@@ -8858,6 +8864,7 @@ export type Database = {
         Args: { p_prospect_id: string; p_reasons?: string[]; p_score: number }
         Returns: Json
       }
+      auto_publish_scheduled_articles: { Args: never; Returns: number }
       automation_acquire_run_lease: {
         Args: {
           _job_key: string

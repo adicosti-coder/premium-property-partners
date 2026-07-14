@@ -9,13 +9,36 @@ import {
 import { HelpCircle } from "lucide-react";
 
 /**
- * Auto-generated FAQ for blog articles based on category.
- * Outputs FAQPage microdata for Google + AI search snippets.
+ * FAQ block for blog articles.
+ * Priority order:
+ *   1. Custom items stored in `blog_articles.faq_items` (per-article, DB-driven)
+ *   2. Category-specific default FAQ
+ *   3. Generic default FAQ
+ *
+ * Emits FAQPage microdata for Google + AI search snippets via useRegisterFAQs.
  */
+
+interface FAQEntry {
+  question: string;
+  answer: string;
+}
+
+interface DbFaqItem {
+  question?: string;
+  answer?: string;
+  q?: string;
+  a?: string;
+  question_en?: string;
+  answer_en?: string;
+  q_en?: string;
+  a_en?: string;
+}
 
 interface ArticleFAQProps {
   category: string;
   articleTitle: string;
+  /** Curated FAQ items from `blog_articles.faq_items` — take priority when present. */
+  customFaqs?: DbFaqItem[] | null;
 }
 
 const faqData: Record<string, { ro: { q: string; a: string }[]; en: { q: string; a: string }[] }> = {
@@ -55,7 +78,6 @@ const faqData: Record<string, { ro: { q: string; a: string }[]; en: { q: string;
   },
 };
 
-// Default FAQ for categories without specific data
 const defaultFaq = {
   ro: [
     { q: "Ce face RealTrust diferit de alți administratori?", a: "Oferim transparență totală, tehnologie avansată (smart locks, pricing dinamic), echipă dedicată și rată de ocupare medie de peste 85%." },
@@ -69,14 +91,37 @@ const defaultFaq = {
   ],
 };
 
-const ArticleFAQ = ({ category, articleTitle }: ArticleFAQProps) => {
+const normalizeCustomFaqs = (raw: DbFaqItem[] | null | undefined, lang: "ro" | "en"): FAQEntry[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (!item) return null;
+      const q = lang === "en"
+        ? (item.question_en || item.q_en || item.question || item.q || "")
+        : (item.question || item.q || "");
+      const a = lang === "en"
+        ? (item.answer_en || item.a_en || item.answer || item.a || "")
+        : (item.answer || item.a || "");
+      const question = String(q).trim();
+      const answer = String(a).trim();
+      if (!question || !answer) return null;
+      return { question, answer };
+    })
+    .filter((v): v is FAQEntry => v !== null)
+    .slice(0, 12);
+};
+
+const ArticleFAQ = ({ category, articleTitle, customFaqs }: ArticleFAQProps) => {
   const { language } = useLanguage();
   const lang = language === "en" ? "en" : "ro";
 
-  const items = faqData[category]?.[lang] || defaultFaq[lang];
+  const custom = normalizeCustomFaqs(customFaqs, lang);
+  const items: FAQEntry[] = custom.length > 0
+    ? custom
+    : (faqData[category]?.[lang] || defaultFaq[lang]).map((it) => ({ question: it.q, answer: it.a }));
 
-  // Register FAQ items via centralized context
-  useRegisterFAQs("article-faq", items.map(item => ({ question: item.q, answer: item.a })));
+  // Register FAQ items via centralized context (drives FAQPage JSON-LD in <head>)
+  useRegisterFAQs("article-faq", items);
 
   return (
     <section className="my-10 p-6 rounded-xl border border-border bg-muted/20">
@@ -88,15 +133,12 @@ const ArticleFAQ = ({ category, articleTitle }: ArticleFAQProps) => {
       </div>
       <Accordion type="single" collapsible className="w-full">
         {items.map((item, i) => (
-          <AccordionItem
-            key={i}
-            value={`article-faq-${i}`}
-          >
+          <AccordionItem key={i} value={`article-faq-${i}`}>
             <AccordionTrigger className="text-left text-sm">
-              {item.q}
+              {item.question}
             </AccordionTrigger>
             <AccordionContent>
-              <p className="text-sm text-muted-foreground">{item.a}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{item.answer}</p>
             </AccordionContent>
           </AccordionItem>
         ))}
