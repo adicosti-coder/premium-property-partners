@@ -307,7 +307,7 @@ const LeadsManager = () => {
           table: 'leads'
         },
         (payload) => {
-          console.log('New lead received:', payload);
+          // PII redacted — do not log lead payload to browser console.
           const newLead = payload.new as LeadFromDB;
           const typedLead: Lead = {
             ...newLead,

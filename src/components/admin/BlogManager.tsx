@@ -60,7 +60,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { BlogLiveActivity } from "./blog/BlogLiveActivity";
 import { BlogSEOAnalyticsPanel } from "./blog/BlogSEOAnalyticsPanel";
-import { BlogRollbackButton } from "./blog/BlogRollbackButton";
+import { BlogRollbackButton, type BlogAiSnapshotLite } from "./blog/BlogRollbackButton";
 import { useBlogAdminShortcuts } from "@/hooks/useBlogAdminShortcuts";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { format } from "date-fns";
@@ -94,6 +94,7 @@ const BlogManager = () => {
   const dateLocale = language === "ro" ? ro : enUS;
 
   const [articles, setArticles] = useState<BlogArticle[]>([]);
+  const [snapshotByArticle, setSnapshotByArticle] = useState<Record<string, BlogAiSnapshotLite>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<BlogArticle | null>(null);
@@ -336,9 +337,27 @@ const BlogManager = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setArticles(data || []);
+      const list = (data || []) as BlogArticle[];
+      setArticles(list);
+
+      // Bulk-load latest active AI snapshot per article (one round-trip instead of N).
+      const ids = list.map((a) => a.id);
+      if (ids.length > 0) {
+        const { data: snaps } = await supabase
+          .from("blog_ai_snapshots" as never)
+          .select("id, article_id, confidence_score, ai_model, rationale, created_at")
+          .in("article_id", ids as never)
+          .is("rolled_back_at", null)
+          .order("created_at", { ascending: false });
+        const map: Record<string, BlogAiSnapshotLite> = {};
+        for (const s of ((snaps as unknown) as BlogAiSnapshotLite[] | null) ?? []) {
+          if (!map[s.article_id]) map[s.article_id] = s; // first (=most recent) wins
+        }
+        setSnapshotByArticle(map);
+      } else {
+        setSnapshotByArticle({});
+      }
     } catch (error) {
-      console.error("Error fetching articles:", error);
       toast({
         title: t.error,
         variant: "destructive",
@@ -946,23 +965,25 @@ const BlogManager = () => {
                     <TableCell>
                       <div className="flex items-center gap-1 flex-wrap">
                         <BlogRollbackButton
-                          articleId={article.id}
+                          snapshot={snapshotByArticle[article.id] ?? null}
                           onRolledBack={fetchArticles}
                         />
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => openDialog(article)}
+                          aria-label={`Editează articolul ${article.title}`}
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => setDeleteArticle(article)}
+                          aria-label={`Șterge articolul ${article.title}`}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </div>
                     </TableCell>

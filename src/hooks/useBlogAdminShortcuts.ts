@@ -8,9 +8,10 @@ interface Opts {
 
 /**
  * Global keyboard shortcuts for the Blog admin.
- * - Cmd/Ctrl+A → bulk save (only when the target is not a form field, and prevents "select all")
- * - Cmd/Ctrl+R → re-audit SEO (prevents browser reload)
- * Shortcuts are ONLY active while the hook is mounted (i.e. Blog admin page).
+ * - Cmd/Ctrl+Shift+S → bulk save (safe: not a browser shortcut)
+ * - Cmd/Ctrl+Shift+R → re-audit SEO (safe: not the browser reload combo)
+ * Both shortcuts no-op while focus is in an editable field, so typing "R"
+ * in an input never triggers them and Cmd+R still reloads the page normally.
  */
 export function useBlogAdminShortcuts({ enabled = true, onBulkSave, onReaudit }: Opts) {
   useEffect(() => {
@@ -22,9 +23,10 @@ export function useBlogAdminShortcuts({ enabled = true, onBulkSave, onReaudit }:
     };
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
-      if (!mod) return;
+      if (!mod || !e.shiftKey) return;
+      if (isEditable(e.target)) return;
       const key = e.key.toLowerCase();
-      if (key === "a" && !isEditable(e.target) && onBulkSave) {
+      if (key === "s" && onBulkSave) {
         e.preventDefault();
         onBulkSave();
       } else if (key === "r" && onReaudit) {
@@ -36,5 +38,4 @@ export function useBlogAdminShortcuts({ enabled = true, onBulkSave, onReaudit }:
     return () => window.removeEventListener("keydown", handler);
   }, [enabled, onBulkSave, onReaudit]);
 }
-
 export default useBlogAdminShortcuts;

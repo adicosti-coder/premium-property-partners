@@ -20,6 +20,7 @@ import { useAdminRecentTabs } from "@/hooks/useAdminRecentTabs";
 import AdminMFAGuard from "@/components/admin/AdminMFAGuard";
 import { getAdminTabComponent, prefetchAdminTab } from "@/components/admin/adminTabLoaders";
 import { AdminTabFallback } from "@/components/admin/AdminTabFallback";
+import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
@@ -168,6 +169,9 @@ const Admin = () => {
   }, [navigate]);
 
   const handleLogout = async () => {
+    // Best-effort: drop the server-side MFA session before signing out.
+    try { await supabase.rpc("revoke_admin_mfa"); } catch { /* ignore */ }
+    try { sessionStorage.removeItem("admin_otp_last_check"); } catch { /* ignore */ }
     await supabase.auth.signOut();
     navigate("/auth");
   };
@@ -307,9 +311,11 @@ function ActiveTabRenderer({ activeTab }: { activeTab: string }) {
     );
   }
   return (
-    <Suspense fallback={<AdminTabFallback />}>
-      <Component />
-    </Suspense>
+    <AdminErrorBoundary resetKey={activeTab}>
+      <Suspense fallback={<AdminTabFallback />}>
+        <Component />
+      </Suspense>
+    </AdminErrorBoundary>
   );
 }
 
