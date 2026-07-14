@@ -72,6 +72,8 @@ interface BlogArticle {
   created_at: string;
   updated_at: string;
   translation_locked: boolean;
+  scheduled_for?: string | null;
+  faq_items?: unknown;
 }
 
 const BlogManager = () => {
@@ -107,7 +109,10 @@ const BlogManager = () => {
     is_published: false,
     is_premium: false,
     translation_locked: false,
+    scheduled_for: "" as string, // datetime-local value, e.g. "2026-08-01T09:00"
+    faq_items_json: "" as string, // raw JSON textarea
   });
+  const [faqJsonError, setFaqJsonError] = useState<string | null>(null);
 
   const translations = {
     ro: {
