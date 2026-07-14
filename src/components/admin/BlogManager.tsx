@@ -94,6 +94,7 @@ const BlogManager = () => {
   const dateLocale = language === "ro" ? ro : enUS;
 
   const [articles, setArticles] = useState<BlogArticle[]>([]);
+  const [snapshotByArticle, setSnapshotByArticle] = useState<Record<string, BlogAiSnapshotLite>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<BlogArticle | null>(null);
