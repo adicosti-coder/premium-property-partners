@@ -891,7 +891,11 @@ const BlogArticlePage = () => {
             <InternalLinks category={article.category} tags={article.tags} currentSlug={article.slug} />
 
             {/* Auto-generated FAQ per article */}
-            <ArticleFAQ category={article.category} articleTitle={displayTitle} />
+            <ArticleFAQ
+              category={article.category}
+              articleTitle={displayTitle}
+              customFaqs={(article as unknown as { faq_items?: unknown }).faq_items as never}
+            />
 
             {/* Location hub cross-link card */}
             {geoLocation && (
