@@ -180,8 +180,14 @@ function matchCompetitor(lead: any, blocklist: string[]): string | null {
   return null;
 }
 
+import { requireAdmin } from "../_shared/adminAuth.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
