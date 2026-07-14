@@ -965,23 +965,25 @@ const BlogManager = () => {
                     <TableCell>
                       <div className="flex items-center gap-1 flex-wrap">
                         <BlogRollbackButton
-                          articleId={article.id}
+                          snapshot={snapshotByArticle[article.id] ?? null}
                           onRolledBack={fetchArticles}
                         />
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => openDialog(article)}
+                          aria-label={`Editează articolul ${article.title}`}
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" aria-hidden="true" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => setDeleteArticle(article)}
+                          aria-label={`Șterge articolul ${article.title}`}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </Button>
                       </div>
                     </TableCell>
