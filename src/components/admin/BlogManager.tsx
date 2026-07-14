@@ -944,7 +944,11 @@ const BlogManager = () => {
                       })}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <BlogRollbackButton
+                          articleId={article.id}
+                          onRolledBack={fetchArticles}
+                        />
                         <Button
                           variant="ghost"
                           size="icon"
@@ -967,8 +971,40 @@ const BlogManager = () => {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Right sidebar */}
+        <div className="space-y-4">
+          <BlogLiveActivity />
+        </div>
+      </div>
+
+      {/* Sticky bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+          <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-3 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm">
+              <CheckSquare className="h-4 w-4 text-primary" />
+              <span className="font-medium">{selectedIds.size}</span> selectate
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button size="sm" variant="outline" onClick={handleBulkSave}>
+                <Save className="h-4 w-4 mr-2" /> Salvează bulk
+                <kbd className="ml-2 rounded border bg-muted px-1.5 py-0.5 text-[10px]">⌘A</kbd>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleBulkReaudit} disabled={isReauditing}>
+                {isReauditing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Re-audit SEO
+                <kbd className="ml-2 rounded border bg-muted px-1.5 py-0.5 text-[10px]">⌘R</kbd>
+              </Button>
+              <Button size="sm" variant="ghost" onClick={clearSelection}>
+                <X className="h-4 w-4 mr-2" /> Deselectează
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
