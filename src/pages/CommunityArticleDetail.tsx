@@ -105,35 +105,42 @@ const CommunityArticleDetail = () => {
     enabled: !!id,
   });
 
-  // Fetch comments
+  // Fetch comments — anon clients no longer have column-level SELECT on
+  // `user_id`, so query only the safe columns.
   const { data: comments, isLoading: commentsLoading } = useQuery({
     queryKey: ["community-article-comments", id],
     queryFn: async () => {
       if (!id) return [];
-      
+
       const { data, error } = await supabase
         .from("community_article_comments")
-        .select("*")
+        .select("id, submission_id, content, created_at")
         .eq("submission_id", id)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
 
-      // Fetch author names
-      const userIds = [...new Set(data.map(c => c.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", userIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
-
-      return data.map(c => ({
-        ...c,
-        author_name: profileMap.get(c.user_id) || "Anonim"
-      })) as Comment[];
+      // Author names are only readable server-side (profiles RLS blocks
+      // anon reads). Fall back to "Anonim" for public visitors — logged-in
+      // owners will still recognize their own comment via `ownCommentIds`.
+      return (data ?? []).map((c) => ({ ...c, author_name: "Anonim" })) as Comment[];
     },
     enabled: !!id,
+  });
+
+  // Owner-only lookup used to gate the delete button.
+  const { data: ownCommentIds } = useQuery({
+    queryKey: ["community-article-comments-own", id, user?.id],
+    enabled: !!id && !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("community_article_comments")
+        .select("id")
+        .eq("submission_id", id!)
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return new Set((data ?? []).map((r) => r.id));
+    },
   });
 
   // Fetch user's vote
