@@ -149,6 +149,36 @@ const BlogCategory = () => {
             </Button>
           </div>
 
+          {/* SEO Hub intro — content-pillar paragraph + keyword chip strip.
+              Rendered above the article grid on page 1 only so paginated
+              variants don't duplicate the same H2 lead across the index. */}
+          {safePage === 1 && (
+            <section
+              aria-labelledby="hub-intro-heading"
+              className="mx-auto max-w-3xl mb-10 rounded-2xl border border-border bg-muted/20 p-6 md:p-8"
+            >
+              <h2
+                id="hub-intro-heading"
+                className="text-xl md:text-2xl font-serif font-semibold text-foreground mb-3"
+              >
+                Despre acest hub de conținut
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">{meta.hubIntro}</p>
+              {meta.hubKeywords?.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {meta.hubKeywords.map((kw) => (
+                    <span
+                      key={kw}
+                      className="inline-flex items-center rounded-full bg-primary/10 text-primary text-xs px-2.5 py-1"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
           <div className="flex flex-wrap justify-center gap-2 mb-10">
             {BLOG_CATEGORIES.map((c) => (
               <Link
