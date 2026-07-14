@@ -1162,6 +1162,10 @@ const BlogManager = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Hub SEO live preview — prototypes hubIntro/hubKeywords per category */}
+      <HubPreviewEditor />
+
+
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteArticle} onOpenChange={() => setDeleteArticle(null)}>
         <AlertDialogContent>
