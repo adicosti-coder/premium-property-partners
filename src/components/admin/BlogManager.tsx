@@ -1341,6 +1341,7 @@ const BlogManager = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </TooltipProvider>
   );
 };
 
