@@ -337,9 +337,27 @@ const BlogManager = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setArticles(data || []);
+      const list = (data || []) as BlogArticle[];
+      setArticles(list);
+
+      // Bulk-load latest active AI snapshot per article (one round-trip instead of N).
+      const ids = list.map((a) => a.id);
+      if (ids.length > 0) {
+        const { data: snaps } = await supabase
+          .from("blog_ai_snapshots" as never)
+          .select("id, article_id, confidence_score, ai_model, rationale, created_at")
+          .in("article_id", ids as never)
+          .is("rolled_back_at", null)
+          .order("created_at", { ascending: false });
+        const map: Record<string, BlogAiSnapshotLite> = {};
+        for (const s of ((snaps as unknown) as BlogAiSnapshotLite[] | null) ?? []) {
+          if (!map[s.article_id]) map[s.article_id] = s; // first (=most recent) wins
+        }
+        setSnapshotByArticle(map);
+      } else {
+        setSnapshotByArticle({});
+      }
     } catch (error) {
-      console.error("Error fetching articles:", error);
       toast({
         title: t.error,
         variant: "destructive",
