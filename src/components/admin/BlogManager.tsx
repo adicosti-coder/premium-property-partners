@@ -436,12 +436,46 @@ const BlogManager = () => {
 
       const translationLocked = formData.translation_locked || enFieldsChanged;
 
-      // Parse curated FAQ items (optional). Invalid JSON blocks save.
+      // Parse curated FAQ items (optional). Validates strict compatibility with
+      // Google FAQPage JSON-LD Rich Results spec: array of {question, answer}
+      // objects, non-empty strings, no raw HTML tags in questions, and per-item
+      // length caps that keep the SERP snippet valid.
       let faqItems: unknown = null;
       if (formData.faq_items_json.trim()) {
         try {
           const parsed = JSON.parse(formData.faq_items_json);
-          if (!Array.isArray(parsed)) throw new Error("faq_items trebuie să fie un array JSON");
+          if (!Array.isArray(parsed)) {
+            throw new Error("faq_items trebuie să fie un array JSON");
+          }
+          if (parsed.length === 0) {
+            throw new Error("array-ul FAQ este gol");
+          }
+          if (parsed.length > 12) {
+            throw new Error(`prea multe întrebări (${parsed.length}); Google recomandă max. 12`);
+          }
+          const htmlTag = /<\/?[a-z][\s\S]*?>/i;
+          parsed.forEach((item, idx) => {
+            if (!item || typeof item !== "object" || Array.isArray(item)) {
+              throw new Error(`item #${idx + 1}: trebuie să fie obiect JSON`);
+            }
+            const q = (item as Record<string, unknown>).question ?? (item as Record<string, unknown>).q;
+            const a = (item as Record<string, unknown>).answer ?? (item as Record<string, unknown>).a;
+            if (typeof q !== "string" || !q.trim()) {
+              throw new Error(`item #${idx + 1}: câmpul "question" lipsește sau este gol`);
+            }
+            if (typeof a !== "string" || !a.trim()) {
+              throw new Error(`item #${idx + 1}: câmpul "answer" lipsește sau este gol`);
+            }
+            if (htmlTag.test(q)) {
+              throw new Error(`item #${idx + 1}: "question" nu poate conține HTML (Google Rich Results)`);
+            }
+            if (q.length > 300) {
+              throw new Error(`item #${idx + 1}: "question" > 300 caractere (limită Rich Results)`);
+            }
+            if (a.length > 1000) {
+              throw new Error(`item #${idx + 1}: "answer" > 1000 caractere; scurtează pentru snippet valid`);
+            }
+          });
           faqItems = parsed;
           setFaqJsonError(null);
         } catch (err) {
