@@ -265,7 +265,7 @@ const BlogComments = ({ articleId }: BlogCommentsProps) => {
                       {formatDate(comment.created_at)}
                     </span>
                   </div>
-                  {user?.id === comment.user_id && (
+                  {ownCommentIds?.has(comment.id) && (
                     <Button
                       variant="ghost"
                       size="sm"
