@@ -749,8 +749,14 @@ const BlogManager = () => {
     }
   };
 
+  useBlogAdminShortcuts({
+    onBulkSave: handleBulkSave,
+    onReaudit: handleBulkReaudit,
+  });
+
   return (
-    <div className="space-y-6">
+    <TooltipProvider>
+    <div className="space-y-6 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-xl font-serif font-semibold text-foreground flex items-center gap-2">
@@ -758,6 +764,22 @@ const BlogManager = () => {
           {t.title}
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => setShowAnalytics((v) => !v)}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            {showAnalytics ? "Ascunde Analytics" : "Arată Analytics"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleRunAutopilot}
+            disabled={isAutopilotRunning}
+            className="border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+          >
+            {isAutopilotRunning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Bot className="w-4 h-4 mr-2" />}
+            AI Auto-Pilot
+          </Button>
           <Button
             variant="outline"
             onClick={handleTranslateAllMissing}
@@ -781,34 +803,46 @@ const BlogManager = () => {
         </div>
       </div>
 
-      {/* Articles Table */}
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : articles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {t.noArticles}
-              </h3>
-              <p className="text-muted-foreground">{t.noArticlesDescription}</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t.tableHeaders.title}</TableHead>
-                  <TableHead>{t.tableHeaders.category}</TableHead>
-                  <TableHead>{t.tableHeaders.access}</TableHead>
-                  <TableHead>{t.tableHeaders.translations}</TableHead>
-                  <TableHead>{t.tableHeaders.status}</TableHead>
-                  <TableHead>{t.tableHeaders.date}</TableHead>
-                  <TableHead className="w-[100px]">{t.tableHeaders.actions}</TableHead>
-                </TableRow>
-              </TableHeader>
+      {/* Analytics */}
+      {showAnalytics && <BlogSEOAnalyticsPanel />}
+
+      {/* 2-column Command Center */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
+        {/* Articles Table */}
+        <Card>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : articles.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  {t.noArticles}
+                </h3>
+                <p className="text-muted-foreground">{t.noArticlesDescription}</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={selectedIds.size === articles.length && articles.length > 0}
+                        onCheckedChange={toggleAllVisible}
+                        aria-label="Selectează tot"
+                      />
+                    </TableHead>
+                    <TableHead>{t.tableHeaders.title}</TableHead>
+                    <TableHead>{t.tableHeaders.category}</TableHead>
+                    <TableHead>{t.tableHeaders.access}</TableHead>
+                    <TableHead>{t.tableHeaders.translations}</TableHead>
+                    <TableHead>{t.tableHeaders.status}</TableHead>
+                    <TableHead>{t.tableHeaders.date}</TableHead>
+                    <TableHead className="w-[180px]">{t.tableHeaders.actions}</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {articles.map((article) => (
                   <TableRow key={article.id}>
