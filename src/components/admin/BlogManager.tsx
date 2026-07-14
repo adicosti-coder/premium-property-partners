@@ -50,7 +50,19 @@ import {
   Globe,
   Languages,
   Sparkles,
+  Bot,
+  BarChart3,
+  Save,
+  RefreshCw,
+  CheckSquare,
+  Square,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BlogLiveActivity } from "./blog/BlogLiveActivity";
+import { BlogSEOAnalyticsPanel } from "./blog/BlogSEOAnalyticsPanel";
+import { BlogRollbackButton } from "./blog/BlogRollbackButton";
+import { useBlogAdminShortcuts } from "@/hooks/useBlogAdminShortcuts";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 
