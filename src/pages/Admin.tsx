@@ -20,6 +20,7 @@ import { useAdminRecentTabs } from "@/hooks/useAdminRecentTabs";
 import AdminMFAGuard from "@/components/admin/AdminMFAGuard";
 import { getAdminTabComponent, prefetchAdminTab } from "@/components/admin/adminTabLoaders";
 import { AdminTabFallback } from "@/components/admin/AdminTabFallback";
+import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useNewLeadsNotification } from "@/hooks/useNewLeadsNotification";
 import { useQuery } from "@tanstack/react-query";
