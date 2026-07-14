@@ -65,7 +65,7 @@ export const BlogLiveActivity = () => {
           detail: r.error_message ?? `IndexNow: ${r.indexnow_status}`,
           status: r.error_message ? "error" : (r.articles_published > 0 ? "success" : "info"),
           at: r.ran_at ?? r.created_at,
-        }, ...prev].slice(0, MAX));
+        } as FeedItem, ...prev].slice(0, MAX));
       })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "indexnow_pings" }, (p: any) => {
         const r = p.new;
@@ -75,7 +75,7 @@ export const BlogLiveActivity = () => {
           detail: `${r.triggered_by ?? "manual"} → ${r.status_code ?? "?"}`,
           status: r.status_code && r.status_code >= 200 && r.status_code < 300 ? "success" : "warning",
           at: r.pinged_at ?? r.created_at,
-        }, ...prev].slice(0, MAX));
+        } as FeedItem, ...prev].slice(0, MAX));
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "blog_ai_snapshots" }, (p: any) => {
         const r = p.new;
@@ -85,7 +85,7 @@ export const BlogLiveActivity = () => {
           detail: r.rolled_back_at ? "Rollback aplicat" : (r.rationale ?? "Optimizare aplicată"),
           status: r.rolled_back_at ? "warning" : "success",
           at: r.rolled_back_at ?? r.created_at,
-        }, ...prev].slice(0, MAX));
+        } as FeedItem, ...prev].slice(0, MAX));
       })
       .subscribe((status) => setConnected(status === "SUBSCRIBED"));
 
