@@ -524,7 +524,7 @@ const CommunityArticleDetail = () => {
                                 })}
                               </span>
                             </div>
-                            {user?.id === comment.user_id && (
+                            {ownCommentIds?.has(comment.id) && (
                               <Button
                                 variant="ghost"
                                 size="sm"
