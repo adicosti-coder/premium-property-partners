@@ -106,6 +106,71 @@ const BlogManager = () => {
   const [retryingId, setRetryingId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState<"ro" | "en">("ro");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showAnalytics, setShowAnalytics] = useState(true);
+  const [isAutopilotRunning, setIsAutopilotRunning] = useState(false);
+  const [isReauditing, setIsReauditing] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleAllVisible = () => {
+    setSelectedIds((prev) => {
+      if (prev.size === articles.length) return new Set();
+      return new Set(articles.map((a) => a.id));
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleRunAutopilot = async () => {
+    setIsAutopilotRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("blog-ai-autopilot", {
+        body: { limit: 5 },
+      });
+      if (error) throw error;
+      const d = data as { applied?: number; queued?: number; processed?: number };
+      toast({
+        title: "AI Auto-Pilot rulat",
+        description: `Procesate: ${d.processed ?? 0} · Aplicate: ${d.applied ?? 0} · În așteptare aprobare: ${d.queued ?? 0}`,
+      });
+      loadArticles();
+    } catch (e) {
+      toast({ title: "Auto-Pilot eșuat", description: e instanceof Error ? e.message : String(e), variant: "destructive" });
+    } finally {
+      setIsAutopilotRunning(false);
+    }
+  };
+
+  const handleBulkSave = async () => {
+    if (selectedIds.size === 0) return;
+    toast({ title: "Salvare bulk", description: `${selectedIds.size} articole marcate pentru salvare (deschide fiecare pentru editare individuală).` });
+  };
+
+  const handleBulkReaudit = async () => {
+    if (selectedIds.size === 0) {
+      toast({ title: "Selectează articole", description: "Bifează articolele pentru re-audit SEO." });
+      return;
+    }
+    setIsReauditing(true);
+    let ok = 0, fail = 0;
+    for (const id of selectedIds) {
+      const article = articles.find((a) => a.id === id);
+      if (!article) continue;
+      try {
+        const { error } = await supabase.functions.invoke("seo-audit", {
+          body: { url: `https://realtrust.ro/blog/${article.slug}` },
+        });
+        if (error) fail++; else ok++;
+      } catch { fail++; }
+    }
+    setIsReauditing(false);
+    toast({ title: "Re-audit SEO finalizat", description: `Reușite: ${ok} · Eșuate: ${fail}` });
+  };
 
   const [formData, setFormData] = useState({
     title: "",
