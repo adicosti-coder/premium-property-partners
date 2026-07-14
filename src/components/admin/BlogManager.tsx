@@ -364,6 +364,12 @@ const BlogManager = () => {
   const openDialog = (article?: BlogArticle) => {
     if (article) {
       setEditingArticle(article);
+      const faqJson = article.faq_items
+        ? JSON.stringify(article.faq_items, null, 2)
+        : "";
+      const scheduledLocal = article.scheduled_for
+        ? new Date(article.scheduled_for).toISOString().slice(0, 16)
+        : "";
       setFormData({
         title: article.title,
         title_en: article.title_en || "",
@@ -379,6 +385,8 @@ const BlogManager = () => {
         is_published: article.is_published,
         is_premium: article.is_premium,
         translation_locked: article.translation_locked ?? false,
+        scheduled_for: scheduledLocal,
+        faq_items_json: faqJson,
       });
     } else {
       setEditingArticle(null);
@@ -397,8 +405,11 @@ const BlogManager = () => {
         is_published: false,
         is_premium: false,
         translation_locked: false,
+        scheduled_for: "",
+        faq_items_json: "",
       });
     }
+    setFaqJsonError(null);
     setActiveTab("ro");
     setIsDialogOpen(true);
   };
