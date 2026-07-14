@@ -104,6 +104,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_mfa_sessions: {
+        Row: {
+          expires_at: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+          verified_at: string
+        }
+        Insert: {
+          expires_at: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+          verified_at?: string
+        }
+        Update: {
+          expires_at?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+          verified_at?: string
+        }
+        Relationships: []
+      }
       admin_otp_codes: {
         Row: {
           code: string
@@ -9184,6 +9208,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_valid_admin_mfa: { Args: never; Returns: boolean }
       increment_keyword_unique_leads: {
         Args: { _delta?: number; _id: string }
         Returns: undefined
@@ -9291,6 +9316,7 @@ export type Database = {
         Args: { p_prospect_id: string }
         Returns: Json
       }
+      revoke_admin_mfa: { Args: never; Returns: undefined }
       seo_acquire_audit_lock: {
         Args: {
           p_language?: string
