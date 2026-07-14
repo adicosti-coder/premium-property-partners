@@ -30,6 +30,7 @@ import { SEOReauditSchedulerPanel } from "./SEOReauditSchedulerPanel";
 import { SEOCompetitorGapPanel } from "./SEOCompetitorGapPanel";
 import { SEOAutoLinkingPanel } from "./SEOAutoLinkingPanel";
 import { SEOPremiumPlusPanel } from "./SEOPremiumPlusPanel";
+import { SEOAutoPilot } from "./SEOAutoPilot";
 import { SEOTrafficROIPanel } from "./SEOTrafficROIPanel";
 import { GlobalCanonicalFixButton } from "./GlobalCanonicalFixButton";
 import { RobotsCacheStatus } from "./RobotsCacheStatus";
@@ -770,6 +771,9 @@ const SEOOptimizerManager = () => {
       </Card>
 
       <SEOPremiumPlusPanel history={history as any} overrides={overrides as any} />
+
+      <SEOAutoPilot history={history as any} overrides={overrides as any} />
+
 
       <SEOQuickWinsPanel history={history} overrides={overrides as any} />
 
