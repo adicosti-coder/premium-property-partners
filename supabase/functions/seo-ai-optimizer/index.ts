@@ -34,8 +34,21 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const rawBody = await req.json().catch(() => ({} as any));
-  const isCron = typeof rawBody?.triggered_by === "string" && rawBody.triggered_by.length > 0;
-  const isInternal = req.headers.get("x-internal-cron") === "1";
+
+  // Only trust an internal-cron call when the caller proves it with the shared
+  // service-role secret. Presence of a `triggered_by` field or `x-internal-cron: 1`
+  // header alone is spoofable, so we always require the secret to bypass admin auth.
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const authHeader = req.headers.get("Authorization") || "";
+  const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+  const internalSecret = req.headers.get("x-internal-cron-secret") || req.headers.get("x-webhook-secret") || "";
+  const hasInternalSecret =
+    !!serviceKey && (
+      (bearer.length > 0 && bearer === serviceKey) ||
+      (internalSecret.length > 0 && internalSecret === serviceKey)
+    );
+  const isCron = hasInternalSecret && typeof rawBody?.triggered_by === "string" && rawBody.triggered_by.length > 0;
+  const isInternal = hasInternalSecret && req.headers.get("x-internal-cron") === "1";
 
   if (!isCron && !isInternal) {
     const auth = await requireAdmin(req, corsHeaders);
