@@ -1,7 +1,13 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { verifyInternalWebhook } from '../_shared/adminAuth.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  // Only DB triggers / internal callers (with SERVICE_ROLE secret) may fire admin alerts.
+  const denied = verifyInternalWebhook(req, corsHeaders);
+  if (denied) return denied;
+
 
   try {
     const webhookUrl = Deno.env.get('MAKE_TRIAGE_WEBHOOK_URL');
