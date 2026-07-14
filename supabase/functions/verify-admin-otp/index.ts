@@ -64,13 +64,35 @@ serve(async (req) => {
       });
     }
 
-    // Mark as used
+    // Mark OTP as used
     await supabaseAdmin
       .from("admin_otp_codes")
       .update({ used: true })
       .eq("id", otpRecord.id);
 
-    return new Response(JSON.stringify({ valid: true }), {
+    // Persist MFA verification server-side (source of truth for AdminMFAGuard).
+    // 4 hours matches SESSION_DURATION_MS on the client.
+    const expiresAt = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString();
+    const { error: mfaError } = await supabaseAdmin
+      .from("admin_mfa_sessions")
+      .upsert(
+        {
+          user_id: user.id,
+          verified_at: new Date().toISOString(),
+          expires_at: expiresAt,
+          user_agent: req.headers.get("user-agent"),
+        },
+        { onConflict: "user_id" },
+      );
+    if (mfaError) {
+      console.error("Failed to persist admin MFA session:", mfaError);
+      return new Response(JSON.stringify({ error: "MFA session error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ valid: true, expires_at: expiresAt }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
