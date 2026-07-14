@@ -235,11 +235,10 @@ Deno.serve(async (req) => {
 
   if (!dryRun) {
     await supabase.from("auto_publish_logs").insert({
-      job: "blog_ai_autopilot",
-      status: errors.length > 0 ? "error" : (applied === 0 && queued === 0 ? "skipped" : "sent"),
       articles_published: applied,
+      published_slugs: publishedUrls.map((u) => u.split("/").pop() || ""),
       indexnow_status: indexnowStatus,
-      details: { queued, applied, results, errors: errors.slice(0, 20) },
+      error_message: errors.length > 0 ? `blog_ai_autopilot | queued=${queued} | ${errors.slice(0, 5).join(" | ")}` : (queued > 0 ? `blog_ai_autopilot | queued=${queued}` : null),
     });
   }
 
