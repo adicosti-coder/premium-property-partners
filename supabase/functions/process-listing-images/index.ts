@@ -219,8 +219,13 @@ async function processOne(bytes: Uint8Array, mode: Mode): Promise<ProcessResult>
 
 
 
+import { requireAdmin } from "../_shared/adminAuth.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
