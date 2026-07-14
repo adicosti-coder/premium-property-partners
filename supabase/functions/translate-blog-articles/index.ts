@@ -73,6 +73,10 @@ async function translate(
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
