@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,23 +11,24 @@ interface AdminMFAGuardProps {
   children: React.ReactNode;
 }
 
-const SESSION_KEY = "admin_otp_verified";
-const SESSION_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
+// Cache used ONLY to skip an extra RPC call on quick tab switches. Never a source of truth.
+const CACHE_KEY = "admin_otp_last_check";
+const CACHE_TTL_MS = 60 * 1000; // 1 minute
 
-type Step = "idle" | "sending" | "verify" | "authenticated";
+type Step = "checking" | "idle" | "sending" | "verify" | "authenticated";
+
+async function checkServerMfa(): Promise<boolean> {
+  const { data, error } = await supabase.rpc("has_valid_admin_mfa");
+  if (error) {
+    console.error("[AdminMFAGuard] has_valid_admin_mfa failed:", error.message);
+    return false;
+  }
+  return data === true;
+}
 
 const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
   const { language } = useLanguage();
-  const [step, setStep] = useState<Step>(() => {
-    const stored = sessionStorage.getItem(SESSION_KEY);
-    if (!stored) return "idle";
-    try {
-      const { timestamp } = JSON.parse(stored);
-      return Date.now() - timestamp < SESSION_DURATION_MS ? "authenticated" : "idle";
-    } catch {
-      return "idle";
-    }
-  });
+  const [step, setStep] = useState<Step>("checking");
   const [code, setCode] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,6 +45,7 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
       invalid: "Cod invalid sau expirat.",
       sendError: "Eroare la trimiterea codului.",
       sent: "Cod trimis pe email!",
+      checking: "Verificare sesiune…",
     },
     en: {
       title: "Admin Verification",
@@ -56,10 +58,37 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
       invalid: "Invalid or expired code.",
       sendError: "Error sending code.",
       sent: "Code sent to email!",
+      checking: "Checking session…",
     },
   };
 
   const labels = t[language] || t.ro;
+
+  // On mount: check server-side MFA state.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // Optional short-lived cache to avoid pinging the RPC on every remount within 1 minute.
+      try {
+        const raw = sessionStorage.getItem(CACHE_KEY);
+        if (raw) {
+          const { at, valid } = JSON.parse(raw);
+          if (valid && Date.now() - at < CACHE_TTL_MS) {
+            if (!cancelled) setStep("authenticated");
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+
+      const valid = await checkServerMfa();
+      if (cancelled) return;
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), valid }));
+      } catch { /* ignore */ }
+      setStep(valid ? "authenticated" : "idle");
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const sendOtp = useCallback(async () => {
     setIsSubmitting(true);
@@ -70,8 +99,7 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
       setMaskedEmail(data.email || "");
       setStep("verify");
       toast({ title: labels.sent });
-    } catch (err: any) {
-      console.error("Send OTP error:", err);
+    } catch (err: unknown) {
       toast({ title: labels.sendError, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
@@ -87,21 +115,40 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
       });
       if (error) throw error;
       if (data?.valid) {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ timestamp: Date.now() }));
+        // Re-check via RPC so client trusts DB truth, not response payload.
+        const ok = await checkServerMfa();
+        if (!ok) {
+          toast({ title: labels.invalid, variant: "destructive" });
+          setCode("");
+          return;
+        }
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), valid: true }));
+        } catch { /* ignore */ }
         toast({ title: labels.success });
         setStep("authenticated");
       } else {
         toast({ title: labels.invalid, variant: "destructive" });
         setCode("");
       }
-    } catch (err: any) {
-      console.error("Verify OTP error:", err);
+    } catch (err: unknown) {
       toast({ title: labels.invalid, variant: "destructive" });
       setCode("");
     } finally {
       setIsSubmitting(false);
     }
   }, [code, labels]);
+
+  if (step === "checking") {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-muted-foreground text-sm">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          {labels.checking}
+        </div>
+      </div>
+    );
+  }
 
   if (step === "authenticated") {
     return <>{children}</>;
@@ -112,10 +159,10 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Mail className="w-8 h-8 text-primary" />
+            <Mail className="w-8 h-8 text-primary" aria-hidden="true" />
           </div>
           <CardTitle className="flex items-center justify-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-primary" />
+            <ShieldCheck className="w-5 h-5 text-primary" aria-hidden="true" />
             {labels.title}
           </CardTitle>
           <CardDescription>
@@ -132,9 +179,9 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
               className="w-full"
             >
               {isSubmitting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
               ) : (
-                <Mail className="w-4 h-4 mr-2" />
+                <Mail className="w-4 h-4 mr-2" aria-hidden="true" />
               )}
               {labels.sendBtn}
             </Button>
@@ -150,6 +197,7 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 className="text-center text-2xl tracking-[0.5em] font-mono"
                 autoFocus
+                aria-label={labels.verifyBtn}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") verifyOtp();
                 }}
@@ -159,8 +207,8 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
                 disabled={code.length !== 6 || isSubmitting}
                 className="w-full"
               >
-                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                <ShieldCheck className="w-4 h-4 mr-2" />
+                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />}
+                <ShieldCheck className="w-4 h-4 mr-2" aria-hidden="true" />
                 {labels.verifyBtn}
               </Button>
               <Button
@@ -169,7 +217,7 @@ const AdminMFAGuard = ({ children }: AdminMFAGuardProps) => {
                 disabled={isSubmitting}
                 className="w-full text-sm"
               >
-                <RefreshCw className="w-3 h-3 mr-1" />
+                <RefreshCw className="w-3 h-3 mr-1" aria-hidden="true" />
                 {labels.resend}
               </Button>
             </>
