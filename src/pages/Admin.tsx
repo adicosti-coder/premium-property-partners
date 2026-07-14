@@ -311,9 +311,11 @@ function ActiveTabRenderer({ activeTab }: { activeTab: string }) {
     );
   }
   return (
-    <Suspense fallback={<AdminTabFallback />}>
-      <Component />
-    </Suspense>
+    <AdminErrorBoundary resetKey={activeTab}>
+      <Suspense fallback={<AdminTabFallback />}>
+        <Component />
+      </Suspense>
+    </AdminErrorBoundary>
   );
 }
 
