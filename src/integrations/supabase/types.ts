@@ -379,6 +379,39 @@ export type Database = {
           },
         ]
       }
+      auto_publish_logs: {
+        Row: {
+          articles_published: number
+          created_at: string
+          error_message: string | null
+          id: string
+          indexnow_request_id: number | null
+          indexnow_status: string
+          published_slugs: string[]
+          ran_at: string
+        }
+        Insert: {
+          articles_published?: number
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          indexnow_request_id?: number | null
+          indexnow_status?: string
+          published_slugs?: string[]
+          ran_at?: string
+        }
+        Update: {
+          articles_published?: number
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          indexnow_request_id?: number | null
+          indexnow_status?: string
+          published_slugs?: string[]
+          ran_at?: string
+        }
+        Relationships: []
+      }
       automation_anomalies: {
         Row: {
           acknowledged_at: string | null
