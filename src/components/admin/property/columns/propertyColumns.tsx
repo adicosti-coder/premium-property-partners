@@ -12,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Edit, Eye, EyeOff, Loader2, Trash2 } from "lucide-react";
+import { RevealableField } from "../../shared/RevealableField";
 import type { PropertyRow } from "../hooks/useProperties";
 
 interface Labels {
@@ -61,11 +62,31 @@ export function PropertyTableRow({
       <TableCell className="text-muted-foreground">
         {property.contact_name || property.contact_phone ? (
           <div className="text-xs space-y-0.5">
-            {property.contact_name && <div className="font-medium">{property.contact_name}</div>}
+            {property.contact_name && (
+              <div className="font-medium">
+                {/* PII: name lives in property_contact_details, keyed by property_id */}
+                <RevealableField
+                  value={property.contact_name}
+                  kind="text"
+                  tableName="property_contact_details"
+                  recordId={property.id}
+                  field="contact_name"
+                />
+              </div>
+            )}
             {property.contact_phone && (
-              <a href={`tel:${property.contact_phone}`} className="text-primary hover:underline">
-                {property.contact_phone}
-              </a>
+              <RevealableField
+                value={property.contact_phone}
+                kind="phone"
+                tableName="property_contact_details"
+                recordId={property.id}
+                field="contact_phone"
+                renderRevealed={(v) => (
+                  <a href={`tel:${v}`} className="text-primary hover:underline">
+                    {v}
+                  </a>
+                )}
+              />
             )}
           </div>
         ) : (
