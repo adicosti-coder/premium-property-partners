@@ -781,9 +781,18 @@ export default function ScraperMonitorPanel() {
                       </TableCell>
                       <TableCell className="text-xs">
                         {l.contact_phone ? (
-                          <a href={`tel:${l.contact_phone}`} className="inline-flex items-center gap-1 text-primary hover:underline">
-                            <Phone className="h-3 w-3" />{l.contact_phone}
-                          </a>
+                          <RevealableField
+                            value={l.contact_phone}
+                            kind="phone"
+                            tableName="prospect_listings"
+                            recordId={l.id}
+                            field="contact_phone"
+                            renderRevealed={(v) => (
+                              <a href={`tel:${v}`} className="inline-flex items-center gap-1 text-primary hover:underline">
+                                <Phone className="h-3 w-3" />{v}
+                              </a>
+                            )}
+                          />
                         ) : <span className="text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell className="text-center">
