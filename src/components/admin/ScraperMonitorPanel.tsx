@@ -684,9 +684,9 @@ export default function ScraperMonitorPanel() {
                 </TabsList>
               </Tabs>
               <Button variant="outline" size="sm" onClick={() => refetchFound()}>
-                <RotateCcw className={`h-4 w-4 mr-1.5 ${foundLoading ? "animate-spin" : ""}`} /> Refresh
+                <RotateCcw className={`h-4 w-4 mr-1.5 ${foundLoading || foundFetching ? "animate-spin" : ""}`} /> Refresh
               </Button>
-              <Button variant="outline" size="sm" onClick={exportFoundListings} disabled={filteredFound.length === 0}>
+              <Button variant="outline" size="sm" onClick={exportFoundListings} disabled={foundListings.length === 0}>
                 <Download className="h-4 w-4 mr-1.5" /> CSV
               </Button>
             </div>
@@ -694,10 +694,10 @@ export default function ScraperMonitorPanel() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Stat label={`Total (${foundWindow})`} value={foundTotals?.total ?? 0} icon={ListChecks} />
-            <Stat label="Active" value={foundTotals?.active ?? 0} icon={CheckCircle2} tone="success" />
-            <Stat label="Prioritare (≥70)" value={foundTotals?.priority ?? 0} icon={Trophy} tone="success" />
-            <Stat label="Surse distincte" value={platformBreakdown.length} icon={Building2} />
+            <Stat label={`Total (${foundWindow})`} value={foundTotals.total} icon={ListChecks} />
+            <Stat label="Active" value={foundTotals.active} icon={CheckCircle2} tone="success" />
+            <Stat label="Prioritare (≥70)" value={foundTotals.priority} icon={Trophy} tone="success" />
+            <Stat label="Surse (pag.)" value={platformBreakdown.length} icon={Building2} />
           </div>
 
           {platformBreakdown.length > 0 && (
@@ -710,23 +710,41 @@ export default function ScraperMonitorPanel() {
             </div>
           )}
 
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Caută în titlu, zonă, telefon, sursă..."
-              value={foundSearch}
-              onChange={(e) => setFoundSearch(e.target.value)}
-              className="pl-8 h-9"
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Caută în titlu, zonă, telefon, sursă..."
+                value={foundSearch}
+                onChange={(e) => { setFoundSearch(e.target.value); setFoundPage(0); }}
+                className="pl-8 h-9"
+              />
+            </div>
+            <Select value={foundStatus} onValueChange={(v) => { setFoundStatus(v as FoundStatusFilter); setFoundPage(0); }}>
+              <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Arhivate</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={foundSource} onValueChange={(v) => { setFoundSource(v); setFoundPage(0); }}>
+              <SelectTrigger className="h-9 w-[180px]"><SelectValue placeholder="Toate sursele" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate sursele</SelectItem>
+                {foundSources.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="rounded-lg border border-border/50 max-h-[520px] overflow-auto">
             {foundLoading ? (
               <div className="p-6 text-center text-sm text-muted-foreground">Se încarcă…</div>
-            ) : filteredFound.length === 0 ? (
+            ) : foundListings.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                Niciun anunț în fereastra selectată.
-                {" "}Verifică cuvintele cheie active și rulează o scanare.
+                Niciun anunț pentru filtrele curente.{" "}Verifică cuvintele cheie active și rulează o scanare.
               </div>
             ) : (
               <Table>
@@ -743,71 +761,25 @@ export default function ScraperMonitorPanel() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredFound.map((l: any) => (
-                    <TableRow key={l.id} className={!l.is_active ? "opacity-60" : ""}>
-                      <TableCell className="text-xs font-mono text-muted-foreground">
-                        {l.created_at?.slice(0, 16).replace("T", " ")}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <Badge variant="outline" className="text-[10px]">{l.source_platform || "—"}</Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[360px]">
-                        <div className="font-medium text-sm truncate" title={l.title || ""}>{l.title || "—"}</div>
-                        {(l.rooms || l.size) && (
-                          <div className="text-[11px] text-muted-foreground">
-                            {l.rooms ? `${l.rooms} cam` : ""}{l.rooms && l.size ? " · " : ""}{l.size ? `${l.size} mp` : ""}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {l.zone ? (
-                          <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3 text-muted-foreground" />{l.zone}</span>
-                        ) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-xs font-mono">
-                        {l.price ? `${Number(l.price).toLocaleString("ro-RO")} ${l.currency || "€"}` : "—"}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {l.contact_phone ? (
-                          <RevealableField
-                            value={l.contact_phone}
-                            kind="phone"
-                            tableName="prospect_listings"
-                            recordId={l.id}
-                            field="contact_phone"
-                            renderRevealed={(v) => (
-                              <a href={`tel:${v}`} className="inline-flex items-center gap-1 text-primary hover:underline">
-                                <Phone className="h-3 w-3" />{v}
-                              </a>
-                            )}
-                          />
-                        ) : <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {typeof l.lead_score === "number" ? (
-                          <Badge variant={l.lead_score >= 70 ? "default" : "secondary"} className="font-mono text-[11px]">
-                            {l.lead_score}
-                          </Badge>
-                        ) : <span className="text-xs text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {l.source_url ? (
-                          <a href={l.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex text-primary hover:underline" title="Deschide anunțul">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        ) : "—"}
-                      </TableCell>
-                    </TableRow>
+                  {foundListings.map((l) => (
+                    <FoundListingRow key={l.id} listing={l} />
                   ))}
                 </TableBody>
               </Table>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            Afișate {filteredFound.length} din {foundListings.length} încărcate (limită 200). Restul în Pipeline Prospecți.
-          </p>
+          <AdminPagination
+            page={foundPage}
+            pageCount={foundPageCount}
+            total={foundTotalCount}
+            pageSize={foundPageSize}
+            onPage={setFoundPage}
+            onPageSize={(s) => { setFoundPageSize(s); setFoundPage(0); }}
+            isFetching={foundFetching}
+          />
         </CardContent>
       </Card>
+
 
       {/* Filters + table */}
       <Card>
