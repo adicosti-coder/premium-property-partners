@@ -73,24 +73,39 @@ serve(async (req) => {
     // Persist MFA verification server-side (source of truth for AdminMFAGuard).
     // 4 hours matches SESSION_DURATION_MS on the client.
     const expiresAt = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString();
-    const { error: mfaError } = await supabaseAdmin
+
+    // Delete any existing row first, then insert. Avoids upsert/onConflict edge cases
+    // where the row silently fails to materialize (previously left mfa_sessions empty
+    // and the client re-check via has_valid_admin_mfa returned false → "cod invalid").
+    const { error: delError } = await supabaseAdmin
       .from("admin_mfa_sessions")
-      .upsert(
-        {
-          user_id: user.id,
-          verified_at: new Date().toISOString(),
-          expires_at: expiresAt,
-          user_agent: req.headers.get("user-agent"),
-        },
-        { onConflict: "user_id" },
-      );
-    if (mfaError) {
-      console.error("Failed to persist admin MFA session:", mfaError);
-      return new Response(JSON.stringify({ error: "MFA session error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      .delete()
+      .eq("user_id", user.id);
+    if (delError) {
+      console.error("MFA delete failed:", delError);
     }
+
+    const { data: mfaRow, error: mfaError } = await supabaseAdmin
+      .from("admin_mfa_sessions")
+      .insert({
+        user_id: user.id,
+        verified_at: new Date().toISOString(),
+        expires_at: expiresAt,
+        user_agent: req.headers.get("user-agent"),
+      })
+      .select()
+      .single();
+    if (mfaError || !mfaRow) {
+      console.error("Failed to persist admin MFA session:", mfaError);
+      return new Response(
+        JSON.stringify({ error: "MFA session error", details: mfaError?.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+    console.log("MFA session persisted for user", user.id, "expires", expiresAt);
 
     return new Response(JSON.stringify({ valid: true, expires_at: expiresAt }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
