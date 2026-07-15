@@ -1,109 +1,83 @@
+# Sprint 1 — Restul implementării
 
-# Sprint 1 Admin — Critic
+Confirmări încorporate: skip UsersManager & CommunicationLogsPanel, `ScraperLeadsManager = ScraperMonitorPanel`, reveal 30s, page size 25.
 
-Înainte să încep, câteva **clarificări de scope** — fișierele din planul original au altă denumire în cod. Vreau confirmare că mapping-ul de mai jos e ok, apoi execut.
+## C1 — Paginare + `select` explicit
 
-## 0. Mapping fișiere (nume real în proiect)
+Toate cele 6 fișiere primesc:
+- `select("id, col1, col2, ...")` explicit (nu `*`)
+- `usePaginatedQuery` cu `pageSize = 25`, count `exact` server-side
+- `<AdminPagination />` sub tabel/list
+- filtre existente propagate în `queryKey` + `filters` (nu client-side pe toată lista)
 
-| Plan | Fișier real |
-|---|---|
-| UsersManager | nu există `UsersManager.tsx` — cel mai apropiat e `src/components/admin/UsersRolesManager.tsx` (dacă există) sau tab-ul din `AdminDashboard`. **Trebuie să confirm ce înțelegi prin "UsersManager"** — profiles? user_roles? auth users list? |
-| LeadsManager | `src/components/admin/LeadsManager.tsx` ✅ |
-| ScraperLeadsManager | nu există sub acest nume — există `ScraperMonitorPanel`, `ScraperAnalytics`, `ScraperLeadActions`, `ScraperBulkActions`. Presupun **`ScraperMonitorPanel.tsx`** = tabela principală prospect_listings/scraper_leads_archive. |
-| PropertiesManager | fișierul real este **`PropertyManager.tsx`**. |
-| AutomationRunsHistory | nu există fișier cu acest nume — presupun tab-ul din `AutomationManager.tsx` care listează `automation_runs`. |
-| SEOAuditLogViewer | fișierul real este **`AuditLogViewer.tsx`** (listează `seo_audit_log` / `admin_audit_log`). |
-| CommunicationLogsPanel | nu găsesc fișier cu acest nume — presupun tab în `LeadsManager` sau componentă separată. Trebuie confirmare. |
-| VoiceAgentLiveMonitor | fișierul real este **`VoiceAgentMonitoring.tsx`** (are stream realtime). |
-| BlogLiveActivity | `src/components/admin/blog/BlogLiveActivity.tsx` ✅ |
-| AutomationLiveLogs | `src/components/admin/AutomationLiveLogs.tsx` ✅ |
+| Fișier | Tabel | Sortare implicită | Filtre server-side |
+|---|---|---|---|
+| `LeadsManager.tsx` | `leads` | `created_at desc` | status, source, search (ilike name/phone/email) |
+| `PropertyManager.tsx` | `properties` | `updated_at desc` | zone, listing_type, is_active, search (ilike title) |
+| `ScraperMonitorPanel.tsx` | `scraper_leads_archive_2026` | `created_at desc` | status, source, zone, search |
+| `AutomationManager.tsx` (tab Runs) | `automation_runs` | `started_at desc` | status, job_key |
+| `BlogManager.tsx` | `blog_articles` | `updated_at desc` | status, category, search (ilike title/slug) |
+| `AuditLogViewer.tsx` | `admin_audit_log` | `created_at desc` | action, severity, entity |
 
-**Dacă mapping-ul e ok, spune "ok" și pornesc.** Dacă vrei alt fișier pentru UsersManager / ScraperLeadsManager / CommunicationLogsPanel, spune-mi care.
+Restul tab-urilor din AutomationManager (jobs, anomalies) rămân ca sunt — doar tab-ul Runs a fost flag-uit în audit.
 
----
+## C2 — Cleanup realtime (`useRealtimeChannel`)
 
-## 1. C3 — Mascare PII + audit log
+Rescriu 4 fișiere să folosească hook-ul unificat: key stabil, `.on()` fluent înainte de `subscribe`, `removeChannel` garantat în cleanup.
 
-### Migrare Supabase
-Tabela `admin_access_logs` **deja există** (8 coloane, 3 policies — văd în context). Verific schema și dacă lipsesc coloane (`revealed_field`, `entity_type`, `entity_id`) fac un `ALTER TABLE` aditiv. Altfel refolosesc.
+- `BlogLiveActivity.tsx` — un singur channel `blog-live-activity` cu 3 `.on()` (auto_publish_logs, indexnow_pings, blog_ai_snapshots)
+- `AutomationLiveLogs.tsx` — channel `automation-live-logs`
+- `VoiceAgentMonitoring.tsx` — channel `voice-agent-monitoring` (verifică subscripțiile existente)
+- `ScraperMonitorPanel.tsx` — channel `scraper-monitor`
 
-Adaug (dacă lipsește):
-- RPC `log_pii_reveal(entity_type text, entity_id text, revealed_field text)` — `SECURITY DEFINER`, verifică `has_role(auth.uid(),'admin')`, insert în `admin_access_logs`.
+Hook-ul acceptă array de handlers; extind dacă e nevoie (semnătură actuală suportă un handler unic — dacă e limitat, îl fac să accepte listă).
 
-### Utilitare frontend
-- `src/utils/security/maskPII.ts` — `maskPhone`, `maskEmail`, `maskIP`.
-- `src/components/admin/shared/RevealableField.tsx` — afișează mascat + buton eye/eye-off; la click apelează RPC-ul de audit și dezvăluie valoarea. Timeout 30s → re-mascare automată.
+## C3 — Mascare PII pe scraper
 
-### Integrare
-- **LeadsManager**: telefon, email, IP (dacă e afișat).
-- **ScraperMonitorPanel**: telefon vânzător.
-- **UsersManager / profiles list**: email, telefon.
+`ScraperMonitorPanel.tsx`: coloana `seller_phone` (și `seller_name` dacă e afișat) devine `<RevealableField>` cu `entity_type="scraper_lead"`, `field="seller_phone"`. Reveal loghează în `admin_access_logs` prin RPC-ul existent `log_pii_reveal`. Auto-mask 30s (default hook).
 
-## 2. C4 — Hardening RPC-uri distructive
+## C4 — Hardening RPC destructive
 
-Audit + patch la fiecare funcție SECURITY DEFINER apelată din UI admin pentru delete/rollback/kill. Fiecare va avea la început:
+Funcții SECURITY DEFINER cu efect destructiv, în afară de `blog_rollback_ai_snapshot` (deja făcut):
 
-```sql
-IF NOT public.has_role(auth.uid(), 'admin') THEN
-  RAISE EXCEPTION 'admin role required' USING ERRCODE = '42501';
-END IF;
+1. `delete_email(uuid)` — verifică `has_role(auth.uid(), 'admin')` la începutul funcției, `RAISE EXCEPTION` altfel. Log în `admin_audit_log`.
+2. `reset_prospect_invalid_status(...)` — admin gate + audit log.
+3. `revoke_admin_mfa(uuid)` — admin gate + audit log; permite self-revoke (auth.uid() = target).
+4. `seo_premium_plus_rollback_override(...)` — admin gate + audit log.
+
+Migrația va face `CREATE OR REPLACE FUNCTION` cu semnăturile exacte, păstrând returnurile.
+
+Nu ating `enforce_agency_blocklist_on_prospect` / `enforce_property_has_images` (triggere, nu callable din client).
+
+## C5 — Split fișiere
+
+Doar pe cele 3 atinse deja:
+
+```
+src/components/admin/
+  blog/
+    hooks/useBlogArticles.ts         (paginated query + mutations)
+    columns/blogColumns.tsx          (table column defs)
+    dialogs/BlogArticleEditor.tsx    (form dialog — extras)
+  property/
+    hooks/useProperties.ts
+    columns/propertyColumns.tsx
+    dialogs/PropertyEditor.tsx
+  scraper/
+    hooks/useScraperLeads.ts
+    columns/scraperColumns.tsx
+    dialogs/ScraperLeadDetail.tsx
 ```
 
-Scanez și acopăr minim:
-- `blog_rollback_ai_snapshot`
-- `revoke_admin_mfa` (deja are — verific)
-- funcții de delete pe leads/properties/prospect_listings apelate din UI
-- kill-switch automation (dacă există RPC)
+`BlogManager.tsx` / `PropertyManager.tsx` / `ScraperMonitorPanel.tsx` devin containere subțiri (~300-400 linii) — layout, tabs, orchestrare. Toată logica de fetch/mutate/render row migrează în sub-module. Fără schimbări funcționale.
 
-Pentru edge functions distructive: verific că fiecare handler pornește cu `requireAdmin(req, corsHeaders)` (majoritatea au fost setate deja în sprint-ul de securitate — completez ce lipsește).
+## Verificare finală
 
-## 3. C1 — Paginare + select explicit
+- `bunx tsgo --noEmit` clean
+- Nu se face deploy — aștept confirmarea ta pe diff.
 
-Pattern unificat printr-un hook nou `src/hooks/admin/usePaginatedQuery.ts` (React Query wrapper cu `.range()` + `count: 'exact'`, page size 25/50/100, prefetch next page).
+## Riscuri / assumptions
 
-Componentă `src/components/admin/shared/AdminPagination.tsx` (prev/next + jump + page size selector).
-
-Aplicat pe: **LeadsManager, PropertyManager, ScraperMonitorPanel, AutomationManager (runs tab), BlogManager, AuditLogViewer, CommunicationLogsPanel** (dacă îl identificăm).
-
-Toate `.select('*')` înlocuite cu listă explicită de coloane necesare view-ului.
-
-## 4. C2 — Cleanup realtime channels
-
-Pattern standard într-un hook nou `src/hooks/admin/useRealtimeChannel.ts`:
-- key stabil `` `admin-${name}-${uid}` ``
-- `removeChannel` în cleanup
-- dedupe pe re-render (ref pentru instanța activă)
-- reconnect controlat (nu recreează pe fiecare state change)
-
-Refactor: `BlogLiveActivity`, `AutomationLiveLogs`, `VoiceAgentMonitoring`, `ScraperMonitorPanel`.
-
-## 5. C5 — Split fișiere atinse
-
-Doar pentru cele modificate mai sus:
-- **BlogManager** (~1400 linii) → `blog/hooks/useBlogArticles.ts`, `blog/columns.tsx`, `blog/dialogs/BlogEditDialog.tsx`, `blog/BlogFilters.tsx`.
-- **PropertyManager** → `property/hooks/useProperties.ts`, `property/columns.tsx`, `property/dialogs/*`.
-- **ScraperMonitorPanel** → `scraper/hooks/useProspectListings.ts`, `scraper/columns.tsx`.
-
-Split-ul e **doar de extragere** (fără schimbări logice) — 1:1 cod mutat + import-uri actualizate.
-
-## 6. Verificare finală
-- `tsgo` typecheck complet (nu build/deploy).
-- Fără modificări pe restul componentelor admin.
-
----
-
-## Livrări
-
-- 1 migrare Supabase (RPC nou + eventual ALTER pe admin_access_logs + hardening RPC-uri existente).
-- ~4 fișiere shared noi (`RevealableField`, `AdminPagination`, `usePaginatedQuery`, `useRealtimeChannel`, `maskPII`).
-- Edit pe 7 manageri + 3 componente realtime.
-- Split în 3 directoare noi (`blog/`, `property/`, `scraper/`).
-
-## Aștept
-
-Confirmă:
-1. **Mapping-ul de fișiere** (mai ales UsersManager, ScraperLeadsManager, CommunicationLogsPanel).
-2. **Timeout reveal 30s** ok, sau alt interval?
-3. **Page size default** — 25, 50, sau 100?
-
-După "ok" pornesc cu migrarea (o singură cerere de aprobare) și apoi codul.
+- Extind `useRealtimeChannel` să accepte multiple `.on()` handlers dacă versiunea curentă e single-handler.
+- Nu convertesc filtrele existente la form controllat React Query dacă asta ar rupe UX (păstrez debounce pe search).
+- Splittings-urile mută cod fără să schimbe comportament — nu refactorizez logica de business în această iterație.
