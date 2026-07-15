@@ -12,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Edit, Eye, EyeOff, Loader2, Trash2 } from "lucide-react";
+import { RevealableField } from "../../shared/RevealableField";
 import type { PropertyRow } from "../hooks/useProperties";
 
 interface Labels {
