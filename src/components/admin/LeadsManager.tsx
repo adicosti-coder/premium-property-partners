@@ -56,6 +56,7 @@ import {
 } from "lucide-react";
 import LeadNotesDialog from "./LeadNotesDialog";
 import LeadDetailDialog from "./LeadDetailDialog";
+import { RevealableField } from "./shared/RevealableField";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -885,23 +886,42 @@ const LeadsManager = () => {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <a
-                          href={`https://wa.me/${lead.whatsapp_number.replace(/\D/g, "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-primary hover:underline"
-                        >
-                          <Phone className="w-4 h-4" />
-                          {lead.whatsapp_number}
-                        </a>
+                        <div className="flex items-center gap-2 text-primary">
+                          <Phone className="w-4 h-4 shrink-0" />
+                          <RevealableField
+                            value={lead.whatsapp_number}
+                            kind="phone"
+                            tableName="leads"
+                            recordId={lead.id}
+                            field="whatsapp_number"
+                            renderRevealed={(v) => (
+                              <a
+                                href={`https://wa.me/${v.replace(/\D/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {v}
+                              </a>
+                            )}
+                          />
+                        </div>
                         {lead.email && (
-                          <a
-                            href={`mailto:${lead.email}`}
-                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                          >
-                            <Mail className="w-3 h-3" />
-                            {lead.email}
-                          </a>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="w-3 h-3 shrink-0" />
+                            <RevealableField
+                              value={lead.email}
+                              kind="email"
+                              tableName="leads"
+                              recordId={lead.id}
+                              field="email"
+                              renderRevealed={(v) => (
+                                <a href={`mailto:${v}`} className="hover:text-foreground">
+                                  {v}
+                                </a>
+                              )}
+                            />
+                          </div>
                         )}
                       </div>
                     </TableCell>
