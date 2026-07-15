@@ -1,121 +1,54 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { toast, useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Loader2,
-  Trash2,
-  Users,
-  Phone,
-  Home,
-  Euro,
-  Calendar,
-  Search,
-  Download,
-  TrendingUp,
-  Building2,
-  Mail,
-  MessageSquare,
-  Filter,
   BarChart3,
+  Calendar,
+  CheckCheck,
+  Download,
+  Euro,
   Eye,
   EyeOff,
-  CheckCheck,
-  CalendarClock,
+  Filter,
+  Home,
+  Loader2,
+  Search,
+  TrendingUp,
+  Users,
 } from "lucide-react";
-import LeadNotesDialog from "./LeadNotesDialog";
 import LeadDetailDialog from "./LeadDetailDialog";
-import { RevealableField } from "./shared/RevealableField";
-import { format, subDays, isWithinInterval, startOfDay, endOfDay } from "date-fns";
-import { ro, enUS } from "date-fns/locale";
+import { format, subDays } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
-  BarChart,
   Bar,
-  XAxis,
-  YAxis,
+  BarChart,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell,
   Legend,
-  LineChart,
   Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
-
-interface Lead {
-  id: string;
-  name: string;
-  whatsapp_number: string;
-  property_area: number;
-  property_type: string;
-  calculated_net_profit: number | null;
-  calculated_yearly_profit: number | null;
-  simulation_data: {
-    adr?: number;
-    occupancy?: number;
-    cleaningCost?: number;
-    managementFee?: number;
-    platformFee?: number;
-    avgStayDuration?: number;
-    city?: string;
-    roomType?: string;
-    location?: string;
-    estimatedIncome?: number;
-    // HostScan AI report fields
-    scor?: number;
-    max_scor?: number;
-    zona?: string;
-    roi_estimat?: string;
-    tarif_noapte?: number;
-    note_consultant?: string;
-    recomandari?: string[];
-    categorie?: string;
-  } | null;
-  created_at: string;
-  source: string | null;
-  email: string | null;
-  message: string | null;
-  is_read: boolean;
-  follow_up_date: string | null;
-}
-
-type LeadFromDB = Omit<Lead, "simulation_data"> & {
-  simulation_data: unknown;
-};
+import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
+import { AdminPagination } from "./shared/AdminPagination";
+import {
+  useLeads,
+  type LeadDateFilter,
+  type LeadReadFilter,
+  type LeadRow,
+} from "./leads/hooks/useLeads";
+import { LeadTableRow, sourceBadgeFor } from "./leads/columns/leadsColumns";
 
 const COLORS = [
   "hsl(var(--primary))",
@@ -135,64 +68,79 @@ const sourceLabels: Record<string, { ro: string; en: string; color: string }> = 
   "AI Chat (Tools)": { ro: "Chat AI", en: "AI Chat", color: "bg-cyan-500" },
 };
 
-// Notification sound using Web Audio API
 const playNotificationSound = () => {
   try {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
-    // Create a pleasant notification sound (two-tone chime)
     const playTone = (frequency: number, startTime: number, duration: number) => {
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
       oscillator.frequency.value = frequency;
-      oscillator.type = 'sine';
-      
-      // Smooth envelope
+      oscillator.type = "sine";
       gainNode.gain.setValueAtTime(0, startTime);
       gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
       gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-      
       oscillator.start(startTime);
       oscillator.stop(startTime + duration);
     };
-    
     const now = audioContext.currentTime;
-    playTone(880, now, 0.15); // A5
-    playTone(1100, now + 0.15, 0.2); // C#6
-    playTone(1320, now + 0.3, 0.25); // E6
-    
+    playTone(880, now, 0.15);
+    playTone(1100, now + 0.15, 0.2);
+    playTone(1320, now + 0.3, 0.25);
   } catch (error) {
-    console.log('Could not play notification sound:', error);
+    console.log("Could not play notification sound:", error);
   }
 };
 
 const LeadsManager = () => {
-  const { t, language } = useLanguage();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [togglingReadId, setTogglingReadId] = useState<string | null>(null);
+  const { language } = useLanguage();
+  const { toast: showToast } = useToast();
+
+  // Filters (server-side)
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
-  const [readFilter, setReadFilter] = useState<string>("all");
-  const [dateFilter, setDateFilter] = useState<string>("all");
-  const dateLocale = language === "ro" ? ro : enUS;
+  const [readFilter, setReadFilter] = useState<LeadReadFilter>("all");
+  const [dateFilter, setDateFilter] = useState<LeadDateFilter>("all");
+
+  // Pagination
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState<PageSize>(25);
+
+  // Selection
+  const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const {
+    rows,
+    total,
+    pageCount,
+    isLoading,
+    isFetching,
+    snapshot,
+    invalidate,
+    deleteLead,
+    isDeletingId,
+    toggleRead,
+    isTogglingReadId,
+    markAllRead,
+  } = useLeads({
+    page,
+    pageSize,
+    search: searchTerm,
+    source: sourceFilter,
+    read: readFilter,
+    date: dateFilter,
+  });
 
   const translations = {
     ro: {
-      title: "Leads Manager",
-      totalLeads: "Total Lead-uri",
+      totalLeads: "Total Lead-uri (90d)",
       thisWeek: "Această săptămână",
       thisMonth: "Această lună",
       avgProfit: "Profit mediu",
       avgArea: "Suprafață medie",
-      search: "Caută după nume sau telefon...",
+      search: "Caută după nume, telefon sau email...",
       source: "Sursă",
       allSources: "Toate sursele",
       period: "Perioadă",
@@ -215,11 +163,10 @@ const LeadsManager = () => {
       delete: "Șterge",
       deleteSuccess: "Lead șters cu succes",
       error: "Eroare",
-      loadError: "Nu am putut încărca lead-urile",
       deleteError: "Nu am putut șterge lead-ul",
       perMonth: "/lună",
       perYear: "/an",
-      leadsBySource: "Lead-uri după sursă",
+      leadsBySource: "Lead-uri după sursă (90d)",
       leadsTrend: "Tendința lead-uri (30 zile)",
       propertyTypes: "Tipuri proprietăți",
       apartment: "Apartament",
@@ -233,16 +180,14 @@ const LeadsManager = () => {
       unreadOnly: "Necitite",
       readOnly: "Citite",
       markAllAsRead: "Marchează toate ca citite",
-      unreadCount: "necitite",
     },
     en: {
-      title: "Leads Manager",
-      totalLeads: "Total Leads",
+      totalLeads: "Total Leads (90d)",
       thisWeek: "This Week",
       thisMonth: "This Month",
       avgProfit: "Average Profit",
       avgArea: "Average Area",
-      search: "Search by name or phone...",
+      search: "Search by name, phone or email...",
       source: "Source",
       allSources: "All Sources",
       period: "Period",
@@ -265,11 +210,10 @@ const LeadsManager = () => {
       delete: "Delete",
       deleteSuccess: "Lead deleted successfully",
       error: "Error",
-      loadError: "Could not load leads",
       deleteError: "Could not delete lead",
       perMonth: "/month",
       perYear: "/year",
-      leadsBySource: "Leads by Source",
+      leadsBySource: "Leads by Source (90d)",
       leadsTrend: "Leads Trend (30 days)",
       propertyTypes: "Property Types",
       apartment: "Apartment",
@@ -283,299 +227,158 @@ const LeadsManager = () => {
       unreadOnly: "Unread",
       readOnly: "Read",
       markAllAsRead: "Mark all as read",
-      unreadCount: "unread",
     },
   };
-
   const text = translations[language as keyof typeof translations] || translations.en;
+  const lang: "ro" | "en" = language === "ro" ? "ro" : "en";
 
-  const { toast: showToast } = useToast();
-
-  // Initial fetch
-  useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  // Realtime subscription for new leads
+  // Realtime — INSERT plays sound + toast, both INSERT/DELETE invalidate queries.
   useEffect(() => {
     const channel = supabase
-      .channel('leads-realtime')
+      .channel("leads-realtime")
       .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'leads'
-        },
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "leads" },
         (payload) => {
-          // PII redacted — do not log lead payload to browser console.
-          const newLead = payload.new as LeadFromDB;
-          const typedLead: Lead = {
-            ...newLead,
-            simulation_data: newLead.simulation_data as Lead["simulation_data"],
-          };
-          
-          // Add new lead to the top of the list
-          setLeads((prevLeads) => [typedLead, ...prevLeads]);
-          
-          // Play notification sound
+          const newLead = payload.new as { name: string; source: string | null };
           playNotificationSound();
-          
-          // Show notification
-          const sourceLabel = sourceLabels[newLead.source || 'calculator']?.[language as 'ro' | 'en'] || newLead.source;
+          const sourceLabel =
+            sourceLabels[newLead.source || "calculator"]?.[lang] || newLead.source;
           showToast({
-            title: language === 'ro' ? '🎉 Lead nou!' : '🎉 New Lead!',
-            description: language === 'ro' 
-              ? `${newLead.name} a trimis un lead din ${sourceLabel}`
-              : `${newLead.name} submitted a lead from ${sourceLabel}`,
+            title: lang === "ro" ? "🎉 Lead nou!" : "🎉 New Lead!",
+            description:
+              lang === "ro"
+                ? `${newLead.name} a trimis un lead din ${sourceLabel}`
+                : `${newLead.name} submitted a lead from ${sourceLabel}`,
           });
-        }
+          invalidate();
+        },
       )
       .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'leads'
-        },
-        (payload) => {
-          const deletedId = (payload.old as { id: string }).id;
-          setLeads((prevLeads) => prevLeads.filter((lead) => lead.id !== deletedId));
-        }
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "leads" },
+        () => invalidate(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "leads" },
+        () => invalidate(),
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [language, showToast]);
-
-  const fetchLeads = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      const typedLeads: Lead[] = (data || []).map((lead: LeadFromDB) => ({
-        ...lead,
-        simulation_data: lead.simulation_data as Lead["simulation_data"],
-      }));
-      setLeads(typedLeads);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-      toast({
-        title: text.error,
-        description: text.loadError,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [lang, showToast, invalidate]);
 
   const handleDelete = async (id: string) => {
-    setDeletingId(id);
     try {
-      const { error } = await supabase.from("leads").delete().eq("id", id);
-      if (error) throw error;
-      setLeads(leads.filter((lead) => lead.id !== id));
+      await deleteLead(id);
       toast({ title: text.deleteSuccess });
     } catch (error) {
       console.error("Error deleting lead:", error);
-      toast({
-        title: text.error,
-        description: text.deleteError,
-        variant: "destructive",
-      });
-    } finally {
-      setDeletingId(null);
+      toast({ title: text.error, description: text.deleteError, variant: "destructive" });
     }
   };
 
-  const handleToggleRead = async (id: string, currentStatus: boolean) => {
-    setTogglingReadId(id);
+  const handleToggleRead = async (lead: LeadRow) => {
     try {
-      const { error } = await supabase
-        .from("leads")
-        .update({ is_read: !currentStatus })
-        .eq("id", id);
-      
-      if (error) throw error;
-      
-      setLeads(leads.map((lead) => 
-        lead.id === id ? { ...lead, is_read: !currentStatus } : lead
-      ));
+      await toggleRead({ id: lead.id, is_read: lead.is_read });
     } catch (error) {
       console.error("Error toggling read status:", error);
-      toast({
-        title: text.error,
-        variant: "destructive",
-      });
-    } finally {
-      setTogglingReadId(null);
+      toast({ title: text.error, variant: "destructive" });
     }
   };
 
-  const handleMarkAllAsRead = async () => {
+  const handleMarkAllRead = async () => {
     try {
-      const unreadIds = leads.filter(l => !l.is_read).map(l => l.id);
-      if (unreadIds.length === 0) return;
-
-      const { error } = await supabase
-        .from("leads")
-        .update({ is_read: true })
-        .in("id", unreadIds);
-      
-      if (error) throw error;
-      
-      setLeads(leads.map((lead) => ({ ...lead, is_read: true })));
+      await markAllRead();
     } catch (error) {
       console.error("Error marking all as read:", error);
-      toast({
-        title: text.error,
-        variant: "destructive",
-      });
+      toast({ title: text.error, variant: "destructive" });
     }
   };
 
-  const handleFollowUpChange = useCallback((leadId: string, date: string | null) => {
-    setLeads(prevLeads => prevLeads.map((lead) => 
-      lead.id === leadId ? { ...lead, follow_up_date: date } : lead
-    ));
-  }, []);
+  const handleFollowUpChange = useCallback(() => {
+    invalidate();
+  }, [invalidate]);
 
-  const filteredLeads = useMemo(() => {
-    return leads.filter((lead) => {
-      // Search filter
-      const searchMatch =
-        searchTerm === "" ||
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.whatsapp_number.includes(searchTerm) ||
-        (lead.email && lead.email.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      // Source filter
-      const sourceMatch =
-        sourceFilter === "all" ||
-        lead.source === sourceFilter ||
-        (sourceFilter === "calculator" && (lead.source === "calculator" || lead.source === "profit-calculator"));
-
-      // Date filter
-      let dateMatch = true;
-      const leadDate = new Date(lead.created_at);
-      const now = new Date();
-
-      if (dateFilter === "7days") {
-        dateMatch = isWithinInterval(leadDate, {
-          start: startOfDay(subDays(now, 7)),
-          end: endOfDay(now),
-        });
-      } else if (dateFilter === "30days") {
-        dateMatch = isWithinInterval(leadDate, {
-          start: startOfDay(subDays(now, 30)),
-          end: endOfDay(now),
-        });
-      } else if (dateFilter === "90days") {
-        dateMatch = isWithinInterval(leadDate, {
-          start: startOfDay(subDays(now, 90)),
-          end: endOfDay(now),
-        });
-      }
-
-      // Read status filter
-      let readMatch = true;
-      if (readFilter === "unread") {
-        readMatch = !lead.is_read;
-      } else if (readFilter === "read") {
-        readMatch = lead.is_read;
-      }
-
-      return searchMatch && sourceMatch && dateMatch && readMatch;
-    });
-  }, [leads, searchTerm, sourceFilter, dateFilter, readFilter]);
-
-  // Stats calculations
+  // ---- Stats + charts derived from snapshot (last 90 days) ----
   const stats = useMemo(() => {
     const now = new Date();
     const weekAgo = subDays(now, 7);
     const monthAgo = subDays(now, 30);
-
-    const thisWeek = leads.filter((l) => new Date(l.created_at) > weekAgo).length;
-    const thisMonth = leads.filter((l) => new Date(l.created_at) > monthAgo).length;
-    
-    const leadsWithProfit = leads.filter((l) => l.calculated_net_profit && l.calculated_net_profit > 0);
-    const avgProfit = leadsWithProfit.length > 0
-      ? Math.round(leadsWithProfit.reduce((acc, l) => acc + (l.calculated_net_profit || 0), 0) / leadsWithProfit.length)
+    const thisWeek = snapshot.filter((l) => new Date(l.created_at) > weekAgo).length;
+    const thisMonth = snapshot.filter((l) => new Date(l.created_at) > monthAgo).length;
+    const withProfit = snapshot.filter((l) => l.calculated_net_profit && l.calculated_net_profit > 0);
+    const avgProfit = withProfit.length
+      ? Math.round(withProfit.reduce((a, l) => a + (l.calculated_net_profit || 0), 0) / withProfit.length)
       : 0;
-    
-    const avgArea = leads.length > 0
-      ? Math.round(leads.reduce((acc, l) => acc + l.property_area, 0) / leads.length)
+    const avgArea = snapshot.length
+      ? Math.round(snapshot.reduce((a, l) => a + (l.property_area || 0), 0) / snapshot.length)
       : 0;
+    const unreadCount = snapshot.filter((l) => !l.is_read).length;
+    return { total: snapshot.length, thisWeek, thisMonth, avgProfit, avgArea, unreadCount };
+  }, [snapshot]);
 
-    const unreadCount = leads.filter((l) => !l.is_read).length;
-
-    return { total: leads.length, thisWeek, thisMonth, avgProfit, avgArea, unreadCount };
-  }, [leads]);
-
-  // Chart data - Leads by source
   const sourceChartData = useMemo(() => {
-    const sourceCounts: Record<string, number> = {};
-    leads.forEach((lead) => {
-      const source = lead.source || "calculator";
-      const normalizedSource = source === "profit-calculator" ? "calculator" : source;
-      sourceCounts[normalizedSource] = (sourceCounts[normalizedSource] || 0) + 1;
+    const counts: Record<string, number> = {};
+    snapshot.forEach((lead) => {
+      const s = lead.source || "calculator";
+      const normalized = s === "profit-calculator" ? "calculator" : s;
+      counts[normalized] = (counts[normalized] || 0) + 1;
     });
-
-    return Object.entries(sourceCounts).map(([source, count]) => ({
-      name: sourceLabels[source]?.[language as "ro" | "en"] || source,
+    return Object.entries(counts).map(([source, count]) => ({
+      name: sourceLabels[source]?.[lang] || source,
       value: count,
     }));
-  }, [leads, language]);
+  }, [snapshot, lang]);
 
-  // Chart data - Leads trend (last 30 days)
   const trendChartData = useMemo(() => {
     const now = new Date();
     const days: { date: string; count: number }[] = [];
-
     for (let i = 29; i >= 0; i--) {
       const date = subDays(now, i);
       const dateStr = format(date, "dd/MM");
-      const count = leads.filter((lead) => {
-        const leadDate = new Date(lead.created_at);
-        return format(leadDate, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
-      }).length;
+      const key = format(date, "yyyy-MM-dd");
+      const count = snapshot.filter((l) => format(new Date(l.created_at), "yyyy-MM-dd") === key).length;
       days.push({ date: dateStr, count });
     }
-
     return days;
-  }, [leads]);
+  }, [snapshot]);
 
-  // Chart data - Property types
   const propertyTypeData = useMemo(() => {
-    const typeCounts: Record<string, number> = {};
-    leads.forEach((lead) => {
+    const counts: Record<string, number> = {};
+    snapshot.forEach((lead) => {
       const type = lead.property_type || "unknown";
-      typeCounts[type] = (typeCounts[type] || 0) + 1;
+      counts[type] = (counts[type] || 0) + 1;
     });
-
-    const typeLabels: Record<string, string> = {
+    const labels: Record<string, string> = {
       apartment: text.apartment,
       studio: text.studio,
       house: text.house,
       unknown: text.unknown,
     };
-
-    return Object.entries(typeCounts).map(([type, count]) => ({
-      name: typeLabels[type] || type,
+    return Object.entries(counts).map(([type, count]) => ({
+      name: labels[type] || type,
       value: count,
     }));
-  }, [leads, text]);
+  }, [snapshot, text]);
 
+  // Export the current paginated view (rows), not the entire dataset.
   const exportToCSV = () => {
-    const headers = ["Nume", "Telefon", "Email", "Tip Proprietate", "Suprafață (m²)", "Profit Net", "Profit Anual", "Sursă", "Data"];
-    const rows = filteredLeads.map((lead) => [
+    const headers = [
+      "Nume",
+      "Telefon",
+      "Email",
+      "Tip Proprietate",
+      "Suprafață (m²)",
+      "Profit Net",
+      "Profit Anual",
+      "Sursă",
+      "Data",
+    ];
+    const csvRows = rows.map((lead) => [
       lead.name,
       lead.whatsapp_number,
       lead.email || "",
@@ -586,8 +389,7 @@ const LeadsManager = () => {
       lead.source || "calculator",
       format(new Date(lead.created_at), "yyyy-MM-dd HH:mm"),
     ]);
-
-    const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+    const csvContent = [headers.join(","), ...csvRows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -595,24 +397,17 @@ const LeadsManager = () => {
     link.click();
   };
 
-  const getSourceBadge = (source: string | null) => {
-    const src = source || "calculator";
-    const label = sourceLabels[src]?.[language as "ro" | "en"] || src;
-    const colorClass = sourceLabels[src]?.color || "bg-gray-500";
-    return (
-      <Badge variant="secondary" className={`${colorClass} text-white`}>
-        {label}
-      </Badge>
-    );
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const rowLabels = {
+    perMonth: text.perMonth,
+    perYear: text.perYear,
+    markAsRead: text.markAsRead,
+    markAsUnread: text.markAsUnread,
+    deleteConfirm: text.deleteConfirm,
+    deleteDescription: text.deleteDescription,
+    cancel: text.cancel,
+    delete: text.delete,
+    language: lang,
+  } as const;
 
   return (
     <div className="space-y-6">
@@ -664,7 +459,9 @@ const LeadsManager = () => {
                 <Euro className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{stats.avgProfit.toLocaleString()}€</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {stats.avgProfit.toLocaleString()}€
+                </p>
                 <p className="text-sm text-muted-foreground">{text.avgProfit}</p>
               </div>
             </div>
@@ -687,7 +484,6 @@ const LeadsManager = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Leads Trend */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -720,7 +516,6 @@ const LeadsManager = () => {
           </CardContent>
         </Card>
 
-        {/* Leads by Source */}
         <Card>
           <CardHeader>
             <CardTitle>{text.leadsBySource}</CardTitle>
@@ -764,12 +559,21 @@ const LeadsManager = () => {
               <Input
                 placeholder={text.search}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(0);
+                }}
                 className="pl-10"
               />
             </div>
             <div className="flex flex-wrap gap-4">
-              <Select value={readFilter} onValueChange={setReadFilter}>
+              <Select
+                value={readFilter}
+                onValueChange={(v) => {
+                  setReadFilter(v as LeadReadFilter);
+                  setPage(0);
+                }}
+              >
                 <SelectTrigger className="w-[160px]">
                   <Eye className="w-4 h-4 mr-2" />
                   <SelectValue placeholder={text.readStatus} />
@@ -795,7 +599,13 @@ const LeadsManager = () => {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <Select
+                value={sourceFilter}
+                onValueChange={(v) => {
+                  setSourceFilter(v);
+                  setPage(0);
+                }}
+              >
                 <SelectTrigger className="w-[180px]">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder={text.source} />
@@ -804,11 +614,25 @@ const LeadsManager = () => {
                   <SelectItem value="all">{text.allSources}</SelectItem>
                   <SelectItem value="calculator">Profit Calculator</SelectItem>
                   <SelectItem value="rental-calculator">Rental Income</SelectItem>
-                  <SelectItem value="quick_form">{language === "ro" ? "Formular Rapid" : "Quick Form"}</SelectItem>
-                  <SelectItem value="real_estate_contact">{language === "ro" ? "Contact Imobiliare" : "Real Estate"}</SelectItem>
+                  <SelectItem value="quick_form">
+                    {lang === "ro" ? "Formular Rapid" : "Quick Form"}
+                  </SelectItem>
+                  <SelectItem value="real_estate_contact">
+                    {lang === "ro" ? "Contact Imobiliare" : "Real Estate"}
+                  </SelectItem>
+                  <SelectItem value="HostScan AI Report">HostScan AI</SelectItem>
+                  <SelectItem value="AI Chat (Tools)">
+                    {lang === "ro" ? "Chat AI" : "AI Chat"}
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={dateFilter} onValueChange={setDateFilter}>
+              <Select
+                value={dateFilter}
+                onValueChange={(v) => {
+                  setDateFilter(v as LeadDateFilter);
+                  setPage(0);
+                }}
+              >
                 <SelectTrigger className="w-[180px]">
                   <Calendar className="w-4 h-4 mr-2" />
                   <SelectValue placeholder={text.period} />
@@ -825,7 +649,7 @@ const LeadsManager = () => {
                 {text.export}
               </Button>
               {stats.unreadCount > 0 && (
-                <Button variant="outline" onClick={handleMarkAllAsRead}>
+                <Button variant="outline" onClick={handleMarkAllRead}>
                   <CheckCheck className="w-4 h-4 mr-2" />
                   {text.markAllAsRead}
                 </Button>
@@ -838,7 +662,11 @@ const LeadsManager = () => {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          {filteredLeads.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : rows.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Users className="w-16 h-16 text-muted-foreground/30 mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">{text.noLeads}</h3>
@@ -859,255 +687,44 @@ const LeadsManager = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLeads.map((lead) => (
-                  <TableRow 
-                    key={lead.id} 
-                    className={cn(
-                      "cursor-pointer",
-                      !lead.is_read ? "bg-primary/5 hover:bg-primary/10" : ""
-                    )}
-                    onClick={() => { setSelectedLead(lead); setDetailOpen(true); }}
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {!lead.is_read && (
-                          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        )}
-                        <div>
-                          <p className={!lead.is_read ? "font-semibold" : ""}>{lead.name}</p>
-                          {lead.message && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                              <MessageSquare className="w-3 h-3" />
-                              {lead.message.substring(0, 50)}...
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-primary">
-                          <Phone className="w-4 h-4 shrink-0" />
-                          <RevealableField
-                            value={lead.whatsapp_number}
-                            kind="phone"
-                            tableName="leads"
-                            recordId={lead.id}
-                            field="whatsapp_number"
-                            renderRevealed={(v) => (
-                              <a
-                                href={`https://wa.me/${v.replace(/\D/g, "")}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:underline"
-                              >
-                                {v}
-                              </a>
-                            )}
-                          />
-                        </div>
-                        {lead.email && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Mail className="w-3 h-3 shrink-0" />
-                            <RevealableField
-                              value={lead.email}
-                              kind="email"
-                              tableName="leads"
-                              recordId={lead.id}
-                              field="email"
-                              renderRevealed={(v) => (
-                                <a href={`mailto:${v}`} className="hover:text-foreground">
-                                  {v}
-                                </a>
-                              )}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <span className="font-medium capitalize">{lead.property_type}</span>
-                          <span className="text-muted-foreground ml-2">({lead.property_area} m²)</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {lead.simulation_data?.scor != null ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white ${
-                              lead.simulation_data.scor >= 100 ? "bg-emerald-500" : lead.simulation_data.scor >= 70 ? "bg-amber-500" : "bg-red-500"
-                            }`}>
-                              {lead.simulation_data.scor}
-                            </div>
-                            <div className="text-xs">
-                              <p className="font-medium">/{lead.simulation_data.max_scor || 140}</p>
-                              <p className="text-muted-foreground">{lead.simulation_data.categorie || "—"}</p>
-                            </div>
-                          </div>
-                          {lead.simulation_data.zona && (
-                            <p className="text-[10px] text-muted-foreground">📍 {lead.simulation_data.zona}</p>
-                          )}
-                          {lead.simulation_data.roi_estimat && (
-                            <p className="text-[10px] font-medium text-emerald-600">ROI: {lead.simulation_data.roi_estimat}</p>
-                          )}
-                          {lead.simulation_data.tarif_noapte && (
-                            <p className="text-[10px] text-muted-foreground">{lead.simulation_data.tarif_noapte}€/noapte</p>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {lead.calculated_net_profit ? (
-                        <div>
-                          <span className="font-semibold text-primary">
-                            {lead.calculated_net_profit.toLocaleString()} €{text.perMonth}
-                          </span>
-                          {lead.calculated_yearly_profit && (
-                            <p className="text-sm text-muted-foreground">
-                              {lead.calculated_yearly_profit.toLocaleString()} €{text.perYear}
-                            </p>
-                          )}
-                        </div>
-                      ) : lead.simulation_data?.estimatedIncome ? (
-                        <div>
-                          <span className="font-semibold text-green-600">
-                            {lead.simulation_data.estimatedIncome.toLocaleString()} €{text.perMonth}
-                          </span>
-                          <p className="text-xs text-muted-foreground">
-                            {lead.simulation_data.city} • {lead.simulation_data.roomType}
-                          </p>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{getSourceBadge(lead.source)}</TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <span className="text-muted-foreground">
-                          {format(new Date(lead.created_at), "d MMM yyyy, HH:mm", {
-                            locale: dateLocale,
-                          })}
-                        </span>
-                        {lead.follow_up_date && (
-                          <div className={`flex items-center gap-1 text-xs ${
-                            new Date(lead.follow_up_date) < new Date() 
-                              ? "text-destructive" 
-                              : "text-primary"
-                          }`}>
-                            <CalendarClock className="w-3 h-3" />
-                            <span className="font-medium">
-                              Follow-up: {format(new Date(lead.follow_up_date), "d MMM, HH:mm", { locale: dateLocale })}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center gap-1">
-                        {(() => {
-                          const cleaned = (lead.whatsapp_number || "").replace(/\D/g, "");
-                          const valid = cleaned.length >= 8 && lead.whatsapp_number !== "pending";
-                          if (!valid) return null;
-                          const greeting = language === "ro"
-                            ? `Bună ziua, ${lead.name}! Vă contactez din partea RealTrust referitor la solicitarea dvs. pentru ${lead.property_type} (${lead.property_area} m²).`
-                            : `Hello ${lead.name}! I'm reaching out from RealTrust regarding your inquiry about ${lead.property_type} (${lead.property_area} m²).`;
-                          const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(greeting)}`;
-                          return (
-                            <Button
-                              asChild
-                              variant="outline"
-                              size="sm"
-                              className="h-8 gap-1.5 border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-800 dark:text-emerald-400"
-                              title={language === "ro" ? "Contactează pe WhatsApp" : "Contact on WhatsApp"}
-                            >
-                              <a href={url} target="_blank" rel="noopener noreferrer">
-                                <MessageSquare className="w-3.5 h-3.5" />
-                                <span className="hidden xl:inline text-xs font-medium">WhatsApp</span>
-                              </a>
-                            </Button>
-                          );
-                        })()}
-                        <LeadNotesDialog 
-                          leadId={lead.id} 
-                          leadName={lead.name} 
-                          followUpDate={lead.follow_up_date}
-                          onFollowUpChange={(date) => handleFollowUpChange(lead.id, date)}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleToggleRead(lead.id, lead.is_read)}
-                          className="text-muted-foreground hover:text-foreground"
-                          title={lead.is_read ? text.markAsUnread : text.markAsRead}
-                        >
-                          {togglingReadId === lead.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : lead.is_read ? (
-                            <EyeOff className="w-4 h-4" />
-                          ) : (
-                            <Eye className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                              {deletingId === lead.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>{text.deleteConfirm}</AlertDialogTitle>
-                              <AlertDialogDescription>{text.deleteDescription}</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{text.cancel}</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(lead.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                {text.delete}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                {rows.map((lead) => (
+                  <LeadTableRow
+                    key={lead.id}
+                    lead={lead}
+                    labels={rowLabels}
+                    sourceBadge={sourceBadgeFor(lead.source, lang, sourceLabels)}
+                    isDeleting={isDeletingId === lead.id}
+                    isTogglingRead={isTogglingReadId === lead.id}
+                    onSelect={(l) => {
+                      setSelectedLead(l);
+                      setDetailOpen(true);
+                    }}
+                    onToggleRead={handleToggleRead}
+                    onDelete={handleDelete}
+                    onFollowUpChange={handleFollowUpChange}
+                  />
                 ))}
               </TableBody>
             </Table>
           )}
+          <div className="border-t border-border">
+            <AdminPagination
+              page={page}
+              pageCount={pageCount}
+              total={total}
+              pageSize={pageSize}
+              onPage={setPage}
+              onPageSize={(s) => {
+                setPageSize(s);
+                setPage(0);
+              }}
+              isFetching={isFetching}
+            />
+          </div>
         </CardContent>
       </Card>
 
-      {/* Results count */}
-      <p className="text-sm text-muted-foreground text-center">
-        {language === "ro"
-          ? `Afișez ${filteredLeads.length} din ${leads.length} lead-uri`
-          : `Showing ${filteredLeads.length} of ${leads.length} leads`}
-      </p>
-
-      {/* Lead Detail Modal */}
-      <LeadDetailDialog
-        lead={selectedLead}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-      />
+      <LeadDetailDialog lead={selectedLead} open={detailOpen} onOpenChange={setDetailOpen} />
     </div>
   );
 };
