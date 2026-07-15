@@ -27,6 +27,14 @@ import {
   ListChecks, Phone, MapPin, Radio, Bell, BellOff, History, ShieldAlert,
 } from "lucide-react";
 import { RevealableField } from "@/components/admin/shared/RevealableField";
+import { AdminPagination } from "@/components/admin/shared/AdminPagination";
+import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
+import {
+  useScraperLeads,
+  type FoundStatusFilter,
+  type FoundWindow,
+} from "@/components/admin/scraper/hooks/useScraperLeads";
+import { FoundListingRow } from "@/components/admin/scraper/columns/scraperColumns";
 
 type Keyword = {
   id: string;
@@ -291,58 +299,36 @@ export default function ScraperMonitorPanel() {
   };
 
 
-  const [foundWindow, setFoundWindow] = useState<"24h" | "7d" | "30d">("7d");
+  // Found-listings feed — server-side paginated via useScraperLeads.
+  const [foundWindow, setFoundWindow] = useState<FoundWindow>("7d");
   const [foundSearch, setFoundSearch] = useState("");
-  const foundSince = useMemo(() => {
-    const now = Date.now();
-    const ms = foundWindow === "24h" ? 86_400_000 : foundWindow === "7d" ? 7 * 86_400_000 : 30 * 86_400_000;
-    return new Date(now - ms).toISOString();
-  }, [foundWindow]);
+  const [foundStatus, setFoundStatus] = useState<FoundStatusFilter>("all");
+  const [foundSource, setFoundSource] = useState<string>("all");
+  const [foundPage, setFoundPage] = useState(0);
+  const [foundPageSize, setFoundPageSize] = useState<PageSize>(25);
 
-  const { data: foundListings = [], isLoading: foundLoading, refetch: refetchFound } = useQuery({
-    queryKey: ["scraper-found-listings", foundWindow],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("prospect_listings")
-        .select("id, title, source_platform, source_url, zone, price, currency, rooms, size, contact_phone, contact_name, lead_score, is_active, created_at")
-        .gte("created_at", foundSince)
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return data ?? [];
-    },
-    staleTime: 30_000,
-    refetchInterval: 60_000,
+  const {
+    rows: foundListings,
+    total: foundTotalCount,
+    pageCount: foundPageCount,
+    isLoading: foundLoading,
+    isFetching: foundFetching,
+    refetch: refetchFound,
+    totals: foundTotals,
+    sources: foundSources,
+  } = useScraperLeads({
+    page: foundPage,
+    pageSize: foundPageSize,
+    window: foundWindow,
+    search: foundSearch,
+    status: foundStatus,
+    source: foundSource,
   });
 
-  const { data: foundTotals } = useQuery({
-    queryKey: ["scraper-found-totals", foundWindow],
-    queryFn: async () => {
-      const [{ count: total }, { count: active }, { count: priority }] = await Promise.all([
-        supabase.from("prospect_listings").select("id", { count: "exact", head: true }).gte("created_at", foundSince),
-        supabase.from("prospect_listings").select("id", { count: "exact", head: true }).gte("created_at", foundSince).eq("is_active", true),
-        supabase.from("prospect_listings").select("id", { count: "exact", head: true }).gte("created_at", foundSince).gte("lead_score", 70),
-      ]);
-      return { total: total ?? 0, active: active ?? 0, priority: priority ?? 0 };
-    },
-    staleTime: 30_000,
-    refetchInterval: 60_000,
-  });
-
-  const filteredFound = useMemo(() => {
-    if (!foundSearch.trim()) return foundListings;
-    const q = foundSearch.toLowerCase();
-    return foundListings.filter((l: any) =>
-      (l.title || "").toLowerCase().includes(q) ||
-      (l.zone || "").toLowerCase().includes(q) ||
-      (l.source_platform || "").toLowerCase().includes(q) ||
-      (l.contact_phone || "").includes(q),
-    );
-  }, [foundListings, foundSearch]);
-
+  // Distinct-source breakdown from the current page (informational only).
   const platformBreakdown = useMemo(() => {
     const map = new Map<string, number>();
-    for (const l of foundListings as any[]) {
+    for (const l of foundListings) {
       const p = (l.source_platform || "necunoscut").trim() || "necunoscut";
       map.set(p, (map.get(p) ?? 0) + 1);
     }
@@ -352,7 +338,7 @@ export default function ScraperMonitorPanel() {
   const exportFoundListings = () => {
     const header = ["created_at", "source_platform", "title", "zone", "rooms", "size", "price", "currency", "lead_score", "contact_name", "contact_phone", "is_active", "source_url"];
     const rows: (string | number | null)[][] = [header];
-    filteredFound.forEach((l: any) => {
+    foundListings.forEach((l) => {
       rows.push([
         l.created_at, l.source_platform ?? "", l.title ?? "", l.zone ?? "",
         l.rooms ?? "", l.size ?? "", l.price ?? "", l.currency ?? "",
@@ -361,8 +347,10 @@ export default function ScraperMonitorPanel() {
       ]);
     });
     downloadCSV(`scraper-found-${foundWindow}-${new Date().toISOString().slice(0, 10)}.csv`, rows);
-    toast({ title: "Export CSV", description: `${filteredFound.length} anunțuri descărcate.` });
+    toast({ title: "Export CSV", description: `${foundListings.length} anunțuri descărcate (pagina curentă).` });
   };
+
+
 
 
   const filtered = useMemo(() => {
@@ -696,9 +684,9 @@ export default function ScraperMonitorPanel() {
                 </TabsList>
               </Tabs>
               <Button variant="outline" size="sm" onClick={() => refetchFound()}>
-                <RotateCcw className={`h-4 w-4 mr-1.5 ${foundLoading ? "animate-spin" : ""}`} /> Refresh
+                <RotateCcw className={`h-4 w-4 mr-1.5 ${foundLoading || foundFetching ? "animate-spin" : ""}`} /> Refresh
               </Button>
-              <Button variant="outline" size="sm" onClick={exportFoundListings} disabled={filteredFound.length === 0}>
+              <Button variant="outline" size="sm" onClick={exportFoundListings} disabled={foundListings.length === 0}>
                 <Download className="h-4 w-4 mr-1.5" /> CSV
               </Button>
             </div>
@@ -706,10 +694,10 @@ export default function ScraperMonitorPanel() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Stat label={`Total (${foundWindow})`} value={foundTotals?.total ?? 0} icon={ListChecks} />
-            <Stat label="Active" value={foundTotals?.active ?? 0} icon={CheckCircle2} tone="success" />
-            <Stat label="Prioritare (≥70)" value={foundTotals?.priority ?? 0} icon={Trophy} tone="success" />
-            <Stat label="Surse distincte" value={platformBreakdown.length} icon={Building2} />
+            <Stat label={`Total (${foundWindow})`} value={foundTotals.total} icon={ListChecks} />
+            <Stat label="Active" value={foundTotals.active} icon={CheckCircle2} tone="success" />
+            <Stat label="Prioritare (≥70)" value={foundTotals.priority} icon={Trophy} tone="success" />
+            <Stat label="Surse (pag.)" value={platformBreakdown.length} icon={Building2} />
           </div>
 
           {platformBreakdown.length > 0 && (
@@ -722,23 +710,41 @@ export default function ScraperMonitorPanel() {
             </div>
           )}
 
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Caută în titlu, zonă, telefon, sursă..."
-              value={foundSearch}
-              onChange={(e) => setFoundSearch(e.target.value)}
-              className="pl-8 h-9"
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Caută în titlu, zonă, telefon, sursă..."
+                value={foundSearch}
+                onChange={(e) => { setFoundSearch(e.target.value); setFoundPage(0); }}
+                className="pl-8 h-9"
+              />
+            </div>
+            <Select value={foundStatus} onValueChange={(v) => { setFoundStatus(v as FoundStatusFilter); setFoundPage(0); }}>
+              <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Arhivate</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={foundSource} onValueChange={(v) => { setFoundSource(v); setFoundPage(0); }}>
+              <SelectTrigger className="h-9 w-[180px]"><SelectValue placeholder="Toate sursele" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate sursele</SelectItem>
+                {foundSources.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="rounded-lg border border-border/50 max-h-[520px] overflow-auto">
             {foundLoading ? (
               <div className="p-6 text-center text-sm text-muted-foreground">Se încarcă…</div>
-            ) : filteredFound.length === 0 ? (
+            ) : foundListings.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                Niciun anunț în fereastra selectată.
-                {" "}Verifică cuvintele cheie active și rulează o scanare.
+                Niciun anunț pentru filtrele curente.{" "}Verifică cuvintele cheie active și rulează o scanare.
               </div>
             ) : (
               <Table>
@@ -755,71 +761,25 @@ export default function ScraperMonitorPanel() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredFound.map((l: any) => (
-                    <TableRow key={l.id} className={!l.is_active ? "opacity-60" : ""}>
-                      <TableCell className="text-xs font-mono text-muted-foreground">
-                        {l.created_at?.slice(0, 16).replace("T", " ")}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <Badge variant="outline" className="text-[10px]">{l.source_platform || "—"}</Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[360px]">
-                        <div className="font-medium text-sm truncate" title={l.title || ""}>{l.title || "—"}</div>
-                        {(l.rooms || l.size) && (
-                          <div className="text-[11px] text-muted-foreground">
-                            {l.rooms ? `${l.rooms} cam` : ""}{l.rooms && l.size ? " · " : ""}{l.size ? `${l.size} mp` : ""}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {l.zone ? (
-                          <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3 text-muted-foreground" />{l.zone}</span>
-                        ) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-xs font-mono">
-                        {l.price ? `${Number(l.price).toLocaleString("ro-RO")} ${l.currency || "€"}` : "—"}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {l.contact_phone ? (
-                          <RevealableField
-                            value={l.contact_phone}
-                            kind="phone"
-                            tableName="prospect_listings"
-                            recordId={l.id}
-                            field="contact_phone"
-                            renderRevealed={(v) => (
-                              <a href={`tel:${v}`} className="inline-flex items-center gap-1 text-primary hover:underline">
-                                <Phone className="h-3 w-3" />{v}
-                              </a>
-                            )}
-                          />
-                        ) : <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {typeof l.lead_score === "number" ? (
-                          <Badge variant={l.lead_score >= 70 ? "default" : "secondary"} className="font-mono text-[11px]">
-                            {l.lead_score}
-                          </Badge>
-                        ) : <span className="text-xs text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {l.source_url ? (
-                          <a href={l.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex text-primary hover:underline" title="Deschide anunțul">
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        ) : "—"}
-                      </TableCell>
-                    </TableRow>
+                  {foundListings.map((l) => (
+                    <FoundListingRow key={l.id} listing={l} />
                   ))}
                 </TableBody>
               </Table>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            Afișate {filteredFound.length} din {foundListings.length} încărcate (limită 200). Restul în Pipeline Prospecți.
-          </p>
+          <AdminPagination
+            page={foundPage}
+            pageCount={foundPageCount}
+            total={foundTotalCount}
+            pageSize={foundPageSize}
+            onPage={setFoundPage}
+            onPageSize={(s) => { setFoundPageSize(s); setFoundPage(0); }}
+            isFetching={foundFetching}
+          />
         </CardContent>
       </Card>
+
 
       {/* Filters + table */}
       <Card>
