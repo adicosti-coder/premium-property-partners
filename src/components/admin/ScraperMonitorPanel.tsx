@@ -27,6 +27,14 @@ import {
   ListChecks, Phone, MapPin, Radio, Bell, BellOff, History, ShieldAlert,
 } from "lucide-react";
 import { RevealableField } from "@/components/admin/shared/RevealableField";
+import { AdminPagination } from "@/components/admin/shared/AdminPagination";
+import type { PageSize } from "@/hooks/admin/usePaginatedQuery";
+import {
+  useScraperLeads,
+  type FoundStatusFilter,
+  type FoundWindow,
+} from "@/components/admin/scraper/hooks/useScraperLeads";
+import { FoundListingRow } from "@/components/admin/scraper/columns/scraperColumns";
 
 type Keyword = {
   id: string;
