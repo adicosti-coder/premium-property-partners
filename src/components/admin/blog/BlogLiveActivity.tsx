@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Bot, Zap, RotateCcw, AlertCircle } from "lucide-react";
@@ -19,15 +20,14 @@ const MAX = 50;
 
 export const BlogLiveActivity = () => {
   const [items, setItems] = useState<FeedItem[]>([]);
-  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     // Seed with recent history
     (async () => {
       const [logs, pings, snaps] = await Promise.all([
-        supabase.from("auto_publish_logs" as any).select("*").order("ran_at", { ascending: false }).limit(15),
-        supabase.from("indexnow_pings" as any).select("*").order("pinged_at", { ascending: false }).limit(15),
-        supabase.from("blog_ai_snapshots" as any).select("*").order("created_at", { ascending: false }).limit(15),
+        supabase.from("auto_publish_logs" as any).select("id, articles_published, error_message, indexnow_status, ran_at, created_at").order("ran_at", { ascending: false }).limit(15),
+        supabase.from("indexnow_pings" as any).select("id, url_count, urls, triggered_by, status_code, pinged_at, created_at").order("pinged_at", { ascending: false }).limit(15),
+        supabase.from("blog_ai_snapshots" as any).select("id, confidence_score, rolled_back_at, rationale, created_at").order("created_at", { ascending: false }).limit(15),
       ]);
       const seed: FeedItem[] = [];
       (logs.data as any[] | null)?.forEach((r) => seed.push({
@@ -54,10 +54,12 @@ export const BlogLiveActivity = () => {
       seed.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
       setItems(seed.slice(0, MAX));
     })();
+  }, []);
 
-    const channel = supabase
-      .channel("blog-live-activity")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "auto_publish_logs" }, (p: any) => {
+  const { connected } = useRealtimeChannel("blog-live-activity", [
+    {
+      event: "INSERT", table: "auto_publish_logs",
+      handler: (p: any) => {
         const r = p.new;
         setItems((prev) => [{
           id: `apl-${r.id}`, source: "auto_publish" as const,
@@ -66,8 +68,11 @@ export const BlogLiveActivity = () => {
           status: r.error_message ? "error" : (r.articles_published > 0 ? "success" : "info"),
           at: r.ran_at ?? r.created_at,
         } as FeedItem, ...prev].slice(0, MAX));
-      })
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "indexnow_pings" }, (p: any) => {
+      },
+    },
+    {
+      event: "INSERT", table: "indexnow_pings",
+      handler: (p: any) => {
         const r = p.new;
         setItems((prev) => [{
           id: `pin-${r.id}`, source: "indexnow" as const,
@@ -76,8 +81,11 @@ export const BlogLiveActivity = () => {
           status: r.status_code && r.status_code >= 200 && r.status_code < 300 ? "success" : "warning",
           at: r.pinged_at ?? r.created_at,
         } as FeedItem, ...prev].slice(0, MAX));
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "blog_ai_snapshots" }, (p: any) => {
+      },
+    },
+    {
+      event: "*", table: "blog_ai_snapshots",
+      handler: (p: any) => {
         const r = p.new;
         setItems((prev) => [{
           id: `snp-${r.id}-${p.eventType}`, source: "ai_snapshot" as const,
@@ -86,11 +94,9 @@ export const BlogLiveActivity = () => {
           status: r.rolled_back_at ? "warning" : "success",
           at: r.rolled_back_at ?? r.created_at,
         } as FeedItem, ...prev].slice(0, MAX));
-      })
-      .subscribe((status) => setConnected(status === "SUBSCRIBED"));
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+      },
+    },
+  ]);
 
   const iconFor = (s: FeedItem["source"]) => {
     if (s === "auto_publish") return <Zap className="h-4 w-4" />;

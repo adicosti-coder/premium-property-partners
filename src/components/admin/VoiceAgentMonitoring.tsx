@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,11 +85,11 @@ export default function VoiceAgentMonitoring() {
   const loadInitial = useCallback(async () => {
     const [errRes, clarityRes] = await Promise.all([
       supabase.from("voice_agent_tts_errors")
-        .select("*")
+        .select("id, source, error_type, http_status, message, text_snippet, voice_id, latency_ms, created_at")
         .order("created_at", { ascending: false })
         .limit(50),
       supabase.from("voice_agent_clarity_logs")
-        .select("*")
+        .select("id, session_id, clarity_score, tts_latency_ms_avg, tts_errors_count, twilio_call_status, fallback_used, created_at")
         .order("created_at", { ascending: false })
         .limit(30),
     ]);
@@ -99,32 +100,30 @@ export default function VoiceAgentMonitoring() {
   useEffect(() => {
     loadInitial();
     loadLexicon();
+  }, [loadInitial, loadLexicon]);
 
-    // Realtime subscriptions
-    const errChannel = supabase
-      .channel("rt-tts-errors")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "voice_agent_tts_errors" }, (payload) => {
+  // Realtime: single channel, both tables — hook manages stable key + cleanup.
+  useRealtimeChannel("voice-agent-monitoring", [
+    {
+      event: "INSERT",
+      table: "voice_agent_tts_errors",
+      handler: (payload) => {
         setErrors((prev) => [payload.new as TtsError, ...prev].slice(0, 50));
         toast({
           variant: "destructive",
           title: "🔴 Eroare TTS premium",
           description: `${(payload.new as TtsError).error_type} — ${(payload.new as TtsError).message?.slice(0, 80) || "fără detalii"}`,
         });
-      })
-      .subscribe();
-
-    const clarityChannel = supabase
-      .channel("rt-clarity")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "voice_agent_clarity_logs" }, (payload) => {
+      },
+    },
+    {
+      event: "INSERT",
+      table: "voice_agent_clarity_logs",
+      handler: (payload) => {
         setClarity((prev) => [payload.new as ClarityLog, ...prev].slice(0, 30));
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(errChannel);
-      supabase.removeChannel(clarityChannel);
-    };
-  }, [loadInitial, loadLexicon]);
+      },
+    },
+  ]);
 
   const addLexiconEntry = async () => {
     if (!newOriginal.trim() || !newPhonetic.trim()) {
