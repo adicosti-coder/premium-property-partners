@@ -1,6 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabaseClient";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, RefreshCw, History } from "lucide-react";
+import { usePaginatedQuery, type PageSize } from "@/hooks/admin/usePaginatedQuery";
+import { AdminPagination } from "./shared/AdminPagination";
 
 export interface AuditLogRow {
   id: string;
@@ -36,6 +36,9 @@ const SEVERITY_STYLE: Record<string, string> = {
   error: "border-destructive/60 text-destructive",
 };
 
+const AUDIT_COLUMNS =
+  "id, actor_user_id, actor_label, action, entity_type, entity_id, details, severity, created_at";
+
 interface Props {
   /** When set, filters log to a single entity (e.g., one prospect lead) */
   entityType?: string;
@@ -49,55 +52,81 @@ export function AuditLogViewer({ entityType, entityId, trigger, title }: Props) 
   const [open, setOpen] = useState(false);
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState<PageSize>(25);
 
-  const queryKey = ["admin-audit-log", entityType ?? "_all", entityId ?? "_all"];
+  // Debounce search input (400ms).
+  useEffect(() => {
+    const id = window.setTimeout(() => setSearch(searchInput), 400);
+    return () => window.clearTimeout(id);
+  }, [searchInput]);
 
-  const { data: rows = [], isLoading, refetch, isFetching } = useQuery({
-    queryKey,
-    queryFn: async () => {
-      let q = supabase
-        .from("admin_audit_log")
-        .select("id, actor_user_id, actor_label, action, entity_type, entity_id, details, severity, created_at")
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (entityType) q = q.eq("entity_type", entityType);
-      if (entityId) q = q.eq("entity_id", entityId);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data || []) as AuditLogRow[];
-    },
-    enabled: open,
-    refetchInterval: open ? 15_000 : false,
-    staleTime: 5_000,
-  });
-
-  const actions = useMemo(() => {
-    const set = new Set<string>();
-    rows.forEach((r) => set.add(r.action));
-    return Array.from(set).sort();
-  }, [rows]);
-
-  const filtered = useMemo(() => {
-    return rows.filter((r) => {
-      if (actionFilter !== "all" && r.action !== actionFilter) return false;
-      if (severityFilter !== "all" && r.severity !== severityFilter) return false;
-      if (search) {
-        const blob = `${r.action} ${r.actor_label || ""} ${r.entity_id || ""} ${JSON.stringify(r.details || {})}`.toLowerCase();
-        if (!blob.includes(search.toLowerCase())) return false;
-      }
-      return true;
-    });
-  }, [rows, actionFilter, severityFilter, search]);
-
-  // Reset filters when dialog re-opens
+  // Reset filters + page whenever the dialog reopens.
   useEffect(() => {
     if (!open) {
       setActionFilter("all");
       setSeverityFilter("all");
+      setSearchInput("");
       setSearch("");
+      setPage(0);
     }
   }, [open]);
+
+  // Reset page whenever any filter changes.
+  useEffect(() => {
+    setPage(0);
+  }, [actionFilter, severityFilter, search, pageSize, entityType, entityId]);
+
+  const applyFilters = useCallback(
+    (q: any) => {
+      if (entityType) q = q.eq("entity_type", entityType);
+      if (entityId) q = q.eq("entity_id", entityId);
+      if (actionFilter !== "all") q = q.eq("action", actionFilter);
+      if (severityFilter !== "all") q = q.eq("severity", severityFilter);
+      if (search.trim()) {
+        const like = `%${search.trim().replace(/[%_]/g, "\\$&")}%`;
+        q = q.or(
+          `action.ilike.${like},actor_label.ilike.${like},entity_id.ilike.${like}`,
+        );
+      }
+      return q;
+    },
+    [entityType, entityId, actionFilter, severityFilter, search],
+  );
+
+  const {
+    rows,
+    total,
+    pageCount,
+    isLoading,
+    isFetching,
+    refetch,
+  } = usePaginatedQuery<AuditLogRow>({
+    queryKey: [
+      "admin-audit-log",
+      entityType ?? "_all",
+      entityId ?? "_all",
+      actionFilter,
+      severityFilter,
+      search,
+    ],
+    table: "admin_audit_log",
+    columns: AUDIT_COLUMNS,
+    page,
+    pageSize,
+    order: { column: "created_at", ascending: false },
+    applyFilters,
+    enabled: open,
+  });
+
+  // Distinct action list for the filter dropdown — small lookup, cheap.
+  const knownActions = useMemo(() => {
+    const set = new Set<string>(Object.keys(ACTION_LABELS));
+    rows.forEach((r) => set.add(r.action));
+    return Array.from(set).sort();
+  }, [rows]);
 
   const fmtDetails = (d: any) => {
     if (!d || typeof d !== "object") return null;
@@ -150,7 +179,7 @@ export function AuditLogViewer({ entityType, entityId, trigger, title }: Props) 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toate acțiunile</SelectItem>
-                {actions.map((a) => (
+                {knownActions.map((a) => (
                   <SelectItem key={a} value={a}>{ACTION_LABELS[a] || a}</SelectItem>
                 ))}
               </SelectContent>
@@ -167,16 +196,16 @@ export function AuditLogViewer({ entityType, entityId, trigger, title }: Props) 
               </SelectContent>
             </Select>
             <Input
-              placeholder="Caută…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-9 max-w-[220px]"
+              placeholder="Caută acțiune, actor, entitate…"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="h-9 max-w-[260px]"
             />
             <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
               <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
             </Button>
             <span className="ml-auto text-xs text-muted-foreground">
-              {filtered.length}/{rows.length} înregistrări
+              {total} înregistrări
             </span>
           </div>
         )}
@@ -187,7 +216,7 @@ export function AuditLogViewer({ entityType, entityId, trigger, title }: Props) 
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : rows.length === 0 ? (
             <div className="text-center py-12 text-sm text-muted-foreground">
               Nicio înregistrare în jurnal.
             </div>
@@ -203,7 +232,7 @@ export function AuditLogViewer({ entityType, entityId, trigger, title }: Props) 
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((r) => (
+                  {rows.map((r) => (
                     <tr key={r.id} className="border-t hover:bg-muted/30 transition-colors">
                       <td className="p-2 text-muted-foreground whitespace-nowrap">{fmtTime(r.created_at)}</td>
                       <td className="p-2">
@@ -222,6 +251,19 @@ export function AuditLogViewer({ entityType, entityId, trigger, title }: Props) 
             </div>
           )}
         </ScrollArea>
+
+        {/* Pagination */}
+        <div className="border-t">
+          <AdminPagination
+            page={page}
+            pageCount={pageCount}
+            total={total}
+            pageSize={pageSize}
+            onPage={setPage}
+            onPageSize={setPageSize}
+            isFetching={isFetching}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
