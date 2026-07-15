@@ -26,6 +26,7 @@ import {
   CheckCircle2, XCircle, AlertTriangle, Zap, Pencil, Save, ExternalLink, Trophy,
   ListChecks, Phone, MapPin, Radio, Bell, BellOff, History, ShieldAlert,
 } from "lucide-react";
+import { RevealableField } from "@/components/admin/shared/RevealableField";
 
 type Keyword = {
   id: string;
