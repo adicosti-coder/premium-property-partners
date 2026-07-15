@@ -22,6 +22,7 @@ export type Database = {
           id: string
           ip_address: string | null
           record_id: string | null
+          revealed_field: string | null
           table_name: string
           user_agent: string | null
         }
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           record_id?: string | null
+          revealed_field?: string | null
           table_name: string
           user_agent?: string | null
         }
@@ -42,6 +44,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           record_id?: string | null
+          revealed_field?: string | null
           table_name?: string
           user_agent?: string | null
         }
@@ -9256,6 +9259,10 @@ export type Database = {
           p_status: string
         }
         Returns: number
+      }
+      log_pii_reveal: {
+        Args: { _field: string; _record_id: string; _table_name: string }
+        Returns: undefined
       }
       log_scraper_admin_action: {
         Args: {
