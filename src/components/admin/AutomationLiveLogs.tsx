@@ -28,7 +28,6 @@ const SOURCE_OPTIONS = ["__all__", "orchestrator", "self_healing"];
 
 export const AutomationLiveLogs = () => {
   const [logs, setLogs] = useState<LogRow[]>([]);
-  const [connected, setConnected] = useState(false);
   const [paused, setPaused] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const [filterSource, setFilterSource] = useState<string>("__all__");
@@ -42,31 +41,25 @@ export const AutomationLiveLogs = () => {
     (async () => {
       const { data } = await supabase
         .from("automation_live_logs")
-        .select("*")
+        .select("id, source, level, job_key, message, details, created_at")
         .order("created_at", { ascending: false })
         .limit(300);
       if (data) setLogs((data as LogRow[]).reverse());
     })();
   }, []);
 
-  // realtime
-  useEffect(() => {
-    const ch = supabase
-      .channel("automation-live-logs")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "automation_live_logs" },
-        (payload) => {
-          if (pausedRef.current) return;
-          const row = payload.new as LogRow;
-          setLogs((prev) => [...prev, row].slice(-500));
-        },
-      )
-      .subscribe((status) => setConnected(status === "SUBSCRIBED"));
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, []);
+  // realtime (unified hook: stable channel, guaranteed cleanup)
+  const { connected } = useRealtimeChannel("automation-live-logs", [
+    {
+      event: "INSERT",
+      table: "automation_live_logs",
+      handler: (payload) => {
+        if (pausedRef.current) return;
+        const row = payload.new as LogRow;
+        setLogs((prev) => [...prev, row].slice(-500));
+      },
+    },
+  ]);
 
   // auto-scroll
   useEffect(() => {
