@@ -141,6 +141,7 @@ export function PropertyTableRow({
             size="icon"
             onClick={() => onEdit(property)}
             className="text-muted-foreground hover:text-foreground"
+            aria-label="Editează proprietatea"
           >
             <Edit className="w-4 h-4" />
           </Button>
@@ -150,6 +151,7 @@ export function PropertyTableRow({
                 variant="ghost"
                 size="icon"
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                aria-label="Șterge proprietatea"
               >
                 {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </Button>
