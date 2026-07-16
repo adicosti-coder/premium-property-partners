@@ -26,6 +26,7 @@ import JobSelfHealingOverride from "./JobSelfHealingOverride";
 import { AutoPublishListingsPanel } from "./AutoPublishListingsPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
 import { ReconciliationCard } from "./ReconciliationCard";
+import { AutomationRunsTab } from "./automation/AutomationRunsTab";
 
 type Settings = {
   enabled: boolean;
