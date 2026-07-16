@@ -257,6 +257,7 @@ export const LeadTableRow = ({
             onClick={() => onToggleRead(lead)}
             className="text-muted-foreground hover:text-foreground"
             title={lead.is_read ? labels.markAsUnread : labels.markAsRead}
+            aria-label={lead.is_read ? labels.markAsUnread : labels.markAsRead}
           >
             {isTogglingRead ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -272,6 +273,7 @@ export const LeadTableRow = ({
                 variant="ghost"
                 size="icon"
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                aria-label={labels.deleteConfirm}
               >
                 {isDeleting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
