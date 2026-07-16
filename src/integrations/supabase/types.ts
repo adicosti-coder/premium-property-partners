@@ -8833,6 +8833,143 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_agent_settings: {
+        Row: {
+          enabled: boolean
+          escalation_threshold: number
+          id: number
+          office_hours_only: boolean
+          paused_reason: string | null
+          system_prompt: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          escalation_threshold?: number
+          id?: number
+          office_hours_only?: boolean
+          paused_reason?: string | null
+          system_prompt?: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          escalation_threshold?: number
+          id?: number
+          office_hours_only?: boolean
+          paused_reason?: string | null
+          system_prompt?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      wa_conversations: {
+        Row: {
+          assigned_channel: string
+          created_at: string
+          handoff_reason: string | null
+          id: string
+          last_inbound_at: string | null
+          last_outbound_at: string | null
+          phone_normalized: string
+          prospect_id: string | null
+          qualification_score: number | null
+          status: string
+          updated_at: string
+          wa_profile_name: string | null
+          window_expires_at: string | null
+        }
+        Insert: {
+          assigned_channel?: string
+          created_at?: string
+          handoff_reason?: string | null
+          id?: string
+          last_inbound_at?: string | null
+          last_outbound_at?: string | null
+          phone_normalized: string
+          prospect_id?: string | null
+          qualification_score?: number | null
+          status?: string
+          updated_at?: string
+          wa_profile_name?: string | null
+          window_expires_at?: string | null
+        }
+        Update: {
+          assigned_channel?: string
+          created_at?: string
+          handoff_reason?: string | null
+          id?: string
+          last_inbound_at?: string | null
+          last_outbound_at?: string | null
+          phone_normalized?: string
+          prospect_id?: string | null
+          qualification_score?: number | null
+          status?: string
+          updated_at?: string
+          wa_profile_name?: string | null
+          window_expires_at?: string | null
+        }
+        Relationships: []
+      }
+      wa_messages: {
+        Row: {
+          ai_model: string | null
+          ai_tokens_in: number | null
+          ai_tokens_out: number | null
+          content: string
+          conversation_id: string
+          created_at: string
+          direction: string
+          error: string | null
+          id: string
+          media_url: string | null
+          role: string
+          template_name: string | null
+          tool_call: Json | null
+          wa_message_id: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          content?: string
+          conversation_id: string
+          created_at?: string
+          direction: string
+          error?: string | null
+          id?: string
+          media_url?: string | null
+          role: string
+          template_name?: string | null
+          tool_call?: Json | null
+          wa_message_id?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          ai_tokens_in?: number | null
+          ai_tokens_out?: number | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          direction?: string
+          error?: string | null
+          id?: string
+          media_url?: string | null
+          role?: string
+          template_name?: string | null
+          tool_call?: Json | null
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       booking_availability: {
