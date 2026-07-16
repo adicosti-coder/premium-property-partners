@@ -50,6 +50,7 @@ const loaders: Record<string, Loader> = {
   "ai-memory": () => import("@/components/admin/AiMemoryPanel"),
   "photo-studio": () => import("@/components/admin/PhotoStudioManager"),
   "voice-agent": () => import("@/components/admin/VoiceAgentCommandCenter"),
+  "whatsapp-andrei": () => import("@/components/admin/WhatsappAgentInbox"),
   "agency-ai": () => import("@/components/admin/AgencyDetectionSettings").then((m) => ({ default: m.AgencyDetectionSettings })),
   "system-health": () => import("@/components/admin/SystemHealthDashboard"),
   automation: () => import("@/components/admin/AutomationManager"),

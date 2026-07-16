@@ -67,6 +67,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       // 🧠 AI Tools — utilitare AI pentru conținut și asistență
       { value: "ai-cache", label: "AI Cache", icon: Sparkles, subgroup: "AI Tools", keywords: ["cache", "ai content"] },
       { value: "voice-agent", label: "Voice Agent", icon: Phone, subgroup: "AI Tools", keywords: ["voice", "apel ai"] },
+      { value: "whatsapp-andrei", label: "Andrei WhatsApp", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "wa", "andrei", "chat"] },
       { value: "photo-studio", label: "Studio Foto AI", icon: Sparkles, subgroup: "AI Tools", keywords: ["foto", "image"] },
       { value: "seo-optimizer", label: "SEO AI", icon: Sparkles, subgroup: "AI Tools", keywords: ["seo"] },
       { value: "ai-memory", label: "AI Memory", icon: Brain, subgroup: "AI Tools", keywords: ["memorie", "context"] },
