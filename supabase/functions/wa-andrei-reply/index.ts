@@ -252,13 +252,19 @@ ${contextText || "(fără istoric anterior — primul contact)"}`;
   }
 
   // Update the outbound message with model + tokens (last inserted by wa-andrei-send)
-  await supabase.from("wa_messages")
-    .update({ ai_model: "openai/gpt-5.4-mini", ai_tokens_in: tokensIn, ai_tokens_out: tokensOut })
+  const { data: lastOut } = await supabase.from("wa_messages")
+    .select("id")
     .eq("conversation_id", conversationId)
     .eq("direction", "outbound")
     .eq("role", "assistant")
     .order("created_at", { ascending: false })
-    .limit(1);
+    .limit(1)
+    .maybeSingle();
+  if (lastOut?.id) {
+    await supabase.from("wa_messages")
+      .update({ ai_model: "openai/gpt-5.4-mini", ai_tokens_in: tokensIn, ai_tokens_out: tokensOut })
+      .eq("id", lastOut.id);
+  }
 
   return new Response(JSON.stringify({ ok: true, tokens_in: tokensIn, tokens_out: tokensOut }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
