@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast, useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,7 +95,6 @@ const playNotificationSound = () => {
 
 const LeadsManager = () => {
   const { language } = useLanguage();
-  const { toast: showToast } = useToast();
 
   // Filters (server-side)
   const [searchTerm, setSearchTerm] = useState("");
@@ -244,7 +243,7 @@ const LeadsManager = () => {
           playNotificationSound();
           const sourceLabel =
             sourceLabels[newLead.source || "calculator"]?.[lang] || newLead.source;
-          showToast({
+          toast({
             title: lang === "ro" ? "🎉 Lead nou!" : "🎉 New Lead!",
             description:
               lang === "ro"
@@ -269,7 +268,7 @@ const LeadsManager = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [lang, showToast, invalidate]);
+  }, [lang, invalidate]);
 
   const handleDelete = async (id: string) => {
     try {
