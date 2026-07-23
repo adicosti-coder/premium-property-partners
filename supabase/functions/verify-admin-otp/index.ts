@@ -29,20 +29,21 @@ serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify user
-    const supabaseUser = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    // Validate token using the admin client (service role) — avoids intermittent
+    // "invalid claim: missing sub" errors seen when the anon client re-validates
+    // right after a token refresh race.
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid user" }), {
+      console.error("verify-admin-otp: getUser failed", userError?.message, "token length:", token.length);
+      return new Response(JSON.stringify({ error: "Invalid user", details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
