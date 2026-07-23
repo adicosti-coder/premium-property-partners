@@ -45,7 +45,6 @@ serve(async (req) => {
     }
 
 
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
     // Find valid OTP
     const { data: otpRecord, error: otpError } = await supabaseAdmin
