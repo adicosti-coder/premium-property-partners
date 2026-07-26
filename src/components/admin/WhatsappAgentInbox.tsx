@@ -69,7 +69,7 @@ type Prospect = {
   contact_name: string | null;
   contact_phone: string | null;
   phone_normalized: string | null;
-  property_type: string | null;
+  prospect_type: string | null;
   zone: string | null;
   source_url: string | null;
   status: string | null;
