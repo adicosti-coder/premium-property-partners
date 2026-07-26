@@ -100,6 +100,11 @@ export default function WhatsappAgentInbox() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [templates, setTemplates] = useState<WaTemplate[]>([]);
+  const [prospect, setProspect] = useState<Prospect | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [templateParams, setTemplateParams] = useState<string[]>([]);
+  const [sendingTemplate, setSendingTemplate] = useState(false);
 
   const loadConversations = async () => {
     setLoading(true);
