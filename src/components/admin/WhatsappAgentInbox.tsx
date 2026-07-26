@@ -52,6 +52,28 @@ type Settings = {
   paused_reason: string | null;
 };
 
+type WaTemplate = {
+  id: string;
+  name: string;
+  language: string;
+  category: string;
+  status: string;
+  body_preview: string;
+  variables_help: string | null;
+  variable_count: number;
+};
+
+type Prospect = {
+  id: string;
+  contact_name: string | null;
+  phone: string | null;
+  property_type: string | null;
+  zone: string | null;
+  listing_url: string | null;
+  status: string | null;
+  predictive_score: number | null;
+};
+
 const STATUS_LABEL: Record<Conv["status"], string> = {
   active: "Activ",
   awaiting_human: "Așteaptă operator",
