@@ -27,6 +27,7 @@ type Conv = {
   qualification_score: number | null;
   handoff_reason: string | null;
   wa_profile_name: string | null;
+  prospect_id: string | null;
 };
 
 type Msg = {
