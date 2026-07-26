@@ -8871,6 +8871,8 @@ export type Database = {
           id: string
           last_inbound_at: string | null
           last_outbound_at: string | null
+          opened_by_admin: string | null
+          opened_by_template: string | null
           phone_normalized: string
           prospect_id: string | null
           qualification_score: number | null
@@ -8886,6 +8888,8 @@ export type Database = {
           id?: string
           last_inbound_at?: string | null
           last_outbound_at?: string | null
+          opened_by_admin?: string | null
+          opened_by_template?: string | null
           phone_normalized: string
           prospect_id?: string | null
           qualification_score?: number | null
@@ -8901,6 +8905,8 @@ export type Database = {
           id?: string
           last_inbound_at?: string | null
           last_outbound_at?: string | null
+          opened_by_admin?: string | null
+          opened_by_template?: string | null
           phone_normalized?: string
           prospect_id?: string | null
           qualification_score?: number | null
@@ -8969,6 +8975,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wa_templates: {
+        Row: {
+          body_preview: string
+          category: string
+          created_at: string
+          id: string
+          language: string
+          name: string
+          status: string
+          updated_at: string
+          variable_count: number
+          variables_help: string | null
+        }
+        Insert: {
+          body_preview: string
+          category?: string
+          created_at?: string
+          id?: string
+          language?: string
+          name: string
+          status?: string
+          updated_at?: string
+          variable_count?: number
+          variables_help?: string | null
+        }
+        Update: {
+          body_preview?: string
+          category?: string
+          created_at?: string
+          id?: string
+          language?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          variable_count?: number
+          variables_help?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

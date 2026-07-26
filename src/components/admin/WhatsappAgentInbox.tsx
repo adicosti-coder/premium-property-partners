@@ -10,7 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  MessageSquare, Send, PhoneCall, PauseCircle, RefreshCw, Bot, Settings,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  MessageSquare, Send, PhoneCall, PauseCircle, RefreshCw, Bot, Settings, FileText, User2, ExternalLink,
 } from "lucide-react";
 
 type Conv = {
@@ -24,6 +27,7 @@ type Conv = {
   qualification_score: number | null;
   handoff_reason: string | null;
   wa_profile_name: string | null;
+  prospect_id: string | null;
 };
 
 type Msg = {
@@ -47,6 +51,29 @@ type Settings = {
   escalation_threshold: number;
   office_hours_only: boolean;
   paused_reason: string | null;
+};
+
+type WaTemplate = {
+  id: string;
+  name: string;
+  language: string;
+  category: string;
+  status: string;
+  body_preview: string;
+  variables_help: string | null;
+  variable_count: number;
+};
+
+type Prospect = {
+  id: string;
+  contact_name: string | null;
+  contact_phone: string | null;
+  phone_normalized: string | null;
+  prospect_type: string | null;
+  zone: string | null;
+  source_url: string | null;
+  status: string | null;
+  predictive_score: number | null;
 };
 
 const STATUS_LABEL: Record<Conv["status"], string> = {
@@ -75,6 +102,11 @@ export default function WhatsappAgentInbox() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [templates, setTemplates] = useState<WaTemplate[]>([]);
+  const [prospect, setProspect] = useState<Prospect | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [templateParams, setTemplateParams] = useState<string[]>([]);
+  const [sendingTemplate, setSendingTemplate] = useState(false);
 
   const loadConversations = async () => {
     setLoading(true);
@@ -97,15 +129,38 @@ export default function WhatsappAgentInbox() {
     if (data) setSettings(data as Settings);
   };
 
+  const loadTemplates = async () => {
+    const { data } = await supabase.from("wa_templates")
+      .select("*").eq("status", "active").order("name", { ascending: true });
+    setTemplates((data as WaTemplate[]) || []);
+  };
+
+  const loadProspect = async (conv: Conv | null) => {
+    if (!conv) { setProspect(null); return; }
+    const cols = "id, contact_name, contact_phone, phone_normalized, prospect_type, zone, source_url, status, predictive_score";
+    const { data } = conv.prospect_id
+      ? await supabase.from("prospect_listings").select(cols).eq("id", conv.prospect_id).maybeSingle()
+      : await supabase.from("prospect_listings").select(cols).eq("phone_normalized", conv.phone_normalized).limit(1).maybeSingle();
+    setProspect((data as unknown as Prospect | null) ?? null);
+  };
+
   useEffect(() => {
     loadConversations();
     loadSettings();
+    loadTemplates();
   }, []);
 
   useEffect(() => {
     if (selectedId) loadMessages(selectedId);
     else setMessages([]);
   }, [selectedId]);
+
+  useEffect(() => {
+    const conv = conversations.find((c) => c.id === selectedId) || null;
+    loadProspect(conv);
+    setSelectedTemplateId("");
+    setTemplateParams([]);
+  }, [selectedId, conversations]);
 
   // Realtime: new inbound messages & conversation updates
   useEffect(() => {
@@ -169,6 +224,37 @@ export default function WhatsappAgentInbox() {
     if (!selectedId) return;
     await supabase.from("wa_conversations").update({ status: "active", handoff_reason: null }).eq("id", selectedId);
     toast({ title: "AI reactivat" });
+    loadConversations();
+  };
+
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) || null;
+
+  const sendTemplate = async () => {
+    if (!selectedId || !selectedTemplate) return;
+    if (selectedTemplate.variable_count > 0 && templateParams.some((p) => !p?.trim())) {
+      toast({ variant: "destructive", title: "Completează toate variabilele" });
+      return;
+    }
+    setSendingTemplate(true);
+    const { data, error } = await supabase.functions.invoke("wa-andrei-send", {
+      body: {
+        conversation_id: selectedId,
+        template_name: selectedTemplate.name,
+        template_language: selectedTemplate.language,
+        template_params: templateParams.slice(0, selectedTemplate.variable_count),
+      },
+    });
+    setSendingTemplate(false);
+    if (error || (data as any)?.error) {
+      toast({ variant: "destructive", title: "Șablon eșuat", description: (data as any)?.error || error?.message });
+      return;
+    }
+    await supabase.from("wa_conversations")
+      .update({ opened_by_template: selectedTemplate.name })
+      .eq("id", selectedId);
+    toast({ title: "Șablon trimis", description: selectedTemplate.name });
+    setTemplateParams([]);
+    loadMessages(selectedId);
     loadConversations();
   };
 
@@ -330,6 +416,27 @@ export default function WhatsappAgentInbox() {
                 </div>
               </div>
 
+              {prospect && (
+                <div className="border-b border-border px-4 py-2 bg-muted/30 text-xs flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="flex items-center gap-1 font-medium">
+                    <User2 className="h-3 w-3" />
+                    {prospect.contact_name || "Prospect fără nume"}
+                  </span>
+                  {prospect.prospect_type && <span className="text-muted-foreground">{prospect.prospect_type}</span>}
+                  {prospect.zone && <span className="text-muted-foreground">· {prospect.zone}</span>}
+                  {prospect.predictive_score != null && (
+                    <span className="text-muted-foreground">· scor {Math.round(prospect.predictive_score)}</span>
+                  )}
+                  {prospect.status && <span className="text-muted-foreground">· {prospect.status}</span>}
+                  {prospect.source_url && (
+                    <a href={prospect.source_url} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 text-primary hover:underline">
+                      Anunț <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              )}
+
+
               <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[calc(100vh-450px)]">
                 {messages.map((m) => (
                   <div
@@ -358,6 +465,62 @@ export default function WhatsappAgentInbox() {
                   <div className="text-xs text-muted-foreground italic">Fără mesaje.</div>
                 )}
               </div>
+              <div className="border-t border-border p-3 space-y-2 bg-muted/20">
+                <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+                  <FileText className="h-3 w-3" /> Șablon aprobat Meta
+                  {selected.window_expires_at && new Date(selected.window_expires_at).getTime() < Date.now() && (
+                    <span className="ml-2 text-amber-600">Fereastra 24h e închisă — folosește un șablon</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={selectedTemplateId}
+                    onValueChange={(v) => {
+                      setSelectedTemplateId(v);
+                      const t = templates.find((x) => x.id === v);
+                      setTemplateParams(t ? Array(t.variable_count).fill("") : []);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[240px] text-xs">
+                      <SelectValue placeholder="Alege șablon…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={t.id} className="text-xs">
+                          {t.name} ({t.language})
+                        </SelectItem>
+                      ))}
+                      {templates.length === 0 && (
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground">Niciun șablon activ</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {selectedTemplate && Array.from({ length: selectedTemplate.variable_count }).map((_, i) => (
+                    <input
+                      key={i}
+                      value={templateParams[i] || ""}
+                      onChange={(e) => {
+                        const next = [...templateParams];
+                        next[i] = e.target.value;
+                        setTemplateParams(next);
+                      }}
+                      placeholder={`{{${i + 1}}}`}
+                      className="h-8 rounded-md border border-input bg-background px-2 text-xs w-32"
+                    />
+                  ))}
+                  <Button size="sm" variant="outline" onClick={sendTemplate} disabled={!selectedTemplate || sendingTemplate}>
+                    <Send className="h-3 w-3 mr-1" />
+                    {sendingTemplate ? "Se trimite…" : "Trimite șablon"}
+                  </Button>
+                </div>
+                {selectedTemplate && (
+                  <div className="text-[10px] text-muted-foreground italic border-l-2 border-border pl-2">
+                    {selectedTemplate.body_preview}
+                    {selectedTemplate.variables_help && <> — <span className="not-italic">{selectedTemplate.variables_help}</span></>}
+                  </div>
+                )}
+              </div>
+
 
               <div className="border-t border-border p-3 space-y-2">
                 <Textarea
