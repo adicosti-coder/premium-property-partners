@@ -160,10 +160,15 @@ const pynbookingPrompt = `Extract ALL available property details from this accom
 - "address": full address of the property
 Return only the fields you can find. Use null for missing values.`;
 
+import { requireAdmin } from "../_shared/adminAuth.ts";
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
 
   try {
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');

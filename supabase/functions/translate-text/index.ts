@@ -1,4 +1,5 @@
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Simple hash for cache key
@@ -18,6 +19,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
 
   try {
     const { text, sourceLang, targetLang } = await req.json();
