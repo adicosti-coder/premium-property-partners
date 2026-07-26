@@ -465,6 +465,62 @@ export default function WhatsappAgentInbox() {
                   <div className="text-xs text-muted-foreground italic">Fără mesaje.</div>
                 )}
               </div>
+              <div className="border-t border-border p-3 space-y-2 bg-muted/20">
+                <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+                  <FileText className="h-3 w-3" /> Șablon aprobat Meta
+                  {selected.window_expires_at && new Date(selected.window_expires_at).getTime() < Date.now() && (
+                    <span className="ml-2 text-amber-600">Fereastra 24h e închisă — folosește un șablon</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={selectedTemplateId}
+                    onValueChange={(v) => {
+                      setSelectedTemplateId(v);
+                      const t = templates.find((x) => x.id === v);
+                      setTemplateParams(t ? Array(t.variable_count).fill("") : []);
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[240px] text-xs">
+                      <SelectValue placeholder="Alege șablon…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={t.id} className="text-xs">
+                          {t.name} ({t.language})
+                        </SelectItem>
+                      ))}
+                      {templates.length === 0 && (
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground">Niciun șablon activ</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {selectedTemplate && Array.from({ length: selectedTemplate.variable_count }).map((_, i) => (
+                    <input
+                      key={i}
+                      value={templateParams[i] || ""}
+                      onChange={(e) => {
+                        const next = [...templateParams];
+                        next[i] = e.target.value;
+                        setTemplateParams(next);
+                      }}
+                      placeholder={`{{${i + 1}}}`}
+                      className="h-8 rounded-md border border-input bg-background px-2 text-xs w-32"
+                    />
+                  ))}
+                  <Button size="sm" variant="outline" onClick={sendTemplate} disabled={!selectedTemplate || sendingTemplate}>
+                    <Send className="h-3 w-3 mr-1" />
+                    {sendingTemplate ? "Se trimite…" : "Trimite șablon"}
+                  </Button>
+                </div>
+                {selectedTemplate && (
+                  <div className="text-[10px] text-muted-foreground italic border-l-2 border-border pl-2">
+                    {selectedTemplate.body_preview}
+                    {selectedTemplate.variables_help && <> — <span className="not-italic">{selectedTemplate.variables_help}</span></>}
+                  </div>
+                )}
+              </div>
+
 
               <div className="border-t border-border p-3 space-y-2">
                 <Textarea
