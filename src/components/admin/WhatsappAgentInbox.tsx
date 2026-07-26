@@ -155,6 +155,13 @@ export default function WhatsappAgentInbox() {
     else setMessages([]);
   }, [selectedId]);
 
+  useEffect(() => {
+    const conv = conversations.find((c) => c.id === selectedId) || null;
+    loadProspect(conv);
+    setSelectedTemplateId("");
+    setTemplateParams([]);
+  }, [selectedId, conversations]);
+
   // Realtime: new inbound messages & conversation updates
   useEffect(() => {
     const ch = supabase.channel("wa-inbox")
