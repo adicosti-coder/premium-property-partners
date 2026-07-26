@@ -137,14 +137,11 @@ export default function WhatsappAgentInbox() {
 
   const loadProspect = async (conv: Conv | null) => {
     if (!conv) { setProspect(null); return; }
-    let q = supabase.from("prospect_listings")
-      .select("id, contact_name, phone, property_type, zone, listing_url, status, predictive_score")
-      .limit(1);
-    q = conv.prospect_id
-      ? q.eq("id", conv.prospect_id)
-      : q.eq("phone", conv.phone_normalized);
-    const { data } = await q.maybeSingle();
-    setProspect((data as Prospect | null) ?? null);
+    const cols = "id, contact_name, contact_phone, phone_normalized, prospect_type, zone, source_url, status, predictive_score";
+    const { data } = conv.prospect_id
+      ? await supabase.from("prospect_listings").select(cols).eq("id", conv.prospect_id).maybeSingle()
+      : await supabase.from("prospect_listings").select(cols).eq("phone_normalized", conv.phone_normalized).limit(1).maybeSingle();
+    setProspect((data as unknown as Prospect | null) ?? null);
   };
 
   useEffect(() => {
