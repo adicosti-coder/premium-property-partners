@@ -488,11 +488,16 @@ async function searchFreeImageSources(query: string): Promise<{ url: string; sou
   return null;
 }
 
+import { requireAdmin } from "../_shared/adminAuth.ts";
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
 
   try {
     const { query, address, latitude, longitude, forcePixabay, forcePexels, forceUnsplash, forceFreeOnly } = await req.json();
