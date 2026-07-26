@@ -227,6 +227,37 @@ export default function WhatsappAgentInbox() {
     loadConversations();
   };
 
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) || null;
+
+  const sendTemplate = async () => {
+    if (!selectedId || !selectedTemplate) return;
+    if (selectedTemplate.variable_count > 0 && templateParams.some((p) => !p?.trim())) {
+      toast({ variant: "destructive", title: "Completează toate variabilele" });
+      return;
+    }
+    setSendingTemplate(true);
+    const { data, error } = await supabase.functions.invoke("wa-andrei-send", {
+      body: {
+        conversation_id: selectedId,
+        template_name: selectedTemplate.name,
+        template_language: selectedTemplate.language,
+        template_params: templateParams.slice(0, selectedTemplate.variable_count),
+      },
+    });
+    setSendingTemplate(false);
+    if (error || (data as any)?.error) {
+      toast({ variant: "destructive", title: "Șablon eșuat", description: (data as any)?.error || error?.message });
+      return;
+    }
+    await supabase.from("wa_conversations")
+      .update({ opened_by_template: selectedTemplate.name })
+      .eq("id", selectedId);
+    toast({ title: "Șablon trimis", description: selectedTemplate.name });
+    setTemplateParams([]);
+    loadMessages(selectedId);
+    loadConversations();
+  };
+
   const saveSettings = async () => {
     if (!settings) return;
     setSavingSettings(true);
