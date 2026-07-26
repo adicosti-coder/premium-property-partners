@@ -416,6 +416,27 @@ export default function WhatsappAgentInbox() {
                 </div>
               </div>
 
+              {prospect && (
+                <div className="border-b border-border px-4 py-2 bg-muted/30 text-xs flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="flex items-center gap-1 font-medium">
+                    <User2 className="h-3 w-3" />
+                    {prospect.contact_name || "Prospect fără nume"}
+                  </span>
+                  {prospect.prospect_type && <span className="text-muted-foreground">{prospect.prospect_type}</span>}
+                  {prospect.zone && <span className="text-muted-foreground">· {prospect.zone}</span>}
+                  {prospect.predictive_score != null && (
+                    <span className="text-muted-foreground">· scor {Math.round(prospect.predictive_score)}</span>
+                  )}
+                  {prospect.status && <span className="text-muted-foreground">· {prospect.status}</span>}
+                  {prospect.source_url && (
+                    <a href={prospect.source_url} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 text-primary hover:underline">
+                      Anunț <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              )}
+
+
               <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[calc(100vh-450px)]">
                 {messages.map((m) => (
                   <div
