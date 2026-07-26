@@ -67,10 +67,11 @@ type WaTemplate = {
 type Prospect = {
   id: string;
   contact_name: string | null;
-  phone: string | null;
+  contact_phone: string | null;
+  phone_normalized: string | null;
   property_type: string | null;
   zone: string | null;
-  listing_url: string | null;
+  source_url: string | null;
   status: string | null;
   predictive_score: number | null;
 };
