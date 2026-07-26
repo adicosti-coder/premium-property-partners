@@ -10,7 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  MessageSquare, Send, PhoneCall, PauseCircle, RefreshCw, Bot, Settings,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  MessageSquare, Send, PhoneCall, PauseCircle, RefreshCw, Bot, Settings, FileText, User2, ExternalLink,
 } from "lucide-react";
 
 type Conv = {
