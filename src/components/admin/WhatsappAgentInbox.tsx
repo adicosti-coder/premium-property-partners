@@ -127,9 +127,28 @@ export default function WhatsappAgentInbox() {
     if (data) setSettings(data as Settings);
   };
 
+  const loadTemplates = async () => {
+    const { data } = await supabase.from("wa_templates")
+      .select("*").eq("status", "active").order("name", { ascending: true });
+    setTemplates((data as WaTemplate[]) || []);
+  };
+
+  const loadProspect = async (conv: Conv | null) => {
+    if (!conv) { setProspect(null); return; }
+    let q = supabase.from("prospect_listings")
+      .select("id, contact_name, phone, property_type, zone, listing_url, status, predictive_score")
+      .limit(1);
+    q = conv.prospect_id
+      ? q.eq("id", conv.prospect_id)
+      : q.eq("phone", conv.phone_normalized);
+    const { data } = await q.maybeSingle();
+    setProspect((data as Prospect | null) ?? null);
+  };
+
   useEffect(() => {
     loadConversations();
     loadSettings();
+    loadTemplates();
   }, []);
 
   useEffect(() => {
