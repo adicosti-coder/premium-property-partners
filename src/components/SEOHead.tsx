@@ -173,7 +173,7 @@ const SEOHead = ({
   const [override, setOverride] = useState<import("@/hooks/useSeoOverride").SeoOverride | null>(null);
   
   const defaultTitles = {
-    ro: "RealTrust | Trust Estate - Investiții & Property Management Timișoara",
+    ro: "RealTrust Timișoara | Regim Hotelier & Servicii Imobiliare",
     en: "RealTrust | Trust Estate - Real Estate Investment & Property Management Timișoara"
   };
   

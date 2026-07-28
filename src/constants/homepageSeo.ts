@@ -13,7 +13,7 @@
 
 export const HOMEPAGE_SEO = {
   ro: {
-    title: "RealTrust | Trust Estate - Investiții & Property Management Timișoara",
+    title: "RealTrust Timișoara | Regim Hotelier & Servicii Imobiliare",
     description:
       "Firmă de property management și investiții imobiliare în Timișoara. Operăm ApArt Hotel și oferim consultanță pentru ansambluri rezidențiale premium. Randament net 9,4%.",
     h1: "RealTrust & ApArt Hotel Timișoara — imobiliare, investiții și operare hotelieră cu randament calculat transparent.",
