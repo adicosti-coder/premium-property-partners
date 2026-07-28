@@ -15,8 +15,8 @@ export const HOMEPAGE_SEO = {
   ro: {
     title: "RealTrust Timișoara | Regim Hotelier & Servicii Imobiliare",
     description:
-      "Firmă de property management și investiții imobiliare în Timișoara. Operăm ApArt Hotel și oferim consultanță pentru ansambluri rezidențiale premium. Randament net 9,4%.",
-    h1: "RealTrust & ApArt Hotel Timișoara — imobiliare, investiții și operare hotelieră cu randament calculat transparent.",
+      "RealTrust oferă servicii profesionale de regim hotelier, property management și consultanță imobiliară în Timișoara. Maximizează randamentul investiției tale.",
+    h1: "RealTrust Timișoara — regim hotelier, property management și consultanță imobiliară cu randament calculat transparent.",
   },
   en: {
     title: "RealTrust Timișoara | Real estate & short-term rentals",
