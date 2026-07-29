@@ -12,6 +12,8 @@ const BASE_URL = SITE_ORIGIN;
 interface SEOHeadProps {
   title?: string;
   description?: string;
+  /** Shorter description used only for og:description / twitter:description. */
+  socialDescription?: string;
   image?: string;
   imageAlt?: string;
   url?: string;
@@ -151,6 +153,7 @@ const generateWebSiteJsonLd = () => ({
 const SEOHead = ({
   title,
   description,
+  socialDescription,
   image = `${BASE_URL}/images/hero-optimized-1920w.webp`,
   imageAlt,
   url,
@@ -180,6 +183,11 @@ const SEOHead = ({
   const defaultDescriptions = {
     ro: "RealTrust oferă servicii profesionale de regim hotelier, property management și consultanță imobiliară în Timișoara. Maximizează randamentul investiției tale.",
     en: "Professional short-term rental, property management and real estate consulting in Timișoara. Maximize the return on your investment with RealTrust."
+  };
+
+  const defaultSocialDescriptions = {
+    ro: "Servicii profesionale de regim hotelier, property management și consultanță imobiliară în Timișoara.",
+    en: "Professional short-term rental, property management and real estate consulting in Timișoara."
   };
   
   useEffect(() => {
@@ -213,6 +221,12 @@ const SEOHead = ({
   // that already pass title/description into SEOHead.
   const finalTitle = override?.title || baseTitle;
   const finalDescription = override?.meta_description || baseDescription;
+  const finalSocialDescription =
+    override?.meta_description ||
+    socialDescription ||
+    description ||
+    defaultSocialDescriptions[language as keyof typeof defaultSocialDescriptions] ||
+    defaultSocialDescriptions.ro;
   const overrideKeywords = override?.extra_keywords?.map((k) => k.keyword).filter(Boolean) || [];
   
   // Canonical URL: ALWAYS absolute on realtrust.ro (non-www, matches global canonical), pathname only (NO query params, NO hash, NO trailing slash except root).
@@ -379,9 +393,9 @@ const SEOHead = ({
     syncMeta('meta[name="title"]', { name: "title" }, finalTitle);
     syncMeta('meta[name="description"]', { name: "description" }, finalDescription);
     syncMeta('meta[property="og:title"]', { property: "og:title" }, finalTitle);
-    syncMeta('meta[property="og:description"]', { property: "og:description" }, finalDescription);
+    syncMeta('meta[property="og:description"]', { property: "og:description" }, finalSocialDescription);
     syncMeta('meta[name="twitter:title"]', { name: "twitter:title" }, finalTitle);
-    syncMeta('meta[name="twitter:description"]', { name: "twitter:description" }, finalDescription);
+    syncMeta('meta[name="twitter:description"]', { name: "twitter:description" }, finalSocialDescription);
   }, [finalTitle, finalDescription]);
 
   return (
@@ -410,7 +424,7 @@ const SEOHead = ({
       <meta property="og:type" content={type} />
       <meta property="og:url" content={finalUrl} />
       <meta property="og:title" content={finalTitle} />
-      <meta property="og:description" content={finalDescription} />
+      <meta property="og:description" content={finalSocialDescription} />
       <meta property="og:image" content={absoluteImage} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
@@ -423,7 +437,7 @@ const SEOHead = ({
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:url" content={finalUrl} />
       <meta name="twitter:title" content={finalTitle} />
-      <meta name="twitter:description" content={finalDescription} />
+      <meta name="twitter:description" content={finalSocialDescription} />
       <meta name="twitter:image" content={absoluteImage} />
       <meta name="twitter:image:alt" content={imageAlt || finalTitle} />
       
