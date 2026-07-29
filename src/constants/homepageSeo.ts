@@ -16,13 +16,17 @@ export const HOMEPAGE_SEO = {
     title: "RealTrust Timișoara | Regim Hotelier & Servicii Imobiliare",
     description:
       "RealTrust oferă servicii profesionale de regim hotelier, property management și consultanță imobiliară în Timișoara. Maximizează randamentul investiției tale.",
-    h1: "RealTrust Timișoara — regim hotelier, property management și consultanță imobiliară cu randament calculat transparent.",
+    socialDescription:
+      "Servicii profesionale de regim hotelier, property management și consultanță imobiliară în Timișoara.",
+    h1: "RealTrust Timișoara — regim hotelier & property management, servicii imobiliare complete.",
   },
   en: {
     title: "RealTrust Timișoara | Real estate & short-term rentals",
     description:
       "Timișoara real estate with hotel-style operations by ApArt Hotel: sales, rentals and management. 9.4% net yield, calculated transparently. Request your simulation.",
-    h1: "RealTrust & ApArt Hotel Timișoara — real estate, investments and hotel-style operations with transparent yield.",
+    socialDescription:
+      "Professional short-term rental, property management and real estate consulting in Timișoara.",
+    h1: "RealTrust Timișoara — short-term rentals, property management and complete real estate services.",
   },
 } as const;
 

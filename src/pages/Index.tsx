@@ -249,6 +249,7 @@ const Index = () => {
       <SEOHead
         title={homepageSeo.title}
         description={homepageSeo.description}
+        socialDescription={homepageSeo.socialDescription}
         url={HOMEPAGE_CANONICAL}
         jsonLd={STATIC_HOMEPAGE_SCHEMAS}
       />
