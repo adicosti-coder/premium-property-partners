@@ -19,9 +19,9 @@ export const translations = {
     // Hero
     hero: {
       badge: "ApArt Hotel Timișoara\nVânzare · Administrare · Cazare",
-      title: "Proprietatea ta,",
-      titleMid: "operată ca un",
-      titleHighlight: "hotel de încredere.",
+      title: "RealTrust Timișoara —",
+      titleMid: "regim hotelier & property management",
+      titleHighlight: "servicii imobiliare complete.",
       subtitle: "Investești în imobiliare — noi construim afacerea la cheie, prin RealTrust Imobiliare.\nAdministrare completă în regim hotelier, prin ApArt Hotel: tu încasezi, noi ne ocupăm de tot.\nRandament net 9,4% calculat pe ipoteze transparente (ocupare 75%, deducere 27%).",
       cta: "Calculează randamentul tău",
       ctaSecondary: "Vezi oportunitățile de investiție",
