@@ -396,7 +396,7 @@ const SEOHead = ({
     syncMeta('meta[property="og:description"]', { property: "og:description" }, finalSocialDescription);
     syncMeta('meta[name="twitter:title"]', { name: "twitter:title" }, finalTitle);
     syncMeta('meta[name="twitter:description"]', { name: "twitter:description" }, finalSocialDescription);
-  }, [finalTitle, finalDescription]);
+  }, [finalTitle, finalDescription, finalSocialDescription]);
 
   return (
     <Helmet>
