@@ -1,4 +1,9 @@
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Flame, Snowflake, ThermometerSun, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LeadRow } from "../hooks/useLeads";
@@ -29,7 +34,11 @@ const GRADE_META: Record<
   },
 };
 
-const FACTOR_LABELS: Array<{ key: keyof NonNullable<LeadRow["score_breakdown"]>; label: string; max: number }> = [
+const FACTOR_LABELS: Array<{
+  key: keyof NonNullable<LeadRow["score_breakdown"]>;
+  label: string;
+  max: number;
+}> = [
   { key: "zone", label: "Zonă", max: 30 },
   { key: "rooms", label: "Camere / tip", max: 25 },
   { key: "income", label: "Estimare venit", max: 25 },
@@ -48,38 +57,42 @@ export const LeadScoreBadge = ({ lead }: { lead: LeadRow }) => {
   const breakdown = lead.score_breakdown;
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold",
-            meta.className,
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+              meta.className,
+            )}
+            aria-label={`Scor automat ${score} din 100 — ${meta.label}`}
+          >
+            <Icon className="w-3 h-3" aria-hidden="true" />
+            {score}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-[220px]">
+          <p className="font-semibold mb-1">
+            Scor automat: {score}/100 · {meta.label}
+          </p>
+          {breakdown ? (
+            <ul className="space-y-0.5 text-xs">
+              {FACTOR_LABELS.map(({ key, label, max }) => (
+                <li key={key} className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span>
+                    {Number(breakdown[key] ?? 0)}/{max}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Fără detaliere disponibilă
+            </p>
           )}
-          aria-label={`Scor automat ${score} din 100 — ${meta.label}`}
-        >
-          <Icon className="w-3 h-3" aria-hidden="true" />
-          {score}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent className="max-w-[220px]">
-        <p className="font-semibold mb-1">
-          Scor automat: {score}/100 · {meta.label}
-        </p>
-        {breakdown ? (
-          <ul className="space-y-0.5 text-xs">
-            {FACTOR_LABELS.map(({ key, label, max }) => (
-              <li key={key} className="flex justify-between gap-3">
-                <span className="text-muted-foreground">{label}</span>
-                <span>
-                  {Number(breakdown[key] ?? 0)}/{max}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-muted-foreground">Fără detaliere disponibilă</p>
-        )}
-      </TooltipContent>
-    </Tooltip>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
