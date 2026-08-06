@@ -37,6 +37,7 @@ const QuickLeadForm = () => {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [securityReady, setSecurityReady] = useState(false);
   const pendingSubmitRef = useRef(false);
+  const failOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Store form data for submission after captcha
   const formDataRef = useRef<{
