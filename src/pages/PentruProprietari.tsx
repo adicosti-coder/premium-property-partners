@@ -449,12 +449,12 @@ const PentruProprietari = () => {
           <picture>
             <source
               media="(max-width: 768px)"
-              srcSet="/images/hero-cinematic.webp"
+              srcSet="/images/hero-optimized-800w.webp"
               width="800"
-              height="450"
+              height="504"
             />
             <img
-              src="/images/hero-cinematic.webp"
+              src="/images/hero-cinematic-1600w.webp"
               alt={language === "ro" ? "Apartament premium administrat în regim hotelier Timișoara" : "Premium managed short-term rental apartment Timișoara"}
               className="w-full h-full object-cover"
               width={1920}
@@ -571,7 +571,7 @@ const PentruProprietari = () => {
                   className="w-full aspect-video object-cover"
                   width={640}
                   height={360}
-                  poster="/images/hero-cinematic.webp"
+                  poster="/images/hero-optimized-800w.webp"
                 >
                   <source src="/videos/hero-apartment-walkthrough.mp4" type="video/mp4" />
                 </video>
