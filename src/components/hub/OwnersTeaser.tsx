@@ -138,14 +138,38 @@ const OwnersTeaser = () => {
         ))}
       </div>
 
-      {/* See More Link */}
-      <div className="text-center mt-8">
-        <Button asChild variant="heroOutline" size="lg" className="group">
-          <Link to="/pentru-proprietari">
-            {language === "ro" ? "Vezi Toate Beneficiile" : "View All Benefits"}
+      {/* Conversion block — primary action stays on-page (free estimate form),
+          secondary goes to the full owners landing page */}
+      <div className="mt-8 flex flex-col items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <Button
+            size="lg"
+            className="group font-semibold"
+            onClick={() => {
+              document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            {language === "ro" ? "Estimare gratuită în 24 de ore" : "Free estimate within 24h"}
             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </Button>
+          </Button>
+          <Button asChild variant="heroOutline" size="lg" className="group">
+            <Link to="/pentru-proprietari">
+              {language === "ro" ? "Vezi Toate Beneficiile" : "View All Benefits"}
+              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+          {(language === "ro"
+            ? ["Fără obligații", "Comision doar din încasări", "9,7/10 rating oaspeți (Booking)"]
+            : ["No obligation", "Commission only on income", "9.7/10 guest rating (Booking)"]
+          ).map((item) => (
+            <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CheckCircle2 className="w-3.5 h-3.5 text-gold" />
+              {item}
+            </span>
+          ))}
+        </div>
       </div>
     </HubSection>
   );
