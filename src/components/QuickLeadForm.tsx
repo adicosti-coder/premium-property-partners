@@ -293,17 +293,30 @@ const QuickLeadForm = () => {
           
           {/* Inline Form */}
           <form onSubmit={handleSubmit} onFocusCapture={activateSecurity} onPointerDownCapture={activateSecurity} className="relative">
-            <div className="flex flex-col md:flex-row gap-3 p-3 md:p-2 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
+            <div className="flex flex-col md:flex-row gap-3 md:gap-3 p-3 md:p-2 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
               {/* Name Input */}
               <div className="relative flex-1">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <label htmlFor="ql-name" className="sr-only">
+                  {t.quickLeadForm?.namePlaceholder || "Numele tău"}
+                </label>
+                <User className="absolute left-3 top-6 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
+                  id="ql-name"
+                  autoComplete="name"
                   placeholder={t.quickLeadForm?.namePlaceholder || "Numele tău"}
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (nameError) setNameError("");
+                  }}
+                  aria-invalid={!!nameError}
+                  aria-describedby={nameError ? "ql-name-error" : undefined}
+                  className={`pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary ${nameError ? "ring-1 ring-destructive" : ""}`}
                   maxLength={100}
                 />
+                {nameError && (
+                  <p id="ql-name-error" className="mt-1 text-xs text-destructive">{nameError}</p>
+                )}
               </div>
               
               {/* Phone Input */}
@@ -320,8 +333,18 @@ const QuickLeadForm = () => {
               
               {/* Property Type Select */}
               <div className="flex-1 md:max-w-[180px]">
-                <Select value={propertyType} onValueChange={setPropertyType}>
-                  <SelectTrigger className="h-12 bg-background/50 border-0 focus:ring-1 focus:ring-primary" aria-label={language === 'ro' ? 'Tip proprietate' : 'Property type'}>
+                <Select
+                  value={propertyType}
+                  onValueChange={(value) => {
+                    setPropertyType(value);
+                    if (typeError) setTypeError("");
+                  }}
+                >
+                  <SelectTrigger
+                    className={`h-12 bg-background/50 border-0 focus:ring-1 focus:ring-primary ${typeError ? "ring-1 ring-destructive" : ""}`}
+                    aria-label={language === 'ro' ? 'Tip proprietate' : 'Property type'}
+                    aria-invalid={!!typeError}
+                  >
                     <Home className="w-4 h-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder={t.quickLeadForm?.typePlaceholder || "Tip proprietate"} />
                   </SelectTrigger>
@@ -333,21 +356,29 @@ const QuickLeadForm = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {typeError && <p className="mt-1 text-xs text-destructive">{typeError}</p>}
               </div>
               
               {/* Listing URL Input */}
               <div className="relative flex-1 md:max-w-[220px]">
-                <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <label htmlFor="ql-listing" className="sr-only">
+                  {t.quickLeadForm?.listingUrlPlaceholder || "Link anunț (opțional)"}
+                </label>
+                <Link className="absolute left-3 top-6 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
+                  id="ql-listing"
                   type="url"
+                  inputMode="url"
                   placeholder={t.quickLeadForm?.listingUrlPlaceholder || "Link anunț (opțional)"}
                   value={listingUrl}
                   onChange={(e) => handleListingUrlChange(e.target.value)}
+                  aria-invalid={!!listingUrlError}
+                  aria-describedby={listingUrlError ? "ql-listing-error" : undefined}
                   className={`pl-10 h-12 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary ${listingUrlError ? "ring-1 ring-destructive" : ""}`}
                   maxLength={500}
                 />
                 {listingUrlError && (
-                  <p className="absolute -bottom-5 left-0 text-xs text-destructive">{listingUrlError}</p>
+                  <p id="ql-listing-error" className="mt-1 text-xs text-destructive">{listingUrlError}</p>
                 )}
               </div>
               
@@ -360,11 +391,13 @@ const QuickLeadForm = () => {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {t.quickLeadForm?.sending || "Se trimite..."}
+                    {isVerifying
+                      ? (language === "en" ? "Verifying..." : "Se verifică...")
+                      : (t.quickLeadForm?.sending || "Se trimite...")}
                   </>
                 ) : (
                   <>
-                    {t.quickLeadForm?.submit || "Trimite"}
+                    {t.quickLeadForm?.submit || (language === "en" ? "Get my free estimate" : "Vreau estimarea gratuită")}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
@@ -384,13 +417,27 @@ const QuickLeadForm = () => {
               </div>
             )}
             
+            {/* Conversion reassurance row — reduces hesitation before submit */}
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4">
+              {(language === "en"
+                ? ["Reply within 24h", "Free, no obligation", "Timișoara only"]
+                : ["Răspuns în 24 de ore", "Gratuit, fără obligații", "Doar Timișoara"]
+              ).map((item) => (
+                <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                  {item}
+                </span>
+              ))}
+            </div>
+
             {/* Trust text with security badge */}
-            <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="flex items-center justify-center gap-2 mt-2">
               <ShieldCheck className="w-4 h-4 text-primary" />
               <p className="text-xs text-muted-foreground">
                 {t.quickLeadForm?.trustText || "🔒 Datele tale sunt în siguranță. Nu le partajăm cu terți."}
               </p>
             </div>
+
           </form>
         </div>
       </div>
