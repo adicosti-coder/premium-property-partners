@@ -12,6 +12,7 @@ import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
+import { withCampaignTracking, campaignSourceSuffix } from "@/lib/campaignAttribution";
 import { trackConversion } from "@/lib/conversionTracking";
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
@@ -25,7 +26,10 @@ const QuickLeadForm = () => {
   const [listingUrl, setListingUrl] = useState("");
   const [listingUrlError, setListingUrlError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [typeError, setTypeError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   // Turnstile state - invisible mode
