@@ -27,6 +27,7 @@ import {
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { RevealableField } from "../../shared/RevealableField";
+import { LeadScoreBadge } from "./LeadScoreBadge";
 import LeadNotesDialog from "../../LeadNotesDialog";
 import type { LeadRow } from "../hooks/useLeads";
 
