@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
+import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { toast } from "sonner";
 
 /**
@@ -243,14 +244,14 @@ const PreCalcMiniForm = ({
         message: `[${source}] Oraș: ${data.city} · Tip: ${data.apartmentType}`,
         source,
         allowSentinelPhone: true,
-        simulation_data: {
+        simulation_data: withCampaignTracking({
           city: data.city,
           apartment_type: data.apartmentType,
           estimated_monthly_min: range[0],
           estimated_monthly_max: range[1],
           generated_message: message,
           language,
-        } as never,
+        }) as never,
       });
 
       if (!result.ok) {

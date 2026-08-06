@@ -8,6 +8,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { FAQSchemaProvider } from "@/hooks/useFAQSchema";
 import CanonicalHreflang from "@/components/seo/CanonicalHreflang";
 import TrailingSlashRedirect from "@/components/seo/TrailingSlashRedirect";
+import { captureCampaignAttribution } from "@/lib/campaignAttribution";
 
 const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
@@ -132,6 +133,8 @@ const ScrollToTop = () => {
   const navType = useNavigationType();
 
   useEffect(() => {
+    // First-touch campaign / outreach attribution (utm, gclid, ?src=andrei_wa)
+    captureCampaignAttribution();
     if (typeof window.gtag === "function") {
       window.gtag("config", GA_MEASUREMENT_ID, { page_path: location.pathname });
     }
