@@ -173,76 +173,66 @@ const QuickLeadForm = () => {
     e.preventDefault();
     setListingUrlError("");
     setPhoneError("");
+    setNameError("");
+    setTypeError("");
 
-    // Validate required fields
-    if (!name.trim() || !phone.trim() || !propertyType) {
-      toast({
-        title: t.quickLeadForm?.fillAllFields || "Completează toate câmpurile",
-        description: t.quickLeadForm?.fillAllFieldsMessage || "Te rugăm să completezi corect toate câmpurile.",
-        variant: "destructive",
-      });
-      return;
+    // Inline field validation (no blocking toasts — the user sees exactly
+    // which field needs attention, which measurably reduces abandonment)
+    let hasError = false;
+    if (!name.trim()) {
+      setNameError(language === "en" ? "Your name is required" : "Numele este obligatoriu");
+      hasError = true;
     }
-
-    // Validate phone internationally
-    if (!isValidInternationalPhone(phone)) {
+    if (!phone.trim()) {
+      setPhoneError(language === "en" ? "Phone number is required" : "Numărul de telefon este obligatoriu");
+      hasError = true;
+    } else if (!isValidInternationalPhone(phone)) {
       setPhoneError(t.quickLeadForm?.invalidPhone || "Număr invalid");
-      toast({
-        title: t.quickLeadForm?.invalidPhone || "Număr invalid",
-        description: t.quickLeadForm?.invalidPhoneMessage || "Verifică formatul numărului de telefon",
-        variant: "destructive",
-      });
-      return;
+      hasError = true;
     }
-
-    // Validate listing URL if provided
+    if (!propertyType) {
+      setTypeError(language === "en" ? "Select a property type" : "Alege tipul proprietății");
+      hasError = true;
+    }
     if (listingUrl.trim()) {
       const urlValidation = listingUrlSchema.safeParse(listingUrl.trim());
       if (!urlValidation.success) {
         setListingUrlError(t.quickLeadForm?.invalidUrl || "Link invalid");
-        return;
+        hasError = true;
       }
     }
+    if (hasError) return;
 
-    // Check if captcha is ready
-    if (!securityReady) {
-      activateSecurity();
-      toast({
-        title: language === 'en' ? "Security check required" : "Verificare de securitate necesară",
-        description: language === 'en' ? "Please complete the security check below." : "Te rugăm să completezi verificarea de securitate de mai jos.",
-        variant: "destructive",
-      });
-      return;
-    }
+    formDataRef.current = {
+      name: name.trim(),
+      phone: phone.trim(),
+      propertyType,
+      listingUrl: listingUrl.trim(),
+    };
 
-    if (!turnstileSiteKey) {
-      toast({
-        title: language === 'en' ? "Please wait" : "Vă rugăm așteptați",
-        description: language === 'en' ? "Security check is loading..." : "Verificarea de securitate se încarcă...",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // If we have a token, submit directly
+    // Already verified → send immediately
     if (turnstileToken) {
       setIsSubmitting(true);
-      formDataRef.current = {
-        name: name.trim(),
-        phone: phone.trim(),
-        propertyType,
-        listingUrl: listingUrl.trim(),
-      };
       pendingSubmitRef.current = true;
       submitForm(turnstileToken);
-    } else {
-      toast({
-        title: language === 'en' ? "Verification required" : "Verificare necesară",
-        description: language === 'en' ? "Please complete the security check" : "Vă rugăm să completați verificarea de securitate",
-        variant: "destructive",
-      });
+      return;
     }
+
+    // Not verified yet: queue the submission instead of rejecting the user.
+    // The Turnstile success/error callbacks auto-send as soon as the check
+    // resolves, and we fail open after a short wait so a slow/blocked
+    // captcha never costs us a lead.
+    activateSecurity();
+    setIsSubmitting(true);
+    setIsVerifying(true);
+    pendingSubmitRef.current = true;
+
+    if (failOpenTimerRef.current) clearTimeout(failOpenTimerRef.current);
+    failOpenTimerRef.current = setTimeout(() => {
+      if (pendingSubmitRef.current) submitForm("bypass");
+    }, 6000);
   };
+
 
   if (isSuccess) {
     return (
