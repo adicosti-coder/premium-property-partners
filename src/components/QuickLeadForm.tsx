@@ -95,9 +95,11 @@ const QuickLeadForm = () => {
           whatsapp_number: formData.phone,
           property_area: 50,
           property_type: formData.propertyType,
-          source: "quick_form",
-          simulation_data: withProvenientaTracking(
-            formData.listingUrl ? { listingUrl: formData.listingUrl } : null,
+          source: ["quick_form", campaignSourceSuffix()].filter(Boolean).join(":"),
+          simulation_data: withCampaignTracking(
+            withProvenientaTracking(
+              formData.listingUrl ? { listingUrl: formData.listingUrl } : null,
+            ),
           ),
           captcha_token: token,
         },
