@@ -243,14 +243,14 @@ const PreCalcMiniForm = ({
         message: `[${source}] Oraș: ${data.city} · Tip: ${data.apartmentType}`,
         source,
         allowSentinelPhone: true,
-        simulation_data: {
+        simulation_data: withCampaignTracking({
           city: data.city,
           apartment_type: data.apartmentType,
           estimated_monthly_min: range[0],
           estimated_monthly_max: range[1],
           generated_message: message,
           language,
-        } as never,
+        }) as never,
       });
 
       if (!result.ok) {
