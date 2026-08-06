@@ -51,6 +51,11 @@ const QuickLeadForm = () => {
     setSecurityReady(true);
   }, []);
 
+  // Clear the fail-open timer if the user leaves mid-submission
+  useEffect(() => () => {
+    if (failOpenTimerRef.current) clearTimeout(failOpenTimerRef.current);
+  }, []);
+
   useEffect(() => {
     if (!securityReady || turnstileSiteKey) return;
 
@@ -135,6 +140,10 @@ const QuickLeadForm = () => {
         variant: "destructive",
       });
     } finally {
+      if (failOpenTimerRef.current) {
+        clearTimeout(failOpenTimerRef.current);
+        failOpenTimerRef.current = null;
+      }
       setIsSubmitting(false);
       setIsVerifying(false);
       pendingSubmitRef.current = false;
