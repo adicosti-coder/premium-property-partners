@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
+import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { toast } from "sonner";
 
 /**
