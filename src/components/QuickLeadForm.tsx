@@ -135,6 +135,7 @@ const QuickLeadForm = () => {
       });
     } finally {
       setIsSubmitting(false);
+      setIsVerifying(false);
       pendingSubmitRef.current = false;
       setTurnstileToken(null);
     }
