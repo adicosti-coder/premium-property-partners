@@ -27,6 +27,7 @@ import {
 import { format } from "date-fns";
 import { ro, enUS } from "date-fns/locale";
 import { RevealableField } from "../../shared/RevealableField";
+import { LeadScoreBadge } from "./LeadScoreBadge";
 import LeadNotesDialog from "../../LeadNotesDialog";
 import type { LeadRow } from "../hooks/useLeads";
 
@@ -76,7 +77,10 @@ export const LeadTableRow = ({
         <div className="flex items-center gap-2">
           {!lead.is_read && <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
           <div>
-            <p className={!lead.is_read ? "font-semibold" : ""}>{lead.name}</p>
+            <div className="flex items-center gap-2">
+              <p className={!lead.is_read ? "font-semibold" : ""}>{lead.name}</p>
+              {lead.lead_score != null && <LeadScoreBadge lead={lead} />}
+            </div>
             {lead.message && (
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                 <MessageSquare className="w-3 h-3" />

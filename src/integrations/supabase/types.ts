@@ -2606,10 +2606,14 @@ export type Database = {
           follow_up_date: string | null
           id: string
           is_read: boolean
+          lead_grade: string | null
+          lead_score: number | null
           message: string | null
           name: string
           property_area: number
           property_type: string
+          score_breakdown: Json | null
+          scored_at: string | null
           simulation_data: Json | null
           source: string | null
           whatsapp_number: string
@@ -2622,10 +2626,14 @@ export type Database = {
           follow_up_date?: string | null
           id?: string
           is_read?: boolean
+          lead_grade?: string | null
+          lead_score?: number | null
           message?: string | null
           name: string
           property_area: number
           property_type: string
+          score_breakdown?: Json | null
+          scored_at?: string | null
           simulation_data?: Json | null
           source?: string | null
           whatsapp_number: string
@@ -2638,10 +2646,14 @@ export type Database = {
           follow_up_date?: string | null
           id?: string
           is_read?: boolean
+          lead_grade?: string | null
+          lead_score?: number | null
           message?: string | null
           name?: string
           property_area?: number
           property_type?: string
+          score_breakdown?: Json | null
+          scored_at?: string | null
           simulation_data?: Json | null
           source?: string | null
           whatsapp_number?: string
@@ -9506,6 +9518,18 @@ export type Database = {
         Returns: Json
       }
       revoke_admin_mfa: { Args: never; Returns: undefined }
+      score_lead: {
+        Args: {
+          p_area: number
+          p_email: string
+          p_net_profit: number
+          p_phone: string
+          p_property_type: string
+          p_source: string
+          p_zone: string
+        }
+        Returns: Json
+      }
       seo_acquire_audit_lock: {
         Args: {
           p_language?: string

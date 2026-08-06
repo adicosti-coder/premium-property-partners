@@ -20,6 +20,9 @@ const LEAD_COLUMNS = [
   "is_read",
   "follow_up_date",
   "created_at",
+  "lead_score",
+  "lead_grade",
+  "score_breakdown",
 ].join(", ");
 
 export interface LeadRow {
@@ -56,6 +59,17 @@ export interface LeadRow {
   is_read: boolean;
   follow_up_date: string | null;
   created_at: string;
+  /** Automatic scoring (0-100) computed in the database on insert */
+  lead_score: number | null;
+  lead_grade: "hot" | "warm" | "cool" | "cold" | null;
+  score_breakdown: {
+    zone?: number;
+    rooms?: number;
+    income?: number;
+    area?: number;
+    contact?: number;
+    inputs?: Record<string, unknown>;
+  } | null;
 }
 
 export type LeadReadFilter = "all" | "unread" | "read";
