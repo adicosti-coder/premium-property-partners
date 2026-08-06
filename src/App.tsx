@@ -132,6 +132,8 @@ const ScrollToTop = () => {
   const navType = useNavigationType();
 
   useEffect(() => {
+    // First-touch campaign / outreach attribution (utm, gclid, ?src=andrei_wa)
+    captureCampaignAttribution();
     if (typeof window.gtag === "function") {
       window.gtag("config", GA_MEASUREMENT_ID, { page_path: location.pathname });
     }
