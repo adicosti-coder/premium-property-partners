@@ -92,6 +92,10 @@ Deno.serve(async (req) => {
   const phone = normalizePhone(record.whatsapp_number);
   const zone = (sim.zona || sim.zone || sim.city || sim.oras || null) as string | null;
   const campaign = (sim.campaign || sim.utm_campaign || null) as string | null;
+  const isReEngaged =
+    payload.event === "lead.re_engaged" || record.engagement_status === "re_engaged";
+  const touchCount = record.touch_count ?? 1;
+  const leadUrl = `https://realtrust.ro/admin?tab=leads&lead=${record.id}`;
 
   const summary = {
     lead_id: record.id,
@@ -109,9 +113,52 @@ Deno.serve(async (req) => {
     source: record.source ?? null,
     campaign,
     created_at: record.created_at,
-    admin_url: "https://realtrust.ro/admin?tab=leads",
+    re_engaged: isReEngaged,
+    touch_count: touchCount,
+    admin_url: leadUrl,
     wa_url: phone ? `https://wa.me/${phone}` : null,
   };
+
+  /** Structured, readable WhatsApp alert for Andrei / admin. */
+  const gradeLabel: Record<string, string> = {
+    hot: "🔥 FIERBINTE",
+    warm: "⚡ CALD",
+    cold: "❄️ RECE",
+  };
+  const eur = (v?: number | null) =>
+    typeof v === "number" ? `${v.toLocaleString("ro-RO")} €` : null;
+
+  const buildAlertMessage = () =>
+    [
+      isReEngaged
+        ? `♻️ *LEAD RE-ENGAGED* (interacțiunea #${touchCount})`
+        : `🚨 *LEAD NOU* — RealTrust`,
+      `${gradeLabel[grade] ?? grade.toUpperCase()} · scor *${score}/100*`,
+      "",
+      `👤 *Nume:* ${record.name || "—"}`,
+      `📞 *Telefon:* ${phone ? `+${phone}` : record.whatsapp_number || "—"}`,
+      record.email ? `✉️ *Email:* ${record.email}` : null,
+      zone ? `📍 *Zonă:* ${zone}` : null,
+      record.property_type
+        ? `🏠 *Proprietate:* ${record.property_type}${
+            record.property_area ? ` · ${record.property_area} m²` : ""
+          }`
+        : null,
+      record.calculated_net_profit
+        ? `💰 *Venit estimat:* ${eur(record.calculated_net_profit)}/lună${
+            record.calculated_yearly_profit
+              ? ` (~${eur(record.calculated_yearly_profit)}/an)`
+              : ""
+          }`
+        : null,
+      `🔗 *Sursă:* ${record.source ?? "necunoscut"}${campaign ? ` · campanie: ${campaign}` : ""}`,
+      "",
+      `📋 *Fișa lead:* ${leadUrl}`,
+      phone ? `💬 *Scrie pe WhatsApp:* https://wa.me/${phone}` : "⚠️ Fără telefon valid",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
 
   const results: Record<string, unknown> = { score, grade };
 
