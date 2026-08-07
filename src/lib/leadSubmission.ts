@@ -69,10 +69,6 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
     }
   }
 
-  // Soft client-side dedup (non-blocking — server trigger is authoritative)
-  const isDup = await checkDuplicate(data);
-  if (isDup) return { ok: true, duplicate: true };
-
   try {
     const { error } = await supabase.from("leads").insert({
       name: data.name,
@@ -86,10 +82,11 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
     });
 
     if (error) {
-      // Server-side trigger raises 23505 / message contains "duplicate_lead"
+      // Legacy safety net: older deployments raised 23505 on duplicates.
       if (error.code === "23505" || /duplicate_lead/i.test(error.message)) {
         return { ok: true, duplicate: true };
       }
+
       reportError(error, {
         scope: `form:lead:${data.source}`,
         meta: { code: error.code, hint: error.hint },
