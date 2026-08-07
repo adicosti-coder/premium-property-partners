@@ -30,7 +30,11 @@ interface LeadRecord {
   lead_grade?: string | null;
   score_breakdown?: Record<string, unknown> | null;
   simulation_data?: Record<string, unknown> | string | null;
+  engagement_status?: string | null;
+  touch_count?: number | null;
+  activity_history?: unknown;
 }
+
 
 /** RO phone → E.164 digits (no plus), or null when unusable. */
 function normalizePhone(raw?: string | null): string | null {
