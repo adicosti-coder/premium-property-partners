@@ -1,19 +1,15 @@
 // Sends a WhatsApp alert (via configurable webhook) to the admin number
 // every time a new lead is inserted. Triggered from the DB.
+import { isInternalCall } from "../_shared/cronAuth.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-webhook-secret, x-cron-secret",
 };
 
 const ADMIN_PHONE = "+40799069256"; // RealTrust WhatsApp
 
-// Constant-time comparison to prevent timing attacks
-function timingSafeEqual(a: string, b: string): boolean {
-  if (!a || !b || a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return result === 0;
-}
 
 interface LeadRecord {
   id: string;
