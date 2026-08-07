@@ -51,14 +51,13 @@ Deno.serve(async (req) => {
     });
   }
 
-  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  const provided = req.headers.get("x-webhook-secret") || "";
-  if (!expected || !timingSafeEqual(provided, expected)) {
+  if (!(await isInternalCall(req))) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
 
   let payload: { record?: LeadRecord } = {};
   try {
