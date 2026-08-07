@@ -1,13 +1,16 @@
 /**
  * Central lead submission helper.
  * - Validates name / email / phone (zod, client-side).
- * - Performs a soft client-side dedup check (last 24h, same source + email/phone).
- * - Inserts into `leads` (a server-side trigger is the authoritative dedup guard).
+ * - Inserts into `leads`.
  * - Reports all unexpected errors via `reportError` (console + optional webhook + Sentry).
  *
- * Server side enforces the same dedup window via `prevent_duplicate_leads` trigger
- * (raises `unique_violation` / code 23505 with message `duplicate_lead`).
+ * Dedup is handled server-side by the `leads_dedupe_upsert` trigger: when a lead with the
+ * same normalized phone or email already exists, the existing row is UPDATED (best score,
+ * merged simulation data, new source/campaign appended to `activity_history`, marked
+ * `engagement_status = 're_engaged'`) instead of inserting a duplicate row. No error is
+ * raised, so the client never needs a pre-check.
  */
+
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { reportError } from "@/lib/errorReporting";
