@@ -230,25 +230,8 @@ Deno.serve(async (req) => {
 
     const alertUrl = Deno.env.get("WHATSAPP_ALERT_WEBHOOK_URL");
     if (alertUrl) {
-      const message = [
-        score >= 80 ? "🔥 *LEAD FIERBINTE*" : "⚡ *LEAD CALD*",
-        `Scor automat: *${score}/100* (${grade})`,
-        "",
-        `👤 ${record.name}`,
-        `📞 +${phone}`,
-        record.property_type
-          ? `🏠 ${record.property_type}${record.property_area ? ` · ${record.property_area} m²` : ""}`
-          : null,
-        zone ? `📍 ${zone}` : null,
-        record.calculated_net_profit
-          ? `💰 Estimare: ${record.calculated_net_profit} €/lună net`
-          : null,
-        `🔗 Sursă: ${record.source ?? "necunoscut"}`,
-        "",
-        `💬 https://wa.me/${phone}`,
-      ]
-        .filter(Boolean)
-        .join("\n");
+      const message = buildAlertMessage();
+
 
       try {
         const res = await fetch(alertUrl, {
