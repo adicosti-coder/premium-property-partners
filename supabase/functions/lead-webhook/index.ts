@@ -35,15 +35,14 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify shared secret against the Supabase service role key (sent by the DB trigger).
-  const webhookSecret = req.headers.get("x-webhook-secret") || "";
-  const expected = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  if (!expected || !timingSafeEqual(webhookSecret, expected)) {
+  // Verify internal call: vault cron secret (DB trigger) or service role key.
+  if (!(await isInternalCall(req))) {
     return new Response(
       JSON.stringify({ error: "Unauthorized" }),
       { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
+
 
   try {
     const payload = await req.json();
