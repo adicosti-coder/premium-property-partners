@@ -173,7 +173,11 @@ Deno.serve(async (req) => {
       const res = await fetch(crmUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event: "lead.scored", ...summary }),
+        body: JSON.stringify({
+          event: isReEngaged ? "lead.re_engaged" : "lead.scored",
+          ...summary,
+        }),
+
       });
       results.crm = { status: res.status, ok: res.ok };
       if (!res.ok) console.error(`CRM webhook failed [${res.status}]: ${await res.text()}`);
