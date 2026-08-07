@@ -30,7 +30,11 @@ interface LeadRecord {
   lead_grade?: string | null;
   score_breakdown?: Record<string, unknown> | null;
   simulation_data?: Record<string, unknown> | string | null;
+  engagement_status?: string | null;
+  touch_count?: number | null;
+  activity_history?: unknown;
 }
+
 
 /** RO phone → E.164 digits (no plus), or null when unusable. */
 function normalizePhone(raw?: string | null): string | null {
@@ -59,7 +63,7 @@ Deno.serve(async (req) => {
   }
 
 
-  let payload: { record?: LeadRecord } = {};
+  let payload: { record?: LeadRecord; event?: string } = {};
   try {
     payload = await req.json();
   } catch {
@@ -92,6 +96,10 @@ Deno.serve(async (req) => {
   const phone = normalizePhone(record.whatsapp_number);
   const zone = (sim.zona || sim.zone || sim.city || sim.oras || null) as string | null;
   const campaign = (sim.campaign || sim.utm_campaign || null) as string | null;
+  const isReEngaged =
+    payload.event === "lead.re_engaged" || record.engagement_status === "re_engaged";
+  const touchCount = record.touch_count ?? 1;
+  const leadUrl = `https://realtrust.ro/admin?tab=leads&lead=${record.id}`;
 
   const summary = {
     lead_id: record.id,
@@ -109,9 +117,52 @@ Deno.serve(async (req) => {
     source: record.source ?? null,
     campaign,
     created_at: record.created_at,
-    admin_url: "https://realtrust.ro/admin?tab=leads",
+    re_engaged: isReEngaged,
+    touch_count: touchCount,
+    admin_url: leadUrl,
     wa_url: phone ? `https://wa.me/${phone}` : null,
   };
+
+  /** Structured, readable WhatsApp alert for Andrei / admin. */
+  const gradeLabel: Record<string, string> = {
+    hot: "🔥 FIERBINTE",
+    warm: "⚡ CALD",
+    cold: "❄️ RECE",
+  };
+  const eur = (v?: number | null) =>
+    typeof v === "number" ? `${v.toLocaleString("ro-RO")} €` : null;
+
+  const buildAlertMessage = () =>
+    [
+      isReEngaged
+        ? `♻️ *LEAD RE-ENGAGED* (interacțiunea #${touchCount})`
+        : `🚨 *LEAD NOU* — RealTrust`,
+      `${gradeLabel[grade] ?? grade.toUpperCase()} · scor *${score}/100*`,
+      "",
+      `👤 *Nume:* ${record.name || "—"}`,
+      `📞 *Telefon:* ${phone ? `+${phone}` : record.whatsapp_number || "—"}`,
+      record.email ? `✉️ *Email:* ${record.email}` : null,
+      zone ? `📍 *Zonă:* ${zone}` : null,
+      record.property_type
+        ? `🏠 *Proprietate:* ${record.property_type}${
+            record.property_area ? ` · ${record.property_area} m²` : ""
+          }`
+        : null,
+      record.calculated_net_profit
+        ? `💰 *Venit estimat:* ${eur(record.calculated_net_profit)}/lună${
+            record.calculated_yearly_profit
+              ? ` (~${eur(record.calculated_yearly_profit)}/an)`
+              : ""
+          }`
+        : null,
+      `🔗 *Sursă:* ${record.source ?? "necunoscut"}${campaign ? ` · campanie: ${campaign}` : ""}`,
+      "",
+      `📋 *Fișa lead:* ${leadUrl}`,
+      phone ? `💬 *Scrie pe WhatsApp:* https://wa.me/${phone}` : "⚠️ Fără telefon valid",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
 
   const results: Record<string, unknown> = { score, grade };
 
@@ -122,7 +173,11 @@ Deno.serve(async (req) => {
       const res = await fetch(crmUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event: "lead.scored", ...summary }),
+        body: JSON.stringify({
+          event: isReEngaged ? "lead.re_engaged" : "lead.scored",
+          ...summary,
+        }),
+
       });
       results.crm = { status: res.status, ok: res.ok };
       if (!res.ok) console.error(`CRM webhook failed [${res.status}]: ${await res.text()}`);
@@ -168,12 +223,15 @@ Deno.serve(async (req) => {
           direction: "outbound",
           role: "system",
           content:
-            `Lead nou scorat automat: ${score}/100 (${grade}). ` +
+            (isReEngaged
+              ? `Lead re-engaged (interacțiunea #${touchCount}) — scor ${score}/100 (${grade}). `
+              : `Lead nou scorat automat: ${score}/100 (${grade}). `) +
             `${record.property_type ?? "proprietate"}${
               record.property_area ? ` · ${record.property_area} m²` : ""
             }${zone ? ` · ${zone}` : ""}` +
             `${record.calculated_net_profit ? ` · estimare ${record.calculated_net_profit} €/lună` : ""}` +
             `${record.source ? ` · sursă: ${record.source}` : ""}`,
+
         });
       }
     } catch (e) {
@@ -183,25 +241,8 @@ Deno.serve(async (req) => {
 
     const alertUrl = Deno.env.get("WHATSAPP_ALERT_WEBHOOK_URL");
     if (alertUrl) {
-      const message = [
-        score >= 80 ? "🔥 *LEAD FIERBINTE*" : "⚡ *LEAD CALD*",
-        `Scor automat: *${score}/100* (${grade})`,
-        "",
-        `👤 ${record.name}`,
-        `📞 +${phone}`,
-        record.property_type
-          ? `🏠 ${record.property_type}${record.property_area ? ` · ${record.property_area} m²` : ""}`
-          : null,
-        zone ? `📍 ${zone}` : null,
-        record.calculated_net_profit
-          ? `💰 Estimare: ${record.calculated_net_profit} €/lună net`
-          : null,
-        `🔗 Sursă: ${record.source ?? "necunoscut"}`,
-        "",
-        `💬 https://wa.me/${phone}`,
-      ]
-        .filter(Boolean)
-        .join("\n");
+      const message = buildAlertMessage();
+
 
       try {
         const res = await fetch(alertUrl, {

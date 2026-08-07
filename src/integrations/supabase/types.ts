@@ -2599,13 +2599,16 @@ export type Database = {
       }
       leads: {
         Row: {
+          activity_history: Json
           calculated_net_profit: number | null
           calculated_yearly_profit: number | null
           created_at: string
           email: string | null
+          engagement_status: string
           follow_up_date: string | null
           id: string
           is_read: boolean
+          last_touch_at: string
           lead_grade: string | null
           lead_score: number | null
           message: string | null
@@ -2616,16 +2619,21 @@ export type Database = {
           scored_at: string | null
           simulation_data: Json | null
           source: string | null
+          touch_count: number
+          updated_at: string
           whatsapp_number: string
         }
         Insert: {
+          activity_history?: Json
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
           email?: string | null
+          engagement_status?: string
           follow_up_date?: string | null
           id?: string
           is_read?: boolean
+          last_touch_at?: string
           lead_grade?: string | null
           lead_score?: number | null
           message?: string | null
@@ -2636,16 +2644,21 @@ export type Database = {
           scored_at?: string | null
           simulation_data?: Json | null
           source?: string | null
+          touch_count?: number
+          updated_at?: string
           whatsapp_number: string
         }
         Update: {
+          activity_history?: Json
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
           email?: string | null
+          engagement_status?: string
           follow_up_date?: string | null
           id?: string
           is_read?: boolean
+          last_touch_at?: string
           lead_grade?: string | null
           lead_score?: number | null
           message?: string | null
@@ -2656,6 +2669,8 @@ export type Database = {
           scored_at?: string | null
           simulation_data?: Json | null
           source?: string | null
+          touch_count?: number
+          updated_at?: string
           whatsapp_number?: string
         }
         Relationships: []

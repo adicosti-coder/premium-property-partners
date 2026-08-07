@@ -1,13 +1,16 @@
 /**
  * Central lead submission helper.
  * - Validates name / email / phone (zod, client-side).
- * - Performs a soft client-side dedup check (last 24h, same source + email/phone).
- * - Inserts into `leads` (a server-side trigger is the authoritative dedup guard).
+ * - Inserts into `leads`.
  * - Reports all unexpected errors via `reportError` (console + optional webhook + Sentry).
  *
- * Server side enforces the same dedup window via `prevent_duplicate_leads` trigger
- * (raises `unique_violation` / code 23505 with message `duplicate_lead`).
+ * Dedup is handled server-side by the `leads_dedupe_upsert` trigger: when a lead with the
+ * same normalized phone or email already exists, the existing row is UPDATED (best score,
+ * merged simulation data, new source/campaign appended to `activity_history`, marked
+ * `engagement_status = 're_engaged'`) instead of inserting a duplicate row. No error is
+ * raised, so the client never needs a pre-check.
  */
+
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { reportError } from "@/lib/errorReporting";
@@ -44,39 +47,8 @@ export type LeadSubmissionResult =
 
 const SENTINEL_PHONES = new Set(["-", "PRECALC_NO_PHONE", "0", "n/a", "N/A", ""]);
 
-/** Soft client-side dedup — same source + (email OR phone) within 24h. */
-const checkDuplicate = async (input: LeadInput): Promise<boolean> => {
-  const phone = input.whatsapp_number?.trim();
-  const email = input.email?.trim().toLowerCase();
-  const usePhone = phone && !SENTINEL_PHONES.has(phone);
-
-  if (!usePhone && !email) return false;
-
-  try {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    let q = supabase
-      .from("leads")
-      .select("id", { count: "exact", head: true })
-      .eq("source", input.source)
-      .gte("created_at", since);
-
-    if (usePhone && email) {
-      q = q.or(`whatsapp_number.eq.${phone},email.ilike.${email}`);
-    } else if (usePhone) {
-      q = q.eq("whatsapp_number", phone);
-    } else if (email) {
-      q = q.ilike("email", email);
-    }
-
-    const { count, error } = await q;
-    if (error) return false; // fail open — server trigger is the safety net
-    return (count ?? 0) > 0;
-  } catch {
-    return false;
-  }
-};
-
 export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> => {
+
   const parsed = leadInputSchema.safeParse(raw);
   if (!parsed.success) {
     const flat = parsed.error.flatten().fieldErrors;
@@ -97,10 +69,6 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
     }
   }
 
-  // Soft client-side dedup (non-blocking — server trigger is authoritative)
-  const isDup = await checkDuplicate(data);
-  if (isDup) return { ok: true, duplicate: true };
-
   try {
     const { error } = await supabase.from("leads").insert({
       name: data.name,
@@ -114,10 +82,11 @@ export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> 
     });
 
     if (error) {
-      // Server-side trigger raises 23505 / message contains "duplicate_lead"
+      // Legacy safety net: older deployments raised 23505 on duplicates.
       if (error.code === "23505" || /duplicate_lead/i.test(error.message)) {
         return { ok: true, duplicate: true };
       }
+
       reportError(error, {
         scope: `form:lead:${data.source}`,
         meta: { code: error.code, hint: error.hint },
