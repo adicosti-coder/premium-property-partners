@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
   }
 
 
-  let payload: { record?: LeadRecord } = {};
+  let payload: { record?: LeadRecord; event?: string } = {};
   try {
     payload = await req.json();
   } catch {
