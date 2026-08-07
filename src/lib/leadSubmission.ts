@@ -47,39 +47,8 @@ export type LeadSubmissionResult =
 
 const SENTINEL_PHONES = new Set(["-", "PRECALC_NO_PHONE", "0", "n/a", "N/A", ""]);
 
-/** Soft client-side dedup — same source + (email OR phone) within 24h. */
-const checkDuplicate = async (input: LeadInput): Promise<boolean> => {
-  const phone = input.whatsapp_number?.trim();
-  const email = input.email?.trim().toLowerCase();
-  const usePhone = phone && !SENTINEL_PHONES.has(phone);
-
-  if (!usePhone && !email) return false;
-
-  try {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    let q = supabase
-      .from("leads")
-      .select("id", { count: "exact", head: true })
-      .eq("source", input.source)
-      .gte("created_at", since);
-
-    if (usePhone && email) {
-      q = q.or(`whatsapp_number.eq.${phone},email.ilike.${email}`);
-    } else if (usePhone) {
-      q = q.eq("whatsapp_number", phone);
-    } else if (email) {
-      q = q.ilike("email", email);
-    }
-
-    const { count, error } = await q;
-    if (error) return false; // fail open — server trigger is the safety net
-    return (count ?? 0) > 0;
-  } catch {
-    return false;
-  }
-};
-
 export const submitLead = async (raw: LeadInput): Promise<LeadSubmissionResult> => {
+
   const parsed = leadInputSchema.safeParse(raw);
   if (!parsed.success) {
     const flat = parsed.error.flatten().fieldErrors;
