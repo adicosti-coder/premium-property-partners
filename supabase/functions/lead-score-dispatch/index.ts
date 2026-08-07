@@ -215,12 +215,15 @@ Deno.serve(async (req) => {
           direction: "outbound",
           role: "system",
           content:
-            `Lead nou scorat automat: ${score}/100 (${grade}). ` +
+            (isReEngaged
+              ? `Lead re-engaged (interacțiunea #${touchCount}) — scor ${score}/100 (${grade}). `
+              : `Lead nou scorat automat: ${score}/100 (${grade}). `) +
             `${record.property_type ?? "proprietate"}${
               record.property_area ? ` · ${record.property_area} m²` : ""
             }${zone ? ` · ${zone}` : ""}` +
             `${record.calculated_net_profit ? ` · estimare ${record.calculated_net_profit} €/lună` : ""}` +
             `${record.source ? ` · sursă: ${record.source}` : ""}`,
+
         });
       }
     } catch (e) {
