@@ -1,6 +1,7 @@
 // wa-andrei-send — trimite mesaje WhatsApp via Meta Cloud API.
 // Internal-only: cere header x-internal-secret === WA_ANDREI_INTERNAL_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
