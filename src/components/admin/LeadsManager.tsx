@@ -109,6 +109,8 @@ const LeadsManager = () => {
   // Selection
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [activityLeadId, setActivityLeadId] = useState<string | null>(null);
+
 
   const {
     rows,
