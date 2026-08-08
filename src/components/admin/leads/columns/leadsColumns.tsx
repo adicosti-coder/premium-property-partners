@@ -16,6 +16,7 @@ import {
 import {
   Building2,
   CalendarClock,
+  History,
   Eye,
   EyeOff,
   Loader2,
@@ -40,6 +41,7 @@ export interface LeadRowLabels {
   deleteDescription: string;
   cancel: string;
   delete: string;
+  activityHistory: string;
   language: "ro" | "en";
 }
 
@@ -53,6 +55,7 @@ interface Props {
   onToggleRead: (lead: LeadRow) => void;
   onDelete: (id: string) => void;
   onFollowUpChange: (leadId: string, date: string | null) => void;
+  onShowActivity: (leadId: string) => void;
 }
 
 export const LeadTableRow = ({
@@ -249,6 +252,16 @@ export const LeadTableRow = ({
               </Button>
             );
           })()}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onShowActivity(lead.id)}
+            className="text-muted-foreground hover:text-foreground"
+            title={labels.activityHistory}
+            aria-label={labels.activityHistory}
+          >
+            <History className="w-4 h-4" />
+          </Button>
           <LeadNotesDialog
             leadId={lead.id}
             leadName={lead.name}
