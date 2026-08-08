@@ -254,6 +254,24 @@ export const LeadTableRow = ({
               </Button>
             );
           })()}
+          {alertFailed && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onResendAlert(lead.id)}
+              disabled={isResending}
+              className="h-8 gap-1.5 border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20"
+              title={labels.resendAlertHint}
+              aria-label={labels.resendAlert}
+            >
+              {isResending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <BellRing className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden xl:inline text-xs font-medium">{labels.resendAlert}</span>
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -264,6 +282,7 @@ export const LeadTableRow = ({
           >
             <History className="w-4 h-4" />
           </Button>
+
           <LeadNotesDialog
             leadId={lead.id}
             leadName={lead.name}
