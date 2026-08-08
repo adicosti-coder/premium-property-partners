@@ -47,8 +47,10 @@ import { AdminPagination } from "./shared/AdminPagination";
 import {
   useLeads,
   type LeadDateFilter,
+  type LeadGradeFilter,
   type LeadReadFilter,
   type LeadRow,
+  type LeadStatusFilter,
 } from "./leads/hooks/useLeads";
 import { LeadTableRow, sourceBadgeFor } from "./leads/columns/leadsColumns";
 
