@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   BarChart3,
+  Activity,
   Calendar,
   CheckCheck,
   Download,
@@ -16,11 +17,13 @@ import {
   Eye,
   EyeOff,
   Filter,
+  Flame,
   Home,
   Loader2,
   Search,
   TrendingUp,
   Users,
+  X,
 } from "lucide-react";
 import LeadDetailDialog from "./LeadDetailDialog";
 import LeadActivityDrawer from "./leads/LeadActivityDrawer";
