@@ -99,8 +99,7 @@ const QuickLeadForm = () => {
   // Submit the form after captcha verification
   const submitForm = useCallback(async (token: string) => {
     const formData = formDataRef.current;
-  const submitForm = useCallback(async (token: string) => {
-    const formData = formDataRef.current;
+
     if (!formData) {
       setIsSubmitting(false);
       return;
