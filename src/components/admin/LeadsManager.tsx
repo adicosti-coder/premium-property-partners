@@ -23,6 +23,8 @@ import {
   Users,
 } from "lucide-react";
 import LeadDetailDialog from "./LeadDetailDialog";
+import LeadActivityDrawer from "./leads/LeadActivityDrawer";
+
 import { format, subDays } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
@@ -109,6 +111,8 @@ const LeadsManager = () => {
   // Selection
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [activityLeadId, setActivityLeadId] = useState<string | null>(null);
+
 
   const {
     rows,
@@ -405,7 +409,9 @@ const LeadsManager = () => {
     deleteDescription: text.deleteDescription,
     cancel: text.cancel,
     delete: text.delete,
+    activityHistory: lang === "ro" ? "Istoric activitate" : "Activity history",
     language: lang,
+
   } as const;
 
   return (
@@ -701,6 +707,8 @@ const LeadsManager = () => {
                     onToggleRead={handleToggleRead}
                     onDelete={handleDelete}
                     onFollowUpChange={handleFollowUpChange}
+                    onShowActivity={setActivityLeadId}
+
                   />
                 ))}
               </TableBody>
@@ -724,6 +732,13 @@ const LeadsManager = () => {
       </Card>
 
       <LeadDetailDialog lead={selectedLead} open={detailOpen} onOpenChange={setDetailOpen} />
+
+      <LeadActivityDrawer
+        leadId={activityLeadId}
+        open={!!activityLeadId}
+        onOpenChange={(o) => !o && setActivityLeadId(null)}
+      />
+
     </div>
   );
 };

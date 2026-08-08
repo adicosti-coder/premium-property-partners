@@ -14,6 +14,13 @@ import { Turnstile } from "@marsidev/react-turnstile";
 import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
 import { withCampaignTracking, campaignSourceSuffix } from "@/lib/campaignAttribution";
 import { trackConversion } from "@/lib/conversionTracking";
+import { clearIdempotencyKey, idempotencyHeaders } from "@/lib/idempotency";
+
+/** Scope used for the per-attempt idempotency key (sessionStorage + request header). */
+const IDEMPOTENCY_SCOPE = "quick_lead_form";
+/** Ignore repeated submit events fired within this window (rapid double-click). */
+const SUBMIT_DEBOUNCE_MS = 1200;
+
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 const listingUrlSchema = z.string().trim().url("Link invalid").max(500).optional().or(z.literal(""));
@@ -38,6 +45,10 @@ const QuickLeadForm = () => {
   const [securityReady, setSecurityReady] = useState(false);
   const pendingSubmitRef = useRef(false);
   const failOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Synchronous lock: state updates are async, so a double-click can slip past `isSubmitting`. */
+  const inFlightRef = useRef(false);
+  const lastSubmitAtRef = useRef(0);
+
 
   // Store form data for submission after captcha
   const formDataRef = useRef<{
@@ -88,14 +99,18 @@ const QuickLeadForm = () => {
   // Submit the form after captcha verification
   const submitForm = useCallback(async (token: string) => {
     const formData = formDataRef.current;
+
     if (!formData) {
       setIsSubmitting(false);
       return;
     }
-
+    // Second layer of protection: only one network call per attempt.
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
 
     try {
-      const { data, error } = await supabase.functions.invoke("submit-lead", {
+      const { error } = await supabase.functions.invoke("submit-lead", {
+        headers: idempotencyHeaders(IDEMPOTENCY_SCOPE),
         body: {
           name: formData.name,
           whatsapp_number: formData.phone,
@@ -113,6 +128,9 @@ const QuickLeadForm = () => {
 
       if (error) throw error;
 
+      // Attempt completed → the next submission is a genuinely new one.
+      clearIdempotencyKey(IDEMPOTENCY_SCOPE);
+
       trackConversion({
         event: "contact_form_submit",
         source: "quick_form_homepage",
@@ -126,6 +144,7 @@ const QuickLeadForm = () => {
 
       setTimeout(() => {
         setName("");
+
         setPhone("");
         setPropertyType("");
         setListingUrl("");
@@ -147,7 +166,9 @@ const QuickLeadForm = () => {
       setIsSubmitting(false);
       setIsVerifying(false);
       pendingSubmitRef.current = false;
+      inFlightRef.current = false;
       setTurnstileToken(null);
+
     }
   }, [language, t.quickLeadForm]);
 
@@ -181,10 +202,20 @@ const QuickLeadForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Idempotency layer 1 — client lock + debounce. A rapid double-click fires
+    // two submit events before React re-renders the disabled button, so the
+    // synchronous refs are what actually stop the second one.
+    const now = Date.now();
+    if (isSubmitting || inFlightRef.current || pendingSubmitRef.current) return;
+    if (now - lastSubmitAtRef.current < SUBMIT_DEBOUNCE_MS) return;
+    lastSubmitAtRef.current = now;
+
     setListingUrlError("");
     setPhoneError("");
     setNameError("");
     setTypeError("");
+
 
     // Inline field validation (no blocking toasts — the user sees exactly
     // which field needs attention, which measurably reduces abandonment)
@@ -211,7 +242,12 @@ const QuickLeadForm = () => {
         hasError = true;
       }
     }
-    if (hasError) return;
+    if (hasError) {
+      // Validation errors aren't an attempt — don't hold the debounce window.
+      lastSubmitAtRef.current = 0;
+      return;
+    }
+
 
     formDataRef.current = {
       name: name.trim(),

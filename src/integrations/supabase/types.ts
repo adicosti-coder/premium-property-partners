@@ -5009,6 +5009,30 @@ export type Database = {
           },
         ]
       }
+      request_idempotency: {
+        Row: {
+          created_at: string
+          expires_at: string
+          key: string
+          response: Json | null
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          key: string
+          response?: Json | null
+          scope?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          key?: string
+          response?: Json | null
+          scope?: string
+        }
+        Relationships: []
+      }
       residential_complexes: {
         Row: {
           created_at: string
@@ -9510,6 +9534,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      purge_expired_idempotency_keys: { Args: never; Returns: number }
       reactivate_scraper_keyword: { Args: { _id: string }; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }

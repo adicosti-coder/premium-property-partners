@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
+import { beginIdempotent } from "../_shared/idempotency.ts";
+
 
 function validateString(value: unknown, maxLength: number): string {
   if (typeof value !== "string") return "";
@@ -51,8 +53,15 @@ const handler = async (req: Request): Promise<Response> => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Idempotency: a repeated / parallel call carrying the same
+  // `x-idempotency-key` is answered from cache instead of inserting twice.
+  const idem = await beginIdempotent(supabase, "submit-lead", req, corsHeaders);
+  if (idem.replay) return idem.replay;
+
   try {
     const body = await req.json();
+
+
 
     // --- Validate required fields ---
     const name = validateString(body.name, 200);
@@ -226,17 +235,31 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, leadId }), {
+    const payload = { success: true, leadId };
+    await idem.finish(payload);
+
+    return new Response(JSON.stringify(payload), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("submit-lead error:", err);
+    // Release the claim so the user can genuinely retry after a failure.
+    if (idem.key) {
+      try {
+        await supabase
+          .from("request_idempotency")
+          .delete()
+          .eq("scope", "submit-lead")
+          .eq("key", idem.key);
+      } catch { /* best effort */ }
+    }
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
 };
 
 serve(handler);
