@@ -700,6 +700,7 @@ const LeadsManager = () => {
                     sourceBadge={sourceBadgeFor(lead.source, lang, sourceLabels)}
                     isDeleting={isDeletingId === lead.id}
                     isTogglingRead={isTogglingReadId === lead.id}
+                    isResending={isResendingId === lead.id}
                     onSelect={(l) => {
                       setSelectedLead(l);
                       setDetailOpen(true);
@@ -708,8 +709,9 @@ const LeadsManager = () => {
                     onDelete={handleDelete}
                     onFollowUpChange={handleFollowUpChange}
                     onShowActivity={setActivityLeadId}
-
+                    onResendAlert={handleResendAlert}
                   />
+
                 ))}
               </TableBody>
             </Table>
