@@ -202,10 +202,20 @@ const QuickLeadForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Idempotency layer 1 — client lock + debounce. A rapid double-click fires
+    // two submit events before React re-renders the disabled button, so the
+    // synchronous refs are what actually stop the second one.
+    const now = Date.now();
+    if (isSubmitting || inFlightRef.current || pendingSubmitRef.current) return;
+    if (now - lastSubmitAtRef.current < SUBMIT_DEBOUNCE_MS) return;
+    lastSubmitAtRef.current = now;
+
     setListingUrlError("");
     setPhoneError("");
     setNameError("");
     setTypeError("");
+
 
     // Inline field validation (no blocking toasts — the user sees exactly
     // which field needs attention, which measurably reduces abandonment)
