@@ -385,37 +385,110 @@ const LeadsManager = () => {
     }));
   }, [snapshot, text]);
 
-  // Export the current paginated view (rows), not the entire dataset.
-  const exportToCSV = () => {
-    const headers = [
-      "Nume",
-      "Telefon",
-      "Email",
-      "Tip Proprietate",
-      "Suprafață (m²)",
-      "Profit Net",
-      "Profit Anual",
-      "Sursă",
-      "Data",
-    ];
-    const csvRows = rows.map((lead) => [
-      lead.name,
-      lead.whatsapp_number,
-      lead.email || "",
-      lead.property_type,
-      lead.property_area,
-      lead.calculated_net_profit || "",
-      lead.calculated_yearly_profit || "",
-      lead.source || "calculator",
-      format(new Date(lead.created_at), "yyyy-MM-dd HH:mm"),
-    ]);
-    const csvContent = [headers.join(","), ...csvRows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `leads_${format(new Date(), "yyyy-MM-dd")}.csv`;
-    link.click();
+  // Secure CSV export of ALL rows matching the active filters (server-side query,
+  // RLS-protected, capped at 5000). Values are escaped and formula-injection is
+  // neutralised so the file can't execute anything when opened in Excel.
+  const csvCell = (value: unknown) => {
+    let s = value == null ? "" : String(value);
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return `"${s.replace(/"/g, '""')}"`;
   };
+
+  const exportToCSV = async () => {
+    setIsExporting(true);
+    try {
+      const all = await fetchAllFiltered();
+      if (all.length === 0) {
+        toast({
+          title: lang === "ro" ? "Nimic de exportat" : "Nothing to export",
+          description:
+            lang === "ro"
+              ? "Niciun lead nu corespunde filtrelor active."
+              : "No leads match the active filters.",
+        });
+        return;
+      }
+      const headers = [
+        "Nume",
+        "Telefon",
+        "Email",
+        "Tip Proprietate",
+        "Suprafață (m²)",
+        "Profit Net",
+        "Profit Anual",
+        "Scor",
+        "Grade",
+        "Status",
+        "Interacțiuni",
+        "Sursă",
+        "Campanie",
+        "Alertă",
+        "Data",
+      ];
+      const csvRows = all.map((lead) => [
+        lead.name,
+        lead.whatsapp_number,
+        lead.email || "",
+        lead.property_type,
+        lead.property_area,
+        lead.calculated_net_profit ?? "",
+        lead.calculated_yearly_profit ?? "",
+        lead.lead_score ?? "",
+        lead.lead_grade ?? "",
+        lead.engagement_status ?? "new",
+        lead.touch_count ?? 1,
+        lead.source || "calculator",
+        lead.simulation_data?.campaign || lead.simulation_data?.utm_campaign || "",
+        lead.alert_status ?? "",
+        format(new Date(lead.created_at), "yyyy-MM-dd HH:mm"),
+      ]);
+      const csvContent = [
+        headers.map(csvCell).join(","),
+        ...csvRows.map((r) => r.map(csvCell).join(",")),
+      ].join("\r\n");
+      // BOM so Excel reads UTF-8 diacritics correctly
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `leads_${format(new Date(), "yyyy-MM-dd_HHmm")}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast({
+        title: lang === "ro" ? "Export finalizat" : "Export complete",
+        description:
+          lang === "ro" ? `${all.length} lead-uri exportate.` : `${all.length} leads exported.`,
+      });
+    } catch (e) {
+      toast({
+        title: text.error,
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleResendAlert = async (id: string) => {
+    try {
+      const res = (await resendAlert(id)) as { attempts?: number } | undefined;
+      toast({
+        title: lang === "ro" ? "Alertă retrimisă" : "Alert resent",
+        description:
+          lang === "ro"
+            ? `Notificarea a fost livrată${res?.attempts ? ` (${res.attempts} încercări)` : ""}.`
+            : `Notification delivered${res?.attempts ? ` (${res.attempts} attempts)` : ""}.`,
+      });
+    } catch (e) {
+      toast({
+        title: lang === "ro" ? "Retrimiterea a eșuat" : "Resend failed",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const rowLabels = {
     perMonth: text.perMonth,
