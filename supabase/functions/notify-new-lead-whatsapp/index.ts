@@ -1,6 +1,7 @@
 // Sends a WhatsApp alert (via configurable webhook) to the admin number
 // every time a new lead is inserted. Triggered from the DB.
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
