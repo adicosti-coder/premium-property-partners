@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anonymous session access with expiry check" ON public.chat_conversations;
