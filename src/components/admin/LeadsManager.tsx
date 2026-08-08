@@ -409,7 +409,9 @@ const LeadsManager = () => {
     deleteDescription: text.deleteDescription,
     cancel: text.cancel,
     delete: text.delete,
+    activityHistory: lang === "ro" ? "Istoric activitate" : "Activity history",
     language: lang,
+
   } as const;
 
   return (
