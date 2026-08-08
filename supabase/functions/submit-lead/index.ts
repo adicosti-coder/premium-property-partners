@@ -53,8 +53,15 @@ const handler = async (req: Request): Promise<Response> => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Idempotency: a repeated / parallel call carrying the same
+  // `x-idempotency-key` is answered from cache instead of inserting twice.
+  const idem = await beginIdempotent(supabase, "submit-lead", req, corsHeaders);
+  if (idem.replay) return idem.replay;
+
   try {
     const body = await req.json();
+
+
 
     // --- Validate required fields ---
     const name = validateString(body.name, 200);
