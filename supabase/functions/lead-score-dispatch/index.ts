@@ -166,25 +166,60 @@ Deno.serve(async (req) => {
 
   const results: Record<string, unknown> = { score, grade };
 
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false } },
+  );
+
+  /** Persist the alert delivery outcome so Admin can offer a manual "Resend alert". */
+  const recordAlertOutcome = async (
+    status: "sent" | "failed" | "skipped",
+    attempts: number,
+    error?: string | null,
+  ) => {
+    try {
+      await supabase
+        .from("leads")
+        .update({
+          alert_status: status,
+          alert_attempts: attempts,
+          alert_last_error: error ? String(error).slice(0, 500) : null,
+          alert_sent_at: status === "sent" ? new Date().toISOString() : null,
+        })
+        .eq("id", record.id);
+
+      await supabase.from("communication_logs").insert({
+        channel: "whatsapp",
+        direction: "outbound",
+        source: "lead-score-dispatch",
+        to_number: phone ? `+${phone}` : null,
+        lead_id: record.id,
+        status,
+        outcome: status === "sent" ? "alert_delivered" : error ?? status,
+        metadata: { score, grade, attempts, retry: attempts > 1 },
+      });
+    } catch (e) {
+      console.error("recordAlertOutcome failed:", e);
+    }
+  };
+
   // 1) CRM webhook — always, so every lead lands in the pipeline with its score
   const crmUrl = Deno.env.get("LEAD_WEBHOOK_URL") || Deno.env.get("MAKE_WEBHOOK_URL");
   if (crmUrl) {
-    try {
-      const res = await fetch(crmUrl, {
+    const res = await fetchWithRetry(
+      crmUrl,
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           event: isReEngaged ? "lead.re_engaged" : "lead.scored",
           ...summary,
         }),
-
-      });
-      results.crm = { status: res.status, ok: res.ok };
-      if (!res.ok) console.error(`CRM webhook failed [${res.status}]: ${await res.text()}`);
-    } catch (e) {
-      results.crm = { error: String(e) };
-      console.error("CRM webhook error:", e);
-    }
+      },
+      { label: "crm-webhook", maxAttempts: 3 },
+    );
+    results.crm = { status: res.status, ok: res.ok, attempts: res.attempts };
   } else {
     results.crm = "skipped: no LEAD_WEBHOOK_URL configured";
   }
@@ -192,12 +227,6 @@ Deno.serve(async (req) => {
   // 2) Hot / warm leads → prepare Andrei's WhatsApp follow-up + alert the admin
   const isPriority = score >= 60;
   if (isPriority && phone) {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { persistSession: false } },
-    );
-
     try {
       const { data: conv, error: convErr } = await supabase
         .from("wa_conversations")
@@ -243,25 +272,29 @@ Deno.serve(async (req) => {
     if (alertUrl) {
       const message = buildAlertMessage();
 
-
-      try {
-        const res = await fetch(alertUrl, {
+      const res = await fetchWithRetry(
+        alertUrl,
+        {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message, lead: summary }),
-        });
-        results.alert = { status: res.status, ok: res.ok };
-        if (!res.ok) console.error(`Alert webhook failed [${res.status}]: ${await res.text()}`);
-      } catch (e) {
-        results.alert = { error: String(e) };
-        console.error("Alert webhook error:", e);
-      }
+        },
+        { label: "whatsapp-alert", maxAttempts: 3 },
+      );
+      results.alert = { status: res.status, ok: res.ok, attempts: res.attempts };
+      await recordAlertOutcome(
+        res.ok ? "sent" : "failed",
+        res.attempts,
+        res.ok ? null : res.error ?? `http_${res.status}`,
+      );
     } else {
       results.alert = "skipped: no WHATSAPP_ALERT_WEBHOOK_URL configured";
+      await recordAlertOutcome("skipped", 0, "no_alert_webhook_configured");
     }
   } else {
     results.whatsapp = isPriority ? "skipped: no valid phone" : "skipped: score below 60";
   }
+
 
   return new Response(JSON.stringify({ success: true, ...results }), {
     status: 200,
