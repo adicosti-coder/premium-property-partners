@@ -23,6 +23,8 @@ import {
   Users,
 } from "lucide-react";
 import LeadDetailDialog from "./LeadDetailDialog";
+import LeadActivityDrawer from "./leads/LeadActivityDrawer";
+
 import { format, subDays } from "date-fns";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
