@@ -7,6 +7,8 @@
 
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -59,7 +61,15 @@ const SEV_RANK: Record<string, number> = { info: 0, warning: 1, critical: 2 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Auth: internal cron/trigger secret OR authenticated admin.
+  if (!(await isInternalCall(req))) {
+    const auth = await requireAdmin(req, corsHeaders as Record<string, string>);
+    if (!auth.ok) return auth.response!;
+  }
+
   try {
+
     const body = await req.json().catch(() => ({}));
     const days = Number(body?.days ?? 7);
 
