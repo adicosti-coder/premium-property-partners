@@ -114,32 +114,42 @@ Deno.serve(async (req) => {
   }
 
   const url = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`;
-  const waResp = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
+  // Retries automatically on Meta rate limits (429) and 5xx, max 3 attempts.
+  const waResp = await fetchWithRetry(
+    url,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(waBody),
     },
-    body: JSON.stringify(waBody),
-  });
+    { label: "meta-wa-send", maxAttempts: 3 },
+  );
 
-  const waJson = await waResp.json().catch(() => ({}));
+  let waJson: any = {};
+  try { waJson = JSON.parse(waResp.body); } catch { waJson = {}; }
 
   if (!waResp.ok) {
-    const errMsg = JSON.stringify(waJson).slice(0, 500);
-    console.error(`WhatsApp send failed [${waResp.status}]: ${errMsg}`);
+    const errMsg = (waResp.body || waResp.error || "").slice(0, 500);
+    console.error(`WhatsApp send failed [${waResp.status}] after ${waResp.attempts} attempt(s): ${errMsg}`);
     await supabase.from("wa_messages").insert({
       conversation_id: conversationId,
       direction: "outbound",
       role: "system",
       content: body.text || `[template:${body.template_name}]`,
       template_name: body.template_name || null,
-      error: `meta_${waResp.status}: ${errMsg}`,
+      error: `meta_${waResp.status} (${waResp.attempts} attempts): ${errMsg}`,
     });
-    return new Response(JSON.stringify({ error: "meta_api_error", status: waResp.status, details: waJson }), { status: waResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(
+      JSON.stringify({ error: "meta_api_error", status: waResp.status, attempts: waResp.attempts, details: waJson }),
+      { status: waResp.status || 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 
   const waMsgId = waJson?.messages?.[0]?.id || null;
+
 
   await supabase.from("wa_messages").insert({
     conversation_id: conversationId,
