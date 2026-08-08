@@ -235,17 +235,31 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, leadId }), {
+    const payload = { success: true, leadId };
+    await idem.finish(payload);
+
+    return new Response(JSON.stringify(payload), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
     console.error("submit-lead error:", err);
+    // Release the claim so the user can genuinely retry after a failure.
+    if (idem.key) {
+      try {
+        await supabase
+          .from("request_idempotency")
+          .delete()
+          .eq("scope", "submit-lead")
+          .eq("key", idem.key);
+      } catch { /* best effort */ }
+    }
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
 };
 
 serve(handler);
