@@ -14,6 +14,13 @@ import { Turnstile } from "@marsidev/react-turnstile";
 import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
 import { withCampaignTracking, campaignSourceSuffix } from "@/lib/campaignAttribution";
 import { trackConversion } from "@/lib/conversionTracking";
+import { clearIdempotencyKey, idempotencyHeaders } from "@/lib/idempotency";
+
+/** Scope used for the per-attempt idempotency key (sessionStorage + request header). */
+const IDEMPOTENCY_SCOPE = "quick_lead_form";
+/** Ignore repeated submit events fired within this window (rapid double-click). */
+const SUBMIT_DEBOUNCE_MS = 1200;
+
 
 const propertyTypeKeys = ["apartament", "casa", "studio", "penthouse", "vila"] as const;
 const listingUrlSchema = z.string().trim().url("Link invalid").max(500).optional().or(z.literal(""));
