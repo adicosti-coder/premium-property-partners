@@ -6,6 +6,7 @@
 // Internal-only: requires x-webhook-secret === SUPABASE_SERVICE_ROLE_KEY.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
