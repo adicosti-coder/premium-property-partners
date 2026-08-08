@@ -2600,6 +2600,10 @@ export type Database = {
       leads: {
         Row: {
           activity_history: Json
+          alert_attempts: number
+          alert_last_error: string | null
+          alert_sent_at: string | null
+          alert_status: string | null
           calculated_net_profit: number | null
           calculated_yearly_profit: number | null
           created_at: string
@@ -2625,6 +2629,10 @@ export type Database = {
         }
         Insert: {
           activity_history?: Json
+          alert_attempts?: number
+          alert_last_error?: string | null
+          alert_sent_at?: string | null
+          alert_status?: string | null
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
@@ -2650,6 +2658,10 @@ export type Database = {
         }
         Update: {
           activity_history?: Json
+          alert_attempts?: number
+          alert_last_error?: string | null
+          alert_sent_at?: string | null
+          alert_status?: string | null
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
@@ -9024,6 +9036,95 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "wa_conversations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_outbound_queue: {
+        Row: {
+          attempts: number
+          conversation_id: string | null
+          created_at: string
+          id: string
+          last_error: string | null
+          lead_id: string | null
+          phone_normalized: string
+          priority: number
+          prospect_listing_id: string | null
+          scheduled_at: string
+          sent_at: string | null
+          source: string | null
+          status: string
+          template_language: string
+          template_name: string
+          template_params: Json
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string | null
+          phone_normalized: string
+          priority?: number
+          prospect_listing_id?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          source?: string | null
+          status?: string
+          template_language?: string
+          template_name: string
+          template_params?: Json
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string | null
+          phone_normalized?: string
+          priority?: number
+          prospect_listing_id?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          source?: string | null
+          status?: string
+          template_language?: string
+          template_name?: string
+          template_params?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_outbound_queue_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_outbound_queue_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_outbound_queue_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_outbound_queue_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
           },
         ]
       }
