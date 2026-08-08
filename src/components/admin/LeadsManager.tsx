@@ -732,6 +732,13 @@ const LeadsManager = () => {
       </Card>
 
       <LeadDetailDialog lead={selectedLead} open={detailOpen} onOpenChange={setDetailOpen} />
+
+      <LeadActivityDrawer
+        leadId={activityLeadId}
+        open={!!activityLeadId}
+        onOpenChange={(o) => !o && setActivityLeadId(null)}
+      />
+
     </div>
   );
 };
