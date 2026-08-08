@@ -45,6 +45,10 @@ const QuickLeadForm = () => {
   const [securityReady, setSecurityReady] = useState(false);
   const pendingSubmitRef = useRef(false);
   const failOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Synchronous lock: state updates are async, so a double-click can slip past `isSubmitting`. */
+  const inFlightRef = useRef(false);
+  const lastSubmitAtRef = useRef(0);
+
 
   // Store form data for submission after captcha
   const formDataRef = useRef<{
