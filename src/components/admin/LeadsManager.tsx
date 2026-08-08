@@ -742,10 +742,132 @@ const LeadsManager = () => {
                   <SelectItem value="7days">{text.last7Days}</SelectItem>
                   <SelectItem value="30days">{text.last30Days}</SelectItem>
                   <SelectItem value="90days">{text.last90Days}</SelectItem>
+                  <SelectItem value="custom">
+                    {lang === "ro" ? "Interval personalizat" : "Custom range"}
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={exportToCSV}>
-                <Download className="w-4 h-4 mr-2" />
+
+              {/* Grade / score */}
+              <Select
+                value={gradeFilter}
+                onValueChange={(v) => {
+                  setGradeFilter(v as LeadGradeFilter);
+                  setPage(0);
+                }}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <Flame className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder={lang === "ro" ? "Scor" : "Score"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {lang === "ro" ? "Toate scorurile" : "All scores"}
+                  </SelectItem>
+                  <SelectItem value="hot">🔥 Hot (80+)</SelectItem>
+                  <SelectItem value="warm">⚡ Warm (60+)</SelectItem>
+                  <SelectItem value="cool">🌤️ Cool</SelectItem>
+                  <SelectItem value="cold">❄️ Cold</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Engagement / alert status */}
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => {
+                  setStatusFilter(v as LeadStatusFilter);
+                  setPage(0);
+                }}
+              >
+                <SelectTrigger className="w-[190px]">
+                  <Activity className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {lang === "ro" ? "Toate statusurile" : "All statuses"}
+                  </SelectItem>
+                  <SelectItem value="new">{lang === "ro" ? "Noi" : "New"}</SelectItem>
+                  <SelectItem value="re_engaged">
+                    {lang === "ro" ? "Re-engaged" : "Re-engaged"}
+                  </SelectItem>
+                  <SelectItem value="alert_failed">
+                    {lang === "ro" ? "Alertă eșuată" : "Alert failed"}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* UTM campaign */}
+              <Input
+                placeholder={lang === "ro" ? "Campanie UTM..." : "UTM campaign..."}
+                value={campaignFilter}
+                onChange={(e) => {
+                  setCampaignFilter(e.target.value);
+                  setPage(0);
+                }}
+                className="w-[180px]"
+                aria-label={lang === "ro" ? "Filtrează după campanie UTM" : "Filter by UTM campaign"}
+              />
+
+              {dateFilter === "custom" && (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => {
+                      setDateFrom(e.target.value);
+                      setPage(0);
+                    }}
+                    className="w-[150px]"
+                    aria-label={lang === "ro" ? "De la data" : "From date"}
+                  />
+                  <span className="text-muted-foreground text-sm">→</span>
+                  <Input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => {
+                      setDateTo(e.target.value);
+                      setPage(0);
+                    }}
+                    className="w-[150px]"
+                    aria-label={lang === "ro" ? "Până la data" : "To date"}
+                  />
+                </div>
+              )}
+
+              {(gradeFilter !== "all" ||
+                statusFilter !== "all" ||
+                campaignFilter ||
+                sourceFilter !== "all" ||
+                readFilter !== "all" ||
+                dateFilter !== "all" ||
+                searchTerm) && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setGradeFilter("all");
+                    setStatusFilter("all");
+                    setCampaignFilter("");
+                    setSourceFilter("all");
+                    setReadFilter("all");
+                    setDateFilter("all");
+                    setDateFrom("");
+                    setDateTo("");
+                    setSearchTerm("");
+                    setPage(0);
+                  }}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  {lang === "ro" ? "Resetează filtrele" : "Reset filters"}
+                </Button>
+              )}
+
+              <Button variant="outline" onClick={exportToCSV} disabled={isExporting}>
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
                 {text.export}
               </Button>
               {stats.unreadCount > 0 && (
@@ -755,6 +877,7 @@ const LeadsManager = () => {
                 </Button>
               )}
             </div>
+
           </div>
         </CardContent>
       </Card>
