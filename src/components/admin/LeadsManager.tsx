@@ -500,9 +500,14 @@ const LeadsManager = () => {
     cancel: text.cancel,
     delete: text.delete,
     activityHistory: lang === "ro" ? "Istoric activitate" : "Activity history",
+    resendAlert: lang === "ro" ? "Retrimite alerta" : "Resend alert",
+    resendAlertHint:
+      lang === "ro"
+        ? "Livrarea alertei WhatsApp a eșuat — retrimite acum"
+        : "WhatsApp alert delivery failed — resend now",
     language: lang,
-
   } as const;
+
 
   return (
     <div className="space-y-6">
