@@ -166,7 +166,9 @@ const QuickLeadForm = () => {
       setIsSubmitting(false);
       setIsVerifying(false);
       pendingSubmitRef.current = false;
+      inFlightRef.current = false;
       setTurnstileToken(null);
+
     }
   }, [language, t.quickLeadForm]);
 
