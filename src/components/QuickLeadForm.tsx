@@ -242,7 +242,12 @@ const QuickLeadForm = () => {
         hasError = true;
       }
     }
-    if (hasError) return;
+    if (hasError) {
+      // Validation errors aren't an attempt — don't hold the debounce window.
+      lastSubmitAtRef.current = 0;
+      return;
+    }
+
 
     formDataRef.current = {
       name: name.trim(),
