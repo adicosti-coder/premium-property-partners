@@ -707,6 +707,8 @@ const LeadsManager = () => {
                     onToggleRead={handleToggleRead}
                     onDelete={handleDelete}
                     onFollowUpChange={handleFollowUpChange}
+                    onShowActivity={setActivityLeadId}
+
                   />
                 ))}
               </TableBody>
