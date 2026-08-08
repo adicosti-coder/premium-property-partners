@@ -103,6 +103,12 @@ const LeadsManager = () => {
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [readFilter, setReadFilter] = useState<LeadReadFilter>("all");
   const [dateFilter, setDateFilter] = useState<LeadDateFilter>("all");
+  const [gradeFilter, setGradeFilter] = useState<LeadGradeFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<LeadStatusFilter>("all");
+  const [campaignFilter, setCampaignFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(0);
@@ -127,6 +133,9 @@ const LeadsManager = () => {
     toggleRead,
     isTogglingReadId,
     markAllRead,
+    fetchAllFiltered,
+    resendAlert,
+    isResendingId,
   } = useLeads({
     page,
     pageSize,
@@ -134,7 +143,13 @@ const LeadsManager = () => {
     source: sourceFilter,
     read: readFilter,
     date: dateFilter,
+    grade: gradeFilter,
+    status: statusFilter,
+    campaign: campaignFilter,
+    dateFrom,
+    dateTo,
   });
+
 
   const translations = {
     ro: {
