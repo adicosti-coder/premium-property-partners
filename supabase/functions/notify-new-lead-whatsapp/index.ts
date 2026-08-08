@@ -1,6 +1,7 @@
 // Sends a WhatsApp alert (via configurable webhook) to the admin number
 // every time a new lead is inserted. Triggered from the DB.
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -108,17 +109,32 @@ Deno.serve(async (req) => {
       },
     };
 
-    const resp = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(webhookPayload),
-    });
+    const resp = await fetchWithRetry(
+      webhookUrl,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(webhookPayload),
+      },
+      { label: "notify-new-lead-whatsapp", maxAttempts: 3 },
+    );
 
-    console.log(`WhatsApp alert sent for lead ${record.id}, status: ${resp.status}`);
+    console.log(
+      `WhatsApp alert for lead ${record.id}: status ${resp.status} after ${resp.attempts} attempt(s)`,
+    );
 
     return new Response(
-      JSON.stringify({ success: true, lead_id: record.id, webhook_status: resp.status }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({
+        success: resp.ok,
+        lead_id: record.id,
+        webhook_status: resp.status,
+        attempts: resp.attempts,
+        error: resp.ok ? undefined : resp.error ?? `http_${resp.status}`,
+      }),
+      {
+        status: resp.ok ? 200 : 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   } catch (err) {
     console.error("notify-new-lead-whatsapp error:", err);

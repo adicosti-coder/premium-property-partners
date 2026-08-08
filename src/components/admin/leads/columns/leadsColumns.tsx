@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  BellRing,
   Building2,
   CalendarClock,
   History,
@@ -42,6 +43,8 @@ export interface LeadRowLabels {
   cancel: string;
   delete: string;
   activityHistory: string;
+  resendAlert: string;
+  resendAlertHint: string;
   language: "ro" | "en";
 }
 
@@ -51,11 +54,13 @@ interface Props {
   sourceBadge: React.ReactNode;
   isDeleting: boolean;
   isTogglingRead: boolean;
+  isResending?: boolean;
   onSelect: (lead: LeadRow) => void;
   onToggleRead: (lead: LeadRow) => void;
   onDelete: (id: string) => void;
   onFollowUpChange: (leadId: string, date: string | null) => void;
   onShowActivity: (leadId: string) => void;
+  onResendAlert: (leadId: string) => void;
 }
 
 export const LeadTableRow = ({
@@ -64,14 +69,17 @@ export const LeadTableRow = ({
   sourceBadge,
   isDeleting,
   isTogglingRead,
+  isResending = false,
   onSelect,
   onToggleRead,
   onDelete,
   onFollowUpChange,
   onShowActivity,
-
+  onResendAlert,
 }: Props) => {
   const dateLocale = labels.language === "ro" ? ro : enUS;
+  const alertFailed = lead.alert_status === "failed";
+
 
   return (
     <TableRow
@@ -254,6 +262,24 @@ export const LeadTableRow = ({
               </Button>
             );
           })()}
+          {alertFailed && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onResendAlert(lead.id)}
+              disabled={isResending}
+              className="h-8 gap-1.5 border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20"
+              title={labels.resendAlertHint}
+              aria-label={labels.resendAlert}
+            >
+              {isResending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <BellRing className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden xl:inline text-xs font-medium">{labels.resendAlert}</span>
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -264,6 +290,7 @@ export const LeadTableRow = ({
           >
             <History className="w-4 h-4" />
           </Button>
+
           <LeadNotesDialog
             leadId={lead.id}
             leadName={lead.name}

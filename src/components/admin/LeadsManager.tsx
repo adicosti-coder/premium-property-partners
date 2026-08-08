@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   BarChart3,
+  Activity,
   Calendar,
   CheckCheck,
   Download,
@@ -16,11 +17,13 @@ import {
   Eye,
   EyeOff,
   Filter,
+  Flame,
   Home,
   Loader2,
   Search,
   TrendingUp,
   Users,
+  X,
 } from "lucide-react";
 import LeadDetailDialog from "./LeadDetailDialog";
 import LeadActivityDrawer from "./leads/LeadActivityDrawer";
@@ -47,8 +50,10 @@ import { AdminPagination } from "./shared/AdminPagination";
 import {
   useLeads,
   type LeadDateFilter,
+  type LeadGradeFilter,
   type LeadReadFilter,
   type LeadRow,
+  type LeadStatusFilter,
 } from "./leads/hooks/useLeads";
 import { LeadTableRow, sourceBadgeFor } from "./leads/columns/leadsColumns";
 
@@ -103,6 +108,12 @@ const LeadsManager = () => {
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [readFilter, setReadFilter] = useState<LeadReadFilter>("all");
   const [dateFilter, setDateFilter] = useState<LeadDateFilter>("all");
+  const [gradeFilter, setGradeFilter] = useState<LeadGradeFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<LeadStatusFilter>("all");
+  const [campaignFilter, setCampaignFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(0);
@@ -127,6 +138,9 @@ const LeadsManager = () => {
     toggleRead,
     isTogglingReadId,
     markAllRead,
+    fetchAllFiltered,
+    resendAlert,
+    isResendingId,
   } = useLeads({
     page,
     pageSize,
@@ -134,7 +148,13 @@ const LeadsManager = () => {
     source: sourceFilter,
     read: readFilter,
     date: dateFilter,
+    grade: gradeFilter,
+    status: statusFilter,
+    campaign: campaignFilter,
+    dateFrom,
+    dateTo,
   });
+
 
   const translations = {
     ro: {
@@ -368,37 +388,110 @@ const LeadsManager = () => {
     }));
   }, [snapshot, text]);
 
-  // Export the current paginated view (rows), not the entire dataset.
-  const exportToCSV = () => {
-    const headers = [
-      "Nume",
-      "Telefon",
-      "Email",
-      "Tip Proprietate",
-      "Suprafață (m²)",
-      "Profit Net",
-      "Profit Anual",
-      "Sursă",
-      "Data",
-    ];
-    const csvRows = rows.map((lead) => [
-      lead.name,
-      lead.whatsapp_number,
-      lead.email || "",
-      lead.property_type,
-      lead.property_area,
-      lead.calculated_net_profit || "",
-      lead.calculated_yearly_profit || "",
-      lead.source || "calculator",
-      format(new Date(lead.created_at), "yyyy-MM-dd HH:mm"),
-    ]);
-    const csvContent = [headers.join(","), ...csvRows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `leads_${format(new Date(), "yyyy-MM-dd")}.csv`;
-    link.click();
+  // Secure CSV export of ALL rows matching the active filters (server-side query,
+  // RLS-protected, capped at 5000). Values are escaped and formula-injection is
+  // neutralised so the file can't execute anything when opened in Excel.
+  const csvCell = (value: unknown) => {
+    let s = value == null ? "" : String(value);
+    if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+    return `"${s.replace(/"/g, '""')}"`;
   };
+
+  const exportToCSV = async () => {
+    setIsExporting(true);
+    try {
+      const all = await fetchAllFiltered();
+      if (all.length === 0) {
+        toast({
+          title: lang === "ro" ? "Nimic de exportat" : "Nothing to export",
+          description:
+            lang === "ro"
+              ? "Niciun lead nu corespunde filtrelor active."
+              : "No leads match the active filters.",
+        });
+        return;
+      }
+      const headers = [
+        "Nume",
+        "Telefon",
+        "Email",
+        "Tip Proprietate",
+        "Suprafață (m²)",
+        "Profit Net",
+        "Profit Anual",
+        "Scor",
+        "Grade",
+        "Status",
+        "Interacțiuni",
+        "Sursă",
+        "Campanie",
+        "Alertă",
+        "Data",
+      ];
+      const csvRows = all.map((lead) => [
+        lead.name,
+        lead.whatsapp_number,
+        lead.email || "",
+        lead.property_type,
+        lead.property_area,
+        lead.calculated_net_profit ?? "",
+        lead.calculated_yearly_profit ?? "",
+        lead.lead_score ?? "",
+        lead.lead_grade ?? "",
+        lead.engagement_status ?? "new",
+        lead.touch_count ?? 1,
+        lead.source || "calculator",
+        lead.simulation_data?.campaign || lead.simulation_data?.utm_campaign || "",
+        lead.alert_status ?? "",
+        format(new Date(lead.created_at), "yyyy-MM-dd HH:mm"),
+      ]);
+      const csvContent = [
+        headers.map(csvCell).join(","),
+        ...csvRows.map((r) => r.map(csvCell).join(",")),
+      ].join("\r\n");
+      // BOM so Excel reads UTF-8 diacritics correctly
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `leads_${format(new Date(), "yyyy-MM-dd_HHmm")}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast({
+        title: lang === "ro" ? "Export finalizat" : "Export complete",
+        description:
+          lang === "ro" ? `${all.length} lead-uri exportate.` : `${all.length} leads exported.`,
+      });
+    } catch (e) {
+      toast({
+        title: text.error,
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleResendAlert = async (id: string) => {
+    try {
+      const res = (await resendAlert(id)) as { attempts?: number } | undefined;
+      toast({
+        title: lang === "ro" ? "Alertă retrimisă" : "Alert resent",
+        description:
+          lang === "ro"
+            ? `Notificarea a fost livrată${res?.attempts ? ` (${res.attempts} încercări)` : ""}.`
+            : `Notification delivered${res?.attempts ? ` (${res.attempts} attempts)` : ""}.`,
+      });
+    } catch (e) {
+      toast({
+        title: lang === "ro" ? "Retrimiterea a eșuat" : "Resend failed",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const rowLabels = {
     perMonth: text.perMonth,
@@ -410,9 +503,14 @@ const LeadsManager = () => {
     cancel: text.cancel,
     delete: text.delete,
     activityHistory: lang === "ro" ? "Istoric activitate" : "Activity history",
+    resendAlert: lang === "ro" ? "Retrimite alerta" : "Resend alert",
+    resendAlertHint:
+      lang === "ro"
+        ? "Livrarea alertei WhatsApp a eșuat — retrimite acum"
+        : "WhatsApp alert delivery failed — resend now",
     language: lang,
-
   } as const;
+
 
   return (
     <div className="space-y-6">
@@ -647,10 +745,132 @@ const LeadsManager = () => {
                   <SelectItem value="7days">{text.last7Days}</SelectItem>
                   <SelectItem value="30days">{text.last30Days}</SelectItem>
                   <SelectItem value="90days">{text.last90Days}</SelectItem>
+                  <SelectItem value="custom">
+                    {lang === "ro" ? "Interval personalizat" : "Custom range"}
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={exportToCSV}>
-                <Download className="w-4 h-4 mr-2" />
+
+              {/* Grade / score */}
+              <Select
+                value={gradeFilter}
+                onValueChange={(v) => {
+                  setGradeFilter(v as LeadGradeFilter);
+                  setPage(0);
+                }}
+              >
+                <SelectTrigger className="w-[160px]">
+                  <Flame className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder={lang === "ro" ? "Scor" : "Score"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {lang === "ro" ? "Toate scorurile" : "All scores"}
+                  </SelectItem>
+                  <SelectItem value="hot">🔥 Hot (80+)</SelectItem>
+                  <SelectItem value="warm">⚡ Warm (60+)</SelectItem>
+                  <SelectItem value="cool">🌤️ Cool</SelectItem>
+                  <SelectItem value="cold">❄️ Cold</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Engagement / alert status */}
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => {
+                  setStatusFilter(v as LeadStatusFilter);
+                  setPage(0);
+                }}
+              >
+                <SelectTrigger className="w-[190px]">
+                  <Activity className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {lang === "ro" ? "Toate statusurile" : "All statuses"}
+                  </SelectItem>
+                  <SelectItem value="new">{lang === "ro" ? "Noi" : "New"}</SelectItem>
+                  <SelectItem value="re_engaged">
+                    {lang === "ro" ? "Re-engaged" : "Re-engaged"}
+                  </SelectItem>
+                  <SelectItem value="alert_failed">
+                    {lang === "ro" ? "Alertă eșuată" : "Alert failed"}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* UTM campaign */}
+              <Input
+                placeholder={lang === "ro" ? "Campanie UTM..." : "UTM campaign..."}
+                value={campaignFilter}
+                onChange={(e) => {
+                  setCampaignFilter(e.target.value);
+                  setPage(0);
+                }}
+                className="w-[180px]"
+                aria-label={lang === "ro" ? "Filtrează după campanie UTM" : "Filter by UTM campaign"}
+              />
+
+              {dateFilter === "custom" && (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => {
+                      setDateFrom(e.target.value);
+                      setPage(0);
+                    }}
+                    className="w-[150px]"
+                    aria-label={lang === "ro" ? "De la data" : "From date"}
+                  />
+                  <span className="text-muted-foreground text-sm">→</span>
+                  <Input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => {
+                      setDateTo(e.target.value);
+                      setPage(0);
+                    }}
+                    className="w-[150px]"
+                    aria-label={lang === "ro" ? "Până la data" : "To date"}
+                  />
+                </div>
+              )}
+
+              {(gradeFilter !== "all" ||
+                statusFilter !== "all" ||
+                campaignFilter ||
+                sourceFilter !== "all" ||
+                readFilter !== "all" ||
+                dateFilter !== "all" ||
+                searchTerm) && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setGradeFilter("all");
+                    setStatusFilter("all");
+                    setCampaignFilter("");
+                    setSourceFilter("all");
+                    setReadFilter("all");
+                    setDateFilter("all");
+                    setDateFrom("");
+                    setDateTo("");
+                    setSearchTerm("");
+                    setPage(0);
+                  }}
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  {lang === "ro" ? "Resetează filtrele" : "Reset filters"}
+                </Button>
+              )}
+
+              <Button variant="outline" onClick={exportToCSV} disabled={isExporting}>
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
                 {text.export}
               </Button>
               {stats.unreadCount > 0 && (
@@ -660,6 +880,7 @@ const LeadsManager = () => {
                 </Button>
               )}
             </div>
+
           </div>
         </CardContent>
       </Card>
@@ -700,6 +921,7 @@ const LeadsManager = () => {
                     sourceBadge={sourceBadgeFor(lead.source, lang, sourceLabels)}
                     isDeleting={isDeletingId === lead.id}
                     isTogglingRead={isTogglingReadId === lead.id}
+                    isResending={isResendingId === lead.id}
                     onSelect={(l) => {
                       setSelectedLead(l);
                       setDetailOpen(true);
@@ -708,8 +930,9 @@ const LeadsManager = () => {
                     onDelete={handleDelete}
                     onFollowUpChange={handleFollowUpChange}
                     onShowActivity={setActivityLeadId}
-
+                    onResendAlert={handleResendAlert}
                   />
+
                 ))}
               </TableBody>
             </Table>
