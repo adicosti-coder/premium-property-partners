@@ -23,6 +23,12 @@ const LEAD_COLUMNS = [
   "lead_score",
   "lead_grade",
   "score_breakdown",
+  "engagement_status",
+  "touch_count",
+  "alert_status",
+  "alert_attempts",
+  "alert_last_error",
+  "alert_sent_at",
 ].join(", ");
 
 export interface LeadRow {
@@ -53,6 +59,8 @@ export interface LeadRow {
     note_consultant?: string;
     recomandari?: string[];
     categorie?: string;
+    campaign?: string;
+    utm_campaign?: string;
   } | null;
   source: string | null;
   message: string | null;
@@ -70,10 +78,19 @@ export interface LeadRow {
     contact?: number;
     inputs?: Record<string, unknown>;
   } | null;
+  engagement_status: string | null;
+  touch_count: number | null;
+  /** WhatsApp/CRM alert delivery state written by lead-score-dispatch */
+  alert_status: string | null;
+  alert_attempts: number | null;
+  alert_last_error: string | null;
+  alert_sent_at: string | null;
 }
 
 export type LeadReadFilter = "all" | "unread" | "read";
-export type LeadDateFilter = "all" | "7days" | "30days" | "90days";
+export type LeadDateFilter = "all" | "7days" | "30days" | "90days" | "custom";
+export type LeadGradeFilter = "all" | "hot" | "warm" | "cool" | "cold";
+export type LeadStatusFilter = "all" | "new" | "re_engaged" | "alert_failed";
 
 export interface UseLeadsOptions {
   page: number;
@@ -82,6 +99,12 @@ export interface UseLeadsOptions {
   source: string; // "all" or specific
   read: LeadReadFilter;
   date: LeadDateFilter;
+  grade?: LeadGradeFilter;
+  status?: LeadStatusFilter;
+  campaign?: string;
+  /** ISO date (yyyy-MM-dd) — used when date === "custom" */
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 function dateFilterSince(date: LeadDateFilter): Date | null {
@@ -92,8 +115,21 @@ function dateFilterSince(date: LeadDateFilter): Date | null {
 }
 
 export function useLeads(opts: UseLeadsOptions) {
-  const { page, pageSize, search, source, read, date } = opts;
+  const {
+    page,
+    pageSize,
+    search,
+    source,
+    read,
+    date,
+    grade = "all",
+    status = "all",
+    campaign = "",
+    dateFrom = "",
+    dateTo = "",
+  } = opts;
   const trimmedSearch = search.trim();
+  const trimmedCampaign = campaign.trim();
   const qc = useQueryClient();
 
   const applyFilters = useCallback(
@@ -106,8 +142,26 @@ export function useLeads(opts: UseLeadsOptions) {
       if (read === "unread") q = q.eq("is_read", false);
       else if (read === "read") q = q.eq("is_read", true);
 
-      const since = dateFilterSince(date);
-      if (since) q = q.gte("created_at", since.toISOString());
+      if (grade !== "all") q = q.eq("lead_grade", grade);
+
+      if (status === "re_engaged") q = q.eq("engagement_status", "re_engaged");
+      else if (status === "new") q = q.or("engagement_status.is.null,engagement_status.eq.new");
+      else if (status === "alert_failed") q = q.eq("alert_status", "failed");
+
+      if (date === "custom") {
+        if (dateFrom) q = q.gte("created_at", new Date(`${dateFrom}T00:00:00`).toISOString());
+        if (dateTo) q = q.lte("created_at", new Date(`${dateTo}T23:59:59`).toISOString());
+      } else {
+        const since = dateFilterSince(date);
+        if (since) q = q.gte("created_at", since.toISOString());
+      }
+
+      if (trimmedCampaign) {
+        const like = `%${trimmedCampaign.replace(/[%_]/g, "\\$&")}%`;
+        q = q.or(
+          `simulation_data->>campaign.ilike.${like},simulation_data->>utm_campaign.ilike.${like}`,
+        );
+      }
 
       if (trimmedSearch) {
         const like = `%${trimmedSearch.replace(/[%_]/g, "\\$&")}%`;
@@ -115,11 +169,22 @@ export function useLeads(opts: UseLeadsOptions) {
       }
       return q;
     },
-    [source, read, date, trimmedSearch],
+    [source, read, date, grade, status, trimmedCampaign, trimmedSearch, dateFrom, dateTo],
   );
 
   const paged = usePaginatedQuery<LeadRow>({
-    queryKey: ["admin-leads", source, read, date, trimmedSearch],
+    queryKey: [
+      "admin-leads",
+      source,
+      read,
+      date,
+      grade,
+      status,
+      trimmedCampaign,
+      dateFrom,
+      dateTo,
+      trimmedSearch,
+    ],
     table: "leads",
     columns: LEAD_COLUMNS,
     page,
@@ -133,9 +198,6 @@ export function useLeads(opts: UseLeadsOptions) {
   });
 
   // Snapshot for stats + charts. Lightweight columns only, last 90 days, capped.
-  // NOTE: replaces the previous client-side full-table aggregation. Stats/charts
-  // now reflect the last 90 days (previously computed over all loaded rows —
-  // in practice the same window since the UI never loaded older data anyway).
   const snapshotQuery = useQuery({
     queryKey: ["admin-leads-snapshot"],
     queryFn: async () => {
@@ -165,6 +227,24 @@ export function useLeads(opts: UseLeadsOptions) {
     qc.invalidateQueries({ queryKey: ["admin-leads"] });
     qc.invalidateQueries({ queryKey: ["admin-leads-snapshot"] });
   }, [qc]);
+
+  /**
+   * Fetches every row matching the active filters (capped) for CSV export.
+   * Runs server-side with the same filters as the table, so the export always
+   * matches what the admin sees — not just the current page.
+   */
+  const fetchAllFiltered = useCallback(
+    async (limit = 5000): Promise<LeadRow[]> => {
+      let q = supabase.from("leads").select(LEAD_COLUMNS);
+      q = applyFilters(q);
+      const { data, error } = await q
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data ?? []) as unknown as LeadRow[];
+    },
+    [applyFilters],
+  );
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -207,6 +287,18 @@ export function useLeads(opts: UseLeadsOptions) {
     onSuccess: invalidate,
   });
 
+  /** Manual re-send of a failed WhatsApp/CRM alert (admin-only edge function). */
+  const resendAlertMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase.functions.invoke("resend-lead-alert", {
+        body: { lead_id: id },
+      });
+      if (error) throw error;
+      return data as { ok?: boolean; attempts?: number };
+    },
+    onSuccess: invalidate,
+  });
+
   return {
     rows: paged.rows,
     total: paged.total,
@@ -220,6 +312,7 @@ export function useLeads(opts: UseLeadsOptions) {
     },
     invalidate,
     snapshot: snapshotQuery.data ?? [],
+    fetchAllFiltered,
     deleteLead: deleteMutation.mutateAsync,
     isDeletingId: deleteMutation.isPending ? (deleteMutation.variables as string | undefined) : undefined,
     toggleRead: toggleReadMutation.mutateAsync,
@@ -228,5 +321,9 @@ export function useLeads(opts: UseLeadsOptions) {
       : undefined,
     markAllRead: markAllReadMutation.mutateAsync,
     updateFollowUp: updateFollowUpMutation.mutateAsync,
+    resendAlert: resendAlertMutation.mutateAsync,
+    isResendingId: resendAlertMutation.isPending
+      ? (resendAlertMutation.variables as string | undefined)
+      : undefined,
   };
 }
