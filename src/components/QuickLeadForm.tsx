@@ -99,14 +99,19 @@ const QuickLeadForm = () => {
   // Submit the form after captcha verification
   const submitForm = useCallback(async (token: string) => {
     const formData = formDataRef.current;
+  const submitForm = useCallback(async (token: string) => {
+    const formData = formDataRef.current;
     if (!formData) {
       setIsSubmitting(false);
       return;
     }
-
+    // Second layer of protection: only one network call per attempt.
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
 
     try {
-      const { data, error } = await supabase.functions.invoke("submit-lead", {
+      const { error } = await supabase.functions.invoke("submit-lead", {
+        headers: idempotencyHeaders(IDEMPOTENCY_SCOPE),
         body: {
           name: formData.name,
           whatsapp_number: formData.phone,
@@ -124,6 +129,9 @@ const QuickLeadForm = () => {
 
       if (error) throw error;
 
+      // Attempt completed → the next submission is a genuinely new one.
+      clearIdempotencyKey(IDEMPOTENCY_SCOPE);
+
       trackConversion({
         event: "contact_form_submit",
         source: "quick_form_homepage",
@@ -137,6 +145,7 @@ const QuickLeadForm = () => {
 
       setTimeout(() => {
         setName("");
+
         setPhone("");
         setPropertyType("");
         setListingUrl("");
