@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/securityHeaders.ts";
+import { beginIdempotent } from "../_shared/idempotency.ts";
+
 
 function validateString(value: unknown, maxLength: number): string {
   if (typeof value !== "string") return "";
