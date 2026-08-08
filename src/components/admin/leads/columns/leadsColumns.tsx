@@ -68,6 +68,8 @@ export const LeadTableRow = ({
   onToggleRead,
   onDelete,
   onFollowUpChange,
+  onShowActivity,
+
 }: Props) => {
   const dateLocale = labels.language === "ro" ? ro : enUS;
 
