@@ -107,25 +107,34 @@ Deno.serve(async (req) => {
     )
   }
 
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
+  // Only internal callers (pg_cron / triggers) may run the queue worker.
+  // Requires the service role key presented either as x-webhook-secret or as
+  // an Authorization: Bearer token, compared with constant-time equality.
+  // Never trust unverified JWT claims.
+  const authHeader = req.headers.get('Authorization') || ''
+  const bearer = authHeader.startsWith('Bearer ')
+    ? authHeader.slice('Bearer '.length).trim()
+    : ''
+  const webhookSecret = req.headers.get('x-webhook-secret') || ''
+
+  const timingSafeEqual = (a: string, b: string): boolean => {
+    if (!a || !b || a.length !== b.length) return false
+    let r = 0
+    for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i)
+    return r === 0
+  }
+
+  const authorized =
+    timingSafeEqual(webhookSecret, supabaseServiceKey) ||
+    timingSafeEqual(bearer, supabaseServiceKey)
+
+  if (!authorized) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
     )
   }
 
-  // Defense in depth: verify_jwt=true already requires a valid JWT at the
-  // gateway layer. This adds an explicit role check so only service-role
-  // callers can trigger queue processing.
-  const token = authHeader.slice('Bearer '.length).trim()
-  const claims = parseJwtClaims(token)
-  if (claims?.role !== 'service_role') {
-    return new Response(
-      JSON.stringify({ error: 'Forbidden' }),
-      { status: 403, headers: { 'Content-Type': 'application/json' } }
-    )
-  }
 
   const supabase = createClient<any>(supabaseUrl, supabaseServiceKey)
 
