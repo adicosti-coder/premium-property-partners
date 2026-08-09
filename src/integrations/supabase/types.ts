@@ -4429,36 +4429,81 @@ export type Database = {
         }
         Relationships: []
       }
+      property_vision_errors: {
+        Row: {
+          created_at: string
+          error: string | null
+          fallback_used: boolean
+          id: string
+          images_count: number | null
+          model: string | null
+          prospect_id: string | null
+          stage: string
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          fallback_used?: boolean
+          id?: string
+          images_count?: number | null
+          model?: string | null
+          prospect_id?: string | null
+          stage: string
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          fallback_used?: boolean
+          id?: string
+          images_count?: number | null
+          model?: string | null
+          prospect_id?: string | null
+          stage?: string
+          status_code?: number | null
+        }
+        Relationships: []
+      }
       property_vision_settings: {
         Row: {
+          auto_outbound_enabled: boolean
           auto_threshold: number
           cache_enabled: boolean
           cache_ttl_days: number
           created_at: string
           id: number
           max_images: number
+          outbound_template: string
+          outbound_threshold: number
           updated_at: string
           updated_by: string | null
           vision_enabled: boolean
         }
         Insert: {
+          auto_outbound_enabled?: boolean
           auto_threshold?: number
           cache_enabled?: boolean
           cache_ttl_days?: number
           created_at?: string
           id?: number
           max_images?: number
+          outbound_template?: string
+          outbound_threshold?: number
           updated_at?: string
           updated_by?: string | null
           vision_enabled?: boolean
         }
         Update: {
+          auto_outbound_enabled?: boolean
           auto_threshold?: number
           cache_enabled?: boolean
           cache_ttl_days?: number
           created_at?: string
           id?: number
           max_images?: number
+          outbound_template?: string
+          outbound_threshold?: number
           updated_at?: string
           updated_by?: string | null
           vision_enabled?: boolean
@@ -9654,6 +9699,20 @@ export type Database = {
           source: string
           title: string
           updated_at: string
+        }[]
+      }
+      get_quality_override_audit: {
+        Args: { _days?: number }
+        Returns: {
+          ai_overrated_pct: number
+          ai_underrated_pct: number
+          avg_abs_delta: number
+          avg_ai_score: number
+          avg_manual_score: number
+          avg_signed_delta: number
+          prospects_touched: number
+          total_overrides: number
+          within_5_pct: number
         }[]
       }
       get_shared_comparison: {
