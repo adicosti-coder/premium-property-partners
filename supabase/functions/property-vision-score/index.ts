@@ -115,10 +115,35 @@ Deno.serve(async (req) => {
     .maybeSingle();
   const settings: VisionSettings = { ...DEFAULT_SETTINGS, ...(settingsRow || {}) };
 
+  /**
+   * Observability: every vision failure is logged so Admin can see when the
+   * multimodal model is degraded. `fallback_used` marks the cases where the
+   * prospect keeps its text-only lead score instead of being blocked.
+   */
+  const logVisionError = async (
+    stage: string,
+    opts: { status?: number | null; error?: unknown; images?: number; fallback?: boolean } = {},
+  ) => {
+    try {
+      await supabase.from("property_vision_errors").insert({
+        prospect_id: prospectId,
+        stage,
+        status_code: opts.status ?? null,
+        error: opts.error ? String(opts.error).slice(0, 1000) : null,
+        images_count: opts.images ?? null,
+        fallback_used: opts.fallback ?? true,
+        model: VISION_MODEL,
+      });
+    } catch (e) {
+      console.error("[property-vision-score] logVisionError failed:", e);
+    }
+  };
+
   // Kill-switch: automatic runs stop, an explicit admin click still works.
   if (!settings.vision_enabled && internal) {
     return json({ skipped: "vision_disabled", prospect_id: prospectId });
   }
+
 
   try {
     const { data: prospect, error: fetchErr } = await supabase
