@@ -5,6 +5,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
 import { exportInvestmentCatalogPdf } from "@/utils/exportInvestmentCatalogPdf";
 import SEOHead from "@/components/SEOHead";
+import { FINANCIAL_SERVICE_SCHEMA } from "@/lib/orgIdentity";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOFooterText from "@/components/SEOFooterText";
@@ -340,6 +341,7 @@ const CatalogInvestitii = () => {
         title={t.title}
         description={t.subtitle}
         url={CATALOG_URL}
+        jsonLd={FINANCIAL_SERVICE_SCHEMA as unknown as Record<string, unknown>}
         breadcrumbItems={breadcrumbItems}
       />
       <Header />
