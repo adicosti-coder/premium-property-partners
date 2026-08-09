@@ -7,7 +7,7 @@ const corsHeaders = {
   "Content-Type": "application/xml; charset=utf-8",
 };
 
-const BASE_URL = "https://www.realtrust.ro";
+const BASE_URL = "https://realtrust.ro";
 
 const escapeXml = (str: string) =>
   str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -35,7 +35,14 @@ serve(async (req: Request) => {
       .order("published_at", { ascending: false });
 
     const STORAGE_BASE = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/blog-images`;
-    const today = new Date().toISOString().split("T")[0];
+    /** Newest published/updated article date — page-specific lastmod for the blog hub. */
+    const articleDate = (a: { updated_at?: string | null; published_at?: string | null; created_at?: string | null }) =>
+      (a.updated_at || a.published_at || a.created_at || "").split("T")[0];
+    const newestArticleDate = (articles ?? [])
+      .map(articleDate)
+      .filter(Boolean)
+      .sort()
+      .pop();
 
     const slugifyLocation = (input: string): string =>
       input
@@ -52,7 +59,8 @@ serve(async (req: Request) => {
       if (!a.geo_location) continue;
       const s = slugifyLocation(a.geo_location);
       if (!s) continue;
-      const d = (a.updated_at || a.published_at || a.created_at || today).split("T")[0];
+      const d = articleDate(a);
+      if (!d) continue;
       const prev = locationLastmod.get(s);
       if (!prev || d > prev) locationLastmod.set(s, d);
     }
@@ -65,8 +73,8 @@ serve(async (req: Request) => {
 
     // Blog hub
     xml += `  <url>
-    <loc>${BASE_URL}/blog</loc>
-    <lastmod>${today}</lastmod>
+    <loc>${BASE_URL}/blog</loc>${newestArticleDate ? `
+    <lastmod>${newestArticleDate}</lastmod>` : ""}
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -76,7 +84,6 @@ serve(async (req: Request) => {
     for (const slug of CATEGORY_SLUGS) {
       xml += `  <url>
     <loc>${BASE_URL}/blog/categorie/${slug}</loc>
-    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -97,7 +104,7 @@ serve(async (req: Request) => {
 
     // Articles
     for (const a of articles ?? []) {
-      const lastmod = (a.updated_at || a.published_at || a.created_at || new Date().toISOString()).split("T")[0];
+      const lastmod = articleDate(a);
       let imageTag = "";
       const rawImage = (a as { main_image_url?: string | null }).main_image_url || a.cover_image;
       if (rawImage) {
@@ -117,8 +124,8 @@ serve(async (req: Request) => {
     <xhtml:link rel="alternate" hreflang="en-US" href="${articleLoc}"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="${articleLoc}"/>`;
       xml += `  <url>
-    <loc>${articleLoc}</loc>
-    <lastmod>${lastmod}</lastmod>
+    <loc>${articleLoc}</loc>${lastmod ? `
+    <lastmod>${lastmod}</lastmod>` : ""}
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>${hreflangTags}${imageTag}
   </url>
