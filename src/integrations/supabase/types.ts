@@ -1404,6 +1404,57 @@ export type Database = {
         }
         Relationships: []
       }
+      conversion_test_runs: {
+        Row: {
+          capi_event_id: string | null
+          capi_http_status: number | null
+          capi_response: Json | null
+          created_at: string
+          created_by: string | null
+          datalayer_fired: boolean
+          dry_run: boolean
+          event_id: string
+          event_id_matched: boolean
+          event_name: string
+          ga4_fired: boolean
+          hashed_fields: string[]
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          capi_event_id?: string | null
+          capi_http_status?: number | null
+          capi_response?: Json | null
+          created_at?: string
+          created_by?: string | null
+          datalayer_fired?: boolean
+          dry_run?: boolean
+          event_id: string
+          event_id_matched?: boolean
+          event_name: string
+          ga4_fired?: boolean
+          hashed_fields?: string[]
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          capi_event_id?: string | null
+          capi_http_status?: number | null
+          capi_response?: Json | null
+          created_at?: string
+          created_by?: string | null
+          datalayer_fired?: boolean
+          dry_run?: boolean
+          event_id?: string
+          event_id_matched?: boolean
+          event_name?: string
+          ga4_fired?: boolean
+          hashed_fields?: string[]
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       cron_job_registry: {
         Row: {
           description: string | null

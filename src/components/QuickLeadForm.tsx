@@ -12,7 +12,7 @@ import { isValidInternationalPhone } from "@/utils/phoneCountryDetector";
 import PhoneInputWithCountry from "./PhoneInputWithCountry";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
-import { withCampaignTracking, campaignSourceSuffix } from "@/lib/campaignAttribution";
+import { withCampaignTracking, campaignSourceSuffix, getCtaVariant } from "@/lib/campaignAttribution";
 import { trackConversion } from "@/lib/conversionTracking";
 import { clearIdempotencyKey, idempotencyHeaders } from "@/lib/idempotency";
 
@@ -137,6 +137,7 @@ const QuickLeadForm = () => {
         // Hashed server-side for Meta advanced matching; never stored raw.
         name: formData.name,
         phone: formData.phone,
+        cta_variant: getCtaVariant(),
       });
 
 

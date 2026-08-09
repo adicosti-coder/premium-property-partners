@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
-import { withCampaignTracking } from "@/lib/campaignAttribution";
+import { withCampaignTracking, getCtaVariant } from "@/lib/campaignAttribution";
 import { toast } from "sonner";
 import { trackCriticalConversion } from "@/lib/conversionTracking";
 
@@ -268,6 +268,7 @@ const PreCalcMiniForm = ({
         apartment_type: data.apartmentType,
         city: data.city,
         name: data.name,
+        cta_variant: getCtaVariant(),
       });
     } catch (err) {
       console.error("[PreCalcMiniForm] unexpected error:", err);
@@ -300,7 +301,7 @@ const PreCalcMiniForm = ({
     if (!result) return;
 
     toast.success(t.successWhatsapp);
-    trackCriticalConversion("WhatsApp_Click", { source: `${source}_whatsapp` });
+    trackCriticalConversion("WhatsApp_Click", { source: `${source}_whatsapp`, cta_variant: getCtaVariant() });
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(result.message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
     setSubmitting(false);

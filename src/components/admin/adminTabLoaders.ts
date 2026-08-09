@@ -13,6 +13,8 @@ const loaders: Record<string, Loader> = {
   "ai-cache": () => import("@/components/admin/AICacheManager"),
   leads: () => import("@/components/admin/LeadsManager"),
   "leads-analytics": () => import("@/components/admin/LeadsAnalyticsDashboard"),
+  "tracking-qa": () => import("@/components/admin/TrackingQAPanel"),
+
   bookings: () => import("@/components/admin/BookingManager"),
   cazare: () => import("@/components/admin/CazareManager"),
   properties: () => import("@/components/admin/PropertyManager"),

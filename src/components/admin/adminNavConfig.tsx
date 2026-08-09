@@ -87,6 +87,8 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     icon: BarChart3,
     items: [
       { value: "leads-analytics", label: "Funnel Lead-uri", icon: BarChart3 },
+      { value: "tracking-qa", label: "Validare Tracking", icon: Activity, keywords: ["ga4", "meta", "capi", "pixel", "conversii", "test", "dry run"] },
+
       { value: "funnel-analytics", label: "Funnel", icon: Target },
       { value: "cta-analytics", label: "CTA Analytics", icon: MousePointerClick },
       { value: "blog-cta-ab", label: "Blog CTA A/B", icon: FlaskConical },

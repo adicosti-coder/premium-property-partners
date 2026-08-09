@@ -11,6 +11,7 @@
 
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.23.8";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 const GRAPH_VERSION = "v21.0";
 
@@ -28,7 +29,11 @@ const BodySchema = z.object({
   name: z.string().max(160).optional(),
   fbp: z.string().max(200).optional(),
   fbc: z.string().max(400).optional(),
+  /** Admin-only QA mode: forces a Meta test_event_code and returns diagnostics. */
+  dry_run: z.boolean().optional().default(false),
+  test_event_code: z.string().max(60).optional(),
 });
+
 
 const sha256 = async (value: string): Promise<string> => {
   const bytes = new TextEncoder().encode(value);
@@ -64,12 +69,7 @@ Deno.serve(async (req) => {
 
   const pixelId = Deno.env.get("META_PIXEL_ID");
   const accessToken = Deno.env.get("META_CAPI_ACCESS_TOKEN");
-  const testEventCode = Deno.env.get("META_TEST_EVENT_CODE");
-
-  // Not configured yet → succeed quietly so the frontend never shows errors.
-  if (!pixelId || !accessToken) {
-    return json({ skipped: "meta_capi_not_configured" });
-  }
+  const envTestEventCode = Deno.env.get("META_TEST_EVENT_CODE");
 
   let raw: unknown;
   try {
@@ -84,6 +84,28 @@ Deno.serve(async (req) => {
   }
   const body = parsed.data;
 
+  // Dry-run (QA) mode is admin-only — it can force a Meta test event.
+  if (body.dry_run) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
+
+  // Not configured yet → succeed quietly so the frontend never shows errors,
+  // but a dry-run must surface the misconfiguration explicitly.
+  if (!pixelId || !accessToken) {
+    return body.dry_run
+      ? json({
+          ok: false,
+          dry_run: true,
+          configured: false,
+          reason: "meta_capi_not_configured",
+          missing: [!pixelId && "META_PIXEL_ID", !accessToken && "META_CAPI_ACCESS_TOKEN"].filter(Boolean),
+        }, 200)
+      : json({ skipped: "meta_capi_not_configured" });
+  }
+
+  const testEventCode = body.dry_run ? (body.test_event_code || envTestEventCode) : envTestEventCode;
+
   // Client IP + UA improve match quality; both come from the request itself.
   const clientIp =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -92,15 +114,29 @@ Deno.serve(async (req) => {
   const userAgent = req.headers.get("user-agent") ?? undefined;
 
   const userData: Record<string, unknown> = {};
-  if (body.email) userData.em = [await sha256(normalizeEmail(body.email))];
+  const hashedFields: string[] = [];
+
+  if (body.email) {
+    userData.em = [await sha256(normalizeEmail(body.email))];
+    hashedFields.push("em");
+  }
   if (body.phone) {
     const normalized = normalizePhone(body.phone);
-    if (normalized.length >= 8) userData.ph = [await sha256(normalized)];
+    if (normalized.length >= 8) {
+      userData.ph = [await sha256(normalized)];
+      hashedFields.push("ph");
+    }
   }
   if (body.name) {
     const parts = body.name.trim().toLowerCase().split(/\s+/);
-    if (parts[0]) userData.fn = [await sha256(parts[0])];
-    if (parts.length > 1) userData.ln = [await sha256(parts[parts.length - 1])];
+    if (parts[0]) {
+      userData.fn = [await sha256(parts[0])];
+      hashedFields.push("fn");
+    }
+    if (parts.length > 1) {
+      userData.ln = [await sha256(parts[parts.length - 1])];
+      hashedFields.push("ln");
+    }
   }
   if (body.fbp) userData.fbp = body.fbp;
   if (body.fbc) userData.fbc = body.fbc;
@@ -140,10 +176,35 @@ Deno.serve(async (req) => {
     const text = await response.text();
     if (!response.ok) {
       console.error(`[meta-conversions] Meta rejected event [${response.status}]: ${text}`);
-      return json({ error: "Meta request failed", status: response.status, details: text }, response.status);
+      return json(
+        {
+          error: "Meta request failed",
+          status: response.status,
+          details: text,
+          ...(body.dry_run
+            ? { dry_run: true, configured: true, event_id: body.event_id, hashed_fields: hashedFields }
+            : {}),
+        },
+        // A dry-run always answers 200 so the QA panel can render the failure.
+        body.dry_run ? 200 : response.status,
+      );
     }
 
-    return json({ ok: true, event_id: body.event_id, meta: text ? JSON.parse(text) : null });
+    return json({
+      ok: true,
+      event_id: body.event_id,
+      status: response.status,
+      meta: text ? JSON.parse(text) : null,
+      ...(body.dry_run
+        ? {
+            dry_run: true,
+            configured: true,
+            hashed_fields: hashedFields,
+            test_event_code: testEventCode ?? null,
+          }
+        : {}),
+    });
+
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[meta-conversions] unexpected error:", message);
