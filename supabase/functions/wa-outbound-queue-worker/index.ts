@@ -92,7 +92,8 @@ Deno.serve(async (req) => {
         type: "warning",
         title: "WhatsApp outbound pus pe pauză automat",
         message: `Protecția numărului s-a activat: ${reason}. ${JSON.stringify(detail)}`,
-        link: "/admin/whatsapp-queue",
+        action_url: "/admin/whatsapp-queue",
+        action_label: "Vezi coada",
       }));
       if (rows.length) await supabase.from("user_notifications").insert(rows);
     } catch (e) {
