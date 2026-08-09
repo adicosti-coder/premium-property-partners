@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.notify_indexnow_on_content_change() FROM PUBLIC, anon, authenticated;

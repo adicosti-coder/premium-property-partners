@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { toast } from "sonner";
+import { storageImage, storageImageSrcSet } from "@/utils/supabaseImage";
 import {
   TrendingUp, Building, Star, ArrowRight, Download, MapPin,
   BedDouble, Bath, Users, Euro, CheckCircle2, Shield, BarChart3,
@@ -851,8 +852,12 @@ const PropertyCard = ({ property, t, index }: { property: Property; t: Record<st
       <div className="relative h-48 overflow-hidden bg-muted">
         {currentImageSrc ? (
           <img
-            src={currentImageSrc}
+            src={storageImage(currentImageSrc, { width: 400 })}
+            srcSet={storageImageSrcSet(currentImageSrc)}
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
             alt={property.name}
+            width={400}
+            height={192}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             loading="lazy"
             decoding="async"

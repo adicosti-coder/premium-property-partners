@@ -37,6 +37,7 @@ import InvestorGuideButton from "@/components/InvestorGuideButton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Download, HelpCircle } from "lucide-react";
+import { storageImage, storageImageSrcSet } from "@/utils/supabaseImage";
 
 const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
@@ -230,7 +231,8 @@ const Investitii = () => {
         ]}
       />
       <Header />
-      
+
+      <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
           summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net țintă de 9,4% calculat pe ipoteze publice (ocupare 75%, deducere 27%). Due diligence complet, administrare profesională inclusă, raportare lunară."
@@ -393,8 +395,14 @@ const Investitii = () => {
                           const src = imgPath.startsWith("http") ? imgPath : `https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/${imgPath}`;
                           return (
                             <img
-                              src={src}
+                              src={storageImage(src, { width: 400 })}
+                              srcSet={storageImageSrcSet(src)}
+                              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                               alt={`${property.name} — ${language === "ro" ? "apartament investiție" : "investment apartment"} ${property.location}`}
+                              width={400}
+                              height={300}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                             />
                           );
@@ -682,6 +690,7 @@ const Investitii = () => {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Analysis Request Modal */}
       <InvestmentAnalysisModal
