@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, memo } from "react";
 import { cloudinaryUrl, cloudinarySrcSet } from "@/utils/cloudinaryUrl";
+import { storageImage, storageImageSrcSet } from "@/utils/supabaseImage";
 import { isGoogleHostedImage, resolveExternalImageUrl } from "@/utils/resolveExternalImageUrl";
 
 interface OptimizedImageProps {
@@ -95,9 +96,22 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   // Proxy Google Places images through our edge function
   const resolvedSrc = hasSrc ? resolveExternalImageUrl(safeSrc) : "";
 
-  // Build Cloudinary-optimised src (f_auto, q_auto, responsive width)
-  const cdnSrc = isSkipCdn ? resolvedSrc : cloudinaryUrl(safeSrc, { width });
-  const cdnSrcSet = isSkipCdn ? undefined : cloudinarySrcSet(safeSrc);
+  // Supabase Storage: transformăm la edge (render/image) în loc să trimitem
+  // originalul de ~2 MB prin Cloudinary fetch — un hop mai puțin și un fișier
+  // de ~10x mai mic pentru exact aceeași dimensiune afișată.
+  const isStorageImage = hasSrc && safeSrc.includes("/storage/v1/object/public/");
+
+  // Build optimised src (Supabase render/image sau Cloudinary f_auto/q_auto)
+  const cdnSrc = isStorageImage
+    ? storageImage(safeSrc, { width: width ?? 800 })
+    : isSkipCdn
+      ? resolvedSrc
+      : cloudinaryUrl(safeSrc, { width });
+  const cdnSrcSet = isStorageImage
+    ? storageImageSrcSet(safeSrc)
+    : isSkipCdn
+      ? undefined
+      : cloudinarySrcSet(safeSrc);
 
   // CLS guard: if neither explicit dimensions nor an aspectRatio are supplied,
   // reserve a 4/3 box so the container never collapses to 0px before the image
