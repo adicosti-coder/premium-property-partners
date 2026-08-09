@@ -201,10 +201,17 @@ Returnează prin tool calling.`;
       .eq("id", prospectId);
     if (updErr) throw updErr;
 
-    // Auto multimodal photo analysis for promising prospects (>= 70).
-    // Fire-and-forget: never blocks or fails the text scoring.
+    // Auto multimodal photo analysis for promising prospects.
+    // Threshold + kill-switch are admin-configurable (property_vision_settings).
     let visionTriggered = false;
-    if (leadScore >= 70) {
+    const { data: visionSettings } = await supabase
+      .from("property_vision_settings")
+      .select("vision_enabled, auto_threshold")
+      .eq("id", 1)
+      .maybeSingle();
+    const visionEnabled = visionSettings?.vision_enabled ?? true;
+    const visionThreshold = Number(visionSettings?.auto_threshold ?? 70);
+    if (visionEnabled && leadScore >= visionThreshold) {
       visionTriggered = true;
       fetch(`${SUPABASE_URL}/functions/v1/property-vision-score`, {
         method: "POST",
@@ -224,6 +231,7 @@ Returnează prin tool calling.`;
       category: parsed.category,
       will_auto_call: leadScore > 80,
       vision_triggered: visionTriggered,
+      vision_threshold: visionThreshold,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (e: any) {

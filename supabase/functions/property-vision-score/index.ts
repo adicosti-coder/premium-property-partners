@@ -29,7 +29,33 @@ const json = (body: unknown, status = 200) =>
 // Multimodal model (Lovable AI Gateway). Kimi K3 is not available on the
 // gateway; this is the supported multimodal equivalent.
 const VISION_MODEL = "google/gemini-3.6-flash";
-const MAX_IMAGES = 5;
+const DEFAULT_MAX_IMAGES = 5;
+const DEFAULT_AUTO_THRESHOLD = 70;
+
+interface VisionSettings {
+  vision_enabled: boolean;
+  auto_threshold: number;
+  cache_enabled: boolean;
+  cache_ttl_days: number;
+  max_images: number;
+}
+
+const DEFAULT_SETTINGS: VisionSettings = {
+  vision_enabled: true,
+  auto_threshold: DEFAULT_AUTO_THRESHOLD,
+  cache_enabled: true,
+  cache_ttl_days: 90,
+  max_images: DEFAULT_MAX_IMAGES,
+};
+
+/** Stable fingerprint of the analysed image set (order-independent) + model. */
+async function imagesHash(urls: string[], model: string): Promise<string> {
+  const payload = `${model}::${[...urls].sort().join("|")}`;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 interface VisionResult {
   quality_score: number;
@@ -82,6 +108,18 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   );
 
+  const { data: settingsRow } = await supabase
+    .from("property_vision_settings")
+    .select("vision_enabled, auto_threshold, cache_enabled, cache_ttl_days, max_images")
+    .eq("id", 1)
+    .maybeSingle();
+  const settings: VisionSettings = { ...DEFAULT_SETTINGS, ...(settingsRow || {}) };
+
+  // Kill-switch: automatic runs stop, an explicit admin click still works.
+  if (!settings.vision_enabled && internal) {
+    return json({ skipped: "vision_disabled", prospect_id: prospectId });
+  }
+
   try {
     const { data: prospect, error: fetchErr } = await supabase
       .from("prospect_listings")
@@ -100,7 +138,7 @@ Deno.serve(async (req) => {
     const images = (Array.isArray(prospect.images) ? prospect.images : [])
       .filter((u: unknown): u is string => typeof u === "string" && u.startsWith("http"))
       .filter((u: string) => isUrlAllowed(u).ok)
-      .slice(0, MAX_IMAGES);
+      .slice(0, settings.max_images);
 
     if (images.length === 0) {
       return json({ error: "no_usable_images", prospect_id: prospectId }, 422);
@@ -115,6 +153,41 @@ Deno.serve(async (req) => {
       prospect.year_built ? `An construcție: ${prospect.year_built}` : null,
     ].filter(Boolean).join(" | ");
 
+    const hash = await imagesHash(images, VISION_MODEL);
+    const useCache = settings.cache_enabled;
+
+    let analysis: Record<string, unknown> | null = null;
+    let qualityScore = 0;
+    let hotelReadiness = 0;
+    let fromCache = false;
+
+    if (useCache) {
+      const freshSince = new Date(
+        Date.now() - settings.cache_ttl_days * 86_400_000,
+      ).toISOString();
+      const { data: cached } = await supabase
+        .from("property_vision_cache")
+        .select("id, quality_score, hotel_readiness, analysis, hit_count, created_at")
+        .eq("images_hash", hash)
+        .gte("created_at", freshSince)
+        .maybeSingle();
+
+      if (cached) {
+        fromCache = true;
+        qualityScore = clamp(cached.quality_score, 0, 100);
+        hotelReadiness = clamp(cached.hotel_readiness, 0, 100);
+        analysis = {
+          ...((cached.analysis || {}) as Record<string, unknown>),
+          from_cache: true,
+        };
+        await supabase
+          .from("property_vision_cache")
+          .update({ hit_count: (cached.hit_count ?? 0) + 1, last_used_at: new Date().toISOString() })
+          .eq("id", cached.id);
+      }
+    }
+
+    if (!fromCache) {
     const aiRes = await fetchWithRetry(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -208,9 +281,9 @@ Deno.serve(async (req) => {
       return json({ error: "invalid_tool_arguments" }, 502);
     }
 
-    const qualityScore = clamp(parsed.quality_score, 0, 100);
-    const hotelReadiness = clamp(parsed.hotel_readiness, 0, 100);
-    const analysis = {
+    qualityScore = clamp(parsed.quality_score, 0, 100);
+    hotelReadiness = clamp(parsed.hotel_readiness, 0, 100);
+    analysis = {
       quality_score: qualityScore,
       condition: CONDITIONS.includes(String(parsed.condition)) ? parsed.condition : "bun",
       finishes: FINISHES.includes(String(parsed.finishes)) ? parsed.finishes : "standard",
@@ -226,6 +299,23 @@ Deno.serve(async (req) => {
       model: VISION_MODEL,
       analyzed_by: internal ? "auto" : actorId,
     };
+
+      if (useCache) {
+        await supabase.from("property_vision_cache").upsert(
+          {
+            images_hash: hash,
+            quality_score: qualityScore,
+            hotel_readiness: hotelReadiness,
+            images_analyzed: images.length,
+            model: VISION_MODEL,
+            analysis,
+            hit_count: 0,
+            last_used_at: new Date().toISOString(),
+          },
+          { onConflict: "images_hash" },
+        );
+      }
+    }
 
     // Blend the visual signal into the AI lead score: ±12 points, centred on 50.
     const baseLeadScore = clamp(prospect.lead_score ?? 0, 0, 100);
@@ -263,6 +353,7 @@ Deno.serve(async (req) => {
       lead_score: blendedLeadScore,
       visual_adjustment: visualAdjustment,
       images_analyzed: images.length,
+      cached: fromCache,
       analysis,
     });
   } catch (e) {

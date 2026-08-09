@@ -9,7 +9,10 @@ import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Sparkles, RefreshCw, Loader2, Save, ImageIcon, CheckCircle2, AlertCircle } from "lucide-react";
-import PropertyQualityScoreCard, { type PropertyQualityAnalysis } from "./PropertyQualityScoreCard";
+import PropertyQualityScoreCard, {
+  type PropertyQualityAnalysis,
+  type PropertyQualityOverride,
+} from "./PropertyQualityScoreCard";
 
 
 export interface EnrichedImage {
@@ -34,6 +37,7 @@ interface Props {
     quality_score?: number | null;
     quality_analysis?: PropertyQualityAnalysis | null;
     quality_analyzed_at?: string | null;
+    quality_override?: PropertyQualityOverride | null;
 
   };
   onUpdated?: (patch: Record<string, unknown>) => void;
@@ -105,6 +109,7 @@ export default function ProspectEnrichmentPanel({ prospect, onUpdated }: Props) 
       qualityScore={prospect.quality_score ?? null}
       qualityAnalysis={prospect.quality_analysis ?? null}
       qualityAnalyzedAt={prospect.quality_analyzed_at ?? null}
+      qualityOverride={prospect.quality_override ?? null}
       onUpdated={onUpdated}
     />
     <Card className="border-amber-200 dark:border-amber-800">
