@@ -9091,6 +9091,10 @@ export type Database = {
           escalation_threshold: number
           id: number
           office_hours_only: boolean
+          outbound_max_delay_seconds: number
+          outbound_max_per_day: number
+          outbound_max_per_hour: number
+          outbound_min_delay_seconds: number
           paused_reason: string | null
           system_prompt: string
           updated_at: string
@@ -9100,6 +9104,10 @@ export type Database = {
           escalation_threshold?: number
           id?: number
           office_hours_only?: boolean
+          outbound_max_delay_seconds?: number
+          outbound_max_per_day?: number
+          outbound_max_per_hour?: number
+          outbound_min_delay_seconds?: number
           paused_reason?: string | null
           system_prompt?: string
           updated_at?: string
@@ -9109,6 +9117,10 @@ export type Database = {
           escalation_threshold?: number
           id?: number
           office_hours_only?: boolean
+          outbound_max_delay_seconds?: number
+          outbound_max_per_day?: number
+          outbound_max_per_hour?: number
+          outbound_min_delay_seconds?: number
           paused_reason?: string | null
           system_prompt?: string
           updated_at?: string
