@@ -69,12 +69,7 @@ Deno.serve(async (req) => {
 
   const pixelId = Deno.env.get("META_PIXEL_ID");
   const accessToken = Deno.env.get("META_CAPI_ACCESS_TOKEN");
-  const testEventCode = Deno.env.get("META_TEST_EVENT_CODE");
-
-  // Not configured yet → succeed quietly so the frontend never shows errors.
-  if (!pixelId || !accessToken) {
-    return json({ skipped: "meta_capi_not_configured" });
-  }
+  const envTestEventCode = Deno.env.get("META_TEST_EVENT_CODE");
 
   let raw: unknown;
   try {
@@ -89,6 +84,28 @@ Deno.serve(async (req) => {
   }
   const body = parsed.data;
 
+  // Dry-run (QA) mode is admin-only — it can force a Meta test event.
+  if (body.dry_run) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
+
+  // Not configured yet → succeed quietly so the frontend never shows errors,
+  // but a dry-run must surface the misconfiguration explicitly.
+  if (!pixelId || !accessToken) {
+    return body.dry_run
+      ? json({
+          ok: false,
+          dry_run: true,
+          configured: false,
+          reason: "meta_capi_not_configured",
+          missing: [!pixelId && "META_PIXEL_ID", !accessToken && "META_CAPI_ACCESS_TOKEN"].filter(Boolean),
+        }, 200)
+      : json({ skipped: "meta_capi_not_configured" });
+  }
+
+  const testEventCode = body.dry_run ? (body.test_event_code || envTestEventCode) : envTestEventCode;
+
   // Client IP + UA improve match quality; both come from the request itself.
   const clientIp =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -97,6 +114,7 @@ Deno.serve(async (req) => {
   const userAgent = req.headers.get("user-agent") ?? undefined;
 
   const userData: Record<string, unknown> = {};
+
   if (body.email) userData.em = [await sha256(normalizeEmail(body.email))];
   if (body.phone) {
     const normalized = normalizePhone(body.phone);
