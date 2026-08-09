@@ -38,11 +38,11 @@ export function WhatsappMessagePreview({
     void (async () => {
       const { data } = await supabase
         .from("wa_templates")
-        .select("body_text")
+        .select("body_preview")
         .eq("name", item.template_name)
         .maybeSingle();
       if (!cancelled) {
-        setBody((data as { body_text?: string } | null)?.body_text ?? null);
+        setBody((data as { body_preview?: string } | null)?.body_preview ?? null);
         setLoading(false);
       }
     })();
