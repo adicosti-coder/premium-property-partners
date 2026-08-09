@@ -971,6 +971,45 @@ export type Database = {
           },
         ]
       }
+      capi_delivery_log: {
+        Row: {
+          created_at: string
+          dry_run: boolean
+          error_detail: string | null
+          event_id: string
+          event_name: string
+          event_source_url: string | null
+          http_status: number | null
+          id: string
+          ok: boolean
+          outcome: string
+        }
+        Insert: {
+          created_at?: string
+          dry_run?: boolean
+          error_detail?: string | null
+          event_id: string
+          event_name: string
+          event_source_url?: string | null
+          http_status?: number | null
+          id?: string
+          ok?: boolean
+          outcome?: string
+        }
+        Update: {
+          created_at?: string
+          dry_run?: boolean
+          error_detail?: string | null
+          event_id?: string
+          event_name?: string
+          event_source_url?: string | null
+          http_status?: number | null
+          id?: string
+          ok?: boolean
+          outcome?: string
+        }
+        Relationships: []
+      }
       captcha_logs: {
         Row: {
           created_at: string
@@ -9727,6 +9766,7 @@ export type Database = {
         Returns: boolean
       }
       check_cta_rate_limit: { Args: { p_session_id: string }; Returns: boolean }
+      cleanup_capi_delivery_log: { Args: never; Returns: undefined }
       cleanup_old_e2e_runs: { Args: never; Returns: number }
       cleanup_old_tracking_data: { Args: never; Returns: Json }
       delete_email: {
