@@ -227,5 +227,7 @@ export default function ProspectEnrichmentPanel({ prospect, onUpdated }: Props) 
         </Tabs>
       </CardContent>
     </Card>
+    </div>
   );
+
 }
