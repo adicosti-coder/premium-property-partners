@@ -120,6 +120,29 @@ Deno.serve(async (req) => {
   const TIME_BUDGET_MS = 40_000;
 
   for (const [idx, item] of queue.entries()) {
+    // ── Deduplicare: niciun mesaj activ/trimis către același număr în 72h ─────
+    const dedupSince = new Date(Date.now() - 72 * 3_600_000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("wa_outbound_queue")
+      .select("id", { count: "exact", head: true })
+      .eq("phone_normalized", item.phone_normalized)
+      .neq("id", item.id)
+      .in("status", ["sending", "sent", "replied"])
+      .gte("sent_at", dedupSince);
+
+    if ((recentCount ?? 0) > 0) {
+      await supabase
+        .from("wa_outbound_queue")
+        .update({
+          status: "cancelled",
+          last_error: "duplicat: mesaj deja trimis către acest număr în ultimele 72h",
+        })
+        .eq("id", item.id)
+        .in("status", ["pending", "failed"]);
+      results.push({ id: item.id, status: "skipped_duplicate" });
+      continue;
+    }
+
     // Jitter uman între trimiteri succesive (anti-bot Meta)
     if (idx > 0 && !force && maxDelay > 0) {
       const waitMs = (minDelay + Math.random() * (maxDelay - minDelay)) * 1000;
@@ -140,6 +163,7 @@ Deno.serve(async (req) => {
       .select("id")
       .maybeSingle();
     if (!claimed) continue;
+
 
     try {
       // Conversație (creează sau refolosește)
