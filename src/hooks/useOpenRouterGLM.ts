@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 export interface GLMMessage {
   role: "system" | "user" | "assistant";

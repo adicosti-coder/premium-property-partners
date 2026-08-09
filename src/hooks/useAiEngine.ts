@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { z, type ZodType } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 
 export type AiEngineModel =

@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { ShieldCheck, ShieldAlert, RefreshCw, Download, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 // Endpoints that must require admin auth (gated in edge functions).
 const AI_ENDPOINTS = [

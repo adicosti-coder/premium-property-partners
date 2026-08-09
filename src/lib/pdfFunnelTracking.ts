@@ -3,7 +3,7 @@
  * Records steps: lead_submitted → pdf_downloaded → thankyou_view → cta_*.
  * Insert is allowed for everyone (RLS), reads are admin-only.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 export type PdfFunnelStep =
   | "lead_submitted"

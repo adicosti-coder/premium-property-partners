@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { useAiEngine, callAiEngine } from "@/hooks/useAiEngine";
 import { TIMISOARA_LOCAL_ENTITIES } from "@/lib/timisoaraGeo";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { formatDistanceToNow } from "date-fns";
 import { ro } from "date-fns/locale";
 
