@@ -97,13 +97,31 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  if (req.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405);
-  }
-
   const pixelId = Deno.env.get("META_PIXEL_ID");
   const accessToken = Deno.env.get("META_CAPI_ACCESS_TOKEN");
   const envTestEventCode = Deno.env.get("META_TEST_EVENT_CODE");
+
+  // Admin-only configuration probe for the Admin status widget.
+  // Returns booleans only — never the secret values themselves.
+  if (req.method === "GET") {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+    return json({
+      configured: Boolean(pixelId && accessToken),
+      has_pixel_id: Boolean(pixelId),
+      has_access_token: Boolean(accessToken),
+      has_test_event_code: Boolean(envTestEventCode),
+      missing: [
+        !pixelId && "META_PIXEL_ID",
+        !accessToken && "META_CAPI_ACCESS_TOKEN",
+      ].filter(Boolean),
+      graph_version: GRAPH_VERSION,
+    });
+  }
+
+  if (req.method !== "POST") {
+    return json({ error: "Method not allowed" }, 405);
+  }
 
   let raw: unknown;
   try {
@@ -124,19 +142,32 @@ Deno.serve(async (req) => {
     if (!auth.ok) return auth.response!;
   }
 
-  // Not configured yet → succeed quietly so the frontend never shows errors,
-  // but a dry-run must surface the misconfiguration explicitly.
+  // Not configured yet → succeed quietly (HTTP 200) so the browser never sees
+  // a 4xx/5xx and client-side GA4 + Pixel remain the source of truth.
+  // A dry-run still surfaces the misconfiguration explicitly for the QA panel.
   if (!pixelId || !accessToken) {
+    const missing = [!pixelId && "META_PIXEL_ID", !accessToken && "META_CAPI_ACCESS_TOKEN"].filter(Boolean);
+    await logDelivery({
+      event_name: body.event_name,
+      event_id: body.event_id,
+      dry_run: body.dry_run,
+      ok: false,
+      http_status: null,
+      outcome: "skipped_not_configured",
+      error_detail: `missing: ${missing.join(", ")}`,
+      event_source_url: body.event_source_url ?? null,
+    });
     return body.dry_run
       ? json({
           ok: false,
           dry_run: true,
           configured: false,
           reason: "meta_capi_not_configured",
-          missing: [!pixelId && "META_PIXEL_ID", !accessToken && "META_CAPI_ACCESS_TOKEN"].filter(Boolean),
+          missing,
         }, 200)
-      : json({ skipped: "meta_capi_not_configured" });
+      : json({ skipped: "meta_capi_not_configured", configured: false });
   }
+
 
   const testEventCode = body.dry_run ? (body.test_event_code || envTestEventCode) : envTestEventCode;
 
