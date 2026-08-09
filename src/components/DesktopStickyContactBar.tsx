@@ -2,6 +2,8 @@ import { Phone, MessageCircle, Mail } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { cn } from "@/lib/utils";
+import { trackCriticalConversion } from "@/lib/conversionTracking";
+
 
 const DesktopStickyContactBar = () => {
   const { t } = useLanguage();
@@ -22,9 +24,11 @@ const DesktopStickyContactBar = () => {
   const handleWhatsApp = () => {
     trackWhatsApp();
     fireContactClick("whatsapp");
+    trackCriticalConversion("WhatsApp_Click", { source: "desktop_sticky_bar" });
     const message = encodeURIComponent(t.floatingWhatsapp.message);
     window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
+
 
   const handleEmail = () => {
     trackEmail();

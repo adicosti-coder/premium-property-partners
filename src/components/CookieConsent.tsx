@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Shield, Settings, X } from "lucide-react";
+import { initMetaPixel } from "@/lib/conversionTracking";
 
 const COOKIE_CONSENT_KEY = "cookie_consent_v2";
 
@@ -25,6 +26,9 @@ const updateConsent = (choice: ConsentChoice) => {
       ad_personalization: granted ? "granted" : "denied",
     });
   }
+
+  // Meta Pixel is an advertising vendor → only after full consent.
+  if (granted) initMetaPixel();
 };
 
 const CookieConsent = () => {

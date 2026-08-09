@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { toast } from "sonner";
+import { trackCriticalConversion } from "@/lib/conversionTracking";
 
 /**
  * PreCalcMiniForm
@@ -258,6 +259,16 @@ const PreCalcMiniForm = ({
         // reportError already fired inside the helper; keep UX moving
         console.warn("[PreCalcMiniForm] submitLead failed", result);
       }
+
+      // Critical funnel event: the visitor completed the ROI pre-calculation.
+      trackCriticalConversion("PreCalc_Completed", {
+        source,
+        value: range[1] * 12,
+        currency: "EUR",
+        apartment_type: data.apartmentType,
+        city: data.city,
+        name: data.name,
+      });
     } catch (err) {
       console.error("[PreCalcMiniForm] unexpected error:", err);
     }
@@ -289,6 +300,7 @@ const PreCalcMiniForm = ({
     if (!result) return;
 
     toast.success(t.successWhatsapp);
+    trackCriticalConversion("WhatsApp_Click", { source: `${source}_whatsapp` });
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(result.message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
     setSubmitting(false);
