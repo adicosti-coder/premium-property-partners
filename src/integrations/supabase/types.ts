@@ -887,6 +887,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_hidden: boolean
           updated_at: string
           user_id: string
         }
@@ -896,6 +897,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_hidden?: boolean
           updated_at?: string
           user_id: string
         }
@@ -905,6 +907,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_hidden?: boolean
           updated_at?: string
           user_id?: string
         }
