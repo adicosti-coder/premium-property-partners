@@ -5,6 +5,7 @@ import { RevealableField } from "@/components/admin/shared/RevealableField";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
