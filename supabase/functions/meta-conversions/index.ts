@@ -35,6 +35,39 @@ const BodySchema = z.object({
 });
 
 
+/**
+ * Best-effort delivery journal (service role).
+ * Never throws: tracking must not break because logging failed.
+ */
+const logDelivery = async (row: {
+  event_name: string;
+  event_id: string;
+  dry_run: boolean;
+  ok: boolean;
+  http_status?: number | null;
+  outcome: string;
+  error_detail?: string | null;
+  event_source_url?: string | null;
+}) => {
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return;
+  try {
+    await fetch(`${url}/rest/v1/capi_delivery_log`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(row),
+    });
+  } catch (err) {
+    console.error("[meta-conversions] delivery log failed:", err instanceof Error ? err.message : err);
+  }
+};
+
 const sha256 = async (value: string): Promise<string> => {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -42,6 +75,7 @@ const sha256 = async (value: string): Promise<string> => {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 };
+
 
 /** Meta requires normalized values before hashing. */
 const normalizeEmail = (raw: string) => raw.trim().toLowerCase();
@@ -63,13 +97,31 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
-  if (req.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405);
-  }
-
   const pixelId = Deno.env.get("META_PIXEL_ID");
   const accessToken = Deno.env.get("META_CAPI_ACCESS_TOKEN");
   const envTestEventCode = Deno.env.get("META_TEST_EVENT_CODE");
+
+  // Admin-only configuration probe for the Admin status widget.
+  // Returns booleans only — never the secret values themselves.
+  if (req.method === "GET") {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+    return json({
+      configured: Boolean(pixelId && accessToken),
+      has_pixel_id: Boolean(pixelId),
+      has_access_token: Boolean(accessToken),
+      has_test_event_code: Boolean(envTestEventCode),
+      missing: [
+        !pixelId && "META_PIXEL_ID",
+        !accessToken && "META_CAPI_ACCESS_TOKEN",
+      ].filter(Boolean),
+      graph_version: GRAPH_VERSION,
+    });
+  }
+
+  if (req.method !== "POST") {
+    return json({ error: "Method not allowed" }, 405);
+  }
 
   let raw: unknown;
   try {
@@ -90,19 +142,32 @@ Deno.serve(async (req) => {
     if (!auth.ok) return auth.response!;
   }
 
-  // Not configured yet → succeed quietly so the frontend never shows errors,
-  // but a dry-run must surface the misconfiguration explicitly.
+  // Not configured yet → succeed quietly (HTTP 200) so the browser never sees
+  // a 4xx/5xx and client-side GA4 + Pixel remain the source of truth.
+  // A dry-run still surfaces the misconfiguration explicitly for the QA panel.
   if (!pixelId || !accessToken) {
+    const missing = [!pixelId && "META_PIXEL_ID", !accessToken && "META_CAPI_ACCESS_TOKEN"].filter(Boolean);
+    await logDelivery({
+      event_name: body.event_name,
+      event_id: body.event_id,
+      dry_run: body.dry_run,
+      ok: false,
+      http_status: null,
+      outcome: "skipped_not_configured",
+      error_detail: `missing: ${missing.join(", ")}`,
+      event_source_url: body.event_source_url ?? null,
+    });
     return body.dry_run
       ? json({
           ok: false,
           dry_run: true,
           configured: false,
           reason: "meta_capi_not_configured",
-          missing: [!pixelId && "META_PIXEL_ID", !accessToken && "META_CAPI_ACCESS_TOKEN"].filter(Boolean),
+          missing,
         }, 200)
-      : json({ skipped: "meta_capi_not_configured" });
+      : json({ skipped: "meta_capi_not_configured", configured: false });
   }
+
 
   const testEventCode = body.dry_run ? (body.test_event_code || envTestEventCode) : envTestEventCode;
 
@@ -176,8 +241,19 @@ Deno.serve(async (req) => {
     const text = await response.text();
     if (!response.ok) {
       console.error(`[meta-conversions] Meta rejected event [${response.status}]: ${text}`);
+      await logDelivery({
+        event_name: body.event_name,
+        event_id: body.event_id,
+        dry_run: body.dry_run,
+        ok: false,
+        http_status: response.status,
+        outcome: "meta_rejected",
+        error_detail: text.slice(0, 2000),
+        event_source_url: body.event_source_url ?? null,
+      });
       return json(
         {
+          ok: false,
           error: "Meta request failed",
           status: response.status,
           details: text,
@@ -185,10 +261,21 @@ Deno.serve(async (req) => {
             ? { dry_run: true, configured: true, event_id: body.event_id, hashed_fields: hashedFields }
             : {}),
         },
-        // A dry-run always answers 200 so the QA panel can render the failure.
-        body.dry_run ? 200 : response.status,
+        // Always 200: the browser must never surface a tracking failure, and the
+        // QA panel reads the outcome from the body instead.
+        200,
       );
     }
+
+    await logDelivery({
+      event_name: body.event_name,
+      event_id: body.event_id,
+      dry_run: body.dry_run,
+      ok: true,
+      http_status: response.status,
+      outcome: "sent",
+      event_source_url: body.event_source_url ?? null,
+    });
 
     return json({
       ok: true,
@@ -208,6 +295,18 @@ Deno.serve(async (req) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[meta-conversions] unexpected error:", message);
-    return json({ error: "Unexpected error", details: message }, 500);
+    await logDelivery({
+      event_name: body.event_name,
+      event_id: body.event_id,
+      dry_run: body.dry_run,
+      ok: false,
+      http_status: null,
+      outcome: "network_error",
+      error_detail: message.slice(0, 2000),
+      event_source_url: body.event_source_url ?? null,
+    });
+    // 200 keeps the client silent; the delivery journal records the failure.
+    return json({ ok: false, error: "Unexpected error", details: message }, 200);
   }
 });
+
