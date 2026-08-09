@@ -479,7 +479,7 @@ const InvestmentEngineV34 = ({
                     setCapacity(range.defaultVal);
                     setNightlyRateStr(getNightlyRate(val, range.defaultVal).toString());
                   }}>
-                    <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
+                    <SelectTrigger aria-label={t.propertyType} className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -496,7 +496,7 @@ const InvestmentEngineV34 = ({
                     setCapacity(cap);
                     setNightlyRateStr(getNightlyRate(propertyType, cap).toString());
                   }}>
-                    <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
+                    <SelectTrigger aria-label={t.capacityLabel} className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -528,7 +528,7 @@ const InvestmentEngineV34 = ({
                 <div>
                   <Label className="text-xs text-foreground/80 uppercase tracking-widest font-bold">{t.occupancy}</Label>
                   <Select value={occupancy} onValueChange={setOccupancy}>
-                    <SelectTrigger className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
+                    <SelectTrigger aria-label={t.occupancy} className="mt-1 text-base font-bold text-foreground bg-background/80 border-border/60">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
