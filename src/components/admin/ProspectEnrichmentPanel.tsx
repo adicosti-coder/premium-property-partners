@@ -31,6 +31,10 @@ interface Props {
     enriched_at?: string | null;
     enrichment_error?: string | null;
     enrichment_saved_at?: string | null;
+    quality_score?: number | null;
+    quality_analysis?: PropertyQualityAnalysis | null;
+    quality_analyzed_at?: string | null;
+
   };
   onUpdated?: (patch: Record<string, unknown>) => void;
 }
