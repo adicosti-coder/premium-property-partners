@@ -4460,6 +4460,9 @@ export type Database = {
           price: number | null
           price_per_sqm: number | null
           prospect_type: string
+          quality_analysis: Json | null
+          quality_analyzed_at: string | null
+          quality_score: number | null
           rating: number | null
           rejection_reason: string | null
           retry_count: number
@@ -4550,6 +4553,9 @@ export type Database = {
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
+          quality_analysis?: Json | null
+          quality_analyzed_at?: string | null
+          quality_score?: number | null
           rating?: number | null
           rejection_reason?: string | null
           retry_count?: number
@@ -4640,6 +4646,9 @@ export type Database = {
           price?: number | null
           price_per_sqm?: number | null
           prospect_type?: string
+          quality_analysis?: Json | null
+          quality_analyzed_at?: string | null
+          quality_score?: number | null
           rating?: number | null
           rejection_reason?: string | null
           retry_count?: number

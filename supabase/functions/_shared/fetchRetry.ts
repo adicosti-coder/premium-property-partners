@@ -21,6 +21,9 @@ export interface RetryOptions {
   timeoutMs?: number;
   /** Label used in logs. */
   label?: string;
+  /** Max characters kept from the response body. Default 1000. Raise it when the
+   *  caller needs to parse the full payload (e.g. AI gateway JSON responses). */
+  maxBodyChars?: number;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -60,6 +63,7 @@ export async function fetchWithRetry(
   const maxDelayMs = opts.maxDelayMs ?? 8000;
   const timeoutMs = opts.timeoutMs ?? 10_000;
   const label = opts.label ?? "fetchWithRetry";
+  const maxBodyChars = opts.maxBodyChars ?? 1000;
 
   let lastStatus = 0;
   let lastBody = "";
@@ -72,7 +76,7 @@ export async function fetchWithRetry(
       const res = await fetch(url, { ...init, signal: controller.signal });
       clearTimeout(timer);
       lastStatus = res.status;
-      lastBody = (await res.text().catch(() => "")).slice(0, 1000);
+      lastBody = (await res.text().catch(() => "")).slice(0, maxBodyChars);
 
       if (res.ok) {
         return { ok: true, status: res.status, body: lastBody, attempts: attempt };

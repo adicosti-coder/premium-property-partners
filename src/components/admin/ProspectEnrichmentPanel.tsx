@@ -9,6 +9,8 @@ import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Sparkles, RefreshCw, Loader2, Save, ImageIcon, CheckCircle2, AlertCircle } from "lucide-react";
+import PropertyQualityScoreCard, { type PropertyQualityAnalysis } from "./PropertyQualityScoreCard";
+
 
 export interface EnrichedImage {
   original: string;
@@ -29,6 +31,10 @@ interface Props {
     enriched_at?: string | null;
     enrichment_error?: string | null;
     enrichment_saved_at?: string | null;
+    quality_score?: number | null;
+    quality_analysis?: PropertyQualityAnalysis | null;
+    quality_analyzed_at?: string | null;
+
   };
   onUpdated?: (patch: Record<string, unknown>) => void;
 }
@@ -92,7 +98,17 @@ export default function ProspectEnrichmentPanel({ prospect, onUpdated }: Props) 
   const originalImages = (prospect.images || []).slice(0, 6);
 
   return (
+    <div className="space-y-4">
+    <PropertyQualityScoreCard
+      prospectId={prospect.id}
+      imagesCount={(prospect.images || []).length}
+      qualityScore={prospect.quality_score ?? null}
+      qualityAnalysis={prospect.quality_analysis ?? null}
+      qualityAnalyzedAt={prospect.quality_analyzed_at ?? null}
+      onUpdated={onUpdated}
+    />
     <Card className="border-amber-200 dark:border-amber-800">
+
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -217,5 +233,7 @@ export default function ProspectEnrichmentPanel({ prospect, onUpdated }: Props) 
         </Tabs>
       </CardContent>
     </Card>
+    </div>
   );
+
 }

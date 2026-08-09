@@ -201,13 +201,31 @@ Returnează prin tool calling.`;
       .eq("id", prospectId);
     if (updErr) throw updErr;
 
+    // Auto multimodal photo analysis for promising prospects (>= 70).
+    // Fire-and-forget: never blocks or fails the text scoring.
+    let visionTriggered = false;
+    if (leadScore >= 70) {
+      visionTriggered = true;
+      fetch(`${SUPABASE_URL}/functions/v1/property-vision-score`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          "x-webhook-secret": SERVICE_KEY,
+        },
+        body: JSON.stringify({ prospect_id: prospectId }),
+      }).catch((e) => console.error("property-vision-score trigger failed:", e));
+    }
+
     return new Response(JSON.stringify({
       success: true,
       prospect_id: prospectId,
       lead_score: leadScore,
       category: parsed.category,
       will_auto_call: leadScore > 80,
+      vision_triggered: visionTriggered,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e: any) {
     console.error("prospect-ai-scorer error:", e);
     return new Response(JSON.stringify({ error: e.message }), {
