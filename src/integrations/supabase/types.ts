@@ -9240,17 +9240,52 @@ export type Database = {
           },
         ]
       }
+      wa_outbound_events: {
+        Row: {
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          queue_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          queue_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          queue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_outbound_events_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "wa_outbound_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_outbound_queue: {
         Row: {
           attempts: number
           conversation_id: string | null
           created_at: string
+          delivered_at: string | null
           id: string
           last_error: string | null
           lead_id: string | null
           phone_normalized: string
           priority: number
           prospect_listing_id: string | null
+          read_at: string | null
+          replied_at: string | null
           scheduled_at: string
           sent_at: string | null
           source: string | null
@@ -9259,17 +9294,21 @@ export type Database = {
           template_name: string
           template_params: Json
           updated_at: string
+          wa_message_id: string | null
         }
         Insert: {
           attempts?: number
           conversation_id?: string | null
           created_at?: string
+          delivered_at?: string | null
           id?: string
           last_error?: string | null
           lead_id?: string | null
           phone_normalized: string
           priority?: number
           prospect_listing_id?: string | null
+          read_at?: string | null
+          replied_at?: string | null
           scheduled_at?: string
           sent_at?: string | null
           source?: string | null
@@ -9278,17 +9317,21 @@ export type Database = {
           template_name: string
           template_params?: Json
           updated_at?: string
+          wa_message_id?: string | null
         }
         Update: {
           attempts?: number
           conversation_id?: string | null
           created_at?: string
+          delivered_at?: string | null
           id?: string
           last_error?: string | null
           lead_id?: string | null
           phone_normalized?: string
           priority?: number
           prospect_listing_id?: string | null
+          read_at?: string | null
+          replied_at?: string | null
           scheduled_at?: string
           sent_at?: string | null
           source?: string | null
@@ -9297,6 +9340,7 @@ export type Database = {
           template_name?: string
           template_params?: Json
           updated_at?: string
+          wa_message_id?: string | null
         }
         Relationships: [
           {
