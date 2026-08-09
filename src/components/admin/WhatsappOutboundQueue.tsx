@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { AdminPageShell } from "@/components/admin/shared/AdminPageShell";
 import { RevealableField } from "@/components/admin/shared/RevealableField";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";

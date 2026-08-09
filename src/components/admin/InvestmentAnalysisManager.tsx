@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { AiEngineLoader } from "@/components/ai/AiEngineLoader";
 import { useAiEngine, z } from "@/hooks/useAiEngine";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { toast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

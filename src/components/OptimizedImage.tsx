@@ -99,10 +99,15 @@ const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
   const cdnSrc = isSkipCdn ? resolvedSrc : cloudinaryUrl(safeSrc, { width });
   const cdnSrcSet = isSkipCdn ? undefined : cloudinarySrcSet(safeSrc);
 
+  // CLS guard: if neither explicit dimensions nor an aspectRatio are supplied,
+  // reserve a 4/3 box so the container never collapses to 0px before the image
+  // decodes (each collapsed card was contributing layout shift on mobile).
+  const hasExplicitBox = (width !== undefined && height !== undefined) || Boolean(aspectRatio);
   const containerStyle: React.CSSProperties = {
     width,
     height,
-    ...(aspectRatio ? { aspectRatio } : {})
+    ...(aspectRatio ? { aspectRatio } : {}),
+    ...(hasExplicitBox ? {} : { aspectRatio: "4 / 3", width: "100%" })
   };
 
   return (

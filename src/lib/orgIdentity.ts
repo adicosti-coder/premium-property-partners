@@ -165,3 +165,63 @@ export const REAL_ESTATE_AGENT_REF = {
   "@id": REAL_ESTATE_AGENT_ID,
   name: REAL_ESTATE_AGENT_SCHEMA.name,
 } as const;
+
+export const FINANCIAL_SERVICE_ID = `${SITE_ORIGIN}/#financialservice`;
+
+/**
+ * Canonical FinancialService node — RealTrust's investment-advisory side
+ * (ROI analysis, yield projections, portfolio structuring for apartments in
+ * regim hotelier). Emitted on the investment/ROI pages and merged by Google
+ * with ORG_ID via parentOrganization.
+ */
+export const FINANCIAL_SERVICE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "FinancialService",
+  "@id": FINANCIAL_SERVICE_ID,
+  name: "RealTrust — Consultanță Investiții Imobiliare Timișoara",
+  description:
+    "Analiză de randament, due diligence și structurare de portofoliu pentru apartamente în regim hotelier în Timișoara. Randament net țintă 9,4% (ocupare 75%, deducere 27%).",
+  url: `${SITE_ORIGIN}/investitii`,
+  logo: BRAND.logo,
+  image: BRAND.image,
+  telephone: BRAND.telephone,
+  email: BRAND.email,
+  priceRange: "$$$",
+  currenciesAccepted: "EUR, RON",
+  paymentAccepted: "Cash, Credit Card, Bank Transfer",
+  openingHours: "Mo-Fr 10:00-18:00",
+  address: POSTAL_ADDRESS,
+  geo: GEO_COORDINATES,
+  areaServed: { "@type": "City", name: "Timișoara" },
+  parentOrganization: { "@id": ORG_ID },
+  sameAs: [...BRAND.sameAs],
+  serviceType: [
+    "Consultanță investiții imobiliare",
+    "Analiză randament (ROI) apartamente",
+    "Administrare regim hotelier",
+  ],
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Servicii de investiții imobiliare",
+    itemListElement: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Analiză ROI apartament",
+          description:
+            "Proiecție de venit și randament net pentru un apartament dat în regim hotelier, pe ipoteze publice.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Property management regim hotelier",
+          description:
+            "Administrare completă (listare, prețuri dinamice, curățenie, oaspeți, raportare lunară).",
+        },
+      },
+    ],
+  },
+} as const;

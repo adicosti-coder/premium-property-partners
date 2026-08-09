@@ -273,12 +273,13 @@ const Blog = () => {
 
   const seoContent = {
     ro: {
-      title: "Ghid Imobiliar Timișoara: Investiții, Vânzări & Regim Hotelier",
-      description: "Descoperă ghidul complet al pieței imobiliare din Timișoara: analize de randament, strategii de investiții și sfaturi pentru vânzări sau regim hotelier."
+      title: "Ghid Imobiliar Timișoara: Investiții & Regim Hotelier",
+      description: "Ghidul pieței imobiliare din Timișoara: analize de randament, strategii de investiții și sfaturi pentru vânzări sau regim hotelier."
     },
     en: {
-      title: "Timișoara Real Estate Guide: Investments, Sales & Short-Term Rentals",
-      description: "Discover the complete Timișoara real estate market guide: yield analysis, investment strategies and practical tips for sales or short-term rentals."
+      title: "Timișoara Real Estate Guide: Invest & Short-Term Rent",
+      description: "Timișoara real estate market guide: yield analysis, investment strategies and practical tips for sales or short-term rentals."
+
     }
   };
 

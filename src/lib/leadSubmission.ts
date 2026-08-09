@@ -12,7 +12,7 @@
  */
 
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { reportError } from "@/lib/errorReporting";
 import { isValidWhatsAppNumber } from "@/lib/conversionTracking";
 

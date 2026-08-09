@@ -8,7 +8,7 @@ import {
   Sparkles, Zap, RefreshCw, Globe2, Loader2, AlertTriangle, CheckCircle2,
   AlertCircle, TrendingUp, Trophy, Gauge, Crown, Rocket, ArrowUpRight, Activity,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {

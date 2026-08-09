@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOFooterText from "@/components/SEOFooterText";
 import SEOHead from "@/components/SEOHead";
+import { FINANCIAL_SERVICE_SCHEMA } from "@/lib/orgIdentity";
 import PageSummary from "@/components/PageSummary";
 import { generateSpeakableSchema } from "@/utils/schemaGenerators";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
@@ -222,7 +223,7 @@ const Investitii = () => {
         title={language === "ro" ? "Investiții imobiliare în Timișoara | Randament 9,4% net țintă | RealTrust" : "Real estate investments in Timișoara | 9.4% target net yield | RealTrust"}
         description={t.metaDescription}
         url="https://realtrust.ro/investitii"
-        jsonLd={speakableSchema}
+        jsonLd={[speakableSchema, FINANCIAL_SERVICE_SCHEMA as unknown as Record<string, unknown>]}
         breadcrumbItems={[
           { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
           { name: t.title, url: "https://realtrust.ro/investitii" },

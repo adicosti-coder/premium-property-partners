@@ -15,7 +15,7 @@ const escapeXml = (str: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
-const BASE_URL = "https://www.realtrust.ro";
+const BASE_URL = "https://realtrust.ro";
 
 interface BlogArticle {
   slug: string;
@@ -142,7 +142,6 @@ serve(async (req: Request) => {
       console.error("Error fetching community articles:", commError);
     }
 
-    const today = new Date().toISOString().split("T")[0];
 
     // Build XML sitemap with hreflang
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -158,17 +157,18 @@ serve(async (req: Request) => {
     <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path}" />
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE_URL}${path}" />`;
 
-    // Add static pages
+    // Add static pages — no <lastmod>: these pages have no per-page timestamp,
+    // and emitting the current date on every request is a meaningless signal.
     for (const page of staticPages) {
       xml += `  <url>
     <loc>${BASE_URL}${page.url}</loc>
-    <lastmod>${today}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
 ${hreflang(page.url)}
   </url>
 `;
     }
+
 
     // Add blog articles (with image sitemap)
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";

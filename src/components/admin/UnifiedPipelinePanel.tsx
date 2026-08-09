@@ -38,7 +38,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabaseClient";
 
 // Lazy-load sub-panels — evită bundle-ul monolitic în ecranul unificat.
 const ScraperMonitorPanel = lazy(() => import("./ScraperMonitorPanel"));
