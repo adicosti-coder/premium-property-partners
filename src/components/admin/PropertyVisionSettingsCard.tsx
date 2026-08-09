@@ -24,11 +24,13 @@ export default function PropertyVisionSettingsCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("property_vision_settings")
-        .select("vision_enabled, auto_threshold, cache_enabled, cache_ttl_days, max_images")
+        .select(
+          "vision_enabled, auto_threshold, cache_enabled, cache_ttl_days, max_images, auto_outbound_enabled, outbound_threshold, outbound_template",
+        )
         .eq("id", 1)
         .maybeSingle();
       if (error) throw error;
-      return (data ?? VISION_SETTINGS_DEFAULTS) as PropertyVisionSettings;
+      return { ...VISION_SETTINGS_DEFAULTS, ...(data ?? {}) } as PropertyVisionSettings;
     },
   });
 
@@ -46,10 +48,14 @@ export default function PropertyVisionSettingsCard() {
           cache_enabled: payload.cache_enabled,
           cache_ttl_days: payload.cache_ttl_days,
           max_images: payload.max_images,
+          auto_outbound_enabled: payload.auto_outbound_enabled,
+          outbound_threshold: payload.outbound_threshold,
+          outbound_template: payload.outbound_template,
         })
         .eq("id", 1);
       if (error) throw error;
     },
+
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["property-vision-settings"] });
       toast({
