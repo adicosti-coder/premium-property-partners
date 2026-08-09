@@ -1,16 +1,110 @@
 /**
- * Conversion tracking utility — pushes custom events to dataLayer (GTM/GA4)
- * and forwards to gtag if available. Safe to call from any form.
+ * Conversion tracking utility.
+ *
+ * Fan-out for every conversion event:
+ *   1. `dataLayer` push  → Google Tag Manager (any container/tag can consume it)
+ *   2. `gtag('event')`   → GA4 direct (measurement ID lives in index.html)
+ *   3. `fbq('track')`    → Meta Pixel, client-side (blocked by ad blockers)
+ *   4. Meta Conversions API → server-side via the `meta-conversions` edge
+ *      function, using the SAME `event_id` as the pixel so Meta deduplicates
+ *      the pair. This is what survives ad blockers / iOS tracking prevention.
+ *
+ * Consent: analytics events require `analytics_only` or `all`; Meta (pixel +
+ * CAPI) is advertising and only fires on `all`. Same storage key as
+ * <CookieConsent />.
  */
 
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: Record<string, unknown>[];
+    fbq?: ((...args: unknown[]) => void) & { queue?: unknown[]; loaded?: boolean; version?: string; push?: unknown };
+    _fbq?: unknown;
   }
 }
 
+const CONSENT_KEY = "cookie_consent_v2";
+
+/** Meta Pixel ID is a publishable value — safe in client code / env. */
+export const META_PIXEL_ID: string | undefined =
+  (import.meta.env.VITE_META_PIXEL_ID as string | undefined) || undefined;
+
+type ConsentChoice = "all" | "analytics_only" | "declined";
+
+const readConsent = (): ConsentChoice | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(CONSENT_KEY);
+    if (!raw) return null;
+    // Stored as a bare string ("all"), historically sometimes JSON-encoded.
+    const value = raw.startsWith('"') ? (JSON.parse(raw) as string) : raw;
+    if (value === "all" || value === "analytics_only" || value === "declined") return value;
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const hasAnalyticsConsent = (): boolean => {
+  const c = readConsent();
+  return c === "all" || c === "analytics_only";
+};
+
+/** Meta pixel + CAPI are advertising vendors → require full consent. */
+export const hasAdsConsent = (): boolean => readConsent() === "all";
+
+/* ------------------------------------------------------------------ *
+ * Meta Pixel bootstrap (lazy, consent-gated, idempotent)
+ * ------------------------------------------------------------------ */
+
+let pixelInitialized = false;
+
+export const initMetaPixel = (): void => {
+  if (typeof window === "undefined") return;
+  if (pixelInitialized || !META_PIXEL_ID || !hasAdsConsent()) return;
+  pixelInitialized = true;
+
+  // Standard Meta Pixel snippet, TS-safe.
+  if (!window.fbq) {
+    const n = function (...args: unknown[]) {
+      const self = n as unknown as { callMethod?: (...a: unknown[]) => void; queue: unknown[] };
+      if (self.callMethod) self.callMethod(...args);
+      else self.queue.push(args);
+    } as unknown as NonNullable<Window["fbq"]>;
+    (n as unknown as { queue: unknown[] }).queue = [];
+    n.loaded = true;
+    n.version = "2.0";
+    window.fbq = n;
+    window._fbq = n;
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "https://connect.facebook.net/en_US/fbevents.js";
+    document.head.appendChild(script);
+  }
+
+  window.fbq?.("init", META_PIXEL_ID);
+  window.fbq?.("track", "PageView");
+};
+
+/** Meta Pixel page view on SPA route changes (no-op without consent/ID). */
+export const trackMetaPageView = (): void => {
+  if (!pixelInitialized) {
+    initMetaPixel();
+    return; // init already sends the first PageView
+  }
+  window.fbq?.("track", "PageView");
+};
+
+/* ------------------------------------------------------------------ *
+ * Events
+ * ------------------------------------------------------------------ */
+
+/** Critical funnel events — canonical names shared by GA4, GTM and Meta. */
+export type CriticalConversionEvent = "Lead_Submit" | "PreCalc_Completed" | "WhatsApp_Click";
+
 export type ConversionEvent =
+  | CriticalConversionEvent
   | "contact_form_submit"
   | "lead_magnet_pdf"
   | "roi_calculator_lead"
@@ -19,28 +113,102 @@ export type ConversionEvent =
   | "whatsapp_click"
   | "phone_click";
 
+/** Map our canonical events to Meta's taxonomy (standard events when possible). */
+const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
+  Lead_Submit: { name: "Lead", custom: false },
+  PreCalc_Completed: { name: "PreCalc_Completed", custom: true },
+  WhatsApp_Click: { name: "Contact", custom: false },
+  contact_form_submit: { name: "Lead", custom: false },
+  owner_valuation_submit: { name: "Lead", custom: false },
+  roi_calculator_lead: { name: "Lead", custom: false },
+  lead_magnet_pdf: { name: "Lead", custom: false },
+  newsletter_subscribe: { name: "Subscribe", custom: false },
+  whatsapp_click: { name: "Contact", custom: false },
+  phone_click: { name: "Contact", custom: false },
+};
+
 interface ConversionPayload {
   event: ConversionEvent;
   source?: string;
   value?: number;
   currency?: string;
   page_path?: string;
+  /** Optional user data — hashed server-side for Meta advanced matching. Never stored. */
+  email?: string;
+  phone?: string;
+  name?: string;
   [key: string]: unknown;
 }
 
+const newEventId = (): string => {
+  try {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  } catch {
+    // fall through
+  }
+  return `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+};
+
+const readCookie = (name: string): string | undefined => {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : undefined;
+};
+
 /**
- * Track a conversion event by pushing it to the dataLayer and gtag.
- * Use this for all key form submissions and conversion goals.
+ * Send the same conversion server-side (Meta Conversions API) so ad blockers
+ * cannot drop it. Fire-and-forget: tracking must never block or break the UI.
+ */
+const forwardToConversionsApi = (
+  payload: ConversionPayload,
+  metaEvent: { name: string; custom: boolean },
+  eventId: string,
+): void => {
+  if (!hasAdsConsent()) return;
+
+  void import("@/lib/supabaseClient")
+    .then(({ supabase }) =>
+      supabase.functions.invoke("meta-conversions", {
+        body: {
+          event_name: metaEvent.name,
+          is_custom: metaEvent.custom,
+          event_id: eventId,
+          event_source_url: typeof window !== "undefined" ? window.location.href : undefined,
+          action_source: "website",
+          value: payload.value,
+          currency: payload.currency,
+          source: payload.source,
+          email: payload.email,
+          phone: payload.phone,
+          name: payload.name,
+          fbp: readCookie("_fbp"),
+          fbc: readCookie("_fbc"),
+        },
+      }),
+    )
+    .catch(() => {
+      // Never surface tracking failures to the visitor.
+    });
+};
+
+/**
+ * Track a conversion event across GTM/GA4 + Meta (pixel and server-side).
+ * Safe to call from any form or handler; silently no-ops without consent.
  */
 export const trackConversion = (payload: ConversionPayload): void => {
   if (typeof window === "undefined") return;
 
+  const eventId = newEventId();
+  const { email: _e, phone: _p, name: _n, ...safeForDataLayer } = payload;
+
   const enriched = {
-    ...payload,
+    ...safeForDataLayer,
+    event_id: eventId,
     page_path: payload.page_path ?? window.location.pathname,
     timestamp: new Date().toISOString(),
   };
 
+  // 1. GTM dataLayer — always safe (no PII pushed).
   try {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(enriched);
@@ -48,6 +216,9 @@ export const trackConversion = (payload: ConversionPayload): void => {
     // ignore
   }
 
+  if (!hasAnalyticsConsent()) return;
+
+  // 2. GA4
   try {
     if (typeof window.gtag === "function") {
       window.gtag("event", payload.event, {
@@ -55,12 +226,44 @@ export const trackConversion = (payload: ConversionPayload): void => {
         event_label: payload.source,
         value: payload.value,
         currency: payload.currency,
+        event_id: eventId,
       });
     }
   } catch {
     // ignore
   }
+
+  const metaEvent = META_EVENT_MAP[payload.event];
+  if (!metaEvent) return;
+
+  // 3. Meta Pixel (client-side)
+  try {
+    if (hasAdsConsent()) {
+      initMetaPixel();
+      window.fbq?.(
+        metaEvent.custom ? "trackCustom" : "track",
+        metaEvent.name,
+        {
+          content_name: payload.source,
+          value: payload.value,
+          currency: payload.currency ?? "EUR",
+        },
+        { eventID: eventId },
+      );
+    }
+  } catch {
+    // ignore
+  }
+
+  // 4. Meta Conversions API (server-side, deduped by event_id)
+  forwardToConversionsApi(payload, metaEvent, eventId);
 };
+
+/** Convenience wrapper for the three critical funnel events. */
+export const trackCriticalConversion = (
+  event: CriticalConversionEvent,
+  payload: Omit<ConversionPayload, "event"> = {},
+): void => trackConversion({ ...payload, event });
 
 /**
  * Validate Romanian / international phone number for WhatsApp.
