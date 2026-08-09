@@ -287,23 +287,35 @@ Deno.serve(async (req) => {
     );
 
     if (!aiRes.ok) {
+      await logVisionError("gateway", {
+        status: aiRes.status,
+        error: aiRes.error ?? aiRes.body,
+        images: images.length,
+        fallback: true,
+      });
       if (aiRes.status === 429) return json({ error: "rate_limited", retry: true }, 429);
       if (aiRes.status === 402) {
         return json({ error: "credits_exhausted", message: "Adaugă credite AI în workspace." }, 402);
       }
       console.error("[property-vision-score] gateway error", aiRes.status, aiRes.body);
-      return json({ error: `ai_gateway_${aiRes.status || "network"}` }, 502);
+      // Fallback: prospect keeps its text-only lead score, nothing is overwritten.
+      return json({ error: `ai_gateway_${aiRes.status || "network"}`, fallback: "text_only" }, 502);
     }
 
     const aiData = JSON.parse(aiRes.body || "{}");
     const args = aiData?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!args) return json({ error: "no_tool_call" }, 502);
+    if (!args) {
+      await logVisionError("no_tool_call", { status: aiRes.status, images: images.length });
+      return json({ error: "no_tool_call", fallback: "text_only" }, 502);
+    }
 
     let parsed: Partial<VisionResult> = {};
     try {
       parsed = JSON.parse(args);
     } catch {
-      return json({ error: "invalid_tool_arguments" }, 502);
+      await logVisionError("invalid_tool_arguments", { images: images.length });
+      return json({ error: "invalid_tool_arguments", fallback: "text_only" }, 502);
+
     }
 
     qualityScore = clamp(parsed.quality_score, 0, 100);
