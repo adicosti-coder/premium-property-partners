@@ -316,7 +316,11 @@ export default function WhatsappOutboundQueue() {
     toast({ title: "Setări salvate" });
   };
 
-  const numField = (k: keyof RateSettings, label: string, hint: string) => (
+  type NumericSetting = {
+    [K in keyof RateSettings]: RateSettings[K] extends number ? K : never;
+  }[keyof RateSettings];
+
+  const numField = (k: NumericSetting, label: string, hint: string) => (
     <div className="space-y-1">
       <Label htmlFor={k} className="text-xs">{label}</Label>
       <Input
