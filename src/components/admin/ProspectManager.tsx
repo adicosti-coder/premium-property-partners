@@ -25,6 +25,8 @@ import ProspectInjectionRejectionStats from "./ProspectInjectionRejectionStats";
 import ProspectRejectionAlerts from "./ProspectRejectionAlerts";
 import ProspectAlertSettings from "./ProspectAlertSettings";
 import PropertyVisionSettingsCard from "./PropertyVisionSettingsCard";
+import PropertyQualityAuditReport from "./vision/PropertyQualityAuditReport";
+
 import ProspectEnrichmentPanel, { type EnrichedImage } from "./ProspectEnrichmentPanel";
 
 interface ProspectListing {
@@ -773,8 +775,13 @@ const ProspectManager = () => {
       {/* Settings: recipients + thresholds */}
       <ProspectAlertSettings />
 
-      {/* Settings: AI photo analysis (threshold, cache, kill-switch) */}
+      {/* Settings: AI photo analysis (threshold, cache, kill-switch, auto outreach) */}
       <PropertyVisionSettingsCard />
+
+      {/* AI vs. manual override accuracy + vision error monitoring */}
+      <PropertyQualityAuditReport />
+
+
 
       {/* Auto-rejection stats (cross-platform dedup + Twilio Lookup DNC) */}
       <ProspectInjectionRejectionStats />

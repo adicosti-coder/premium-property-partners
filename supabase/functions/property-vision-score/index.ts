@@ -115,10 +115,35 @@ Deno.serve(async (req) => {
     .maybeSingle();
   const settings: VisionSettings = { ...DEFAULT_SETTINGS, ...(settingsRow || {}) };
 
+  /**
+   * Observability: every vision failure is logged so Admin can see when the
+   * multimodal model is degraded. `fallback_used` marks the cases where the
+   * prospect keeps its text-only lead score instead of being blocked.
+   */
+  const logVisionError = async (
+    stage: string,
+    opts: { status?: number | null; error?: unknown; images?: number; fallback?: boolean } = {},
+  ) => {
+    try {
+      await supabase.from("property_vision_errors").insert({
+        prospect_id: prospectId,
+        stage,
+        status_code: opts.status ?? null,
+        error: opts.error ? String(opts.error).slice(0, 1000) : null,
+        images_count: opts.images ?? null,
+        fallback_used: opts.fallback ?? true,
+        model: VISION_MODEL,
+      });
+    } catch (e) {
+      console.error("[property-vision-score] logVisionError failed:", e);
+    }
+  };
+
   // Kill-switch: automatic runs stop, an explicit admin click still works.
   if (!settings.vision_enabled && internal) {
     return json({ skipped: "vision_disabled", prospect_id: prospectId });
   }
+
 
   try {
     const { data: prospect, error: fetchErr } = await supabase
@@ -141,8 +166,10 @@ Deno.serve(async (req) => {
       .slice(0, settings.max_images);
 
     if (images.length === 0) {
-      return json({ error: "no_usable_images", prospect_id: prospectId }, 422);
+      await logVisionError("no_usable_images", { images: 0 });
+      return json({ error: "no_usable_images", prospect_id: prospectId, fallback: "text_only" }, 422);
     }
+
 
     const contextLine = [
       prospect.title ? `Titlu: ${prospect.title}` : null,
@@ -262,23 +289,35 @@ Deno.serve(async (req) => {
     );
 
     if (!aiRes.ok) {
+      await logVisionError("gateway", {
+        status: aiRes.status,
+        error: aiRes.error ?? aiRes.body,
+        images: images.length,
+        fallback: true,
+      });
       if (aiRes.status === 429) return json({ error: "rate_limited", retry: true }, 429);
       if (aiRes.status === 402) {
         return json({ error: "credits_exhausted", message: "Adaugă credite AI în workspace." }, 402);
       }
       console.error("[property-vision-score] gateway error", aiRes.status, aiRes.body);
-      return json({ error: `ai_gateway_${aiRes.status || "network"}` }, 502);
+      // Fallback: prospect keeps its text-only lead score, nothing is overwritten.
+      return json({ error: `ai_gateway_${aiRes.status || "network"}`, fallback: "text_only" }, 502);
     }
 
     const aiData = JSON.parse(aiRes.body || "{}");
     const args = aiData?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!args) return json({ error: "no_tool_call" }, 502);
+    if (!args) {
+      await logVisionError("no_tool_call", { status: aiRes.status, images: images.length });
+      return json({ error: "no_tool_call", fallback: "text_only" }, 502);
+    }
 
     let parsed: Partial<VisionResult> = {};
     try {
       parsed = JSON.parse(args);
     } catch {
-      return json({ error: "invalid_tool_arguments" }, 502);
+      await logVisionError("invalid_tool_arguments", { images: images.length });
+      return json({ error: "invalid_tool_arguments", fallback: "text_only" }, 502);
+
     }
 
     qualityScore = clamp(parsed.quality_score, 0, 100);
@@ -358,6 +397,8 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("[property-vision-score] error:", e);
-    return json({ error: (e as Error).message }, 500);
+    await logVisionError("exception", { error: e });
+    return json({ error: (e as Error).message, fallback: "text_only" }, 500);
+
   }
 });

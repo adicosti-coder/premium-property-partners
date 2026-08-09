@@ -90,13 +90,14 @@ Deno.serve(async (req) => {
     // DNC / blocklist check pe phone_intelligence
     const { data: intel } = await supabase
       .from("phone_intelligence")
-      .select("dnc")
-      .eq("phone_normalized", phone)
+      .select("is_blacklisted, is_unreachable")
+      .eq("phone_number", phone)
       .maybeSingle();
-    if (intel?.dnc) {
-      skipped.push({ id: p.id, reason: "dnc" });
+    if (intel?.is_blacklisted || intel?.is_unreachable) {
+      skipped.push({ id: p.id, reason: intel?.is_blacklisted ? "blacklisted" : "unreachable" });
       continue;
     }
+
 
     rows.push({
       phone_normalized: phone,

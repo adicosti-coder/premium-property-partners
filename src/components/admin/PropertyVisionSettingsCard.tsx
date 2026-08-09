@@ -24,11 +24,13 @@ export default function PropertyVisionSettingsCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("property_vision_settings")
-        .select("vision_enabled, auto_threshold, cache_enabled, cache_ttl_days, max_images")
+        .select(
+          "vision_enabled, auto_threshold, cache_enabled, cache_ttl_days, max_images, auto_outbound_enabled, outbound_threshold, outbound_template",
+        )
         .eq("id", 1)
         .maybeSingle();
       if (error) throw error;
-      return (data ?? VISION_SETTINGS_DEFAULTS) as PropertyVisionSettings;
+      return { ...VISION_SETTINGS_DEFAULTS, ...(data ?? {}) } as PropertyVisionSettings;
     },
   });
 
@@ -46,10 +48,14 @@ export default function PropertyVisionSettingsCard() {
           cache_enabled: payload.cache_enabled,
           cache_ttl_days: payload.cache_ttl_days,
           max_images: payload.max_images,
+          auto_outbound_enabled: payload.auto_outbound_enabled,
+          outbound_threshold: payload.outbound_threshold,
+          outbound_template: payload.outbound_template,
         })
         .eq("id", 1);
       if (error) throw error;
     },
+
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["property-vision-settings"] });
       toast({
@@ -163,6 +169,56 @@ export default function PropertyVisionSettingsCard() {
                 <p className="text-xs text-muted-foreground">Mai multe poze = cost mai mare.</p>
               </div>
             </div>
+
+            <div className="space-y-4 rounded-md border border-primary/30 bg-primary/5 p-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label htmlFor="auto-outbound">Outreach automat pe WhatsApp (Andrei)</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Prospecții cu scor final ≥ prag și telefon valid intră automat în coada de
+                    mesaje. Numerele blocate sau deja contactate sunt sărite.
+                  </p>
+                </div>
+                <Switch
+                  id="auto-outbound"
+                  checked={form.auto_outbound_enabled}
+                  onCheckedChange={(v) => setForm((f) => ({ ...f, auto_outbound_enabled: v }))}
+                  aria-label="Activează outreach automat pe WhatsApp"
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="outbound-threshold">Prag scor final pentru outreach</Label>
+                  <Input
+                    id="outbound-threshold"
+                    type="number"
+                    min={0}
+                    max={100}
+                    inputMode="numeric"
+                    value={form.outbound_threshold}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        outbound_threshold: clamp(e.target.value, 0, 100, 70),
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="outbound-template">Șablon Meta preaprobat</Label>
+                  <Input
+                    id="outbound-template"
+                    value={form.outbound_template}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, outbound_template: e.target.value.trim() }))
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+
 
             <div className="flex justify-end">
               <Button onClick={() => save.mutate(form)} disabled={save.isPending}>
