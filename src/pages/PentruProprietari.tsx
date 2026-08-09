@@ -22,8 +22,10 @@ import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
+import { setCtaVariant as recordCtaVariant } from "@/lib/campaignAttribution";
 
 const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
+
 const OwnerBenefits = lazy(() => import("@/components/OwnerBenefits"));
 const OwnerHowItWorks = lazy(() => import("@/components/OwnerHowItWorks"));
 const OnboardingVideoExplainer = lazy(() => import("@/components/OnboardingVideoExplainer"));
