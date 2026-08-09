@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { Button } from "@/components/ui/button";
 
@@ -14,11 +15,12 @@ const MoonIcon = () => (
   </svg>
 );
 
-const ThemeToggle = () => {
+const ThemeToggle = forwardRef<HTMLButtonElement>((_props, ref) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
     <Button
+      ref={ref}
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
@@ -28,6 +30,8 @@ const ThemeToggle = () => {
       {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
     </Button>
   );
-};
+});
+
+ThemeToggle.displayName = "ThemeToggle";
 
 export default ThemeToggle;

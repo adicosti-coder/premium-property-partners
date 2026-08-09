@@ -1,7 +1,7 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 
-const LanguageSwitcher = () => {
+const LanguageSwitcher = forwardRef<HTMLButtonElement>((_props, ref) => {
   const { language, setLanguage } = useLanguage();
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -15,6 +15,7 @@ const LanguageSwitcher = () => {
 
   return (
     <button
+      ref={ref}
       onClick={toggleLanguage}
       className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] min-w-[44px] rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all duration-200 group overflow-hidden"
       aria-label={language === 'ro' ? 'Switch to English' : 'Schimbă în Română'}
@@ -35,6 +36,8 @@ const LanguageSwitcher = () => {
       </span>
     </button>
   );
-};
+});
+
+LanguageSwitcher.displayName = "LanguageSwitcher";
 
 export default LanguageSwitcher;
