@@ -230,6 +230,9 @@ const App = () => (
                     <Route path="/portal-proprietar" element={<OwnerDashboard />} />
                     <Route path="/despre-noi" element={<AboutUs />} />
                     <Route path="/pentru-proprietari" element={<PentruProprietari />} />
+                    {/* Short alias people type / share manually — keeps one canonical URL. */}
+                    <Route path="/proprietari" element={<Navigate to="/pentru-proprietari" replace />} />
+
                     <Route path="/profil" element={<Profile />} />
                     <Route path="/setari" element={<Settings />} />
                     <Route path="/comunitate" element={<CommunityArticles />} />
