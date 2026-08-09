@@ -75,11 +75,12 @@ async function submitSitemapsToGsc(): Promise<Record<string, unknown>> {
   );
 
   if (matches.length === 0) return { skipped: "no_verified_property" };
-  if (matches.length > 1) {
-    return { skipped: "multiple_properties", candidates: matches.map((m) => m.siteUrl) };
-  }
 
-  const siteUrl = matches[0].siteUrl;
+  // Contul are atât proprietatea de domeniu, cât și URL-prefix pe realtrust.ro.
+  // Preferăm proprietatea de domeniu: acoperă www + non-www + subdomenii, deci
+  // raportarea și sitemap-urile rămân valide indiferent de host-ul folosit.
+  const siteUrl =
+    matches.find((m) => m.siteUrl === PREFERRED_SITE_URL)?.siteUrl ?? matches[0].siteUrl;
   const results: Record<string, number> = {};
 
   for (const sitemap of SITEMAPS) {
