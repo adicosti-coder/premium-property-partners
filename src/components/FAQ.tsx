@@ -7,11 +7,16 @@ import {
 } from "@/components/ui/accordion";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 const FAQ = () => {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: contentRef, isVisible: contentVisible } = useScrollAnimation({ threshold: 0.05 });
   const { t } = useLanguage();
+
+  // The visible accordion is the source of truth for the FAQPage rich result.
+  useRegisterFAQs("homepage-faq", t.faq.items);
+
 
   return (
     <section id="faq" className="faq-section section-padding bg-background relative overflow-hidden">
