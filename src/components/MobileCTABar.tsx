@@ -4,6 +4,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { cn } from "@/lib/utils";
+import { trackCriticalConversion } from "@/lib/conversionTracking";
+
 
 const MobileCTABar = () => {
   const { language } = useLanguage();
