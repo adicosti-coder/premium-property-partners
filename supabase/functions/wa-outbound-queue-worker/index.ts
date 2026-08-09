@@ -209,15 +209,22 @@ Deno.serve(async (req) => {
       const attempts = (item.attempts ?? 0) + 1;
 
       if (send.ok) {
+        let waMessageId: string | null = null;
+        try {
+          waMessageId = JSON.parse(send.body || "{}")?.wa_message_id ?? null;
+        } catch { /* ignore */ }
+
         await supabase
           .from("wa_outbound_queue")
           .update({
             status: "sent",
             sent_at: new Date().toISOString(),
             conversation_id: conversationId,
+            wa_message_id: waMessageId,
             last_error: null,
           })
           .eq("id", item.id);
+
 
         await supabase.from("communication_logs").insert({
           channel: "whatsapp",
