@@ -37,11 +37,13 @@ const MobileCTABar = () => {
     lightTap();
     trackWhatsApp();
     fireContactClick("whatsapp");
+    trackCriticalConversion("WhatsApp_Click", { source: "mobile_cta_bar" });
     const message = encodeURIComponent(language === 'ro' 
       ? "Bună ziua, aș dori câteva detalii despre serviciile RealTrust." 
       : "Hello, I'd like a few details about RealTrust's services.");
     window.open(`https://wa.me/40799069256?text=${message}`, '_blank', 'noopener,noreferrer');
   };
+
 
   const scrollToGuests = () => {
     lightTap();
