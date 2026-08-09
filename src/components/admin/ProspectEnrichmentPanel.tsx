@@ -92,7 +92,17 @@ export default function ProspectEnrichmentPanel({ prospect, onUpdated }: Props) 
   const originalImages = (prospect.images || []).slice(0, 6);
 
   return (
+    <div className="space-y-4">
+    <PropertyQualityScoreCard
+      prospectId={prospect.id}
+      imagesCount={(prospect.images || []).length}
+      qualityScore={prospect.quality_score ?? null}
+      qualityAnalysis={prospect.quality_analysis ?? null}
+      qualityAnalyzedAt={prospect.quality_analyzed_at ?? null}
+      onUpdated={onUpdated}
+    />
     <Card className="border-amber-200 dark:border-amber-800">
+
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-sm flex items-center gap-2">
