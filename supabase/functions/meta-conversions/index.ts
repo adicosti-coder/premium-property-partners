@@ -114,16 +114,29 @@ Deno.serve(async (req) => {
   const userAgent = req.headers.get("user-agent") ?? undefined;
 
   const userData: Record<string, unknown> = {};
+  const hashedFields: string[] = [];
 
-  if (body.email) userData.em = [await sha256(normalizeEmail(body.email))];
+  if (body.email) {
+    userData.em = [await sha256(normalizeEmail(body.email))];
+    hashedFields.push("em");
+  }
   if (body.phone) {
     const normalized = normalizePhone(body.phone);
-    if (normalized.length >= 8) userData.ph = [await sha256(normalized)];
+    if (normalized.length >= 8) {
+      userData.ph = [await sha256(normalized)];
+      hashedFields.push("ph");
+    }
   }
   if (body.name) {
     const parts = body.name.trim().toLowerCase().split(/\s+/);
-    if (parts[0]) userData.fn = [await sha256(parts[0])];
-    if (parts.length > 1) userData.ln = [await sha256(parts[parts.length - 1])];
+    if (parts[0]) {
+      userData.fn = [await sha256(parts[0])];
+      hashedFields.push("fn");
+    }
+    if (parts.length > 1) {
+      userData.ln = [await sha256(parts[parts.length - 1])];
+      hashedFields.push("ln");
+    }
   }
   if (body.fbp) userData.fbp = body.fbp;
   if (body.fbc) userData.fbc = body.fbc;
@@ -163,10 +176,35 @@ Deno.serve(async (req) => {
     const text = await response.text();
     if (!response.ok) {
       console.error(`[meta-conversions] Meta rejected event [${response.status}]: ${text}`);
-      return json({ error: "Meta request failed", status: response.status, details: text }, response.status);
+      return json(
+        {
+          error: "Meta request failed",
+          status: response.status,
+          details: text,
+          ...(body.dry_run
+            ? { dry_run: true, configured: true, event_id: body.event_id, hashed_fields: hashedFields }
+            : {}),
+        },
+        // A dry-run always answers 200 so the QA panel can render the failure.
+        body.dry_run ? 200 : response.status,
+      );
     }
 
-    return json({ ok: true, event_id: body.event_id, meta: text ? JSON.parse(text) : null });
+    return json({
+      ok: true,
+      event_id: body.event_id,
+      status: response.status,
+      meta: text ? JSON.parse(text) : null,
+      ...(body.dry_run
+        ? {
+            dry_run: true,
+            configured: true,
+            hashed_fields: hashedFields,
+            test_event_code: testEventCode ?? null,
+          }
+        : {}),
+    });
+
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[meta-conversions] unexpected error:", message);
