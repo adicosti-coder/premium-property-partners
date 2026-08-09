@@ -35,6 +35,39 @@ const BodySchema = z.object({
 });
 
 
+/**
+ * Best-effort delivery journal (service role).
+ * Never throws: tracking must not break because logging failed.
+ */
+const logDelivery = async (row: {
+  event_name: string;
+  event_id: string;
+  dry_run: boolean;
+  ok: boolean;
+  http_status?: number | null;
+  outcome: string;
+  error_detail?: string | null;
+  event_source_url?: string | null;
+}) => {
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return;
+  try {
+    await fetch(`${url}/rest/v1/capi_delivery_log`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify(row),
+    });
+  } catch (err) {
+    console.error("[meta-conversions] delivery log failed:", err instanceof Error ? err.message : err);
+  }
+};
+
 const sha256 = async (value: string): Promise<string> => {
   const bytes = new TextEncoder().encode(value);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -42,6 +75,7 @@ const sha256 = async (value: string): Promise<string> => {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 };
+
 
 /** Meta requires normalized values before hashing. */
 const normalizeEmail = (raw: string) => raw.trim().toLowerCase();
