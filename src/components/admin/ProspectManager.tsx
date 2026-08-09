@@ -24,6 +24,7 @@ import { detectObjection, OBJECTION_LABEL } from "@/lib/voiceObjections";
 import ProspectInjectionRejectionStats from "./ProspectInjectionRejectionStats";
 import ProspectRejectionAlerts from "./ProspectRejectionAlerts";
 import ProspectAlertSettings from "./ProspectAlertSettings";
+import PropertyVisionSettingsCard from "./PropertyVisionSettingsCard";
 import ProspectEnrichmentPanel, { type EnrichedImage } from "./ProspectEnrichmentPanel";
 
 interface ProspectListing {
@@ -771,6 +772,9 @@ const ProspectManager = () => {
 
       {/* Settings: recipients + thresholds */}
       <ProspectAlertSettings />
+
+      {/* Settings: AI photo analysis (threshold, cache, kill-switch) */}
+      <PropertyVisionSettingsCard />
 
       {/* Auto-rejection stats (cross-platform dedup + Twilio Lookup DNC) */}
       <ProspectInjectionRejectionStats />

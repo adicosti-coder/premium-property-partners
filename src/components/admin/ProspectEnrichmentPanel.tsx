@@ -105,6 +105,7 @@ export default function ProspectEnrichmentPanel({ prospect, onUpdated }: Props) 
       qualityScore={prospect.quality_score ?? null}
       qualityAnalysis={prospect.quality_analysis ?? null}
       qualityAnalyzedAt={prospect.quality_analyzed_at ?? null}
+      qualityOverride={prospect.quality_override ?? null}
       onUpdated={onUpdated}
     />
     <Card className="border-amber-200 dark:border-amber-800">
