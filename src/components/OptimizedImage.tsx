@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, memo } from "react";
 import { cloudinaryUrl, cloudinarySrcSet } from "@/utils/cloudinaryUrl";
+import { storageImage, storageImageSrcSet } from "@/utils/supabaseImage";
 import { isGoogleHostedImage, resolveExternalImageUrl } from "@/utils/resolveExternalImageUrl";
 
 interface OptimizedImageProps {
