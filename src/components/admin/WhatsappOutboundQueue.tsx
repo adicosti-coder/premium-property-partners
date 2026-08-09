@@ -5,6 +5,7 @@ import { RevealableField } from "@/components/admin/shared/RevealableField";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +15,16 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Send, Ban, RefreshCw, Download, Loader2, Radio, ShieldAlert, Clock, MessageSquare,
-  Pencil, RotateCcw, History,
+  Pencil, RotateCcw, History, Eye, PlayCircle, PauseCircle,
 } from "lucide-react";
 import { WhatsappQueueTimeline } from "@/components/admin/whatsapp/WhatsappQueueTimeline";
 import {
   WhatsappQueueEditDialog, type EditableQueueItem,
 } from "@/components/admin/whatsapp/WhatsappQueueEditDialog";
+import {
+  WhatsappMessagePreview, type PreviewItem,
+} from "@/components/admin/whatsapp/WhatsappMessagePreview";
+import { WhatsappDncList } from "@/components/admin/whatsapp/WhatsappDncList";
 
 type QueueRow = {
   id: string;
@@ -49,6 +54,11 @@ type RateSettings = {
   outbound_max_per_day: number;
   outbound_min_delay_seconds: number;
   outbound_max_delay_seconds: number;
+  outbound_auto_pause_enabled: boolean;
+  outbound_min_delivery_rate: number;
+  outbound_max_consecutive_failures: number;
+  outbound_paused: boolean;
+  outbound_pause_reason: string | null;
 };
 
 const STATUSES = ["pending", "sending", "sent", "failed", "replied", "cancelled"] as const;
@@ -83,6 +93,8 @@ export default function WhatsappOutboundQueue() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [timelineId, setTimelineId] = useState<string | null>(null);
   const [editItem, setEditItem] = useState<EditableQueueItem | null>(null);
+  const [previewItem, setPreviewItem] = useState<PreviewItem | null>(null);
+  const [eventFilter, setEventFilter] = useState<string>("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -103,7 +115,7 @@ export default function WhatsappOutboundQueue() {
   const loadSettings = useCallback(async () => {
     const { data } = await supabase
       .from("wa_agent_settings")
-      .select("outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds")
+      .select("outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds, outbound_auto_pause_enabled, outbound_min_delivery_rate, outbound_max_consecutive_failures, outbound_paused, outbound_pause_reason")
       .eq("id", 1)
       .maybeSingle();
     if (data) setSettings(data as RateSettings);
@@ -118,14 +130,25 @@ export default function WhatsappOutboundQueue() {
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
-    if (!s) return rows;
-    return rows.filter(
-      (r) =>
-        r.phone_normalized?.toLowerCase().includes(s) ||
-        r.template_name?.toLowerCase().includes(s) ||
-        (r.source ?? "").toLowerCase().includes(s),
-    );
-  }, [rows, search]);
+    const digits = s.replace(/[^\d]/g, "");
+    return rows.filter((r) => {
+      if (s) {
+        const phone = r.phone_normalized ?? "";
+        const matches =
+          phone.toLowerCase().includes(s) ||
+          (digits.length >= 3 && phone.replace(/[^\d]/g, "").includes(digits)) ||
+          r.template_name?.toLowerCase().includes(s) ||
+          (r.source ?? "").toLowerCase().includes(s);
+        if (!matches) return false;
+      }
+      if (eventFilter === "delivered" && !r.delivered_at) return false;
+      if (eventFilter === "read" && !r.read_at) return false;
+      if (eventFilter === "replied" && !(r.replied_at || r.status === "replied")) return false;
+      if (eventFilter === "failed" && r.status !== "failed") return false;
+      if (eventFilter === "not_delivered" && (r.delivered_at || !r.sent_at)) return false;
+      return true;
+    });
+  }, [rows, search, eventFilter]);
 
   const stats = useMemo(() => {
     const now = Date.now();
@@ -156,6 +179,21 @@ export default function WhatsappOutboundQueue() {
       conversionRate: pct(replied),
     };
   }, [rows]);
+
+  const resumeWorker = async () => {
+    setSavingSettings(true);
+    const { error } = await supabase
+      .from("wa_agent_settings")
+      .update({ outbound_paused: false, outbound_pause_reason: null, outbound_paused_at: null })
+      .eq("id", 1);
+    setSavingSettings(false);
+    if (error) {
+      toast({ title: "Reactivare eșuată", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Trimiterile au fost reactivate" });
+    await loadSettings();
+  };
 
   const retryItem = async (id: string) => {
     setBusyId(id);
@@ -278,7 +316,11 @@ export default function WhatsappOutboundQueue() {
     toast({ title: "Setări salvate" });
   };
 
-  const numField = (k: keyof RateSettings, label: string, hint: string) => (
+  type NumericSetting = {
+    [K in keyof RateSettings]: RateSettings[K] extends number ? K : never;
+  }[keyof RateSettings];
+
+  const numField = (k: NumericSetting, label: string, hint: string) => (
     <div className="space-y-1">
       <Label htmlFor={k} className="text-xs">{label}</Label>
       <Input
@@ -354,9 +396,74 @@ export default function WhatsappOutboundQueue() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={eventFilter} onValueChange={setEventFilter}>
+            <SelectTrigger className="w-[210px]" aria-label="Filtrează după eveniment webhook">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toate evenimentele</SelectItem>
+              <SelectItem value="delivered">Livrate</SelectItem>
+              <SelectItem value="read">Citite</SelectItem>
+              <SelectItem value="replied">Cu răspuns</SelectItem>
+              <SelectItem value="failed">Eșuate (Meta)</SelectItem>
+              <SelectItem value="not_delivered">Trimise, nelivrate</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       }
     >
+      {settings?.outbound_paused && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="p-4 flex flex-wrap items-center gap-3">
+            <PauseCircle className="h-5 w-5 text-destructive" />
+            <div className="flex-1 min-w-[220px]">
+              <p className="text-sm font-medium text-foreground">
+                Trimiterile sunt oprite automat (protecția numărului)
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Motiv: {settings.outbound_pause_reason ?? "prag de siguranță depășit"}
+              </p>
+            </div>
+            <Button size="sm" onClick={() => void resumeWorker()} disabled={savingSettings}>
+              <PlayCircle className="h-4 w-4 mr-2" /> Reactivează trimiterile
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-primary" />
+            Protecția numărului & alerte
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Auto-pause safety switch</p>
+              <p className="text-xs text-muted-foreground">
+                Oprește automat worker-ul și notifică adminii dacă rata de livrare scade sub prag
+                sau apar prea multe erori consecutive de la Meta.
+              </p>
+            </div>
+            <Switch
+              checked={settings?.outbound_auto_pause_enabled ?? true}
+              aria-label="Activează protecția automată a numărului"
+              onCheckedChange={(v) =>
+                setSettings((s) => (s ? { ...s, outbound_auto_pause_enabled: v } : s))
+              }
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {numField("outbound_min_delivery_rate", "Rată minimă de livrare (%)", "Sub acest procent se activează pauza automată (implicit 80).")}
+            {numField("outbound_max_consecutive_failures", "Erori consecutive Meta acceptate", "După acest număr de eșecuri la rând se oprește trimiterea (implicit 3).")}
+          </div>
+        </CardContent>
+      </Card>
+
+      <WhatsappDncList />
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -476,6 +583,22 @@ export default function WhatsappOutboundQueue() {
                       </Button>
                       <Button
                         size="sm"
+                        variant="ghost"
+                        aria-label="Previzualizează mesajul"
+                        title="Previzualizare mesaj"
+                        onClick={() => setPreviewItem({
+                          id: r.id,
+                          phone_normalized: r.phone_normalized,
+                          template_name: r.template_name,
+                          template_language: r.template_language,
+                          template_params: r.template_params,
+                          status: r.status,
+                        })}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
                         variant="outline"
                         aria-label="Editează mesajul"
                         title="Editează variabilele șablonului"
@@ -527,6 +650,7 @@ export default function WhatsappOutboundQueue() {
           </tbody>
         </table>
       </div>
+      <WhatsappMessagePreview item={previewItem} onClose={() => setPreviewItem(null)} />
       <WhatsappQueueTimeline queueId={timelineId} onClose={() => setTimelineId(null)} />
       <WhatsappQueueEditDialog
         item={editItem}
