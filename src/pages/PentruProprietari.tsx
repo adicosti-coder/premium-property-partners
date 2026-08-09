@@ -97,16 +97,29 @@ const PentruProprietari = () => {
   const [calcSentinel, calcReady] = useDeferredLoad("500px");
   const [faqSentinel, faqReady] = useDeferredLoad("500px");
 
-  // CTA A/B variant toggle (persisted in localStorage)
-  const [ctaVariant, setCtaVariant] = useState<"A" | "B">(() => {
+  // CTA A/B variant — assigned 50/50 on first visit, then persisted so the
+  // visitor always sees the same variant (and leads stay attributable).
+  const [ctaVariant, setCtaVariantState] = useState<"A" | "B">(() => {
     if (typeof window === "undefined") return "A";
-    return (localStorage.getItem("ownerCtaVariant") as "A" | "B") || "A";
+    const stored = localStorage.getItem("ownerCtaVariant") as "A" | "B" | null;
+    if (stored === "A" || stored === "B") return stored;
+    const assigned = Math.random() < 0.5 ? "A" : "B";
+    try {
+      localStorage.setItem("ownerCtaVariant", assigned);
+    } catch {
+      /* ignore */
+    }
+    return assigned;
   });
+  const setCtaVariant = setCtaVariantState;
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("ownerCtaVariant", ctaVariant);
+      // Attach the variant to session attribution → lands on every new lead.
+      recordCtaVariant(ctaVariant);
     }
   }, [ctaVariant]);
+
 
   // Analytics for CTA A/B test
   const { trackCta, trackFormSubmit } = useCtaAnalytics();
