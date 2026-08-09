@@ -34,6 +34,8 @@ const SITEMAPS = [
 ];
 
 const GSC_GATEWAY = "https://connector-gateway.lovable.dev/google_search_console";
+/** Proprietatea GSC preferată când mai multe acoperă host-ul (domain > URL-prefix). */
+const PREFERRED_SITE_URL = `sc-domain:${HOST}`;
 
 type SiteEntry = { siteUrl: string; permissionLevel?: string };
 
