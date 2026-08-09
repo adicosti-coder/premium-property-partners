@@ -9,7 +9,10 @@ import { toast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Sparkles, RefreshCw, Loader2, Save, ImageIcon, CheckCircle2, AlertCircle } from "lucide-react";
-import PropertyQualityScoreCard, { type PropertyQualityAnalysis } from "./PropertyQualityScoreCard";
+import PropertyQualityScoreCard, {
+  type PropertyQualityAnalysis,
+  type PropertyQualityOverride,
+} from "./PropertyQualityScoreCard";
 
 
 export interface EnrichedImage {
