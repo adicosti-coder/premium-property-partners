@@ -51,6 +51,8 @@ const loaders: Record<string, Loader> = {
   "photo-studio": () => import("@/components/admin/PhotoStudioManager"),
   "voice-agent": () => import("@/components/admin/VoiceAgentCommandCenter"),
   "whatsapp-andrei": () => import("@/components/admin/WhatsappAgentInbox"),
+  "whatsapp-queue": () => import("@/components/admin/WhatsappOutboundQueue"),
+
   "agency-ai": () => import("@/components/admin/AgencyDetectionSettings").then((m) => ({ default: m.AgencyDetectionSettings })),
   "system-health": () => import("@/components/admin/SystemHealthDashboard"),
   automation: () => import("@/components/admin/AutomationManager"),
