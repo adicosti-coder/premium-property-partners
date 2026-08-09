@@ -9091,10 +9091,16 @@ export type Database = {
           escalation_threshold: number
           id: number
           office_hours_only: boolean
+          outbound_auto_pause_enabled: boolean
+          outbound_max_consecutive_failures: number
           outbound_max_delay_seconds: number
           outbound_max_per_day: number
           outbound_max_per_hour: number
           outbound_min_delay_seconds: number
+          outbound_min_delivery_rate: number
+          outbound_pause_reason: string | null
+          outbound_paused: boolean
+          outbound_paused_at: string | null
           paused_reason: string | null
           system_prompt: string
           updated_at: string
@@ -9104,10 +9110,16 @@ export type Database = {
           escalation_threshold?: number
           id?: number
           office_hours_only?: boolean
+          outbound_auto_pause_enabled?: boolean
+          outbound_max_consecutive_failures?: number
           outbound_max_delay_seconds?: number
           outbound_max_per_day?: number
           outbound_max_per_hour?: number
           outbound_min_delay_seconds?: number
+          outbound_min_delivery_rate?: number
+          outbound_pause_reason?: string | null
+          outbound_paused?: boolean
+          outbound_paused_at?: string | null
           paused_reason?: string | null
           system_prompt?: string
           updated_at?: string
@@ -9117,10 +9129,16 @@ export type Database = {
           escalation_threshold?: number
           id?: number
           office_hours_only?: boolean
+          outbound_auto_pause_enabled?: boolean
+          outbound_max_consecutive_failures?: number
           outbound_max_delay_seconds?: number
           outbound_max_per_day?: number
           outbound_max_per_hour?: number
           outbound_min_delay_seconds?: number
+          outbound_min_delivery_rate?: number
+          outbound_pause_reason?: string | null
+          outbound_paused?: boolean
+          outbound_paused_at?: string | null
           paused_reason?: string | null
           system_prompt?: string
           updated_at?: string
@@ -9178,6 +9196,39 @@ export type Database = {
           updated_at?: string
           wa_profile_name?: string | null
           window_expires_at?: string | null
+        }
+        Relationships: []
+      }
+      wa_dnc_list: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          label: string
+          phone_normalized: string
+          reason: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          phone_normalized: string
+          reason?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          phone_normalized?: string
+          reason?: string | null
+          source?: string
+          updated_at?: string
         }
         Relationships: []
       }
