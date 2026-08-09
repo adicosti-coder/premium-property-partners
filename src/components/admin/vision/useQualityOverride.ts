@@ -42,20 +42,20 @@ export function useQualityOverride(prospectId: string) {
       );
       const nextOverride = isCleared ? null : p.override;
 
-      const { error: histErr } = await supabase.from("property_quality_overrides").insert({
+      const { error: histErr } = await supabase.from("property_quality_overrides").insert([{
         prospect_id: prospectId,
         admin_id: adminId,
         ai_quality_score: p.aiQualityScore,
-        previous_override: p.previous,
-        override: nextOverride ?? {},
+        previous_override: (p.previous ?? null) as unknown as never,
+        override: (nextOverride ?? {}) as unknown as never,
         note: p.override.note ?? null,
-      });
+      }]);
       if (histErr) throw histErr;
 
       const { error: updErr } = await supabase
         .from("prospect_listings")
         .update({
-          quality_override: nextOverride,
+          quality_override: (nextOverride ?? null) as unknown as never,
           quality_override_at: nextOverride ? new Date().toISOString() : null,
           quality_override_by: nextOverride ? adminId : null,
         })
