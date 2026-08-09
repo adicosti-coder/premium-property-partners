@@ -2,6 +2,8 @@ import { Phone, MessageCircle, Mail } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { cn } from "@/lib/utils";
+import { trackCriticalConversion } from "@/lib/conversionTracking";
+
 
 const DesktopStickyContactBar = () => {
   const { t } = useLanguage();
