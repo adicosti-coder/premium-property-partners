@@ -132,9 +132,13 @@ const QuickLeadForm = () => {
       clearIdempotencyKey(IDEMPOTENCY_SCOPE);
 
       trackConversion({
-        event: "contact_form_submit",
+        event: "Lead_Submit",
         source: "quick_form_homepage",
+        // Hashed server-side for Meta advanced matching; never stored raw.
+        name: formData.name,
+        phone: formData.phone,
       });
+
 
       setIsSuccess(true);
       toast({
