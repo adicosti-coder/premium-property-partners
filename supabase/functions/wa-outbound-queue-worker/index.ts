@@ -30,29 +30,86 @@ Deno.serve(async (req) => {
     if (!auth.ok) return auth.response!;
   }
 
-  let body: { batch_size?: number } = {};
+  let body: { batch_size?: number; queue_id?: string; force?: boolean } = {};
   try {
     body = await req.json();
   } catch {
     body = {};
   }
   const batchSize = Math.min(50, Math.max(1, Number(body.batch_size) || 10));
+  const force = body.force === true;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const internalSecret = Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "";
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-  const { data: queue, error } = await supabase
+  // ── Anti-spam / Meta rate limit guard ──────────────────────────────────────
+  const { data: settings } = await supabase
+    .from("wa_agent_settings")
+    .select(
+      "outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds",
+    )
+    .eq("id", 1)
+    .maybeSingle();
+
+  const maxPerHour = Math.max(0, Number(settings?.outbound_max_per_hour ?? 20));
+  const maxPerDay = Math.max(0, Number(settings?.outbound_max_per_day ?? 100));
+  const minDelay = Math.max(0, Number(settings?.outbound_min_delay_seconds ?? 30));
+  const maxDelay = Math.max(minDelay, Number(settings?.outbound_max_delay_seconds ?? 90));
+
+  let allowance = batchSize;
+  if (!force) {
+    const nowMs = Date.now();
+    const [{ count: hourCount }, { count: dayCount }] = await Promise.all([
+      supabase
+        .from("wa_outbound_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "sent")
+        .gte("sent_at", new Date(nowMs - 3_600_000).toISOString()),
+      supabase
+        .from("wa_outbound_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "sent")
+        .gte("sent_at", new Date(nowMs - 86_400_000).toISOString()),
+    ]);
+    allowance = Math.min(
+      batchSize,
+      Math.max(0, maxPerHour - (hourCount ?? 0)),
+      Math.max(0, maxPerDay - (dayCount ?? 0)),
+    );
+    if (allowance <= 0) {
+      return json({
+        ok: true,
+        processed: 0,
+        rate_limited: true,
+        sent_last_hour: hourCount ?? 0,
+        sent_last_day: dayCount ?? 0,
+        max_per_hour: maxPerHour,
+        max_per_day: maxPerDay,
+      });
+    }
+  }
+
+  let query = supabase
     .from("wa_outbound_queue")
     .select(
       "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id",
-    )
-    .eq("status", "pending")
-    .lte("scheduled_at", new Date().toISOString())
-    .order("priority", { ascending: false })
-    .order("scheduled_at", { ascending: true })
-    .limit(batchSize);
+    );
+
+  if (body.queue_id) {
+    query = query.eq("id", body.queue_id).in("status", ["pending", "failed"]);
+  } else {
+    query = query
+      .eq("status", "pending")
+      .lte("scheduled_at", new Date().toISOString())
+      .order("priority", { ascending: false })
+      .order("scheduled_at", { ascending: true })
+      .limit(allowance);
+  }
+
+  const { data: queue, error } = await query;
+
 
   if (error) return json({ error: error.message }, 500);
   if (!queue?.length) return json({ ok: true, processed: 0 });
