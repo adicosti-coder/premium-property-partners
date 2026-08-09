@@ -13,6 +13,8 @@ import {
   Activity, CheckCircle2, XCircle, Loader2, RefreshCw, FlaskConical, ShieldCheck,
 } from "lucide-react";
 import { hasAdsConsent, hasAnalyticsConsent } from "@/lib/conversionTracking";
+import { CapiStatusWidget } from "@/components/admin/CapiStatusWidget";
+
 
 /**
  * Tracking QA — dry-run validation for the owner lead funnel.
