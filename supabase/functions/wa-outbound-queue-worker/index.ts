@@ -115,14 +115,28 @@ Deno.serve(async (req) => {
   if (!queue?.length) return json({ ok: true, processed: 0 });
 
   const results: Record<string, unknown>[] = [];
+  const startedAt = Date.now();
+  // Rămâne loc pentru încă un ciclu de trimitere înainte de timeout-ul funcției.
+  const TIME_BUDGET_MS = 40_000;
 
-  for (const item of queue) {
-    // Claim optimist: doar dacă e încă 'pending'
+  for (const [idx, item] of queue.entries()) {
+    // Jitter uman între trimiteri succesive (anti-bot Meta)
+    if (idx > 0 && !force && maxDelay > 0) {
+      const waitMs = (minDelay + Math.random() * (maxDelay - minDelay)) * 1000;
+      if (Date.now() - startedAt + waitMs > TIME_BUDGET_MS) {
+        results.push({ id: item.id, status: "deferred", reason: "delay_budget" });
+        break;
+      }
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
+
+    // Claim optimist: doar dacă e încă 'pending' (sau 'failed' la force send)
     const { data: claimed } = await supabase
       .from("wa_outbound_queue")
       .update({ status: "sending", attempts: (item.attempts ?? 0) + 1 })
       .eq("id", item.id)
-      .eq("status", "pending")
+      .in("status", force ? ["pending", "failed"] : ["pending"])
+
       .select("id")
       .maybeSingle();
     if (!claimed) continue;
