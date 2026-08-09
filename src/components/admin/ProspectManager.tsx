@@ -25,6 +25,8 @@ import ProspectInjectionRejectionStats from "./ProspectInjectionRejectionStats";
 import ProspectRejectionAlerts from "./ProspectRejectionAlerts";
 import ProspectAlertSettings from "./ProspectAlertSettings";
 import PropertyVisionSettingsCard from "./PropertyVisionSettingsCard";
+import PropertyQualityAuditReport from "./vision/PropertyQualityAuditReport";
+
 import ProspectEnrichmentPanel, { type EnrichedImage } from "./ProspectEnrichmentPanel";
 
 interface ProspectListing {
