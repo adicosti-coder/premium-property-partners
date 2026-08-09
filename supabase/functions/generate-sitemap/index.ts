@@ -142,7 +142,6 @@ serve(async (req: Request) => {
       console.error("Error fetching community articles:", commError);
     }
 
-    const today = new Date().toISOString().split("T")[0];
 
     // Build XML sitemap with hreflang
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
