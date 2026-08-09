@@ -138,7 +138,10 @@ const ScrollToTop = () => {
     if (typeof window.gtag === "function") {
       window.gtag("config", GA_MEASUREMENT_ID, { page_path: location.pathname });
     }
+    // Meta Pixel SPA page view (no-op without ads consent / pixel ID)
+    void import("@/lib/conversionTracking").then((m) => m.trackMetaPageView()).catch(() => {});
   }, [location.pathname]);
+
 
   useEffect(() => {
     // Only scroll to top on PUSH navigation (new page), not on POP (back/forward)
