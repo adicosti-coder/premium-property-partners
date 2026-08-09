@@ -11,7 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Ban, Loader2, Plus, Trash2, Upload } from "lucide-react";
-import RevealableField from "@/components/admin/shared/RevealableField";
+import { RevealableField } from "@/components/admin/shared/RevealableField";
 
 type DncRow = {
   id: string;
@@ -204,7 +204,13 @@ export function WhatsappDncList() {
           )}
           {rows.map((r) => (
             <div key={r.id} className="flex items-center gap-3 p-3 text-sm">
-              <RevealableField value={r.phone_normalized} type="phone" recordId={r.id} tableName="wa_dnc_list" />
+              <RevealableField
+                value={r.phone_normalized}
+                kind="phone"
+                recordId={r.id}
+                tableName="wa_dnc_list"
+                field="phone_normalized"
+              />
               <Badge variant="outline">{LABELS.find((l) => l.value === r.label)?.label ?? r.label}</Badge>
               <span className="text-xs text-muted-foreground truncate flex-1">{r.reason ?? "—"}</span>
               <span className="text-[11px] text-muted-foreground hidden sm:inline">
