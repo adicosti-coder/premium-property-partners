@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
   const { data: settings } = await supabase
     .from("wa_agent_settings")
     .select(
-      "outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds",
+      "outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds, outbound_auto_pause_enabled, outbound_min_delivery_rate, outbound_max_consecutive_failures, outbound_paused, outbound_pause_reason",
     )
     .eq("id", 1)
     .maybeSingle();
@@ -57,6 +57,93 @@ Deno.serve(async (req) => {
   const maxPerDay = Math.max(0, Number(settings?.outbound_max_per_day ?? 100));
   const minDelay = Math.max(0, Number(settings?.outbound_min_delay_seconds ?? 30));
   const maxDelay = Math.max(minDelay, Number(settings?.outbound_max_delay_seconds ?? 90));
+  const autoPauseEnabled = settings?.outbound_auto_pause_enabled !== false;
+  const minDeliveryRate = Math.max(0, Number(settings?.outbound_min_delivery_rate ?? 80));
+  const maxConsecutiveFailures = Math.max(1, Number(settings?.outbound_max_consecutive_failures ?? 3));
+
+  // ── Safety switch: worker în pauză (manual sau auto) ───────────────────────
+  if (settings?.outbound_paused === true && !force) {
+    return json({
+      ok: true,
+      processed: 0,
+      paused: true,
+      pause_reason: settings?.outbound_pause_reason ?? "auto_pause",
+    });
+  }
+
+  /** Oprește worker-ul și notifică adminii. */
+  const autoPause = async (reason: string, detail: Record<string, unknown>) => {
+    await supabase
+      .from("wa_agent_settings")
+      .update({
+        outbound_paused: true,
+        outbound_paused_at: new Date().toISOString(),
+        outbound_pause_reason: reason,
+      })
+      .eq("id", 1);
+
+    try {
+      const { data: admins } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+      const rows = (admins ?? []).map((a: { user_id: string }) => ({
+        user_id: a.user_id,
+        type: "warning",
+        title: "WhatsApp outbound pus pe pauză automat",
+        message: `Protecția numărului s-a activat: ${reason}. ${JSON.stringify(detail)}`,
+        link: "/admin/whatsapp-queue",
+      }));
+      if (rows.length) await supabase.from("user_notifications").insert(rows);
+    } catch (e) {
+      console.error("[wa-outbound-worker] admin notify failed:", e);
+    }
+    console.error(`[wa-outbound-worker] AUTO-PAUSE: ${reason}`, detail);
+  };
+
+  // ── Health check pre-run: rata de livrare + erori consecutive Meta ─────────
+  if (autoPauseEnabled && !force) {
+    const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
+    const { data: recent } = await supabase
+      .from("wa_outbound_queue")
+      .select("status, delivered_at, sent_at")
+      .gte("sent_at", since)
+      .not("sent_at", "is", null)
+      .order("sent_at", { ascending: false })
+      .limit(200);
+
+    const sentRows = recent ?? [];
+    if (sentRows.length >= 10) {
+      const delivered = sentRows.filter((r) => r.delivered_at).length;
+      const rate = Math.round((delivered / sentRows.length) * 100);
+      if (rate < minDeliveryRate) {
+        await autoPause("delivery_rate_low", {
+          delivery_rate: rate,
+          threshold: minDeliveryRate,
+          sample: sentRows.length,
+        });
+        return json({ ok: true, processed: 0, paused: true, delivery_rate: rate });
+      }
+    }
+
+    const { data: lastAttempts } = await supabase
+      .from("wa_outbound_queue")
+      .select("status")
+      .in("status", ["sent", "failed", "replied"])
+      .order("updated_at", { ascending: false })
+      .limit(maxConsecutiveFailures);
+    const attempts = lastAttempts ?? [];
+    if (
+      attempts.length >= maxConsecutiveFailures &&
+      attempts.every((a) => a.status === "failed")
+    ) {
+      await autoPause("consecutive_meta_failures", {
+        consecutive_failures: attempts.length,
+        threshold: maxConsecutiveFailures,
+      });
+      return json({ ok: true, processed: 0, paused: true, consecutive_failures: attempts.length });
+    }
+  }
 
   let allowance = batchSize;
   if (!force) {
@@ -116,10 +203,31 @@ Deno.serve(async (req) => {
 
   const results: Record<string, unknown>[] = [];
   const startedAt = Date.now();
+  let consecutiveFailures = 0;
   // Rămâne loc pentru încă un ciclu de trimitere înainte de timeout-ul funcției.
   const TIME_BUDGET_MS = 40_000;
 
   for (const [idx, item] of queue.entries()) {
+    // ── Listă excludere (DNC / agenții / refuzuri) ───────────────────────────
+    const { data: dnc } = await supabase
+      .from("wa_dnc_list")
+      .select("reason, label")
+      .eq("phone_normalized", item.phone_normalized)
+      .maybeSingle();
+
+    if (dnc) {
+      await supabase
+        .from("wa_outbound_queue")
+        .update({
+          status: "cancelled",
+          last_error: `blocat: număr în lista de excludere (${dnc.label}${dnc.reason ? ` — ${dnc.reason}` : ""})`,
+        })
+        .eq("id", item.id)
+        .in("status", ["pending", "failed"]);
+      results.push({ id: item.id, status: "blocked_dnc" });
+      continue;
+    }
+
     // ── Deduplicare: niciun mesaj activ/trimis către același număr în 72h ─────
     const dedupSince = new Date(Date.now() - 72 * 3_600_000).toISOString();
     const { count: recentCount } = await supabase
@@ -237,6 +345,7 @@ Deno.serve(async (req) => {
           metadata: { template: item.template_name, attempts },
         });
 
+        consecutiveFailures = 0;
         results.push({ id: item.id, status: "sent" });
       } else {
         const err = (send.error ?? `http_${send.status}`).slice(0, 500);
@@ -256,6 +365,14 @@ Deno.serve(async (req) => {
           .eq("id", item.id);
 
         results.push({ id: item.id, status: exhausted ? "failed" : "retry", error: err });
+        if (exhausted) consecutiveFailures += 1;
+        if (autoPauseEnabled && consecutiveFailures >= maxConsecutiveFailures) {
+          await autoPause("consecutive_meta_failures", {
+            consecutive_failures: consecutiveFailures,
+            threshold: maxConsecutiveFailures,
+          });
+          break;
+        }
       }
     } catch (e) {
       const attempts = (item.attempts ?? 0) + 1;
