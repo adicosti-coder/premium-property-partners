@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ViewingRequestModal from "@/components/ViewingRequestModal";
 import { Building2, Key, MapPin, Maximize2, BedDouble, CalendarCheck, ArrowRight } from "lucide-react";
+import { storageImage, storageImageSrcSet } from "@/utils/supabaseImage";
 
 interface ListingProperty {
   id: string;
@@ -177,7 +178,9 @@ const RealEstateListings = () => {
                   {/* Image — fixed aspect container (h-52) prevents CLS */}
                   <div className="relative h-52 overflow-hidden bg-muted">
                     <img
-                      src={getImageUrl(listing)}
+                      src={storageImage(getImageUrl(listing), { width: 400 })}
+                      srcSet={storageImageSrcSet(getImageUrl(listing))}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                       alt={listing.name}
                       width={400}
                       height={208}
