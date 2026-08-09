@@ -104,6 +104,30 @@ export function getCampaignAttribution(): CampaignAttribution | null {
 }
 
 /**
+ * Record the active CTA A/B variant so every lead submitted in this session
+ * can be attributed to the variant that was actually shown.
+ */
+export function setCtaVariant(variant: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const current = read() ?? {};
+    if (current.cta_variant === variant) return;
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ ...current, cta_variant: variant }),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Active CTA variant for this session, if one was recorded. */
+export function getCtaVariant(): string | undefined {
+  return read()?.cta_variant;
+}
+
+
+/**
  * Merge attribution into a lead's `simulation_data` payload.
  * No-op when the visitor has no campaign/outreach context.
  */
