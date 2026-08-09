@@ -241,8 +241,19 @@ Deno.serve(async (req) => {
     const text = await response.text();
     if (!response.ok) {
       console.error(`[meta-conversions] Meta rejected event [${response.status}]: ${text}`);
+      await logDelivery({
+        event_name: body.event_name,
+        event_id: body.event_id,
+        dry_run: body.dry_run,
+        ok: false,
+        http_status: response.status,
+        outcome: "meta_rejected",
+        error_detail: text.slice(0, 2000),
+        event_source_url: body.event_source_url ?? null,
+      });
       return json(
         {
+          ok: false,
           error: "Meta request failed",
           status: response.status,
           details: text,
@@ -250,10 +261,21 @@ Deno.serve(async (req) => {
             ? { dry_run: true, configured: true, event_id: body.event_id, hashed_fields: hashedFields }
             : {}),
         },
-        // A dry-run always answers 200 so the QA panel can render the failure.
-        body.dry_run ? 200 : response.status,
+        // Always 200: the browser must never surface a tracking failure, and the
+        // QA panel reads the outcome from the body instead.
+        200,
       );
     }
+
+    await logDelivery({
+      event_name: body.event_name,
+      event_id: body.event_id,
+      dry_run: body.dry_run,
+      ok: true,
+      http_status: response.status,
+      outcome: "sent",
+      event_source_url: body.event_source_url ?? null,
+    });
 
     return json({
       ok: true,
@@ -273,6 +295,18 @@ Deno.serve(async (req) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[meta-conversions] unexpected error:", message);
-    return json({ error: "Unexpected error", details: message }, 500);
+    await logDelivery({
+      event_name: body.event_name,
+      event_id: body.event_id,
+      dry_run: body.dry_run,
+      ok: false,
+      http_status: null,
+      outcome: "network_error",
+      error_detail: message.slice(0, 2000),
+      event_source_url: body.event_source_url ?? null,
+    });
+    // 200 keeps the client silent; the delivery journal records the failure.
+    return json({ ok: false, error: "Unexpected error", details: message }, 200);
   }
 });
+
