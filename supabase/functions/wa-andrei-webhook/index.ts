@@ -160,9 +160,56 @@ Deno.serve(async (req) => {
         }
 
         conversationsToReply.add(convId);
+
+        // Marchează în coada outbound primul răspuns primit de la acest număr
+        try {
+          const { data: pendingReply } = await supabase
+            .from("wa_outbound_queue")
+            .select("id")
+            .eq("phone_normalized", from)
+            .in("status", ["sent"])
+            .is("replied_at", null)
+            .order("sent_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (pendingReply?.id) {
+            await supabase
+              .from("wa_outbound_queue")
+              .update({ status: "replied", replied_at: nowIso })
+              .eq("id", pendingReply.id);
+          }
+        } catch (e) {
+          console.error("[wa-webhook] queue reply mark failed:", e);
+        }
+      }
+
+      // ── Status callbacks (sent / delivered / read / failed) ────────────────
+      for (const st of value?.statuses || []) {
+        const waId = st?.id;
+        const state = String(st?.status || "");
+        if (!waId || !state) continue;
+        const tsIso = st?.timestamp
+          ? new Date(Number(st.timestamp) * 1000).toISOString()
+          : new Date().toISOString();
+
+        const patch: Record<string, unknown> = {};
+        if (state === "delivered") patch.delivered_at = tsIso;
+        else if (state === "read") patch.read_at = tsIso;
+        else if (state === "failed") {
+          patch.status = "failed";
+          patch.last_error = `meta_status_failed: ${JSON.stringify(st?.errors ?? {}).slice(0, 400)}`;
+        }
+        if (!Object.keys(patch).length) continue;
+
+        const { error: qErr } = await supabase
+          .from("wa_outbound_queue")
+          .update(patch)
+          .eq("wa_message_id", waId);
+        if (qErr) console.error("[wa-webhook] status update failed:", qErr);
       }
     }
   }
+
 
   // Fire-and-forget replies (must return 200 to Meta < 20s)
   for (const convId of conversationsToReply) {

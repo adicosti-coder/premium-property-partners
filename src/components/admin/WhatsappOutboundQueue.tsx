@@ -14,7 +14,12 @@ import {
 import { toast } from "@/hooks/use-toast";
 import {
   Send, Ban, RefreshCw, Download, Loader2, Radio, ShieldAlert, Clock, MessageSquare,
+  Pencil, RotateCcw, History,
 } from "lucide-react";
+import { WhatsappQueueTimeline } from "@/components/admin/whatsapp/WhatsappQueueTimeline";
+import {
+  WhatsappQueueEditDialog, type EditableQueueItem,
+} from "@/components/admin/whatsapp/WhatsappQueueEditDialog";
 
 type QueueRow = {
   id: string;
@@ -32,6 +37,11 @@ type QueueRow = {
   sent_at: string | null;
   created_at: string;
   conversation_id: string | null;
+  template_params: unknown;
+  wa_message_id: string | null;
+  delivered_at: string | null;
+  read_at: string | null;
+  replied_at: string | null;
 };
 
 type RateSettings = {
@@ -71,13 +81,15 @@ export default function WhatsappOutboundQueue() {
   const [workerBusy, setWorkerBusy] = useState(false);
   const [settings, setSettings] = useState<RateSettings | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [timelineId, setTimelineId] = useState<string | null>(null);
+  const [editItem, setEditItem] = useState<EditableQueueItem | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     let q = supabase
       .from("wa_outbound_queue")
       .select(
-        "id, phone_normalized, prospect_listing_id, lead_id, template_name, template_language, status, priority, attempts, last_error, source, scheduled_at, sent_at, created_at, conversation_id",
+        "id, phone_normalized, prospect_listing_id, lead_id, template_name, template_language, template_params, status, priority, attempts, last_error, source, scheduled_at, sent_at, created_at, conversation_id, wa_message_id, delivered_at, read_at, replied_at",
       )
       .order("created_at", { ascending: false })
       .limit(200);
@@ -129,6 +141,41 @@ export default function WhatsappOutboundQueue() {
   }, [rows]);
 
   const replyRate = stats.sent ? Math.round((stats.replied / stats.sent) * 100) : 0;
+
+  const delivery = useMemo(() => {
+    const sent = rows.filter((r) => r.sent_at);
+    const delivered = sent.filter((r) => r.delivered_at).length;
+    const read = sent.filter((r) => r.read_at).length;
+    const replied = sent.filter((r) => r.replied_at || r.status === "replied").length;
+    const pct = (n: number) => (sent.length ? Math.round((n / sent.length) * 100) : 0);
+    return {
+      total: sent.length,
+      delivered, read, replied,
+      deliveryRate: pct(delivered),
+      readRate: pct(read),
+      conversionRate: pct(replied),
+    };
+  }, [rows]);
+
+  const retryItem = async (id: string) => {
+    setBusyId(id);
+    const { error } = await supabase
+      .from("wa_outbound_queue")
+      .update({
+        status: "pending",
+        last_error: null,
+        scheduled_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("status", "failed");
+    setBusyId(null);
+    if (error) {
+      toast({ title: "Repornirea a eșuat", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Mesaj repornit", description: "A fost reprogramat pentru trimitere." });
+    await load();
+  };
 
   const forceSend = async (id: string) => {
     setBusyId(id);
@@ -189,18 +236,23 @@ export default function WhatsappOutboundQueue() {
   const exportCsv = () => {
     const headers = [
       "id", "telefon", "status", "sablon", "limba", "sursa", "prioritate",
-      "incercari", "programat_la", "trimis_la", "creat_la", "conversatie_id", "eroare",
+      "incercari", "programat_la", "trimis_la", "livrat_la", "citit_la", "raspuns_la",
+      "creat_la", "conversatie_id", "eroare",
     ];
     const lines = [headers.join(",")];
     for (const r of filtered) {
       lines.push([
         r.id, r.phone_normalized, r.status, r.template_name, r.template_language, r.source,
-        r.priority, r.attempts, r.scheduled_at, r.sent_at, r.created_at, r.conversation_id, r.last_error,
+        r.priority, r.attempts, r.scheduled_at, r.sent_at, r.delivered_at, r.read_at, r.replied_at,
+        r.created_at, r.conversation_id, r.last_error,
       ].map(csvCell).join(","));
     }
     lines.push("");
     lines.push([csvCell("Total"), csvCell(filtered.length)].join(","));
     lines.push([csvCell("Rata de răspuns"), csvCell(`${replyRate}%`)].join(","));
+    lines.push([csvCell("Rata de livrare"), csvCell(`${delivery.deliveryRate}%`)].join(","));
+    lines.push([csvCell("Rata de citire"), csvCell(`${delivery.readRate}%`)].join(","));
+    lines.push([csvCell("Rata de conversie în răspuns"), csvCell(`${delivery.conversionRate}%`)].join(","));
     const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -308,6 +360,37 @@ export default function WhatsappOutboundQueue() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
+            <Radio className="h-4 w-4 text-primary" />
+            Raport rate delivery
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { label: "Rata de livrare", value: delivery.deliveryRate, count: delivery.delivered },
+              { label: "Rata de citire", value: delivery.readRate, count: delivery.read },
+              { label: "Conversie în răspuns", value: delivery.conversionRate, count: delivery.replied },
+            ].map((m) => (
+              <div key={m.label} className="space-y-1">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-xs text-muted-foreground">{m.label}</p>
+                  <p className="text-lg font-semibold text-foreground">{m.value}%</p>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${m.value}%` }} />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {m.count} din {delivery.total} mesaje trimise
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-primary" />
             Protecții & Rate limiting
           </CardTitle>
@@ -393,6 +476,41 @@ export default function WhatsappOutboundQueue() {
                       </Button>
                       <Button
                         size="sm"
+                        variant="outline"
+                        aria-label="Editează mesajul"
+                        title="Editează variabilele șablonului"
+                        disabled={r.status !== "pending"}
+                        onClick={() => setEditItem({
+                          id: r.id,
+                          template_name: r.template_name,
+                          template_language: r.template_language,
+                          template_params: r.template_params,
+                          status: r.status,
+                        })}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        aria-label="Repornește mesajul eșuat"
+                        title="Repornește mesajul eșuat"
+                        disabled={r.status !== "failed" || busyId === r.id}
+                        onClick={() => void retryItem(r.id)}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        aria-label="Vezi timeline evenimente"
+                        title="Vezi timeline evenimente"
+                        onClick={() => setTimelineId(r.id)}
+                      >
+                        <History className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
                         variant="ghost"
                         aria-label="Anulează din coadă"
                         title="Anulează din coadă"
@@ -409,6 +527,12 @@ export default function WhatsappOutboundQueue() {
           </tbody>
         </table>
       </div>
+      <WhatsappQueueTimeline queueId={timelineId} onClose={() => setTimelineId(null)} />
+      <WhatsappQueueEditDialog
+        item={editItem}
+        onClose={() => setEditItem(null)}
+        onSaved={() => void load()}
+      />
     </AdminPageShell>
   );
 }
