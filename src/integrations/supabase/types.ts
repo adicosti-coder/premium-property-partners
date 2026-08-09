@@ -4165,6 +4165,54 @@ export type Database = {
           },
         ]
       }
+      property_quality_overrides: {
+        Row: {
+          admin_id: string | null
+          ai_quality_score: number | null
+          created_at: string
+          id: string
+          note: string | null
+          override: Json
+          previous_override: Json | null
+          prospect_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          ai_quality_score?: number | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          override: Json
+          previous_override?: Json | null
+          prospect_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          ai_quality_score?: number | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          override?: Json
+          previous_override?: Json | null
+          prospect_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_quality_overrides_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_quality_overrides_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+        ]
+      }
       property_requests: {
         Row: {
           bedrooms: string | null
@@ -4339,6 +4387,84 @@ export type Database = {
           },
         ]
       }
+      property_vision_cache: {
+        Row: {
+          analysis: Json
+          created_at: string
+          hit_count: number
+          hotel_readiness: number
+          id: string
+          images_analyzed: number
+          images_hash: string
+          last_used_at: string
+          model: string
+          quality_score: number
+          updated_at: string
+        }
+        Insert: {
+          analysis: Json
+          created_at?: string
+          hit_count?: number
+          hotel_readiness: number
+          id?: string
+          images_analyzed?: number
+          images_hash: string
+          last_used_at?: string
+          model: string
+          quality_score: number
+          updated_at?: string
+        }
+        Update: {
+          analysis?: Json
+          created_at?: string
+          hit_count?: number
+          hotel_readiness?: number
+          id?: string
+          images_analyzed?: number
+          images_hash?: string
+          last_used_at?: string
+          model?: string
+          quality_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      property_vision_settings: {
+        Row: {
+          auto_threshold: number
+          cache_enabled: boolean
+          cache_ttl_days: number
+          created_at: string
+          id: number
+          max_images: number
+          updated_at: string
+          updated_by: string | null
+          vision_enabled: boolean
+        }
+        Insert: {
+          auto_threshold?: number
+          cache_enabled?: boolean
+          cache_ttl_days?: number
+          created_at?: string
+          id?: number
+          max_images?: number
+          updated_at?: string
+          updated_by?: string | null
+          vision_enabled?: boolean
+        }
+        Update: {
+          auto_threshold?: number
+          cache_enabled?: boolean
+          cache_ttl_days?: number
+          created_at?: string
+          id?: number
+          max_images?: number
+          updated_at?: string
+          updated_by?: string | null
+          vision_enabled?: boolean
+        }
+        Relationships: []
+      }
       prospect_alert_settings: {
         Row: {
           dominance_critical_ratio: number
@@ -4462,6 +4588,9 @@ export type Database = {
           prospect_type: string
           quality_analysis: Json | null
           quality_analyzed_at: string | null
+          quality_override: Json | null
+          quality_override_at: string | null
+          quality_override_by: string | null
           quality_score: number | null
           rating: number | null
           rejection_reason: string | null
@@ -4555,6 +4684,9 @@ export type Database = {
           prospect_type?: string
           quality_analysis?: Json | null
           quality_analyzed_at?: string | null
+          quality_override?: Json | null
+          quality_override_at?: string | null
+          quality_override_by?: string | null
           quality_score?: number | null
           rating?: number | null
           rejection_reason?: string | null
@@ -4648,6 +4780,9 @@ export type Database = {
           prospect_type?: string
           quality_analysis?: Json | null
           quality_analyzed_at?: string | null
+          quality_override?: Json | null
+          quality_override_at?: string | null
+          quality_override_by?: string | null
           quality_score?: number | null
           rating?: number | null
           rejection_reason?: string | null
