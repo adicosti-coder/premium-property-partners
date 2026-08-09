@@ -395,6 +395,8 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("[property-vision-score] error:", e);
-    return json({ error: (e as Error).message }, 500);
+    await logVisionError("exception", { error: e });
+    return json({ error: (e as Error).message, fallback: "text_only" }, 500);
+
   }
 });
