@@ -280,6 +280,8 @@ export default function TrackingQAPanel() {
       }
     >
       <div className="space-y-6">
+        <CapiStatusWidget />
+
         {lastResult && (
           <Card>
             <CardHeader className="pb-3">
