@@ -11,6 +11,7 @@
 
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.23.8";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 const GRAPH_VERSION = "v21.0";
 
@@ -28,7 +29,11 @@ const BodySchema = z.object({
   name: z.string().max(160).optional(),
   fbp: z.string().max(200).optional(),
   fbc: z.string().max(400).optional(),
+  /** Admin-only QA mode: forces a Meta test_event_code and returns diagnostics. */
+  dry_run: z.boolean().optional().default(false),
+  test_event_code: z.string().max(60).optional(),
 });
+
 
 const sha256 = async (value: string): Promise<string> => {
   const bytes = new TextEncoder().encode(value);
