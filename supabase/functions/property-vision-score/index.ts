@@ -166,8 +166,10 @@ Deno.serve(async (req) => {
       .slice(0, settings.max_images);
 
     if (images.length === 0) {
-      return json({ error: "no_usable_images", prospect_id: prospectId }, 422);
+      await logVisionError("no_usable_images", { images: 0 });
+      return json({ error: "no_usable_images", prospect_id: prospectId, fallback: "text_only" }, 422);
     }
+
 
     const contextLine = [
       prospect.title ? `Titlu: ${prospect.title}` : null,
