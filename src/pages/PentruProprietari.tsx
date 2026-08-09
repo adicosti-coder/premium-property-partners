@@ -403,7 +403,11 @@ const PentruProprietari = () => {
           ]
         }
       };
-      setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema, faqPageSchema, taxAdvisorySchema]);
+      // faqPageSchema is intentionally NOT injected here: the visible OwnersFAQ /
+      // FAQ accordions register the same questions through FAQSchemaProvider, and
+      // two FAQPage nodes on one URL invalidate the rich result.
+      void faqPageSchema;
+      setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema, taxAdvisorySchema]);
     });
   }, [seo.title]);
 
