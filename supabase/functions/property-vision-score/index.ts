@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
           tool_choice: { type: "function", function: { name: "submit_quality_analysis" } },
         }),
       },
-      { label: "property-vision-score", maxAttempts: 3, timeoutMs: 60_000 },
+      { label: "property-vision-score", maxAttempts: 3, timeoutMs: 60_000, maxBodyChars: 200_000 },
     );
 
     if (!aiRes.ok) {
