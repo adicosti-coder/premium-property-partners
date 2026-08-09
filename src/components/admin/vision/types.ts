@@ -41,6 +41,10 @@ export interface PropertyVisionSettings {
   cache_enabled: boolean;
   cache_ttl_days: number;
   max_images: number;
+  /** Auto-enqueue high-scoring prospects into Andrei's WhatsApp outbound queue. */
+  auto_outbound_enabled: boolean;
+  outbound_threshold: number;
+  outbound_template: string;
 }
 
 export const VISION_SETTINGS_DEFAULTS: PropertyVisionSettings = {
@@ -49,7 +53,11 @@ export const VISION_SETTINGS_DEFAULTS: PropertyVisionSettings = {
   cache_enabled: true,
   cache_ttl_days: 90,
   max_images: 5,
+  auto_outbound_enabled: false,
+  outbound_threshold: 70,
+  outbound_template: "realtrust_owner_intro",
 };
+
 
 export const CONDITION_OPTIONS = [
   { value: "nou", label: "Nou" },
