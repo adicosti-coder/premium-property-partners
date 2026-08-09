@@ -29,7 +29,10 @@ export interface CampaignAttribution {
   landing_path?: string;
   referrer?: string;
   captured_at?: string;
+  /** Active A/B variant of the owners-page hero CTA ("A" | "B"). */
+  cta_variant?: string;
 }
+
 
 const PARAM_KEYS: Array<keyof CampaignAttribution> = [
   "utm_source",
