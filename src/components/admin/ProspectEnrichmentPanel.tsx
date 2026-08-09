@@ -34,6 +34,7 @@ interface Props {
     quality_score?: number | null;
     quality_analysis?: PropertyQualityAnalysis | null;
     quality_analyzed_at?: string | null;
+    quality_override?: PropertyQualityOverride | null;
 
   };
   onUpdated?: (patch: Record<string, unknown>) => void;
