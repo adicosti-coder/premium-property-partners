@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { OPEN_COOKIE_PREFERENCES_EVENT } from "@/components/CookieConsent";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Phone, Mail, Send, Lock, ShieldCheck, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
