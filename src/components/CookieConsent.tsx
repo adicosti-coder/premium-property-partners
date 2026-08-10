@@ -105,7 +105,7 @@ const CookieConsent = () => {
               cookie-uri de analiză și publicitate. Poți accepta tot, păstra doar strictul necesar sau
               alege în detaliu. Îți poți schimba oricând opțiunea.{" "}
               <Link to="/politica-confidentialitate" className="underline underline-offset-2 hover:text-foreground">
-                Politica de cookie-uri
+                Politica de confidențialitate
               </Link>
             </p>
           </div>
