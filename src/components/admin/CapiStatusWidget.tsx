@@ -124,18 +124,18 @@ export const CapiStatusWidget = () => {
                 {lastOk === false ? "Activ / Verifică erorile" : "Activ / Test OK"}
               </Badge>
             ) : (
-              <Badge variant="destructive" className="gap-1">
-                <XCircle className="w-3 h-3" aria-hidden="true" />
-                Inactiv / Secrete lipsă
+              <Badge variant="secondary" className="gap-1">
+                <ShieldCheck className="w-3 h-3" aria-hidden="true" />
+                Inactiv (Fallback activ – necesită chei Meta)
               </Badge>
             )}
             <Badge variant="outline" className="gap-1">
               <KeyRound className="w-3 h-3" aria-hidden="true" />
-              Pixel ID: {status?.has_pixel_id ? "setat" : "lipsă"}
+              Pixel ID: {status?.has_pixel_id ? "setat" : "neconfigurat"}
             </Badge>
             <Badge variant="outline" className="gap-1">
               <KeyRound className="w-3 h-3" aria-hidden="true" />
-              Access Token: {status?.has_access_token ? "setat" : "lipsă"}
+              Access Token: {status?.has_access_token ? "setat" : "neconfigurat"}
             </Badge>
             <Badge variant="outline">
               Test Event Code: {status?.has_test_event_code ? "setat" : "opțional"}
@@ -145,12 +145,12 @@ export const CapiStatusWidget = () => {
 
         {!isConfigured && !statusQuery.isLoading && !statusQuery.isError && (
           <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-            Trimiterea server-side este oprită temporar, fără erori pentru vizitatori: conversiile
-            sunt raportate în continuare client-side prin GA4 și Meta Pixel. Salvează{" "}
-            <span className="font-mono">META_PIXEL_ID</span> și{" "}
-            <span className="font-mono">META_CAPI_ACCESS_TOKEN</span> pentru a activa CAPI.
+            Fallback activ: transmisia server-side este în pauză, iar conversiile sunt raportate
+            client-side prin GA4 și Meta Pixel. Nu apar erori pentru vizitatori — evenimentele sunt
+            doar marcate „Ignorat” în jurnal. CAPI pornește automat imediat ce salvezi cheile Meta.
           </p>
         )}
+
 
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Ultimele 5 evenimente</p>
