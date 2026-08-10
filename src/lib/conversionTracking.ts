@@ -36,7 +36,14 @@ const readConsent = (): ConsentChoice | null => {
   try {
     const raw = localStorage.getItem(CONSENT_KEY);
     if (!raw) return null;
-    // Stored as a bare string ("all"), historically sometimes JSON-encoded.
+    // Current shape: {"choice":"all","ts":…} with a 12-month validity.
+    // Older builds stored a bare (sometimes JSON-quoted) string.
+    if (raw.startsWith("{")) {
+      const parsed = JSON.parse(raw) as { choice?: string; ts?: number };
+      if (typeof parsed.ts === "number" && Date.now() - parsed.ts > 365 * 24 * 60 * 60 * 1000) return null;
+      const c = parsed.choice;
+      return c === "all" || c === "analytics_only" || c === "declined" ? c : null;
+    }
     const value = raw.startsWith('"') ? (JSON.parse(raw) as string) : raw;
     if (value === "all" || value === "analytics_only" || value === "declined") return value;
     return null;

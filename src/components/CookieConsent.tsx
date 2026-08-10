@@ -5,6 +5,26 @@ import { Shield, SlidersHorizontal } from "lucide-react";
 import { initMetaPixel } from "@/lib/conversionTracking";
 
 const COOKIE_CONSENT_KEY = "cookie_consent_v2";
+/** GDPR best practice: consent must be re-asked at least once a year. */
+const CONSENT_TTL_MS = 365 * 24 * 60 * 60 * 1000;
+
+/** Stored shape: {"choice":"all","ts":1690000000000}; bare strings from older builds still parse. */
+const readStoredConsent = (): ConsentChoice | null => {
+  try {
+    const raw = localStorage.getItem(COOKIE_CONSENT_KEY);
+    if (!raw) return null;
+    if (raw.startsWith("{")) {
+      const parsed = JSON.parse(raw) as { choice?: string; ts?: number };
+      if (!parsed.choice) return null;
+      if (typeof parsed.ts === "number" && Date.now() - parsed.ts > CONSENT_TTL_MS) return null;
+      return parsed.choice as ConsentChoice;
+    }
+    const value = raw.startsWith('"') ? (JSON.parse(raw) as string) : raw;
+    return value === "all" || value === "analytics_only" || value === "declined" ? value : null;
+  } catch {
+    return null;
+  }
+};
 
 /** Fire this on window to reopen the preferences panel (e.g. from the footer). */
 export const OPEN_COOKIE_PREFERENCES_EVENT = "realtrust:open-cookie-preferences";
@@ -46,7 +66,7 @@ const CookieConsent = () => {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const stored = localStorage.getItem(COOKIE_CONSENT_KEY) as ConsentChoice | null;
+      const stored = readStoredConsent();
       if (stored) {
         updateConsent(stored);
         setAnalyticsEnabled(stored === "all" || stored === "analytics_only");
@@ -69,7 +89,9 @@ const CookieConsent = () => {
   }, []);
 
   const save = useCallback((choice: ConsentChoice) => {
-    try { localStorage.setItem(COOKIE_CONSENT_KEY, choice); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify({ choice, ts: Date.now() }));
+    } catch { /* ignore */ }
     updateConsent(choice);
     setVisible(false);
     setShowSettings(false);
