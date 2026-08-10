@@ -9794,6 +9794,10 @@ export type Database = {
           impressions: number
         }[]
       }
+      get_conversion_attribution_report: {
+        Args: { p_days?: number }
+        Returns: Json
+      }
       get_cron_reconcile_secret: { Args: never; Returns: string }
       get_owner_property_reviews: {
         Args: { p_property_id?: string }
