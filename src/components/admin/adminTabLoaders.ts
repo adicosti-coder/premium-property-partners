@@ -14,6 +14,8 @@ const loaders: Record<string, Loader> = {
   leads: () => import("@/components/admin/LeadsManager"),
   "leads-analytics": () => import("@/components/admin/LeadsAnalyticsDashboard"),
   "tracking-qa": () => import("@/components/admin/TrackingQAPanel"),
+  "conversion-report": () => import("@/components/admin/WeeklyConversionReport"),
+
 
   bookings: () => import("@/components/admin/BookingManager"),
   cazare: () => import("@/components/admin/CazareManager"),

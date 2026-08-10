@@ -167,10 +167,14 @@ const DeferredShell = ({ children }: { children: React.ReactNode }) => {
     };
     const events = ["click", "touchstart", "keydown"] as const;
     events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+    // GDPR: the cookie banner must appear without requiring an interaction first.
+    const timer = setTimeout(trigger, 2500);
     return () => {
+      clearTimeout(timer);
       events.forEach(e => document.removeEventListener(e, trigger));
     };
   }, []);
+
 
   return (
     <>

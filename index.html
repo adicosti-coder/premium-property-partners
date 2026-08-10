@@ -3,6 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Google Consent Mode v2 — everything denied until the visitor chooses (GDPR).
+         Must run BEFORE any tag loads so no cookie/identifier is written first. -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){window.dataLayer.push(arguments);}
+      window.gtag = window.gtag || gtag;
+      (function () {
+        var stored = null;
+        try { stored = localStorage.getItem('cookie_consent_v2'); } catch (e) {}
+        if (stored && stored.charAt(0) === '"') { try { stored = JSON.parse(stored); } catch (e) {} }
+        var analytics = stored === 'all' || stored === 'analytics_only' ? 'granted' : 'denied';
+        var ads = stored === 'all' ? 'granted' : 'denied';
+        gtag('consent', 'default', {
+          ad_storage: ads,
+          ad_user_data: ads,
+          ad_personalization: ads,
+          analytics_storage: analytics,
+          functionality_storage: 'granted',
+          security_storage: 'granted',
+          wait_for_update: 2000
+        });
+        gtag('set', 'url_passthrough', true);
+        gtag('set', 'ads_data_redaction', ads !== 'granted');
+      })();
+    </script>
+
     
     <title>RealTrust Timișoara | Regim Hotelier & Servicii Imobiliare</title>
     <meta name="description" content="RealTrust oferă servicii profesionale de regim hotelier, property management și consultanță imobiliară în Timișoara. Maximizează randamentul investiției tale.">

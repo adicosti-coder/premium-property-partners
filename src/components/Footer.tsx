@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { OPEN_COOKIE_PREFERENCES_EVENT } from "@/components/CookieConsent";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Phone, Mail, Send, Lock, ShieldCheck, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -216,10 +218,19 @@ const Footer = () => {
             <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-primary" /> GDPR</span>
             <span>© 2026 RealTrust. {t.footer.rights}</span>
           </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             <Link to="/termeni-si-conditii" className="hover:text-foreground transition-colors">{t.footer.terms}</Link>
             <Link to="/politica-confidentialitate" className="hover:text-foreground transition-colors">{t.footer.privacy}</Link>
+            {/* GDPR: consent must be withdrawable at any time. */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_PREFERENCES_EVENT))}
+              className="hover:text-foreground transition-colors underline-offset-2 hover:underline"
+            >
+              Preferințe cookie-uri
+            </button>
           </div>
+
         </div>
 
         {/* Disclaimer - compact */}
