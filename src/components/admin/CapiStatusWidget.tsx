@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AlertTriangle, CheckCircle2, KeyRound, Loader2, RefreshCw, XCircle, Radio,
+  AlertTriangle, CheckCircle2, KeyRound, Loader2, RefreshCw, ShieldCheck, Radio,
 } from "lucide-react";
+
 
 /**
  * Meta Conversions API status monitor.
@@ -124,18 +125,18 @@ export const CapiStatusWidget = () => {
                 {lastOk === false ? "Activ / Verifică erorile" : "Activ / Test OK"}
               </Badge>
             ) : (
-              <Badge variant="destructive" className="gap-1">
-                <XCircle className="w-3 h-3" aria-hidden="true" />
-                Inactiv / Secrete lipsă
+              <Badge variant="secondary" className="gap-1">
+                <ShieldCheck className="w-3 h-3" aria-hidden="true" />
+                Inactiv (Fallback activ – necesită chei Meta)
               </Badge>
             )}
             <Badge variant="outline" className="gap-1">
               <KeyRound className="w-3 h-3" aria-hidden="true" />
-              Pixel ID: {status?.has_pixel_id ? "setat" : "lipsă"}
+              Pixel ID: {status?.has_pixel_id ? "setat" : "neconfigurat"}
             </Badge>
             <Badge variant="outline" className="gap-1">
               <KeyRound className="w-3 h-3" aria-hidden="true" />
-              Access Token: {status?.has_access_token ? "setat" : "lipsă"}
+              Access Token: {status?.has_access_token ? "setat" : "neconfigurat"}
             </Badge>
             <Badge variant="outline">
               Test Event Code: {status?.has_test_event_code ? "setat" : "opțional"}
@@ -145,12 +146,12 @@ export const CapiStatusWidget = () => {
 
         {!isConfigured && !statusQuery.isLoading && !statusQuery.isError && (
           <p className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-            Trimiterea server-side este oprită temporar, fără erori pentru vizitatori: conversiile
-            sunt raportate în continuare client-side prin GA4 și Meta Pixel. Salvează{" "}
-            <span className="font-mono">META_PIXEL_ID</span> și{" "}
-            <span className="font-mono">META_CAPI_ACCESS_TOKEN</span> pentru a activa CAPI.
+            Fallback activ: transmisia server-side este în pauză, iar conversiile sunt raportate
+            client-side prin GA4 și Meta Pixel. Nu apar erori pentru vizitatori — evenimentele sunt
+            doar marcate „Ignorat” în jurnal. CAPI pornește automat imediat ce salvezi cheile Meta.
           </p>
         )}
+
 
         <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">Ultimele 5 evenimente</p>
@@ -178,12 +179,21 @@ export const CapiStatusWidget = () => {
                     </div>
                     <p className="truncate text-xs text-muted-foreground">
                       {formatTime(row.created_at)} · {OUTCOME_LABEL[row.outcome] ?? row.outcome}
-                      {row.error_detail ? ` · ${row.error_detail}` : ""}
+                      {/* Missing keys are an expected fallback state, not an error to surface. */}
+                      {row.error_detail && row.outcome !== "skipped_not_configured"
+                        ? ` · ${row.error_detail}`
+                        : ""}
                     </p>
                   </div>
-                  <Badge variant={row.ok ? "default" : "destructive"} className="shrink-0">
-                    {row.http_status ?? "—"}
+                  <Badge
+                    variant={
+                      row.ok ? "default" : row.outcome === "skipped_not_configured" ? "secondary" : "destructive"
+                    }
+                    className="shrink-0"
+                  >
+                    {row.http_status ?? (row.outcome === "skipped_not_configured" ? "fallback" : "—")}
                   </Badge>
+
                 </li>
               ))}
             </ul>
