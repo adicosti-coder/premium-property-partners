@@ -179,12 +179,21 @@ export const CapiStatusWidget = () => {
                     </div>
                     <p className="truncate text-xs text-muted-foreground">
                       {formatTime(row.created_at)} · {OUTCOME_LABEL[row.outcome] ?? row.outcome}
-                      {row.error_detail ? ` · ${row.error_detail}` : ""}
+                      {/* Missing keys are an expected fallback state, not an error to surface. */}
+                      {row.error_detail && row.outcome !== "skipped_not_configured"
+                        ? ` · ${row.error_detail}`
+                        : ""}
                     </p>
                   </div>
-                  <Badge variant={row.ok ? "default" : "destructive"} className="shrink-0">
-                    {row.http_status ?? "—"}
+                  <Badge
+                    variant={
+                      row.ok ? "default" : row.outcome === "skipped_not_configured" ? "secondary" : "destructive"
+                    }
+                    className="shrink-0"
+                  >
+                    {row.http_status ?? (row.outcome === "skipped_not_configured" ? "fallback" : "—")}
                   </Badge>
+
                 </li>
               ))}
             </ul>
