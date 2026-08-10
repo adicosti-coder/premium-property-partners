@@ -227,7 +227,7 @@ const Footer = () => {
               onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_PREFERENCES_EVENT))}
               className="hover:text-foreground transition-colors underline-offset-2 hover:underline"
             >
-              Preferințe cookie-uri
+              Modifică setările de confidențialitate
             </button>
           </div>
 

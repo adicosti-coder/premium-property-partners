@@ -7319,6 +7319,75 @@ export type Database = {
         }
         Relationships: []
       }
+      tracking_alert_log: {
+        Row: {
+          alerted: boolean
+          checked_on: string
+          created_at: string
+          current_day: string | null
+          current_sessions: number
+          drop_pct: number | null
+          id: string
+          note: string | null
+          notified_emails: string[] | null
+          previous_day: string | null
+          previous_sessions: number
+        }
+        Insert: {
+          alerted?: boolean
+          checked_on?: string
+          created_at?: string
+          current_day?: string | null
+          current_sessions?: number
+          drop_pct?: number | null
+          id?: string
+          note?: string | null
+          notified_emails?: string[] | null
+          previous_day?: string | null
+          previous_sessions?: number
+        }
+        Update: {
+          alerted?: boolean
+          checked_on?: string
+          created_at?: string
+          current_day?: string | null
+          current_sessions?: number
+          drop_pct?: number | null
+          id?: string
+          note?: string | null
+          notified_emails?: string[] | null
+          previous_day?: string | null
+          previous_sessions?: number
+        }
+        Relationships: []
+      }
+      tracking_alert_settings: {
+        Row: {
+          enabled: boolean
+          id: boolean
+          min_sessions: number
+          notify_emails: string[]
+          threshold_pct: number
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+          min_sessions?: number
+          notify_emails?: string[]
+          threshold_pct?: number
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+          min_sessions?: number
+          notify_emails?: string[]
+          threshold_pct?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       translation_cache: {
         Row: {
           created_at: string | null
@@ -9799,6 +9868,7 @@ export type Database = {
         Returns: Json
       }
       get_cron_reconcile_secret: { Args: never; Returns: string }
+      get_ga4_daily_sessions: { Args: { p_days?: number }; Returns: Json }
       get_owner_property_reviews: {
         Args: { p_property_id?: string }
         Returns: {
