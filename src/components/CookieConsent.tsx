@@ -104,7 +104,7 @@ const CookieConsent = () => {
               Folosim cookie-uri esențiale pentru funcționarea site-ului și, doar cu acordul tău,
               cookie-uri de analiză și publicitate. Poți accepta tot, păstra doar strictul necesar sau
               alege în detaliu. Îți poți schimba oricând opțiunea.{" "}
-              <Link to="/legal/politica-cookies" className="underline underline-offset-2 hover:text-foreground">
+              <Link to="/politica-confidentialitate" className="underline underline-offset-2 hover:text-foreground">
                 Politica de cookie-uri
               </Link>
             </p>
