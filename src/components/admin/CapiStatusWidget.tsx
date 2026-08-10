@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  AlertTriangle, CheckCircle2, KeyRound, Loader2, RefreshCw, XCircle, Radio,
+  AlertTriangle, CheckCircle2, KeyRound, Loader2, RefreshCw, ShieldCheck, Radio,
 } from "lucide-react";
+
 
 /**
  * Meta Conversions API status monitor.
