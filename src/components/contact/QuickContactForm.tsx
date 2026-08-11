@@ -13,6 +13,8 @@ import {
   formatPhoneInput,
 } from "@/lib/conversionTracking";
 import { submitLead } from "@/lib/leadSubmission";
+import FormTrustBadges from "@/components/forms/FormTrustBadges";
+import { formMessages } from "@/lib/formMessages";
 
 const QuickContactForm = () => {
   const { language } = useLanguage();
@@ -42,11 +44,9 @@ const QuickContactForm = () => {
       : "How can we help? (sale, rental, short-term rental management...)",
     send: isRo ? "Trimite mesajul" : "Send message",
     sending: isRo ? "Se trimite..." : "Sending...",
-    error: isRo ? "Eroare la trimitere. Încearcă din nou sau sună-ne direct." : "Send failed. Please try again or call us directly.",
-    invalid: isRo ? "Verifică datele introduse." : "Please check the entered data.",
-    invalidPhone: isRo
-      ? "Număr invalid. Folosește formatul internațional (+40 7XX XXX XXX)."
-      : "Invalid number. Use international format (+40 7XX XXX XXX).",
+    error: formMessages.errorBody(language),
+    invalid: formMessages.validationBody(language),
+    invalidPhone: formMessages.invalidPhone(language),
     phoneValid: isRo ? "Număr WhatsApp valid" : "Valid WhatsApp number",
   };
 
@@ -86,9 +86,7 @@ const QuickContactForm = () => {
       }
 
       if (result.duplicate) {
-        toast.success(isRo
-          ? "Am primit deja un mesaj de la tine. Te contactăm în scurt timp!"
-          : "We already received a message from you. We'll reach out shortly!");
+        toast.success(formMessages.duplicateBody(language));
       }
 
       trackConversion({ event: "contact_form_submit", source: "pagina_contact" });
@@ -182,6 +180,8 @@ const QuickContactForm = () => {
         <Send className="w-4 h-4" />
         {loading ? t.sending : t.send}
       </Button>
+
+      <FormTrustBadges className="mt-2" />
     </form>
   );
 };
