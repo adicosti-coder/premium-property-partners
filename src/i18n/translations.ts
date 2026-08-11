@@ -373,7 +373,7 @@ export const translations = {
     
     // Footer
     footer: {
-      description: "Administrare profesională a proprietăților în regim hotelier. Maximizăm veniturile tale, fără efort din partea ta.",
+      description: "Administrăm apartamente în regim hotelier în Timișoara: tu deții activul, noi ne ocupăm de tot și îți raportăm venitul lună de lună.",
       quickLinks: "Link-uri Rapide",
       forOwners: "Pentru Proprietari",
       forGuests: "Pentru Oaspeți",
