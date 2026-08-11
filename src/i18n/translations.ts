@@ -388,7 +388,7 @@ export const translations = {
       sectionLabel: "Contact",
       title: "Hai Să",
       titleHighlight: "Discutăm",
-      subtitle: "Suntem aici să răspundem la toate întrebările tale. Contactează-ne pentru o evaluare gratuită a proprietății.",
+      subtitle: "Un mesaj sau un telefon și afli concret ce poate produce apartamentul tău. Evaluarea e gratuită și nu te obligă la nimic.",
       contactInfo: "Informații Contact",
       phone: "Telefon",
       email: "Email",
