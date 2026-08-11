@@ -463,7 +463,7 @@ const PreCalcMiniForm = ({
                 </Button>
               </div>
 
-              <FormTrustBadges privacyText={t.privacy} className="mt-2" />
+              <FormTrustBadges className="mt-2" />
             </form>
           </div>
         </div>

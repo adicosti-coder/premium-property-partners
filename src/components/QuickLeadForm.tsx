@@ -461,7 +461,7 @@ const QuickLeadForm = () => {
             )}
             
             {/* Conversion reassurance — reduces hesitation right at the submit button */}
-            <FormTrustBadges privacyText={t.quickLeadForm?.trustText} />
+            <FormTrustBadges />
 
 
           </form>
