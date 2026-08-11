@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
 import { withCampaignTracking, getCtaVariant } from "@/lib/campaignAttribution";
+import FormTrustBadges from "@/components/forms/FormTrustBadges";
 import { toast } from "sonner";
 import { trackCriticalConversion } from "@/lib/conversionTracking";
 
@@ -462,7 +463,7 @@ const PreCalcMiniForm = ({
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground text-center">{t.privacy}</p>
+              <FormTrustBadges className="mt-2" />
             </form>
           </div>
         </div>

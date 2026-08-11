@@ -1,5 +1,6 @@
 import { useState, lazy, Suspense, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import FormTrustBadges from "@/components/forms/FormTrustBadges";
 import { Building2, Home, LandPlot, Store, ChevronLeft, ChevronRight, CheckCircle2, FileCheck, MapPin, Clock, ShieldCheck } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { Progress } from "@/components/ui/progress";
@@ -159,9 +160,9 @@ const EvaluareGratuita = () => {
         <div className="min-h-[80vh] flex items-center justify-center px-4">
           <div className="text-center max-w-md space-y-4">
             <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
-            <h1 className="text-2xl font-bold text-foreground">Cererea ta a fost trimisă</h1>
+            <h1 className="text-2xl font-bold text-foreground">Am primit cererea ta</h1>
             <p className="text-muted-foreground">
-              Te contactăm în maximum 24 de ore lucrătoare cu o estimare personalizată pentru proprietatea ta.
+              Un consultant RealTrust te contactează în maximum 24 de ore lucrătoare cu estimarea personalizată pentru proprietatea ta. Nu ai nicio obligație contractuală.
             </p>
             <Button asChild variant="outline">
               <a href="/">Înapoi la pagina principală</a>
@@ -327,6 +328,8 @@ const EvaluareGratuita = () => {
               </Button>
             )}
           </div>
+
+          {step === 4 && <FormTrustBadges />}
         </div>
 
         {/* SEO content sections */}
