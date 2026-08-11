@@ -236,8 +236,8 @@ export const translations = {
       badge: "Pentru Oaspeți",
       title: "Experiență de",
       titleHighlight: "Cazare Premium",
-      subtitle: "Apartamentele noastre oferă confortul unui hotel cu intimitatea unei case. Check-in automat, curățenie impecabilă și suport 24/7.",
-      bookNow: "Rezervă Acum",
+      subtitle: "Confortul unui hotel, intimitatea unei case: intri singur cu un cod, oricând ajungi, într-un apartament curățat la standard hotelier. Suntem la un mesaj distanță, 24/7.",
+      bookNow: "Rezervă direct (preț mai bun)",
       viewApartments: "Vezi Apartamentele",
       features: [
         { title: "Auto Check-in 24/7", description: "• Cod securizat\n• Acces oricând\n• Fără așteptare" },
