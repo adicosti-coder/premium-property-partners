@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLanguage } from "@/i18n/LanguageContext";
 import { submitLead } from "@/lib/leadSubmission";
 import { withCampaignTracking, getCtaVariant } from "@/lib/campaignAttribution";
+import FormTrustBadges from "@/components/forms/FormTrustBadges";
 import { toast } from "sonner";
 import { trackCriticalConversion } from "@/lib/conversionTracking";
 
