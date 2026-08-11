@@ -59,7 +59,7 @@ export const translations = {
       title: "Listăm pe Platformele de Top",
       label: "Parteneri de Încredere",
       trustedTitle: "Partenerii Noștri Premium",
-      trustedSubtitle: "Suntem mândri să colaborăm cu cele mai mari platforme de rezervări din lume pentru a maximiza vizibilitatea proprietății tale.",
+      trustedSubtitle: "Apartamentul tău e văzut de milioane de călători pe cele mai mari platforme de rezervări din lume — nu doar de câțiva vizitatori pe un site local.",
       activeText: "Listări active pe toate platformele",
     },
     
