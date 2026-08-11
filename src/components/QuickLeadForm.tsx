@@ -15,6 +15,8 @@ import { withProvenientaTracking } from "@/lib/investmentReferralTracking";
 import { withCampaignTracking, campaignSourceSuffix, getCtaVariant } from "@/lib/campaignAttribution";
 import { trackConversion } from "@/lib/conversionTracking";
 import { clearIdempotencyKey, idempotencyHeaders } from "@/lib/idempotency";
+import FormTrustBadges from "@/components/forms/FormTrustBadges";
+import { formMessages } from "@/lib/formMessages";
 
 /** Scope used for the per-attempt idempotency key (sessionStorage + request header). */
 const IDEMPOTENCY_SCOPE = "quick_lead_form";
@@ -143,8 +145,8 @@ const QuickLeadForm = () => {
 
       setIsSuccess(true);
       toast({
-        title: t.quickLeadForm?.successToast || "Mulțumim!",
-        description: t.quickLeadForm?.successToastMessage || "Te vom contacta în curând.",
+        title: formMessages.successTitle(language),
+        description: formMessages.successBody(language),
       });
 
       setTimeout(() => {
@@ -159,8 +161,8 @@ const QuickLeadForm = () => {
     } catch (error) {
       console.error("Error submitting lead:", error);
       toast({
-        title: t.quickLeadForm?.error || "Eroare",
-        description: t.quickLeadForm?.errorMessage || "A apărut o eroare. Încearcă din nou.",
+        title: formMessages.errorTitle(language),
+        description: formMessages.errorBody(language),
         variant: "destructive",
       });
     } finally {
@@ -226,24 +228,24 @@ const QuickLeadForm = () => {
     // which field needs attention, which measurably reduces abandonment)
     let hasError = false;
     if (!name.trim()) {
-      setNameError(language === "en" ? "Your name is required" : "Numele este obligatoriu");
+      setNameError(formMessages.requiredName(language));
       hasError = true;
     }
     if (!phone.trim()) {
-      setPhoneError(language === "en" ? "Phone number is required" : "Numărul de telefon este obligatoriu");
+      setPhoneError(formMessages.requiredPhone(language));
       hasError = true;
     } else if (!isValidInternationalPhone(phone)) {
-      setPhoneError(t.quickLeadForm?.invalidPhone || "Număr invalid");
+      setPhoneError(formMessages.invalidPhone(language));
       hasError = true;
     }
     if (!propertyType) {
-      setTypeError(language === "en" ? "Select a property type" : "Alege tipul proprietății");
+      setTypeError(formMessages.requiredType(language));
       hasError = true;
     }
     if (listingUrl.trim()) {
       const urlValidation = listingUrlSchema.safeParse(listingUrl.trim());
       if (!urlValidation.success) {
-        setListingUrlError(t.quickLeadForm?.invalidUrl || "Link invalid");
+        setListingUrlError(formMessages.invalidUrl(language));
         hasError = true;
       }
     }
@@ -296,10 +298,10 @@ const QuickLeadForm = () => {
                 <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
               <h3 className="text-2xl font-serif font-semibold text-foreground mb-2">
-                {t.quickLeadForm?.success || "Cerere trimisă cu succes!"}
+                {formMessages.successTitle(language)}
               </h3>
               <p className="text-muted-foreground">
-                {t.quickLeadForm?.successMessage || "Te vom contacta în cel mai scurt timp pentru o evaluare gratuită."}
+                {formMessages.successBody(language)}
               </p>
             </div>
           </div>
