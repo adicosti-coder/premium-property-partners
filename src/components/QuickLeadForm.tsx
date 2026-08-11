@@ -458,26 +458,9 @@ const QuickLeadForm = () => {
               </div>
             )}
             
-            {/* Conversion reassurance row — reduces hesitation before submit */}
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-4">
-              {(language === "en"
-                ? ["Reply within 24h", "Free, no obligation", "Timișoara only"]
-                : ["Răspuns în 24 de ore", "Gratuit, fără obligații", "Doar Timișoara"]
-              ).map((item) => (
-                <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <CheckCircle className="w-3.5 h-3.5 text-primary" />
-                  {item}
-                </span>
-              ))}
-            </div>
+            {/* Conversion reassurance — reduces hesitation right at the submit button */}
+            <FormTrustBadges privacyText={t.quickLeadForm?.trustText} />
 
-            {/* Trust text with security badge */}
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              <p className="text-xs text-muted-foreground">
-                {t.quickLeadForm?.trustText || "🔒 Datele tale sunt în siguranță. Nu le partajăm cu terți."}
-              </p>
-            </div>
 
           </form>
         </div>
