@@ -301,7 +301,7 @@ export const translations = {
       label: "Contact",
       title: "Hai să",
       titleHighlight: "Vorbim",
-      subtitle: "Completează formularul sau contactează-ne direct. Îți răspundem în maximum 24 de ore.",
+      subtitle: "Lasă-ne datele apartamentului și îți trimitem simularea de venit. Răspundem în maximum 24 de ore, în orele de program.",
       form: {
         name: "Nume complet",
         phone: "Număr WhatsApp",
