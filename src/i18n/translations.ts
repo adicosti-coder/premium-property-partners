@@ -45,12 +45,12 @@ export const translations = {
         reporting: "Raportare",
       },
       features: {
-        payments: "Investiție",
-        paymentsDesc: "Randament net 9,4% (ipoteze transparente)",
-        model: "Operare hotelieră",
-        modelDesc: "Tu nu coordonezi nimic — primești venitul lunar",
-        response: "Echipă proprie",
-        responseDesc: "Răspuns în aceeași zi, în orele de program",
+        payments: "Venit previzibil",
+        paymentsDesc: "9,4% net, cu ipotezele afișate — verifici tu calculul",
+        model: "Zero implicare",
+        modelDesc: "Nu răspunzi mesajelor, nu cauți oaspeți — încasezi lunar",
+        response: "Echipă proprie în Timișoara",
+        responseDesc: "Fără subcontractori: răspuns în aceeași zi lucrătoare",
       },
     },
     
