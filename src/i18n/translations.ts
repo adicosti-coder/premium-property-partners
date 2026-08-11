@@ -22,14 +22,15 @@ export const translations = {
       title: "RealTrust Timișoara —",
       titleMid: "regim hotelier & property management",
       titleHighlight: "servicii imobiliare complete.",
-      subtitle: "Investești în imobiliare — noi construim afacerea la cheie, prin RealTrust Imobiliare.\nAdministrare completă în regim hotelier, prin ApArt Hotel: tu încasezi, noi ne ocupăm de tot.\nRandament net 9,4% calculat pe ipoteze transparente (ocupare 75%, deducere 27%).",
-      cta: "Calculează randamentul tău",
+      subtitle: "Tu deții apartamentul. Noi îl transformăm în venit lunar, fără să miști un deget.\nOperare completă în regim hotelier prin ApArt Hotel: oaspeți, curățenie, pricing, raportare — la noi.\nRandament net 9,4%, calculat pe ipoteze pe care le poți verifica: ocupare 75%, deducere 27%.",
+      cta: "Vezi cât produce apartamentul tău",
       ctaSecondary: "Vezi oportunitățile de investiție",
       ctaGuests: "Pentru oaspeți",
       ctaQuickStart: "Start rapid",
       trustTitle: "Aleși de investitori și oaspeți",
-      trustText: "Primești o simulare detaliată și recomandări personalizate în 24 de ore.",
+      trustText: "În 24 de ore primești simularea de venit pentru apartamentul tău, cu cifre, nu promisiuni.",
       trustPrivacy: "Datele rămân confidențiale. Te contactăm doar pentru cererea ta.",
+
       stats: {
         properties: "Proprietăți Gestionate",
         occupancy: "Rată de Ocupare",
