@@ -1545,12 +1545,12 @@ Thank you!`,
     
     // CTA
     cta: {
-      title: "Speak with a",
-      titleHighlight: "Property Management Specialist",
-      subtitle: "Request a free property evaluation. Our team will analyze your yield potential and propose a personalized strategy.",
-      primaryButton: "Schedule a Consultation",
+      title: "Find out in 24 hours what",
+      titleHighlight: "Your Apartment Can Earn",
+      subtitle: "We build an income simulation on your apartment's real data — area, size, amenities. You get concrete numbers and a clear strategy, not a sales pitch.",
+      primaryButton: "Get my free simulation",
       secondaryButton: "Contact Us",
-      footer: "We respond within 24 hours. Professional consultation, no obligations.",
+      footer: "Reply within 24 hours. No cost, no obligation.",
     },
     
     // Profit Calculator
