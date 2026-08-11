@@ -65,21 +65,21 @@ export const translations = {
     
     // Benefits
     benefits: {
-      title: "De ce aleg investitorii",
-      titleHighlight: "RealTrust",
-      subtitle: "Administrăm proprietăți pentru proprietari care vor randament net previzibil, raportare clară și operațiuni gestionate complet de echipa noastră.",
+      title: "De ce ne aleg investitorii din",
+      titleHighlight: "Timișoara",
+      subtitle: "Lucrăm cu proprietari care nu vor bătăi de cap: venit net previzibil, cifre pe masă în fiecare lună și o echipă care duce operarea de la A la Z.",
       items: [
         {
-          title: "Randament net calculat transparent",
-          description: "• 9,4% net pe ipoteze publice\n• Ocupare 75% și deducere 27%\n• Pricing dinamic ajustat săptămânal",
+          title: "Venit net pe care îl poți verifica",
+          description: "• 9,4% net, cu ipotezele afișate public\n• Ocupare 75%, deducere 27% — fără cifre umflate\n• Pricing ajustat săptămânal la cererea reală",
         },
         {
-          title: "Operațiuni gestionate de echipa noastră",
-          description: "• Tu nu te ocupi de oaspeți\n• Operare hotelieră end-to-end\n• Mentenanță preventivă inclusă",
+          title: "Tu nu faci nimic. Chiar nimic.",
+          description: "• Oaspeții vorbesc cu noi, nu cu tine\n• Curățenie, check-in, mentenanță — la noi\n• Intervenim înainte să apară problema",
         },
         {
-          title: "Raportare financiară clară",
-          description: "• Dashboard accesibil oricând\n• P&L lunar cu detalii\n• Decontare la dată fixă",
+          title: "Vezi banii, nu poveștile",
+          description: "• Dashboard deschis 24/7\n• P&L lunar, linie cu linie\n• Decontare la aceeași dată, în fiecare lună",
         },
       ],
     },
