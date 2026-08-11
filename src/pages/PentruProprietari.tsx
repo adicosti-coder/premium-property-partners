@@ -173,6 +173,10 @@ const PentruProprietari = () => {
       title: "Venit lunar previzibil din apartamentul tău,",
       titleHighlight: "fără sarcini operaționale",
       subtitle: "Administrăm apartamentul tău în regim hotelier: listare, oaspeți verificați, curățenie la standard hotelier, mentenanță, raportare lunară și conformitate ANAF. Tu primești venitul net în cont.",
+      // Variant B heading — same offer, framed on safety & full management
+      titleB: "Apartamentul tău, administrat complet",
+      titleHighlightB: "și protejat, lună de lună",
+      subtitleB: "Verificăm fiecare oaspete, ne ocupăm de curățenie, mentenanță, taxe și rapoarte, iar tu vezi totul în portalul proprietarului. Zero drumuri, zero surprize, venit încasat la dată fixă.",
       cta: "Calculează venitul tău lunar",
       secondaryCta: "Discută cu un consultant",
       ctaB: "Calculează în 60 de secunde",
@@ -200,6 +204,10 @@ const PentruProprietari = () => {
       title: "Predictable monthly income from your apartment,",
       titleHighlight: "without the operational load",
       subtitle: "We run your apartment as a short-term rental: listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You receive the net income in your account.",
+      // Variant B heading — same offer, framed on safety & full management
+      titleB: "Your apartment, fully managed",
+      titleHighlightB: "and protected, month after month",
+      subtitleB: "We vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. No trips, no surprises, income paid on a fixed date.",
       cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
       ctaB: "Calculate in 60 seconds",
@@ -505,13 +513,15 @@ const PentruProprietari = () => {
 
               {/* Title */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-6">
-                {t.title}{" "}
-                <span className="text-gradient-gold">{t.titleHighlight}</span>
+                {ctaVariant === "A" ? t.title : t.titleB}{" "}
+                <span className="text-gradient-gold">
+                  {ctaVariant === "A" ? t.titleHighlight : t.titleHighlightB}
+                </span>
               </h1>
 
               {/* Subtitle */}
               <p className="text-lg md:text-xl text-white/80 mb-8">
-                {t.subtitle}
+                {ctaVariant === "A" ? t.subtitle : t.subtitleB}
               </p>
 
               {/* CTAs - CSS transitions only */}
