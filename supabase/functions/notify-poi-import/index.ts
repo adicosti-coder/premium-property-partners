@@ -57,6 +57,16 @@ async function sendPushNotification(
   }
 }
 
+/** Escapes user-supplied text before it is interpolated into email HTML. */
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 async function sendEmailNotification(
   resend: Resend,
   email: string,
@@ -64,6 +74,9 @@ async function sendEmailNotification(
   importedCount: number,
   shareCode: string
 ): Promise<boolean> {
+  const safeName = escapeHtml(importerName);
+  const safeCount = Number.isFinite(importedCount) ? Math.trunc(importedCount) : 1;
+
   try {
     const { error } = await resend.emails.send({
       from: 'RealTrust <info@notify.realtrust.ro>',
