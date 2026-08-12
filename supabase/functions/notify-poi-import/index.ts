@@ -152,13 +152,24 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-    const { shareCode, importerName, importedCount, importerId } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const shareCode = typeof body?.shareCode === 'string' ? body.shareCode.trim() : '';
+    const rawName = typeof body?.importerName === 'string' ? body.importerName.trim().slice(0, 80) : '';
+    const importedCount = Math.max(1, Math.min(500, Math.trunc(Number(body?.importedCount) || 1)));
 
-    if (!shareCode) {
+    if (!shareCode || shareCode.length > 64 || !/^[A-Za-z0-9_-]+$/.test(shareCode)) {
       return new Response(
-        JSON.stringify({ error: 'Missing required field: shareCode' }),
+        JSON.stringify({ error: 'Invalid or missing field: shareCode' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Attribution comes from the caller's JWT only — never from a client-supplied id.
+    let importerId: string | null = null;
+    const bearer = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim();
+    if (bearer) {
+      const { data: authData } = await supabase.auth.getUser(bearer);
+      importerId = authData?.user?.id ?? null;
     }
 
     console.log(`Processing import notification for share code: ${shareCode}`);
@@ -178,6 +189,22 @@ serve(async (req) => {
       );
     }
 
+    // ── Anti-spam: cap notifications per share code (max 5 in the last hour) ──
+    const sinceIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count: recentEvents } = await supabase
+      .from('poi_import_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('shared_link_id', sharedLink.id)
+      .gte('created_at', sinceIso);
+
+    if ((recentEvents || 0) >= 5) {
+      console.log(`Rate limit reached for share code ${shareCode} — skipping notification`);
+      return new Response(
+        JSON.stringify({ success: true, throttled: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Update import count
     const { error: updateError } = await supabase
       .from('shared_poi_links')
@@ -191,19 +218,16 @@ serve(async (req) => {
       console.error('Error updating import count:', updateError);
     }
 
-    // Log import event for trends tracking (including importer user_id if authenticated)
+    // Log import event for trends tracking (importer id derived from the JWT)
     const importEventData: { shared_link_id: string; imported_count: number; imported_by?: string } = {
       shared_link_id: sharedLink.id,
-      imported_count: importedCount || 1,
+      imported_count: importedCount,
     };
-    
-    // Add importer user_id if provided (authenticated user)
+
     if (importerId) {
       importEventData.imported_by = importerId;
-      console.log(`Import by authenticated user: ${importerId}`);
-    } else {
-      console.log('Import by anonymous user');
     }
+
 
     const { error: eventError } = await supabase
       .from('poi_import_events')
