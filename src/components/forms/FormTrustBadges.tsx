@@ -47,6 +47,7 @@ const COPY = {
 const FormTrustBadges = ({
   className = "",
   showBadges = true,
+  showSocialProof = true,
   privacyText,
   tone = "default",
 }: FormTrustBadgesProps) => {
@@ -55,9 +56,26 @@ const FormTrustBadges = ({
 
   const mutedClass = tone === "onDark" ? "text-white/70" : "text-muted-foreground";
   const iconClass = tone === "onDark" ? "text-amber-300" : "text-primary";
+  const proofChipClass =
+    tone === "onDark"
+      ? "border-white/20 bg-white/10 text-white"
+      : "border-border bg-card text-foreground";
 
   return (
-    <div className={`mt-4 space-y-2 ${className}`}>
+    <div className={`mt-4 space-y-2.5 ${className}`}>
+      {showSocialProof && (
+        <ul className="flex flex-wrap items-center justify-center gap-2">
+          {copy.proof.map(({ icon: Icon, label }) => (
+            <li
+              key={label}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold ${proofChipClass}`}
+            >
+              <Icon className={`w-3.5 h-3.5 shrink-0 ${iconClass}`} aria-hidden="true" />
+              {label}
+            </li>
+          ))}
+        </ul>
+      )}
       {showBadges && (
         <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           {copy.badges.map((item) => (

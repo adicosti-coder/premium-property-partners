@@ -94,6 +94,11 @@ const CookieConsent = () => {
     return () => window.removeEventListener(OPEN_COOKIE_PREFERENCES_EVENT, reopen);
   }, []);
 
+  // Let bottom-anchored UI know whether this banner currently occupies the bottom.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(COOKIE_BANNER_STATE_EVENT, { detail: { visible } }));
+  }, [visible]);
+
   const save = useCallback((choice: ConsentChoice) => {
     try {
       localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify({ choice, ts: Date.now() }));
