@@ -80,6 +80,12 @@ const normalizePath = (raw: string): string => {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  // ── Auth gate: internal cron secret / service role, or an authenticated admin ──
+  if (!(await isInternalCall(req))) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
+
   const _t0 = Date.now();
   const _logSb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   await _logSb.from("cron_run_log").insert({ job_name: "ga4-analytics-import", status: "started" }).then(()=>{}, ()=>{});
