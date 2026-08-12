@@ -28,6 +28,7 @@ const QuickLeadForm = lazy(() => import("@/components/QuickLeadForm"));
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FAQ = lazy(() => import("@/components/FAQ"));
+const OwnerFearsFAQ = lazy(() => import("@/components/OwnerFearsFAQ"));
 const ContactSection = lazy(() => import("@/components/ContactSection"));
 const CTA = lazy(() => import("@/components/CTA"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -178,6 +179,7 @@ const GalleryMapSection = () => {
 const BottomFoldPrimarySection = () => (
   <div className="cv-auto">
     <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+      <OwnerFearsFAQ />
       <FAQ />
       <ContactSection />
       <CTA />
