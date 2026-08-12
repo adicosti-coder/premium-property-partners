@@ -259,8 +259,8 @@ serve(async (req) => {
     }
 
     // Prepare notification content
-    const name = importerName || 'Cineva';
-    const count = importedCount || 1;
+    const name = rawName || 'Cineva';
+    const count = importedCount;
     
     let pushSentCount = 0;
     let emailSent = false;
