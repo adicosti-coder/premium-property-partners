@@ -3,6 +3,8 @@
 // upserts results into `seo_ga4_metrics` keyed by (url_path, period_start).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { create, getNumericDate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
