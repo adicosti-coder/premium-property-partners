@@ -92,7 +92,9 @@ const GlobalConversionWidgets = ({
       events.forEach(e => document.removeEventListener(e, triggerPhase1));
     };
 
-    const events = ["click", "touchstart", "keydown"] as const;
+    // "scroll" included so the mobile sticky CTA bar is mounted by the time
+    // the user passes the hero fold (its own scroll gate reveals it).
+    const events = ["click", "touchstart", "keydown", "scroll"] as const;
     events.forEach(e => document.addEventListener(e, triggerPhase1, { once: true, passive: true }));
 
     return () => {
