@@ -96,7 +96,7 @@ async function sendEmailNotification(
           
           <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
             <p style="font-size: 18px; margin-bottom: 20px;">
-              <strong>${importerName}</strong> a importat <strong>${importedCount}</strong> locații din lista ta de favorite partajate!
+              <strong>${safeName}</strong> a importat <strong>${safeCount}</strong> locații din lista ta de favorite partajate!
             </p>
             
             <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0;">
