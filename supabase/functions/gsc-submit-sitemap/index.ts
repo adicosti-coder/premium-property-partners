@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +21,13 @@ const SITEMAPS = [
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // ── Auth gate: internal cron/service-role call, or an authenticated admin ──
+  if (!(await isInternalCall(req))) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
+
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const GSC_API_KEY = Deno.env.get("GOOGLE_SEARCH_CONSOLE_API_KEY");

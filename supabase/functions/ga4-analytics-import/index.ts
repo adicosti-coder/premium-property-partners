@@ -3,6 +3,8 @@
 // upserts results into `seo_ga4_metrics` keyed by (url_path, period_start).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { create, getNumericDate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +79,12 @@ const normalizePath = (raw: string): string => {
 // --- main --------------------------------------------------------------------
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // ── Auth gate: internal cron secret / service role, or an authenticated admin ──
+  if (!(await isInternalCall(req))) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
 
   const _t0 = Date.now();
   const _logSb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
