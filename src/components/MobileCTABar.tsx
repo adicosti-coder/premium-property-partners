@@ -6,7 +6,7 @@ import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { cn } from "@/lib/utils";
 import { trackCriticalConversion } from "@/lib/conversionTracking";
-import { COOKIE_BANNER_STATE_EVENT } from "@/components/CookieConsent";
+import { COOKIE_BANNER_STATE_EVENT, isCookieBannerVisible } from "@/lib/cookieConsentEvents";
 
 /**
  * Sticky bottom CTA bar (mobile only).
@@ -27,7 +27,7 @@ const MobileCTABar = () => {
   const { lightTap } = useHapticFeedback();
 
   const [pastHero, setPastHero] = useState(false);
-  const [cookieBannerVisible, setCookieBannerVisible] = useState(false);
+  const [cookieBannerVisible, setCookieBannerVisible] = useState(isCookieBannerVisible());
 
   const translations = {
     ro: { call: "Sună", whatsapp: "WhatsApp", calc: "Calculează Randament" },
