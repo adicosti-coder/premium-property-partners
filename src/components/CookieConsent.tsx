@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, SlidersHorizontal } from "lucide-react";
 import { initMetaPixel } from "@/lib/conversionTracking";
+import {
+  COOKIE_BANNER_STATE_EVENT,
+  OPEN_COOKIE_PREFERENCES_EVENT,
+  setCookieBannerVisible,
+} from "@/lib/cookieConsentEvents";
 
 const COOKIE_CONSENT_KEY = "cookie_consent_v2";
 /** GDPR best practice: consent must be re-asked at least once a year. */
@@ -90,7 +95,7 @@ const CookieConsent = () => {
 
   // Let bottom-anchored UI know whether this banner currently occupies the bottom.
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent(COOKIE_BANNER_STATE_EVENT, { detail: { visible } }));
+    setCookieBannerVisible(visible);
   }, [visible]);
 
   const save = useCallback((choice: ConsentChoice) => {
