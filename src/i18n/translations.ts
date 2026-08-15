@@ -263,6 +263,11 @@ export const translations = {
           question: "Ce randament pot estima realist din apartamentul meu în Timișoara?", 
           answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, FullView Studio, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
         },
+        // Transparență calcul randament
+        {
+          question: "Cum se calculează concret randamentul net de 9,4%?",
+          answer: "Pornim de la venitul brut din cazare (tarif pe noapte × nopți ocupate, la o ocupare de 75%). Din acesta scădem o deducere operațională de 27%, care include comisioanele platformelor (Booking, Airbnb, Expedia), impozitul efectiv pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie). Taxa de curățenie nu te costă: este achitată separat de oaspeți la momentul rezervării. Abia după aceea se scad cheltuielile fixe (utilități, internet, întreținere) și comisionul nostru de administrare — de aceea 9,4% este venit curat (net), nu brut. Cifra finală pentru apartamentul tău se stabilește după evaluarea gratuită."
+        },
         // Servicii incluse
         { 
           question: "Ce servicii sunt incluse în comisionul de administrare?", 
