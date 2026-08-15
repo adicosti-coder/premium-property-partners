@@ -120,6 +120,20 @@ const FounderProfile = () => {
                   {t.founderPromise}
                 </p>
 
+                <div className="rounded-lg bg-muted/50 p-4 mb-6">
+                  <p className="text-sm font-semibold mb-2">{t.visionTitle}</p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {t.vision.map((v) => (
+                      <li key={v} className="flex gap-2">
+                        <BadgeCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                        <span>{v}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+
+
                 <div className="flex flex-wrap gap-3">
                   <Button asChild size="lg" className="min-h-12">
                     <a
