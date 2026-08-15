@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Linkedin, Mail } from "lucide-react";
 
-import ceoImage from "@/assets/team/ceo.jpg";
+import ceoImageAsset from "@/assets/adrian-costi-founder.png.asset.json";
 import propertyManagerImage from "@/assets/team/property-manager.jpg";
 import operationsImage from "@/assets/team/operations.jpg";
 import guestRelationsImage from "@/assets/team/guest-relations.jpg";
