@@ -64,6 +64,13 @@ const FounderProfile = () => {
         founderBio:
           "Over 10 years in Timișoara real estate. I personally take every first conversation: your income estimate, what needs changing in the apartment, and whether short-term rental makes sense in your area.",
         founderPromise: "I answer the phone personally during business hours (Mon–Fri, 10:00–18:00).",
+        visionTitle: "Vision and local experience",
+        vision: [
+          "Over 10 years in real estate exclusively in Timișoara — I know the real rates per area, from Cetate and Iosefin to Dumbrăvița and Aradului.",
+          "A properly managed apartment should beat long-term rent with numbers, not promises: our working target is 9.4% net yield.",
+          "Hotel standards at small scale: the same cleaning, communication and reporting rules as a hotel.",
+          "We prefer a small, high-performing portfolio over many loosely managed apartments.",
+        ],
         callBtn: "Call directly",
         waBtn: "Message on WhatsApp",
         bookBtn: "Book a 15-min call",
