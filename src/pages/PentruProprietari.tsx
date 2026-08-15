@@ -62,6 +62,7 @@ const OwnerCoverageMap = lazy(() => import("@/components/owners/OwnerCoverageMap
 const OwnerGuideHub = lazy(() => import("@/components/owners/OwnerGuideHub"));
 const OwnerTestimonials = lazy(() => import("@/components/owners/OwnerTestimonials"));
 const TaxOptimizationSection = lazy(() => import("@/components/owners/TaxOptimizationSection"));
+const ContractTransparency = lazy(() => import("@/components/owners/ContractTransparency"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
