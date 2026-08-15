@@ -103,7 +103,7 @@ const FounderProfile = () => {
           <CardContent className="p-0">
             <div className="grid md:grid-cols-[280px_1fr]">
               <img
-                src={ceoImage}
+                src={ceoImageAsset.url}
                 alt={isRo ? "Adrian Costi, fondator RealTrust Timișoara" : "Adrian Costi, founder of RealTrust Timișoara"}
                 width={560}
                 height={640}
