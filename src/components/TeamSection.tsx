@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Linkedin, Mail } from "lucide-react";
 
-import ceoImage from "@/assets/team/ceo.jpg";
+import ceoImageAsset from "@/assets/adrian-costi-founder.png.asset.json";
 import propertyManagerImage from "@/assets/team/property-manager.jpg";
 import operationsImage from "@/assets/team/operations.jpg";
 import guestRelationsImage from "@/assets/team/guest-relations.jpg";
@@ -33,7 +33,7 @@ const TeamSection = () => {
           name: "Adrian Costi",
           role: "Fondator & CEO",
           description: "Cu peste 10 ani de experiență în imobiliare, Adrian a fondat RealTrust & ApArt Hotel cu viziunea de a aduce standarde internaționale în piața din Timișoara.",
-          image: ceoImage,
+          image: ceoImageAsset.url,
           linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
         }
@@ -49,7 +49,7 @@ const TeamSection = () => {
           name: "Adrian Costi",
           role: "Founder & CEO",
           description: "With over 10 years of real estate experience, Adrian founded RealTrust & ApArt Hotel with the vision of bringing international standards to the Timișoara market.",
-          image: ceoImage,
+          image: ceoImageAsset.url,
           linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
         }
