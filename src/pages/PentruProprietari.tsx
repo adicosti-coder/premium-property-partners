@@ -209,13 +209,18 @@ const PentruProprietari = () => {
     },
     en: {
       badge: "Property management · Timișoara",
-      title: "Predictable monthly income from your apartment,",
-      titleHighlight: "without the operational load",
-      subtitle: "We run your apartment as a short-term rental: listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You receive the net income in your account.",
+      title: "Turn your apartment into an investment yielding",
+      titleHighlight: "9.4% net per year, hassle-free",
+      subtitle: "We fully take over your apartment as a short-term rental: listing on 15+ platforms, dynamic pricing, verified guests, hotel-grade cleaning, maintenance and monthly reporting. You receive the net income on a fixed date.",
       // Variant B heading — same offer, framed on safety & full management
-      titleB: "Your apartment, fully managed",
-      titleHighlightB: "and protected, month after month",
+      titleB: "Your apartment, fully managed and protected, at",
+      titleHighlightB: "9.4% net annual yield",
       subtitleB: "We vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. No trips, no surprises, income paid on a fixed date.",
+      socialProof: [
+        "9.7/10 guest rating (Booking)",
+        "100+ properties managed",
+        "Flexible contract, exit in 30 days",
+      ],
       cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
       ctaB: "Calculate in 60 seconds",
