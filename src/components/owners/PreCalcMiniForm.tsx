@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { CalendarCheck, MessageCircle, MapPin, Home, User, Sparkles, Loader2, ArrowRight } from "lucide-react";
+import { CalendarCheck, MessageCircle, MapPin, Home, User, Sparkles, Loader2, ArrowRight, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
