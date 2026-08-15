@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect, lazy, Suspense } from "react";
-import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText, History, Trash2 } from "lucide-react";
+import { Calculator, TrendingUp, Percent, DollarSign, Home, Sparkles, FileText, History, Trash2, Download } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Tooltip as RechartsTooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Tooltip as ShadTooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import LeadCaptureForm from "./LeadCaptureForm";
 import YieldTransparencyNote from "./YieldTransparencyNote";
+import YieldReportDialog from "./YieldReportDialog";
 const FastTrackScoring = lazy(() => import("./FastTrackScoring"));
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
@@ -25,6 +26,7 @@ const ProfitCalculator = () => {
   const [platformFee, setPlatformFee] = useState(15);
   const [avgStayDuration, setAvgStayDuration] = useState(3);
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false);
+  const [isYieldReportOpen, setIsYieldReportOpen] = useState(false);
   const [showSimulationHistory, setShowSimulationHistory] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [simulationSaved, setSimulationSaved] = useState(false);
@@ -614,6 +616,16 @@ const ProfitCalculator = () => {
                     <FileText className="w-5 h-5 mr-2" />
                     {t.calculator.getAnalysis}
                   </Button>
+                  <Button
+                    onClick={() => setIsYieldReportOpen(true)}
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                    aria-label={language === 'ro' ? 'Descarcă raportul PDF de randament' : 'Download the yield report PDF'}
+                  >
+                    <Download className="w-5 h-5 mr-2" aria-hidden="true" />
+                    {language === 'ro' ? 'Descarcă raportul PDF' : 'Download PDF report'}
+                  </Button>
                   <p className="text-center text-xs text-muted-foreground">
                     {language === 'ro' 
                       ? '📋 Completezi un scurt formular → Primești analiza personalizată pe WhatsApp în 24h' 
@@ -638,6 +650,29 @@ const ProfitCalculator = () => {
           </div>
         </div>
       </div>
+
+      <YieldReportDialog
+        isOpen={isYieldReportOpen}
+        onClose={() => setIsYieldReportOpen(false)}
+        report={{
+          adr,
+          occupancy,
+          cleaningCost,
+          managementFee,
+          platformFee,
+          avgStayDuration,
+          occupiedDays: calculations.occupiedDays,
+          numberOfStays: calculations.numberOfStays,
+          grossRevenue: calculations.grossRevenue,
+          cleaningCosts: calculations.cleaningCosts,
+          managementCost: calculations.managementCost,
+          platformCost: calculations.platformCost,
+          totalCosts: calculations.totalCosts,
+          netProfit: calculations.netProfit,
+          yearlyGross: calculations.yearlyGross,
+          yearlyNet: calculations.yearlyNet,
+        }}
+      />
 
       <LeadCaptureForm
         isOpen={isLeadFormOpen}
