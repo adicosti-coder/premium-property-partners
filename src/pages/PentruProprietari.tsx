@@ -984,6 +984,9 @@ const PentruProprietari = () => {
       {/* Financial Transparency */}
       <FinancialTransparency />
 
+      {/* Contract terms + sample monthly report (owner trust) */}
+      <ContractTransparency />
+
       {/* Process Steps Timeline */}
       <ProcessStepsTimeline />
 
