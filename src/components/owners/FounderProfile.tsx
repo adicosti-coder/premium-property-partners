@@ -33,7 +33,7 @@ const FounderProfile = () => {
           "Firma este din Timișoara, birou fizic în Cetate, cu o echipă care se ocupă zilnic de apartamente ca al tău.",
         founderRole: "Fondator & Administrator",
         founderBio:
-          "Peste 25 de ani în imobiliare în Timișoara. Preiau personal fiecare discuție de început: îți spun estimarea de venit, ce trebuie schimbat în apartament și dacă merită regim hotelier în zona ta.",
+          "Adrian Costi este fondatorul RealTrust & ApArt Hotel, cu o carieră de peste 25 de ani dedicată pieței imobiliare din Timișoara. A coordonat sute de tranzacții imobiliare și a dezvoltat un model integrat de administrare completă a proprietăților — de la închirierea pe termen lung, până la operarea în regim hotelier la standard de boutique hotel. Viziunea sa este simplă: fiecare proprietate să fie gestionată ca o investiție performantă, cu transparență totală, raportare clară și venituri optimizate pentru proprietar.",
         founderPromise: "Răspund personal la telefon în timpul programului (L–V, 10:00–18:00).",
         visionTitle: "Viziunea și experiența locală",
         vision: [
@@ -69,7 +69,7 @@ const FounderProfile = () => {
           "A Timișoara-based company with a physical office in Cetate and a team handling apartments like yours every day.",
         founderRole: "Founder & Managing Director",
         founderBio:
-          "Over 25 years in Timișoara real estate. I personally take every first conversation: your income estimate, what needs changing in the apartment, and whether short-term rental makes sense in your area.",
+          "Adrian Costi is the founder of RealTrust & ApArt Hotel, with a 25+ year career dedicated to the Timișoara real estate market. He has coordinated hundreds of real estate transactions and developed an integrated full-property management model — from long-term rentals to boutique-hotel-standard short-term operations. His vision is straightforward: every property should be managed as a high-performing investment, with full transparency, clear reporting, and optimized owner returns.",
         founderPromise: "I answer the phone personally during business hours (Mon–Fri, 10:00–18:00).",
         visionTitle: "Vision and local experience",
         vision: [
