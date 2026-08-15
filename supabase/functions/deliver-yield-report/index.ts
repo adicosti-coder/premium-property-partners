@@ -7,6 +7,7 @@
 // input is strictly validated and IP rate-limited.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { applyRateLimit } from "../_shared/rateLimiter.ts";
+import { logLeadEvent } from "../_shared/leadEvents.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,6 +66,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    const tUpload = Date.now();
     const path = `yield-reports/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.pdf`;
 
     const { error: upErr } = await admin.storage
@@ -85,10 +87,14 @@ Deno.serve(async (req) => {
       return json({ error: "sign_failed" }, 500);
     }
 
+    const uploadMs = Date.now() - tUpload;
+
     // Optional: email the PDF straight to the owner.
     let emailSent = false;
+    let ownerEmailMs: number | null = null;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (ownerEmail && resendKey) {
+      const tMail = Date.now();
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
@@ -108,6 +114,7 @@ Deno.serve(async (req) => {
         }),
       });
       emailSent = res.ok;
+      ownerEmailMs = Date.now() - tMail;
       if (!res.ok) console.error("deliver-yield-report email failed:", res.status);
     }
 
@@ -131,6 +138,30 @@ Deno.serve(async (req) => {
           .from("leads")
           .update({ report_pdf_path: path, report_delivered_at: new Date().toISOString() })
           .eq("id", leadRow.id);
+
+        await logLeadEvent({
+          leadId: leadRow.id,
+          type: "pdf_stored",
+          status: "success",
+          message: "Raport PDF de randament încărcat în storage-ul privat",
+          durationMs: uploadMs,
+          actor: "deliver-yield-report",
+          metadata: { path, size_bytes: bytes.length },
+        }, admin);
+
+        if (ownerEmail) {
+          await logLeadEvent({
+            leadId: leadRow.id,
+            type: "owner_email",
+            status: emailSent ? "success" : "error",
+            message: emailSent
+              ? `Raportul a fost trimis pe email către ${ownerEmail}`
+              : "Trimiterea raportului pe email a eșuat",
+            durationMs: ownerEmailMs,
+            actor: "deliver-yield-report",
+            metadata: { to: ownerEmail },
+          }, admin);
+        }
       }
     } catch (linkErr) {
       console.error("deliver-yield-report lead link failed:", (linkErr as Error)?.message);

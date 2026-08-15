@@ -13,6 +13,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
+import { logLeadEvent } from "../_shared/leadEvents.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -120,7 +121,11 @@ Deno.serve(async (req) => {
     let crmStatus: "synced" | "skipped" | "failed" = "skipped";
     let crmError: string | null = null;
 
+    const isRetry = !!payload?.is_retry;
+    const attemptNo = Number((record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0) + (isRetry ? 1 : 1);
+
     if (crmUrl) {
+      const t0 = Date.now();
       const res = await fetchWithRetry(
         crmUrl,
         {
@@ -130,14 +135,34 @@ Deno.serve(async (req) => {
         },
         { label: "crm-lead-sync", maxAttempts: 3 },
       );
+      const took = Date.now() - t0;
       if (res.ok) {
         crmStatus = "synced";
       } else {
         crmStatus = "failed";
         crmError = `CRM webhook ${res.response?.status ?? "network"}`.slice(0, 300);
       }
+      await logLeadEvent({
+        leadId: record.id,
+        type: isRetry ? "crm_webhook_retry" : "crm_webhook",
+        status: res.ok ? "success" : "error",
+        message: res.ok
+          ? `Webhook CRM livrat (HTTP ${res.response?.status ?? 200})`
+          : crmError,
+        durationMs: took,
+        attempt: attemptNo,
+        actor: "crm-lead-sync",
+        metadata: { http_status: res.response?.status ?? null, is_retry: isRetry },
+      }, admin);
     } else {
       crmError = "CRM_WEBHOOK_URL not configured";
+      await logLeadEvent({
+        leadId: record.id,
+        type: "crm_webhook",
+        status: "warning",
+        message: "CRM_WEBHOOK_URL nu este configurat — sincronizare omisă",
+        actor: "crm-lead-sync",
+      }, admin);
     }
 
     // ---- 2. Instant team email with the WhatsApp deep link -----------------
@@ -171,6 +196,7 @@ Deno.serve(async (req) => {
           <p style="color:#6e7480;font-size:12px">RealTrust Timișoara · lead ${escapeHtml(record.id)}</p>
         </div>`;
 
+      const tEmail = Date.now();
       const mail = await fetchWithRetry(
         "https://api.resend.com/emails",
         {
@@ -187,6 +213,17 @@ Deno.serve(async (req) => {
       );
       emailSent = mail.ok;
       if (!mail.ok && !crmError) crmError = "team email failed";
+      await logLeadEvent({
+        leadId: record.id,
+        type: "team_email",
+        status: mail.ok ? "success" : "error",
+        message: mail.ok
+          ? `Alertă email trimisă către ${teamEmail}`
+          : `Trimiterea emailului către echipă a eșuat (HTTP ${mail.response?.status ?? "network"})`,
+        durationMs: Date.now() - tEmail,
+        actor: "crm-lead-sync",
+        metadata: { to: teamEmail, whatsapp_link: waLink },
+      }, admin);
     }
 
     // ---- 3. Persist outcome (+ retry bookkeeping) ---------------------------
@@ -194,7 +231,7 @@ Deno.serve(async (req) => {
     // row in `failed`, so the `retry-failed-crm-syncs` cron picks it up again
     // with exponential backoff (max 5 attempts).
     const transientFail = crmStatus === "failed" || (!!resendKey && !emailSent);
-    const attempts = Number(payload?.is_retry ? (record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0 : 0);
+    const attempts = Number(isRetry ? (record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0 : 0);
 
     const update: Record<string, unknown> = {
       crm_sync_status: transientFail ? "failed" : crmStatus,
@@ -207,7 +244,7 @@ Deno.serve(async (req) => {
     } else {
       update.crm_next_retry_at = null;
     }
-    if (!payload?.is_retry) update.crm_status = "nou_necontactat";
+    if (!isRetry) update.crm_status = "nou_necontactat";
 
     await admin.from("leads").update(update).eq("id", record.id);
 
