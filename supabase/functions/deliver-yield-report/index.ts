@@ -111,6 +111,31 @@ Deno.serve(async (req) => {
       if (!res.ok) console.error("deliver-yield-report email failed:", res.status);
     }
 
+    // Link the report back to the freshest matching lead so the team dashboard
+    // can open the exact PDF the owner received.
+    try {
+      const digits = ownerPhone.replace(/[^\d]/g, "").slice(-9);
+      let q = admin
+        .from("leads")
+        .select("id")
+        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (digits.length >= 9) q = q.ilike("whatsapp_number", `%${digits}%`);
+      else if (ownerEmail) q = q.eq("email", ownerEmail);
+      else q = q.eq("id", "00000000-0000-0000-0000-000000000000");
+
+      const { data: leadRow } = await q.maybeSingle();
+      if (leadRow?.id) {
+        await admin
+          .from("leads")
+          .update({ report_pdf_path: path, report_delivered_at: new Date().toISOString() })
+          .eq("id", leadRow.id);
+      }
+    } catch (linkErr) {
+      console.error("deliver-yield-report lead link failed:", (linkErr as Error)?.message);
+    }
+
     return json({ ok: true, url: signed.signedUrl, email_sent: emailSent });
   } catch (err) {
     console.error("deliver-yield-report error:", err);

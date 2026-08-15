@@ -189,18 +189,36 @@ Deno.serve(async (req) => {
       if (!mail.ok && !crmError) crmError = "team email failed";
     }
 
-    // ---- 3. Persist outcome ------------------------------------------------
-    await admin
-      .from("leads")
-      .update({
-        crm_status: crmStatus === "synced" ? "nou_necontactat" : "nou_necontactat",
-        crm_sync_status: crmStatus,
-        crm_synced_at: crmStatus === "synced" ? new Date().toISOString() : null,
-        crm_sync_error: crmError,
-      })
-      .eq("id", record.id);
+    // ---- 3. Persist outcome (+ retry bookkeeping) ---------------------------
+    // A transient failure on either channel (CRM webhook or team email) keeps the
+    // row in `failed`, so the `retry-failed-crm-syncs` cron picks it up again
+    // with exponential backoff (max 5 attempts).
+    const transientFail = crmStatus === "failed" || (!!resendKey && !emailSent);
+    const attempts = Number(payload?.is_retry ? (record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0 : 0);
 
-    return json({ ok: true, crm: crmStatus, email_sent: emailSent, whatsapp_link: waLink });
+    const update: Record<string, unknown> = {
+      crm_sync_status: transientFail ? "failed" : crmStatus,
+      crm_synced_at: transientFail ? null : new Date().toISOString(),
+      crm_sync_error: crmError,
+    };
+    if (transientFail) {
+      // Backoff handled by the SQL sweep; here we only make sure it is queued.
+      update.crm_next_retry_at = new Date(Date.now() + 3 * 60_000).toISOString();
+    } else {
+      update.crm_next_retry_at = null;
+    }
+    if (!payload?.is_retry) update.crm_status = "nou_necontactat";
+
+    await admin.from("leads").update(update).eq("id", record.id);
+
+    return json({
+      ok: true,
+      crm: crmStatus,
+      email_sent: emailSent,
+      queued_for_retry: transientFail,
+      attempts,
+      whatsapp_link: waLink,
+    });
   } catch (err) {
     console.error("crm-lead-sync error:", err);
     return json({ error: (err as Error)?.message ?? "unknown" }, 500);

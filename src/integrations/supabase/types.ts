@@ -2697,10 +2697,13 @@ export type Database = {
           alert_last_error: string | null
           alert_sent_at: string | null
           alert_status: string | null
+          anonymized_at: string | null
           calculated_net_profit: number | null
           calculated_yearly_profit: number | null
           created_at: string
+          crm_next_retry_at: string | null
           crm_status: string
+          crm_sync_attempts: number
           crm_sync_error: string | null
           crm_sync_status: string | null
           crm_synced_at: string | null
@@ -2716,6 +2719,9 @@ export type Database = {
           name: string
           property_area: number
           property_type: string
+          report_delivered_at: string | null
+          report_pdf_path: string | null
+          retention_expires_at: string | null
           score_breakdown: Json | null
           scored_at: string | null
           simulation_data: Json | null
@@ -2730,10 +2736,13 @@ export type Database = {
           alert_last_error?: string | null
           alert_sent_at?: string | null
           alert_status?: string | null
+          anonymized_at?: string | null
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
+          crm_next_retry_at?: string | null
           crm_status?: string
+          crm_sync_attempts?: number
           crm_sync_error?: string | null
           crm_sync_status?: string | null
           crm_synced_at?: string | null
@@ -2749,6 +2758,9 @@ export type Database = {
           name: string
           property_area: number
           property_type: string
+          report_delivered_at?: string | null
+          report_pdf_path?: string | null
+          retention_expires_at?: string | null
           score_breakdown?: Json | null
           scored_at?: string | null
           simulation_data?: Json | null
@@ -2763,10 +2775,13 @@ export type Database = {
           alert_last_error?: string | null
           alert_sent_at?: string | null
           alert_status?: string | null
+          anonymized_at?: string | null
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
+          crm_next_retry_at?: string | null
           crm_status?: string
+          crm_sync_attempts?: number
           crm_sync_error?: string | null
           crm_sync_status?: string | null
           crm_synced_at?: string | null
@@ -2782,6 +2797,9 @@ export type Database = {
           name?: string
           property_area?: number
           property_type?: string
+          report_delivered_at?: string | null
+          report_pdf_path?: string | null
+          retention_expires_at?: string | null
           score_breakdown?: Json | null
           scored_at?: string | null
           simulation_data?: Json | null
@@ -9782,6 +9800,8 @@ export type Database = {
     Functions: {
       _canonical_listing_url: { Args: { url: string }; Returns: string }
       _extract_domain: { Args: { url: string }; Returns: string }
+      admin_run_lead_retention: { Args: never; Returns: Json }
+      anonymize_expired_leads: { Args: never; Returns: Json }
       anonymize_ip_address: { Args: { ip_address: string }; Returns: string }
       auto_blacklist_prospect: {
         Args: { p_prospect_id: string; p_reasons?: string[]; p_score: number }
@@ -10148,6 +10168,7 @@ export type Database = {
         Args: { p_prospect_id: string }
         Returns: Json
       }
+      retry_failed_crm_syncs: { Args: never; Returns: number }
       revoke_admin_mfa: { Args: never; Returns: undefined }
       score_lead: {
         Args: {
