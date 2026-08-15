@@ -655,27 +655,27 @@ const PentruProprietari = () => {
             {[
               {
                 Icon: TrendingUp,
-                title: language === "ro" ? "Venit lunar mai mare" : "Higher monthly income",
+                title: language === "ro" ? "Venit 100% pasiv" : "100% passive income",
                 description:
                   language === "ro"
-                    ? "Tipic de 1,6× până la 2,5× față de chiria clasică, prin tarifare dinamică și ocupare optimizată pe Booking și Airbnb."
-                    : "Typically 1.6× to 2.5× compared to classic rental, through dynamic pricing and optimized occupancy on Booking and Airbnb.",
-              },
-              {
-                Icon: Shield,
-                title: language === "ro" ? "Operațiuni preluate de echipa noastră" : "Operations handled by our team",
-                description:
-                  language === "ro"
-                    ? "Oaspeți verificați, curățenie la standard hotelier, mentenanță și conformitate ANAF — gestionate de echipa noastră."
-                    : "Verified guests, hotel-grade cleaning, maintenance and tax compliance — handled by our team.",
+                    ? "Preluăm tot: listări, tarifare dinamică, oaspeți, curățenie, check-in și mentenanță. Tu nu faci nicio deplasare și nu răspunzi la nicio cerere de oaspete."
+                    : "We take over everything: listings, dynamic pricing, guests, cleaning, check-in and maintenance. Zero trips, zero guest messages for you.",
               },
               {
                 Icon: BarChart3,
-                title: language === "ro" ? "Raportare clară" : "Clear reporting",
+                title: language === "ro" ? "Transparență financiară totală" : "Full financial transparency",
                 description:
                   language === "ro"
-                    ? "Rapoarte lunare detaliate, decontare directă în contul tău și acces oricând în portalul proprietarului."
-                    : "Detailed monthly reports, direct settlement to your account and anytime access to the owner portal.",
+                    ? "Raport lunar detaliat cu venit brut, comision și profit net, plus acces oricând în portalul proprietarului. Decontare la dată fixă, fără costuri ascunse."
+                    : "Detailed monthly report with gross income, commission and net profit, plus anytime owner-portal access. Fixed payout date, no hidden costs.",
+              },
+              {
+                Icon: Shield,
+                title: language === "ro" ? "Protecția garantată a proprietății" : "Guaranteed property protection",
+                description:
+                  language === "ro"
+                    ? "Oaspeți verificați înainte de check-in, garanție de daune, acoperire AirCover/Booking Damage Protection și inspecție după fiecare plecare."
+                    : "Guests verified before check-in, damage deposit, AirCover/Booking Damage Protection coverage and inspection after every checkout.",
               },
             ].map(({ Icon, title, description }, idx) => (
               <div
