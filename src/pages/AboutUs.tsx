@@ -3,6 +3,8 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import TeamSection from "@/components/TeamSection";
+import WhyUs from "@/components/WhyUs";
+
 import OwnerCaseStudies from "@/components/owners/OwnerCaseStudies";
 import CompanyTimeline from "@/components/CompanyTimeline";
 import {
@@ -670,8 +672,12 @@ const AboutUs = () => {
           </div>
         </section>
 
+        {/* Why Us — differentiation & trust */}
+        <WhyUs variant="about" />
+
         {/* Company Timeline */}
         <CompanyTimeline />
+
 
         {/* Team Section */}
         <TeamSection />
