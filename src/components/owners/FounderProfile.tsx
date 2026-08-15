@@ -33,11 +33,11 @@ const FounderProfile = () => {
           "Firma este din Timișoara, birou fizic în Cetate, cu o echipă care se ocupă zilnic de apartamente ca al tău.",
         founderRole: "Fondator & Administrator",
         founderBio:
-          "Peste 10 ani în imobiliare în Timișoara. Preiau personal fiecare discuție de început: îți spun estimarea de venit, ce trebuie schimbat în apartament și dacă merită regim hotelier în zona ta.",
+          "Peste 25 de ani în imobiliare în Timișoara. Preiau personal fiecare discuție de început: îți spun estimarea de venit, ce trebuie schimbat în apartament și dacă merită regim hotelier în zona ta.",
         founderPromise: "Răspund personal la telefon în timpul programului (L–V, 10:00–18:00).",
         visionTitle: "Viziunea și experiența locală",
         vision: [
-          "Peste 10 ani în imobiliare exclusiv în Timișoara — cunosc tarifele reale pe fiecare zonă, de la Cetate și Iosefin până la Dumbrăvița și Aradului.",
+          "Peste 25 de ani în imobiliare exclusiv în Timișoara — cunosc tarifele reale pe fiecare zonă, de la Cetate și Iosefin până la Dumbrăvița și Aradului.",
           "Cred că un apartament administrat corect trebuie să bată chiria clasică cu cifre, nu cu promisiuni: ținta noastră de lucru este 9,4% randament net.",
           "Standard hotelier aplicat la scară mică: aceleași reguli de curățenie, comunicare și raportare pentru un apartament ca pentru un hotel.",
           "Preferăm un portofoliu mic și performant decât multe apartamente administrate superficial.",
@@ -62,11 +62,11 @@ const FounderProfile = () => {
           "A Timișoara-based company with a physical office in Cetate and a team handling apartments like yours every day.",
         founderRole: "Founder & Managing Director",
         founderBio:
-          "Over 10 years in Timișoara real estate. I personally take every first conversation: your income estimate, what needs changing in the apartment, and whether short-term rental makes sense in your area.",
+          "Over 25 years in Timișoara real estate. I personally take every first conversation: your income estimate, what needs changing in the apartment, and whether short-term rental makes sense in your area.",
         founderPromise: "I answer the phone personally during business hours (Mon–Fri, 10:00–18:00).",
         visionTitle: "Vision and local experience",
         vision: [
-          "Over 10 years in real estate exclusively in Timișoara — I know the real rates per area, from Cetate and Iosefin to Dumbrăvița and Aradului.",
+          "Over 25 years in real estate exclusively in Timișoara — I know the real rates per area, from Cetate and Iosefin to Dumbrăvița and Aradului.",
           "A properly managed apartment should beat long-term rent with numbers, not promises: our working target is 9.4% net yield.",
           "Hotel standards at small scale: the same cleaning, communication and reporting rules as a hotel.",
           "We prefer a small, high-performing portfolio over many loosely managed apartments.",
