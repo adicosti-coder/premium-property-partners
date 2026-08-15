@@ -2658,6 +2658,53 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_events: {
+        Row: {
+          actor: string | null
+          attempt: number | null
+          created_at: string
+          duration_ms: number | null
+          event_type: string
+          id: string
+          lead_id: string
+          message: string | null
+          metadata: Json
+          status: string
+        }
+        Insert: {
+          actor?: string | null
+          attempt?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          event_type: string
+          id?: string
+          lead_id: string
+          message?: string | null
+          metadata?: Json
+          status?: string
+        }
+        Update: {
+          actor?: string | null
+          attempt?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          event_type?: string
+          id?: string
+          lead_id?: string
+          message?: string | null
+          metadata?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_notes: {
         Row: {
           content: string
@@ -10103,6 +10150,19 @@ export type Database = {
           p_status: string
         }
         Returns: number
+      }
+      log_lead_event: {
+        Args: {
+          p_actor?: string
+          p_attempt?: number
+          p_duration_ms?: number
+          p_event_type: string
+          p_lead_id: string
+          p_message?: string
+          p_metadata?: Json
+          p_status?: string
+        }
+        Returns: string
       }
       log_pii_reveal: {
         Args: { _field: string; _record_id: string; _table_name: string }
