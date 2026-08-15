@@ -1073,7 +1073,8 @@ const PentruProprietari = () => {
       <ROICaseStudySection />
 
       {/* Why Us */}
-      <WhyUs />
+      <WhyUs variant="owner" />
+
 
       {/* Testimonials */}
       <Testimonials />
