@@ -2700,6 +2700,10 @@ export type Database = {
           calculated_net_profit: number | null
           calculated_yearly_profit: number | null
           created_at: string
+          crm_status: string
+          crm_sync_error: string | null
+          crm_sync_status: string | null
+          crm_synced_at: string | null
           email: string | null
           engagement_status: string
           follow_up_date: string | null
@@ -2729,6 +2733,10 @@ export type Database = {
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
+          crm_status?: string
+          crm_sync_error?: string | null
+          crm_sync_status?: string | null
+          crm_synced_at?: string | null
           email?: string | null
           engagement_status?: string
           follow_up_date?: string | null
@@ -2758,6 +2766,10 @@ export type Database = {
           calculated_net_profit?: number | null
           calculated_yearly_profit?: number | null
           created_at?: string
+          crm_status?: string
+          crm_sync_error?: string | null
+          crm_sync_status?: string | null
+          crm_synced_at?: string | null
           email?: string | null
           engagement_status?: string
           follow_up_date?: string | null
