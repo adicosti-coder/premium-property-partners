@@ -372,6 +372,36 @@ const PreCalcMiniForm = ({
                 )}
               </div>
 
+              {/* Phone */}
+              <div>
+                <Label htmlFor="precalc-phone" className="flex items-center gap-2 mb-2">
+                  <Phone className="w-4 h-4 text-primary" />
+                  {t.phoneLabel}
+                </Label>
+                <Input
+                  id="precalc-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  maxLength={20}
+                  required
+                  placeholder={t.phonePlaceholder}
+                  value={form.phone}
+                  onChange={(e) => {
+                    setForm((prev) => ({ ...prev, phone: e.target.value }));
+                    if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }));
+                  }}
+                  aria-invalid={!!errors.phone}
+                  aria-describedby={errors.phone ? "precalc-phone-error" : undefined}
+                />
+                {errors.phone && (
+                  <p id="precalc-phone-error" className="mt-1 text-sm text-destructive">
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
+
+
               <div className="grid sm:grid-cols-2 gap-5">
                 {/* City */}
                 <div>
