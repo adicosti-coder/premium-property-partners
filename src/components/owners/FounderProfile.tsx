@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BadgeCheck, Building2, Linkedin, Mail, MapPin, MessageCircle, Phone, UserRound } from "lucide-react";
 import { BRAND } from "@/lib/orgIdentity";
 import { trackConversion } from "@/lib/conversionTracking";
-import ceoImage from "@/assets/team/ceo.jpg";
+import ceoImageAsset from "@/assets/adrian-costi-founder.png.asset.json";
 import propertyManagerImage from "@/assets/team/property-manager.jpg";
 import operationsImage from "@/assets/team/operations.jpg";
 import guestRelationsImage from "@/assets/team/guest-relations.jpg";
