@@ -35,6 +35,13 @@ const FounderProfile = () => {
         founderBio:
           "Peste 10 ani în imobiliare în Timișoara. Preiau personal fiecare discuție de început: îți spun estimarea de venit, ce trebuie schimbat în apartament și dacă merită regim hotelier în zona ta.",
         founderPromise: "Răspund personal la telefon în timpul programului (L–V, 10:00–18:00).",
+        visionTitle: "Viziunea și experiența locală",
+        vision: [
+          "Peste 10 ani în imobiliare exclusiv în Timișoara — cunosc tarifele reale pe fiecare zonă, de la Cetate și Iosefin până la Dumbrăvița și Aradului.",
+          "Cred că un apartament administrat corect trebuie să bată chiria clasică cu cifre, nu cu promisiuni: ținta noastră de lucru este 9,4% randament net.",
+          "Standard hotelier aplicat la scară mică: aceleași reguli de curățenie, comunicare și raportare pentru un apartament ca pentru un hotel.",
+          "Preferăm un portofoliu mic și performant decât multe apartamente administrate superficial.",
+        ],
         callBtn: "Sună direct",
         waBtn: "Scrie pe WhatsApp",
         bookBtn: "Rezervă un call de 15 min",
