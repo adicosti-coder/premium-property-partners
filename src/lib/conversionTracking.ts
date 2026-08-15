@@ -115,6 +115,7 @@ export type ConversionEvent =
   | "contact_form_submit"
   | "lead_magnet_pdf"
   | "roi_calculator_lead"
+  | "download_yield_report"
   | "owner_valuation_submit"
   | "newsletter_subscribe"
   | "whatsapp_click"
@@ -129,10 +130,12 @@ const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
   owner_valuation_submit: { name: "Lead", custom: false },
   roi_calculator_lead: { name: "Lead", custom: false },
   lead_magnet_pdf: { name: "Lead", custom: false },
+  download_yield_report: { name: "Lead", custom: false },
   newsletter_subscribe: { name: "Subscribe", custom: false },
   whatsapp_click: { name: "Contact", custom: false },
   phone_click: { name: "Contact", custom: false },
 };
+
 
 interface ConversionPayload {
   event: ConversionEvent;
