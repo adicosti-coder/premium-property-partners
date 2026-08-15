@@ -111,22 +111,6 @@ Deno.serve(async (req) => {
       if (!res.ok) console.error("deliver-yield-report email failed:", res.status);
     }
 
-    // Log the delivery for the team (best-effort, never blocks the response).
-    await admin.from("admin_access_logs").insert({
-      action: "yield_report_delivered",
-      table_name: "lead_reports",
-      details: {
-        path,
-        name: safeName || null,
-        email: ownerEmail,
-        phone: ownerPhone || null,
-        email_sent: emailSent,
-      },
-    }).then(
-      () => undefined,
-      (e: unknown) => console.warn("delivery log skipped:", (e as Error)?.message),
-    );
-
     return json({ ok: true, url: signed.signedUrl, email_sent: emailSent });
   } catch (err) {
     console.error("deliver-yield-report error:", err);
