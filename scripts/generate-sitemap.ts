@@ -17,7 +17,7 @@
  * sitemap files are left untouched so a build never ships an empty sitemap.
  */
 
-import { writeFileSync, existsSync } from "fs";
+import { writeFileSync, existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 const BASE_URL = "https://realtrust.ro";
@@ -27,6 +27,27 @@ const SOURCES = [
   `${FUNCTIONS_ORIGIN}/generate-sitemap`,
   `${FUNCTIONS_ORIGIN}/generate-blog-sitemap`,
 ];
+
+/**
+ * Neighborhood landing pages (/imobiliare-timisoara/:zona) are driven by
+ * src/data/neighborhoods.ts, so read the slugs straight from there — adding a
+ * new zone to the app keeps the sitemap in sync automatically.
+ * No <lastmod>: there is no authoritative per-page timestamp for these routes.
+ */
+const neighborhoodBlocks = (): string[] => {
+  try {
+    const src = readFileSync(resolve("src/data/neighborhoods.ts"), "utf8");
+    const slugs = Array.from(src.matchAll(/^\s*slug:\s*['"]([a-z0-9-]+)['"]/gm)).map((m) => m[1]);
+    return Array.from(new Set(slugs)).map(
+      (slug) =>
+        `  <url>\n    <loc>${BASE_URL}/imobiliare-timisoara/${slug}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`,
+    );
+  } catch (err) {
+    console.warn("[sitemap] could not read neighborhood slugs:", (err as Error).message);
+    return [];
+  }
+};
+
 
 /** Rewrite any legacy www / function-host <loc> to the canonical project domain. */
 const canonicalizeHosts = (xml: string): string =>
