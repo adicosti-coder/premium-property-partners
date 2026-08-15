@@ -82,6 +82,10 @@ const formSchema = z.object({
     .trim()
     .min(2, { message: "Numele trebuie să aibă minim 2 caractere" })
     .max(80, { message: "Numele este prea lung" }),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^(\+?4?0)?7\d{8}$/, { message: "Introdu un număr de telefon valid (ex: 0722 123 456)" }),
   city: z
     .string()
     .trim()
@@ -98,6 +102,7 @@ const formSchema = z.object({
 
 type FormState = {
   name: string;
+  phone: string;
   city: string;
   apartmentType: string;
 };
