@@ -67,6 +67,8 @@ const TaxOptimizationSection = lazy(() => import("@/components/owners/TaxOptimiz
 const ContractTransparency = lazy(() => import("@/components/owners/ContractTransparency"));
 const BeforeAfterTransformations = lazy(() => import("@/components/owners/BeforeAfterTransformations"));
 const OwnerPricingPackages = lazy(() => import("@/components/owners/OwnerPricingPackages"));
+const FounderProfile = lazy(() => import("@/components/owners/FounderProfile"));
+const FounderCallBooking = lazy(() => import("@/components/owners/FounderCallBooking"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
@@ -1003,6 +1005,13 @@ const PentruProprietari = () => {
 
       {/* Before/after: net income uplift on real managed apartments */}
       <BeforeAfterTransformations />
+
+      {/* Founder + team + legal identity ("cine ești, cu față") */}
+      <FounderProfile />
+
+      {/* 15-minute call slot booking with the founder */}
+      <FounderCallBooking />
+
 
       {/* Process Steps Timeline */}
       <ProcessStepsTimeline />
