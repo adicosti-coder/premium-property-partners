@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip as RechartsTooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Tooltip as ShadTooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import LeadCaptureForm from "./LeadCaptureForm";
+import YieldTransparencyNote from "./YieldTransparencyNote";
 const FastTrackScoring = lazy(() => import("./FastTrackScoring"));
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
@@ -599,6 +600,9 @@ const ProfitCalculator = () => {
                     <p className="text-sm text-muted-foreground">{t.calculator.staysPerMonth}</p>
                   </div>
                 </div>
+
+                {/* Full-equation transparency note (27% deduction, cleaning, utilities) */}
+                <YieldTransparencyNote />
 
                 {/* Lead Capture CTA — clarify what happens next */}
                 <div className="space-y-2">

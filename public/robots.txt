@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /portal-proprietar
 
 Sitemap: https://realtrust.ro/sitemap.xml

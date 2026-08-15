@@ -263,6 +263,11 @@ export const translations = {
           question: "Ce randament pot estima realist din apartamentul meu în Timișoara?", 
           answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, FullView Studio, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
         },
+        // Transparență calcul randament
+        {
+          question: "Cum se calculează concret randamentul net de 9,4%?",
+          answer: "Pornim de la venitul brut din cazare (tarif pe noapte × nopți ocupate, la o ocupare de 75%). Din acesta scădem o deducere operațională de 27%, care include comisioanele platformelor (Booking, Airbnb, Expedia), impozitul efectiv pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie). Taxa de curățenie nu te costă: este achitată separat de oaspeți la momentul rezervării. Abia după aceea se scad cheltuielile fixe (utilități, internet, întreținere) și comisionul nostru de administrare — de aceea 9,4% este venit curat (net), nu brut. Cifra finală pentru apartamentul tău se stabilește după evaluarea gratuită."
+        },
         // Servicii incluse
         { 
           question: "Ce servicii sunt incluse în comisionul de administrare?", 
@@ -1361,6 +1366,11 @@ Mulțumesc!`,
         { 
           question: "What net return can I realistically expect from my apartment in Timișoara?", 
           answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, FullView Studio, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy, 27% deduction). The exact figure for your property comes after the evaluation." 
+        },
+        // Yield transparency
+        {
+          question: "How exactly is the 9.4% net return calculated?",
+          answer: "We start from gross accommodation revenue (nightly rate × occupied nights, at 75% occupancy). From it we subtract a 27% operational deduction covering platform commissions (Booking, Airbnb, Expedia), effective income tax and consumables (toiletries, coffee, salt, oil, linen). The cleaning fee costs you nothing: guests pay it separately at booking time. Only after that do we subtract fixed costs (utilities, internet, maintenance) and our management commission — which is why 9.4% is net income, not gross. Your final figure is set after the free valuation."
         },
         // Services included
         { 
