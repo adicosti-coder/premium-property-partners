@@ -173,13 +173,18 @@ const PentruProprietari = () => {
   const content = {
     ro: {
       badge: "Administrare proprietăți · Timișoara",
-      title: "Venit lunar previzibil din apartamentul tău,",
-      titleHighlight: "fără sarcini operaționale",
-      subtitle: "Administrăm apartamentul tău în regim hotelier: listare, oaspeți verificați, curățenie la standard hotelier, mentenanță, raportare lunară și conformitate ANAF. Tu primești venitul net în cont.",
+      title: "Transformă-ți apartamentul într-o investiție de",
+      titleHighlight: "9,4% net pe an, fără bătăi de cap",
+      subtitle: "Preluăm complet apartamentul tău în regim hotelier: listare pe 15+ platforme, tarifare dinamică, oaspeți verificați, curățenie hotelieră, mentenanță și raportare lunară. Tu primești venitul net în cont, la dată fixă.",
       // Variant B heading — same offer, framed on safety & full management
-      titleB: "Apartamentul tău, administrat complet",
-      titleHighlightB: "și protejat, lună de lună",
+      titleB: "Apartamentul tău, administrat complet și protejat, cu",
+      titleHighlightB: "9,4% randament net pe an",
       subtitleB: "Verificăm fiecare oaspete, ne ocupăm de curățenie, mentenanță, taxe și rapoarte, iar tu vezi totul în portalul proprietarului. Zero drumuri, zero surprize, venit încasat la dată fixă.",
+      socialProof: [
+        "9,7/10 rating oaspeți (Booking)",
+        "100+ proprietăți administrate",
+        "Contract flexibil, ieșire în 30 de zile",
+      ],
       cta: "Calculează venitul tău lunar",
       secondaryCta: "Discută cu un consultant",
       ctaB: "Calculează în 60 de secunde",
