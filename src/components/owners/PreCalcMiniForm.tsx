@@ -224,6 +224,7 @@ const PreCalcMiniForm = ({
 
     const parsed = formSchema.safeParse({
       name: form.name,
+      phone: form.phone,
       city: form.city,
       apartmentType: form.apartmentType,
     });
@@ -232,6 +233,7 @@ const PreCalcMiniForm = ({
       const fieldErrors = parsed.error.flatten().fieldErrors;
       setErrors({
         name: fieldErrors.name?.[0],
+        phone: fieldErrors.phone?.[0],
         city: fieldErrors.city?.[0],
         apartmentType: fieldErrors.apartmentType?.[0],
       });
@@ -248,12 +250,11 @@ const PreCalcMiniForm = ({
     try {
       const result = await submitLead({
         name: data.name,
-        whatsapp_number: "PRECALC_NO_PHONE", // sentinel — real number captured downstream
+        whatsapp_number: data.phone,
         property_type: data.apartmentType,
         property_area: 0,
-        message: `[${source}] Oraș: ${data.city} · Tip: ${data.apartmentType}`,
+        message: `[${source}] Zonă: ${data.city} · Tip: ${data.apartmentType}`,
         source,
-        allowSentinelPhone: true,
         simulation_data: withCampaignTracking({
           city: data.city,
           apartment_type: data.apartmentType,
@@ -294,6 +295,7 @@ const PreCalcMiniForm = ({
 
     const params = new URLSearchParams({
       nume: result.data.name,
+      telefon: result.data.phone,
       oras: result.data.city,
       tip: result.data.apartmentType,
       source,
