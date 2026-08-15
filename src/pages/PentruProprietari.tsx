@@ -509,12 +509,9 @@ const PentruProprietari = () => {
         {/* Background decorations - CSS only, no framer-motion */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(45_93%_58%/0.1),transparent_70%)]" />
 
-        <div
-          ref={heroRef}
-          className={`container mx-auto px-6 relative z-10 transition-opacity duration-700 ${
-            heroVisible ? "opacity-100" : "opacity-0"
-          }`}
-        >
+        {/* Hero copy is always visible (no fade gate) — it is the LCP block and
+            must never depend on an IntersectionObserver firing. */}
+        <div ref={heroRef} className="container mx-auto px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             {/* Left Column - Text & CTA */}
             <div className="text-left">
