@@ -69,6 +69,9 @@ const BeforeAfterTransformations = lazy(() => import("@/components/owners/Before
 const OwnerPricingPackages = lazy(() => import("@/components/owners/OwnerPricingPackages"));
 const FounderProfile = lazy(() => import("@/components/owners/FounderProfile"));
 const FounderCallBooking = lazy(() => import("@/components/owners/FounderCallBooking"));
+const OwnerLegalTaxGuide = lazy(() => import("@/components/owners/OwnerLegalTaxGuide"));
+const OwnerRisksLimits = lazy(() => import("@/components/owners/OwnerRisksLimits"));
+const OwnerAssociationPermits = lazy(() => import("@/components/owners/OwnerAssociationPermits"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
@@ -1011,6 +1014,17 @@ const PentruProprietari = () => {
 
       {/* 15-minute call slot booking with the founder */}
       <FounderCallBooking />
+
+      {/* Interactive legal & tax guide + downloadable owner guide (lead magnet) */}
+      <OwnerLegalTaxGuide />
+
+      {/* Risks, minimum requirements, furnishing standards, guarantees */}
+      <OwnerRisksLimits />
+
+      {/* Association approval + tourism classification steps */}
+      <OwnerAssociationPermits />
+
+
 
 
       {/* Process Steps Timeline */}
