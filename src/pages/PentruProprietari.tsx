@@ -173,13 +173,18 @@ const PentruProprietari = () => {
   const content = {
     ro: {
       badge: "Administrare proprietăți · Timișoara",
-      title: "Venit lunar previzibil din apartamentul tău,",
-      titleHighlight: "fără sarcini operaționale",
-      subtitle: "Administrăm apartamentul tău în regim hotelier: listare, oaspeți verificați, curățenie la standard hotelier, mentenanță, raportare lunară și conformitate ANAF. Tu primești venitul net în cont.",
+      title: "Transformă-ți apartamentul într-o investiție de",
+      titleHighlight: "9,4% net pe an, fără bătăi de cap",
+      subtitle: "Preluăm complet apartamentul tău în regim hotelier: listare pe 15+ platforme, tarifare dinamică, oaspeți verificați, curățenie hotelieră, mentenanță și raportare lunară. Tu primești venitul net în cont, la dată fixă.",
       // Variant B heading — same offer, framed on safety & full management
-      titleB: "Apartamentul tău, administrat complet",
-      titleHighlightB: "și protejat, lună de lună",
+      titleB: "Apartamentul tău, administrat complet și protejat, cu",
+      titleHighlightB: "9,4% randament net pe an",
       subtitleB: "Verificăm fiecare oaspete, ne ocupăm de curățenie, mentenanță, taxe și rapoarte, iar tu vezi totul în portalul proprietarului. Zero drumuri, zero surprize, venit încasat la dată fixă.",
+      socialProof: [
+        "9,7/10 rating oaspeți (Booking)",
+        "100+ proprietăți administrate",
+        "Contract flexibil, ieșire în 30 de zile",
+      ],
       cta: "Calculează venitul tău lunar",
       secondaryCta: "Discută cu un consultant",
       ctaB: "Calculează în 60 de secunde",
@@ -204,13 +209,18 @@ const PentruProprietari = () => {
     },
     en: {
       badge: "Property management · Timișoara",
-      title: "Predictable monthly income from your apartment,",
-      titleHighlight: "without the operational load",
-      subtitle: "We run your apartment as a short-term rental: listing, verified guests, hotel-grade cleaning, maintenance, monthly reporting and tax compliance. You receive the net income in your account.",
+      title: "Turn your apartment into an investment yielding",
+      titleHighlight: "9.4% net per year, hassle-free",
+      subtitle: "We fully take over your apartment as a short-term rental: listing on 15+ platforms, dynamic pricing, verified guests, hotel-grade cleaning, maintenance and monthly reporting. You receive the net income on a fixed date.",
       // Variant B heading — same offer, framed on safety & full management
-      titleB: "Your apartment, fully managed",
-      titleHighlightB: "and protected, month after month",
+      titleB: "Your apartment, fully managed and protected, at",
+      titleHighlightB: "9.4% net annual yield",
       subtitleB: "We vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. No trips, no surprises, income paid on a fixed date.",
+      socialProof: [
+        "9.7/10 guest rating (Booking)",
+        "100+ properties managed",
+        "Flexible contract, exit in 30 days",
+      ],
       cta: "Calculate your monthly income",
       secondaryCta: "Talk to a consultant",
       ctaB: "Calculate in 60 seconds",
@@ -499,12 +509,9 @@ const PentruProprietari = () => {
         {/* Background decorations - CSS only, no framer-motion */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(45_93%_58%/0.1),transparent_70%)]" />
 
-        <div
-          ref={heroRef}
-          className={`container mx-auto px-6 relative z-10 transition-opacity duration-700 ${
-            heroVisible ? "opacity-100" : "opacity-0"
-          }`}
-        >
+        {/* Hero copy is always visible (no fade gate) — it is the LCP block and
+            must never depend on an IntersectionObserver firing. */}
+        <div ref={heroRef} className="container mx-auto px-6 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
             {/* Left Column - Text & CTA */}
             <div className="text-left">
@@ -564,35 +571,23 @@ const PentruProprietari = () => {
                 )}
               </div>
 
-              {/* A/B Variant Toggle */}
-              <div className="flex items-center gap-2 mb-8">
-                <span className="text-xs text-white/60 mr-1">{t.variantLabel}:</span>
-                {(["A", "B"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => {
-                      setCtaVariant(v);
-                      trackFormSubmit("owner_cta_variant_switch", {
-                        variant: v,
-                        page: "pentru_proprietari",
-                      });
-                    }}
-                    aria-pressed={ctaVariant === v}
-                    className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${
-                      ctaVariant === v
-                        ? "bg-amber-500 text-blue-950 border-amber-500"
-                        : "bg-transparent text-white/70 border-white/20 hover:border-amber-400/60 hover:text-amber-300"
-                    }`}
-                  >
-                    {v}
-                  </button>
+              {/* Social proof row — rating, portfolio size, contract flexibility */}
+              <ul className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-8">
+                {t.socialProof.map((point, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-sm text-white/85">
+                    {idx === 0 ? (
+                      <Star className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                    )}
+                    <span className="font-medium">{point}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
 
             {/* Right Column - Hero Video Walkthrough - simplified CSS transition */}
-            <div className={`transition-opacity duration-700 ${heroVisible ? "opacity-100" : "opacity-0"}`}>
+            <div className="transition-opacity duration-700 opacity-100">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/30 border border-white/20">
                 <video
                   autoPlay
@@ -657,27 +652,27 @@ const PentruProprietari = () => {
             {[
               {
                 Icon: TrendingUp,
-                title: language === "ro" ? "Venit lunar mai mare" : "Higher monthly income",
+                title: language === "ro" ? "Venit 100% pasiv" : "100% passive income",
                 description:
                   language === "ro"
-                    ? "Tipic de 1,6× până la 2,5× față de chiria clasică, prin tarifare dinamică și ocupare optimizată pe Booking și Airbnb."
-                    : "Typically 1.6× to 2.5× compared to classic rental, through dynamic pricing and optimized occupancy on Booking and Airbnb.",
-              },
-              {
-                Icon: Shield,
-                title: language === "ro" ? "Operațiuni preluate de echipa noastră" : "Operations handled by our team",
-                description:
-                  language === "ro"
-                    ? "Oaspeți verificați, curățenie la standard hotelier, mentenanță și conformitate ANAF — gestionate de echipa noastră."
-                    : "Verified guests, hotel-grade cleaning, maintenance and tax compliance — handled by our team.",
+                    ? "Preluăm tot: listări, tarifare dinamică, oaspeți, curățenie, check-in și mentenanță. Tu nu faci nicio deplasare și nu răspunzi la nicio cerere de oaspete."
+                    : "We take over everything: listings, dynamic pricing, guests, cleaning, check-in and maintenance. Zero trips, zero guest messages for you.",
               },
               {
                 Icon: BarChart3,
-                title: language === "ro" ? "Raportare clară" : "Clear reporting",
+                title: language === "ro" ? "Transparență financiară totală" : "Full financial transparency",
                 description:
                   language === "ro"
-                    ? "Rapoarte lunare detaliate, decontare directă în contul tău și acces oricând în portalul proprietarului."
-                    : "Detailed monthly reports, direct settlement to your account and anytime access to the owner portal.",
+                    ? "Raport lunar detaliat cu venit brut, comision și profit net, plus acces oricând în portalul proprietarului. Decontare la dată fixă, fără costuri ascunse."
+                    : "Detailed monthly report with gross income, commission and net profit, plus anytime owner-portal access. Fixed payout date, no hidden costs.",
+              },
+              {
+                Icon: Shield,
+                title: language === "ro" ? "Protecția garantată a proprietății" : "Guaranteed property protection",
+                description:
+                  language === "ro"
+                    ? "Oaspeți verificați înainte de check-in, garanție de daune, acoperire AirCover/Booking Damage Protection și inspecție după fiecare plecare."
+                    : "Guests verified before check-in, damage deposit, AirCover/Booking Damage Protection coverage and inspection after every checkout.",
               },
             ].map(({ Icon, title, description }, idx) => (
               <div

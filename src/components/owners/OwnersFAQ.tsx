@@ -23,6 +23,10 @@ const OwnersFAQ = () => {
       subtitle: "Răspunsuri la cele mai importante întrebări despre administrarea în regim hotelier",
       items: [
         {
+          q: "Din ce se compune deducerea de 27% și de ce 9,4% este randamentul net final?",
+          a: "Pornim de la venitul brut încasat (ocupare medie estimată 75%) și scădem un total de aproximativ 27%: comisioanele platformelor (Booking 15-18%, Airbnb 3-15%, media ponderată ~12-14%), impozitul efectiv de aproximativ 7% din încasări (normă de venit PFA sau microîntreprindere, în funcție de structura ta) și consumabile plus utilități și lenjerie (~6-8%). Ce rămâne, minus comisionul nostru de administrare, este venitul net în cont. Raportat la valoarea de achiziție a apartamentului, acest venit net reprezintă un randament de 9,4% pe an — deci 9,4% este cifra finală, după toate deducerile, nu una brută.",
+        },
+        {
           q: "Ce autorizație de regim hotelier este necesară în Timișoara?",
           a: "Pentru operarea legală în regim hotelier ai nevoie de Certificat de Clasificare emis de Ministerul Antreprenoriatului și Turismului (1-5 stele/margarete), autorizație DSP (sanitară), aviz ISU (situații de urgență) și înregistrare la Primăria Timișoara pentru taxa hotelieră. RealTrust te ghidează pas cu pas în obținerea tuturor avizelor.",
         },
@@ -56,6 +60,10 @@ const OwnersFAQ = () => {
       title: "Frequently Asked Questions — Owners",
       subtitle: "Answers to the most important questions about short-term rental management",
       items: [
+        {
+          q: "What makes up the 27% deduction, and why is 9.4% the final net yield?",
+          a: "We start from gross collected revenue (75% estimated average occupancy) and deduct roughly 27% in total: platform commissions (Booking 15-18%, Airbnb 3-15%, weighted average ~12-14%), an effective tax of about 7% of revenue (self-employed income norm or micro-company, depending on your structure), and consumables plus utilities and linen (~6-8%). What remains, minus our management fee, is the net income paid to you. Measured against the apartment's purchase value, that net income equals a 9.4% annual yield — so 9.4% is the final figure after all deductions, not a gross number.",
+        },
         {
           q: "What short-term rental license is required in Timișoara?",
           a: "For legal operation you need: Classification Certificate from the Ministry of Tourism (1-5 stars), DSP (sanitary) authorization, ISU (fire safety) approval, and registration with Timișoara City Hall for the hotel tax. RealTrust guides you through the entire licensing process.",

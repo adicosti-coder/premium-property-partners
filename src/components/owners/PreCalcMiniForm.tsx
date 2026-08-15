@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { CalendarCheck, MessageCircle, MapPin, Home, User, Sparkles, Loader2, ArrowRight } from "lucide-react";
+import { CalendarCheck, MessageCircle, MapPin, Home, User, Sparkles, Loader2, ArrowRight, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,6 +82,10 @@ const formSchema = z.object({
     .trim()
     .min(2, { message: "Numele trebuie să aibă minim 2 caractere" })
     .max(80, { message: "Numele este prea lung" }),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^(\+?4?0)?7\d{8}$/, { message: "Introdu un număr de telefon valid (ex: 0722 123 456)" }),
   city: z
     .string()
     .trim()
@@ -98,6 +102,7 @@ const formSchema = z.object({
 
 type FormState = {
   name: string;
+  phone: string;
   city: string;
   apartmentType: string;
 };
@@ -122,6 +127,7 @@ const PreCalcMiniForm = ({
   const navigate = useNavigate();
   const [form, setForm] = useState<FormState>({
     name: "",
+    phone: "",
     city: "Timișoara",
     apartmentType: "2-camere",
   });
@@ -136,12 +142,14 @@ const PreCalcMiniForm = ({
         : "See how much you can earn monthly — no complicated math",
     subtitle:
       language === "ro"
-        ? "Completează 3 câmpuri și primești pe WhatsApp o estimare realistă pentru apartamentul tău + un slot pentru consultanță gratuită."
-        : "Fill in 3 fields and get a realistic estimate for your apartment on WhatsApp + a slot for a free consultation.",
+        ? "Completează 4 câmpuri simple și primești o estimare realistă pentru apartamentul tău + un slot pentru consultanță gratuită."
+        : "Fill in 4 simple fields and get a realistic estimate for your apartment + a slot for a free consultation.",
     nameLabel: language === "ro" ? "Numele tău" : "Your name",
     namePlaceholder: language === "ro" ? "Ex: Andrei Popescu" : "e.g. John Smith",
-    cityLabel: language === "ro" ? "Orașul / Localitatea" : "City / Locality",
-    cityPlaceholder: language === "ro" ? "Selectează orașul" : "Select city",
+    phoneLabel: language === "ro" ? "Telefon" : "Phone",
+    phonePlaceholder: language === "ro" ? "07xx xxx xxx" : "07xx xxx xxx",
+    cityLabel: language === "ro" ? "Cartier / Localitate" : "Neighborhood / Locality",
+    cityPlaceholder: language === "ro" ? "Selectează zona" : "Select area",
     typeLabel: language === "ro" ? "Tip apartament" : "Apartment type",
     typePlaceholder: language === "ro" ? "Selectează tipul" : "Select type",
     submit: language === "ro" ? "Rezervă consultanță gratuită" : "Book free consultation",
@@ -216,6 +224,7 @@ const PreCalcMiniForm = ({
 
     const parsed = formSchema.safeParse({
       name: form.name,
+      phone: form.phone,
       city: form.city,
       apartmentType: form.apartmentType,
     });
@@ -224,6 +233,7 @@ const PreCalcMiniForm = ({
       const fieldErrors = parsed.error.flatten().fieldErrors;
       setErrors({
         name: fieldErrors.name?.[0],
+        phone: fieldErrors.phone?.[0],
         city: fieldErrors.city?.[0],
         apartmentType: fieldErrors.apartmentType?.[0],
       });
@@ -240,12 +250,11 @@ const PreCalcMiniForm = ({
     try {
       const result = await submitLead({
         name: data.name,
-        whatsapp_number: "PRECALC_NO_PHONE", // sentinel — real number captured downstream
+        whatsapp_number: data.phone,
         property_type: data.apartmentType,
         property_area: 0,
-        message: `[${source}] Oraș: ${data.city} · Tip: ${data.apartmentType}`,
+        message: `[${source}] Zonă: ${data.city} · Tip: ${data.apartmentType}`,
         source,
-        allowSentinelPhone: true,
         simulation_data: withCampaignTracking({
           city: data.city,
           apartment_type: data.apartmentType,
@@ -286,6 +295,7 @@ const PreCalcMiniForm = ({
 
     const params = new URLSearchParams({
       nume: result.data.name,
+      telefon: result.data.phone,
       oras: result.data.city,
       tip: result.data.apartmentType,
       source,
@@ -361,6 +371,36 @@ const PreCalcMiniForm = ({
                   </p>
                 )}
               </div>
+
+              {/* Phone */}
+              <div>
+                <Label htmlFor="precalc-phone" className="flex items-center gap-2 mb-2">
+                  <Phone className="w-4 h-4 text-primary" />
+                  {t.phoneLabel}
+                </Label>
+                <Input
+                  id="precalc-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  maxLength={20}
+                  required
+                  placeholder={t.phonePlaceholder}
+                  value={form.phone}
+                  onChange={(e) => {
+                    setForm((prev) => ({ ...prev, phone: e.target.value }));
+                    if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }));
+                  }}
+                  aria-invalid={!!errors.phone}
+                  aria-describedby={errors.phone ? "precalc-phone-error" : undefined}
+                />
+                {errors.phone && (
+                  <p id="precalc-phone-error" className="mt-1 text-sm text-destructive">
+                    {errors.phone}
+                  </p>
+                )}
+              </div>
+
 
               <div className="grid sm:grid-cols-2 gap-5">
                 {/* City */}
