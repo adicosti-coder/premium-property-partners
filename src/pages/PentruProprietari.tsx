@@ -63,6 +63,7 @@ const OwnerGuideHub = lazy(() => import("@/components/owners/OwnerGuideHub"));
 const OwnerTestimonials = lazy(() => import("@/components/owners/OwnerTestimonials"));
 const TaxOptimizationSection = lazy(() => import("@/components/owners/TaxOptimizationSection"));
 const ContractTransparency = lazy(() => import("@/components/owners/ContractTransparency"));
+const BeforeAfterTransformations = lazy(() => import("@/components/owners/BeforeAfterTransformations"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
@@ -987,6 +988,9 @@ const PentruProprietari = () => {
 
       {/* Contract terms + sample monthly report (owner trust) */}
       <ContractTransparency />
+
+      {/* Before/after: net income uplift on real managed apartments */}
+      <BeforeAfterTransformations />
 
       {/* Process Steps Timeline */}
       <ProcessStepsTimeline />

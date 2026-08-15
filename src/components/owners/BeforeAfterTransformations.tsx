@@ -229,7 +229,7 @@ const BeforeAfterTransformations = () => {
                 </a>
               </Button>
               <Button asChild variant="outline" size="lg" className="min-h-[48px]">
-                <Link to="/calculator-randament" aria-label={t.ctaSecondary}>
+                <Link to="/calculator-roi" aria-label={t.ctaSecondary}>
                   {t.ctaSecondary}
                 </Link>
               </Button>
