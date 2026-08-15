@@ -3,6 +3,7 @@
 // Admin-only: the `lead-reports` bucket is private and never exposed to clients.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { logLeadEvent } from "../_shared/leadEvents.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +51,15 @@ Deno.serve(async (req) => {
       .createSignedUrl(lead.report_pdf_path, 60 * 10);
 
     if (signErr || !signed?.signedUrl) return json({ error: "sign_failed" }, 500);
+
+    await logLeadEvent({
+      leadId,
+      type: "report_viewed",
+      status: "info",
+      message: "Raportul PDF a fost deschis de un administrator",
+      actor: "admin",
+      metadata: { admin_user_id: auth.userId ?? null, ttl_seconds: 600 },
+    }, admin);
 
     return json({ ok: true, url: signed.signedUrl });
   } catch (err) {
