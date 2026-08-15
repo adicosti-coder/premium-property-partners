@@ -1367,6 +1367,11 @@ Mulțumesc!`,
           question: "What net return can I realistically expect from my apartment in Timișoara?", 
           answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, FullView Studio, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy, 27% deduction). The exact figure for your property comes after the evaluation." 
         },
+        // Yield transparency
+        {
+          question: "How exactly is the 9.4% net return calculated?",
+          answer: "We start from gross accommodation revenue (nightly rate × occupied nights, at 75% occupancy). From it we subtract a 27% operational deduction covering platform commissions (Booking, Airbnb, Expedia), effective income tax and consumables (toiletries, coffee, salt, oil, linen). The cleaning fee costs you nothing: guests pay it separately at booking time. Only after that do we subtract fixed costs (utilities, internet, maintenance) and our management commission — which is why 9.4% is net income, not gross. Your final figure is set after the free valuation."
+        },
         // Services included
         { 
           question: "What services are included in the management fee?", 
