@@ -574,31 +574,19 @@ const PentruProprietari = () => {
                 )}
               </div>
 
-              {/* A/B Variant Toggle */}
-              <div className="flex items-center gap-2 mb-8">
-                <span className="text-xs text-white/60 mr-1">{t.variantLabel}:</span>
-                {(["A", "B"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => {
-                      setCtaVariant(v);
-                      trackFormSubmit("owner_cta_variant_switch", {
-                        variant: v,
-                        page: "pentru_proprietari",
-                      });
-                    }}
-                    aria-pressed={ctaVariant === v}
-                    className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${
-                      ctaVariant === v
-                        ? "bg-amber-500 text-blue-950 border-amber-500"
-                        : "bg-transparent text-white/70 border-white/20 hover:border-amber-400/60 hover:text-amber-300"
-                    }`}
-                  >
-                    {v}
-                  </button>
+              {/* Social proof row — rating, portfolio size, contract flexibility */}
+              <ul className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-8">
+                {t.socialProof.map((point, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-sm text-white/85">
+                    {idx === 0 ? (
+                      <Star className="w-4 h-4 text-amber-400 fill-amber-400 shrink-0" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                    )}
+                    <span className="font-medium">{point}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
 
             {/* Right Column - Hero Video Walkthrough - simplified CSS transition */}
