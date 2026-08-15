@@ -153,7 +153,7 @@ const EvaluareGratuita = () => {
     // Persist the lead (dedup handled server-side by leads_dedupe_upsert).
     const result = await submitLead({
       name: form.name,
-      whatsapp_number: form.phone,
+      whatsapp_number: formatPhoneInput(form.phone),
       email: form.email,
       property_type: form.propertyType,
       property_area: 0,
