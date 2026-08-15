@@ -3,6 +3,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import TeamSection from "@/components/TeamSection";
+import OwnerCaseStudies from "@/components/owners/OwnerCaseStudies";
 import CompanyTimeline from "@/components/CompanyTimeline";
 import {
   Building2, 
@@ -674,6 +675,9 @@ const AboutUs = () => {
 
         {/* Team Section */}
         <TeamSection />
+
+        {/* Case studies from the portfolio managed by Adrian Costi */}
+        <OwnerCaseStudies />
 
         {/* Case Study — verified ROI proof */}
         <section id="studiu-caz" className="py-20 bg-background">

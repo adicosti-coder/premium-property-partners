@@ -69,6 +69,7 @@ const ContractTransparency = lazy(() => import("@/components/owners/ContractTran
 const BeforeAfterTransformations = lazy(() => import("@/components/owners/BeforeAfterTransformations"));
 const OwnerPricingPackages = lazy(() => import("@/components/owners/OwnerPricingPackages"));
 const FounderProfile = lazy(() => import("@/components/owners/FounderProfile"));
+const OwnerCaseStudies = lazy(() => import("@/components/owners/OwnerCaseStudies"));
 const FounderCallBooking = lazy(() => import("@/components/owners/FounderCallBooking"));
 const OwnerLegalTaxGuide = lazy(() => import("@/components/owners/OwnerLegalTaxGuide"));
 const OwnerRisksLimits = lazy(() => import("@/components/owners/OwnerRisksLimits"));
@@ -1009,6 +1010,9 @@ const PentruProprietari = () => {
 
       {/* Before/after: net income uplift on real managed apartments */}
       <BeforeAfterTransformations />
+
+      {/* Case studies: three representative managed scenarios */}
+      <OwnerCaseStudies />
 
       {/* Founder + team + legal identity ("cine ești, cu față") */}
       <FounderProfile />
