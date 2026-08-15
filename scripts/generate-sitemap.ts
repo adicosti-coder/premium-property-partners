@@ -86,7 +86,7 @@ const SITEMAP_INDEX = `<?xml version="1.0" encoding="UTF-8"?>
 `;
 
 const main = async () => {
-  const blocks: string[] = [];
+  const blocks: string[] = [...neighborhoodBlocks()];
 
   for (const source of SOURCES) {
     try {
