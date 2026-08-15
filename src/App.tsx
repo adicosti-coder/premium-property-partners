@@ -103,6 +103,7 @@ const AnalizaROIApartament = lazyWithRetry(() => import("./pages/AnalizaROIApart
 const CityOfMaraTimisoara = lazyWithRetry(() => import("./pages/CityOfMaraTimisoara"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
+const ThankYou = lazyWithRetry(() => import("./pages/ThankYou"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 const NeighborhoodCluster = lazyWithRetry(() => import("./pages/NeighborhoodCluster"));
 const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"));
@@ -261,6 +262,8 @@ const App = () => (
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
+                    <Route path="/multumire" element={<ThankYou />} />
+                    <Route path="/mulțumire" element={<Navigate to="/multumire" replace />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />

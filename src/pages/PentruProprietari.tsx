@@ -23,6 +23,8 @@ import BackToTop from "@/components/BackToTop";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 import { setCtaVariant as recordCtaVariant } from "@/lib/campaignAttribution";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
+import { OWNERS_FAQ_DATA } from "@/data/ownersFaq";
 
 const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
 
@@ -95,6 +97,17 @@ function useDeferredLoad(rootMargin = "500px") {
 
 const PentruProprietari = () => {
   const { language } = useLanguage();
+
+  // Register the owners FAQ schema at page level: the visible OwnersFAQ section
+  // is lazy + below the fold, so without this the FAQPage JSON-LD was missing
+  // entirely for crawlers that never scroll. Same id => single dedup'd node.
+  useRegisterFAQs(
+    "owners-faq",
+    OWNERS_FAQ_DATA[language === "en" ? "en" : "ro"].items.map((item) => ({
+      question: item.q,
+      answer: item.a,
+    })),
+  );
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation({ threshold: 0.1 });
 

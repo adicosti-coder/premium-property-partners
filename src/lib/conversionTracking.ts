@@ -113,6 +113,7 @@ export type CriticalConversionEvent = "Lead_Submit" | "PreCalc_Completed" | "Wha
 export type ConversionEvent =
   | CriticalConversionEvent
   | "contact_form_submit"
+  | "generate_lead"
   | "lead_magnet_pdf"
   | "roi_calculator_lead"
   | "download_yield_report"
@@ -127,6 +128,7 @@ const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
   PreCalc_Completed: { name: "PreCalc_Completed", custom: true },
   WhatsApp_Click: { name: "Contact", custom: false },
   contact_form_submit: { name: "Lead", custom: false },
+  generate_lead: { name: "Lead", custom: false },
   owner_valuation_submit: { name: "Lead", custom: false },
   roi_calculator_lead: { name: "Lead", custom: false },
   lead_magnet_pdf: { name: "Lead", custom: false },
