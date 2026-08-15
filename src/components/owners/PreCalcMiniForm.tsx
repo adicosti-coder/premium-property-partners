@@ -127,6 +127,7 @@ const PreCalcMiniForm = ({
   const navigate = useNavigate();
   const [form, setForm] = useState<FormState>({
     name: "",
+    phone: "",
     city: "Timișoara",
     apartmentType: "2-camere",
   });
