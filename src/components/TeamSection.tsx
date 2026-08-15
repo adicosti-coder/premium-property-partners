@@ -2,7 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Linkedin, Mail } from "lucide-react";
+import { Award, Clock, Linkedin, Mail, ShieldCheck, TrendingUp, Users } from "lucide-react";
 
 import ceoImageAsset from "@/assets/adrian-costi-founder.png.asset.json";
 import propertyManagerImage from "@/assets/team/property-manager.jpg";
@@ -18,6 +18,13 @@ interface TeamMember {
   email?: string;
 }
 
+interface StatItem {
+  value: string;
+  suffix: string;
+  label: string;
+  icon: "clock" | "trending" | "shield";
+}
+
 const TeamSection = () => {
   const { language } = useLanguage();
   const animation = useScrollAnimation({ threshold: 0.1 });
@@ -28,6 +35,8 @@ const TeamSection = () => {
       title: "Oamenii din Spatele",
       titleHighlight: "Succesului",
       subtitle: "O echipă dedicată care transformă viziunea în realitate, zi de zi.",
+      statsTitle: "Cifrele care ne definesc",
+      quoteLabel: "Filosofia fondatorului",
       team: [
         {
           name: "Adrian Costi",
@@ -37,13 +46,22 @@ const TeamSection = () => {
           linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
         }
-      ]
+      ],
+      founderStats: [
+        { value: "25+", suffix: "", label: "Ani experiență în imobiliare Timișoara", icon: "clock" as const },
+        { value: "9.4", suffix: "%", label: "Randament mediu net pentru proprietari", icon: "trending" as const },
+        { value: "100", suffix: "%", label: "Administrare completă, de la A la Z", icon: "shield" as const },
+      ],
+      founderQuote:
+        "„Preferăm un portofoliu restrâns și înalt performant, unde fiecare apartament primește atenția directă pe care ar primi-o într-un hotel de top, decât administrarea superficială a sute de unități.\"",
     },
     en: {
       badge: "Our Team",
       title: "The People Behind",
       titleHighlight: "Success",
       subtitle: "A dedicated team that transforms vision into reality, day by day.",
+      statsTitle: "The numbers that define us",
+      quoteLabel: "Founder's philosophy",
       team: [
         {
           name: "Adrian Costi",
@@ -53,7 +71,14 @@ const TeamSection = () => {
           linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
         }
-      ]
+      ],
+      founderStats: [
+        { value: "25+", suffix: "", label: "Years of real estate experience in Timișoara", icon: "clock" as const },
+        { value: "9.4", suffix: "%", label: "Average net yield for owners", icon: "trending" as const },
+        { value: "100", suffix: "%", label: "End-to-end management, from A to Z", icon: "shield" as const },
+      ],
+      founderQuote:
+        '"We prefer a small, high-performing portfolio where every apartment receives the direct attention it would get in a top hotel, rather than the superficial management of hundreds of units."',
     }
   };
 
@@ -141,6 +166,39 @@ const TeamSection = () => {
             </Card>
           ))}
         </div>
+
+        <Card className="mt-12 border-primary/15">
+          <CardContent className="p-6 md:p-8">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <h3 className="text-xl font-bold mb-4">{t.statsTitle}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {t.founderStats.map((stat: StatItem, idx: number) => {
+                    const Icon = stat.icon === "clock" ? Clock : stat.icon === "trending" ? TrendingUp : ShieldCheck;
+                    return (
+                      <div
+                        key={idx}
+                        className="rounded-lg border border-primary/15 bg-primary/5 p-4 text-center"
+                      >
+                        <Icon className="w-6 h-6 text-primary mx-auto mb-2" aria-hidden="true" />
+                        <p className="text-3xl font-extrabold text-primary mb-1">
+                          {stat.value}{stat.suffix}
+                        </p>
+                        <p className="text-sm text-muted-foreground leading-snug">{stat.label}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <blockquote className="relative rounded-lg border-l-4 border-primary bg-muted/40 p-5">
+                <Award className="w-6 h-6 text-primary/40 mb-2" aria-hidden="true" />
+                <p className="text-base md:text-lg font-medium italic text-foreground">{t.founderQuote}</p>
+                <footer className="mt-3 text-sm font-semibold text-primary">— Adrian Costi</footer>
+              </blockquote>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );
