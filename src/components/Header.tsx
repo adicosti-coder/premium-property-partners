@@ -299,7 +299,7 @@ const Header = () => {
             {/* Notifications - hidden on mobile, visible md+ only for authenticated admins */}
             {/* Notifications + Animation toggle: render only after mobile menu interaction OR md+ viewport.
                 Avoids loading non-critical chunks on mobile LCP path. */}
-            {isAuthenticated === true && <div className="hidden md:block"><Suspense fallback={null}><NotificationBell /></Suspense></div>}
+            {isAuthenticated === true && isAdmin && <div className="hidden md:block"><Suspense fallback={null}><NotificationBell /></Suspense></div>}
             <div className="hidden md:block"><Suspense fallback={null}><AnimationToggle /></Suspense></div>
             {/* Theme toggle - visible on all screens */}
             <ThemeToggle />
