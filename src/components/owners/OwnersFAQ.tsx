@@ -23,6 +23,10 @@ const OwnersFAQ = () => {
       subtitle: "Răspunsuri la cele mai importante întrebări despre administrarea în regim hotelier",
       items: [
         {
+          q: "Din ce se compune deducerea de 27% și de ce 9,4% este randamentul net final?",
+          a: "Pornim de la venitul brut încasat (ocupare medie estimată 75%) și scădem un total de aproximativ 27%: comisioanele platformelor (Booking 15-18%, Airbnb 3-15%, media ponderată ~12-14%), impozitul efectiv de aproximativ 7% din încasări (normă de venit PFA sau microîntreprindere, în funcție de structura ta) și consumabile plus utilități și lenjerie (~6-8%). Ce rămâne, minus comisionul nostru de administrare, este venitul net în cont. Raportat la valoarea de achiziție a apartamentului, acest venit net reprezintă un randament de 9,4% pe an — deci 9,4% este cifra finală, după toate deducerile, nu una brută.",
+        },
+        {
           q: "Ce autorizație de regim hotelier este necesară în Timișoara?",
           a: "Pentru operarea legală în regim hotelier ai nevoie de Certificat de Clasificare emis de Ministerul Antreprenoriatului și Turismului (1-5 stele/margarete), autorizație DSP (sanitară), aviz ISU (situații de urgență) și înregistrare la Primăria Timișoara pentru taxa hotelieră. RealTrust te ghidează pas cu pas în obținerea tuturor avizelor.",
         },
