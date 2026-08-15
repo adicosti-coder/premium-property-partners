@@ -1004,6 +1004,13 @@ const PentruProprietari = () => {
       {/* Before/after: net income uplift on real managed apartments */}
       <BeforeAfterTransformations />
 
+      {/* Founder + team + legal identity ("cine ești, cu față") */}
+      <FounderProfile />
+
+      {/* 15-minute call slot booking with the founder */}
+      <FounderCallBooking />
+
+
       {/* Process Steps Timeline */}
       <ProcessStepsTimeline />
 
