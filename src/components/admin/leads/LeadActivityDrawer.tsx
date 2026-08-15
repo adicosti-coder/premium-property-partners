@@ -20,6 +20,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import LeadEventTimeline from "./LeadEventTimeline";
 
 interface ActivityEntry {
   at?: string;
@@ -160,6 +161,14 @@ const LeadActivityDrawer = ({ leadId, open, onOpenChange }: Props) => {
               <span>Creat: {fmt(lead.created_at)}</span>
               {lead.last_touch_at && <span>· Ultima atingere: {fmt(lead.last_touch_at)}</span>}
             </div>
+
+            {/* Automation timeline */}
+            <section>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Cronologie automatizări
+              </h4>
+              <LeadEventTimeline leadId={leadId} enabled={open} />
+            </section>
 
             {/* Activity timeline */}
             <section>
