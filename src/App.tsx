@@ -108,6 +108,7 @@ const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 const NeighborhoodCluster = lazyWithRetry(() => import("./pages/NeighborhoodCluster"));
 const SharedComparison = lazyWithRetry(() => import("./pages/SharedComparison"));
 const CallDashboard = lazyWithRetry(() => import("./pages/CallDashboard"));
+const AdminLeadDashboard = lazyWithRetry(() => import("./pages/AdminLeadDashboard"));
 const FastReview = lazyWithRetry(() => import("./pages/admin/FastReview"));
 // No loader — render nothing while chunks load so the HTML skeleton stays visible
 const PageLoader = () => null;
