@@ -1,5 +1,8 @@
 import { useState, lazy, Suspense, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import { submitLead } from "@/lib/leadSubmission";
+import { withCampaignTracking } from "@/lib/campaignAttribution";
 import FormTrustBadges from "@/components/forms/FormTrustBadges";
 import { Building2, Home, LandPlot, Store, ChevronLeft, ChevronRight, CheckCircle2, FileCheck, MapPin, Clock, ShieldCheck } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
