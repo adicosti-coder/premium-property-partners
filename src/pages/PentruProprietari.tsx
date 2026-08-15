@@ -587,7 +587,7 @@ const PentruProprietari = () => {
             </div>
 
             {/* Right Column - Hero Video Walkthrough - simplified CSS transition */}
-            <div className={`transition-opacity duration-700 ${heroVisible ? "opacity-100" : "opacity-0"}`}>
+            <div className="transition-opacity duration-700 opacity-100">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/30 border border-white/20">
                 <video
                   autoPlay
