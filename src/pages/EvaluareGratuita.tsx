@@ -14,7 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { cn } from "@/lib/utils";
 import { neighborhoods } from "@/data/neighborhoods";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
-import { trackConversion } from "@/lib/conversionTracking";
+import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 
 const EVAL_FAQS = [
   {
@@ -77,6 +77,7 @@ const APARTMENT_TYPE_MAP: Record<string, { propertyType: string; rooms: string }
 
 const EvaluareGratuita = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
@@ -167,7 +168,7 @@ const EvaluareGratuita = () => {
       }) as never,
     });
 
-    if (!result.ok) {
+    if (result.ok !== true) {
       setSubmitted(false);
       if (result.reason === "validation") {
         toast.error("Verifică numele, telefonul și emailul introduse.");
