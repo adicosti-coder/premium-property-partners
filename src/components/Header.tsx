@@ -460,7 +460,7 @@ const Header = () => {
                   <span className="text-xs text-muted-foreground mr-2">
                     {language === 'ro' ? 'Setări:' : 'Settings:'}
                   </span>
-                  {mobileMenuOpen && isAuthenticated === true && <Suspense fallback={null}><NotificationBell /></Suspense>}
+                  {mobileMenuOpen && isAuthenticated === true && isAdmin && <Suspense fallback={null}><NotificationBell /></Suspense>}
                   {mobileMenuOpen && <Suspense fallback={null}><AnimationToggle /></Suspense>}
                   <ThemeToggle />
                   <LanguageSwitcher />
