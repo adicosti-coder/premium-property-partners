@@ -44,6 +44,14 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      proxy: mode === "development" && process.env.LOVABLE_PREVIEW_HOST
+        ? {
+            "/__l5e": {
+              target: `https://${process.env.LOVABLE_PREVIEW_HOST}`,
+              changeOrigin: true,
+            },
+          }
+        : undefined,
     },
     define: defineEnv,
     plugins: [
