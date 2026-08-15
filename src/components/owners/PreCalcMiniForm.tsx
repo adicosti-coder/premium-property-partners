@@ -142,12 +142,14 @@ const PreCalcMiniForm = ({
         : "See how much you can earn monthly — no complicated math",
     subtitle:
       language === "ro"
-        ? "Completează 3 câmpuri și primești pe WhatsApp o estimare realistă pentru apartamentul tău + un slot pentru consultanță gratuită."
-        : "Fill in 3 fields and get a realistic estimate for your apartment on WhatsApp + a slot for a free consultation.",
+        ? "Completează 4 câmpuri simple și primești o estimare realistă pentru apartamentul tău + un slot pentru consultanță gratuită."
+        : "Fill in 4 simple fields and get a realistic estimate for your apartment + a slot for a free consultation.",
     nameLabel: language === "ro" ? "Numele tău" : "Your name",
     namePlaceholder: language === "ro" ? "Ex: Andrei Popescu" : "e.g. John Smith",
-    cityLabel: language === "ro" ? "Orașul / Localitatea" : "City / Locality",
-    cityPlaceholder: language === "ro" ? "Selectează orașul" : "Select city",
+    phoneLabel: language === "ro" ? "Telefon" : "Phone",
+    phonePlaceholder: language === "ro" ? "07xx xxx xxx" : "07xx xxx xxx",
+    cityLabel: language === "ro" ? "Cartier / Localitate" : "Neighborhood / Locality",
+    cityPlaceholder: language === "ro" ? "Selectează zona" : "Select area",
     typeLabel: language === "ro" ? "Tip apartament" : "Apartment type",
     typePlaceholder: language === "ro" ? "Selectează tipul" : "Select type",
     submit: language === "ro" ? "Rezervă consultanță gratuită" : "Book free consultation",
