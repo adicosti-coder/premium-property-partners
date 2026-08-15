@@ -12,7 +12,7 @@ import { trackConversion } from "@/lib/conversionTracking";
  * Pur prezentațional, bilingv RO/EN, fără backend.
  */
 const WHATSAPP_URL =
-  "https://wa.me/40726123456?text=" +
+  "https://wa.me/40799069256?text=" +
   encodeURIComponent("Bună! Vreau modelul de contract de administrare și un exemplu de raport lunar.");
 
 const ContractTransparency = () => {
@@ -100,7 +100,7 @@ const ContractTransparency = () => {
       };
 
   const handleContractRequest = () => {
-    trackConversion("contract_template_request", { source: "owners_contract_transparency" });
+    trackConversion({ event: "whatsapp_click", source: "owners_contract_transparency" });
   };
 
   return (
