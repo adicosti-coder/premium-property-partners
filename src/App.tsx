@@ -262,6 +262,8 @@ const App = () => (
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
+                    <Route path="/multumire" element={<ThankYou />} />
+                    <Route path="/mulțumire" element={<Navigate to="/multumire" replace />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
                     <Route path="/politica-confidentialitate" element={<LegalPage type="privacy" />} />
                     <Route path="/unsubscribe" element={<Unsubscribe />} />
