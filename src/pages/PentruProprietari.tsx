@@ -1012,6 +1012,17 @@ const PentruProprietari = () => {
       {/* 15-minute call slot booking with the founder */}
       <FounderCallBooking />
 
+      {/* Interactive legal & tax guide + downloadable owner guide (lead magnet) */}
+      <OwnerLegalTaxGuide />
+
+      {/* Risks, minimum requirements, furnishing standards, guarantees */}
+      <OwnerRisksLimits />
+
+      {/* Association approval + tourism classification steps */}
+      <OwnerAssociationPermits />
+
+
+
 
       {/* Process Steps Timeline */}
       <ProcessStepsTimeline />
