@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.translate-blog-articles]
 verify_jwt = false
+
+[functions.book-owner-call]
+verify_jwt = false
+
+[functions.send-call-reminders]
+verify_jwt = false
