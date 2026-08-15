@@ -41,7 +41,7 @@ const TeamSection = () => {
         {
           name: "Adrian Costi",
           role: "Fondator & CEO",
-          description: "Cu peste 25 de ani de experiență în imobiliare, Adrian a fondat RealTrust & ApArt Hotel cu viziunea de a aduce standarde internaționale în piața din Timișoara.",
+          description: "Cu peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara, Adrian a fondat RealTrust & ApArt Hotel pentru a oferi proprietarilor un model complet: de la închiriere pe termen lung la regim hotelier la standard de boutique hotel.",
           image: ceoImageAsset.url,
           linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
@@ -66,7 +66,7 @@ const TeamSection = () => {
         {
           name: "Adrian Costi",
           role: "Founder & CEO",
-          description: "With over 25 years of real estate experience, Adrian founded RealTrust & ApArt Hotel with the vision of bringing international standards to the Timișoara market.",
+          description: "With over 25 years in real estate transactions and property management in Timișoara, Adrian founded RealTrust & ApArt Hotel to give owners a complete model: from long-term rentals to boutique-hotel-standard short-term operations.",
           image: ceoImageAsset.url,
           linkedin: "https://www.linkedin.com/in/costi-adrian-2b50931a",
           email: "adrian@realtrust.ro"
