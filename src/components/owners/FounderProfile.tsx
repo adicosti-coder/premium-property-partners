@@ -2,7 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BadgeCheck, Building2, Linkedin, Mail, MapPin, MessageCircle, Phone, UserRound } from "lucide-react";
+import { Award, BadgeCheck, Building2, Clock, Linkedin, Mail, MapPin, MessageCircle, Phone, ShieldCheck, TrendingUp, UserRound } from "lucide-react";
 import { BRAND } from "@/lib/orgIdentity";
 import { trackConversion } from "@/lib/conversionTracking";
 import ceoImageAsset from "@/assets/adrian-costi-founder.png.asset.json";
@@ -49,6 +49,13 @@ const FounderProfile = () => {
         legalTitle: "Date de identificare",
         legalNote: "Poți verifica firma oricând înainte să semnezi ceva.",
         labels: { company: "Firma", cui: "CUI", office: "Birou", contact: "Contact" },
+        stats: [
+          { value: "25+", suffix: "", label: "Ani experiență în imobiliare Timișoara", icon: "clock" as const },
+          { value: "9.4", suffix: "%", label: "Randament mediu net obținut pentru proprietari", icon: "trending" as const },
+          { value: "100", suffix: "%", label: "Administrare completă, de la A la Z", icon: "shield" as const },
+        ],
+        quote:
+          "„Preferăm un portofoliu restrâns și înalt performant, unde fiecare apartament primește atenția directă pe care ar primi-o într-un hotel de top, decât administrarea superficială a sute de unități.\"",
         team: [
           { name: "Property Manager", role: "Relația cu proprietarii", desc: "Rapoarte lunare, prețuri, mentenanță.", image: propertyManagerImage },
           { name: "Operațiuni", role: "Curățenie & logistică", desc: "Lenjerie, consumabile, standard între rezervări.", image: operationsImage },
@@ -78,6 +85,13 @@ const FounderProfile = () => {
         legalTitle: "Company details",
         legalNote: "You can verify the company any time before signing anything.",
         labels: { company: "Company", cui: "VAT ID", office: "Office", contact: "Contact" },
+        stats: [
+          { value: "25+", suffix: "", label: "Years of real estate experience in Timișoara", icon: "clock" as const },
+          { value: "9.4", suffix: "%", label: "Average net yield achieved for owners", icon: "trending" as const },
+          { value: "100", suffix: "%", label: "End-to-end management, from A to Z", icon: "shield" as const },
+        ],
+        quote:
+          '"We prefer a small, high-performing portfolio where every apartment receives the direct attention it would get in a top hotel, rather than the superficial management of hundreds of units."',
         team: [
           { name: "Property Manager", role: "Owner relations", desc: "Monthly reports, pricing, maintenance.", image: propertyManagerImage },
           { name: "Operations", role: "Cleaning & logistics", desc: "Linen, supplies, standards between stays.", image: operationsImage },
@@ -120,6 +134,31 @@ const FounderProfile = () => {
                   {t.founderPromise}
                 </p>
 
+                {/* Key stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  {t.stats.map((stat, idx) => {
+                    const Icon = stat.icon === "clock" ? Clock : stat.icon === "trending" ? TrendingUp : ShieldCheck;
+                    return (
+                      <div
+                        key={idx}
+                        className="rounded-lg border border-primary/15 bg-primary/5 p-4 text-center"
+                      >
+                        <Icon className="w-6 h-6 text-primary mx-auto mb-2" aria-hidden="true" />
+                        <p className="text-3xl font-extrabold text-primary mb-1">
+                          {stat.value}
+                          {stat.suffix}
+                        </p>
+                        <p className="text-sm text-muted-foreground leading-snug">{stat.label}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <blockquote className="relative rounded-lg border-l-4 border-primary bg-muted/40 p-5 mb-6">
+                  <Award className="w-6 h-6 text-primary/40 mb-2" aria-hidden="true" />
+                  <p className="text-base md:text-lg font-medium italic text-foreground">{t.quote}</p>
+                </blockquote>
+
                 <div className="rounded-lg bg-muted/50 p-4 mb-6">
                   <p className="text-sm font-semibold mb-2">{t.visionTitle}</p>
                   <ul className="space-y-2 text-sm text-muted-foreground">
@@ -131,8 +170,6 @@ const FounderProfile = () => {
                     ))}
                   </ul>
                 </div>
-
-
 
                 <div className="flex flex-wrap gap-3">
                   <Button asChild size="lg" className="min-h-12">
