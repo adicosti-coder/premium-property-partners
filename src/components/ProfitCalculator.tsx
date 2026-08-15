@@ -601,6 +601,9 @@ const ProfitCalculator = () => {
                   </div>
                 </div>
 
+                {/* Full-equation transparency note (27% deduction, cleaning, utilities) */}
+                <YieldTransparencyNote />
+
                 {/* Lead Capture CTA — clarify what happens next */}
                 <div className="space-y-2">
                   <Button 
