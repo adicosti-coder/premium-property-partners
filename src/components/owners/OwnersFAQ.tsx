@@ -61,6 +61,10 @@ const OwnersFAQ = () => {
       subtitle: "Answers to the most important questions about short-term rental management",
       items: [
         {
+          q: "What makes up the 27% deduction, and why is 9.4% the final net yield?",
+          a: "We start from gross collected revenue (75% estimated average occupancy) and deduct roughly 27% in total: platform commissions (Booking 15-18%, Airbnb 3-15%, weighted average ~12-14%), an effective tax of about 7% of revenue (self-employed income norm or micro-company, depending on your structure), and consumables plus utilities and linen (~6-8%). What remains, minus our management fee, is the net income paid to you. Measured against the apartment's purchase value, that net income equals a 9.4% annual yield — so 9.4% is the final figure after all deductions, not a gross number.",
+        },
+        {
           q: "What short-term rental license is required in Timișoara?",
           a: "For legal operation you need: Classification Certificate from the Ministry of Tourism (1-5 stars), DSP (sanitary) authorization, ISU (fire safety) approval, and registration with Timișoara City Hall for the hotel tax. RealTrust guides you through the entire licensing process.",
         },
