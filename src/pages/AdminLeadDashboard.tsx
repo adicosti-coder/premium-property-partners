@@ -28,6 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { maskEmail, maskPhone } from "@/utils/security/maskPII";
+import ScheduledCallsPanel from "@/components/admin/ScheduledCallsPanel";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -333,6 +334,8 @@ const AdminLeadDashboard = () => {
           </Card>
         ))}
       </div>
+
+      <ScheduledCallsPanel />
 
       <Card>
         <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-end sm:justify-between">

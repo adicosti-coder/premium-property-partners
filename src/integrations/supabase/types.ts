@@ -1164,6 +1164,7 @@ export type Database = {
       chatbot_appointments: {
         Row: {
           appointment_type: string
+          confirmation_sent_at: string | null
           contact_email: string | null
           contact_name: string
           contact_phone: string
@@ -1174,6 +1175,7 @@ export type Database = {
           preferred_date: string | null
           preferred_time_slot: string | null
           property_interest: string | null
+          reminder_sent_at: string | null
           status: string | null
           updated_at: string
           user_id: string | null
@@ -1181,6 +1183,7 @@ export type Database = {
         }
         Insert: {
           appointment_type: string
+          confirmation_sent_at?: string | null
           contact_email?: string | null
           contact_name: string
           contact_phone: string
@@ -1191,6 +1194,7 @@ export type Database = {
           preferred_date?: string | null
           preferred_time_slot?: string | null
           property_interest?: string | null
+          reminder_sent_at?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string | null
@@ -1198,6 +1202,7 @@ export type Database = {
         }
         Update: {
           appointment_type?: string
+          confirmation_sent_at?: string | null
           contact_email?: string | null
           contact_name?: string
           contact_phone?: string
@@ -1208,6 +1213,7 @@ export type Database = {
           preferred_date?: string | null
           preferred_time_slot?: string | null
           property_interest?: string | null
+          reminder_sent_at?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string | null

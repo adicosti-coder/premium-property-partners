@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CalendarClock, CheckCircle2, Clock, Loader2, Phone } from "lucide-react";
-import { trackConversion } from "@/lib/conversionTracking";
+import { trackConversion, attributionParams, OWNER_FUNNEL_VALUE_EUR } from "@/lib/conversionTracking";
 
 /**
  * FounderCallBooking — programare call de 15 minute direct cu fondatorul.
@@ -41,6 +42,8 @@ const FounderCallBooking = () => {
   const { language } = useLanguage();
   const isRo = language === "ro";
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const slotTracked = useRef(false);
 
   const days = useMemo(() => nextWorkingDays(5), []);
   const [selectedDate, setSelectedDate] = useState(() => toISODate(nextWorkingDays(1)[0]));
@@ -100,6 +103,22 @@ const FounderCallBooking = () => {
         note: "Hours: Mon–Fri, 10:00–18:00. Duration: 15 minutes, no obligation.",
       };
 
+  /** Pas de funnel: prima selecție de interval = intent (o singură dată per sesiune de formular). */
+  const handleSlotSelect = (slot: string) => {
+    setSelectedSlot(slot);
+    if (!slotTracked.current) {
+      slotTracked.current = true;
+      trackConversion({
+        event: "select_booking_dates",
+        source: "owners_founder_call_booking",
+        value: OWNER_FUNNEL_VALUE_EUR.intent,
+        currency: "EUR",
+        booking_date: selectedDate,
+        booking_slot: slot,
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim().length < 2 || phone.trim().length < 7) {
@@ -111,29 +130,55 @@ const FounderCallBooking = () => {
       return;
     }
     setLoading(true);
+    const attribution = attributionParams();
+
+    trackConversion({
+      event: "begin_checkout",
+      source: "owners_founder_call_booking",
+      value: OWNER_FUNNEL_VALUE_EUR.intent,
+      currency: "EUR",
+      booking_date: selectedDate,
+      booking_slot: selectedSlot,
+      ...attribution,
+    });
+
     try {
-      const { error } = await supabase.from("chatbot_appointments").insert({
-        appointment_type: APPOINTMENT_TYPE,
-        contact_name: name.trim(),
-        contact_phone: phone.trim(),
-        contact_email: email.trim() ? email.trim() : null,
-        preferred_date: selectedDate,
-        preferred_time_slot: selectedSlot,
-        notes: notes.trim() ? notes.trim() : null,
-        status: "pending",
+      const { data, error } = await supabase.functions.invoke("book-owner-call", {
+        body: {
+          name: name.trim(),
+          phone: phone.trim(),
+          email: email.trim() || undefined,
+          date: selectedDate,
+          slot: selectedSlot,
+          notes: notes.trim() || undefined,
+          language,
+          attribution,
+        },
       });
       if (error) throw error;
 
       trackConversion({
         event: "generate_lead",
         source: "owners_founder_call_booking",
+        value: OWNER_FUNNEL_VALUE_EUR.scheduledCall,
+        currency: "EUR",
         name: name.trim(),
         phone: phone.trim(),
         email: email.trim() || undefined,
+        ...attribution,
       });
 
       setDone(true);
       toast({ title: t.okTitle, description: t.okDesc });
+
+      const params = new URLSearchParams({
+        d: selectedDate,
+        t: selectedSlot,
+        n: name.trim().split(" ")[0],
+      });
+      const appointmentId = (data as { appointment_id?: string } | null)?.appointment_id;
+      if (appointmentId) params.set("id", appointmentId);
+      navigate(`/programare-confirmata?${params.toString()}`);
     } catch {
       toast({ title: t.errTitle, description: t.errDesc, variant: "destructive" });
     } finally {
@@ -213,7 +258,7 @@ const FounderCallBooking = () => {
                           variant={active ? "default" : "outline"}
                           className="min-h-12"
                           aria-pressed={active}
-                          onClick={() => setSelectedSlot(slot)}
+                          onClick={() => handleSlotSelect(slot)}
                         >
                           {slot}
                         </Button>

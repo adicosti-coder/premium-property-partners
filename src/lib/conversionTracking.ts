@@ -120,7 +120,13 @@ export type ConversionEvent =
   | "owner_valuation_submit"
   | "newsletter_subscribe"
   | "whatsapp_click"
-  | "phone_click";
+  | "phone_click"
+  /* Booking / management funnel (GA4 e-commerce taxonomy) */
+  | "select_booking_dates"
+  | "begin_checkout"
+  | "schedule_call"
+  | "booking_completed"
+  | "purchase";
 
 /** Map our canonical events to Meta's taxonomy (standard events when possible). */
 const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
@@ -136,7 +142,61 @@ const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
   newsletter_subscribe: { name: "Subscribe", custom: false },
   whatsapp_click: { name: "Contact", custom: false },
   phone_click: { name: "Contact", custom: false },
+  // Booking funnel → Meta standard events so campaigns can optimise on them.
+  select_booking_dates: { name: "AddToCart", custom: false },
+  begin_checkout: { name: "InitiateCheckout", custom: false },
+  schedule_call: { name: "Schedule", custom: false },
+  booking_completed: { name: "Purchase", custom: false },
+  purchase: { name: "Purchase", custom: false },
 };
+
+/**
+ * Estimated commercial value of an owner conversion, in EUR.
+ * Used as `value` on GA4 e-commerce events and for Meta bid optimisation.
+ * Basis: average managed apartment ≈ 1.150 €/lună venit brut × 20% comision
+ * × 12 luni, ponderat cu rata de închidere pe fiecare pas al funnel-ului.
+ */
+export const OWNER_FUNNEL_VALUE_EUR = {
+  /** Visitor picked a call slot / finished the yield calculation. */
+  intent: 90,
+  /** Booked a 15-minute strategy call. */
+  scheduledCall: 320,
+  /** Sent a full management request. */
+  managementRequest: 550,
+} as const;
+
+/**
+ * Attribution params (UTM / gclid / fbclid / src) for the current session,
+ * flattened so they ride along on every GA4 + CAPI conversion payload.
+ */
+export const attributionParams = (): Record<string, string> => {
+  const out: Record<string, string> = {};
+  if (typeof window === "undefined") return out;
+  try {
+    const raw = sessionStorage.getItem("campaign_attribution_v1");
+    if (!raw) return out;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    for (const key of [
+      "utm_source",
+      "utm_medium",
+      "utm_campaign",
+      "utm_content",
+      "utm_term",
+      "gclid",
+      "fbclid",
+      "src",
+      "landing_path",
+      "cta_variant",
+    ]) {
+      const value = parsed[key];
+      if (typeof value === "string" && value) out[key] = value;
+    }
+  } catch {
+    // attribution is best-effort only
+  }
+  return out;
+};
+
 
 
 interface ConversionPayload {
@@ -234,10 +294,12 @@ export const trackConversion = (payload: ConversionPayload): void => {
   try {
     if (typeof window.gtag === "function") {
       window.gtag("event", payload.event, {
+        ...attributionParams(),
+        ...safeForDataLayer,
         event_category: "conversion",
         event_label: payload.source,
         value: payload.value,
-        currency: payload.currency,
+        currency: payload.currency ?? (payload.value ? "EUR" : undefined),
         event_id: eventId,
       });
     }
