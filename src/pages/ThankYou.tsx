@@ -7,6 +7,7 @@ import { trackConversion } from "@/lib/conversionTracking";
 import { getCampaignAttribution } from "@/lib/campaignAttribution";
 
 const Header = lazy(() => import("@/components/Header"));
+const YieldReportDelivery = lazy(() => import("@/components/thankyou/YieldReportDelivery"));
 const Footer = lazy(() => import("@/components/Footer"));
 
 const WHATSAPP_NUMBER = "40799069256";
@@ -129,6 +130,16 @@ const ThankYou = () => {
               </dl>
             </section>
           )}
+
+          <Suspense fallback={null}>
+            <YieldReportDelivery
+              name={summary.name}
+              phone={summary.phone}
+              email={summary.email}
+              zone={summary.zone}
+              rooms={summary.rooms}
+            />
+          </Suspense>
 
           <div className="mt-8 space-y-3">
             <Button asChild size="lg" className="w-full min-h-[48px]">
