@@ -141,38 +141,62 @@ const EvaluareGratuita = () => {
     return false;
   };
 
-  const handleSubmit = () => {
-    if (canNext()) {
-      setSubmitted(true);
-      trackConversion({
-        event: "roi_calculator_lead",
-        source: "evaluare_gratuita",
-        property_type: form.propertyType,
+  const zoneLabel = ZONES.find((z) => z.value === form.zone)?.label ?? form.zone;
+
+  const handleSubmit = async () => {
+    if (!canNext() || submitted) return;
+    setSubmitted(true);
+
+    // Persist the lead (dedup handled server-side by leads_dedupe_upsert).
+    const result = await submitLead({
+      name: form.name,
+      whatsapp_number: form.phone,
+      email: form.email,
+      property_type: form.propertyType,
+      property_area: 0,
+      message: `[evaluare_gratuita] Zonă: ${zoneLabel} · Camere: ${form.rooms || "-"}`,
+      source: "evaluare_gratuita",
+      simulation_data: withCampaignTracking({
         zone: form.zone,
-      });
+        zone_label: zoneLabel,
+        property_type: form.propertyType,
+        rooms: form.rooms,
+      }) as never,
+    });
+
+    if (!result.ok) {
+      setSubmitted(false);
+      if (result.reason === "validation") {
+        toast.error("Verifică numele, telefonul și emailul introduse.");
+      } else {
+        toast.error("Nu am putut trimite cererea. Te rugăm să încerci din nou.");
+      }
+      return;
     }
+
+    trackConversion({
+      event: "roi_calculator_lead",
+      source: "evaluare_gratuita",
+      property_type: form.propertyType,
+      zone: form.zone,
+      name: form.name,
+      phone: form.phone,
+      email: form.email,
+    });
+
+    const params = new URLSearchParams({
+      nume: form.name,
+      telefon: form.phone,
+      email: form.email,
+      zona: zoneLabel,
+      tip: form.propertyType,
+      sursa: "evaluare_gratuita",
+    });
+    if (form.rooms) params.set("camere", form.rooms);
+
+    navigate(`/multumire?${params.toString()}`);
   };
 
-  if (submitted) {
-    return (
-      <Suspense fallback={null}>
-        <Header />
-        <div className="min-h-[80vh] flex items-center justify-center px-4">
-          <div className="text-center max-w-md space-y-4">
-            <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
-            <h1 className="text-2xl font-bold text-foreground">Am primit cererea ta</h1>
-            <p className="text-muted-foreground">
-              Un consultant RealTrust te contactează în maximum 24 de ore lucrătoare cu estimarea personalizată pentru proprietatea ta. Nu ai nicio obligație contractuală.
-            </p>
-            <Button asChild variant="outline">
-              <a href="/">Înapoi la pagina principală</a>
-            </Button>
-          </div>
-        </div>
-        <Footer />
-      </Suspense>
-    );
-  }
 
   return (
     <Suspense fallback={null}>
