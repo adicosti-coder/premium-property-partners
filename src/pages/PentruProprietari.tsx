@@ -67,6 +67,8 @@ const TaxOptimizationSection = lazy(() => import("@/components/owners/TaxOptimiz
 const ContractTransparency = lazy(() => import("@/components/owners/ContractTransparency"));
 const BeforeAfterTransformations = lazy(() => import("@/components/owners/BeforeAfterTransformations"));
 const OwnerPricingPackages = lazy(() => import("@/components/owners/OwnerPricingPackages"));
+const FounderProfile = lazy(() => import("@/components/owners/FounderProfile"));
+const FounderCallBooking = lazy(() => import("@/components/owners/FounderCallBooking"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
