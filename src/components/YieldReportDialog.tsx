@@ -7,7 +7,7 @@ import { Download, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
-import { trackCriticalConversion } from "@/lib/conversionTracking";
+import { trackConversion } from "@/lib/conversionTracking";
 import {
   generateYieldReportPdf,
   yieldReportFileName,
@@ -86,7 +86,8 @@ const YieldReportDialog = ({ isOpen, onClose, report }: YieldReportDialogProps) 
 
       doc.save(yieldReportFileName(lang));
 
-      trackCriticalConversion("download_yield_report", {
+      trackConversion({
+        event: "download_yield_report",
         source: withEmail ? "yield_report_email" : "yield_report_download",
         value: report.yearlyNet,
         currency: "EUR",
