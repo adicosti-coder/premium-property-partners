@@ -113,6 +113,7 @@ export type CriticalConversionEvent = "Lead_Submit" | "PreCalc_Completed" | "Wha
 export type ConversionEvent =
   | CriticalConversionEvent
   | "contact_form_submit"
+  | "generate_lead"
   | "lead_magnet_pdf"
   | "roi_calculator_lead"
   | "download_yield_report"
