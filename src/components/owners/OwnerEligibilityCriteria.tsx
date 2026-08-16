@@ -34,7 +34,7 @@ const OwnerEligibilityCriteria = () => {
         badge: "Criterii de eligibilitate",
         title: "Nu luăm orice apartament în administrare",
         subtitle:
-          "Preferăm să spunem „nu" la început, decât să promitem cifre pe care apartamentul tău nu le poate susține. Iată exact ce căutăm și ce refuzăm.",
+          "Preferăm să spunem „nu” la început, decât să promitem cifre pe care apartamentul tău nu le poate susține. Iată exact ce căutăm și ce refuzăm.",
         acceptTitle: "Ce acceptăm",
         acceptBadge: "Se califică",
         accept: [
