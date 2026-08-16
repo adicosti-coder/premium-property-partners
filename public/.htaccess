@@ -2,10 +2,11 @@
   RewriteEngine On
   RewriteBase /
 
-  # Force non-www to www (canonical domain = https://www.realtrust.ro)
-  # Matches BASE_URL used in SEOHead canonical tags + sitemap edge functions.
-  RewriteCond %{HTTP_HOST} ^realtrust\.ro$ [NC]
-  RewriteRule ^(.*)$ https://www.realtrust.ro/$1 [R=301,L]
+  # Force www to non-www (canonical domain = https://realtrust.ro)
+  # Matches <link rel="canonical"> in CanonicalHreflang and every sitemap <loc>.
+  RewriteCond %{HTTP_HOST} ^www\.realtrust\.ro$ [NC]
+  RewriteRule ^(.*)$ https://realtrust.ro/$1 [R=301,L]
+
 
   # Strip tracking query params (fbclid, gclid, utm_*, _ga, mc_*, igshid) via 301 to clean URL.
   # Prevents Google indexing duplicate URLs reported as "alternative page with canonical".
