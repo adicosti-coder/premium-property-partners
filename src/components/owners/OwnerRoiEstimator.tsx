@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { emitOwnerRoiPrefill, scrollToOwnerContactForm } from "@/lib/ownerRoiPrefill";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,8 @@ const OwnerRoiEstimator = () => {
   const { language } = useLanguage();
   const isRo = language === "ro";
 
+  const navigate = useNavigate();
+
   const [typeKey, setTypeKey] = useState<PropertyTypeKey>("2-camere");
   const [zoneKey, setZoneKey] = useState<string>("circumvalatiunii");
   const [rent, setRent] = useState<number>(500);
@@ -91,6 +94,7 @@ const OwnerRoiEstimator = () => {
         extra: "Câștig suplimentar net pe an",
         uplift: "mai mult venit net",
         cta: "Solicită o evaluare exactă gratuită",
+        ctaSecondary: "Vreau această estimare",
         assumptions: `Ipoteze: ocupare medie ${Math.round(OCCUPANCY * 100)}%, deducere standard ${Math.round(
           DEDUCTION * 100,
         )}% (comision de administrare, curățenie, consumabile, taxe). Cifrele sunt orientative; estimarea exactă se face după analiza proprietății.`,
@@ -110,12 +114,24 @@ const OwnerRoiEstimator = () => {
         extra: "Extra net income per year",
         uplift: "more net income",
         cta: "Request a free exact valuation",
+        ctaSecondary: "I want this estimate",
         assumptions: `Assumptions: ~${Math.round(OCCUPANCY * 100)}% average occupancy, standard ${Math.round(
           DEDUCTION * 100,
         )}% deduction (management fee, cleaning, consumables, taxes). Figures are indicative; the exact estimate follows a property review.`,
       };
 
-  const ctaHref = `/evaluare-gratuita?tip=${typeKey}&zona=${selectedZone.slug}`;
+  const handlePrefillCta = () => {
+    emitOwnerRoiPrefill({
+      propertyType: typeKey,
+      zone: zoneKey,
+      monthlyRent: rent,
+      netAnnualIncome: Math.round(result.hotelAnnualNet),
+    });
+    const scrolled = scrollToOwnerContactForm();
+    if (!scrolled) {
+      navigate(`/evaluare-gratuita?tip=${typeKey}&zona=${selectedZone.slug}`);
+    }
+  };
 
   return (
     <section id="calculator-roi" className="py-20 bg-muted/30">
@@ -243,12 +259,26 @@ const OwnerRoiEstimator = () => {
                   </div>
                 </div>
 
-                <Button asChild size="lg" className="w-full min-h-[48px]">
-                  <Link to={ctaHref}>
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="w-full min-h-[48px]"
+                    onClick={handlePrefillCta}
+                  >
                     {t.cta}
                     <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
-                  </Link>
-                </Button>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="lg"
+                    variant="outline"
+                    className="w-full min-h-[48px]"
+                    onClick={handlePrefillCta}
+                  >
+                    {t.ctaSecondary}
+                  </Button>
+                </div>
 
                 <p className="text-xs text-muted-foreground flex gap-2">
                   <Info className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
