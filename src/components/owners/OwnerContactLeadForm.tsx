@@ -279,6 +279,18 @@ const OwnerContactLeadForm = ({
     event.preventDefault();
     if (submitting) return;
 
+    // Honeypot: doar boții completează câmpul ascuns → ieșim silențios.
+    if (honeypotRef.current.trim() !== "") {
+      setSuccess(true);
+      return;
+    }
+
+    if (!gdprConsent) {
+      setConsentError(t.gdprRequired);
+      return;
+    }
+    setConsentError(null);
+
     const parsed = makeSchema(isRo).safeParse(form);
     if (!parsed.success) {
       const fieldErrors = parsed.error.flatten().fieldErrors;
