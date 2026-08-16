@@ -133,7 +133,14 @@ serve(async (req: Request) => {
     }
 
     xml += `</urlset>`;
-    return new Response(xml, { status: 200, headers: corsHeaders });
+    return new Response(xml, {
+      status: 200,
+      headers: new Headers({
+        ...corsHeaders,
+        "content-type": "application/xml; charset=utf-8",
+        "cache-control": "public, max-age=3600",
+      }),
+    });
   } catch (e) {
     return new Response(`<?xml version="1.0"?><error>${(e as Error).message}</error>`, {
       status: 500,
