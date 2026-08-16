@@ -271,6 +271,8 @@ const OwnerContactLeadForm = ({
         gdprAfter: ".",
         gdprRequired: "You must accept data processing before sending the request.",
         botError: "Security check failed. Please try again.",
+        rateLimited: "Too many attempts. Please try again in a few minutes.",
+
       };
 
   const zoneLabel = (value: string) => {
