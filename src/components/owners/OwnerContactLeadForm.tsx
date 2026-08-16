@@ -449,6 +449,10 @@ const OwnerContactLeadForm = ({
                     onClick={() => {
                       setSuccess(false);
                       setForm({ name: "", phone: "", email: "", zone: "", propertyType: "" });
+                      setGdprConsent(false);
+                      setConsentError(null);
+                      honeypotRef.current = "";
+                      turnstileTokenRef.current = null;
                     }}
                   >
                     {t.again}
