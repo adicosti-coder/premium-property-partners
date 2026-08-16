@@ -253,6 +253,11 @@ const OwnerContactLeadForm = ({
         prefillNote: "We picked up the figures calculated for your property.",
         prefillRent: "Estimated long-term rent",
         prefillNet: "RealTrust net income (year)",
+        gdprBefore: "I agree to the processing of my personal data according to the ",
+        gdprLink: "Privacy Policy",
+        gdprAfter: ".",
+        gdprRequired: "You must accept data processing before sending the request.",
+        botError: "Security check failed. Please try again.",
       };
 
   const zoneLabel = (value: string) => {
