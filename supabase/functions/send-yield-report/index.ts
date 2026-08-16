@@ -1,5 +1,6 @@
 // Sends the personalised yield report PDF (generated client-side) by email via Resend.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { applyRateLimit } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,9 +23,23 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 // ~4MB base64 cap — the report is a few hundred KB in practice.
 const MAX_PDF_B64 = 4_000_000;
 
+const isPdf = (b64: string): boolean => {
+  try {
+    const head = atob(b64.slice(0, 16));
+    return head.startsWith("%PDF-");
+  } catch {
+    return false;
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  // Public endpoint (owners are anonymous): rate limit per IP so it cannot be
+  // abused as a bulk mail relay.
+  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 3, windowMs: 60_000 });
+  if (limited) return limited;
 
   try {
     const body = await req.json().catch(() => null);
@@ -37,6 +52,14 @@ serve(async (req) => {
     }
     if (typeof pdfBase64 !== "string" || pdfBase64.length < 100 || pdfBase64.length > MAX_PDF_B64) {
       return json({ error: "Invalid PDF payload" }, 400);
+    }
+    const cleanB64 = pdfBase64.replace(/\s/g, "");
+    if (!/^[A-Za-z0-9+/]+={0,2}$/.test(cleanB64)) {
+      return json({ error: "Invalid PDF encoding" }, 400);
+    }
+    // Verify the attachment really is a PDF (magic bytes "%PDF-").
+    if (!isPdf(cleanB64)) {
+      return json({ error: "Attachment must be a PDF" }, 400);
     }
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
@@ -115,7 +138,7 @@ serve(async (req) => {
         subject,
         html,
         reply_to: "info@realtrust.ro",
-        attachments: [{ filename: attachmentName, content: pdfBase64 }],
+        attachments: [{ filename: attachmentName, content: cleanB64 }],
       }),
     });
 
