@@ -78,6 +78,8 @@ const OwnerRisksLimits = lazy(() => import("@/components/owners/OwnerRisksLimits
 const OwnerExitDamagePolicy = lazy(() => import("@/components/owners/OwnerExitDamagePolicy"));
 const OwnerDashboardDemo = lazy(() => import("@/components/owners/OwnerDashboardDemo"));
 const OwnerSeasonalityChart = lazy(() => import("@/components/owners/OwnerSeasonalityChart"));
+const OwnerEligibilityCriteria = lazy(() => import("@/components/owners/OwnerEligibilityCriteria"));
+const OwnerCompetitorComparison = lazy(() => import("@/components/owners/OwnerCompetitorComparison"));
 const OwnerAssociationPermits = lazy(() => import("@/components/owners/OwnerAssociationPermits"));
 
 /**
