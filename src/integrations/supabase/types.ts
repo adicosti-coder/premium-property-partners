@@ -10197,6 +10197,10 @@ export type Database = {
         }
         Returns: number
       }
+      my_community_comment_ids: {
+        Args: { _submission_id: string }
+        Returns: string[]
+      }
       normalize_ro_phone: { Args: { p: string }; Returns: string }
       normalize_zone_key: {
         Args: { p_location: string; p_zone: string }

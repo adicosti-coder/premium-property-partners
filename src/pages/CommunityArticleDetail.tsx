@@ -128,18 +128,19 @@ const CommunityArticleDetail = () => {
     enabled: !!id,
   });
 
-  // Owner-only lookup used to gate the delete button.
+  // Owner-only lookup used to gate the delete button. `user_id` is no longer
+  // readable from the client (column-level privileges), so we use a
+  // security-definer RPC scoped to auth.uid().
   const { data: ownCommentIds } = useQuery({
     queryKey: ["community-article-comments-own", id, user?.id],
     enabled: !!id && !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("community_article_comments")
-        .select("id")
-        .eq("submission_id", id!)
-        .eq("user_id", user!.id);
+      const { data, error } = await supabase.rpc("my_community_comment_ids", {
+        _submission_id: id!,
+      });
       if (error) throw error;
-      return new Set((data ?? []).map((r) => r.id));
+      return new Set((data ?? []) as string[]);
+
     },
   });
 
