@@ -17,9 +17,15 @@ const CatalogManager = () => {
   const [fileStatuses, setFileStatuses] = useState<Record<string, { exists: boolean; url: string; updatedAt?: string }>>({});
   const [loading, setLoading] = useState(true);
 
-  const getPublicUrl = (fileName: string) => {
-    const { data } = supabase.storage.from("catalogs").getPublicUrl(fileName);
-    return data.publicUrl;
+  // The `catalogs` bucket is private — links are short-lived signed URLs
+  // generated for the authenticated admin, never public object URLs.
+  const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 days
+
+  const getSignedUrl = async (fileName: string) => {
+    const { data } = await supabase.storage
+      .from("catalogs")
+      .createSignedUrl(fileName, SIGNED_URL_TTL);
+    return data?.signedUrl ?? "";
   };
 
   const checkFiles = async () => {
@@ -33,7 +39,7 @@ const CatalogManager = () => {
       const found = data?.find(f => f.name === file.key);
       statuses[file.key] = {
         exists: !!found,
-        url: getPublicUrl(file.key),
+        url: found ? await getSignedUrl(file.key) : "",
         updatedAt: found?.updated_at,
       };
     }
@@ -95,7 +101,7 @@ const CatalogManager = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Cataloage PDF</h2>
-          <p className="text-muted-foreground text-sm">Generează și gestionează cataloagele de investiții statice pentru campaniile de email marketing.</p>
+          <p className="text-muted-foreground text-sm">Generează și gestionează cataloagele de investiții statice. Link-urile sunt semnate și expiră în 7 zile.</p>
         </div>
         <Button variant="outline" size="sm" onClick={checkFiles} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
