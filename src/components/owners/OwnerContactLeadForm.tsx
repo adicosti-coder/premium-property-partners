@@ -32,6 +32,10 @@ import { submitLead } from "@/lib/leadSubmission";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, trackCriticalConversion, OWNER_FUNNEL_VALUE_EUR } from "@/lib/conversionTracking";
 import { BRAND } from "@/lib/orgIdentity";
+
+/** Versiunea textului de consimțământ GDPR salvată împreună cu lead-ul (audit). */
+const GDPR_CONSENT_VERSION = "2026-08-v1";
+
 import {
   OWNER_ROI_PREFILL_EVENT,
   type OwnerRoiPrefillPayload,
@@ -134,8 +138,9 @@ const OwnerContactLeadForm = ({
   /** Honeypot — completat doar de boți; ascuns pentru utilizatori și screen readers. */
   const honeypotRef = useRef("");
 
-  /** Cloudflare Turnstile (invisible/managed, fail-open pe erori de încărcare). */
+  /** Cloudflare Turnstile (invisible/managed) — verificare fail-closed pe server. */
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
   const turnstileTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -144,9 +149,12 @@ const OwnerContactLeadForm = ({
       try {
         const { data, error } = await supabase.functions.invoke("get-turnstile-site-key");
         if (error) throw error;
-        if (!cancelled && data?.siteKey) setTurnstileSiteKey(data.siteKey);
+        if (!cancelled && data?.siteKey) {
+          setTurnstileSiteKey(data.siteKey);
+          setTurnstileReady(true);
+        }
       } catch {
-        // fail open — formularul rămâne funcțional (honeypot + validare server)
+        // cheia nu s-a putut încărca — protecția rămâne pe honeypot + rate limiting server
       }
     })();
     return () => {
@@ -154,18 +162,25 @@ const OwnerContactLeadForm = ({
     };
   }, []);
 
-  const verifyCaptcha = useCallback(async (token: string): Promise<boolean> => {
-    if (token === "bypass") return true;
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
-        body: { token, formType: "owner_contact_lead_form" },
-      });
-      if (error) throw error;
-      return data?.success === true;
-    } catch {
-      return true; // fail open
-    }
-  }, []);
+  /** Fail-closed: orice eroare/verificare eșuată blochează trimiterea. */
+  const verifyCaptcha = useCallback(
+    async (token: string): Promise<{ ok: boolean; rateLimited: boolean }> => {
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+          body: { token, formType: "owner_contact_lead_form" },
+        });
+        if (error) {
+          const status = (error as { context?: { status?: number } })?.context?.status;
+          return { ok: false, rateLimited: status === 429 };
+        }
+        return { ok: data?.success === true, rateLimited: false };
+      } catch {
+        return { ok: false, rateLimited: false };
+      }
+    },
+    [],
+  );
+
 
   // Prefill din Calculatorul ROI (aceeași pagină)
   useEffect(() => {
@@ -222,6 +237,8 @@ const OwnerContactLeadForm = ({
         gdprAfter: ".",
         gdprRequired: "Trebuie să accepți prelucrarea datelor pentru a trimite cererea.",
         botError: "Verificarea de securitate a eșuat. Te rugăm să reîncerci.",
+        rateLimited: "Prea multe încercări. Te rugăm să reîncerci în câteva minute.",
+
       }
     : {
         badge: "Quick contact · 60 seconds",
@@ -258,6 +275,8 @@ const OwnerContactLeadForm = ({
         gdprAfter: ".",
         gdprRequired: "You must accept data processing before sending the request.",
         botError: "Security check failed. Please try again.",
+        rateLimited: "Too many attempts. Please try again in a few minutes.",
+
       };
 
   const zoneLabel = (value: string) => {
@@ -307,16 +326,23 @@ const OwnerContactLeadForm = ({
     setErrors({});
     setSubmitting(true);
 
-    // Anti-spam: verificăm token-ul Turnstile server-side (fail-open dacă widgetul nu s-a încărcat).
+    // Anti-spam fail-closed: token obligatoriu când widgetul e disponibil.
     const token = turnstileTokenRef.current;
+    if (turnstileReady && !token) {
+      setSubmitting(false);
+      setConsentError(t.botError);
+      return;
+    }
     if (token) {
-      const human = await verifyCaptcha(token);
-      if (!human) {
+      const { ok, rateLimited } = await verifyCaptcha(token);
+      if (!ok) {
         setSubmitting(false);
-        setConsentError(t.botError);
+        setConsentError(rateLimited ? t.rateLimited : t.botError);
+        turnstileTokenRef.current = null;
         return;
       }
     }
+
 
     const data = parsed.data;
     const result = await submitLead({
@@ -344,6 +370,10 @@ const OwnerContactLeadForm = ({
         roi_net_annual_income: roiPrefill?.netAnnualIncome ?? null,
         gdpr_consent: true,
         gdpr_consent_at: new Date().toISOString(),
+        gdpr_consent_version: GDPR_CONSENT_VERSION,
+        gdpr_consent_text: `${t.gdprBefore}${t.gdprLink}${t.gdprAfter}`,
+        captcha_verified: !!turnstileTokenRef.current,
+
       }) as never,
     });
 
