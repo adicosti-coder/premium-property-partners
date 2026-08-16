@@ -36,8 +36,17 @@
   RewriteCond %{ENV:REDIRECT_STATUS} ^$
   RewriteRule ^index\.html$ / [R=301,L]
 
-  # /sitemap.xml is served as a Sitemap Index (public/sitemap.xml) referencing
-  # the dynamic edge-function sitemaps + static fallback. Do not rewrite.
+  # ---- Sitemaps: never fall through to the SPA (index.html) ----------------
+  # 1) If the static file generated at build time exists, serve it as-is.
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^sitemap(|-static|-dynamic)\.xml$ - [L]
+
+  # 2) Otherwise proxy straight to the public `sitemap` edge function, which
+  #    always answers 200 with Content-Type: application/xml; charset=utf-8.
+  RewriteRule ^sitemap\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/sitemap.xml [P,L,E=SITEMAP_XML:1]
+  RewriteRule ^sitemap-static\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/static.xml [P,L,E=SITEMAP_XML:1]
+  RewriteRule ^sitemap-dynamic\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/dynamic.xml [P,L,E=SITEMAP_XML:1]
+
 
   # Redirect social media crawlers to dynamic OG edge function for property pages
   RewriteCond %{HTTP_USER_AGENT} facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|Googlebot [NC]
@@ -58,9 +67,11 @@
   RewriteCond %{DOCUMENT_ROOT}/%1/index.html -f
   RewriteRule ^ %1/index.html [L]
 
+  # Never SPA-fallback XML documents (sitemaps, feeds).
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-e
+  RewriteCond %{REQUEST_URI} !\.xml$
   RewriteRule . /index.html [L]
 </IfModule>
 
@@ -221,3 +232,22 @@ Options -Indexes
   AddType font/woff2 .woff2
   AddType application/manifest+json .webmanifest
 </IfModule>
+
+# Sitemaps must always be served as XML with an explicit charset.
+<IfModule mod_mime.c>
+  AddType application/xml .xml
+</IfModule>
+# Proxied sitemap responses come back from the functions gateway as
+# text/plain; force the correct XML type on the way out.
+<IfModule mod_headers.c>
+  Header always set Content-Type "application/xml; charset=utf-8" env=SITEMAP_XML
+  Header always set Content-Type "application/xml; charset=utf-8" env=REDIRECT_SITEMAP_XML
+</IfModule>
+
+<FilesMatch "^sitemap(|-static|-dynamic)\.xml$">
+  ForceType application/xml
+  <IfModule mod_headers.c>
+    Header set Content-Type "application/xml; charset=utf-8"
+    Header set Cache-Control "public, max-age=3600, stale-while-revalidate=86400"
+  </IfModule>
+</FilesMatch>

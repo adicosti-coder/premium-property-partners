@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Content-Type": "application/xml; charset=utf-8",
+  "content-type": "application/xml; charset=utf-8",
 };
 
 const BASE_URL = "https://realtrust.ro";
@@ -133,7 +133,14 @@ serve(async (req: Request) => {
     }
 
     xml += `</urlset>`;
-    return new Response(xml, { status: 200, headers: corsHeaders });
+    return new Response(xml, {
+      status: 200,
+      headers: new Headers({
+        ...corsHeaders,
+        "content-type": "application/xml; charset=utf-8",
+        "cache-control": "public, max-age=3600",
+      }),
+    });
   } catch (e) {
     return new Response(`<?xml version="1.0"?><error>${(e as Error).message}</error>`, {
       status: 500,

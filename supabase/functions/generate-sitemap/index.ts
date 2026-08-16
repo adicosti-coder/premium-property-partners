@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Content-Type": "application/xml; charset=utf-8",
+  "content-type": "application/xml; charset=utf-8",
 };
 
 const escapeXml = (str: string) =>
@@ -275,7 +275,11 @@ ${hreflang(`/proprietate/${property.slug}`)}
 
     return new Response(xml, {
       status: 200,
-      headers: corsHeaders,
+      headers: new Headers({
+        ...corsHeaders,
+        "content-type": "application/xml; charset=utf-8",
+        "cache-control": "public, max-age=3600",
+      }),
     });
   } catch (error) {
     console.error("Error generating sitemap:", error);
