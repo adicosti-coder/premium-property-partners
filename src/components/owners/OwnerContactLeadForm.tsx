@@ -570,6 +570,75 @@ const OwnerContactLeadForm = ({
                     </div>
                   </div>
 
+                  {/* GDPR — consimțământ explicit obligatoriu */}
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="ocf-gdpr"
+                      checked={gdprConsent}
+                      onCheckedChange={(v) => {
+                        setGdprConsent(v === true);
+                        if (v === true) setConsentError(null);
+                      }}
+                      required
+                      aria-invalid={!!consentError}
+                      aria-describedby={consentError ? "ocf-gdpr-error" : undefined}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <Label htmlFor="ocf-gdpr" className="text-sm font-normal leading-snug cursor-pointer">
+                        {t.gdprBefore}
+                        <a
+                          href="/politica-confidentialitate"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline underline-offset-2"
+                        >
+                          {t.gdprLink}
+                        </a>
+                        {t.gdprAfter}
+                      </Label>
+                      {consentError && (
+                        <p id="ocf-gdpr-error" className="text-xs text-destructive mt-1" role="alert">
+                          {consentError}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Honeypot anti-bot — invizibil pentru utilizatori reali */}
+                  <div className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden" aria-hidden="true">
+                    <label htmlFor="ocf-company-website">Website</label>
+                    <input
+                      id="ocf-company-website"
+                      name="company_website"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      onChange={(e) => {
+                        honeypotRef.current = e.target.value;
+                      }}
+                    />
+                  </div>
+
+                  {/* Cloudflare Turnstile — verificare invizibilă (fail-open) */}
+                  {turnstileSiteKey && (
+                    <div className="flex justify-center">
+                      <Turnstile
+                        siteKey={turnstileSiteKey}
+                        onSuccess={(token) => {
+                          turnstileTokenRef.current = token;
+                        }}
+                        onError={() => {
+                          turnstileTokenRef.current = null;
+                        }}
+                        onExpire={() => {
+                          turnstileTokenRef.current = null;
+                        }}
+                        options={{ theme: "auto", size: "flexible", appearance: "interaction-only" }}
+                      />
+                    </div>
+                  )}
+
                   <Button type="submit" size="lg" className="w-full min-h-[52px]" disabled={submitting}>
                     {submitting ? (
                       <>
