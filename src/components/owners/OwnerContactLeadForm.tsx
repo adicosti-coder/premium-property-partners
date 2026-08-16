@@ -366,6 +366,10 @@ const OwnerContactLeadForm = ({
         roi_net_annual_income: roiPrefill?.netAnnualIncome ?? null,
         gdpr_consent: true,
         gdpr_consent_at: new Date().toISOString(),
+        gdpr_consent_version: GDPR_CONSENT_VERSION,
+        gdpr_consent_text: `${t.gdprBefore}${t.gdprLink}${t.gdprAfter}`,
+        captcha_verified: !!turnstileTokenRef.current,
+
       }) as never,
     });
 
