@@ -217,6 +217,11 @@ const OwnerContactLeadForm = ({
         prefillNote: "Am preluat datele calculate pentru proprietatea ta.",
         prefillRent: "Chirie clasică estimată",
         prefillNet: "Venit net RealTrust (an)",
+        gdprBefore: "Sunt de acord cu prelucrarea datelor cu caracter personal conform ",
+        gdprLink: "Politicii de Confidențialitate",
+        gdprAfter: ".",
+        gdprRequired: "Trebuie să accepți prelucrarea datelor pentru a trimite cererea.",
+        botError: "Verificarea de securitate a eșuat. Te rugăm să reîncerci.",
       }
     : {
         badge: "Quick contact · 60 seconds",
