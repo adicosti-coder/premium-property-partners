@@ -75,7 +75,26 @@ export const SEORedeployPanel = ({ overrides }: Props) => {
     }
     setSteps([...log]);
 
+    // 1b. Bulk IndexNow pentru toate URL-urile dinamice (proprietăți, complexe, blog)
+    log.push({ label: "Reindexare bulk URL-uri dinamice", status: "idle" });
+    setSteps([...log]);
+    try {
+      const { data, error } = await supabase.functions.invoke("reindex-dynamic-urls", {
+        body: { triggered_by: "admin_seo_redeploy" },
+      });
+      if (error) throw error;
+      log[log.length - 1] = {
+        label: "Reindexare bulk trimisă",
+        status: data?.ok ? "ok" : "err",
+        detail: `${data?.count ?? 0} URL-uri`,
+      };
+    } catch (e: any) {
+      log[log.length - 1] = { label: "Reindexare bulk", status: "err", detail: e.message };
+    }
+    setSteps([...log]);
+
     // 2. IndexNow ping
+
     log.push({ label: `Trimit IndexNow ping (${activeUrls.length} URL-uri)`, status: "idle" });
     setSteps([...log]);
     try {
