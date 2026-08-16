@@ -94,6 +94,7 @@ const OwnerRoiEstimator = () => {
         extra: "Câștig suplimentar net pe an",
         uplift: "mai mult venit net",
         cta: "Solicită o evaluare exactă gratuită",
+        ctaSecondary: "Vreau această estimare",
         assumptions: `Ipoteze: ocupare medie ${Math.round(OCCUPANCY * 100)}%, deducere standard ${Math.round(
           DEDUCTION * 100,
         )}% (comision de administrare, curățenie, consumabile, taxe). Cifrele sunt orientative; estimarea exactă se face după analiza proprietății.`,
@@ -113,6 +114,7 @@ const OwnerRoiEstimator = () => {
         extra: "Extra net income per year",
         uplift: "more net income",
         cta: "Request a free exact valuation",
+        ctaSecondary: "I want this estimate",
         assumptions: `Assumptions: ~${Math.round(OCCUPANCY * 100)}% average occupancy, standard ${Math.round(
           DEDUCTION * 100,
         )}% deduction (management fee, cleaning, consumables, taxes). Figures are indicative; the exact estimate follows a property review.`,
