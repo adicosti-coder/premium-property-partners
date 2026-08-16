@@ -78,6 +78,8 @@ const OwnerRisksLimits = lazy(() => import("@/components/owners/OwnerRisksLimits
 const OwnerExitDamagePolicy = lazy(() => import("@/components/owners/OwnerExitDamagePolicy"));
 const OwnerDashboardDemo = lazy(() => import("@/components/owners/OwnerDashboardDemo"));
 const OwnerSeasonalityChart = lazy(() => import("@/components/owners/OwnerSeasonalityChart"));
+const OwnerEligibilityCriteria = lazy(() => import("@/components/owners/OwnerEligibilityCriteria"));
+const OwnerCompetitorComparison = lazy(() => import("@/components/owners/OwnerCompetitorComparison"));
 const OwnerAssociationPermits = lazy(() => import("@/components/owners/OwnerAssociationPermits"));
 
 /**
@@ -1021,6 +1023,12 @@ const PentruProprietari = () => {
 
       {/* Month-by-month seasonality — honest risk picture */}
       <OwnerSeasonalityChart />
+
+      {/* Eligibility: what we accept and when we say no (self-qualification) */}
+      <OwnerEligibilityCriteria />
+
+      {/* Honest comparison vs self-management and classic agencies */}
+      <OwnerCompetitorComparison />
 
 
       {/* Before/after: net income uplift on real managed apartments */}
