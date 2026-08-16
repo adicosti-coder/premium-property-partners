@@ -6,6 +6,7 @@ import TeamSection from "@/components/TeamSection";
 import WhyUs from "@/components/WhyUs";
 
 import OwnerCaseStudies from "@/components/owners/OwnerCaseStudies";
+import OwnerRoiEstimator from "@/components/owners/OwnerRoiEstimator";
 import CompanyTimeline from "@/components/CompanyTimeline";
 import {
   Building2, 
@@ -684,6 +685,9 @@ const AboutUs = () => {
 
         {/* Case studies from the portfolio managed by Adrian Costi */}
         <OwnerCaseStudies />
+
+        {/* Interactive ROI / income estimator */}
+        <OwnerRoiEstimator />
 
         {/* Case Study — verified ROI proof */}
         <section id="studiu-caz" className="py-20 bg-background">
