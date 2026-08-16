@@ -71,6 +71,7 @@ const OwnerPricingPackages = lazy(() => import("@/components/owners/OwnerPricing
 const FounderProfile = lazy(() => import("@/components/owners/FounderProfile"));
 const OwnerCaseStudies = lazy(() => import("@/components/owners/OwnerCaseStudies"));
 const OwnerRoiEstimator = lazy(() => import("@/components/owners/OwnerRoiEstimator"));
+const OwnerContactLeadForm = lazy(() => import("@/components/owners/OwnerContactLeadForm"));
 const FounderCallBooking = lazy(() => import("@/components/owners/FounderCallBooking"));
 const OwnerLegalTaxGuide = lazy(() => import("@/components/owners/OwnerLegalTaxGuide"));
 const OwnerRisksLimits = lazy(() => import("@/components/owners/OwnerRisksLimits"));
@@ -1017,6 +1018,9 @@ const PentruProprietari = () => {
 
       {/* Interactive ROI / income estimator */}
       <OwnerRoiEstimator />
+
+      {/* Optimized short lead capture form */}
+      <OwnerContactLeadForm source="pentru_proprietari_contact" />
 
       {/* Founder + team + legal identity ("cine ești, cu față") */}
       <FounderProfile />

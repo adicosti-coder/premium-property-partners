@@ -7,6 +7,7 @@ import WhyUs from "@/components/WhyUs";
 
 import OwnerCaseStudies from "@/components/owners/OwnerCaseStudies";
 import OwnerRoiEstimator from "@/components/owners/OwnerRoiEstimator";
+import OwnerContactLeadForm from "@/components/owners/OwnerContactLeadForm";
 import CompanyTimeline from "@/components/CompanyTimeline";
 import {
   Building2, 
@@ -688,6 +689,9 @@ const AboutUs = () => {
 
         {/* Interactive ROI / income estimator */}
         <OwnerRoiEstimator />
+
+        {/* Optimized short lead capture form */}
+        <OwnerContactLeadForm source="despre_noi_contact" />
 
         {/* Case Study — verified ROI proof */}
         <section id="studiu-caz" className="py-20 bg-background">
