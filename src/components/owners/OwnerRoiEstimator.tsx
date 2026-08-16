@@ -116,7 +116,18 @@ const OwnerRoiEstimator = () => {
         )}% deduction (management fee, cleaning, consumables, taxes). Figures are indicative; the exact estimate follows a property review.`,
       };
 
-  const ctaHref = `/evaluare-gratuita?tip=${typeKey}&zona=${selectedZone.slug}`;
+  const handlePrefillCta = () => {
+    emitOwnerRoiPrefill({
+      propertyType: typeKey,
+      zone: zoneKey,
+      monthlyRent: rent,
+      netAnnualIncome: Math.round(result.hotelAnnualNet),
+    });
+    const scrolled = scrollToOwnerContactForm();
+    if (!scrolled) {
+      navigate(`/evaluare-gratuita?tip=${typeKey}&zona=${selectedZone.slug}`);
+    }
+  };
 
   return (
     <section id="calculator-roi" className="py-20 bg-muted/30">
