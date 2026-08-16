@@ -2,8 +2,19 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { getCorsHeaders, securityHeaders } from "../_shared/securityHeaders.ts";
 import { isUrlAllowed } from "../_shared/urlGuard.ts";
 
-// Only booking-engine hosts we actually integrate with may be fetched here.
-const BOOKING_HOST_SUFFIXES = ["pynbooking.direct", "pynbooking.com", "booking.com", "realtrust.ro"];
+// Only the booking engine used by the live availability parser may be fetched.
+// This is intentionally narrower than the shared media-fetch allowlist.
+const BOOKING_HOST_SUFFIX = "pynbooking.direct";
+
+const getAllowedBookingUrl = (rawUrl: string): URL | null => {
+  const guard = isUrlAllowed(rawUrl);
+  if (!guard.ok || !guard.parsed || guard.parsed.protocol !== "https:") return null;
+
+  const host = guard.parsed.hostname.toLowerCase();
+  if (host !== BOOKING_HOST_SUFFIX && !host.endsWith(`.${BOOKING_HOST_SUFFIX}`)) return null;
+
+  return guard.parsed;
+};
 
 interface PropertyPayload {
   slug: string;
@@ -140,17 +151,17 @@ const normalizeAvailabilityPayload = (payload: unknown): AvailabilityResponse =>
 
 const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkOut: string): Promise<FetchUnavailableDatesResult> => {
   // SSRF guard: block private/loopback hosts and anything outside the booking allowlist.
-  const guard = isUrlAllowed(bookingUrl, { extraHostSuffixes: BOOKING_HOST_SUFFIXES });
-  if (!guard.ok || !guard.parsed || guard.parsed.protocol !== "https:") {
+  const url = getAllowedBookingUrl(bookingUrl);
+  if (!url) {
     console.warn("live-property-availability: blocked bookingUrl");
     return { unavailableDates: new Set<string>(), resolved: false };
   }
-  const url = guard.parsed;
   url.searchParams.set("arrivalDate", checkIn);
   url.searchParams.set("departureDate", checkOut);
 
   const pageResponse = await fetch(url.toString(), {
     headers: { "User-Agent": "RealTrustAvailability/1.0" },
+    redirect: "error",
   });
 
   if (!pageResponse.ok) {
@@ -183,6 +194,7 @@ const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkO
         roomId: context.roomId,
         rateId: context.rateId,
       }),
+      redirect: "error",
     });
 
     if (!availabilityResponse.ok) {
