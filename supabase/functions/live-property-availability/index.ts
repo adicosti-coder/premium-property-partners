@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { getCorsHeaders, securityHeaders } from "../_shared/securityHeaders.ts";
+import { isUrlAllowed } from "../_shared/urlGuard.ts";
+
+// Only booking-engine hosts we actually integrate with may be fetched here.
+const BOOKING_HOST_SUFFIXES = ["pynbooking.direct", "pynbooking.com", "booking.com", "realtrust.ro"];
 
 interface PropertyPayload {
   slug: string;
@@ -135,7 +139,13 @@ const normalizeAvailabilityPayload = (payload: unknown): AvailabilityResponse =>
 };
 
 const fetchUnavailableDates = async (bookingUrl: string, checkIn: string, checkOut: string): Promise<FetchUnavailableDatesResult> => {
-  const url = new URL(bookingUrl);
+  // SSRF guard: block private/loopback hosts and anything outside the booking allowlist.
+  const guard = isUrlAllowed(bookingUrl, { extraHostSuffixes: BOOKING_HOST_SUFFIXES });
+  if (!guard.ok || !guard.parsed || guard.parsed.protocol !== "https:") {
+    console.warn("live-property-availability: blocked bookingUrl");
+    return { unavailableDates: new Set<string>(), resolved: false };
+  }
+  const url = guard.parsed;
   url.searchParams.set("arrivalDate", checkIn);
   url.searchParams.set("departureDate", checkOut);
 
