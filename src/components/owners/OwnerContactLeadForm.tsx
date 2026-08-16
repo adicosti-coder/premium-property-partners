@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import {
   Loader2,
@@ -10,6 +10,7 @@ import {
   Lock,
   ArrowRight,
   Sparkles,
+  Calculator,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,10 @@ import { submitLead } from "@/lib/leadSubmission";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, trackCriticalConversion, OWNER_FUNNEL_VALUE_EUR } from "@/lib/conversionTracking";
 import { BRAND } from "@/lib/orgIdentity";
+import {
+  OWNER_ROI_PREFILL_EVENT,
+  type OwnerRoiPrefillPayload,
+} from "@/lib/ownerRoiPrefill";
 
 /**
  * OwnerContactLeadForm — formular scurt de captare lead (proprietari).
@@ -118,6 +123,26 @@ const OwnerContactLeadForm = ({
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [roiPrefill, setRoiPrefill] = useState<OwnerRoiPrefillPayload | null>(null);
+
+  // Prefill din Calculatorul ROI (aceeași pagină)
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<OwnerRoiPrefillPayload>).detail;
+      if (!detail) return;
+      setRoiPrefill(detail);
+      setSuccess(false);
+      setForm((prev) => ({
+        ...prev,
+        zone: detail.zone || prev.zone,
+        propertyType: detail.propertyType || prev.propertyType,
+      }));
+      setErrors({});
+      setWantsYieldAnalysis(true);
+    };
+    window.addEventListener(OWNER_ROI_PREFILL_EVENT, handler);
+    return () => window.removeEventListener(OWNER_ROI_PREFILL_EVENT, handler);
+  }, []);
 
   const t = isRo
     ? {
@@ -147,6 +172,9 @@ const OwnerContactLeadForm = ({
         whatsapp: "Scrie pe WhatsApp",
         again: "Trimite o altă cerere",
         errorGeneric: "A apărut o problemă la trimitere. Te rugăm să încerci din nou sau să ne suni direct.",
+        prefillNote: "Am preluat datele calculate pentru proprietatea ta.",
+        prefillRent: "Chirie clasică estimată",
+        prefillNet: "Venit net RealTrust (an)",
       }
     : {
         badge: "Quick contact · 60 seconds",
@@ -175,6 +203,9 @@ const OwnerContactLeadForm = ({
         whatsapp: "Message on WhatsApp",
         again: "Send another request",
         errorGeneric: "Something went wrong while sending. Please try again or call us directly.",
+        prefillNote: "We picked up the figures calculated for your property.",
+        prefillRent: "Estimated long-term rent",
+        prefillNet: "RealTrust net income (year)",
       };
 
   const zoneLabel = (value: string) => {
@@ -221,6 +252,10 @@ const OwnerContactLeadForm = ({
       property_area: 0,
       message: `[${source}] Zonă: ${zoneLabel(data.zone)} · Tip: ${typeLabel(data.propertyType)}${
         wantsYieldAnalysis ? " · Solicită analiză gratuită de randament" : ""
+      }${
+        roiPrefill
+          ? ` · Calculator ROI: chirie clasică ${roiPrefill.monthlyRent} €/lună · venit net estimat ${roiPrefill.netAnnualIncome} €/an`
+          : ""
       }`,
       source,
       simulation_data: withCampaignTracking({
@@ -229,6 +264,9 @@ const OwnerContactLeadForm = ({
         property_type: data.propertyType,
         wants_yield_analysis: wantsYieldAnalysis,
         language,
+        roi_calculator_prefill: !!roiPrefill,
+        roi_monthly_rent: roiPrefill?.monthlyRent ?? null,
+        roi_net_annual_income: roiPrefill?.netAnnualIncome ?? null,
       }) as never,
     });
 
@@ -254,6 +292,14 @@ const OwnerContactLeadForm = ({
       value: OWNER_FUNNEL_VALUE_EUR.intent,
       currency: "EUR",
     });
+    if (roiPrefill) {
+      trackConversion({
+        event: "generate_lead_roi_calculator",
+        source: `${source}_roi_calculator`,
+        value: OWNER_FUNNEL_VALUE_EUR.managementRequest,
+        currency: "EUR",
+      });
+    }
     if (wantsYieldAnalysis) {
       trackConversion({
         event: "owner_valuation_submit",
@@ -334,6 +380,22 @@ const OwnerContactLeadForm = ({
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                  {roiPrefill && (
+                    <div
+                      className="rounded-lg border border-primary/30 bg-primary/5 p-4"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <p className="text-sm font-medium text-foreground flex items-start gap-2">
+                        <Calculator className="w-4 h-4 mt-0.5 text-primary shrink-0" aria-hidden="true" />
+                        <span>{t.prefillNote}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {t.prefillRent}: <strong>{roiPrefill.monthlyRent} €</strong> ·{" "}
+                        {t.prefillNet}: <strong>{roiPrefill.netAnnualIncome} €</strong>
+                      </p>
+                    </div>
+                  )}
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div>
                       <Label htmlFor="ocf-name">{t.name}</Label>
