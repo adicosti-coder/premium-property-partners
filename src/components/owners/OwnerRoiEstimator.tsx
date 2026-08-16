@@ -52,6 +52,8 @@ const OwnerRoiEstimator = () => {
   const { language } = useLanguage();
   const isRo = language === "ro";
 
+  const navigate = useNavigate();
+
   const [typeKey, setTypeKey] = useState<PropertyTypeKey>("2-camere");
   const [zoneKey, setZoneKey] = useState<string>("circumvalatiunii");
   const [rent, setRent] = useState<number>(500);
