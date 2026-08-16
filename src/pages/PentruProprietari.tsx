@@ -75,6 +75,9 @@ const OwnerContactLeadForm = lazy(() => import("@/components/owners/OwnerContact
 const FounderCallBooking = lazy(() => import("@/components/owners/FounderCallBooking"));
 const OwnerLegalTaxGuide = lazy(() => import("@/components/owners/OwnerLegalTaxGuide"));
 const OwnerRisksLimits = lazy(() => import("@/components/owners/OwnerRisksLimits"));
+const OwnerExitDamagePolicy = lazy(() => import("@/components/owners/OwnerExitDamagePolicy"));
+const OwnerDashboardDemo = lazy(() => import("@/components/owners/OwnerDashboardDemo"));
+const OwnerSeasonalityChart = lazy(() => import("@/components/owners/OwnerSeasonalityChart"));
 const OwnerAssociationPermits = lazy(() => import("@/components/owners/OwnerAssociationPermits"));
 
 /**
@@ -1009,6 +1012,16 @@ const PentruProprietari = () => {
 
       {/* Contract terms + sample monthly report (owner trust) */}
       <ContractTransparency />
+
+      {/* Exit clause / trial period + guest damage policy (zero-risk decision) */}
+      <OwnerExitDamagePolicy />
+
+      {/* Demo of the owner portal (what you get after signing) */}
+      <OwnerDashboardDemo />
+
+      {/* Month-by-month seasonality — honest risk picture */}
+      <OwnerSeasonalityChart />
+
 
       {/* Before/after: net income uplift on real managed apartments */}
       <BeforeAfterTransformations />
