@@ -38,3 +38,16 @@
 
 /pwa-sw.js
   Cache-Control: public, max-age=0, must-revalidate
+
+# Sitemaps — explicit XML content type, short cache
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/sitemap-static.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/sitemap-dynamic.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400

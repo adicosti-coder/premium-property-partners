@@ -67,9 +67,11 @@
   RewriteCond %{DOCUMENT_ROOT}/%1/index.html -f
   RewriteRule ^ %1/index.html [L]
 
+  # Never SPA-fallback XML documents (sitemaps, feeds).
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-e
+  RewriteCond %{REQUEST_URI} !\.xml$
   RewriteRule . /index.html [L]
 </IfModule>
 
@@ -230,3 +232,15 @@ Options -Indexes
   AddType font/woff2 .woff2
   AddType application/manifest+json .webmanifest
 </IfModule>
+
+# Sitemaps must always be served as XML with an explicit charset.
+<IfModule mod_mime.c>
+  AddType application/xml .xml
+</IfModule>
+<FilesMatch "^sitemap(|-static|-dynamic)\.xml$">
+  ForceType application/xml
+  <IfModule mod_headers.c>
+    Header set Content-Type "application/xml; charset=utf-8"
+    Header set Cache-Control "public, max-age=3600, stale-while-revalidate=86400"
+  </IfModule>
+</FilesMatch>
