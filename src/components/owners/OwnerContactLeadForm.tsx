@@ -134,8 +134,9 @@ const OwnerContactLeadForm = ({
   /** Honeypot — completat doar de boți; ascuns pentru utilizatori și screen readers. */
   const honeypotRef = useRef("");
 
-  /** Cloudflare Turnstile (invisible/managed, fail-open pe erori de încărcare). */
+  /** Cloudflare Turnstile (invisible/managed) — verificare fail-closed pe server. */
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
   const turnstileTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -144,9 +145,12 @@ const OwnerContactLeadForm = ({
       try {
         const { data, error } = await supabase.functions.invoke("get-turnstile-site-key");
         if (error) throw error;
-        if (!cancelled && data?.siteKey) setTurnstileSiteKey(data.siteKey);
+        if (!cancelled && data?.siteKey) {
+          setTurnstileSiteKey(data.siteKey);
+          setTurnstileReady(true);
+        }
       } catch {
-        // fail open — formularul rămâne funcțional (honeypot + validare server)
+        // cheia nu s-a putut încărca — protecția rămâne pe honeypot + rate limiting server
       }
     })();
     return () => {
@@ -154,18 +158,25 @@ const OwnerContactLeadForm = ({
     };
   }, []);
 
-  const verifyCaptcha = useCallback(async (token: string): Promise<boolean> => {
-    if (token === "bypass") return true;
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
-        body: { token, formType: "owner_contact_lead_form" },
-      });
-      if (error) throw error;
-      return data?.success === true;
-    } catch {
-      return true; // fail open
-    }
-  }, []);
+  /** Fail-closed: orice eroare/verificare eșuată blochează trimiterea. */
+  const verifyCaptcha = useCallback(
+    async (token: string): Promise<{ ok: boolean; rateLimited: boolean }> => {
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+          body: { token, formType: "owner_contact_lead_form" },
+        });
+        if (error) {
+          const status = (error as { context?: { status?: number } })?.context?.status;
+          return { ok: false, rateLimited: status === 429 };
+        }
+        return { ok: data?.success === true, rateLimited: false };
+      } catch {
+        return { ok: false, rateLimited: false };
+      }
+    },
+    [],
+  );
+
 
   // Prefill din Calculatorul ROI (aceeași pagină)
   useEffect(() => {
