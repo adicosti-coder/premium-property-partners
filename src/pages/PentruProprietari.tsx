@@ -1013,6 +1013,16 @@ const PentruProprietari = () => {
       {/* Contract terms + sample monthly report (owner trust) */}
       <ContractTransparency />
 
+      {/* Exit clause / trial period + guest damage policy (zero-risk decision) */}
+      <OwnerExitDamagePolicy />
+
+      {/* Demo of the owner portal (what you get after signing) */}
+      <OwnerDashboardDemo />
+
+      {/* Month-by-month seasonality — honest risk picture */}
+      <OwnerSeasonalityChart />
+
+
       {/* Before/after: net income uplift on real managed apartments */}
       <BeforeAfterTransformations />
 
