@@ -136,6 +136,7 @@ const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
   WhatsApp_Click: { name: "Contact", custom: false },
   contact_form_submit: { name: "Lead", custom: false },
   generate_lead: { name: "Lead", custom: false },
+  generate_lead_roi_calculator: { name: "Lead", custom: false },
   owner_valuation_submit: { name: "Lead", custom: false },
   roi_calculator_lead: { name: "Lead", custom: false },
   lead_magnet_pdf: { name: "Lead", custom: false },
