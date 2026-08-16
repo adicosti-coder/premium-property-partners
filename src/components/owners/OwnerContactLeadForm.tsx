@@ -307,6 +307,17 @@ const OwnerContactLeadForm = ({
     setErrors({});
     setSubmitting(true);
 
+    // Anti-spam: verificăm token-ul Turnstile server-side (fail-open dacă widgetul nu s-a încărcat).
+    const token = turnstileTokenRef.current;
+    if (token) {
+      const human = await verifyCaptcha(token);
+      if (!human) {
+        setSubmitting(false);
+        setConsentError(t.botError);
+        return;
+      }
+    }
+
     const data = parsed.data;
     const result = await submitLead({
       name: data.name,
