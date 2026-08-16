@@ -1,17 +1,24 @@
 /**
- * Build-time sitemap generator.
+ * Build-time sitemap generator (runs on `prebuild`, i.e. before every publish).
  *
- * Runs on `prebuild` (i.e. before every publish) and writes:
- *   public/sitemap-dynamic.xml  — properties, blog articles, complexes, community
- *                                 articles, pulled live from the database
- *   public/sitemap.xml          — sitemap index referencing ONLY project-domain URLs
+ * Single source of truth for the sitemap files served from the project domain:
+ *   public/sitemap-static.xml   — evergreen marketing/landing routes
+ *   public/sitemap-dynamic.xml  — properties, blog articles, complexes,
+ *                                 community articles (live from the database)
+ *   public/sitemap.xml          — sitemap index referencing the two above
  *
- * Why fetch the edge functions instead of querying the DB directly?
- * The `generate-sitemap` / `generate-blog-sitemap` functions already own the
- * queries, filters and image/hreflang markup, and they run with elevated
- * privileges (RLS on `blog_articles` / `properties` blocks anonymous reads).
- * We reuse their XML and only re-host it under realtrust.ro so Search Console
- * never sees cross-host sitemap entries.
+ * The URL data comes from the `generate-sitemap` / `generate-blog-sitemap` edge
+ * functions: they already own the DB queries, the RLS-elevated reads and the
+ * image/hreflang markup, and they can also be requested directly at runtime
+ * (`/functions/v1/generate-sitemap`) for an always-fresh XML response.
+ *
+ * Canonical hygiene enforced here (nothing else in the pipeline is trusted):
+ *   - https only
+ *   - apex host `realtrust.ro` (www + function host are rewritten)
+ *   - no query strings at all (`?lang=en`, utm_*, gclid… are dropped);
+ *     language variants are expressed exclusively through <xhtml:link hreflang>
+ *   - no trailing slash except the root
+ *   - deduplicated by <loc>
  *
  * Failure is non-fatal: if the network is unavailable the previously committed
  * sitemap files are left untouched so a build never ships an empty sitemap.
@@ -21,11 +28,23 @@ import { writeFileSync, existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 const BASE_URL = "https://realtrust.ro";
+const HOST = "realtrust.ro";
 const FUNCTIONS_ORIGIN = "https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1";
 
 const SOURCES = [
   `${FUNCTIONS_ORIGIN}/generate-sitemap`,
   `${FUNCTIONS_ORIGIN}/generate-blog-sitemap`,
+];
+
+/** Path prefixes whose URLs are database-driven → sitemap-dynamic.xml. */
+const DYNAMIC_PREFIXES = [
+  "/proprietate/",
+  "/blog/",
+  "/complex/",
+  "/complexe/",
+  "/comunitate/articol/",
+  "/imobiliare-timisoara/",
+  "/zona/",
 ];
 
 /**
@@ -48,17 +67,52 @@ const neighborhoodBlocks = (): string[] => {
   }
 };
 
-
-/** Rewrite any legacy www / function-host <loc> to the canonical project domain. */
-const canonicalizeHosts = (xml: string): string =>
-  xml
-    .replace(/https:\/\/www\.realtrust\.ro/g, BASE_URL)
-    .replace(new RegExp(FUNCTIONS_ORIGIN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), BASE_URL);
-
-const extractUrlBlocks = (xml: string): string[] => {
-  const matches = xml.match(/<url>[\s\S]*?<\/url>/g);
-  return matches ?? [];
+/**
+ * Canonicalize a single URL: force https + apex host, strip every query string
+ * and fragment, strip trailing slashes (root excepted).
+ * Returns null when the URL points somewhere that must not be listed.
+ */
+const canonicalizeUrl = (raw: string): string | null => {
+  let url: URL;
+  try {
+    url = new URL(raw.trim());
+  } catch {
+    return null;
+  }
+  if (url.hostname.toLowerCase().replace(/^www\./, "") !== HOST) {
+    // Rewrite the two known internal hosts, reject anything else (no
+    // cross-host entries may ever reach Search Console).
+    const host = url.hostname.toLowerCase();
+    if (host !== "www.realtrust.ro" && host !== "mvzssjyzbwccioqvhjpo.supabase.co") return null;
+  }
+  const path = url.pathname.replace(/\/+$/, "") || "/";
+  return `${BASE_URL}${path}`;
 };
+
+/** Rewrite every <loc>/<xhtml:link href> in a block to its canonical form. */
+const canonicalizeBlock = (block: string): string | null => {
+  const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1];
+  if (!loc) return null;
+  const canonicalLoc = canonicalizeUrl(loc);
+  if (!canonicalLoc) return null;
+
+  let out = block.replace(/<loc>[^<]+<\/loc>/, `<loc>${canonicalLoc}</loc>`);
+
+  // hreflang alternates: ro / x-default = canonical URL. `en` is the same
+  // document (language is client state), so it must not introduce a
+  // parameterized duplicate either.
+  out = out.replace(
+    /<xhtml:link\b([^>]*?)href="([^"]+)"([^>]*)\/>/g,
+    (_m, before: string, href: string, after: string) => {
+      const canonicalHref = canonicalizeUrl(href) ?? canonicalLoc;
+      return `<xhtml:link${before}href="${canonicalHref}"${after}/>`;
+    },
+  );
+
+  return out;
+};
+
+const extractUrlBlocks = (xml: string): string[] => xml.match(/<url>[\s\S]*?<\/url>/g) ?? [];
 
 const dedupeByLoc = (blocks: string[]): string[] => {
   const seen = new Set<string>();
@@ -72,9 +126,28 @@ const dedupeByLoc = (blocks: string[]): string[] => {
   return out;
 };
 
+const isDynamic = (block: string): boolean => {
+  const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "";
+  const path = loc.slice(BASE_URL.length);
+  return DYNAMIC_PREFIXES.some((p) => path.startsWith(p) && path.length > p.length);
+};
+
+const wrapUrlset = (blocks: string[]): string =>
+  [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<!-- Generated by scripts/generate-sitemap.ts (prebuild). Canonical apex URLs only. -->`,
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`,
+    `        xmlns:xhtml="http://www.w3.org/1999/xhtml"`,
+    `        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`,
+    ...blocks,
+    `</urlset>`,
+    "",
+  ].join("\n");
+
 const SITEMAP_INDEX = `<?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated by scripts/generate-sitemap.ts (prebuild). All entries are served
-     from the project domain so Search Console never sees a cross-host sitemap. -->
+     from the canonical apex domain so Search Console never sees a cross-host
+     or www sitemap entry. -->
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
     <loc>${BASE_URL}/sitemap-static.xml</loc>
@@ -85,8 +158,22 @@ const SITEMAP_INDEX = `<?xml version="1.0" encoding="UTF-8"?>
 </sitemapindex>
 `;
 
+const writeIfNotEmpty = (file: string, blocks: string[], label: string) => {
+  const target = resolve(`public/${file}`);
+  if (blocks.length === 0) {
+    console.warn(
+      existsSync(target)
+        ? `[sitemap] no ${label} entries fetched — keeping existing ${file}`
+        : `[sitemap] no ${label} entries fetched and no previous file — ${file} not written`,
+    );
+    return;
+  }
+  writeFileSync(target, wrapUrlset(blocks));
+  console.log(`[sitemap] ${file} written (${blocks.length} URLs)`);
+};
+
 const main = async () => {
-  const blocks: string[] = [...neighborhoodBlocks()];
+  const raw: string[] = [...neighborhoodBlocks()];
 
   for (const source of SOURCES) {
     try {
@@ -95,35 +182,22 @@ const main = async () => {
         console.warn(`[sitemap] ${source} responded ${res.status} — skipped`);
         continue;
       }
-      const xml = canonicalizeHosts(await res.text());
-      blocks.push(...extractUrlBlocks(xml));
+      raw.push(...extractUrlBlocks(await res.text()));
     } catch (err) {
       console.warn(`[sitemap] failed to fetch ${source}:`, (err as Error).message);
     }
   }
 
-  const unique = dedupeByLoc(blocks);
+  const canonical = raw
+    .map(canonicalizeBlock)
+    .filter((b): b is string => Boolean(b));
+  const unique = dedupeByLoc(canonical);
 
-  if (unique.length === 0) {
-    const target = resolve("public/sitemap-dynamic.xml");
-    console.warn(
-      existsSync(target)
-        ? "[sitemap] no entries fetched — keeping the existing sitemap-dynamic.xml"
-        : "[sitemap] no entries fetched and no previous file — sitemap-dynamic.xml not written",
-    );
-  } else {
-    const xml = [
-      `<?xml version="1.0" encoding="UTF-8"?>`,
-      `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`,
-      `        xmlns:xhtml="http://www.w3.org/1999/xhtml"`,
-      `        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`,
-      ...unique,
-      `</urlset>`,
-      "",
-    ].join("\n");
-    writeFileSync(resolve("public/sitemap-dynamic.xml"), xml);
-    console.log(`[sitemap] sitemap-dynamic.xml written (${unique.length} URLs)`);
-  }
+  const dynamicBlocks = unique.filter(isDynamic);
+  const staticBlocks = unique.filter((b) => !isDynamic(b));
+
+  writeIfNotEmpty("sitemap-static.xml", staticBlocks, "static");
+  writeIfNotEmpty("sitemap-dynamic.xml", dynamicBlocks, "dynamic");
 
   writeFileSync(resolve("public/sitemap.xml"), SITEMAP_INDEX);
   console.log("[sitemap] sitemap.xml index written");
