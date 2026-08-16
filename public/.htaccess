@@ -43,9 +43,9 @@
 
   # 2) Otherwise proxy straight to the public `sitemap` edge function, which
   #    always answers 200 with Content-Type: application/xml; charset=utf-8.
-  RewriteRule ^sitemap\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/sitemap.xml [P,L]
-  RewriteRule ^sitemap-static\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/static.xml [P,L]
-  RewriteRule ^sitemap-dynamic\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/dynamic.xml [P,L]
+  RewriteRule ^sitemap\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/sitemap.xml [P,L,E=SITEMAP_XML:1]
+  RewriteRule ^sitemap-static\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/static.xml [P,L,E=SITEMAP_XML:1]
+  RewriteRule ^sitemap-dynamic\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/dynamic.xml [P,L,E=SITEMAP_XML:1]
 
 
   # Redirect social media crawlers to dynamic OG edge function for property pages
@@ -237,6 +237,13 @@ Options -Indexes
 <IfModule mod_mime.c>
   AddType application/xml .xml
 </IfModule>
+# Proxied sitemap responses come back from the functions gateway as
+# text/plain; force the correct XML type on the way out.
+<IfModule mod_headers.c>
+  Header always set Content-Type "application/xml; charset=utf-8" env=SITEMAP_XML
+  Header always set Content-Type "application/xml; charset=utf-8" env=REDIRECT_SITEMAP_XML
+</IfModule>
+
 <FilesMatch "^sitemap(|-static|-dynamic)\.xml$">
   ForceType application/xml
   <IfModule mod_headers.c>
