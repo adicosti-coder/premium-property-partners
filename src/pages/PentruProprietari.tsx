@@ -1024,6 +1024,12 @@ const PentruProprietari = () => {
       {/* Month-by-month seasonality — honest risk picture */}
       <OwnerSeasonalityChart />
 
+      {/* Eligibility: what we accept and when we say no (self-qualification) */}
+      <OwnerEligibilityCriteria />
+
+      {/* Honest comparison vs self-management and classic agencies */}
+      <OwnerCompetitorComparison />
+
 
       {/* Before/after: net income uplift on real managed apartments */}
       <BeforeAfterTransformations />
