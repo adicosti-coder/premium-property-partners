@@ -36,8 +36,17 @@
   RewriteCond %{ENV:REDIRECT_STATUS} ^$
   RewriteRule ^index\.html$ / [R=301,L]
 
-  # /sitemap.xml is served as a Sitemap Index (public/sitemap.xml) referencing
-  # the dynamic edge-function sitemaps + static fallback. Do not rewrite.
+  # ---- Sitemaps: never fall through to the SPA (index.html) ----------------
+  # 1) If the static file generated at build time exists, serve it as-is.
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^sitemap(|-static|-dynamic)\.xml$ - [L]
+
+  # 2) Otherwise proxy straight to the public `sitemap` edge function, which
+  #    always answers 200 with Content-Type: application/xml; charset=utf-8.
+  RewriteRule ^sitemap\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/sitemap.xml [P,L]
+  RewriteRule ^sitemap-static\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/static.xml [P,L]
+  RewriteRule ^sitemap-dynamic\.xml$ https://mvzssjyzbwccioqvhjpo.supabase.co/functions/v1/sitemap/dynamic.xml [P,L]
+
 
   # Redirect social media crawlers to dynamic OG edge function for property pages
   RewriteCond %{HTTP_USER_AGENT} facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|Googlebot [NC]
