@@ -127,6 +127,46 @@ const OwnerContactLeadForm = ({
   const [success, setSuccess] = useState(false);
   const [roiPrefill, setRoiPrefill] = useState<OwnerRoiPrefillPayload | null>(null);
 
+  /** GDPR: consimțământ explicit, obligatoriu. */
+  const [gdprConsent, setGdprConsent] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
+
+  /** Honeypot — completat doar de boți; ascuns pentru utilizatori și screen readers. */
+  const honeypotRef = useRef("");
+
+  /** Cloudflare Turnstile (invisible/managed, fail-open pe erori de încărcare). */
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
+  const turnstileTokenRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("get-turnstile-site-key");
+        if (error) throw error;
+        if (!cancelled && data?.siteKey) setTurnstileSiteKey(data.siteKey);
+      } catch {
+        // fail open — formularul rămâne funcțional (honeypot + validare server)
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const verifyCaptcha = useCallback(async (token: string): Promise<boolean> => {
+    if (token === "bypass") return true;
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token, formType: "owner_contact_lead_form" },
+      });
+      if (error) throw error;
+      return data?.success === true;
+    } catch {
+      return true; // fail open
+    }
+  }, []);
+
   // Prefill din Calculatorul ROI (aceeași pagină)
   useEffect(() => {
     const handler = (event: Event) => {
