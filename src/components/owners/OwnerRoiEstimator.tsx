@@ -244,12 +244,26 @@ const OwnerRoiEstimator = () => {
                   </div>
                 </div>
 
-                <Button asChild size="lg" className="w-full min-h-[48px]">
-                  <Link to={ctaHref}>
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="w-full min-h-[48px]"
+                    onClick={handlePrefillCta}
+                  >
                     {t.cta}
                     <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
-                  </Link>
-                </Button>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="lg"
+                    variant="outline"
+                    className="w-full min-h-[48px]"
+                    onClick={handlePrefillCta}
+                  >
+                    {t.ctaSecondary}
+                  </Button>
+                </div>
 
                 <p className="text-xs text-muted-foreground flex gap-2">
                   <Info className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
