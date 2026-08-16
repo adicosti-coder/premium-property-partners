@@ -32,6 +32,10 @@ import { submitLead } from "@/lib/leadSubmission";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, trackCriticalConversion, OWNER_FUNNEL_VALUE_EUR } from "@/lib/conversionTracking";
 import { BRAND } from "@/lib/orgIdentity";
+
+/** Versiunea textului de consimțământ GDPR salvată împreună cu lead-ul (audit). */
+const GDPR_CONSENT_VERSION = "2026-08-v1";
+
 import {
   OWNER_ROI_PREFILL_EVENT,
   type OwnerRoiPrefillPayload,
