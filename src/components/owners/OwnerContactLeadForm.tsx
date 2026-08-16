@@ -233,6 +233,8 @@ const OwnerContactLeadForm = ({
         gdprAfter: ".",
         gdprRequired: "Trebuie să accepți prelucrarea datelor pentru a trimite cererea.",
         botError: "Verificarea de securitate a eșuat. Te rugăm să reîncerci.",
+        rateLimited: "Prea multe încercări. Te rugăm să reîncerci în câteva minute.",
+
       }
     : {
         badge: "Quick contact · 60 seconds",
