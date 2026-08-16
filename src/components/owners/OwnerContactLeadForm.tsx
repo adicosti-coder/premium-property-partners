@@ -318,16 +318,23 @@ const OwnerContactLeadForm = ({
     setErrors({});
     setSubmitting(true);
 
-    // Anti-spam: verificăm token-ul Turnstile server-side (fail-open dacă widgetul nu s-a încărcat).
+    // Anti-spam fail-closed: token obligatoriu când widgetul e disponibil.
     const token = turnstileTokenRef.current;
+    if (turnstileReady && !token) {
+      setSubmitting(false);
+      setConsentError(t.botError);
+      return;
+    }
     if (token) {
-      const human = await verifyCaptcha(token);
-      if (!human) {
+      const { ok, rateLimited } = await verifyCaptcha(token);
+      if (!ok) {
         setSubmitting(false);
-        setConsentError(t.botError);
+        setConsentError(rateLimited ? t.rateLimited : t.botError);
+        turnstileTokenRef.current = null;
         return;
       }
     }
+
 
     const data = parsed.data;
     const result = await submitLead({
