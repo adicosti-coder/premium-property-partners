@@ -342,6 +342,8 @@ const OwnerContactLeadForm = ({
         roi_calculator_prefill: !!roiPrefill,
         roi_monthly_rent: roiPrefill?.monthlyRent ?? null,
         roi_net_annual_income: roiPrefill?.netAnnualIncome ?? null,
+        gdpr_consent: true,
+        gdpr_consent_at: new Date().toISOString(),
       }) as never,
     });
 
