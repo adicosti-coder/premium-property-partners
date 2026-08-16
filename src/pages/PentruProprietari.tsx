@@ -75,6 +75,9 @@ const OwnerContactLeadForm = lazy(() => import("@/components/owners/OwnerContact
 const FounderCallBooking = lazy(() => import("@/components/owners/FounderCallBooking"));
 const OwnerLegalTaxGuide = lazy(() => import("@/components/owners/OwnerLegalTaxGuide"));
 const OwnerRisksLimits = lazy(() => import("@/components/owners/OwnerRisksLimits"));
+const OwnerExitDamagePolicy = lazy(() => import("@/components/owners/OwnerExitDamagePolicy"));
+const OwnerDashboardDemo = lazy(() => import("@/components/owners/OwnerDashboardDemo"));
+const OwnerSeasonalityChart = lazy(() => import("@/components/owners/OwnerSeasonalityChart"));
 const OwnerAssociationPermits = lazy(() => import("@/components/owners/OwnerAssociationPermits"));
 
 /**
