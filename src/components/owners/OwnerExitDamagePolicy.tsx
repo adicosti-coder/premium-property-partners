@@ -179,10 +179,7 @@ const OwnerExitDamagePolicy = () => {
       };
 
   const handleRequest = () => {
-    trackConversion("whatsapp_click", {
-      source: "owner_exit_damage_policy",
-      language,
-    });
+    trackConversion({ event: "whatsapp_click", source: "owners_exit_damage_policy" });
   };
 
   return (
