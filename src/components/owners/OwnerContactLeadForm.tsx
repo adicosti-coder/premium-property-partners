@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
+import { Turnstile } from "@marsidev/react-turnstile";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Loader2,
   CheckCircle2,
@@ -125,6 +127,46 @@ const OwnerContactLeadForm = ({
   const [success, setSuccess] = useState(false);
   const [roiPrefill, setRoiPrefill] = useState<OwnerRoiPrefillPayload | null>(null);
 
+  /** GDPR: consimțământ explicit, obligatoriu. */
+  const [gdprConsent, setGdprConsent] = useState(false);
+  const [consentError, setConsentError] = useState<string | null>(null);
+
+  /** Honeypot — completat doar de boți; ascuns pentru utilizatori și screen readers. */
+  const honeypotRef = useRef("");
+
+  /** Cloudflare Turnstile (invisible/managed, fail-open pe erori de încărcare). */
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
+  const turnstileTokenRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("get-turnstile-site-key");
+        if (error) throw error;
+        if (!cancelled && data?.siteKey) setTurnstileSiteKey(data.siteKey);
+      } catch {
+        // fail open — formularul rămâne funcțional (honeypot + validare server)
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const verifyCaptcha = useCallback(async (token: string): Promise<boolean> => {
+    if (token === "bypass") return true;
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-turnstile", {
+        body: { token, formType: "owner_contact_lead_form" },
+      });
+      if (error) throw error;
+      return data?.success === true;
+    } catch {
+      return true; // fail open
+    }
+  }, []);
+
   // Prefill din Calculatorul ROI (aceeași pagină)
   useEffect(() => {
     const handler = (event: Event) => {
@@ -175,6 +217,11 @@ const OwnerContactLeadForm = ({
         prefillNote: "Am preluat datele calculate pentru proprietatea ta.",
         prefillRent: "Chirie clasică estimată",
         prefillNet: "Venit net RealTrust (an)",
+        gdprBefore: "Sunt de acord cu prelucrarea datelor cu caracter personal conform ",
+        gdprLink: "Politicii de Confidențialitate",
+        gdprAfter: ".",
+        gdprRequired: "Trebuie să accepți prelucrarea datelor pentru a trimite cererea.",
+        botError: "Verificarea de securitate a eșuat. Te rugăm să reîncerci.",
       }
     : {
         badge: "Quick contact · 60 seconds",
@@ -206,6 +253,11 @@ const OwnerContactLeadForm = ({
         prefillNote: "We picked up the figures calculated for your property.",
         prefillRent: "Estimated long-term rent",
         prefillNet: "RealTrust net income (year)",
+        gdprBefore: "I agree to the processing of my personal data according to the ",
+        gdprLink: "Privacy Policy",
+        gdprAfter: ".",
+        gdprRequired: "You must accept data processing before sending the request.",
+        botError: "Security check failed. Please try again.",
       };
 
   const zoneLabel = (value: string) => {
@@ -227,6 +279,18 @@ const OwnerContactLeadForm = ({
     event.preventDefault();
     if (submitting) return;
 
+    // Honeypot: doar boții completează câmpul ascuns → ieșim silențios.
+    if (honeypotRef.current.trim() !== "") {
+      setSuccess(true);
+      return;
+    }
+
+    if (!gdprConsent) {
+      setConsentError(t.gdprRequired);
+      return;
+    }
+    setConsentError(null);
+
     const parsed = makeSchema(isRo).safeParse(form);
     if (!parsed.success) {
       const fieldErrors = parsed.error.flatten().fieldErrors;
@@ -242,6 +306,17 @@ const OwnerContactLeadForm = ({
 
     setErrors({});
     setSubmitting(true);
+
+    // Anti-spam: verificăm token-ul Turnstile server-side (fail-open dacă widgetul nu s-a încărcat).
+    const token = turnstileTokenRef.current;
+    if (token) {
+      const human = await verifyCaptcha(token);
+      if (!human) {
+        setSubmitting(false);
+        setConsentError(t.botError);
+        return;
+      }
+    }
 
     const data = parsed.data;
     const result = await submitLead({
@@ -267,6 +342,8 @@ const OwnerContactLeadForm = ({
         roi_calculator_prefill: !!roiPrefill,
         roi_monthly_rent: roiPrefill?.monthlyRent ?? null,
         roi_net_annual_income: roiPrefill?.netAnnualIncome ?? null,
+        gdpr_consent: true,
+        gdpr_consent_at: new Date().toISOString(),
       }) as never,
     });
 
@@ -372,6 +449,10 @@ const OwnerContactLeadForm = ({
                     onClick={() => {
                       setSuccess(false);
                       setForm({ name: "", phone: "", email: "", zone: "", propertyType: "" });
+                      setGdprConsent(false);
+                      setConsentError(null);
+                      honeypotRef.current = "";
+                      turnstileTokenRef.current = null;
                     }}
                   >
                     {t.again}
@@ -488,6 +569,75 @@ const OwnerContactLeadForm = ({
                       <p className="text-xs text-muted-foreground mt-1">{t.checkboxHint}</p>
                     </div>
                   </div>
+
+                  {/* GDPR — consimțământ explicit obligatoriu */}
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="ocf-gdpr"
+                      checked={gdprConsent}
+                      onCheckedChange={(v) => {
+                        setGdprConsent(v === true);
+                        if (v === true) setConsentError(null);
+                      }}
+                      required
+                      aria-invalid={!!consentError}
+                      aria-describedby={consentError ? "ocf-gdpr-error" : undefined}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <Label htmlFor="ocf-gdpr" className="text-sm font-normal leading-snug cursor-pointer">
+                        {t.gdprBefore}
+                        <a
+                          href="/politica-confidentialitate"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline underline-offset-2"
+                        >
+                          {t.gdprLink}
+                        </a>
+                        {t.gdprAfter}
+                      </Label>
+                      {consentError && (
+                        <p id="ocf-gdpr-error" className="text-xs text-destructive mt-1" role="alert">
+                          {consentError}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Honeypot anti-bot — invizibil pentru utilizatori reali */}
+                  <div className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden" aria-hidden="true">
+                    <label htmlFor="ocf-company-website">Website</label>
+                    <input
+                      id="ocf-company-website"
+                      name="company_website"
+                      type="text"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      onChange={(e) => {
+                        honeypotRef.current = e.target.value;
+                      }}
+                    />
+                  </div>
+
+                  {/* Cloudflare Turnstile — verificare invizibilă (fail-open) */}
+                  {turnstileSiteKey && (
+                    <div className="flex justify-center">
+                      <Turnstile
+                        siteKey={turnstileSiteKey}
+                        onSuccess={(token) => {
+                          turnstileTokenRef.current = token;
+                        }}
+                        onError={() => {
+                          turnstileTokenRef.current = null;
+                        }}
+                        onExpire={() => {
+                          turnstileTokenRef.current = null;
+                        }}
+                        options={{ theme: "auto", size: "flexible", appearance: "interaction-only" }}
+                      />
+                    </div>
+                  )}
 
                   <Button type="submit" size="lg" className="w-full min-h-[52px]" disabled={submitting}>
                     {submitting ? (
