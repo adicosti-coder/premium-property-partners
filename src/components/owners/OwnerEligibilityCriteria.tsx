@@ -64,7 +64,7 @@ const OwnerEligibilityCriteria = () => {
               "Ai nevoie de un sezon complet ca să vezi rezultatul real. Sub 12 luni nu apucăm să amortizăm fotografiile și poziționarea în platforme.",
           },
         ],
-        rejectTitle: "Când spunem „nu"",
+        rejectTitle: "Când spunem „nu”",
         rejectBadge: "Nu se califică",
         reject: [
           {
