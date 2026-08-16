@@ -1015,6 +1015,9 @@ const PentruProprietari = () => {
       {/* Case studies: three representative managed scenarios */}
       <OwnerCaseStudies />
 
+      {/* Interactive ROI / income estimator */}
+      <OwnerRoiEstimator />
+
       {/* Founder + team + legal identity ("cine ești, cu față") */}
       <FounderProfile />
 
