@@ -10,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const HOST = "www.realtrust.ro";
+const HOST = "realtrust.ro";
 // Daily soft cap to stay well under IndexNow's per-host quota.
 const DAILY_REPING_CAP = 80;
 
