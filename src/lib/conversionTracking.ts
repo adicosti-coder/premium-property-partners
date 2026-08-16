@@ -114,6 +114,7 @@ export type ConversionEvent =
   | CriticalConversionEvent
   | "contact_form_submit"
   | "generate_lead"
+  | "generate_lead_roi_calculator"
   | "lead_magnet_pdf"
   | "roi_calculator_lead"
   | "download_yield_report"
