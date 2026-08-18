@@ -14,6 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
+import { sendTeamEmail } from "../_shared/teamEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -166,11 +167,14 @@ Deno.serve(async (req) => {
     }
 
     // ---- 2. Instant team email with the WhatsApp deep link -----------------
-    const resendKey = Deno.env.get("RESEND_API_KEY");
+    // Sent through the shared helper: verified-sender fallback (onboarding@resend.dev
+    // while realtrust.ro is not DNS-verified) + persistence in
+    // `admin_email_failures` when delivery still fails.
     const teamEmail = Deno.env.get("ADMIN_ALERT_EMAIL") || "info@realtrust.ro";
     let emailSent = false;
+    let emailStored = false;
 
-    if (resendKey) {
+    {
       const rows: Array<[string, string]> = [
         ["Nume", record.name],
         ["Telefon", phoneValid ? phoneRaw : "—"],
@@ -197,40 +201,37 @@ Deno.serve(async (req) => {
         </div>`;
 
       const tEmail = Date.now();
-      const mail = await fetchWithRetry(
-        "https://api.resend.com/emails",
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            from: "RealTrust <noreply@realtrust.ro>",
-            to: [teamEmail],
-            subject: `🚨 Lead nou: ${record.name} — ${crmPayload.lead.neighbourhood || crmPayload.lead.source || "website"}`,
-            html,
-          }),
-        },
-        { label: "crm-lead-sync-email", maxAttempts: 2 },
-      );
-      emailSent = mail.ok;
-      if (!mail.ok && !crmError) crmError = "team email failed";
+      const mail = await sendTeamEmail({
+        to: teamEmail,
+        subject: `🚨 Lead nou: ${record.name} — ${crmPayload.lead.neighbourhood || crmPayload.lead.source || "website"}`,
+        html,
+        leadId: record.id,
+        source: "crm-lead-sync",
+      }, admin);
+      emailSent = mail.sent;
+      emailStored = !!mail.storedFallback;
+      if (!mail.sent && !crmError) crmError = mail.error ?? "team email failed";
       await logLeadEvent({
         leadId: record.id,
         type: "team_email",
-        status: mail.ok ? "success" : "error",
-        message: mail.ok
-          ? `Alertă email trimisă către ${teamEmail}`
-          : `Trimiterea emailului către echipă a eșuat (HTTP ${mail.response?.status ?? "network"})`,
+        status: mail.sent ? "success" : emailStored ? "warning" : "error",
+        message: mail.sent
+          ? `Alertă email trimisă către ${teamEmail} (de la ${mail.from})`
+          : emailStored
+            ? `Emailul a eșuat (${mail.error}) — notificarea a fost salvată în dashboard-ul admin`
+            : `Trimiterea emailului către echipă a eșuat: ${mail.error}`,
         durationMs: Date.now() - tEmail,
         actor: "crm-lead-sync",
-        metadata: { to: teamEmail, whatsapp_link: waLink },
+        metadata: { to: teamEmail, whatsapp_link: waLink, from: mail.from, stored_fallback: emailStored },
       }, admin);
     }
+
 
     // ---- 3. Persist outcome (+ retry bookkeeping) ---------------------------
     // A transient failure on either channel (CRM webhook or team email) keeps the
     // row in `failed`, so the `retry-failed-crm-syncs` cron picks it up again
     // with exponential backoff (max 5 attempts).
-    const transientFail = crmStatus === "failed" || (!!resendKey && !emailSent);
+    const transientFail = crmStatus === "failed" || (!emailSent && !emailStored);
     const attempts = Number(isRetry ? (record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0 : 0);
 
     const update: Record<string, unknown> = {

@@ -12,6 +12,7 @@ const loaders: Record<string, Loader> = {
   dashboard: () => import("@/components/admin/AdminDashboard"),
   "ai-cache": () => import("@/components/admin/AICacheManager"),
   leads: () => import("@/components/admin/LeadsManager"),
+  contracts: () => import("@/components/admin/ContractManager"),
   "leads-analytics": () => import("@/components/admin/LeadsAnalyticsDashboard"),
   "tracking-qa": () => import("@/components/admin/TrackingQAPanel"),
   "conversion-report": () => import("@/components/admin/WeeklyConversionReport"),

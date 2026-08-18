@@ -104,6 +104,7 @@ const CityOfMaraTimisoara = lazyWithRetry(() => import("./pages/CityOfMaraTimiso
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const ThankYou = lazyWithRetry(() => import("./pages/ThankYou"));
+const SemnareContract = lazyWithRetry(() => import("./pages/SemnareContract"));
 const ProgramareConfirmata = lazyWithRetry(() => import("./pages/ProgramareConfirmata"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 const NeighborhoodCluster = lazyWithRetry(() => import("./pages/NeighborhoodCluster"));
@@ -265,6 +266,7 @@ const App = () => (
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
                     <Route path="/multumire" element={<ThankYou />} />
+                    <Route path="/contract/:token" element={<SemnareContract />} />
                     <Route path="/programare-confirmata" element={<ProgramareConfirmata />} />
                     <Route path="/mulțumire" element={<Navigate to="/multumire" replace />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
