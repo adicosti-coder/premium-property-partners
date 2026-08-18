@@ -261,6 +261,27 @@ export default function ContractManager() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {contracts.isLoading && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    <Loader2 className="mr-2 inline h-4 w-4 animate-spin" aria-hidden="true" /> Se încarcă contractele…
+                  </TableCell>
+                </TableRow>
+              )}
+              {contracts.error && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-10 text-center text-destructive">
+                    Nu am putut încărca contractele: {(contracts.error as Error).message}
+                  </TableCell>
+                </TableRow>
+              )}
+              {!contracts.isLoading && !contracts.error && (contracts.data?.length ?? 0) === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    Niciun contract generat încă. Creează primul contract dintr-un lead.
+                  </TableCell>
+                </TableRow>
+              )}
               {contracts.data?.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>
