@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, FilePlus2, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Copy, FilePlus2, Loader2, RefreshCw, AlertTriangle, FileSignature } from "lucide-react";
 
 interface ContractRow {
   id: string;
