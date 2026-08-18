@@ -11,14 +11,6 @@ import {
 const setConsent = (choice: string, ts = Date.now()) =>
   localStorage.setItem("cookie_consent_v2", JSON.stringify({ choice, ts }));
 
-declare global {
-  interface Window {
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
-    fbq?: (...args: unknown[]) => void;
-  }
-}
-
 describe("consent gating", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -93,6 +85,7 @@ describe("attributionParams", () => {
 describe("trackConversion", () => {
   let gtag: ReturnType<typeof vi.fn>;
   let fbq: ReturnType<typeof vi.fn>;
+  /* eslint-disable @typescript-eslint/no-explicit-any */
 
   beforeEach(() => {
     localStorage.clear();
@@ -100,15 +93,15 @@ describe("trackConversion", () => {
     window.dataLayer = [];
     gtag = vi.fn();
     fbq = vi.fn();
-    window.gtag = gtag;
-    window.fbq = fbq;
+    (window as any).gtag = gtag;
+    (window as any).fbq = fbq;
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    delete window.gtag;
-    delete window.fbq;
+    delete (window as any).gtag;
+    delete (window as any).fbq;
   });
 
   it("pushes to dataLayer but skips GA4/Meta without consent", () => {
