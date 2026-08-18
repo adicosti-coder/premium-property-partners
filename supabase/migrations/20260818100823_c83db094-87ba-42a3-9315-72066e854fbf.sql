@@ -1,0 +1,1 @@
+update public.wa_conversations set last_outbound_at = now() + interval '8 seconds' where phone_normalized = '+40700000001';

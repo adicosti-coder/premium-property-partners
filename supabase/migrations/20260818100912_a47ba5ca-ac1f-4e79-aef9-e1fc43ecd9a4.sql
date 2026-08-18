@@ -1,0 +1,2 @@
+insert into public.leads (name, whatsapp_number, property_area, property_type, calculated_net_profit, calculated_yearly_profit, source, email, message)
+values ('Test Audit E2E', '+40700000002', 45, 'apartament_2_camere', 3800, 45600, 'audit_test', 'test-audit-e2e@example.com', 'Apartament 2 camere Iosefin, vreau regim hotelier');
