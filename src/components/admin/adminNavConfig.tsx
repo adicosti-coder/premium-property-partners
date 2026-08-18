@@ -39,6 +39,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     items: [
       { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, keywords: ["home", "start", "overview"] },
       { value: "leads", label: "Lead-uri", icon: Users, badgeKey: "newLeads" },
+      { value: "contracts", label: "Contracte & Plăți", icon: FileText, keywords: ["contract", "semnare", "plata", "stripe", "onboarding"] },
       { value: "bookings", label: "Rezervări", icon: CalendarDays },
       { value: "ical-sync", label: "iCal Sync", icon: Calendar },
       { value: "reviews", label: "Reviews", icon: MessageSquare },
