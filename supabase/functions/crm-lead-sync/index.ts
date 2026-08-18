@@ -14,6 +14,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
+import { sendTeamEmail } from "../_shared/teamEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -230,7 +231,7 @@ Deno.serve(async (req) => {
     // A transient failure on either channel (CRM webhook or team email) keeps the
     // row in `failed`, so the `retry-failed-crm-syncs` cron picks it up again
     // with exponential backoff (max 5 attempts).
-    const transientFail = crmStatus === "failed" || (!!resendKey && !emailSent);
+    const transientFail = crmStatus === "failed" || (!emailSent && !emailStored);
     const attempts = Number(isRetry ? (record as { crm_sync_attempts?: number }).crm_sync_attempts ?? 0 : 0);
 
     const update: Record<string, unknown> = {
