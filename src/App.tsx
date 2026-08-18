@@ -266,6 +266,7 @@ const App = () => (
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
                     <Route path="/evaluare-gratuita" element={<EvaluareGratuita />} />
                     <Route path="/multumire" element={<ThankYou />} />
+                    <Route path="/contract/:token" element={<SemnareContract />} />
                     <Route path="/programare-confirmata" element={<ProgramareConfirmata />} />
                     <Route path="/mulțumire" element={<Navigate to="/multumire" replace />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
