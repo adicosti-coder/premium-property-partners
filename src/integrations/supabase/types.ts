@@ -107,6 +107,66 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_email_failures: {
+        Row: {
+          acknowledged_at: string | null
+          contract_id: string | null
+          created_at: string
+          error_message: string | null
+          html_body: string | null
+          http_status: number | null
+          id: string
+          lead_id: string | null
+          recipient: string
+          sender: string | null
+          source: string
+          subject: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          html_body?: string | null
+          http_status?: number | null
+          id?: string
+          lead_id?: string | null
+          recipient: string
+          sender?: string | null
+          source?: string
+          subject: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          html_body?: string | null
+          http_status?: number | null
+          id?: string
+          lead_id?: string | null
+          recipient?: string
+          sender?: string | null
+          source?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_email_failures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "owner_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_email_failures_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_mfa_sessions: {
         Row: {
           expires_at: string
@@ -3369,6 +3429,104 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_contracts: {
+        Row: {
+          contract_body: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          lead_id: string | null
+          management_fee_percent: number
+          onboarding_fee_cents: number
+          otp_attempts: number
+          otp_code_hash: string | null
+          otp_expires_at: string | null
+          owner_address: string | null
+          owner_email: string | null
+          owner_name: string
+          owner_phone: string | null
+          owner_tax_id: string | null
+          paid_at: string | null
+          payment_amount_cents: number | null
+          property_address: string | null
+          signature_ip: string | null
+          signature_name: string | null
+          signature_user_agent: string | null
+          signed_at: string | null
+          status: string
+          stripe_session_id: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          contract_body?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          lead_id?: string | null
+          management_fee_percent?: number
+          onboarding_fee_cents?: number
+          otp_attempts?: number
+          otp_code_hash?: string | null
+          otp_expires_at?: string | null
+          owner_address?: string | null
+          owner_email?: string | null
+          owner_name: string
+          owner_phone?: string | null
+          owner_tax_id?: string | null
+          paid_at?: string | null
+          payment_amount_cents?: number | null
+          property_address?: string | null
+          signature_ip?: string | null
+          signature_name?: string | null
+          signature_user_agent?: string | null
+          signed_at?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          contract_body?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          lead_id?: string | null
+          management_fee_percent?: number
+          onboarding_fee_cents?: number
+          otp_attempts?: number
+          otp_code_hash?: string | null
+          otp_expires_at?: string | null
+          owner_address?: string | null
+          owner_email?: string | null
+          owner_name?: string
+          owner_phone?: string | null
+          owner_tax_id?: string | null
+          paid_at?: string | null
+          payment_amount_cents?: number | null
+          property_address?: string | null
+          signature_ip?: string | null
+          signature_name?: string | null
+          signature_user_agent?: string | null
+          signed_at?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_contracts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
