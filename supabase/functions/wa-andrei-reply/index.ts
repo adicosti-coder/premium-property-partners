@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
 
   // 2. Conversation + history
   const { data: conv } = await supabase.from("wa_conversations")
-    .select("id, phone_normalized, status, prospect_id")
+    .select("id, phone_normalized, status, prospect_id, last_outbound_at, last_inbound_at")
     .eq("id", conversationId).maybeSingle();
   if (!conv) {
     return new Response(JSON.stringify({ error: "Conversation not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -80,6 +80,21 @@ Deno.serve(async (req) => {
   if (conv.status === "awaiting_human" || conv.status === "closed" || conv.status === "escalated_to_call") {
     console.log(`[wa-andrei-reply] status=${conv.status}, not auto-replying`);
     return new Response(JSON.stringify({ ok: true, skipped: `status_${conv.status}` }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // 2b. Rate limit per conversație: max 1 răspuns AI / REPLY_COOLDOWN_MS.
+  // Protejează atât de burst-uri (proprietar care trimite 5 mesaje rapid) cât
+  // și de invocări duplicate ale webhook-ului Meta (retry la > 20s).
+  const REPLY_COOLDOWN_MS = 5_000;
+  if (conv.last_outbound_at) {
+    const sinceLastReply = Date.now() - new Date(conv.last_outbound_at as string).getTime();
+    if (sinceLastReply >= 0 && sinceLastReply < REPLY_COOLDOWN_MS) {
+      console.log(`[wa-andrei-reply] rate limited (${sinceLastReply}ms since last outbound)`);
+      return new Response(
+        JSON.stringify({ ok: true, skipped: "rate_limited", retry_in_ms: REPLY_COOLDOWN_MS - sinceLastReply }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
   }
 
   const { data: history } = await supabase.from("wa_messages")
