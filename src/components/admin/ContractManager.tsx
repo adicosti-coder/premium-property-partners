@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
-import { AdminPageShell } from "./AdminPageShell";
+import { AdminPageShell } from "./shared/AdminPageShell";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +40,7 @@ interface EmailFailureRow {
   subject: string;
   error_message: string | null;
   source: string | null;
-  resolved_at: string | null;
+  acknowledged_at: string | null;
 }
 
 const CONTRACT_COLUMNS =
@@ -90,8 +90,8 @@ export default function ContractManager() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("admin_email_failures")
-        .select("id, created_at, recipient, subject, error_message, source, resolved_at")
-        .is("resolved_at", null)
+        .select("id, created_at, recipient, subject, error_message, source, acknowledged_at")
+        .is("acknowledged_at", null)
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -130,7 +130,7 @@ export default function ContractManager() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("admin_email_failures")
-        .update({ resolved_at: new Date().toISOString() })
+        .update({ acknowledged_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
     },
