@@ -156,12 +156,9 @@ export default function ContractManager() {
 
   return (
     <AdminPageShell
+      icon={FileSignature}
       title="Contracte & Plăți"
       description="Generează contracte de administrare pre-completate, urmărește semnăturile digitale și plata taxei de onboarding."
-      isLoading={contracts.isLoading}
-      error={contracts.error as Error | null}
-      isEmpty={!contracts.isLoading && (contracts.data?.length ?? 0) === 0}
-      emptyMessage="Niciun contract generat încă. Creează primul contract dintr-un lead."
       actions={
         <div className="flex gap-2">
           <Button
