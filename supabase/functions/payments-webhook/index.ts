@@ -136,6 +136,8 @@ async function markContractPaid(session: any, env: StripeEnv) {
       <p>Proprietate: ${(contract as any).property_address ?? "—"}</p>
       <p>Sumă încasată: <strong>${amount} ${currency}</strong> (${env})</p>
       <p>Cod acces portal proprietar: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">${portalCode}</code></p>
+      <p>Factură: <strong>${invoiceNumber}</strong></p>
+      ${pdfLink ? `<p><a href="${pdfLink}">Descarcă contractul semnat (PDF)</a></p>` : "<p>PDF contract indisponibil — regenerează din /admin.</p>"}
     </div>`,
     leadId,
     contractId,
