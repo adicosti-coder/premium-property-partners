@@ -232,6 +232,29 @@ Deno.serve(async (req) => {
 
   try {
     const event = await verifyWebhook(req, env);
+    const eventId = String((event as unknown as { id?: string }).id ?? "");
+
+    // ── Idempotency: claim the Stripe event id before doing any work. Stripe
+    // retries for up to 3 days, so a duplicate delivery must not re-issue an
+    // invoice, a receipt email or a refund entry. The primary key on
+    // stripe_webhook_events makes the claim atomic across parallel deliveries.
+    if (eventId) {
+      const { error: claimError } = await getSupabase()
+        .from("stripe_webhook_events")
+        .insert({ event_id: eventId, event_type: event.type, environment: env });
+      if (claimError) {
+        if (claimError.code === "23505") {
+          console.log("payments-webhook: duplicate event ignored", eventId, event.type);
+          return new Response(JSON.stringify({ received: true, duplicate: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        // Ledger unavailable → fail open; markContractPaid stays paid_at-guarded.
+        console.error("payments-webhook: idempotency claim failed (failing open):", claimError.message);
+      }
+    }
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
@@ -251,6 +274,14 @@ Deno.serve(async (req) => {
       default:
         console.log("payments-webhook: unhandled event", event.type);
     }
+
+    if (eventId) {
+      await getSupabase()
+        .from("stripe_webhook_events")
+        .update({ processed_at: new Date().toISOString() })
+        .eq("event_id", eventId);
+    }
+
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
