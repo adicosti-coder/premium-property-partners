@@ -7,12 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, FilePlus2, Loader2, RefreshCw, AlertTriangle, FileSignature } from "lucide-react";
+
+interface LineItem {
+  price_id: string;
+  label: string;
+  amount_cents: number;
+}
 
 interface ContractRow {
   id: string;
