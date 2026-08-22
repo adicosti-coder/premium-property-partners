@@ -32,7 +32,10 @@ interface ContractRow {
   property_address: string | null;
   management_fee_percent: number;
   onboarding_fee_cents: number;
+  photo_session_included: boolean;
+  photo_session_fee_cents: number;
   currency: string;
+  line_items: LineItem[] | null;
   status: string;
   signed_at: string | null;
   signature_name: string | null;
