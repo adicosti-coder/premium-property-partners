@@ -116,8 +116,12 @@ export type Database = {
           html_body: string | null
           http_status: number | null
           id: string
+          last_retry_at: string | null
+          last_retry_error: string | null
           lead_id: string | null
           recipient: string
+          resent_at: string | null
+          retry_count: number
           sender: string | null
           source: string
           subject: string
@@ -130,8 +134,12 @@ export type Database = {
           html_body?: string | null
           http_status?: number | null
           id?: string
+          last_retry_at?: string | null
+          last_retry_error?: string | null
           lead_id?: string | null
           recipient: string
+          resent_at?: string | null
+          retry_count?: number
           sender?: string | null
           source?: string
           subject: string
@@ -144,8 +152,12 @@ export type Database = {
           html_body?: string | null
           http_status?: number | null
           id?: string
+          last_retry_at?: string | null
+          last_retry_error?: string | null
           lead_id?: string | null
           recipient?: string
+          resent_at?: string | null
+          retry_count?: number
           sender?: string | null
           source?: string
           subject?: string
@@ -7533,6 +7545,30 @@ export type Database = {
           updated_at?: string
           weekly_report_enabled?: boolean | null
           weekly_report_recipients?: string[] | null
+        }
+        Relationships: []
+      }
+      stripe_webhook_events: {
+        Row: {
+          environment: string
+          event_id: string
+          event_type: string
+          processed_at: string | null
+          received_at: string
+        }
+        Insert: {
+          environment?: string
+          event_id: string
+          event_type: string
+          processed_at?: string | null
+          received_at?: string
+        }
+        Update: {
+          environment?: string
+          event_id?: string
+          event_type?: string
+          processed_at?: string | null
+          received_at?: string
         }
         Relationships: []
       }
