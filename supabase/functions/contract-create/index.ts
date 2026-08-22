@@ -99,10 +99,24 @@ Deno.serve(async (req) => {
     const onboarding_fee_cents =
       Number.isFinite(feeCents) && feeCents >= 0 && feeCents <= 10_000_000 ? Math.round(feeCents) : 50_000;
 
+    const photoSessionCents = Number(body?.photo_session_fee_cents);
+    const photo_session_fee_cents =
+      Number.isFinite(photoSessionCents) && photoSessionCents >= 0 && photoSessionCents <= 10_000_000
+        ? Math.round(photoSessionCents)
+        : 50_000;
+    const photo_session_included = body?.photo_session_included === true || body?.photo_session_included === "true";
+
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const line_items = [
+      { price_id: "onboarding_fee_standard", label: "Taxă onboarding administrare RealTrust", amount_cents: onboarding_fee_cents },
+      ...(photo_session_included
+        ? [{ price_id: "photo_session_standard", label: "Ședință foto profesională", amount_cents: photo_session_fee_cents }]
+        : []),
+    ];
 
     const payload = {
       token: randomToken(),
@@ -114,8 +128,11 @@ Deno.serve(async (req) => {
       property_address: clean(body?.property_address),
       management_fee_percent,
       onboarding_fee_cents,
+      photo_session_included,
+      photo_session_fee_cents,
       currency: "ron",
       status: "draft",
+      line_items,
       created_by: auth.userId ?? null,
     };
 
@@ -126,6 +143,8 @@ Deno.serve(async (req) => {
       property_address: payload.property_address,
       management_fee_percent,
       onboarding_fee_cents,
+      photo_session_included,
+      photo_session_fee_cents,
       currency: payload.currency,
     });
 
