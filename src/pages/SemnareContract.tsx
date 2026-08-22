@@ -15,6 +15,12 @@ import { ContractEmbeddedCheckout } from "@/components/ContractEmbeddedCheckout"
 import { isPaymentsConfigured } from "@/lib/stripe";
 import { CheckCircle2, FileSignature, Loader2, ShieldCheck } from "lucide-react";
 
+interface LineItem {
+  price_id: string;
+  label: string;
+  amount_cents: number;
+}
+
 interface PublicContract {
   id: string;
   token: string;
@@ -25,7 +31,10 @@ interface PublicContract {
   property_address: string | null;
   management_fee_percent: number;
   onboarding_fee_cents: number;
+  photo_session_included: boolean;
+  photo_session_fee_cents: number;
   currency: string;
+  line_items: LineItem[] | null;
   contract_body: string | null;
   status: string;
   signed_at: string | null;
