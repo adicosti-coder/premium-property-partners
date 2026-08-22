@@ -83,6 +83,8 @@ export default function ContractManager() {
     property_address: "",
     management_fee_percent: "20",
     onboarding_fee_lei: "500",
+    photo_session_fee_lei: "500",
+    photo_session_included: true,
   });
 
   const contracts = useQuery({
