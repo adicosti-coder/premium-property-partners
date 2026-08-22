@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, FilePlus2, Loader2, RefreshCw, AlertTriangle, FileSignature } from "lucide-react";
+import { Copy, FilePlus2, Loader2, RefreshCw, AlertTriangle, FileSignature, FileDown } from "lucide-react";
+import { openContractPdf } from "@/lib/contractPdf";
 
 interface LineItem {
   price_id: string;
