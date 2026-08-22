@@ -10,6 +10,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
+import { generateAndStoreContractPdf } from "../_shared/contractPdf.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
