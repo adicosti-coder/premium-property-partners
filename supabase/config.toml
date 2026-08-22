@@ -14,3 +14,18 @@ verify_jwt = false
 
 [functions.send-call-reminders]
 verify_jwt = false
+
+[functions.contract-create]
+verify_jwt = false
+
+[functions.contract-public]
+verify_jwt = false
+
+[functions.contract-sign]
+verify_jwt = false
+
+[functions.create-contract-checkout]
+verify_jwt = false
+
+[functions.payments-webhook]
+verify_jwt = false
