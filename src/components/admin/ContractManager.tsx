@@ -331,7 +331,7 @@ export default function ContractManager() {
                     <p className="text-xs text-muted-foreground">{row.owner_email ?? "—"}</p>
                   </TableCell>
                   <TableCell className="max-w-[220px] truncate">{row.property_address ?? "—"}</TableCell>
-                  <TableCell>{money(row.onboarding_fee_cents, row.currency)}</TableCell>
+                  <TableCell>{money(totalCents(row), row.currency)}</TableCell>
                   <TableCell><StatusBadge row={row} /></TableCell>
                   <TableCell className="text-xs">{dt(row.signed_at)}</TableCell>
                   <TableCell className="text-xs">{dt(row.paid_at)}</TableCell>
