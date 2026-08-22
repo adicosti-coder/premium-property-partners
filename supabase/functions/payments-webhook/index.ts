@@ -97,6 +97,35 @@ async function markContractPaid(session: any, env: StripeEnv) {
   const amount = ((amountTotal ?? 0) / 100).toFixed(2);
   const currency = String(session.currency ?? (contract as any).currency ?? "").toUpperCase();
 
+  // ── Invoice / receipt data ────────────────────────────────────────────────
+  const invoiceNumber = `RT-${new Date().getFullYear()}-${String(contractId).slice(0, 8).toUpperCase()}`;
+  const lineItems = (((contract as any).line_items ?? []) as { label: string; amount_cents: number }[]);
+  const itemRows = (lineItems.length
+    ? lineItems
+    : [{ label: "Taxă onboarding", amount_cents: (contract as any).onboarding_fee_cents ?? amountTotal ?? 0 }]
+  )
+    .map(
+      (item) =>
+        `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${item.label}</td>
+         <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right">${((item.amount_cents ?? 0) / 100).toFixed(2)} ${currency}</td></tr>`,
+    )
+    .join("");
+
+  // Signed link (7 days) to the signed-contract PDF, for the team + owner.
+  let pdfLink: string | null = null;
+  const pdfPath = (contract as any).contract_pdf_path as string | null;
+  if (pdfPath) {
+    const { data: signedUrl } = await supabase.storage
+      .from("owner-contracts")
+      .createSignedUrl(pdfPath, 7 * 24 * 3600);
+    pdfLink = signedUrl?.signedUrl ?? null;
+  }
+
+  await supabase
+    .from("owner_contracts")
+    .update({ invoice_number: invoiceNumber, invoice_sent_at: new Date().toISOString() })
+    .eq("id", contractId);
+
   // Team alert
   await sendTeamEmail({
     to: Deno.env.get("ADMIN_ALERT_EMAIL") || "info@realtrust.ro",
