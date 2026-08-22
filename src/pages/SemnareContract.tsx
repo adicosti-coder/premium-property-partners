@@ -186,7 +186,52 @@ export default function SemnareContract() {
             <Field label="Adresă proprietar" value={contract.owner_address} />
             <Field label="Adresă proprietate" value={contract.property_address} />
             <Field label="Comision administrare" value={`${contract.management_fee_percent}%`} />
-            <Field label="Taxă onboarding" value={formatFee(contract.onboarding_fee_cents, contract.currency)} />
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Sumar de plată</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y">
+              {(contract.line_items ?? []).map((item) => (
+                <li key={item.price_id} className="flex items-center justify-between py-3">
+                  <span className="text-sm">{item.label}</span>
+                  <span className="font-medium">{formatFee(item.amount_cents, contract.currency)}</span>
+                </li>
+              ))}
+              {(!contract.line_items || contract.line_items.length === 0) && (
+                <li className="flex items-center justify-between py-3">
+                  <span className="text-sm">Taxă onboarding administrare RealTrust</span>
+                  <span className="font-medium">{formatFee(contract.onboarding_fee_cents, contract.currency)}</span>
+                </li>
+              )}
+            </ul>
+            <div className="mt-3 flex items-center justify-between border-t pt-3">
+              <span className="font-semibold">Total</span>
+              <span className="text-lg font-semibold">
+                {formatFee(
+                  (contract.line_items ?? []).reduce((sum, item) => sum + (item.amount_cents ?? 0), 0) ||
+                    contract.onboarding_fee_cents,
+                  contract.currency,
+                )}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Datele din contract</CardTitle>
+            <CardDescription>Pre-completate pe baza discuției cu echipa. Anunță-ne dacă ceva nu e corect.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <Field label="Proprietar" value={contract.owner_name} />
+            <Field label="CNP / CUI" value={contract.owner_tax_id} />
+            <Field label="Adresă proprietar" value={contract.owner_address} />
+            <Field label="Adresă proprietate" value={contract.property_address} />
+            <Field label="Comision administrare" value={`${contract.management_fee_percent}%`} />
           </CardContent>
         </Card>
 
