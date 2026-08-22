@@ -380,6 +380,9 @@ const AdminLeadDashboard = () => {
 
       <ScheduledCallsPanel />
 
+      <EmailFailuresPanel />
+
+
       <Card>
         <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-end sm:justify-between">
           <div>
