@@ -97,6 +97,35 @@ async function markContractPaid(session: any, env: StripeEnv) {
   const amount = ((amountTotal ?? 0) / 100).toFixed(2);
   const currency = String(session.currency ?? (contract as any).currency ?? "").toUpperCase();
 
+  // ── Invoice / receipt data ────────────────────────────────────────────────
+  const invoiceNumber = `RT-${new Date().getFullYear()}-${String(contractId).slice(0, 8).toUpperCase()}`;
+  const lineItems = (((contract as any).line_items ?? []) as { label: string; amount_cents: number }[]);
+  const itemRows = (lineItems.length
+    ? lineItems
+    : [{ label: "Taxă onboarding", amount_cents: (contract as any).onboarding_fee_cents ?? amountTotal ?? 0 }]
+  )
+    .map(
+      (item) =>
+        `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${item.label}</td>
+         <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right">${((item.amount_cents ?? 0) / 100).toFixed(2)} ${currency}</td></tr>`,
+    )
+    .join("");
+
+  // Signed link (7 days) to the signed-contract PDF, for the team + owner.
+  let pdfLink: string | null = null;
+  const pdfPath = (contract as any).contract_pdf_path as string | null;
+  if (pdfPath) {
+    const { data: signedUrl } = await supabase.storage
+      .from("owner-contracts")
+      .createSignedUrl(pdfPath, 7 * 24 * 3600);
+    pdfLink = signedUrl?.signedUrl ?? null;
+  }
+
+  await supabase
+    .from("owner_contracts")
+    .update({ invoice_number: invoiceNumber, invoice_sent_at: new Date().toISOString() })
+    .eq("id", contractId);
+
   // Team alert
   await sendTeamEmail({
     to: Deno.env.get("ADMIN_ALERT_EMAIL") || "info@realtrust.ro",
@@ -107,6 +136,8 @@ async function markContractPaid(session: any, env: StripeEnv) {
       <p>Proprietate: ${(contract as any).property_address ?? "—"}</p>
       <p>Sumă încasată: <strong>${amount} ${currency}</strong> (${env})</p>
       <p>Cod acces portal proprietar: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">${portalCode}</code></p>
+      <p>Factură: <strong>${invoiceNumber}</strong></p>
+      ${pdfLink ? `<p><a href="${pdfLink}">Descarcă contractul semnat (PDF)</a></p>` : "<p>PDF contract indisponibil — regenerează din /admin.</p>"}
     </div>`,
     leadId,
     contractId,
@@ -118,10 +149,19 @@ async function markContractPaid(session: any, env: StripeEnv) {
   if (ownerEmail) {
     await sendTeamEmail({
       to: ownerEmail,
-      subject: `Confirmare plată — ${amount} ${currency} | RealTrust Timișoara`,
-      html: `<div style="font-family:system-ui,sans-serif;max-width:520px">
+      subject: `Chitanță ${invoiceNumber} — ${amount} ${currency} | RealTrust Timișoara`,
+      html: `<div style="font-family:system-ui,sans-serif;max-width:560px">
         <h2 style="color:#1a365d">Mulțumim, ${(contract as any).owner_name}!</h2>
-        <p>Am primit plata de <strong>${amount} ${currency}</strong> pentru taxa de onboarding.</p>
+        <p>Am primit plata de <strong>${amount} ${currency}</strong>. Mai jos ai chitanța detaliată.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0">
+          <tbody>
+            ${itemRows}
+            <tr><td style="padding:8px 0;font-weight:700">Total plătit</td>
+                <td style="padding:8px 0;text-align:right;font-weight:700">${amount} ${currency}</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:13px;color:#6b7280">Document fiscal: <strong>${invoiceNumber}</strong> · Data: ${new Date().toLocaleDateString("ro-RO")}</p>
+        ${pdfLink ? `<p><a href="${pdfLink}" style="color:#1a365d;font-weight:600">Descarcă contractul semnat (PDF)</a> — link valabil 7 zile.</p>` : ""}
         <p>Proprietatea ta din <strong>${(contract as any).property_address ?? "—"}</strong> intră acum în administrarea RealTrust.</p>
         <p>Codul tău de acces în portalul proprietarului este: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:18px">${portalCode}</code></p>
         <p>Accesează portalul la: <a href="https://realtrust.ro/owner">realtrust.ro/owner</a></p>

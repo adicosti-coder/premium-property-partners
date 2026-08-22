@@ -10,6 +10,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
+import { generateAndStoreContractPdf } from "../_shared/contractPdf.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -119,6 +120,7 @@ Deno.serve(async (req) => {
     }
 
     const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || null;
+    const signedAt = new Date().toISOString();
     await admin
       .from("owner_contracts")
       .update({
@@ -126,11 +128,22 @@ Deno.serve(async (req) => {
         signature_name: signatureName,
         signature_ip: ip,
         signature_user_agent: (req.headers.get("user-agent") || "").slice(0, 300),
-        signed_at: new Date().toISOString(),
+        signed_at: signedAt,
         otp_code_hash: null,
         otp_expires_at: null,
       })
       .eq("id", contract.id);
+
+    // Signed-contract PDF → private bucket. Best-effort: never blocks signing.
+    const pdf = await generateAndStoreContractPdf(
+      {
+        ...(contract as any),
+        signature_name: signatureName,
+        signature_ip: ip,
+        signed_at: signedAt,
+      },
+      admin,
+    );
 
     if (contract.lead_id) {
       await admin.from("leads").update({ crm_status: "contract_semnat" }).eq("id", contract.lead_id);
@@ -140,11 +153,11 @@ Deno.serve(async (req) => {
         status: "success",
         message: `Contract semnat digital de ${signatureName}`,
         actor: "contract-sign",
-        metadata: { contract_id: contract.id },
+        metadata: { contract_id: contract.id, pdf_path: pdf.path ?? null },
       }, admin);
     }
 
-    return json({ ok: true, status: "signed" });
+    return json({ ok: true, status: "signed", pdf_generated: pdf.ok });
   } catch (err) {
     console.error("contract-sign error:", (err as Error)?.message);
     return json({ error: "Eroare internă" }, 500);

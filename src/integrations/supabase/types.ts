@@ -3437,10 +3437,14 @@ export type Database = {
         Row: {
           charge_id: string | null
           contract_body: string | null
+          contract_pdf_generated_at: string | null
+          contract_pdf_path: string | null
           created_at: string
           created_by: string | null
           currency: string
           id: string
+          invoice_number: string | null
+          invoice_sent_at: string | null
           lead_id: string | null
           line_items: Json | null
           management_fee_percent: number
@@ -3476,10 +3480,14 @@ export type Database = {
         Insert: {
           charge_id?: string | null
           contract_body?: string | null
+          contract_pdf_generated_at?: string | null
+          contract_pdf_path?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
           id?: string
+          invoice_number?: string | null
+          invoice_sent_at?: string | null
           lead_id?: string | null
           line_items?: Json | null
           management_fee_percent?: number
@@ -3515,10 +3523,14 @@ export type Database = {
         Update: {
           charge_id?: string | null
           contract_body?: string | null
+          contract_pdf_generated_at?: string | null
+          contract_pdf_path?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
           id?: string
+          invoice_number?: string | null
+          invoice_sent_at?: string | null
           lead_id?: string | null
           line_items?: Json | null
           management_fee_percent?: number
