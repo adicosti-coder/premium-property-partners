@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     const { data, error } = await admin
       .from("owner_contracts")
       .select(
-        "id, token, owner_name, owner_email, owner_tax_id, owner_address, property_address, management_fee_percent, onboarding_fee_cents, currency, contract_body, status, signed_at, signature_name, paid_at",
+        "id, token, owner_name, owner_email, owner_tax_id, owner_address, property_address, management_fee_percent, onboarding_fee_cents, photo_session_included, photo_session_fee_cents, currency, line_items, contract_body, status, signed_at, signature_name, paid_at",
       )
       .eq("token", token)
       .maybeSingle();
