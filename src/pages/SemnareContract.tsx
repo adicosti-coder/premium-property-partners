@@ -221,19 +221,6 @@ export default function SemnareContract() {
           </CardContent>
         </Card>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Datele din contract</CardTitle>
-            <CardDescription>Pre-completate pe baza discuției cu echipa. Anunță-ne dacă ceva nu e corect.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <Field label="Proprietar" value={contract.owner_name} />
-            <Field label="CNP / CUI" value={contract.owner_tax_id} />
-            <Field label="Adresă proprietar" value={contract.owner_address} />
-            <Field label="Adresă proprietate" value={contract.property_address} />
-            <Field label="Comision administrare" value={`${contract.management_fee_percent}%`} />
-          </CardContent>
-        </Card>
 
         {contract.contract_body && (
           <Card className="mb-6">
