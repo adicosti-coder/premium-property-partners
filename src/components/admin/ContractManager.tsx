@@ -183,7 +183,7 @@ export default function ContractManager() {
     <AdminPageShell
       icon={FileSignature}
       title="Contracte & Plăți"
-      description="Generează contracte de administrare pre-completate, urmărește semnăturile digitale și plata taxei de onboarding."
+      description="Generează contracte de administrare pre-completate, urmărește semnăturile digitale, ședința foto și plata taxei de onboarding."
       actions={
         <div className="flex gap-2">
           <Button
