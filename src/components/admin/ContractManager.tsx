@@ -247,7 +247,7 @@ export default function ContractManager() {
         <StatCard label="Contracte" value={String(stats.total)} />
         <StatCard label="Semnate" value={String(stats.signed)} />
         <StatCard label="Plătite" value={String(stats.paid)} />
-        <StatCard label="Încasat onboarding" value={money(stats.revenue, "ron")} />
+        <StatCard label="Încasat total" value={money(stats.revenue, "ron")} />
       </div>
 
       {(emailFailures.data?.length ?? 0) > 0 && (
