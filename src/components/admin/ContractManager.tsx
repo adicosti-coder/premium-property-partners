@@ -125,6 +125,8 @@ export default function ContractManager() {
         property_address: form.property_address.trim() || null,
         management_fee_percent: Number(form.management_fee_percent) || 20,
         onboarding_fee_cents: Math.round((Number(form.onboarding_fee_lei) || 0) * 100),
+        photo_session_fee_cents: Math.round((Number(form.photo_session_fee_lei) || 0) * 100),
+        photo_session_included: form.photo_session_included,
       };
       if (payload.owner_name.length < 3) throw new Error("Numele proprietarului este obligatoriu.");
       const { data, error } = await supabase.functions.invoke("contract-create", { body: payload });
@@ -135,7 +137,15 @@ export default function ContractManager() {
     onSuccess: () => {
       toast({ title: "Contract generat", description: "Trimite proprietarului linkul de semnare." });
       setOpen(false);
-      setForm((f) => ({ ...f, lead_id: "", owner_name: "", owner_email: "", owner_tax_id: "", owner_address: "", property_address: "" }));
+      setForm((f) => ({
+        ...f,
+        lead_id: "",
+        owner_name: "",
+        owner_email: "",
+        owner_tax_id: "",
+        owner_address: "",
+        property_address: "",
+      }));
       void qc.invalidateQueries({ queryKey: ["admin", "owner_contracts"] });
     },
     onError: (e: Error) => toast({ title: "Nu am putut genera contractul", description: e.message, variant: "destructive" }),
