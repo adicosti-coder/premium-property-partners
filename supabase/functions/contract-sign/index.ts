@@ -153,11 +153,11 @@ Deno.serve(async (req) => {
         status: "success",
         message: `Contract semnat digital de ${signatureName}`,
         actor: "contract-sign",
-        metadata: { contract_id: contract.id },
+        metadata: { contract_id: contract.id, pdf_path: pdf.path ?? null },
       }, admin);
     }
 
-    return json({ ok: true, status: "signed" });
+    return json({ ok: true, status: "signed", pdf_generated: pdf.ok });
   } catch (err) {
     console.error("contract-sign error:", (err as Error)?.message);
     return json({ error: "Eroare internă" }, 500);
