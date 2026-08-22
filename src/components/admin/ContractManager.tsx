@@ -295,7 +295,7 @@ export default function ContractManager() {
               <TableRow>
                 <TableHead>Proprietar</TableHead>
                 <TableHead>Proprietate</TableHead>
-                <TableHead>Taxă</TableHead>
+                <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Semnat</TableHead>
                 <TableHead>Plătit</TableHead>
