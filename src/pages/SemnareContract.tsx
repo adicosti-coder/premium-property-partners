@@ -318,10 +318,16 @@ export default function SemnareContract() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <ShieldCheck className="h-5 w-5" aria-hidden="true" /> Plata taxei de onboarding
+                <ShieldCheck className="h-5 w-5" aria-hidden="true" /> Plată securizată
               </CardTitle>
               <CardDescription>
-                Contract semnat de {contract.signature_name} · {formatFee(contract.onboarding_fee_cents, contract.currency)} de achitat
+                Contract semnat de {contract.signature_name} · {" "}
+                {formatFee(
+                  (contract.line_items ?? []).reduce((sum, item) => sum + (item.amount_cents ?? 0), 0) ||
+                    contract.onboarding_fee_cents,
+                  contract.currency,
+                )}{" "}
+                de achitat
               </CardDescription>
             </CardHeader>
             <CardContent>
