@@ -54,7 +54,10 @@ interface EmailFailureRow {
 }
 
 const CONTRACT_COLUMNS =
-  "id, token, lead_id, owner_name, owner_email, owner_tax_id, owner_address, property_address, management_fee_percent, onboarding_fee_cents, currency, status, signed_at, signature_name, paid_at, created_at";
+  "id, token, lead_id, owner_name, owner_email, owner_tax_id, owner_address, property_address, management_fee_percent, onboarding_fee_cents, photo_session_included, photo_session_fee_cents, currency, line_items, status, signed_at, signature_name, paid_at, created_at";
+
+const totalCents = (row: ContractRow) =>
+  (row.line_items ?? []).reduce((sum, item) => sum + (item.amount_cents ?? 0), 0) || row.onboarding_fee_cents;
 
 const money = (cents: number, currency: string) =>
   `${(cents / 100).toLocaleString("ro-RO", { minimumFractionDigits: 2 })} ${currency.toUpperCase()}`;
