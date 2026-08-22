@@ -169,7 +169,7 @@ export default function ContractManager() {
       total: rows.length,
       signed: rows.filter((r) => r.status === "signed" || r.paid_at).length,
       paid: rows.filter((r) => r.paid_at).length,
-      revenue: rows.filter((r) => r.paid_at).reduce((s, r) => s + r.onboarding_fee_cents, 0),
+      revenue: rows.filter((r) => r.paid_at).reduce((s, r) => s + totalCents(r), 0),
     };
   }, [contracts.data]);
 
