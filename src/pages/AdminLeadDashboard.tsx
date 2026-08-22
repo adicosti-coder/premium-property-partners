@@ -28,12 +28,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { maskEmail, maskPhone } from "@/utils/security/maskPII";
+import { openContractPdf } from "@/lib/contractPdf";
 import ScheduledCallsPanel from "@/components/admin/ScheduledCallsPanel";
 import {
   AlertTriangle,
   ArrowLeft,
   Eye,
   EyeOff,
+  FileSignature,
   FileText,
   Inbox,
   Loader2,
@@ -83,6 +85,16 @@ interface DashboardLead {
   anonymized_at: string | null;
   retention_expires_at: string | null;
   simulation_data: Record<string, unknown> | null;
+}
+
+interface LeadContract {
+  id: string;
+  lead_id: string | null;
+  status: string | null;
+  signed_at: string | null;
+  paid_at: string | null;
+  contract_pdf_path: string | null;
+  invoice_number: string | null;
 }
 
 const digits = (v: string | null | undefined) => (v || "").replace(/[^\d]/g, "");
@@ -147,6 +159,37 @@ const AdminLeadDashboard = () => {
       return (data ?? []) as unknown as DashboardLead[];
     },
   });
+
+  /** Signed contracts keyed by lead, so the table can link the contract PDF. */
+  const contractsQuery = useQuery({
+    queryKey: ["admin-lead-dashboard-contracts"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("owner_contracts")
+        .select("id, lead_id, status, signed_at, paid_at, contract_pdf_path, invoice_number")
+        .not("lead_id", "is", null)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const byLead = new Map<string, LeadContract>();
+      for (const row of (data ?? []) as unknown as LeadContract[]) {
+        if (row.lead_id && !byLead.has(row.lead_id)) byLead.set(row.lead_id, row);
+      }
+      return byLead;
+    },
+  });
+
+  const openContract = async (contractId: string, ownerLabel: string) => {
+    try {
+      await openContractPdf(contractId);
+    } catch (e) {
+      toast({
+        title: `Nu am putut deschide contractul (${ownerLabel})`,
+        description: (e as Error).message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -404,12 +447,14 @@ const AdminLeadDashboard = () => {
                     <TableHead>CRM</TableHead>
                     <TableHead>UTM</TableHead>
                     <TableHead>Raport</TableHead>
+                    <TableHead>Contract</TableHead>
                     <TableHead className="text-right">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {rows.map((lead) => {
                     const utm = utmOf(lead);
+                    const contract = contractsQuery.data?.get(lead.id) ?? null;
                     const show = !!revealed[lead.id];
                     const phone = digits(lead.whatsapp_number);
                     const waLink = phone.length >= 9 ? `https://wa.me/${phone}` : null;
@@ -535,6 +580,32 @@ const AdminLeadDashboard = () => {
                             <p className="mt-1 text-muted-foreground">
                               {dateFmt(lead.report_delivered_at)}
                             </p>
+                          )}
+                        </TableCell>
+
+                        <TableCell className="align-top text-xs">
+                          {contract?.signed_at ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => void openContract(contract.id, lead.name || "lead")}
+                                aria-label={`Deschide contractul semnat în PDF pentru ${lead.name}`}
+                              >
+                                <FileSignature className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                                Contract
+                              </Button>
+                              <p className="mt-1 text-muted-foreground">
+                                {contract.paid_at ? `Plătit ${dateFmt(contract.paid_at)}` : "Semnat, neplătit"}
+                              </p>
+                              {contract.invoice_number && (
+                                <p className="text-muted-foreground">{contract.invoice_number}</p>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              {contract ? "Draft trimis" : "—"}
+                            </span>
                           )}
                         </TableCell>
 
