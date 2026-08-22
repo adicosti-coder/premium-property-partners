@@ -214,6 +214,23 @@ export default function ContractManager() {
                 <FormField id="property_address" label="Adresă proprietate" value={form.property_address} onChange={(v) => setForm({ ...form, property_address: v })} />
                 <FormField id="fee" label="Comision (%)" value={form.management_fee_percent} onChange={(v) => setForm({ ...form, management_fee_percent: v })} />
                 <FormField id="onboarding" label="Taxă onboarding (RON)" value={form.onboarding_fee_lei} onChange={(v) => setForm({ ...form, onboarding_fee_lei: v })} />
+                <div className="col-span-2 flex items-start gap-3 rounded-md border p-3">
+                  <Checkbox
+                    id="photo-session"
+                    checked={form.photo_session_included}
+                    onCheckedChange={(v) => setForm({ ...form, photo_session_included: v === true })}
+                    aria-label="Include ședința foto în contract"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="photo-session" className="text-sm font-medium">
+                      Include ședința foto profesională în suma de plată
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Dacă este bifată, proprietarul plătește onboarding + ședința foto la semnare.</p>
+                  </div>
+                </div>
+                {form.photo_session_included && (
+                  <FormField id="photo-fee" label="Ședință foto (RON)" value={form.photo_session_fee_lei} onChange={(v) => setForm({ ...form, photo_session_fee_lei: v })} />
+                )}
               </div>
               <DialogFooter>
                 <Button onClick={() => createContract.mutate()} disabled={createContract.isPending}>
