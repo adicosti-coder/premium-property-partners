@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { maskEmail, maskPhone } from "@/utils/security/maskPII";
 import { openContractPdf } from "@/lib/contractPdf";
 import ScheduledCallsPanel from "@/components/admin/ScheduledCallsPanel";
+import EmailFailuresPanel from "@/components/admin/EmailFailuresPanel";
 import {
   AlertTriangle,
   ArrowLeft,
