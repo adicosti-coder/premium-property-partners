@@ -41,6 +41,7 @@ interface ContractRow {
   signed_at: string | null;
   signature_name: string | null;
   paid_at: string | null;
+  contract_pdf_path: string | null;
   created_at: string;
 }
 
@@ -55,7 +56,7 @@ interface EmailFailureRow {
 }
 
 const CONTRACT_COLUMNS =
-  "id, token, lead_id, owner_name, owner_email, owner_tax_id, owner_address, property_address, management_fee_percent, onboarding_fee_cents, photo_session_included, photo_session_fee_cents, currency, line_items, status, signed_at, signature_name, paid_at, created_at";
+  "id, token, lead_id, owner_name, owner_email, owner_tax_id, owner_address, property_address, management_fee_percent, onboarding_fee_cents, photo_session_included, photo_session_fee_cents, currency, line_items, status, signed_at, signature_name, paid_at, contract_pdf_path, created_at";
 
 const totalCents = (row: ContractRow) =>
   (row.line_items ?? []).reduce((sum, item) => sum + (item.amount_cents ?? 0), 0) || row.onboarding_fee_cents;
@@ -173,6 +174,14 @@ export default function ContractManager() {
       revenue: rows.filter((r) => r.paid_at).reduce((s, r) => s + totalCents(r), 0),
     };
   }, [contracts.data]);
+
+  const openPdf = async (row: ContractRow) => {
+    try {
+      await openContractPdf(row.id, false);
+    } catch (e) {
+      toast({ title: "Nu am putut deschide PDF-ul", description: (e as Error).message, variant: "destructive" });
+    }
+  };
 
   const copyLink = async (token: string) => {
     const url = `${window.location.origin}/contract/${token}`;
@@ -300,27 +309,28 @@ export default function ContractManager() {
                 <TableHead>Status</TableHead>
                 <TableHead>Semnat</TableHead>
                 <TableHead>Plătit</TableHead>
+                <TableHead>PDF semnat</TableHead>
                 <TableHead className="text-right">Link</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {contracts.isLoading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                     <Loader2 className="mr-2 inline h-4 w-4 animate-spin" aria-hidden="true" /> Se încarcă contractele…
                   </TableCell>
                 </TableRow>
               )}
               {contracts.error && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-destructive">
+                  <TableCell colSpan={8} className="py-10 text-center text-destructive">
                     Nu am putut încărca contractele: {(contracts.error as Error).message}
                   </TableCell>
                 </TableRow>
               )}
               {!contracts.isLoading && !contracts.error && (contracts.data?.length ?? 0) === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                     Niciun contract generat încă. Creează primul contract dintr-un lead.
                   </TableCell>
                 </TableRow>
@@ -336,6 +346,21 @@ export default function ContractManager() {
                   <TableCell><StatusBadge row={row} /></TableCell>
                   <TableCell className="text-xs">{dt(row.signed_at)}</TableCell>
                   <TableCell className="text-xs">{dt(row.paid_at)}</TableCell>
+                  <TableCell>
+                    {row.signed_at ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void openPdf(row)}
+                        aria-label={`Descarcă contractul semnat în PDF pentru ${row.owner_name}`}
+                      >
+                        <FileDown className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                        {row.contract_pdf_path ? "Descarcă" : "Generează"}
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       size="sm"
