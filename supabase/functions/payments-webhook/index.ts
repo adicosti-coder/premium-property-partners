@@ -149,10 +149,19 @@ async function markContractPaid(session: any, env: StripeEnv) {
   if (ownerEmail) {
     await sendTeamEmail({
       to: ownerEmail,
-      subject: `Confirmare plată — ${amount} ${currency} | RealTrust Timișoara`,
-      html: `<div style="font-family:system-ui,sans-serif;max-width:520px">
+      subject: `Chitanță ${invoiceNumber} — ${amount} ${currency} | RealTrust Timișoara`,
+      html: `<div style="font-family:system-ui,sans-serif;max-width:560px">
         <h2 style="color:#1a365d">Mulțumim, ${(contract as any).owner_name}!</h2>
-        <p>Am primit plata de <strong>${amount} ${currency}</strong> pentru taxa de onboarding.</p>
+        <p>Am primit plata de <strong>${amount} ${currency}</strong>. Mai jos ai chitanța detaliată.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0">
+          <tbody>
+            ${itemRows}
+            <tr><td style="padding:8px 0;font-weight:700">Total plătit</td>
+                <td style="padding:8px 0;text-align:right;font-weight:700">${amount} ${currency}</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:13px;color:#6b7280">Document fiscal: <strong>${invoiceNumber}</strong> · Data: ${new Date().toLocaleDateString("ro-RO")}</p>
+        ${pdfLink ? `<p><a href="${pdfLink}" style="color:#1a365d;font-weight:600">Descarcă contractul semnat (PDF)</a> — link valabil 7 zile.</p>` : ""}
         <p>Proprietatea ta din <strong>${(contract as any).property_address ?? "—"}</strong> intră acum în administrarea RealTrust.</p>
         <p>Codul tău de acces în portalul proprietarului este: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:18px">${portalCode}</code></p>
         <p>Accesează portalul la: <a href="https://realtrust.ro/owner">realtrust.ro/owner</a></p>
