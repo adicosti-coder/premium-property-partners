@@ -31,9 +31,17 @@ function buildContractBody(input: {
   property_address: string | null;
   management_fee_percent: number;
   onboarding_fee_cents: number;
+  photo_session_included: boolean;
+  photo_session_fee_cents: number;
   currency: string;
 }) {
-  const fee = (input.onboarding_fee_cents / 100).toLocaleString("ro-RO", { minimumFractionDigits: 2 });
+  const onboardingFee = (input.onboarding_fee_cents / 100).toLocaleString("ro-RO", { minimumFractionDigits: 2 });
+  const photoFee = (input.photo_session_fee_cents / 100).toLocaleString("ro-RO", { minimumFractionDigits: 2 });
+  const total = ((input.onboarding_fee_cents + (input.photo_session_included ? input.photo_session_fee_cents : 0)) / 100)
+    .toLocaleString("ro-RO", { minimumFractionDigits: 2 });
+  const photoClause = input.photo_session_included
+    ? `\n\n4.2. ȘEDINȚĂ FOTO PROFESIONALĂ\nProprietarul achită separat suma de ${photoFee} ${input.currency.toUpperCase()} pentru ședința foto profesională a proprietății (fotografiere, selecție și editare imagini), plătibilă odată cu taxa de onboarding.`
+    : "\n\n4.2. ȘEDINȚĂ FOTO PROFESIONALĂ\nȘedința foto profesională nu este inclusă în taxa de onboarding și se poate achita separat la solicitare, la prețul de ${photoFee} ${input.currency.toUpperCase()}.";
   return `CONTRACT DE ADMINISTRARE ÎN REGIM HOTELIER
 RealTrust Timișoara
 
@@ -48,7 +56,9 @@ Administrarea completă în regim hotelier a proprietății situate în ${input.
 Prestatorul reține un comision de ${input.management_fee_percent}% din încasările brute realizate din exploatarea proprietății. Restul se virează Proprietarului lunar, împreună cu raportul detaliat.
 
 4. TAXĂ DE ONBOARDING
-Proprietarul achită o taxă unică de setup de ${fee} ${input.currency.toUpperCase()}, care acoperă ședința foto profesională, crearea și optimizarea anunțurilor, configurarea sistemului de acces și integrarea în platforma de management.
+Proprietarul achită o taxă unică de setup de ${onboardingFee} ${input.currency.toUpperCase()}, care acoperă crearea și optimizarea anunțurilor pe platformele de rezervări, configurarea sistemului de acces și integrarea proprietății în platforma de management. Ședința foto profesională este facturată separat.${photoClause}
+
+Total de plată la semnare: ${total} ${input.currency.toUpperCase()}.
 
 5. DURATĂ ȘI ÎNCETARE
 Contractul se încheie pe o perioadă de 12 luni, cu reînnoire automată. Proprietarul beneficiază de o perioadă de probă de 90 de zile, în care poate denunța unilateral contractul fără penalități, cu o notificare de 30 de zile.
@@ -89,10 +99,24 @@ Deno.serve(async (req) => {
     const onboarding_fee_cents =
       Number.isFinite(feeCents) && feeCents >= 0 && feeCents <= 10_000_000 ? Math.round(feeCents) : 50_000;
 
+    const photoSessionCents = Number(body?.photo_session_fee_cents);
+    const photo_session_fee_cents =
+      Number.isFinite(photoSessionCents) && photoSessionCents >= 0 && photoSessionCents <= 10_000_000
+        ? Math.round(photoSessionCents)
+        : 50_000;
+    const photo_session_included = body?.photo_session_included === true || body?.photo_session_included === "true";
+
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const line_items = [
+      { price_id: "onboarding_fee_standard", label: "Taxă onboarding administrare RealTrust", amount_cents: onboarding_fee_cents },
+      ...(photo_session_included
+        ? [{ price_id: "photo_session_standard", label: "Ședință foto profesională", amount_cents: photo_session_fee_cents }]
+        : []),
+    ];
 
     const payload = {
       token: randomToken(),
@@ -104,8 +128,11 @@ Deno.serve(async (req) => {
       property_address: clean(body?.property_address),
       management_fee_percent,
       onboarding_fee_cents,
+      photo_session_included,
+      photo_session_fee_cents,
       currency: "ron",
       status: "draft",
+      line_items,
       created_by: auth.userId ?? null,
     };
 
@@ -116,6 +143,8 @@ Deno.serve(async (req) => {
       property_address: payload.property_address,
       management_fee_percent,
       onboarding_fee_cents,
+      photo_session_included,
+      photo_session_fee_cents,
       currency: payload.currency,
     });
 

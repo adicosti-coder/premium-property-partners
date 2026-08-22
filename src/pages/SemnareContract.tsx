@@ -15,6 +15,12 @@ import { ContractEmbeddedCheckout } from "@/components/ContractEmbeddedCheckout"
 import { isPaymentsConfigured } from "@/lib/stripe";
 import { CheckCircle2, FileSignature, Loader2, ShieldCheck } from "lucide-react";
 
+interface LineItem {
+  price_id: string;
+  label: string;
+  amount_cents: number;
+}
+
 interface PublicContract {
   id: string;
   token: string;
@@ -25,7 +31,10 @@ interface PublicContract {
   property_address: string | null;
   management_fee_percent: number;
   onboarding_fee_cents: number;
+  photo_session_included: boolean;
+  photo_session_fee_cents: number;
   currency: string;
+  line_items: LineItem[] | null;
   contract_body: string | null;
   status: string;
   signed_at: string | null;
@@ -177,9 +186,41 @@ export default function SemnareContract() {
             <Field label="Adresă proprietar" value={contract.owner_address} />
             <Field label="Adresă proprietate" value={contract.property_address} />
             <Field label="Comision administrare" value={`${contract.management_fee_percent}%`} />
-            <Field label="Taxă onboarding" value={formatFee(contract.onboarding_fee_cents, contract.currency)} />
           </CardContent>
         </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Sumar de plată</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y">
+              {(contract.line_items ?? []).map((item) => (
+                <li key={item.price_id} className="flex items-center justify-between py-3">
+                  <span className="text-sm">{item.label}</span>
+                  <span className="font-medium">{formatFee(item.amount_cents, contract.currency)}</span>
+                </li>
+              ))}
+              {(!contract.line_items || contract.line_items.length === 0) && (
+                <li className="flex items-center justify-between py-3">
+                  <span className="text-sm">Taxă onboarding administrare RealTrust</span>
+                  <span className="font-medium">{formatFee(contract.onboarding_fee_cents, contract.currency)}</span>
+                </li>
+              )}
+            </ul>
+            <div className="mt-3 flex items-center justify-between border-t pt-3">
+              <span className="font-semibold">Total</span>
+              <span className="text-lg font-semibold">
+                {formatFee(
+                  (contract.line_items ?? []).reduce((sum, item) => sum + (item.amount_cents ?? 0), 0) ||
+                    contract.onboarding_fee_cents,
+                  contract.currency,
+                )}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
 
         {contract.contract_body && (
           <Card className="mb-6">
@@ -277,10 +318,16 @@ export default function SemnareContract() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <ShieldCheck className="h-5 w-5" aria-hidden="true" /> Plata taxei de onboarding
+                <ShieldCheck className="h-5 w-5" aria-hidden="true" /> Plată securizată
               </CardTitle>
               <CardDescription>
-                Contract semnat de {contract.signature_name} · {formatFee(contract.onboarding_fee_cents, contract.currency)} de achitat
+                Contract semnat de {contract.signature_name} · {" "}
+                {formatFee(
+                  (contract.line_items ?? []).reduce((sum, item) => sum + (item.amount_cents ?? 0), 0) ||
+                    contract.onboarding_fee_cents,
+                  contract.currency,
+                )}{" "}
+                de achitat
               </CardDescription>
             </CardHeader>
             <CardContent>

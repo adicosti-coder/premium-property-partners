@@ -1,6 +1,7 @@
 // payments-webhook
-// Stripe webhook handler. Marks a signed contract as paid and moves the lead in
-// the CRM to "Contract Semnat & Plătit" once the payment settles.
+// Stripe webhook handler. Marks a signed contract as paid, stores payment
+// details, generates the owner portal access code, and notifies both the team
+// and the owner. Also handles refunds and async payment failures.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { type StripeEnv, verifyWebhook } from "../_shared/stripe.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
@@ -17,21 +18,50 @@ function getSupabase() {
   return _supabase;
 }
 
+function generatePortalCode(): string {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  return Array.from(crypto.getRandomValues(new Uint8Array(8)))
+    .map((b) => chars[b % chars.length])
+    .join("");
+}
+
+async function findContractBySessionId(sessionId: string) {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from("owner_contracts")
+    .select("id, status, lead_id, owner_name, owner_email, property_address, payment_amount_cents, currency, paid_at, owner_portal_code")
+    .eq("stripe_session_id", sessionId)
+    .maybeSingle();
+  return data;
+}
+
 async function markContractPaid(session: any, env: StripeEnv) {
   const contractId = session?.metadata?.contract_id;
   if (!contractId) {
-    console.log("payments-webhook: session without contract_id — nothing to fulfil");
-    return;
+    // Fallback lookup by session id if metadata is missing.
+    const bySession = await findContractBySessionId(session.id);
+    if (!bySession) {
+      console.log("payments-webhook: session without contract_id and no matching session_id — nothing to fulfil");
+      return;
+    }
   }
-  const supabase = getSupabase();
 
+  const supabase = getSupabase();
   const { data: contract } = await supabase
     .from("owner_contracts")
-    .select("id, status, lead_id, owner_name, property_address, payment_amount_cents, currency, paid_at")
+    .select("id, status, lead_id, owner_name, owner_email, property_address, payment_amount_cents, currency, paid_at, owner_portal_code")
     .eq("id", contractId)
     .maybeSingle();
   if (!contract) return;
   if ((contract as any).paid_at) return; // idempotent
+
+  const paymentIntentId = session.payment_intent;
+  const chargeId = session.charges?.data?.[0]?.id;
+  const receiptUrl = session.charges?.data?.[0]?.receipt_url;
+  const customerId = session.customer;
+  const amountTotal = session.amount_total;
+
+  const portalCode = (contract as any).owner_portal_code || generatePortalCode();
 
   await supabase
     .from("owner_contracts")
@@ -39,7 +69,12 @@ async function markContractPaid(session: any, env: StripeEnv) {
       status: "paid",
       paid_at: new Date().toISOString(),
       stripe_session_id: session.id,
-      payment_amount_cents: session.amount_total ?? (contract as any).payment_amount_cents ?? null,
+      stripe_customer_id: typeof customerId === "string" ? customerId : null,
+      payment_intent_id: typeof paymentIntentId === "string" ? paymentIntentId : null,
+      charge_id: typeof chargeId === "string" ? chargeId : null,
+      receipt_url: typeof receiptUrl === "string" ? receiptUrl : null,
+      payment_amount_cents: amountTotal ?? (contract as any).payment_amount_cents ?? null,
+      owner_portal_code: portalCode,
     })
     .eq("id", contractId);
 
@@ -55,11 +90,14 @@ async function markContractPaid(session: any, env: StripeEnv) {
       status: "success",
       message: "Contract semnat & plătit — status CRM actualizat",
       actor: "payments-webhook",
-      metadata: { contract_id: contractId, environment: env, session_id: session.id },
+      metadata: { contract_id: contractId, environment: env, session_id: session.id, amount_total: amountTotal },
     }, supabase as any);
   }
 
-  const amount = ((session.amount_total ?? 0) / 100).toFixed(2);
+  const amount = ((amountTotal ?? 0) / 100).toFixed(2);
+  const currency = String(session.currency ?? (contract as any).currency ?? "").toUpperCase();
+
+  // Team alert
   await sendTeamEmail({
     to: Deno.env.get("ADMIN_ALERT_EMAIL") || "info@realtrust.ro",
     subject: `✅ Contract semnat & plătit — ${(contract as any).owner_name}`,
@@ -67,12 +105,76 @@ async function markContractPaid(session: any, env: StripeEnv) {
       <h2 style="color:#1a365d">Contract semnat & plătit</h2>
       <p>Proprietar: <strong>${(contract as any).owner_name}</strong></p>
       <p>Proprietate: ${(contract as any).property_address ?? "—"}</p>
-      <p>Sumă încasată: <strong>${amount} ${String(session.currency ?? (contract as any).currency ?? "").toUpperCase()}</strong> (${env})</p>
+      <p>Sumă încasată: <strong>${amount} ${currency}</strong> (${env})</p>
+      <p>Cod acces portal proprietar: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">${portalCode}</code></p>
     </div>`,
     leadId,
     contractId,
     source: "payments-webhook",
   }, getSupabase() as any);
+
+  // Owner receipt
+  const ownerEmail = (contract as any).owner_email;
+  if (ownerEmail) {
+    await sendTeamEmail({
+      to: ownerEmail,
+      subject: `Confirmare plată — ${amount} ${currency} | RealTrust Timișoara`,
+      html: `<div style="font-family:system-ui,sans-serif;max-width:520px">
+        <h2 style="color:#1a365d">Mulțumim, ${(contract as any).owner_name}!</h2>
+        <p>Am primit plata de <strong>${amount} ${currency}</strong> pentru taxa de onboarding.</p>
+        <p>Proprietatea ta din <strong>${(contract as any).property_address ?? "—"}</strong> intră acum în administrarea RealTrust.</p>
+        <p>Codul tău de acces în portalul proprietarului este: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:18px">${portalCode}</code></p>
+        <p>Accesează portalul la: <a href="https://realtrust.ro/owner">realtrust.ro/owner</a></p>
+        <p style="font-size:12px;color:#6b7280;margin-top:24px">Dacă ai întrebări, răspunde la acest email sau contactează-ne pe WhatsApp.</p>
+      </div>`,
+      leadId,
+      contractId,
+      source: "payments-webhook-receipt",
+    }, getSupabase() as any);
+  }
+}
+
+async function handleRefund(session: any, env: StripeEnv) {
+  const contractId = session?.metadata?.contract_id;
+  if (!contractId) return;
+  const supabase = getSupabase();
+  const refundAmount = session.refunds?.[0]?.amount ?? session.amount_refunded ?? 0;
+  await supabase
+    .from("owner_contracts")
+    .update({
+      refunded_at: new Date().toISOString(),
+      refund_amount_cents: refundAmount,
+    })
+    .eq("id", contractId);
+
+  const leadId = session?.metadata?.lead_id;
+  if (leadId) {
+    await logLeadEvent({
+      leadId,
+      type: "contract_refunded",
+      status: "warning",
+      message: `Rambursare înregistrată: ${(refundAmount / 100).toFixed(2)}`,
+      actor: "payments-webhook",
+      metadata: { contract_id: contractId, environment: env, session_id: session.id, refund_amount_cents: refundAmount },
+    }, supabase as any);
+  }
+}
+
+async function handlePaymentFailure(session: any, env: StripeEnv) {
+  const contractId = session?.metadata?.contract_id;
+  if (!contractId) return;
+  const supabase = getSupabase();
+  const leadId = session?.metadata?.lead_id;
+  if (leadId) {
+    await logLeadEvent({
+      leadId,
+      type: "contract_payment_failed",
+      status: "error",
+      message: "Plata online a eșuat sau a expirat",
+      actor: "payments-webhook",
+      metadata: { contract_id: contractId, environment: env, session_id: session.id },
+    }, supabase as any);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -100,7 +202,11 @@ Deno.serve(async (req) => {
         await markContractPaid(event.data.object, env);
         break;
       case "checkout.session.async_payment_failed":
-        console.warn("payments-webhook: async payment failed", event.data.object?.id);
+        await handlePaymentFailure(event.data.object, env);
+        break;
+      case "charge.refunded":
+      case "checkout.session.expired":
+        await handleRefund(event.data.object, env);
         break;
       default:
         console.log("payments-webhook: unhandled event", event.type);

@@ -7,12 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, FilePlus2, Loader2, RefreshCw, AlertTriangle, FileSignature } from "lucide-react";
+
+interface LineItem {
+  price_id: string;
+  label: string;
+  amount_cents: number;
+}
 
 interface ContractRow {
   id: string;
@@ -25,7 +32,10 @@ interface ContractRow {
   property_address: string | null;
   management_fee_percent: number;
   onboarding_fee_cents: number;
+  photo_session_included: boolean;
+  photo_session_fee_cents: number;
   currency: string;
+  line_items: LineItem[] | null;
   status: string;
   signed_at: string | null;
   signature_name: string | null;
@@ -44,7 +54,10 @@ interface EmailFailureRow {
 }
 
 const CONTRACT_COLUMNS =
-  "id, token, lead_id, owner_name, owner_email, owner_tax_id, owner_address, property_address, management_fee_percent, onboarding_fee_cents, currency, status, signed_at, signature_name, paid_at, created_at";
+  "id, token, lead_id, owner_name, owner_email, owner_tax_id, owner_address, property_address, management_fee_percent, onboarding_fee_cents, photo_session_included, photo_session_fee_cents, currency, line_items, status, signed_at, signature_name, paid_at, created_at";
+
+const totalCents = (row: ContractRow) =>
+  (row.line_items ?? []).reduce((sum, item) => sum + (item.amount_cents ?? 0), 0) || row.onboarding_fee_cents;
 
 const money = (cents: number, currency: string) =>
   `${(cents / 100).toLocaleString("ro-RO", { minimumFractionDigits: 2 })} ${currency.toUpperCase()}`;
@@ -70,6 +83,8 @@ export default function ContractManager() {
     property_address: "",
     management_fee_percent: "20",
     onboarding_fee_lei: "500",
+    photo_session_fee_lei: "500",
+    photo_session_included: true,
   });
 
   const contracts = useQuery({
@@ -110,6 +125,8 @@ export default function ContractManager() {
         property_address: form.property_address.trim() || null,
         management_fee_percent: Number(form.management_fee_percent) || 20,
         onboarding_fee_cents: Math.round((Number(form.onboarding_fee_lei) || 0) * 100),
+        photo_session_fee_cents: Math.round((Number(form.photo_session_fee_lei) || 0) * 100),
+        photo_session_included: form.photo_session_included,
       };
       if (payload.owner_name.length < 3) throw new Error("Numele proprietarului este obligatoriu.");
       const { data, error } = await supabase.functions.invoke("contract-create", { body: payload });
@@ -120,7 +137,15 @@ export default function ContractManager() {
     onSuccess: () => {
       toast({ title: "Contract generat", description: "Trimite proprietarului linkul de semnare." });
       setOpen(false);
-      setForm((f) => ({ ...f, lead_id: "", owner_name: "", owner_email: "", owner_tax_id: "", owner_address: "", property_address: "" }));
+      setForm((f) => ({
+        ...f,
+        lead_id: "",
+        owner_name: "",
+        owner_email: "",
+        owner_tax_id: "",
+        owner_address: "",
+        property_address: "",
+      }));
       void qc.invalidateQueries({ queryKey: ["admin", "owner_contracts"] });
     },
     onError: (e: Error) => toast({ title: "Nu am putut genera contractul", description: e.message, variant: "destructive" }),
@@ -144,7 +169,7 @@ export default function ContractManager() {
       total: rows.length,
       signed: rows.filter((r) => r.status === "signed" || r.paid_at).length,
       paid: rows.filter((r) => r.paid_at).length,
-      revenue: rows.filter((r) => r.paid_at).reduce((s, r) => s + r.onboarding_fee_cents, 0),
+      revenue: rows.filter((r) => r.paid_at).reduce((s, r) => s + totalCents(r), 0),
     };
   }, [contracts.data]);
 
@@ -158,7 +183,7 @@ export default function ContractManager() {
     <AdminPageShell
       icon={FileSignature}
       title="Contracte & Plăți"
-      description="Generează contracte de administrare pre-completate, urmărește semnăturile digitale și plata taxei de onboarding."
+      description="Generează contracte de administrare pre-completate, urmărește semnăturile digitale, ședința foto și plata taxei de onboarding."
       actions={
         <div className="flex gap-2">
           <Button
@@ -189,6 +214,23 @@ export default function ContractManager() {
                 <FormField id="property_address" label="Adresă proprietate" value={form.property_address} onChange={(v) => setForm({ ...form, property_address: v })} />
                 <FormField id="fee" label="Comision (%)" value={form.management_fee_percent} onChange={(v) => setForm({ ...form, management_fee_percent: v })} />
                 <FormField id="onboarding" label="Taxă onboarding (RON)" value={form.onboarding_fee_lei} onChange={(v) => setForm({ ...form, onboarding_fee_lei: v })} />
+                <div className="col-span-2 flex items-start gap-3 rounded-md border p-3">
+                  <Checkbox
+                    id="photo-session"
+                    checked={form.photo_session_included}
+                    onCheckedChange={(v) => setForm({ ...form, photo_session_included: v === true })}
+                    aria-label="Include ședința foto în contract"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="photo-session" className="text-sm font-medium">
+                      Include ședința foto profesională în suma de plată
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Dacă este bifată, proprietarul plătește onboarding + ședința foto la semnare.</p>
+                  </div>
+                </div>
+                {form.photo_session_included && (
+                  <FormField id="photo-fee" label="Ședință foto (RON)" value={form.photo_session_fee_lei} onChange={(v) => setForm({ ...form, photo_session_fee_lei: v })} />
+                )}
               </div>
               <DialogFooter>
                 <Button onClick={() => createContract.mutate()} disabled={createContract.isPending}>
@@ -205,7 +247,7 @@ export default function ContractManager() {
         <StatCard label="Contracte" value={String(stats.total)} />
         <StatCard label="Semnate" value={String(stats.signed)} />
         <StatCard label="Plătite" value={String(stats.paid)} />
-        <StatCard label="Încasat onboarding" value={money(stats.revenue, "ron")} />
+        <StatCard label="Încasat total" value={money(stats.revenue, "ron")} />
       </div>
 
       {(emailFailures.data?.length ?? 0) > 0 && (
@@ -253,7 +295,7 @@ export default function ContractManager() {
               <TableRow>
                 <TableHead>Proprietar</TableHead>
                 <TableHead>Proprietate</TableHead>
-                <TableHead>Taxă</TableHead>
+                <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Semnat</TableHead>
                 <TableHead>Plătit</TableHead>
@@ -289,7 +331,7 @@ export default function ContractManager() {
                     <p className="text-xs text-muted-foreground">{row.owner_email ?? "—"}</p>
                   </TableCell>
                   <TableCell className="max-w-[220px] truncate">{row.property_address ?? "—"}</TableCell>
-                  <TableCell>{money(row.onboarding_fee_cents, row.currency)}</TableCell>
+                  <TableCell>{money(totalCents(row), row.currency)}</TableCell>
                   <TableCell><StatusBadge row={row} /></TableCell>
                   <TableCell className="text-xs">{dt(row.signed_at)}</TableCell>
                   <TableCell className="text-xs">{dt(row.paid_at)}</TableCell>

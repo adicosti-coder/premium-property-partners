@@ -3435,12 +3435,14 @@ export type Database = {
       }
       owner_contracts: {
         Row: {
+          charge_id: string | null
           contract_body: string | null
           created_at: string
           created_by: string | null
           currency: string
           id: string
           lead_id: string | null
+          line_items: Json | null
           management_fee_percent: number
           onboarding_fee_cents: number
           otp_attempts: number
@@ -3450,26 +3452,36 @@ export type Database = {
           owner_email: string | null
           owner_name: string
           owner_phone: string | null
+          owner_portal_code: string | null
           owner_tax_id: string | null
           paid_at: string | null
           payment_amount_cents: number | null
+          payment_intent_id: string | null
+          photo_session_fee_cents: number
+          photo_session_included: boolean
           property_address: string | null
+          receipt_url: string | null
+          refund_amount_cents: number | null
+          refunded_at: string | null
           signature_ip: string | null
           signature_name: string | null
           signature_user_agent: string | null
           signed_at: string | null
           status: string
+          stripe_customer_id: string | null
           stripe_session_id: string | null
           token: string
           updated_at: string
         }
         Insert: {
+          charge_id?: string | null
           contract_body?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
           id?: string
           lead_id?: string | null
+          line_items?: Json | null
           management_fee_percent?: number
           onboarding_fee_cents?: number
           otp_attempts?: number
@@ -3479,26 +3491,36 @@ export type Database = {
           owner_email?: string | null
           owner_name: string
           owner_phone?: string | null
+          owner_portal_code?: string | null
           owner_tax_id?: string | null
           paid_at?: string | null
           payment_amount_cents?: number | null
+          payment_intent_id?: string | null
+          photo_session_fee_cents?: number
+          photo_session_included?: boolean
           property_address?: string | null
+          receipt_url?: string | null
+          refund_amount_cents?: number | null
+          refunded_at?: string | null
           signature_ip?: string | null
           signature_name?: string | null
           signature_user_agent?: string | null
           signed_at?: string | null
           status?: string
+          stripe_customer_id?: string | null
           stripe_session_id?: string | null
           token: string
           updated_at?: string
         }
         Update: {
+          charge_id?: string | null
           contract_body?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
           id?: string
           lead_id?: string | null
+          line_items?: Json | null
           management_fee_percent?: number
           onboarding_fee_cents?: number
           otp_attempts?: number
@@ -3508,15 +3530,23 @@ export type Database = {
           owner_email?: string | null
           owner_name?: string
           owner_phone?: string | null
+          owner_portal_code?: string | null
           owner_tax_id?: string | null
           paid_at?: string | null
           payment_amount_cents?: number | null
+          payment_intent_id?: string | null
+          photo_session_fee_cents?: number
+          photo_session_included?: boolean
           property_address?: string | null
+          receipt_url?: string | null
+          refund_amount_cents?: number | null
+          refunded_at?: string | null
           signature_ip?: string | null
           signature_name?: string | null
           signature_user_agent?: string | null
           signed_at?: string | null
           status?: string
+          stripe_customer_id?: string | null
           stripe_session_id?: string | null
           token?: string
           updated_at?: string
