@@ -5,6 +5,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { BUCKET, generateAndStoreContractPdf } from "../_shared/contractPdf.ts";
+import { logAudit } from "../_shared/auditLog.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,6 +59,16 @@ Deno.serve(async (req) => {
       .from(BUCKET)
       .createSignedUrl(path, 600);
     if (signErr || !signed?.signedUrl) return json({ error: signErr?.message ?? "Signed URL eșuat" }, 500);
+
+    await logAudit(admin, {
+      action: regenerate ? "contract_pdf_regenerated" : "contract_pdf_accessed",
+      actor_user_id: auth.userId ?? null,
+      actor_label: "admin",
+      entity_type: "owner_contract",
+      entity_id: contractId,
+      details: { path, regenerate },
+      severity: "warning",
+    });
 
     return json({ ok: true, url: signed.signedUrl, path, expires_in: 600 });
   } catch (err) {
