@@ -5,6 +5,7 @@
 // and reporting show real product names instead of ad-hoc price_data.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
+import { logAudit } from "../_shared/auditLog.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -157,6 +158,21 @@ Deno.serve(async (req) => {
         payment_amount_cents: totalAmountCents,
       })
       .eq("id", contract.id);
+
+    await logAudit(admin, {
+      action: "payment_checkout_created",
+      actor_label: "owner (token)",
+      entity_type: "owner_contract",
+      entity_id: contract.id,
+      details: {
+        lead_id: contract.lead_id ?? null,
+        environment,
+        session_id: session.id,
+        amount_cents: totalAmountCents,
+        currency: contract.currency,
+      },
+      severity: "warning",
+    });
 
     return json({ clientSecret: session.client_secret });
   } catch (err) {

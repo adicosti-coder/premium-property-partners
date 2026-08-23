@@ -11,6 +11,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
 import { generateAndStoreContractPdf } from "../_shared/contractPdf.ts";
+import { logAudit } from "../_shared/auditLog.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -91,6 +92,14 @@ Deno.serve(async (req) => {
         source: "contract-sign-otp",
       }, admin);
 
+      await logAudit(admin, {
+        action: "contract_otp_sent",
+        actor_label: "owner (token)",
+        entity_type: "owner_contract",
+        entity_id: contract.id,
+        details: { email_sent: result.sent, stored_fallback: !!result.storedFallback },
+      });
+
       return json({ ok: true, email_sent: result.sent, stored_fallback: !!result.storedFallback });
     }
 
@@ -156,6 +165,20 @@ Deno.serve(async (req) => {
         metadata: { contract_id: contract.id, pdf_path: pdf.path ?? null },
       }, admin);
     }
+
+    await logAudit(admin, {
+      action: "contract_signed",
+      actor_label: `owner: ${signatureName}`,
+      entity_type: "owner_contract",
+      entity_id: contract.id,
+      details: {
+        lead_id: contract.lead_id ?? null,
+        signed_at: signedAt,
+        signature_ip: ip,
+        pdf_generated: pdf.ok,
+      },
+      severity: "warning",
+    });
 
     return json({ ok: true, status: "signed", pdf_generated: pdf.ok });
   } catch (err) {

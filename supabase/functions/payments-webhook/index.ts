@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { type StripeEnv, verifyWebhook } from "../_shared/stripe.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
+import { logAudit } from "../_shared/auditLog.ts";
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
@@ -93,6 +94,21 @@ async function markContractPaid(session: any, env: StripeEnv) {
       metadata: { contract_id: contractId, environment: env, session_id: session.id, amount_total: amountTotal },
     }, supabase as any);
   }
+
+  await logAudit(supabase, {
+    action: "payment_succeeded",
+    actor_label: "stripe-webhook",
+    entity_type: "owner_contract",
+    entity_id: String(contractId),
+    details: {
+      lead_id: leadId,
+      environment: env,
+      session_id: session.id,
+      amount_total: amountTotal,
+      currency: session.currency ?? null,
+    },
+    severity: "warning",
+  });
 
   const amount = ((amountTotal ?? 0) / 100).toFixed(2);
   const currency = String(session.currency ?? (contract as any).currency ?? "").toUpperCase();
@@ -205,6 +221,14 @@ async function handlePaymentFailure(session: any, env: StripeEnv) {
   if (!contractId) return;
   const supabase = getSupabase();
   const leadId = session?.metadata?.lead_id;
+  await logAudit(supabase, {
+    action: "payment_failed",
+    actor_label: "stripe-webhook",
+    entity_type: "owner_contract",
+    entity_id: String(contractId),
+    details: { lead_id: leadId ?? null, environment: env, session_id: session.id },
+    severity: "error",
+  });
   if (leadId) {
     await logLeadEvent({
       leadId,

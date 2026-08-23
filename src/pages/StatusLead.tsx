@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,8 @@ const formatDate = (value: string | null) =>
 
 const StatusLead = () => {
   const [params, setParams] = useSearchParams();
-  const urlToken = (params.get("token") ?? "").trim();
+  const { token: pathToken } = useParams<{ token?: string }>();
+  const urlToken = (params.get("token") ?? pathToken ?? "").trim();
 
   const [tokenInput, setTokenInput] = useState(urlToken);
   const [status, setStatus] = useState<LeadStatus | null>(null);

@@ -21,6 +21,9 @@ verify_jwt = false
 [functions.contract-public]
 verify_jwt = false
 
+[functions.lead-status-public]
+verify_jwt = false
+
 [functions.contract-sign]
 verify_jwt = false
 
