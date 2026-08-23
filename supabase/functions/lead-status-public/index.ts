@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     const { data: contract, error } = await admin
       .from("owner_contracts")
       .select(
-        "id, lead_id, owner_name, owner_email, property_address, status, created_at, sent_at, signed_at, paid_at, invoice_number, contract_pdf_path, management_fee_percent, currency, payment_amount_cents",
+        "id, lead_id, owner_name, owner_email, property_address, status, created_at, signed_at, paid_at, invoice_number, contract_pdf_path, management_fee_percent, currency, payment_amount_cents",
       )
       .eq("token", token)
       .maybeSingle();
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
     const paid = !!c.paid_at;
     const signed = !!c.signed_at;
-    const sent = !!(c.sent_at ?? (c.status && c.status !== "draft"));
+    const sent = !!c.signed_at || (!!c.status && c.status !== "draft");
 
     const mk = (
       key: string,
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
         "contract_trimis",
         "Contract trimis",
         "Contractul de administrare este disponibil pentru semnare digitală.",
-        c.sent_at ?? null,
+        sent ? c.created_at ?? null : null,
         sent,
       ),
       mk(
