@@ -192,9 +192,10 @@ const MaintenanceManager = () => {
     }
   };
 
-  const uploadFile = async (file: File, folder: string): Promise<string | null> => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+  const uploadFile = async (file: File, folder: string, propertyId: string): Promise<string | null> => {
+    const fileExt = (file.name.split(".").pop() || "bin").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8);
+    // Path is scoped by property id so storage RLS can verify ownership by folder prefix.
+    const fileName = `${propertyId}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
     const { error } = await supabase.storage
       .from("maintenance-files")
