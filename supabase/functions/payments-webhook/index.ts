@@ -203,6 +203,19 @@ async function handleRefund(session: any, env: StripeEnv) {
     })
     .eq("id", contractId);
 
+  await logAudit(supabase, {
+    action: "payment_refunded",
+    actor_label: "stripe-webhook",
+    entity_type: "owner_contract",
+    entity_id: String(contractId),
+    details: {
+      environment: env,
+      session_id: session.id,
+      refund_amount_cents: refundAmount,
+    },
+    severity: "warning",
+  });
+
   const leadId = session?.metadata?.lead_id;
   if (leadId) {
     await logLeadEvent({

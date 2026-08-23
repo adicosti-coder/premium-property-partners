@@ -62,8 +62,8 @@ Deno.serve(async (req) => {
 
     await logAudit(admin, {
       action: regenerate ? "contract_pdf_regenerated" : "contract_pdf_accessed",
-      actor_user_id: (auth as any).user?.id ?? null,
-      actor_label: (auth as any).user?.email ?? "admin",
+      actor_user_id: auth.userId ?? null,
+      actor_label: "admin",
       entity_type: "owner_contract",
       entity_id: contractId,
       details: { path, regenerate },
