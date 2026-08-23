@@ -105,6 +105,7 @@ const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
 const ThankYou = lazyWithRetry(() => import("./pages/ThankYou"));
 const SemnareContract = lazyWithRetry(() => import("./pages/SemnareContract"));
+const StatusLead = lazyWithRetry(() => import("./pages/StatusLead"));
 const ProgramareConfirmata = lazyWithRetry(() => import("./pages/ProgramareConfirmata"));
 const ComplexLanding = lazyWithRetry(() => import("./pages/ComplexLanding"));
 const NeighborhoodCluster = lazyWithRetry(() => import("./pages/NeighborhoodCluster"));
