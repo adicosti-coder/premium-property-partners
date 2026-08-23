@@ -249,10 +249,10 @@ const MaintenanceManager = () => {
       let invoiceUrl = editingRecord?.invoice_url || null;
 
       if (photoFile) {
-        imageUrl = await uploadFile(photoFile, "photos");
+        imageUrl = await uploadFile(photoFile, "photos", formData.property_id);
       }
       if (invoiceFile) {
-        invoiceUrl = await uploadFile(invoiceFile, "invoices");
+        invoiceUrl = await uploadFile(invoiceFile, "invoices", formData.property_id);
       }
 
       const recordData = {
