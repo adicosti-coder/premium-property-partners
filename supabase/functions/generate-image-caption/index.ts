@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isUrlAllowed } from "../_shared/urlGuard.ts";
+import { checkRateLimit, getClientIp, rateLimitExceededResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,8 +12,17 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`img-caption:${ip}`, { maxRequests: 20, windowMs: 60_000 });
+    if (!rl.allowed) return rateLimitExceededResponse(rl.resetAt, corsHeaders);
+
     const { imageUrl, propertyName, language } = await req.json();
-    if (!imageUrl) throw new Error("imageUrl is required");
+    if (typeof imageUrl !== "string" || !imageUrl || imageUrl.length > 2048) {
+      return new Response(JSON.stringify({ error: "imageUrl is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const safeName = typeof propertyName === "string" ? propertyName.slice(0, 120) : "";
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -24,6 +35,13 @@ serve(async (req) => {
     const normalizedImageUrl = imageUrl.startsWith("http")
       ? imageUrl
       : `${supabaseUrl}/storage/v1/object/public/property-images/${imageUrl}`;
+
+    const guard = isUrlAllowed(normalizedImageUrl);
+    if (!guard.ok) {
+      return new Response(JSON.stringify({ error: "Image URL not allowed" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     try {
       const { data: cached } = await sb
@@ -60,7 +78,7 @@ serve(async (req) => {
           {
             role: "user",
             content: [
-               { type: "text", text: `Describe this photo from "${propertyName}":` },
+               { type: "text", text: `Describe this photo from "${safeName}":` },
                { type: "image_url", image_url: { url: normalizedImageUrl } },
             ],
           },
@@ -90,7 +108,7 @@ serve(async (req) => {
     if (caption) {
       sb.from("image_caption_cache")
         .upsert(
-          { image_url: normalizedImageUrl, property_name: propertyName, language: lang, caption, updated_at: new Date().toISOString() },
+          { image_url: normalizedImageUrl, property_name: safeName, language: lang, caption, updated_at: new Date().toISOString() },
           { onConflict: "image_url,language" }
         )
         .then(({ error }) => { if (error) console.warn("Cache write failed:", error); });

@@ -1,4 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, getClientIp, rateLimitExceededResponse } from "../_shared/rateLimiter.ts";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,14 +14,22 @@ serve(async (req) => {
   }
 
   try {
+    const ip = getClientIp(req);
+    const ipLimit = checkRateLimit(`guest-guide:ip:${ip}`, { maxRequests: 3, windowMs: 60_000 });
+    if (!ipLimit.allowed) return rateLimitExceededResponse(ipLimit.resetAt, corsHeaders);
+
     const { email, language } = await req.json();
 
-    if (!email) {
+    if (typeof email !== "string" || email.length > 254 || !EMAIL_RE.test(email.trim())) {
       return new Response(
-        JSON.stringify({ error: "Email is required" }),
+        JSON.stringify({ error: "Valid email is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const emailLimit = checkRateLimit(`guest-guide:email:${normalizedEmail}`, { maxRequests: 2, windowMs: 3_600_000 });
+    if (!emailLimit.allowed) return rateLimitExceededResponse(emailLimit.resetAt, corsHeaders);
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
@@ -152,7 +163,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "RealTrust <info@notify.realtrust.ro>",
-        to: [email],
+        to: [normalizedEmail],
         subject,
         html,
       }),
@@ -167,7 +178,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Tourist guide email sent to:", email);
+    console.log("Tourist guide email sent");
 
     return new Response(
       JSON.stringify({ success: true }),
