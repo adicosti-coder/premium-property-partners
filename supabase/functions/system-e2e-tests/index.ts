@@ -122,16 +122,32 @@ Deno.serve(async (req) => {
       action: "e2e_test_failure", actor_label: "system-e2e-tests",
       entity_type: "e2e_test_runs", severity, details: { label, msg },
     });
+    const title = severity === "error" ? "🚨 Test E2E CRITIC (după retry)" : "⚠️ Test E2E eșuat";
     const { data: admins } = await sb.from("user_roles").select("user_id").eq("role", "admin");
-    if (admins?.length) {
-      await sb.from("user_notifications").insert(admins.map((a: any) => ({
+    if (!admins?.length) return;
+
+    // Anti-spam: nu re-notifica dacă există deja o alertă necitită cu același titlu în ultimele 24h
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: recent } = await sb
+      .from("user_notifications")
+      .select("user_id")
+      .eq("title", title)
+      .eq("is_read", false)
+      .gte("created_at", since);
+    const alreadyNotified = new Set((recent ?? []).map((r: any) => r.user_id));
+
+    const rows = admins
+      .filter((a: any) => !alreadyNotified.has(a.user_id))
+      .map((a: any) => ({
         user_id: a.user_id,
-        title: severity === "error" ? "🚨 Test E2E CRITIC (după retry)" : "⚠️ Test E2E eșuat",
-        message: msg, type: severity,
+        title,
+        message: msg.length > 300 ? `${msg.slice(0, 300)}…` : msg,
+        type: severity,
         action_url: "/admin/system-health", action_label: "Vezi dashboard",
-      })));
-    }
+      }));
+    if (rows.length) await sb.from("user_notifications").insert(rows);
   };
+
 
   let voicePassed = true, seoPassed = true;
   let voiceErr: string | null = null, seoErr: string | null = null;
