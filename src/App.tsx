@@ -250,6 +250,8 @@ const App = () => (
                     <Route path="/comunitate/editeaza/:id" element={<EditArticle />} />
                     <Route path="/comunitate/profil/:userId" element={<PublicProfile />} />
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
+                    <Route path="/recomanda" element={<ReferralProgram />} />
+
                     <Route path="/complexe" element={<Complexe />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
                     <Route path="/complexe/city-of-mara" element={<CityOfMaraTimisoara />} />
