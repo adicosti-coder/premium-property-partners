@@ -213,7 +213,7 @@ const ReferralProgram = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase.functions.invoke("submit-referral", {
+      const { data: result, error } = await supabase.functions.invoke("submit-referral", {
         body: {
           referrerName: data.referrerName,
           referrerEmail: data.referrerEmail,
@@ -230,17 +230,32 @@ const ReferralProgram = () => {
 
       if (error) throw error;
 
+      const token = (result as { status_token?: string | null } | null)?.status_token ?? null;
+      setStatusToken(token);
+
+      // GA4 + Meta Pixel + Meta CAPI (server-side, deduped).
+      trackConversion({
+        event: "lead",
+        source: "referral_form",
+        value: OWNER_FUNNEL_VALUE_EUR.managementRequest,
+        currency: "EUR",
+        name: data.ownerName,
+        email: data.ownerEmail,
+        phone: data.ownerPhone,
+        referral: true,
+      });
+
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 100);
       setIsSubmitted(true);
       toast.success(language === "ro" ? "Recomandare trimisă!" : "Referral submitted!");
     } catch (error) {
-      console.error("Error submitting referral:", error);
       toast.error(language === "ro" ? "Eroare la trimitere" : "Submission error");
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const handleReset = () => {
     form.reset();
