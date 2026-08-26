@@ -452,9 +452,24 @@ const ReferralProgram = () => {
                       <CheckCircle className="w-16 h-16 mx-auto mb-4 text-emerald-500" />
                       <h2 className="text-2xl font-bold text-foreground mb-2">{text.successTitle}</h2>
                       <p className="text-muted-foreground mb-6">{text.successMessage}</p>
+                      {statusToken && (
+                        <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+                          <p className="mb-3 text-muted-foreground">
+                            {language === "ro"
+                              ? "Urmărește în timp real progresul preluării apartamentului (audit, poze, contract, listare):"
+                              : "Track the onboarding progress in real time (audit, photos, contract, listing):"}
+                          </p>
+                          <Button asChild variant="secondary" size="sm">
+                            <Link to={`/status-lead/${statusToken}`}>
+                              {language === "ro" ? "Vezi statusul recomandării" : "View referral status"}
+                            </Link>
+                          </Button>
+                        </div>
+                      )}
                       <Button onClick={handleReset} variant="outline">
                         {text.submitAnother}
                       </Button>
+
                     </CardContent>
                   </Card>
                 </motion.div>
