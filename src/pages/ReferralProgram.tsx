@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabaseClient";
-import { trackConversion } from "@/lib/conversionTracking";
+import { trackConversion, OWNER_FUNNEL_VALUE_EUR } from "@/lib/conversionTracking";
 import { Link } from "react-router-dom";
 
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -78,6 +78,7 @@ const ReferralProgram = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [statusToken, setStatusToken] = useState<string | null>(null);
 
   const t = {
     ro: {
@@ -235,7 +236,7 @@ const ReferralProgram = () => {
 
       // GA4 + Meta Pixel + Meta CAPI (server-side, deduped).
       trackConversion({
-        event: "lead",
+        event: "Lead_Submit",
         source: "referral_form",
         value: OWNER_FUNNEL_VALUE_EUR.managementRequest,
         currency: "EUR",
