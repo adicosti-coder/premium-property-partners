@@ -137,10 +137,46 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    return new Response(JSON.stringify({ success: true, id: data?.id }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    // Mirror the referral into the CRM `leads` pipeline so scoring, WhatsApp
+    // dispatch and the public status page work exactly like a direct lead.
+    let statusToken: string | null = null;
+    try {
+      const { data: lead, error: leadError } = await supabase
+        .from("leads")
+        .insert({
+          name: ownerName,
+          email: ownerEmail,
+          whatsapp_number: ownerPhoneRaw.replace(/\s/g, ""),
+          message: [
+            `Recomandare de la ${referrerName} (${referrerEmail}${referrerPhone ? `, ${referrerPhone}` : ""}).`,
+            ownerMessage,
+          ]
+            .filter(Boolean)
+            .join(" "),
+          property_type: propertyType ?? "apartament",
+          property_area: 0,
+          source: "referral",
+        })
+        .select("status_token")
+        .single();
+
+      if (leadError) {
+        console.error("submit-referral lead insert error:", leadError.message);
+      } else {
+        statusToken = (lead as { status_token?: string } | null)?.status_token ?? null;
+      }
+    } catch (leadErr) {
+      console.error("submit-referral lead insert exception:", (leadErr as Error)?.message);
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, id: data?.id, status_token: statusToken }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      },
+    );
+
   } catch (e) {
     console.error("submit-referral error:", e);
     return new Response(JSON.stringify({ error: "Bad request" }), {

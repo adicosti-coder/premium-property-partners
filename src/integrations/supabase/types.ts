@@ -2851,6 +2851,7 @@ export type Database = {
           scored_at: string | null
           simulation_data: Json | null
           source: string | null
+          status_token: string
           touch_count: number
           updated_at: string
           whatsapp_number: string
@@ -2890,6 +2891,7 @@ export type Database = {
           scored_at?: string | null
           simulation_data?: Json | null
           source?: string | null
+          status_token?: string
           touch_count?: number
           updated_at?: string
           whatsapp_number: string
@@ -2929,6 +2931,7 @@ export type Database = {
           scored_at?: string | null
           simulation_data?: Json | null
           source?: string | null
+          status_token?: string
           touch_count?: number
           updated_at?: string
           whatsapp_number?: string

@@ -56,7 +56,82 @@ Deno.serve(async (req) => {
       .eq("token", token)
       .maybeSingle();
     if (error) throw error;
-    if (!contract) return json({ error: "Link inexistent sau expirat" }, 404);
+
+    // Fallback: pre-contract stage — token issued per lead (leads.status_token).
+    if (!contract) {
+      const { data: lead, error: leadErr } = await admin
+        .from("leads")
+        .select("name, email, crm_status, created_at, property_type, property_area, source")
+        .eq("status_token", token)
+        .maybeSingle();
+      if (leadErr) throw leadErr;
+      if (!lead) return json({ error: "Link inexistent sau expirat" }, 404);
+
+      const l = lead as Record<string, any>;
+      const st = String(l.crm_status ?? "new");
+      const audited = ["contacted", "qualified", "audit", "oferta", "contract", "listat"].includes(st);
+      const photos = ["contract", "listat"].includes(st);
+
+      const leadStages: Stage[] = [
+        {
+          key: "lead",
+          label: "Cerere înregistrată",
+          description: "Am primit solicitarea ta și proprietatea a intrat în evaluare.",
+          at: l.created_at ?? null,
+          state: "done",
+        },
+        {
+          key: "audit",
+          label: "Audit & evaluare randament",
+          description: "Analizăm apartamentul, zona și potențialul de venit în regim hotelier.",
+          at: audited ? l.created_at ?? null : null,
+          state: audited ? "done" : "pending",
+        },
+        {
+          key: "poze",
+          label: "Ședință foto & pregătire",
+          description: "Programăm ședința foto profesională și pregătim apartamentul.",
+          at: null,
+          state: photos ? "done" : "pending",
+        },
+        {
+          key: "contract",
+          label: "Contract de administrare",
+          description: "Primești contractul pre-completat pentru semnare digitală.",
+          at: null,
+          state: st === "contract" || st === "listat" ? "done" : "pending",
+        },
+        {
+          key: "listare",
+          label: "Listare pe platforme",
+          description: "Publicare pe Booking, Airbnb și canalele directe cu tarife dinamice.",
+          at: null,
+          state: st === "listat" ? "done" : "pending",
+        },
+      ];
+
+      const firstPendingLead = leadStages.findIndex((s) => s.state === "pending");
+      if (firstPendingLead > 0) leadStages[firstPendingLead].state = "current";
+
+      return json({
+        status: {
+          owner_name: l.name ?? null,
+          owner_email_masked: maskEmail(l.email),
+          property_address: l.property_type
+            ? `${l.property_type}${l.property_area ? ` · ${l.property_area} m²` : ""}`
+            : null,
+          contract_status: null,
+          invoice_number: null,
+          management_fee_percent: null,
+          currency: "RON",
+          payment_amount_cents: null,
+          can_sign: false,
+          stages: leadStages,
+          updated_at: new Date().toISOString(),
+        },
+      });
+    }
+
 
     const c = contract as Record<string, any>;
 

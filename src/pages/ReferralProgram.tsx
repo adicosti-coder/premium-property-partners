@@ -3,6 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabaseClient";
+import { trackConversion, OWNER_FUNNEL_VALUE_EUR } from "@/lib/conversionTracking";
+import { Link } from "react-router-dom";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import { User } from "@supabase/supabase-js";
 import Header from "@/components/Header";
@@ -75,6 +78,7 @@ const ReferralProgram = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [statusToken, setStatusToken] = useState<string | null>(null);
 
   const t = {
     ro: {
@@ -210,7 +214,7 @@ const ReferralProgram = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase.functions.invoke("submit-referral", {
+      const { data: result, error } = await supabase.functions.invoke("submit-referral", {
         body: {
           referrerName: data.referrerName,
           referrerEmail: data.referrerEmail,
@@ -227,17 +231,32 @@ const ReferralProgram = () => {
 
       if (error) throw error;
 
+      const token = (result as { status_token?: string | null } | null)?.status_token ?? null;
+      setStatusToken(token);
+
+      // GA4 + Meta Pixel + Meta CAPI (server-side, deduped).
+      trackConversion({
+        event: "Lead_Submit",
+        source: "referral_form",
+        value: OWNER_FUNNEL_VALUE_EUR.managementRequest,
+        currency: "EUR",
+        name: data.ownerName,
+        email: data.ownerEmail,
+        phone: data.ownerPhone,
+        referral: true,
+      });
+
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 100);
       setIsSubmitted(true);
       toast.success(language === "ro" ? "Recomandare trimisă!" : "Referral submitted!");
     } catch (error) {
-      console.error("Error submitting referral:", error);
       toast.error(language === "ro" ? "Eroare la trimitere" : "Submission error");
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const handleReset = () => {
     form.reset();
@@ -433,9 +452,24 @@ const ReferralProgram = () => {
                       <CheckCircle className="w-16 h-16 mx-auto mb-4 text-emerald-500" />
                       <h2 className="text-2xl font-bold text-foreground mb-2">{text.successTitle}</h2>
                       <p className="text-muted-foreground mb-6">{text.successMessage}</p>
+                      {statusToken && (
+                        <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+                          <p className="mb-3 text-muted-foreground">
+                            {language === "ro"
+                              ? "Urmărește în timp real progresul preluării apartamentului (audit, poze, contract, listare):"
+                              : "Track the onboarding progress in real time (audit, photos, contract, listing):"}
+                          </p>
+                          <Button asChild variant="secondary" size="sm">
+                            <Link to={`/status-lead/${statusToken}`}>
+                              {language === "ro" ? "Vezi statusul recomandării" : "View referral status"}
+                            </Link>
+                          </Button>
+                        </div>
+                      )}
                       <Button onClick={handleReset} variant="outline">
                         {text.submitAnother}
                       </Button>
+
                     </CardContent>
                   </Card>
                 </motion.div>
