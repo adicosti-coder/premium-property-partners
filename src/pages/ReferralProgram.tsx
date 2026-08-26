@@ -3,6 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabaseClient";
+import { trackConversion } from "@/lib/conversionTracking";
+import { Link } from "react-router-dom";
+
 import { useLanguage } from "@/i18n/LanguageContext";
 import { User } from "@supabase/supabase-js";
 import Header from "@/components/Header";
