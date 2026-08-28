@@ -22,7 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import HostScanUploader from "@/components/hostscan/HostScanUploader";
+import AnalysisPhotoUploader, { type AnalysisPhoto } from "@/components/analiza/AnalysisPhotoUploader";
+import AnalysisAdjustPanel from "@/components/analiza/AnalysisAdjustPanel";
 import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 
 export interface ListingAnalysis {
