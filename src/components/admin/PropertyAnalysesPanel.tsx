@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { BrainCircuit, ExternalLink, FileDown, Link as LinkIcon, RefreshCw } from "lucide-react";
+import AnalysisVersionsPanel from "@/components/admin/AnalysisVersionsPanel";
 import type { ListingAnalysis } from "@/components/analiza/AiListingAnalyzer";
 
 interface AnalysisRow {
