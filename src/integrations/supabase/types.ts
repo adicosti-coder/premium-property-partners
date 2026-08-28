@@ -4343,6 +4343,8 @@ export type Database = {
           cached: boolean
           context_text: string | null
           created_at: string
+          email_sent_at: string | null
+          expires_at: string
           id: string
           input_hash: string | null
           ip_hash: string | null
@@ -4350,6 +4352,7 @@ export type Database = {
           mode: string
           model: string | null
           photo_count: number
+          recipient_email: string | null
           score: number | null
           share_token: string
           source_url: string | null
@@ -4361,6 +4364,8 @@ export type Database = {
           cached?: boolean
           context_text?: string | null
           created_at?: string
+          email_sent_at?: string | null
+          expires_at?: string
           id?: string
           input_hash?: string | null
           ip_hash?: string | null
@@ -4368,6 +4373,7 @@ export type Database = {
           mode?: string
           model?: string | null
           photo_count?: number
+          recipient_email?: string | null
           score?: number | null
           share_token?: string
           source_url?: string | null
@@ -4379,6 +4385,8 @@ export type Database = {
           cached?: boolean
           context_text?: string | null
           created_at?: string
+          email_sent_at?: string | null
+          expires_at?: string
           id?: string
           input_hash?: string | null
           ip_hash?: string | null
@@ -4386,6 +4394,7 @@ export type Database = {
           mode?: string
           model?: string | null
           photo_count?: number
+          recipient_email?: string | null
           score?: number | null
           share_token?: string
           source_url?: string | null
@@ -10265,6 +10274,7 @@ export type Database = {
         Returns: {
           analysis: Json
           created_at: string
+          expires_at: string
           id: string
           mode: string
           photo_count: number
