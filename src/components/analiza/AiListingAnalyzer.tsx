@@ -13,6 +13,8 @@ import {
   BarChart3,
   Lightbulb,
   Zap,
+  FileDown,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
