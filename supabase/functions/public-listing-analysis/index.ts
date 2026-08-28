@@ -368,7 +368,17 @@ Deno.serve(async (req) => {
     cacheKey = await hashInput(["photos", context, ...valid]);
     const cachedPhotos = await cacheGet(cacheKey);
     if (cachedPhotos) {
-      return json({ ok: true, mode, source_url: null, cached: true, analysis: cachedPhotos });
+      const tokenPhotos = await saveAnalysis({
+        hash: cacheKey,
+        mode,
+        sourceUrl: null,
+        photoCount: valid.length,
+        context,
+        model: null,
+        cached: true,
+        analysis: cachedPhotos as Record<string, unknown>,
+      });
+      return json({ ok: true, mode, source_url: null, cached: true, analysis: cachedPhotos, share_token: tokenPhotos });
     }
 
     userContent = [
