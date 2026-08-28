@@ -211,6 +211,45 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
     document.getElementById("formular-analiza")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const shareUrl = result?.shareToken
+    ? `${window.location.origin}/analiza/${result.shareToken}`
+    : null;
+
+  const downloadPdf = async () => {
+    if (!result) return;
+    try {
+      const { downloadAnalysisPdf } = await import("@/lib/analysisPdf");
+      downloadAnalysisPdf({
+        analysis: result.analysis,
+        sourceUrl: result.sourceUrl,
+        mode: result.mode,
+        photoCount: result.photoCount,
+        shareUrl,
+      });
+      toast.success("Raportul PDF a fost descărcat.");
+    } catch {
+      toast.error("Nu am putut genera PDF-ul. Încearcă din nou.");
+    }
+  };
+
+  const shareAnalysis = async () => {
+    if (!shareUrl) {
+      toast.error("Linkul de partajare nu este disponibil pentru această analiză.");
+      return;
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Analiză RealTrust", url: shareUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copiat. Îl poți trimite oricui.");
+    } catch {
+      toast.error("Nu am putut copia linkul. Copiază-l manual din bara de adrese a raportului.");
+    }
+  };
+
+
   return (
     <section className="px-4 py-8">
       <div className="max-w-3xl mx-auto bg-card border border-border rounded-2xl p-6 md:p-8 shadow-lg space-y-5">
