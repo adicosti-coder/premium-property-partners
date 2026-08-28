@@ -1,0 +1,269 @@
+// Public AI analysis for /analiza-proprietate: accepts a listing URL or property photos
+// and returns a structured evaluation (score, estimated hotel-regime revenue, recommendations).
+import { checkRateLimit } from "../_shared/rateLimiter.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const ALLOWED_HOSTS = [
+  "olx.ro",
+  "storia.ro",
+  "imobiliare.ro",
+  "publi24.ro",
+  "anuntul.ro",
+  "homezz.ro",
+  "booking.com",
+  "airbnb.com",
+  "airbnb.ro",
+];
+
+function isAllowedListingUrl(raw: string): { ok: boolean; parsed?: URL } {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return { ok: false };
+  }
+  if (parsed.protocol !== "https:") return { ok: false };
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  if (!ALLOWED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) return { ok: false };
+  return { ok: true, parsed };
+}
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function fetchListingText(url: string): Promise<string> {
+  const scrapeKey = Deno.env.get("SCRAPE_DO_TOKEN") || Deno.env.get("SCRAPEDO_API_KEY");
+  if (scrapeKey) {
+    try {
+      const params = new URLSearchParams({
+        token: scrapeKey,
+        url,
+        render: "true",
+        super: "true",
+        geoCode: "ro",
+        customWait: "3000",
+        timeout: "45000",
+      });
+      const res = await fetch(`https://api.scrape.do/?${params.toString()}`, {
+        signal: AbortSignal.timeout(50000),
+      });
+      if (res.ok) {
+        const html = await res.text();
+        const text = htmlToText(html);
+        if (text.length > 400) return text;
+      }
+    } catch (e) {
+      console.warn("scrape.do failed, falling back to direct fetch", (e as Error).message);
+    }
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "accept-language": "ro-RO,ro;q=0.9,en;q=0.8",
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`fetch_failed_${res.status}`);
+  return htmlToText(await res.text());
+}
+
+const SYSTEM_PROMPT = `Ești consultant senior RealTrust Timișoara, specializat în administrare de apartamente în REGIM HOTELIER (short-stay) în Timișoara, județul Timiș.
+
+Reguli de calcul (obligatorii):
+- Ocupare medie folosită: 75%.
+- Din venitul brut se scade 27% (management + taxe) pentru a obține venitul net.
+- Randamentul net standard de referință al portofoliului este ~9,4%/an.
+- Zone valide: Cetate/Centru, Iosefin, Fabric, Dumbrăvița, Aradului. Dacă zona nu e clară, scrie "Timișoara".
+- Nu inventa date pe care nu le poți susține; când estimezi, marchează clar că este estimare.
+
+Răspunde EXCLUSIV cu JSON valid, în limba română, cu această structură exactă:
+{
+  "titlu": "titlu scurt al proprietății",
+  "zona": "zona identificată",
+  "tip_proprietate": "apartament|casa|studio|comercial",
+  "camere": 2,
+  "suprafata": 55,
+  "pret_listare": 95000,
+  "moneda": "EUR",
+  "scor": 78,
+  "max_scor": 100,
+  "tarif_noapte": 260,
+  "venit_lunar_brut": 5850,
+  "venit_lunar_net": 4270,
+  "roi_estimat": "8.9%",
+  "puncte_forte": ["..."],
+  "riscuri": ["..."],
+  "recomandari": ["3-5 acțiuni concrete pentru a crește tariful/ocuparea"],
+  "verdict": "2-4 propoziții, ton profesionist, fără promisiuni exagerate"
+}
+Valorile numerice sunt în RON pentru tarif/venit și în moneda listării pentru preț. Dacă un câmp nu poate fi determinat, folosește null.`;
+
+function parseJsonLoose(raw: string) {
+  const cleaned = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(cleaned.slice(start, end + 1));
+      } catch { /* ignore */ }
+    }
+  }
+  return null;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+
+  const ip =
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    "unknown";
+
+  const limit = checkRateLimit(`public-listing-analysis:${ip}`, {
+    maxRequests: 6,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limit.allowed) {
+    return json(
+      { error: "rate_limited", message: "Prea multe analize. Încearcă din nou într-o oră." },
+      429,
+    );
+  }
+
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) return json({ error: "ai_not_configured" }, 500);
+
+  let payload: { mode?: string; url?: string; images?: unknown; context?: string };
+  try {
+    payload = await req.json();
+  } catch {
+    return json({ error: "invalid_body" }, 400);
+  }
+
+  const mode = payload.mode === "photos" ? "photos" : "url";
+  const context = typeof payload.context === "string" ? payload.context.slice(0, 500) : "";
+
+  let userContent: unknown;
+  let sourceUrl: string | null = null;
+
+  if (mode === "url") {
+    const rawUrl = typeof payload.url === "string" ? payload.url.trim() : "";
+    const guard = isAllowedListingUrl(rawUrl);
+    if (!guard.ok) {
+      return json(
+        {
+          error: "url_not_allowed",
+          message:
+            "Acceptăm linkuri de pe OLX, Storia, Imobiliare.ro, Publi24, Anuntul.ro, Homezz, Booking sau Airbnb (https).",
+        },
+        400,
+      );
+    }
+    sourceUrl = guard.parsed!.toString();
+
+    let text: string;
+    try {
+      text = await fetchListingText(sourceUrl);
+    } catch (e) {
+      console.error("listing fetch failed", (e as Error).message);
+      return json(
+        {
+          error: "fetch_failed",
+          message: "Nu am putut citi anunțul. Încarcă fotografii sau completează manual formularul.",
+        },
+        502,
+      );
+    }
+    if (text.length < 200) {
+      return json(
+        { error: "empty_listing", message: "Anunțul pare gol sau protejat. Încearcă cu fotografii." },
+        422,
+      );
+    }
+
+    userContent = `Analizează acest anunț imobiliar din Timișoara (sursă: ${sourceUrl}).${
+      context ? ` Context suplimentar de la proprietar: ${context}.` : ""
+    }\n\nCONȚINUT PAGINĂ:\n${text.slice(0, 14000)}`;
+  } else {
+    const images = Array.isArray(payload.images) ? payload.images : [];
+    const valid = images
+      .filter((i): i is string => typeof i === "string" && i.startsWith("data:image/"))
+      .slice(0, 8)
+      .filter((i) => i.length < 2_500_000);
+    if (valid.length === 0) {
+      return json({ error: "no_images", message: "Adaugă minim o fotografie validă." }, 400);
+    }
+    userContent = [
+      {
+        type: "text",
+        text: `Analizează aceste ${valid.length} fotografii ale proprietății din Timișoara și evaluează potențialul în regim hotelier.${
+          context ? ` Context de la proprietar: ${context}.` : ""
+        }`,
+      },
+      ...valid.map((url) => ({ type: "image_url", image_url: { url } })),
+    ];
+  }
+
+  try {
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userContent },
+        ],
+      }),
+      signal: AbortSignal.timeout(90000),
+    });
+
+    if (aiRes.status === 429) return json({ error: "ai_rate_limited" }, 429);
+    if (aiRes.status === 402) return json({ error: "ai_credits" }, 402);
+    if (!aiRes.ok) {
+      console.error("ai gateway error", aiRes.status, await aiRes.text());
+      return json({ error: "ai_error" }, 502);
+    }
+
+    const data = await aiRes.json();
+    const raw = data.choices?.[0]?.message?.content?.trim() || "";
+    const parsed = parseJsonLoose(raw);
+    if (!parsed) return json({ error: "ai_parse_failed" }, 502);
+
+    return json({ ok: true, mode, source_url: sourceUrl, analysis: parsed });
+  } catch (e) {
+    console.error("analysis failed", (e as Error).message);
+    return json({ error: "analysis_failed" }, 500);
+  }
+});
