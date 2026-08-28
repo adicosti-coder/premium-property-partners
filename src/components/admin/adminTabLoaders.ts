@@ -69,6 +69,7 @@ const loaders: Record<string, Loader> = {
   "ai-security": () => import("@/components/admin/AISecurityPanel"),
   "seo-guide-generator": () => import("@/components/admin/SeoGuideGenerator"),
   "blog-error-feed": () => import("@/components/admin/BlogErrorFeed"),
+  "not-found-logs": () => import("@/components/admin/NotFoundLogsPanel"),
   "auto-publish-logs": () => import("@/components/admin/AutoPublishLogsDashboard"),
 };
 
