@@ -140,7 +140,7 @@ const BlogArticleCTA = () => {
               variants={buttonVariants}
             >
               <Button asChild className="gap-2 group/btn">
-                <Link to="/guests">
+                <Link to="/pentru-oaspeti">
                   {t.guestCta}
                   <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                 </Link>

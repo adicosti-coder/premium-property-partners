@@ -73,7 +73,7 @@ export default function ComplexZoneListings({ complexName, zoneMatchers, isRo }:
                 : "The latest listings verified and approved by the RealTrust team."}
             </p>
           </div>
-          <Link to="/proprietati">
+          <Link to="/imobiliare">
             <Button variant="outline" size="sm" className="gap-1">
               {isRo ? "Vezi toate proprietățile" : "View all properties"}
               <ArrowRight className="w-3.5 h-3.5" />
@@ -91,7 +91,7 @@ export default function ComplexZoneListings({ complexName, zoneMatchers, isRo }:
           <div className="grid md:grid-cols-3 gap-4">
             {listings.map((l) => {
               const img = Array.isArray(l.images) ? l.images[0] : null;
-              const href = l.slug ? `/proprietate/${l.slug}` : "/proprietati";
+              const href = l.slug ? `/proprietate/${l.slug}` : "/imobiliare";
               const priceLabel = l.listing_type === "vanzare"
                 ? null
                 : l.base_price_per_night
