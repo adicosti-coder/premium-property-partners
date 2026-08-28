@@ -118,7 +118,11 @@ Răspunde EXCLUSIV cu JSON valid, în limba română, cu această structură exa
   "puncte_forte": ["..."],
   "riscuri": ["..."],
   "recomandari": ["3-5 acțiuni concrete pentru a crește tariful/ocuparea"],
+  "comparabile_zona": [
+    { "denumire": "apartament 2 camere similar, Cetate", "tarif_noapte": 250, "ocupare_estimata": "72%", "observatie": "1-2 propoziții" }
+  ],
   "verdict": "2-4 propoziții, ton profesionist, fără promisiuni exagerate"
+
 }
 Valorile numerice sunt în RON pentru tarif/venit și în moneda listării pentru preț. Dacă un câmp nu poate fi determinat, folosește null.`;
 
@@ -137,6 +141,71 @@ function parseJsonLoose(raw: string) {
   }
   return null;
 }
+
+// ---- Cache (rewrite_cache: property_title = hash, listing_type = 'ai_analysis') ----
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const SB_URL = Deno.env.get("SUPABASE_URL") || "";
+const SB_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+async function hashInput(parts: string[]): Promise<string> {
+  const buf = new TextEncoder().encode(parts.join("|"));
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function cacheGet(hash: string): Promise<Record<string, unknown> | null> {
+  if (!SB_URL || !SB_SERVICE_KEY) return null;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/rewrite_cache?select=rewritten_full,updated_at&listing_type=eq.ai_analysis&property_title=eq.${hash}&limit=1`,
+      { headers: { apikey: SB_SERVICE_KEY, Authorization: `Bearer ${SB_SERVICE_KEY}` } },
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const row = Array.isArray(rows) ? rows[0] : null;
+    if (!row?.rewritten_full) return null;
+    if (row.updated_at && Date.now() - new Date(row.updated_at).getTime() > CACHE_TTL_MS) return null;
+    return JSON.parse(row.rewritten_full);
+  } catch {
+    return null;
+  }
+}
+
+async function cacheSet(hash: string, analysis: unknown, model: string | null) {
+  if (!SB_URL || !SB_SERVICE_KEY) return;
+  try {
+    await fetch(
+      `${SB_URL}/rest/v1/rewrite_cache?listing_type=eq.ai_analysis&property_title=eq.${hash}`,
+      {
+        method: "DELETE",
+        headers: { apikey: SB_SERVICE_KEY, Authorization: `Bearer ${SB_SERVICE_KEY}` },
+      },
+    );
+    await fetch(`${SB_URL}/rest/v1/rewrite_cache`, {
+      method: "POST",
+      headers: {
+        apikey: SB_SERVICE_KEY,
+        Authorization: `Bearer ${SB_SERVICE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        property_title: hash,
+        listing_type: "ai_analysis",
+        tone: "premium",
+        language: "ro",
+        rewritten_title: model || "ai",
+        rewritten_full: JSON.stringify(analysis),
+        updated_at: new Date().toISOString(),
+      }),
+    });
+  } catch (e) {
+    console.warn("cache write failed", (e as Error).message);
+  }
+}
+
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -173,6 +242,7 @@ Deno.serve(async (req) => {
 
   let userContent: unknown;
   let sourceUrl: string | null = null;
+  let cacheKey: string | null = null;
 
   if (mode === "url") {
     const rawUrl = typeof payload.url === "string" ? payload.url.trim() : "";
@@ -188,6 +258,12 @@ Deno.serve(async (req) => {
       );
     }
     sourceUrl = guard.parsed!.toString();
+
+    cacheKey = await hashInput(["url", sourceUrl, context]);
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return json({ ok: true, mode, source_url: sourceUrl, cached: true, analysis: cached });
+    }
 
     let text: string;
     try {
@@ -221,6 +297,12 @@ Deno.serve(async (req) => {
     if (valid.length === 0) {
       return json({ error: "no_images", message: "Adaugă minim o fotografie validă." }, 400);
     }
+    cacheKey = await hashInput(["photos", context, ...valid]);
+    const cachedPhotos = await cacheGet(cacheKey);
+    if (cachedPhotos) {
+      return json({ ok: true, mode, source_url: null, cached: true, analysis: cachedPhotos });
+    }
+
     userContent = [
       {
         type: "text",
@@ -233,9 +315,9 @@ Deno.serve(async (req) => {
   }
 
   const MODELS = [
-    "google/gemini-3-flash",
+    "google/gemini-3.7-flash",
     "google/gemini-2.5-flash",
-    "google/gemini-2.5-flash-lite",
+    "google/gemini-3.1-flash-lite",
     "openai/gpt-5-mini",
   ];
 
@@ -288,7 +370,9 @@ Deno.serve(async (req) => {
       return json({ error: "ai_error", message: "Nu am putut genera analiza. Trimite formularul și revenim în 24h." }, 502);
     }
 
-    return json({ ok: true, mode, source_url: sourceUrl, model: usedModel, analysis: parsed });
+    if (cacheKey) await cacheSet(cacheKey, parsed, usedModel);
+
+    return json({ ok: true, mode, source_url: sourceUrl, model: usedModel, cached: false, analysis: parsed });
 
 
     return json({ ok: true, mode, source_url: sourceUrl, analysis: parsed });

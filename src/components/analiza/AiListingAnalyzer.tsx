@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Link2,
@@ -9,6 +9,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   ArrowDownToLine,
+  Wallet,
+  BarChart3,
+  Lightbulb,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,6 +41,12 @@ export interface ListingAnalysis {
   riscuri?: string[] | null;
   recomandari?: string[] | null;
   verdict?: string | null;
+  comparabile_zona?: Array<{
+    denumire?: string | null;
+    tarif_noapte?: number | null;
+    ocupare_estimata?: string | null;
+    observatie?: string | null;
+  }> | null;
 }
 
 export interface AnalyzerResult {
@@ -44,6 +54,7 @@ export interface AnalyzerResult {
   sourceUrl: string | null;
   mode: "url" | "photos";
   photoCount: number;
+  cached?: boolean;
 }
 
 interface Props {
@@ -81,6 +92,13 @@ function compressImage(base64: string, maxWidth = 900, quality = 0.7): Promise<s
   });
 }
 
+const STEPS = [
+  "Validăm sursa și verificăm cache-ul",
+  "Extragem datele proprietății",
+  "Estimăm tariful și ocuparea",
+  "Construim raportul final",
+];
+
 const fmt = (n: number | null | undefined, suffix = "") =>
   typeof n === "number" && Number.isFinite(n) ? `${Math.round(n).toLocaleString("ro-RO")}${suffix}` : "—";
 
@@ -91,6 +109,18 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
   const [context, setContext] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalyzerResult | null>(null);
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (!loading) return;
+    setStep(0);
+    const timers = [
+      window.setTimeout(() => setStep(1), 1200),
+      window.setTimeout(() => setStep(2), 5000),
+      window.setTimeout(() => setStep(3), 11000),
+    ];
+    return () => timers.forEach(window.clearTimeout);
+  }, [loading]);
 
   const run = async () => {
     if (loading) return;
@@ -139,10 +169,11 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
         sourceUrl: data.source_url ?? null,
         mode: tab,
         photoCount: tab === "photos" ? images.length : 0,
+        cached: Boolean(data.cached),
       };
       setResult(payload);
       onResult(payload);
-      toast.success("Analiza AI este gata.");
+      toast.success(data.cached ? "Analiză recuperată instant din cache." : "Analiza AI este gata.");
     } catch {
       toast.error("Analiza a eșuat. Verifică conexiunea și încearcă din nou.");
     } finally {
@@ -237,6 +268,35 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
           )}
         </Button>
 
+        {loading && (
+          <ol className="space-y-2" aria-live="polite" aria-label="Progresul analizei AI">
+            {STEPS.map((label, i) => {
+              const done = i < step;
+              const active = i === step;
+              return (
+                <li key={label} className="flex items-center gap-3 text-sm">
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${
+                      done
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : active
+                          ? "border-primary text-primary"
+                          : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    {done ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
+                  </span>
+                  <span className={active ? "font-medium text-foreground" : "text-muted-foreground"}>
+                    {label}
+                  </span>
+                  {active && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" aria-hidden="true" />}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+
+
         <AnimatePresence>
           {result && (
             <motion.div
@@ -255,65 +315,120 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
                 <span className="text-sm text-muted-foreground">
                   Zonă: <strong className="text-foreground">{result.analysis.zona || "Timișoara"}</strong>
                 </span>
+                {result.cached && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground">
+                    <Zap className="w-3 h-3" aria-hidden="true" /> Rezultat instant (cache)
+                  </span>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  { label: "Tarif/noapte", value: fmt(result.analysis.tarif_noapte, " RON") },
-                  { label: "Venit brut/lună", value: fmt(result.analysis.venit_lunar_brut, " RON") },
-                  { label: "Venit net/lună", value: fmt(result.analysis.venit_lunar_net, " RON") },
-                  { label: "ROI estimat", value: result.analysis.roi_estimat || "—" },
-                ].map((m) => (
-                  <div key={m.label} className="rounded-xl border border-border bg-background p-3">
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{m.label}</p>
-                    <p className="text-base font-bold text-foreground">{m.value}</p>
-                  </div>
-                ))}
-              </div>
+              {/* 1. Potențial randament */}
+              <section className="space-y-3 rounded-xl border border-border bg-background p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <TrendingUp className="w-4 h-4 text-primary" aria-hidden="true" /> 1. Potențial randament
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    { label: "Tarif/noapte", value: fmt(result.analysis.tarif_noapte, " RON") },
+                    { label: "ROI estimat", value: result.analysis.roi_estimat || "—" },
+                    { label: "Preț listare", value: `${fmt(result.analysis.pret_listare)} ${result.analysis.moneda || ""}`.trim() },
+                  ].map((m) => (
+                    <div key={m.label} className="rounded-lg border border-border p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{m.label}</p>
+                      <p className="text-base font-bold text-foreground">{m.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {result.analysis.verdict && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">{result.analysis.verdict}</p>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {!!result.analysis.puncte_forte?.length && (
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-semibold text-foreground">Puncte forte</p>
+                      <ul className="space-y-1">
+                        {result.analysis.puncte_forte.slice(0, 5).map((p, i) => (
+                          <li key={i} className="flex gap-2 text-sm text-muted-foreground">
+                            <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                            {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {!!result.analysis.riscuri?.length && (
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-semibold text-foreground">Riscuri / atenționări</p>
+                      <ul className="space-y-1">
+                        {result.analysis.riscuri.slice(0, 5).map((p, i) => (
+                          <li key={i} className="flex gap-2 text-sm text-muted-foreground">
+                            <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
+                            {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </section>
 
-              {result.analysis.verdict && (
-                <p className="text-sm text-muted-foreground leading-relaxed">{result.analysis.verdict}</p>
+              {/* 2. Comparabile zonă */}
+              {!!result.analysis.comparabile_zona?.length && (
+                <section className="space-y-3 rounded-xl border border-border bg-background p-4">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <BarChart3 className="w-4 h-4 text-primary" aria-hidden="true" /> 2. Comparabile în zonă
+                  </h3>
+                  <ul className="space-y-2">
+                    {result.analysis.comparabile_zona.slice(0, 5).map((c, i) => (
+                      <li key={i} className="rounded-lg border border-border p-3">
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <p className="text-sm font-medium text-foreground">{c.denumire || "Proprietate similară"}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {fmt(c.tarif_noapte, " RON/noapte")}
+                            {c.ocupare_estimata ? ` · ocupare ${c.ocupare_estimata}` : ""}
+                          </p>
+                        </div>
+                        {c.observatie && (
+                          <p className="mt-1 text-xs text-muted-foreground">{c.observatie}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {!!result.analysis.puncte_forte?.length && (
-                  <div className="space-y-1.5">
-                    <p className="text-sm font-semibold text-foreground">Puncte forte</p>
-                    <ul className="space-y-1">
-                      {result.analysis.puncte_forte.slice(0, 5).map((p, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-muted-foreground">
-                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {!!result.analysis.riscuri?.length && (
-                  <div className="space-y-1.5">
-                    <p className="text-sm font-semibold text-foreground">Riscuri / atenționări</p>
-                    <ul className="space-y-1">
-                      {result.analysis.riscuri.slice(0, 5).map((p, i) => (
-                        <li key={i} className="flex gap-2 text-sm text-muted-foreground">
-                          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
+              {/* 3. Recomandări optimizare */}
               {!!result.analysis.recomandari?.length && (
-                <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-foreground">Recomandări pentru randament maxim</p>
+                <section className="space-y-2 rounded-xl border border-border bg-background p-4">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Lightbulb className="w-4 h-4 text-primary" aria-hidden="true" /> 3. Recomandări de optimizare
+                  </h3>
                   <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                     {result.analysis.recomandari.slice(0, 6).map((r, i) => (
                       <li key={i}>{r}</li>
                     ))}
                   </ol>
-                </div>
+                </section>
               )}
+
+              {/* 4. Estimare venit lunar */}
+              <section className="space-y-3 rounded-xl border border-border bg-background p-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Wallet className="w-4 h-4 text-primary" aria-hidden="true" /> 4. Estimare venit lunar
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Venit brut/lună", value: fmt(result.analysis.venit_lunar_brut, " RON") },
+                    { label: "Venit net/lună", value: fmt(result.analysis.venit_lunar_net, " RON") },
+                  ].map((m) => (
+                    <div key={m.label} className="rounded-lg border border-border p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{m.label}</p>
+                      <p className="text-base font-bold text-foreground">{m.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
 
               <Button variant="secondary" onClick={applyToForm} className="w-full min-h-12">
                 <ArrowDownToLine className="w-4 h-4 mr-2" aria-hidden="true" />
