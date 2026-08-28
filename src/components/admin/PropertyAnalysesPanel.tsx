@@ -94,6 +94,7 @@ export default function PropertyAnalysesPanel() {
   };
 
   return (
+    <div className="space-y-6">
     <Card>
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -215,5 +216,7 @@ export default function PropertyAnalysesPanel() {
         )}
       </CardContent>
     </Card>
+    <AnalysisVersionsPanel />
+    </div>
   );
 }
