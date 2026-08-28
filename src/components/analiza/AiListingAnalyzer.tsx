@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Link2,
@@ -9,6 +9,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   ArrowDownToLine,
+  Wallet,
+  BarChart3,
+  Lightbulb,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,6 +41,12 @@ export interface ListingAnalysis {
   riscuri?: string[] | null;
   recomandari?: string[] | null;
   verdict?: string | null;
+  comparabile_zona?: Array<{
+    denumire?: string | null;
+    tarif_noapte?: number | null;
+    ocupare_estimata?: string | null;
+    observatie?: string | null;
+  }> | null;
 }
 
 export interface AnalyzerResult {
@@ -44,6 +54,7 @@ export interface AnalyzerResult {
   sourceUrl: string | null;
   mode: "url" | "photos";
   photoCount: number;
+  cached?: boolean;
 }
 
 interface Props {
@@ -81,6 +92,13 @@ function compressImage(base64: string, maxWidth = 900, quality = 0.7): Promise<s
   });
 }
 
+const STEPS = [
+  "Validăm sursa și verificăm cache-ul",
+  "Extragem datele proprietății",
+  "Estimăm tariful și ocuparea",
+  "Construim raportul final",
+];
+
 const fmt = (n: number | null | undefined, suffix = "") =>
   typeof n === "number" && Number.isFinite(n) ? `${Math.round(n).toLocaleString("ro-RO")}${suffix}` : "—";
 
@@ -91,6 +109,18 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
   const [context, setContext] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalyzerResult | null>(null);
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (!loading) return;
+    setStep(0);
+    const timers = [
+      window.setTimeout(() => setStep(1), 1200),
+      window.setTimeout(() => setStep(2), 5000),
+      window.setTimeout(() => setStep(3), 11000),
+    ];
+    return () => timers.forEach(window.clearTimeout);
+  }, [loading]);
 
   const run = async () => {
     if (loading) return;
@@ -139,10 +169,11 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
         sourceUrl: data.source_url ?? null,
         mode: tab,
         photoCount: tab === "photos" ? images.length : 0,
+        cached: Boolean(data.cached),
       };
       setResult(payload);
       onResult(payload);
-      toast.success("Analiza AI este gata.");
+      toast.success(data.cached ? "Analiză recuperată instant din cache." : "Analiza AI este gata.");
     } catch {
       toast.error("Analiza a eșuat. Verifică conexiunea și încearcă din nou.");
     } finally {
