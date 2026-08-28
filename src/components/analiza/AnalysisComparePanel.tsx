@@ -48,6 +48,10 @@ const AnalysisComparePanel = ({ analysis, occupancy = 75 }: Props) => {
   const rentYield = yieldOf(rentNet);
   const diffMonth = hotelNet - rentNet;
   const diffPct = rentNet > 0 ? (diffMonth / rentNet) * 100 : null;
+  const diffMonthEur = diffMonth / EUR_RON;
+  const diffYearEur = (diffMonth * 12) / EUR_RON;
+  const yieldGap =
+    hotelYield !== null && rentYield !== null ? hotelYield - rentYield : null;
 
   const scenarios = [
     {
@@ -98,6 +102,35 @@ const AnalysisComparePanel = ({ analysis, occupancy = 75 }: Props) => {
           onChange={(e) => setRent(Number(e.target.value) || 0)}
           aria-label="Chirie lunară estimată în RON pentru termen lung"
         />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2" aria-label="Diferență de randament între scenarii">
+        {diffPct !== null && (
+          <Badge
+            className={
+              diffMonth >= 0
+                ? "bg-primary text-primary-foreground"
+                : "bg-destructive text-destructive-foreground"
+            }
+          >
+            {diffMonth >= 0 ? "+" : "−"}
+            {Math.abs(Math.round(diffPct))}% venit net vs. chirie
+          </Badge>
+        )}
+        <Badge variant="secondary">
+          Surplus lunar: {diffMonth >= 0 ? "+" : "−"}
+          {fmt(Math.abs(diffMonthEur), " €")}
+        </Badge>
+        <Badge variant="secondary">
+          Surplus anual: {diffMonth >= 0 ? "+" : "−"}
+          {fmt(Math.abs(diffYearEur), " €")}
+        </Badge>
+        {yieldGap !== null && (
+          <Badge variant="outline">
+            Randament: {yieldGap >= 0 ? "+" : "−"}
+            {Math.abs(yieldGap).toFixed(1).replace(".", ",")} pp
+          </Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

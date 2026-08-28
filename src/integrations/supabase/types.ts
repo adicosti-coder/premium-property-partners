@@ -4345,6 +4345,7 @@ export type Database = {
           created_at: string
           email_sent_at: string | null
           expires_at: string
+          expiry_notified_at: string | null
           id: string
           input_hash: string | null
           ip_hash: string | null
@@ -4366,6 +4367,7 @@ export type Database = {
           created_at?: string
           email_sent_at?: string | null
           expires_at?: string
+          expiry_notified_at?: string | null
           id?: string
           input_hash?: string | null
           ip_hash?: string | null
@@ -4387,6 +4389,7 @@ export type Database = {
           created_at?: string
           email_sent_at?: string | null
           expires_at?: string
+          expiry_notified_at?: string | null
           id?: string
           input_hash?: string | null
           ip_hash?: string | null
@@ -4402,6 +4405,41 @@ export type Database = {
           zone?: string | null
         }
         Relationships: []
+      }
+      property_analysis_versions: {
+        Row: {
+          analysis: Json
+          analysis_id: string
+          created_at: string
+          id: string
+          params: Json
+          version: number
+        }
+        Insert: {
+          analysis?: Json
+          analysis_id: string
+          created_at?: string
+          id?: string
+          params?: Json
+          version?: number
+        }
+        Update: {
+          analysis?: Json
+          analysis_id?: string
+          created_at?: string
+          id?: string
+          params?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_analysis_versions_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "property_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_contact_details: {
         Row: {
@@ -10500,6 +10538,10 @@ export type Database = {
       log_404: {
         Args: { _path: string; _referrer?: string; _user_agent?: string }
         Returns: undefined
+      }
+      log_analysis_version: {
+        Args: { p_analysis: Json; p_params: Json; p_token: string }
+        Returns: number
       }
       log_cron_run: {
         Args: {

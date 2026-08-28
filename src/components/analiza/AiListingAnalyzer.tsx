@@ -26,7 +26,7 @@ import AnalysisPhotoUploader, { type AnalysisPhoto } from "@/components/analiza/
 import AnalysisAdjustPanel from "@/components/analiza/AnalysisAdjustPanel";
 import AnalysisComparePanel from "@/components/analiza/AnalysisComparePanel";
 import AnalysisEmailCard from "@/components/analiza/AnalysisEmailCard";
-import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
+import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 
 export interface ListingAnalysis {
   titlu?: string | null;
@@ -480,10 +480,17 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
 
               <AnalysisAdjustPanel
                 analysis={result.analysis}
-                onRecalculated={(analysis) => {
+                onRecalculated={(analysis, params) => {
                   const next = { ...result, analysis, adjusted: true };
                   setResult(next);
                   onResult(next);
+                  if (result.shareToken) {
+                    void supabase.rpc("log_analysis_version", {
+                      p_token: result.shareToken,
+                      p_params: params as never,
+                      p_analysis: analysis as never,
+                    });
+                  }
                 }}
               />
 
