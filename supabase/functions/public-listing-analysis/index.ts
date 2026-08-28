@@ -452,10 +452,26 @@ Deno.serve(async (req) => {
 
     if (cacheKey) await cacheSet(cacheKey, parsed, usedModel);
 
-    return json({ ok: true, mode, source_url: sourceUrl, model: usedModel, cached: false, analysis: parsed });
+    const shareToken = await saveAnalysis({
+      hash: cacheKey,
+      mode,
+      sourceUrl,
+      photoCount,
+      context,
+      model: usedModel,
+      cached: false,
+      analysis: parsed as Record<string, unknown>,
+    });
 
-
-    return json({ ok: true, mode, source_url: sourceUrl, analysis: parsed });
+    return json({
+      ok: true,
+      mode,
+      source_url: sourceUrl,
+      model: usedModel,
+      cached: false,
+      analysis: parsed,
+      share_token: shareToken,
+    });
   } catch (e) {
     console.error("analysis failed", (e as Error).message);
     return json({ error: "analysis_failed" }, 500);
