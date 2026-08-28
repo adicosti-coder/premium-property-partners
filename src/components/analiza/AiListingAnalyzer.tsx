@@ -172,7 +172,9 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
         mode: tab,
         photoCount: tab === "photos" ? images.length : 0,
         cached: Boolean(data.cached),
+        shareToken: (data.share_token as string | null) ?? null,
       };
+
       setResult(payload);
       onResult(payload);
       toast.success(data.cached ? "Analiză recuperată instant din cache." : "Analiza AI este gata.");
