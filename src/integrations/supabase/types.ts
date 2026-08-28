@@ -10556,6 +10556,19 @@ export type Database = {
         Args: { p_language?: string; p_url: string }
         Returns: undefined
       }
+      submit_analysis_lead: {
+        Args: {
+          p_email: string
+          p_message?: string
+          p_name: string
+          p_phone: string
+          p_property_area?: number
+          p_property_type: string
+          p_simulation?: Json
+          p_source?: string
+        }
+        Returns: string
+      }
       validate_chat_session: {
         Args: { p_session_id: string }
         Returns: boolean
