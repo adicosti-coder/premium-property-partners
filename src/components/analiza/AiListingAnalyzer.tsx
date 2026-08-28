@@ -59,6 +59,7 @@ export interface AnalyzerResult {
   photoCount: number;
   cached?: boolean;
   shareToken?: string | null;
+  adjusted?: boolean;
 }
 
 
