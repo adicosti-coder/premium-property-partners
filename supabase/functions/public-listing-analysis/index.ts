@@ -366,6 +366,7 @@ Deno.serve(async (req) => {
     if (valid.length === 0) {
       return json({ error: "no_images", message: "Adaugă minim o fotografie validă." }, 400);
     }
+    photoCount = valid.length;
     cacheKey = await hashInput(["photos", context, ...valid]);
     const cachedPhotos = await cacheGet(cacheKey);
     if (cachedPhotos) {
