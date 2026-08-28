@@ -142,6 +142,65 @@ function parseJsonLoose(raw: string) {
   return null;
 }
 
+// ---- Cache (rewrite_cache: property_title = hash, listing_type = 'ai_analysis') ----
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const SB_URL = Deno.env.get("SUPABASE_URL") || "";
+const SB_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+async function hashInput(parts: string[]): Promise<string> {
+  const buf = new TextEncoder().encode(parts.join("|"));
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function cacheGet(hash: string): Promise<Record<string, unknown> | null> {
+  if (!SB_URL || !SB_SERVICE_KEY) return null;
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/rewrite_cache?select=rewritten_full,updated_at&listing_type=eq.ai_analysis&property_title=eq.${hash}&limit=1`,
+      { headers: { apikey: SB_SERVICE_KEY, Authorization: `Bearer ${SB_SERVICE_KEY}` } },
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const row = Array.isArray(rows) ? rows[0] : null;
+    if (!row?.rewritten_full) return null;
+    if (row.updated_at && Date.now() - new Date(row.updated_at).getTime() > CACHE_TTL_MS) return null;
+    return JSON.parse(row.rewritten_full);
+  } catch {
+    return null;
+  }
+}
+
+async function cacheSet(hash: string, analysis: unknown, model: string | null) {
+  if (!SB_URL || !SB_SERVICE_KEY) return;
+  try {
+    await fetch(`${SB_URL}/rest/v1/rewrite_cache?on_conflict=property_title,listing_type,tone,language`, {
+      method: "POST",
+      headers: {
+        apikey: SB_SERVICE_KEY,
+        Authorization: `Bearer ${SB_SERVICE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates",
+      },
+      body: JSON.stringify({
+        property_title: hash,
+        listing_type: "ai_analysis",
+        tone: "premium",
+        language: "ro",
+        rewritten_title: model || "ai",
+        rewritten_full: JSON.stringify(analysis),
+        updated_at: new Date().toISOString(),
+      }),
+    });
+  } catch (e) {
+    console.warn("cache write failed", (e as Error).message);
+  }
+}
+
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
