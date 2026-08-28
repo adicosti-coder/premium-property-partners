@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_404_logs: {
+        Row: {
+          first_seen_at: string
+          hits: number
+          id: string
+          last_seen_at: string
+          path: string
+          referrer: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          first_seen_at?: string
+          hits?: number
+          id?: string
+          last_seen_at?: string
+          path: string
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          first_seen_at?: string
+          hits?: number
+          id?: string
+          last_seen_at?: string
+          path?: string
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_access_logs: {
         Row: {
           accessed_at: string
@@ -10384,6 +10414,10 @@ export type Database = {
           _quality_delta?: number
           _source_platform: string
         }
+        Returns: undefined
+      }
+      log_404: {
+        Args: { _path: string; _referrer?: string; _user_agent?: string }
         Returns: undefined
       }
       log_cron_run: {
