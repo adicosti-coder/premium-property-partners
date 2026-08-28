@@ -1,10 +1,11 @@
 import { lazy, Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, Send, ShieldCheck, Clock, LineChart } from "lucide-react";
+import { Loader2, Send, ShieldCheck, Clock, LineChart, Sparkles } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import InvestmentYieldCalculator from "@/components/InvestmentYieldCalculator";
 import FormTrustBadges from "@/components/forms/FormTrustBadges";
+import AiListingAnalyzer, { type AnalyzerResult } from "@/components/analiza/AiListingAnalyzer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import { neighborhoods } from "@/data/neighborhoods";
 
 const Header = lazy(() => import("@/components/Header"));
 const Footer = lazy(() => import("@/components/Footer"));
+
 
 const PROPERTY_TYPES = [
   { value: "apartament", label: "Apartament" },
