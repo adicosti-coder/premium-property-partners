@@ -106,7 +106,7 @@ const AnalizaPartajata = () => {
         <SEOHead
           title="Analiză indisponibilă | RealTrust"
           description="Linkul analizei nu mai este valabil."
-          noindex
+          noIndex
         />
         <h1 className="text-2xl font-serif font-bold text-foreground">Analiza nu a fost găsită</h1>
         <p className="text-muted-foreground max-w-md">
@@ -126,7 +126,7 @@ const AnalizaPartajata = () => {
       <SEOHead
         title={`Analiză potențial regim hotelier${a.zona ? ` – ${a.zona}` : ""} | RealTrust`}
         description="Raport AI RealTrust: scor de potențial, tarif estimat pe noapte, venit lunar net și recomandări de optimizare pentru regim hotelier în Timișoara."
-        noindex
+        noIndex
       />
       <main className="max-w-3xl mx-auto px-4 py-10 space-y-5">
         <header className="space-y-2">
