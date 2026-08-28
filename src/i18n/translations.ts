@@ -1916,10 +1916,12 @@ Thank you!`,
     
     // NotFound (404)
     notFound: {
-      title: "404",
-      message: "Oops! Page not found",
+      title: "This page no longer exists",
+      message: "The link you followed is old or mistyped. Let's get you back on track.",
       backHome: "Return to Home",
+      ownersCta: "I want hotel-regime management",
     },
+
     
     // Common
     common: {
