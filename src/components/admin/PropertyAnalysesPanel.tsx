@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { BrainCircuit, ExternalLink, FileDown, Link as LinkIcon, RefreshCw } from "lucide-react";
+import AnalysisVersionsPanel from "@/components/admin/AnalysisVersionsPanel";
 import type { ListingAnalysis } from "@/components/analiza/AiListingAnalyzer";
 
 interface AnalysisRow {
@@ -93,6 +94,7 @@ export default function PropertyAnalysesPanel() {
   };
 
   return (
+    <div className="space-y-6">
     <Card>
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -214,5 +216,7 @@ export default function PropertyAnalysesPanel() {
         )}
       </CardContent>
     </Card>
+    <AnalysisVersionsPanel />
+    </div>
   );
 }

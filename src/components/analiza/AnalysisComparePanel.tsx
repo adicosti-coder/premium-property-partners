@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeftRight, BedDouble, Home, TrendingUp } from "lucide-react";
+import { ArrowLeftRight, BedDouble, FileDown, Home, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +17,8 @@ interface Props {
   analysis: ListingAnalysis;
   /** ocupare folosită pentru scenariul hotelier (default 75%) */
   occupancy?: number;
+  /** link public al analizei, inclus în PDF-ul comparativ */
+  shareUrl?: string | null;
 }
 
 const fmt = (n: number | null | undefined, suffix = "") =>
@@ -22,7 +26,7 @@ const fmt = (n: number | null | undefined, suffix = "") =>
     ? `${Math.round(n).toLocaleString("ro-RO")}${suffix}`
     : "—";
 
-const AnalysisComparePanel = ({ analysis, occupancy = 75 }: Props) => {
+const AnalysisComparePanel = ({ analysis, occupancy = 75, shareUrl = null }: Props) => {
   const hotelGross = useMemo(() => {
     if (analysis.venit_lunar_brut) return analysis.venit_lunar_brut;
     return Math.round((analysis.tarif_noapte || 0) * DAYS_PER_MONTH * (occupancy / 100));
@@ -77,6 +81,40 @@ const AnalysisComparePanel = ({ analysis, occupancy = 75 }: Props) => {
       highlight: diffMonth < 0,
     },
   ];
+
+  const downloadComparison = async () => {
+    try {
+      const [{ downloadComparePdf }, { trackConversion }] = await Promise.all([
+        import("@/lib/analysisComparePdf"),
+        import("@/lib/conversionTracking"),
+      ]);
+      downloadComparePdf({
+        title: analysis.titlu || "Analiza potential regim hotelier",
+        zone: analysis.zona || null,
+        scenarios: scenarios.map((s) => ({
+          title: s.title,
+          subtitle: s.subtitle,
+          gross: s.gross,
+          net: s.net,
+          yearly: s.yearly,
+          yieldPct: s.yieldPct,
+        })),
+        diffMonthRon: diffMonth,
+        diffMonthEur,
+        diffYearEur,
+        diffPct,
+        yieldGapPp: yieldGap,
+        shareUrl,
+      });
+      trackConversion({
+        event: "download_yield_report",
+        source: "analiza_comparatie_pdf",
+      });
+      toast.success("Raportul comparativ a fost descărcat.");
+    } catch {
+      toast.error("Nu am putut genera PDF-ul comparativ.");
+    }
+  };
 
   return (
     <section className="space-y-4 rounded-xl border border-border bg-card p-4">
@@ -190,6 +228,16 @@ const AnalysisComparePanel = ({ analysis, occupancy = 75 }: Props) => {
           </span>
         )}
       </p>
+
+      <Button
+        variant="outline"
+        onClick={downloadComparison}
+        className="w-full min-h-12"
+        aria-label="Descarcă raportul PDF comparativ regim hotelier vs. chirie termen lung"
+      >
+        <FileDown className="mr-2 h-4 w-4" aria-hidden="true" />
+        Descarcă PDF comparativ
+      </Button>
     </section>
   );
 };

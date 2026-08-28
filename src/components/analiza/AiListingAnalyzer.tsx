@@ -232,6 +232,8 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
         photoCount: result.photoCount,
         shareUrl,
       });
+      const { trackConversion } = await import("@/lib/conversionTracking");
+      trackConversion({ event: "download_yield_report", source: "analiza_ai_pdf" });
       toast.success("Raportul PDF a fost descărcat.");
     } catch {
       toast.error("Nu am putut genera PDF-ul. Încearcă din nou.");
@@ -494,7 +496,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
                 }}
               />
 
-              <AnalysisComparePanel analysis={result.analysis} />
+              <AnalysisComparePanel analysis={result.analysis} shareUrl={shareUrl} />
 
               <AnalysisEmailCard shareToken={result.shareToken} />
 

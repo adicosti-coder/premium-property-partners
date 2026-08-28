@@ -17,6 +17,8 @@ import SEOHead from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import type { ListingAnalysis } from "@/components/analiza/AiListingAnalyzer";
 import AnalysisComparePanel from "@/components/analiza/AnalysisComparePanel";
+import AnalysisExpiryCountdown from "@/components/analiza/AnalysisExpiryCountdown";
+import { trackConversion } from "@/lib/conversionTracking";
 
 interface SharedAnalysis {
   analysis: ListingAnalysis;
@@ -79,6 +81,7 @@ const AnalizaPartajata = () => {
         shareUrl: window.location.href,
         createdAt: data.createdAt,
       });
+      trackConversion({ event: "download_yield_report", source: "analiza_partajata_pdf" });
       toast.success("Raportul PDF a fost descărcat.");
     } catch {
       toast.error("Nu am putut genera PDF-ul.");
@@ -156,6 +159,8 @@ const AnalizaPartajata = () => {
               .join(" · ")}
           </p>
         </header>
+
+        <AnalysisExpiryCountdown expiresAt={data.expiresAt} />
 
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" onClick={downloadPdf} className="min-h-12">
@@ -268,14 +273,24 @@ const AnalizaPartajata = () => {
           </div>
         </section>
 
-        <AnalysisComparePanel analysis={a} />
+        <AnalysisComparePanel analysis={a} shareUrl={window.location.href} />
 
         <p className="text-xs text-muted-foreground">
           Estimările folosesc 75% ocupare și 27% deducere management/taxe. Sunt orientative și nu
           reprezintă o ofertă contractuală.
         </p>
 
-        <Button asChild className="w-full min-h-12">
+        <Button
+          asChild
+          className="w-full min-h-12"
+          onClick={() =>
+            trackConversion({ event: "schedule_call", source: "analiza_partajata_consultanta" })
+          }
+        >
+          <Link to="/contact">Programează Consultanță</Link>
+        </Button>
+
+        <Button asChild variant="outline" className="w-full min-h-12">
           <Link to="/pentru-proprietari">Vreau administrare în regim hotelier</Link>
         </Button>
       </main>
