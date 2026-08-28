@@ -176,13 +176,19 @@ async function cacheGet(hash: string): Promise<Record<string, unknown> | null> {
 async function cacheSet(hash: string, analysis: unknown, model: string | null) {
   if (!SB_URL || !SB_SERVICE_KEY) return;
   try {
-    await fetch(`${SB_URL}/rest/v1/rewrite_cache?on_conflict=property_title,listing_type,tone,language`, {
+    await fetch(
+      `${SB_URL}/rest/v1/rewrite_cache?listing_type=eq.ai_analysis&property_title=eq.${hash}`,
+      {
+        method: "DELETE",
+        headers: { apikey: SB_SERVICE_KEY, Authorization: `Bearer ${SB_SERVICE_KEY}` },
+      },
+    );
+    await fetch(`${SB_URL}/rest/v1/rewrite_cache`, {
       method: "POST",
       headers: {
         apikey: SB_SERVICE_KEY,
         Authorization: `Bearer ${SB_SERVICE_KEY}`,
         "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates",
       },
       body: JSON.stringify({
         property_title: hash,
@@ -296,9 +302,9 @@ Deno.serve(async (req) => {
   }
 
   const MODELS = [
-    "google/gemini-3-flash",
+    "google/gemini-3.7-flash",
     "google/gemini-2.5-flash",
-    "google/gemini-2.5-flash-lite",
+    "google/gemini-3.1-flash-lite",
     "openai/gpt-5-mini",
   ];
 
