@@ -475,6 +475,15 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
                 </div>
               </section>
 
+              <AnalysisAdjustPanel
+                analysis={result.analysis}
+                onRecalculated={(analysis) => {
+                  const next = { ...result, analysis, adjusted: true };
+                  setResult(next);
+                  onResult(next);
+                }}
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Button variant="outline" onClick={downloadPdf} className="min-h-12">
                   <FileDown className="w-4 h-4 mr-2" aria-hidden="true" />
