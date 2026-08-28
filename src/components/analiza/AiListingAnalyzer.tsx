@@ -472,11 +472,28 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
                 </div>
               </section>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button variant="outline" onClick={downloadPdf} className="min-h-12">
+                  <FileDown className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Descarcă Raport PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={shareAnalysis}
+                  className="min-h-12"
+                  disabled={!shareUrl}
+                  aria-label="Distribuie link analiză"
+                >
+                  <Share2 className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Distribuie link analiză
+                </Button>
+              </div>
 
               <Button variant="secondary" onClick={applyToForm} className="w-full min-h-12">
                 <ArrowDownToLine className="w-4 h-4 mr-2" aria-hidden="true" />
                 Trimite analiza spre echipa RealTrust
               </Button>
+
               <p className="text-xs text-muted-foreground text-center">
                 Estimările folosesc 75% ocupare și 27% deducere management/taxe. Analiza umană detaliată vine în 24h lucrătoare.
               </p>
