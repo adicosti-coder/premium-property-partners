@@ -127,6 +127,8 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "automation", label: "Automation", icon: Sparkles, keywords: ["automation", "automatizare", "kill switch", "joburi", "approvals"] },
       { value: "blog-error-feed", label: "Erori Frontend", icon: ShieldCheck, keywords: ["errors", "erori", "blog", "401", "403", "correlation"] },
       { value: "not-found-logs", label: "Monitorizare 404", icon: LinkIcon, keywords: ["404", "not found", "linkuri rupte", "broken links", "redirect"] },
+      { value: "property-analyses", label: "Istoric analize AI", icon: Sparkles, keywords: ["analiza", "analize", "ai", "randament", "pdf", "raport", "share"] },
+
     ],
   },
 ];

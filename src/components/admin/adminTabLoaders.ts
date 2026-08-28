@@ -70,6 +70,7 @@ const loaders: Record<string, Loader> = {
   "seo-guide-generator": () => import("@/components/admin/SeoGuideGenerator"),
   "blog-error-feed": () => import("@/components/admin/BlogErrorFeed"),
   "not-found-logs": () => import("@/components/admin/NotFoundLogsPanel"),
+  "property-analyses": () => import("@/components/admin/PropertyAnalysesPanel"),
   "auto-publish-logs": () => import("@/components/admin/AutoPublishLogsDashboard"),
 };
 

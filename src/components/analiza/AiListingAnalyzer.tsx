@@ -13,6 +13,8 @@ import {
   BarChart3,
   Lightbulb,
   Zap,
+  FileDown,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -55,7 +57,9 @@ export interface AnalyzerResult {
   mode: "url" | "photos";
   photoCount: number;
   cached?: boolean;
+  shareToken?: string | null;
 }
+
 
 interface Props {
   onResult: (result: AnalyzerResult) => void;
@@ -170,7 +174,9 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
         mode: tab,
         photoCount: tab === "photos" ? images.length : 0,
         cached: Boolean(data.cached),
+        shareToken: (data.share_token as string | null) ?? null,
       };
+
       setResult(payload);
       onResult(payload);
       toast.success(data.cached ? "Analiză recuperată instant din cache." : "Analiza AI este gata.");
@@ -206,6 +212,45 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
     toast.success("Datele au fost trecute în formular.");
     document.getElementById("formular-analiza")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  const shareUrl = result?.shareToken
+    ? `${window.location.origin}/analiza/${result.shareToken}`
+    : null;
+
+  const downloadPdf = async () => {
+    if (!result) return;
+    try {
+      const { downloadAnalysisPdf } = await import("@/lib/analysisPdf");
+      downloadAnalysisPdf({
+        analysis: result.analysis,
+        sourceUrl: result.sourceUrl,
+        mode: result.mode,
+        photoCount: result.photoCount,
+        shareUrl,
+      });
+      toast.success("Raportul PDF a fost descărcat.");
+    } catch {
+      toast.error("Nu am putut genera PDF-ul. Încearcă din nou.");
+    }
+  };
+
+  const shareAnalysis = async () => {
+    if (!shareUrl) {
+      toast.error("Linkul de partajare nu este disponibil pentru această analiză.");
+      return;
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Analiză RealTrust", url: shareUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copiat. Îl poți trimite oricui.");
+    } catch {
+      toast.error("Nu am putut copia linkul. Copiază-l manual din bara de adrese a raportului.");
+    }
+  };
+
 
   return (
     <section className="px-4 py-8">
@@ -429,11 +474,28 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
                 </div>
               </section>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button variant="outline" onClick={downloadPdf} className="min-h-12">
+                  <FileDown className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Descarcă Raport PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={shareAnalysis}
+                  className="min-h-12"
+                  disabled={!shareUrl}
+                  aria-label="Distribuie link analiză"
+                >
+                  <Share2 className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Distribuie link analiză
+                </Button>
+              </div>
 
               <Button variant="secondary" onClick={applyToForm} className="w-full min-h-12">
                 <ArrowDownToLine className="w-4 h-4 mr-2" aria-hidden="true" />
                 Trimite analiza spre echipa RealTrust
               </Button>
+
               <p className="text-xs text-muted-foreground text-center">
                 Estimările folosesc 75% ocupare și 27% deducere management/taxe. Analiza umană detaliată vine în 24h lucrătoare.
               </p>

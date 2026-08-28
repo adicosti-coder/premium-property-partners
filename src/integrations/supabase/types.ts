@@ -4337,6 +4337,63 @@ export type Database = {
         }
         Relationships: []
       }
+      property_analyses: {
+        Row: {
+          analysis: Json
+          cached: boolean
+          context_text: string | null
+          created_at: string
+          id: string
+          input_hash: string | null
+          ip_hash: string | null
+          lead_id: string | null
+          mode: string
+          model: string | null
+          photo_count: number
+          score: number | null
+          share_token: string
+          source_url: string | null
+          updated_at: string
+          zone: string | null
+        }
+        Insert: {
+          analysis: Json
+          cached?: boolean
+          context_text?: string | null
+          created_at?: string
+          id?: string
+          input_hash?: string | null
+          ip_hash?: string | null
+          lead_id?: string | null
+          mode?: string
+          model?: string | null
+          photo_count?: number
+          score?: number | null
+          share_token?: string
+          source_url?: string | null
+          updated_at?: string
+          zone?: string | null
+        }
+        Update: {
+          analysis?: Json
+          cached?: boolean
+          context_text?: string | null
+          created_at?: string
+          id?: string
+          input_hash?: string | null
+          ip_hash?: string | null
+          lead_id?: string | null
+          mode?: string
+          model?: string | null
+          photo_count?: number
+          score?: number | null
+          share_token?: string
+          source_url?: string | null
+          updated_at?: string
+          zone?: string | null
+        }
+        Relationships: []
+      }
       property_contact_details: {
         Row: {
           contact_email: string | null
@@ -10203,6 +10260,20 @@ export type Database = {
       }
       extract_ro_phone_from_text: { Args: { p_text: string }; Returns: string }
       extract_url_domain: { Args: { p_url: string }; Returns: string }
+      get_analysis_by_token: {
+        Args: { _token: string }
+        Returns: {
+          analysis: Json
+          created_at: string
+          id: string
+          mode: string
+          photo_count: number
+          score: number
+          share_token: string
+          source_url: string
+          zone: string
+        }[]
+      }
       get_blog_hub_impressions: {
         Args: { p_days?: number }
         Returns: {

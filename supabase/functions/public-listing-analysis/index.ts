@@ -205,6 +205,64 @@ async function cacheSet(hash: string, analysis: unknown, model: string | null) {
   }
 }
 
+// ---- History (property_analyses): persist every analysis + shareable token ----
+async function saveAnalysis(input: {
+  hash: string | null;
+  mode: string;
+  sourceUrl: string | null;
+  photoCount: number;
+  context: string;
+  model: string | null;
+  cached: boolean;
+  analysis: Record<string, unknown>;
+}): Promise<string | null> {
+  if (!SB_URL || !SB_SERVICE_KEY) return null;
+  const headers = {
+    apikey: SB_SERVICE_KEY,
+    Authorization: `Bearer ${SB_SERVICE_KEY}`,
+    "Content-Type": "application/json",
+  };
+  try {
+    if (input.hash) {
+      const existing = await fetch(
+        `${SB_URL}/rest/v1/property_analyses?select=share_token&input_hash=eq.${input.hash}&order=created_at.desc&limit=1`,
+        { headers },
+      );
+      if (existing.ok) {
+        const rows = await existing.json();
+        const token = Array.isArray(rows) ? rows[0]?.share_token : null;
+        if (token) return token as string;
+      }
+    }
+    const scoreRaw = (input.analysis as { scor?: unknown }).scor;
+    const zoneRaw = (input.analysis as { zona?: unknown }).zona;
+    const res = await fetch(`${SB_URL}/rest/v1/property_analyses`, {
+      method: "POST",
+      headers: { ...headers, Prefer: "return=representation" },
+      body: JSON.stringify({
+        mode: input.mode,
+        source_url: input.sourceUrl,
+        photo_count: input.photoCount,
+        context_text: input.context || null,
+        input_hash: input.hash,
+        model: input.model,
+        cached: input.cached,
+        analysis: input.analysis,
+        score: typeof scoreRaw === "number" ? Math.round(scoreRaw) : null,
+        zone: typeof zoneRaw === "string" ? zoneRaw.slice(0, 120) : null,
+      }),
+    });
+    if (!res.ok) {
+      console.warn("analysis history insert failed", res.status);
+      return null;
+    }
+    const rows = await res.json();
+    return (Array.isArray(rows) ? rows[0]?.share_token : null) ?? null;
+  } catch (e) {
+    console.warn("analysis history failed", (e as Error).message);
+    return null;
+  }
+}
 
 
 Deno.serve(async (req) => {
@@ -243,6 +301,7 @@ Deno.serve(async (req) => {
   let userContent: unknown;
   let sourceUrl: string | null = null;
   let cacheKey: string | null = null;
+  let photoCount = 0;
 
   if (mode === "url") {
     const rawUrl = typeof payload.url === "string" ? payload.url.trim() : "";
@@ -262,7 +321,17 @@ Deno.serve(async (req) => {
     cacheKey = await hashInput(["url", sourceUrl, context]);
     const cached = await cacheGet(cacheKey);
     if (cached) {
-      return json({ ok: true, mode, source_url: sourceUrl, cached: true, analysis: cached });
+      const token = await saveAnalysis({
+        hash: cacheKey,
+        mode,
+        sourceUrl,
+        photoCount: 0,
+        context,
+        model: null,
+        cached: true,
+        analysis: cached as Record<string, unknown>,
+      });
+      return json({ ok: true, mode, source_url: sourceUrl, cached: true, analysis: cached, share_token: token });
     }
 
     let text: string;
@@ -297,10 +366,21 @@ Deno.serve(async (req) => {
     if (valid.length === 0) {
       return json({ error: "no_images", message: "Adaugă minim o fotografie validă." }, 400);
     }
+    photoCount = valid.length;
     cacheKey = await hashInput(["photos", context, ...valid]);
     const cachedPhotos = await cacheGet(cacheKey);
     if (cachedPhotos) {
-      return json({ ok: true, mode, source_url: null, cached: true, analysis: cachedPhotos });
+      const tokenPhotos = await saveAnalysis({
+        hash: cacheKey,
+        mode,
+        sourceUrl: null,
+        photoCount: valid.length,
+        context,
+        model: null,
+        cached: true,
+        analysis: cachedPhotos as Record<string, unknown>,
+      });
+      return json({ ok: true, mode, source_url: null, cached: true, analysis: cachedPhotos, share_token: tokenPhotos });
     }
 
     userContent = [
@@ -372,10 +452,26 @@ Deno.serve(async (req) => {
 
     if (cacheKey) await cacheSet(cacheKey, parsed, usedModel);
 
-    return json({ ok: true, mode, source_url: sourceUrl, model: usedModel, cached: false, analysis: parsed });
+    const shareToken = await saveAnalysis({
+      hash: cacheKey,
+      mode,
+      sourceUrl,
+      photoCount,
+      context,
+      model: usedModel,
+      cached: false,
+      analysis: parsed as Record<string, unknown>,
+    });
 
-
-    return json({ ok: true, mode, source_url: sourceUrl, analysis: parsed });
+    return json({
+      ok: true,
+      mode,
+      source_url: sourceUrl,
+      model: usedModel,
+      cached: false,
+      analysis: parsed,
+      share_token: shareToken,
+    });
   } catch (e) {
     console.error("analysis failed", (e as Error).message);
     return json({ error: "analysis_failed" }, 500);
