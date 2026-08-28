@@ -570,7 +570,7 @@ const QuickStatsBar = () => {
                       <span>{language === "ro" ? "Profilul meu" : "My Profile"}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      onClick={() => navigate("/favorites")}
+                      onClick={() => navigate("/favorite")}
                       className="cursor-pointer"
                     >
                       <Heart className="w-4 h-4 mr-2" />

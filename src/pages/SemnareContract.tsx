@@ -274,7 +274,7 @@ export default function SemnareContract() {
                 />
                 <Label htmlFor="accept-terms" className="text-sm font-normal leading-relaxed">
                   Am citit și accept termenii contractului de administrare, precum și{" "}
-                  <a href="/legal/politica-de-confidentialitate" className="underline" target="_blank" rel="noopener noreferrer">
+                  <a href="/politica-confidentialitate" className="underline" target="_blank" rel="noopener noreferrer">
                     Politica de confidențialitate
                   </a>
                   .
