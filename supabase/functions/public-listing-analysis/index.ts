@@ -242,6 +242,7 @@ Deno.serve(async (req) => {
 
   let userContent: unknown;
   let sourceUrl: string | null = null;
+  let cacheKey: string | null = null;
 
   if (mode === "url") {
     const rawUrl = typeof payload.url === "string" ? payload.url.trim() : "";
@@ -257,6 +258,12 @@ Deno.serve(async (req) => {
       );
     }
     sourceUrl = guard.parsed!.toString();
+
+    cacheKey = await hashInput(["url", sourceUrl, context]);
+    const cached = await cacheGet(cacheKey);
+    if (cached) {
+      return json({ ok: true, mode, source_url: sourceUrl, cached: true, analysis: cached });
+    }
 
     let text: string;
     try {
@@ -290,6 +297,12 @@ Deno.serve(async (req) => {
     if (valid.length === 0) {
       return json({ error: "no_images", message: "Adaugă minim o fotografie validă." }, 400);
     }
+    cacheKey = await hashInput(["photos", context, ...valid]);
+    const cachedPhotos = await cacheGet(cacheKey);
+    if (cachedPhotos) {
+      return json({ ok: true, mode, source_url: null, cached: true, analysis: cachedPhotos });
+    }
+
     userContent = [
       {
         type: "text",
@@ -357,7 +370,9 @@ Deno.serve(async (req) => {
       return json({ error: "ai_error", message: "Nu am putut genera analiza. Trimite formularul și revenim în 24h." }, 502);
     }
 
-    return json({ ok: true, mode, source_url: sourceUrl, model: usedModel, analysis: parsed });
+    if (cacheKey) await cacheSet(cacheKey, parsed, usedModel);
+
+    return json({ ok: true, mode, source_url: sourceUrl, model: usedModel, cached: false, analysis: parsed });
 
 
     return json({ ok: true, mode, source_url: sourceUrl, analysis: parsed });
