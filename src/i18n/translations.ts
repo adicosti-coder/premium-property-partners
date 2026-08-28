@@ -810,10 +810,12 @@ Mulțumesc!`,
     
     // NotFound (404)
     notFound: {
-      title: "404",
-      message: "Ups! Pagina nu a fost găsită",
+      title: "Pagina nu mai există",
+      message: "Linkul accesat este vechi sau greșit. Te ducem imediat unde trebuie.",
       backHome: "Înapoi la pagina principală",
+      ownersCta: "Vreau administrare în regim hotelier",
     },
+
     
     // Common
     common: {
