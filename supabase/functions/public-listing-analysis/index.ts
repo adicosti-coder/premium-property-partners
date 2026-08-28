@@ -301,6 +301,7 @@ Deno.serve(async (req) => {
   let userContent: unknown;
   let sourceUrl: string | null = null;
   let cacheKey: string | null = null;
+  let photoCount = 0;
 
   if (mode === "url") {
     const rawUrl = typeof payload.url === "string" ? payload.url.trim() : "";
