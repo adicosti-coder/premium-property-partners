@@ -268,6 +268,35 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
           )}
         </Button>
 
+        {loading && (
+          <ol className="space-y-2" aria-live="polite" aria-label="Progresul analizei AI">
+            {STEPS.map((label, i) => {
+              const done = i < step;
+              const active = i === step;
+              return (
+                <li key={label} className="flex items-center gap-3 text-sm">
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${
+                      done
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : active
+                          ? "border-primary text-primary"
+                          : "border-border text-muted-foreground"
+                    }`}
+                  >
+                    {done ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : i + 1}
+                  </span>
+                  <span className={active ? "font-medium text-foreground" : "text-muted-foreground"}>
+                    {label}
+                  </span>
+                  {active && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" aria-hidden="true" />}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+
+
         <AnimatePresence>
           {result && (
             <motion.div
