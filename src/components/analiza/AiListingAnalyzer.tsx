@@ -110,7 +110,7 @@ const fmt = (n: number | null | undefined, suffix = "") =>
 const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
   const [tab, setTab] = useState<"url" | "photos">("url");
   const [url, setUrl] = useState("");
-  const [images, setImages] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<AnalysisPhoto[]>([]);
   const [context, setContext] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalyzerResult | null>(null);
@@ -133,7 +133,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
       toast.error("Lipește un link complet (https://...) de pe OLX, Storia, Imobiliare.ro, Publi24, Booking sau Airbnb.");
       return;
     }
-    if (tab === "photos" && images.length === 0) {
+    if (tab === "photos" && photos.length === 0) {
       toast.error("Adaugă cel puțin o fotografie a proprietății.");
       return;
     }
@@ -145,7 +145,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
       if (tab === "url") {
         body.url = url.trim();
       } else {
-        body.images = await Promise.all(images.slice(0, 8).map((img) => compressImage(img)));
+        body.images = await Promise.all(photos.slice(0, 8).map((p) => compressImage(p.dataUrl)));
       }
 
       const res = await fetch(ANALYSIS_URL, {
@@ -173,7 +173,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
         analysis: data.analysis as ListingAnalysis,
         sourceUrl: data.source_url ?? null,
         mode: tab,
-        photoCount: tab === "photos" ? images.length : 0,
+        photoCount: tab === "photos" ? photos.length : 0,
         cached: Boolean(data.cached),
         shareToken: (data.share_token as string | null) ?? null,
       };
@@ -291,7 +291,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
           </TabsContent>
 
           <TabsContent value="photos" className="pt-4">
-            <HostScanUploader images={images} onImagesChange={setImages} maxImages={8} language="ro" />
+            <AnalysisPhotoUploader photos={photos} onChange={setPhotos} maxPhotos={8} />
           </TabsContent>
         </Tabs>
 
