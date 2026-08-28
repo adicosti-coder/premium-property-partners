@@ -249,8 +249,12 @@ Deno.serve(async (req) => {
       signal: AbortSignal.timeout(90000),
     });
 
-    if (aiRes.status === 429) return json({ error: "ai_rate_limited" }, 429);
-    if (aiRes.status === 402) return json({ error: "ai_credits" }, 402);
+    if (aiRes.status === 429) {
+      return json({ error: "ai_rate_limited", message: "AI-ul este suprasolicitat. Reia analiza în câteva minute." }, 429);
+    }
+    if (aiRes.status === 402) {
+      return json({ error: "ai_credits", message: "Analiza AI este momentan indisponibilă. Trimite formularul și îți răspundem în 24h." }, 402);
+    }
     if (!aiRes.ok) {
       console.error("ai gateway error", aiRes.status, await aiRes.text());
       return json({ error: "ai_error" }, 502);
