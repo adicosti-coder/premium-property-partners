@@ -88,13 +88,26 @@ const AnalizaProprietate = () => {
         p_email: form.email.trim(),
         p_property_type: form.propertyType,
         p_property_area: Number(form.area) || 0,
-        p_message: `[analiza_proprietate] Zonă: ${zoneLabel || "-"} · ${form.details.trim() || "fără detalii suplimentare"}`,
+        p_message: `[analiza_proprietate] Zonă: ${zoneLabel || "-"} · ${form.details.trim() || "fără detalii suplimentare"}${
+          aiResult
+            ? ` · [AI ${aiResult.mode === "url" ? "link" : `${aiResult.photoCount} poze`}] scor ${aiResult.analysis.scor ?? "-"}/${aiResult.analysis.max_scor ?? 100}, tarif ${aiResult.analysis.tarif_noapte ?? "-"} RON/noapte, net ${aiResult.analysis.venit_lunar_net ?? "-"} RON/lună${aiResult.sourceUrl ? `, sursă: ${aiResult.sourceUrl}` : ""}`
+            : ""
+        }`,
         p_simulation: withCampaignTracking({
           zone: form.zone,
           zone_label: zoneLabel,
           property_type: form.propertyType,
           area: Number(form.area) || 0,
+          ai_analysis: aiResult
+            ? {
+                mode: aiResult.mode,
+                source_url: aiResult.sourceUrl,
+                photo_count: aiResult.photoCount,
+                ...aiResult.analysis,
+              }
+            : null,
         }) as never,
+
         p_source: "analiza_proprietate",
       });
 
