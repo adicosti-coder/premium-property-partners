@@ -118,7 +118,11 @@ Răspunde EXCLUSIV cu JSON valid, în limba română, cu această structură exa
   "puncte_forte": ["..."],
   "riscuri": ["..."],
   "recomandari": ["3-5 acțiuni concrete pentru a crește tariful/ocuparea"],
+  "comparabile_zona": [
+    { "denumire": "apartament 2 camere similar, Cetate", "tarif_noapte": 250, "ocupare_estimata": "72%", "observatie": "1-2 propoziții" }
+  ],
   "verdict": "2-4 propoziții, ton profesionist, fără promisiuni exagerate"
+
 }
 Valorile numerice sunt în RON pentru tarif/venit și în moneda listării pentru preț. Dacă un câmp nu poate fi determinat, folosește null.`;
 
