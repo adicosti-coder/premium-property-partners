@@ -103,7 +103,6 @@ const AnalizaROIApartament = lazyWithRetry(() => import("./pages/AnalizaROIApart
 const CityOfMaraTimisoara = lazyWithRetry(() => import("./pages/CityOfMaraTimisoara"));
 const PiataImobiliara = lazyWithRetry(() => import("./pages/PiataImobiliara"));
 const EvaluareGratuita = lazyWithRetry(() => import("./pages/EvaluareGratuita"));
-const AnalizaProprietate = lazyWithRetry(() => import("./pages/AnalizaProprietate"));
 const ThankYou = lazyWithRetry(() => import("./pages/ThankYou"));
 const SemnareContract = lazyWithRetry(() => import("./pages/SemnareContract"));
 const StatusLead = lazyWithRetry(() => import("./pages/StatusLead"));
