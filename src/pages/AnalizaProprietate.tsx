@@ -1,722 +1,282 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Send, Camera, TrendingUp, MapPin, CheckCircle2, 
-  Bot, User, Loader2, ArrowRight, Building2, Phone,
-  Sparkles, RotateCcw, Star
-} from "lucide-react";
+import { lazy, Suspense, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Loader2, Send, ShieldCheck, Clock, LineChart } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
+import InvestmentYieldCalculator from "@/components/InvestmentYieldCalculator";
+import FormTrustBadges from "@/components/forms/FormTrustBadges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import SEOHead from "@/components/SEOHead";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { useLanguage } from "@/i18n/LanguageContext";
-import { useRegisterFAQs } from "@/hooks/useFAQSchema";
-import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { lazy, Suspense } from "react";
-import HostScanUploader from "@/components/hostscan/HostScanUploader";
-import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { withCampaignTracking } from "@/lib/campaignAttribution";
+import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
+import { neighborhoods } from "@/data/neighborhoods";
 
-const HostScanMiniMap = lazy(() => import("@/components/HostScanMiniMap"));
+const Header = lazy(() => import("@/components/Header"));
+const Footer = lazy(() => import("@/components/Footer"));
 
-const STREAM_URL = `${supabaseConfig.url}/functions/v1/ai-chatbot-stream`;
-const ZONES = ["Fructus Plaza", "Paltim", "Centru", "Iulius Town", "City of Mara", "Nord-One", "Monarch", "Ateneo", "Vivalia", "Altă zonă"];
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  imagePreview?: string;
-}
-
-interface PropertyReport {
-  scor: number;
-  max_scor: number;
-  zona: string;
-  roi_estimat: string;
-  tarif_noapte: number;
-  note_consultant: string;
-  recomandari: string[];
-  categorie: string;
-}
-
-const parseReport = (text: string): PropertyReport | null => {
-  const match = text.match(/<RAPORT_JSON>([\s\S]*?)<\/RAPORT_JSON>/);
-  if (!match) return null;
-  try { return JSON.parse(match[1].trim()); } catch { return null; }
-};
-const cleanReport = (text: string) => text.replace(/<RAPORT_JSON>[\s\S]*?<\/RAPORT_JSON>/g, "").trim();
-
-/** Compress a base64 image to max ~800px wide */
-function compressImage(base64: string, maxWidth = 800, quality = 0.7): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.onerror = () => resolve(base64);
-    img.src = base64;
-  });
-}
+const PROPERTY_TYPES = [
+  { value: "apartament", label: "Apartament" },
+  { value: "casa", label: "Casă" },
+  { value: "studio", label: "Garsonieră / Studio" },
+  { value: "comercial", label: "Spațiu comercial" },
+];
 
 const AnalizaProprietate = () => {
-  const { language } = useLanguage();
-  const [step, setStep] = useState<"wizard" | "chat">("wizard");
-  const [wizardImages, setWizardImages] = useState<string[]>([]);
-  const [form, setForm] = useState({ name: "", phone: "", zone: "Fructus Plaza", rooms: "2" });
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [report, setReport] = useState<PropertyReport | null>(null);
-  const [attachedImage, setAttachedImage] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    propertyType: "apartament",
+    zone: "",
+    area: "",
+    details: "",
+  });
+  const [consent, setConsent] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const set = (key: keyof typeof form, value: string) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
-  useEffect(() => {
-    if (step === "chat" && inputRef.current) inputRef.current.focus();
-  }, [step]);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+    if (honeypot) return;
 
-  const t = {
-    ro: {
-      pageTitle: "Analiză Proprietate AI Timișoara | Evaluare & Consultanță",
-      pageDesc: "Analiză AI gratuită pentru piața imobiliară Timișoara: evaluare apartament, scor ROI estimat, consultanță imobiliară personalizată pentru regim hotelier, vânzări și închirieri.",
-      heroTitle: "Analiză AI",
-      heroHighlight: "Proprietate",
-      heroSubtitle: "Scor inteligent, ROI estimat și recomandări personalizate în timp real.",
-      nameLabel: "Prenume *",
-      phoneLabel: "Telefon WhatsApp *",
-      zoneLabel: "Zona proprietății",
-      roomsLabel: "Număr camere",
-      startBtn: "ÎNCEPE ANALIZA AI",
-      startBtnWithPhotos: "ANALIZEAZĂ TEXT + FOTO",
-      placeholder: "Descrie proprietatea ta...",
-      imagePlaceholder: "Adaugă detalii despre imagine...",
-      imageReady: "Imagine pregătită pentru analiză vizuală",
-      photosTitle: "Fotografii proprietate (opțional)",
-      photosHint: "Adaugă fotografii pentru o analiză vizuală suplimentară",
-    },
-    en: {
-      pageTitle: "AI Property Analysis Timișoara | Valuation & Consulting",
-      pageDesc: "Free AI analysis for Timișoara real estate market: apartment valuation, ROI score, personalized real estate consulting for short-term rental, sales and long-term rentals.",
-      heroTitle: "AI Property",
-      heroHighlight: "Analysis",
-      heroSubtitle: "Intelligent scoring, estimated ROI and personalized recommendations in real-time.",
-      nameLabel: "First name *",
-      phoneLabel: "WhatsApp phone *",
-      zoneLabel: "Property zone",
-      roomsLabel: "Number of rooms",
-      startBtn: "START AI ANALYSIS",
-      startBtnWithPhotos: "ANALYZE TEXT + PHOTOS",
-      placeholder: "Describe your property...",
-      imagePlaceholder: "Add details about the image...",
-      imageReady: "Image ready for visual analysis",
-      photosTitle: "Property photos (optional)",
-      photosHint: "Add photos for additional visual analysis",
-    },
-  };
-  const text = t[language as keyof typeof t] || t.ro;
-
-  const handleStartAnalysis = async () => {
-    if (!form.name.trim() || !form.phone.trim()) {
-      toast.error(language === "ro" ? "Completează numele și telefonul" : "Fill in name and phone");
+    if (form.name.trim().length < 2) {
+      toast.error("Introdu numele complet.");
       return;
     }
-    setStep("chat");
-
-    let introMsg = language === "ro"
-      ? `Salut! Sunt ${form.name}. Am un apartament cu ${form.rooms} camere în zona ${form.zone}. Vreau o analiză completă cu scor și ROI estimat.`
-      : `Hi! I'm ${form.name}. I have a ${form.rooms}-room apartment in ${form.zone}. I'd like a complete analysis with score and estimated ROI.`;
-
-    if (wizardImages.length > 0) {
-      introMsg += language === "ro"
-        ? ` Am atașat ${wizardImages.length} fotografi${wizardImages.length === 1 ? "e" : "i"} ale proprietății pentru analiză vizuală completă.`
-        : ` I attached ${wizardImages.length} photo${wizardImages.length === 1 ? "" : "s"} of the property for complete visual analysis.`;
-    }
-
-    // Compress images if any
-    let compressed: string[] | undefined;
-    if (wizardImages.length > 0) {
-      compressed = await Promise.all(wizardImages.map((img) => compressImage(img)));
-    }
-
-    handleSend(introMsg, compressed);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(language === "ro" ? "Max 5MB" : "Max 5MB");
+    if (form.phone.trim().length < 6) {
+      toast.error("Introdu un număr de telefon valid.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => setAttachedImage(reader.result as string);
-    reader.readAsDataURL(file);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+    if (!consent) {
+      toast.error("Este necesar consimțământul pentru prelucrarea datelor.");
+      return;
+    }
 
-  const handleSend = async (overrideMessage?: string, imagesArray?: string[]) => {
-    const content = overrideMessage || input.trim();
-    const hasImage = !!attachedImage;
-    if (!content && !hasImage) return;
-
-    const currentImage = attachedImage;
-    const userMsg: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: content || (language === "ro" ? "Am atașat o imagine." : "I attached an image."),
-      imagePreview: currentImage || undefined,
-    };
-    const assistantId = crypto.randomUUID();
-    setMessages(prev => [...prev, userMsg, { id: assistantId, role: "assistant", content: "" }]);
-    setInput("");
-    setAttachedImage(null);
-    setIsLoading(true);
-
+    setSubmitting(true);
     try {
-      const apiKey = getSupabasePublishableKey();
-      const response = await fetch(STREAM_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-          apikey: apiKey || "",
-          Accept: "text/event-stream",
-        },
-        body: JSON.stringify({
-          message: content || "",
-          language,
-          conversationHistory: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
-          pageContext: "/analiza-proprietate",
-          imageBase64: hasImage ? currentImage : undefined,
-          imagesArray: imagesArray || undefined,
-          qualificationContext: { name: form.name, phone: form.phone, zone: form.zone },
-        }),
+      const zoneLabel =
+        neighborhoods.find((n) => n.slug === form.zone)?.fullName ?? form.zone ?? "";
+
+      const { data, error } = await supabase.rpc("submit_analysis_lead", {
+        p_name: form.name.trim(),
+        p_phone: formatPhoneInput(form.phone),
+        p_email: form.email.trim(),
+        p_property_type: form.propertyType,
+        p_property_area: Number(form.area) || 0,
+        p_message: `[analiza_proprietate] Zonă: ${zoneLabel || "-"} · ${form.details.trim() || "fără detalii suplimentare"}`,
+        p_simulation: withCampaignTracking({
+          zone: form.zone,
+          zone_label: zoneLabel,
+          property_type: form.propertyType,
+          area: Number(form.area) || 0,
+        }) as never,
+        p_source: "analiza_proprietate",
       });
 
-      if (!response.ok) throw new Error("network");
+      if (error || !data) throw error ?? new Error("no_token");
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let acc = "";
-      let buffer = "";
+      trackConversion({
+        event: "roi_calculator_lead",
+        source: "analiza_proprietate",
+        property_type: form.propertyType,
+        zone: form.zone,
+        name: form.name,
+        phone: form.phone,
+        email: form.email,
+      });
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          let idx: number;
-          while ((idx = buffer.indexOf("\n")) !== -1) {
-            let line = buffer.slice(0, idx);
-            buffer = buffer.slice(idx + 1);
-            if (line.endsWith("\r")) line = line.slice(0, -1);
-            if (!line.startsWith("data: ")) continue;
-            const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") break;
-            try {
-              const parsed = JSON.parse(jsonStr);
-              if (parsed.delta) {
-                acc += parsed.delta;
-                setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: acc } : m));
-              }
-            } catch {}
-          }
-        }
-      }
-
-      const parsedReport = parseReport(acc);
-      if (parsedReport) {
-        setReport(parsedReport);
-        acc = cleanReport(acc);
-      }
-      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: acc || "..." } : m));
+      navigate(`/status-lead/${data}`);
     } catch {
-      setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: language === "ro" ? "Eroare. Încearcă din nou." : "Error. Try again." } : m));
-    } finally {
-      setIsLoading(false);
+      toast.error("Nu am putut trimite analiza. Te rugăm să încerci din nou.");
+      setSubmitting(false);
     }
   };
 
-  const handleReset = () => {
-    setStep("wizard");
-    setMessages([]);
-    setReport(null);
-    setInput("");
-    setAttachedImage(null);
-    setWizardImages([]);
-  };
-
-  // Register FAQ items via centralized context
-  useRegisterFAQs("analiza-proprietate", [
-    {
-      question: language === "ro" ? "Ce este HostScan AI?" : "What is HostScan AI?",
-      answer: language === "ro"
-        ? "HostScan AI este un instrument gratuit care analizează potențialul apartamentului tău pentru regim hotelier în Timișoara, oferind un scor din 140 de puncte, ROI estimat și recomandări personalizate."
-        : "HostScan AI is a free tool that analyzes your apartment's potential for short-term rental in Timișoara, providing a score out of 140 points, estimated ROI and personalized recommendations.",
-    },
-    {
-      question: language === "ro" ? "Cât costă analiza AI?" : "How much does the AI analysis cost?",
-      answer: language === "ro"
-        ? "Analiza HostScan AI este complet gratuită și confidențială. Nu este nevoie de cont sau card de plată."
-        : "The HostScan AI analysis is completely free and confidential. No account or payment card required.",
-    },
-    {
-      question: language === "ro" ? "Cât durează analiza?" : "How long does the analysis take?",
-      answer: language === "ro"
-        ? "Analiza durează aproximativ 2 minute. Primești scorul proprietății, estimarea randamentului lunar și recomandări concrete de optimizare."
-        : "The analysis takes approximately 2 minutes. You receive the property score, monthly yield estimate and concrete optimization recommendations.",
-    },
-    {
-      question: language === "ro" ? "Care este randamentul chiriei în Timișoara?" : "What is the rental yield in Timișoara?",
-      answer: language === "ro"
-        ? "Randamentul chiriei în Timișoara variază între 4-6% net pe an pentru închirieri pe termen lung și 8-11% net pentru regim hotelier (administrat profesional). HostScan AI calculează randamentul exact pentru proprietatea ta în funcție de zonă, dotări și ocupare estimată."
-        : "Rental yield in Timișoara ranges 4-6% net per year for long-term rentals and 8-11% net for short-term (professionally managed). HostScan AI calculates the exact yield for your property based on area, amenities and estimated occupancy.",
-    },
-    {
-      question: language === "ro" ? "Care este evoluția prețurilor pe piața imobiliară Timișoara?" : "How are real estate prices evolving in Timișoara?",
-      answer: language === "ro"
-        ? "Piața imobiliară Timișoara a înregistrat o creștere medie de 7-9% anual în ultimii 3 ani, cu vârfuri în zonele ISHO, Complex Studențesc și Iulius Town. Apartamentele noi se vând cu 1.800-2.500€/mp, iar cele vechi cu 1.400-1.900€/mp. Tendința rămâne ascendentă datorită cererii corporate (Continental, Hella, City Business Centre) și a populației studențești."
-        : "Timișoara's real estate market grew 7-9% annually over the last 3 years, peaking in ISHO, Student Complex and Iulius Town areas. New apartments sell for €1,800-2,500/sqm, older ones €1,400-1,900/sqm. The upward trend continues thanks to corporate demand (Continental, Hella, City Business Centre) and student population.",
-    },
-  ]);
-
-  const jsonLdSchemas = [
-    {
-      ...REAL_ESTATE_AGENT_SCHEMA,
-      "@type": ["RealEstateAgent", "LocalBusiness"],
-      "url": "https://realtrust.ro/analiza-proprietate",
-      "makesOffer": [
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Evaluare apartament Timișoara (AI)" : "Apartment valuation Timișoara (AI)" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Consultanță imobiliară Timișoara" : "Real estate consulting Timișoara" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Administrare regim hotelier" : "Short-term rental management" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Vânzări apartamente Timișoara" : "Apartment sales Timișoara" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": language === "ro" ? "Închirieri apartamente Timișoara" : "Long-term rentals Timișoara" } },
-      ],
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "Service",
-      "name": language === "ro" ? "Analiză AI Proprietate (HostScan)" : "AI Property Analysis (HostScan)",
-      "serviceType": language === "ro" ? "Evaluare apartament Timișoara" : "Apartment valuation Timișoara",
-      "provider": REAL_ESTATE_AGENT_REF,
-      "areaServed": { "@type": "City", "name": "Timișoara" },
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock" },
-    },
-  ];
-
   return (
-    <>
+    <Suspense fallback={null}>
       <SEOHead
-        title={text.pageTitle}
-        description={text.pageDesc}
+        title="Analiză potențial imobiliar Timișoara | Calculator randament RealTrust"
+        description="Calculează randamentul proprietății tale în regim hotelier și primește analiza detaliată a potențialului imobiliar în Timișoara. Gratuit, în 24 de ore."
         url="https://realtrust.ro/analiza-proprietate"
-        jsonLd={jsonLdSchemas}
-        breadcrumbItems={[
-          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
-          { name: language === "ro" ? "Pentru Proprietari" : "For Owners", url: "https://realtrust.ro/pentru-proprietari" },
-          { name: language === "ro" ? "Analiză AI Proprietate" : "AI Property Analysis", url: "https://realtrust.ro/analiza-proprietate" },
-        ]}
       />
       <Header />
-      <main className="min-h-screen bg-background pt-20">
-        <div className="container mx-auto px-4 py-8 max-w-2xl">
-          {/* Hero */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8 space-y-3"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
-              <Sparkles className="w-3.5 h-3.5" />
-              HostScan AI
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              {text.heroTitle} <span className="text-primary">{text.heroHighlight}</span>
+      <main className="min-h-[80vh]">
+        <section className="px-4 pt-12 pb-4">
+          <div className="max-w-3xl mx-auto text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground">
+              Analiza potențialului proprietății tale
             </h1>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto">{text.heroSubtitle}</p>
-            {/* SEO intro paragraph with target keywords */}
-            <p className="sr-only">
-              {language === "ro"
-                ? "Evaluare apartament Timișoara și consultanță imobiliară Timișoara cu instrumentul HostScan AI. Analizăm piața imobiliară Timișoara — vânzări, închirieri și regim hotelier — pe cartiere (ISHO, Centru, Iosefin, Complex Studențesc, Iulius Town, Openville) pentru a oferi un scor obiectiv și ROI estimat pentru proprietatea ta."
-                : "Apartment valuation Timișoara and real estate consulting with the HostScan AI tool. We analyze the Timișoara real estate market — sales, rentals and short-term rental — by neighborhoods (ISHO, Centru, Iosefin, Student Complex, Iulius Town, Openville) to deliver an objective score and estimated ROI for your property."}
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Simulează randamentul în regim hotelier, apoi cere analiza detaliată. Primești un link
+              unde urmărești în timp real fiecare etapă a cererii tale.
             </p>
-          </motion.div>
+            <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground pt-2">
+              <li className="flex items-center gap-1.5"><LineChart className="w-4 h-4 text-primary" /> Randament pe date reale</li>
+              <li className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" /> Răspuns în 24h lucrătoare</li>
+              <li className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> Fără obligații</li>
+            </ul>
+          </div>
+        </section>
 
-          {/* SEO H2 strip — promoted from H3 to better reflect service hierarchy */}
-          <section className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3" aria-label={language === "ro" ? "Servicii imobiliare Timișoara" : "Real estate services Timișoara"}>
-            {[
-              {
-                h2: language === "ro" ? "Evaluare apartament Timișoara" : "Apartment valuation Timișoara",
-                desc: language === "ro" ? "Scor obiectiv din 140 puncte pentru proprietatea ta." : "Objective 140-point score for your property.",
-              },
-              {
-                h2: language === "ro" ? "Consultanță imobiliară Timișoara" : "Real estate consulting Timișoara",
-                desc: language === "ro" ? "Strategie investiții, vânzări și închirieri pe cartiere." : "Investment, sales & rental strategy by neighborhood.",
-              },
-              {
-                h2: language === "ro" ? "Administrare regim hotelier" : "Short-term rental management",
-                desc: language === "ro" ? "ROI net verificat 9.4% pe Booking, Airbnb și direct." : "9.4% verified net ROI on Booking, Airbnb and direct.",
-              },
-            ].map((item) => (
-              <div key={item.h2} className="p-4 rounded-2xl bg-card border border-border/50">
-                <h2 className="text-sm font-bold text-foreground">{item.h2}</h2>
-                <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
-              </div>
-            ))}
-          </section>
+        <InvestmentYieldCalculator />
 
-          {/* Main Card */}
-          <motion.div
-            layout
-            className="bg-card border border-border/50 rounded-3xl shadow-2xl overflow-hidden"
+        <section className="px-4 pb-16">
+          <form
+            onSubmit={handleSubmit}
+            className="w-full max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 md:p-8 space-y-5 shadow-lg"
           >
-            <AnimatePresence mode="wait">
-              {step === "wizard" ? (
-                <motion.div
-                  key="wizard"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="p-6 md:p-8 space-y-5"
-                >
-                  {/* Text fields */}
-                  <div className="grid grid-cols-1 gap-4">
-                    <Input
-                      placeholder={text.nameLabel}
-                      value={form.name}
-                      onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
-                      className="h-13 rounded-xl"
-                    />
-                    <Input
-                      type="tel"
-                      placeholder={text.phoneLabel}
-                      value={form.phone}
-                      onChange={e => setForm(prev => ({ ...prev, phone: e.target.value }))}
-                      className="h-13 rounded-xl"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.zoneLabel}</label>
-                        <select
-                          value={form.zone}
-                          onChange={e => setForm(prev => ({ ...prev, zone: e.target.value }))}
-                          className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
-                        >
-                          {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground font-medium mb-1.5 block">{text.roomsLabel}</label>
-                        <select
-                          value={form.rooms}
-                          onChange={e => setForm(prev => ({ ...prev, rooms: e.target.value }))}
-                          className="w-full h-12 rounded-xl bg-background border border-border px-3 text-sm text-foreground"
-                        >
-                          {["Studio", "1", "2", "3", "4+"].map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Divider + Photo upload section */}
-                  <div className="border-t border-border/40 pt-5 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Camera className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-semibold text-foreground">{text.photosTitle}</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{text.photosHint}</p>
-                    <HostScanUploader
-                      images={wizardImages}
-                      onImagesChange={setWizardImages}
-                      maxImages={20}
-                      language={language}
-                    />
-                  </div>
-
-                  {/* Single CTA button */}
-                  <Button
-                    size="xl"
-                    className="w-full gap-2"
-                    onClick={handleStartAnalysis}
-                    disabled={!form.name.trim() || !form.phone.trim()}
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    {wizardImages.length > 0 ? text.startBtnWithPhotos : text.startBtn}
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="chat"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col h-[70vh]"
-                >
-                  {/* Chat header */}
-                  <div className="p-4 border-b border-border/30 flex items-center justify-between bg-muted/5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
-                        <Bot className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-sm text-foreground">HostScan AI</h3>
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                            {form.zone} · {form.rooms} cam
-                            {wizardImages.length > 0 && ` · ${wizardImages.length} 📷`}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" className="rounded-xl" onClick={handleReset}>
-                      <RotateCcw className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.map(m => (
-                      <motion.div
-                        key={m.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={cn("flex gap-3", m.role === "user" ? "flex-row-reverse" : "flex-row")}
-                      >
-                        <div className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                          m.role === "user" ? "bg-muted" : "bg-primary text-primary-foreground"
-                        )}>
-                          {m.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                        </div>
-                        <div className={cn(
-                          "max-w-[85%] p-3 px-4 rounded-2xl text-sm",
-                          m.role === "user"
-                            ? "bg-primary text-primary-foreground rounded-tr-none"
-                            : "bg-muted/50 border border-border/30 rounded-tl-none"
-                        )}>
-                          {m.imagePreview && (
-                            <img src={m.imagePreview} alt="Property" className="rounded-xl max-h-32 mb-2 w-full object-cover" />
-                          )}
-                          <div className="prose prose-sm dark:prose-invert max-w-none [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs [&_table]:my-3 [&_th]:bg-muted [&_th]:px-2 [&_th]:py-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-border/50 [&_td]:px-2 [&_td]:py-1.5 [&_td]:border [&_td]:border-border/50 [&_table]:rounded-lg [&_table]:overflow-hidden">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content || "..."}</ReactMarkdown>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-
-                    {/* Inline map after first AI response */}
-                    {messages.length >= 2 && messages.some(m => m.role === "assistant" && m.content.length > 50) && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="my-2"
-                      >
-                        <Suspense fallback={null}>
-                          <HostScanMiniMap zone={report?.zona || form.zone} />
-                        </Suspense>
-                      </motion.div>
-                    )}
-
-                    {/* Report Card */}
-                    {report && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="p-5 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-accent/5 border border-primary/30 shadow-xl space-y-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5 text-primary" />
-                            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary">
-                              {language === "ro" ? "Raport Finalizat" : "Report Complete"}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-3xl font-bold text-foreground">{report.scor}</span>
-                            <span className="text-sm text-muted-foreground">/{report.max_scor}</span>
-                          </div>
-                        </div>
-                        <div className="h-3 bg-muted rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(report.scor / report.max_scor) * 100}%` }}
-                            transition={{ duration: 1.2, ease: "easeOut" }}
-                            className={cn(
-                              "h-full rounded-full",
-                              report.scor >= 100 ? "bg-accent" : report.scor >= 70 ? "bg-primary" : "bg-destructive"
-                            )}
-                          />
-                        </div>
-                        <div className="grid grid-cols-3 gap-3 text-center">
-                          <div className="bg-background/50 rounded-xl p-3 border border-border/30">
-                            <MapPin className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
-                            <p className="text-sm font-bold text-foreground">{report.zona}</p>
-                          </div>
-                          <div className="bg-background/50 rounded-xl p-3 border border-border/30">
-                            <TrendingUp className="w-4 h-4 mx-auto text-accent mb-1" />
-                            <p className="text-sm font-bold text-foreground">{report.roi_estimat}</p>
-                          </div>
-                          <div className="bg-background/50 rounded-xl p-3 border border-border/30">
-                            <span className="text-lg">€</span>
-                            <p className="text-sm font-bold text-foreground">{report.tarif_noapte}€</p>
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3">"{report.note_consultant}"</p>
-                        {report.recomandari?.length > 0 && (
-                          <div className="space-y-1.5">
-                            {report.recomandari.map((rec, i) => (
-                              <div key={i} className="flex items-center gap-2 text-xs text-foreground/80">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" /> {rec}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <Button
-                          variant="whatsapp"
-                          size="lg"
-                          className="w-full gap-2"
-                          onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(
-                            `Scor HostScan: ${report.scor}/${report.max_scor} | ${report.zona} | ROI: ${report.roi_estimat} | ${form.name} - ${form.phone}`
-                          )}`, '_blank', 'noopener,noreferrer')}
-                        >
-                          <Phone className="w-4 h-4" />
-                          {language === "ro" ? "CONTACTEAZĂ ADRIAN" : "CONTACT ADRIAN"}
-                        </Button>
-                      </motion.div>
-                    )}
-
-                    {isLoading && messages[messages.length - 1]?.content === "" && (
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                          <Bot className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                        <div className="bg-muted/50 rounded-2xl rounded-tl-none border border-border/30 px-4 py-3">
-                          <div className="flex gap-1.5">
-                            {[0, 1, 2].map(i => (
-                              <motion.div key={i} className="w-2 h-2 rounded-full bg-primary/60" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <div ref={scrollRef} />
-                  </div>
-
-                  {/* Input — always visible in chat mode */}
-                  <div className="p-4 border-t border-border/30">
-                    {attachedImage && (
-                      <div className="mb-2 relative inline-block">
-                        <img src={attachedImage} alt="Preview" className="h-14 rounded-xl border border-primary/30 object-cover" />
-                        <button onClick={() => setAttachedImage(null)} className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-destructive text-destructive-foreground rounded-full text-[8px] flex items-center justify-center">✕</button>
-                        <p className="text-[10px] text-accent flex items-center gap-1 mt-0.5"><CheckCircle2 className="w-3 h-3" />{text.imageReady}</p>
-                      </div>
-                    )}
-                    <div className="flex gap-2 items-center">
-                      <label className="cursor-pointer h-12 w-12 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-center hover:bg-primary/10 transition-all shrink-0">
-                        <Camera className="w-5 h-5 text-primary" />
-                        <input ref={fileInputRef} type="file" hidden accept="image/*" capture="environment" onChange={handleImageUpload} />
-                      </label>
-                      <Input
-                        ref={inputRef}
-                        placeholder={attachedImage ? text.imagePlaceholder : text.placeholder}
-                        value={input}
-                        onChange={e => setInput(e.target.value)}
-                        onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
-                        className="h-12 rounded-xl"
-                        disabled={isLoading}
-                      />
-                      <Button
-                        size="icon"
-                        className="h-12 w-12 rounded-xl"
-                        onClick={() => handleSend()}
-                        disabled={(!input.trim() && !attachedImage) || isLoading}
-                      >
-                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-
-          {/* Social Proof Section */}
-          {step === "wizard" && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mt-10 space-y-6"
-            >
-              {/* Trust indicators */}
-              <div className="grid grid-cols-3 gap-4 text-center">
-                {[
-                  { value: "140", label: language === "ro" ? "Puncte Scor" : "Score Points", icon: "📊" },
-                  { value: "50+", label: language === "ro" ? "Proprietăți Analizate" : "Properties Analyzed", icon: "🏠" },
-                  { value: "2 min", label: language === "ro" ? "Timp Analiză" : "Analysis Time", icon: "⚡" },
-                ].map((stat) => (
-                  <div key={stat.label} className="p-4 rounded-2xl bg-card border border-border/50">
-                    <span className="text-2xl">{stat.icon}</span>
-                    <p className="text-xl font-bold text-foreground mt-1">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* How it works */}
-              <div className="bg-card border border-border/50 rounded-2xl p-6">
-                <h3 className="font-bold text-foreground text-center mb-4">
-                  {language === "ro" ? "Cum funcționează?" : "How does it work?"}
-                </h3>
-                <div className="space-y-3">
-                  {(language === "ro" ? [
-                    { step: "1", text: "Completezi datele de bază + adaugi fotografii (opțional)" },
-                    { step: "2", text: "AI-ul analizează zona, piața, fotografiile și potențialul" },
-                    { step: "3", text: "Primești scor din 140, ROI estimat și recomandări" },
-                  ] : [
-                    { step: "1", text: "Fill in basic details + add photos (optional)" },
-                    { step: "2", text: "AI analyzes area, market, photos and potential" },
-                    { step: "3", text: "Get a score out of 140, estimated ROI and recommendations" },
-                  ]).map((item) => (
-                    <div key={item.step} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center shrink-0">
-                        {item.step}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{item.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* CTA bottom */}
-              <p className="text-center text-xs text-muted-foreground">
-                {language === "ro" 
-                  ? "🔒 Datele tale sunt confidențiale. Nu trimitem spam." 
-                  : "🔒 Your data is confidential. We don't send spam."}
+            <div className="space-y-1">
+              <h2 className="text-2xl font-serif font-bold text-foreground">
+                Formular de analiză a potențialului imobiliar
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Completează datele proprietății și primești analiza personalizată de la echipa RealTrust.
               </p>
-            </motion.div>
-          )}
-        </div>
+            </div>
+
+            {/* Honeypot */}
+            <input
+              type="text"
+              name="company_website"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="hidden"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ap-name">Nume complet *</Label>
+                <Input
+                  id="ap-name"
+                  value={form.name}
+                  onChange={(e) => set("name", e.target.value)}
+                  placeholder="Ion Popescu"
+                  autoComplete="name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ap-phone">Telefon / WhatsApp *</Label>
+                <Input
+                  id="ap-phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => set("phone", e.target.value)}
+                  placeholder="0722 123 456"
+                  autoComplete="tel"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ap-email">Email</Label>
+                <Input
+                  id="ap-email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                  placeholder="email@exemplu.com"
+                  autoComplete="email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ap-type">Tip proprietate</Label>
+                <select
+                  id="ap-type"
+                  value={form.propertyType}
+                  onChange={(e) => set("propertyType", e.target.value)}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                >
+                  {PROPERTY_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ap-zone">Zonă</Label>
+                <select
+                  id="ap-zone"
+                  value={form.zone}
+                  onChange={(e) => set("zone", e.target.value)}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                >
+                  <option value="">Alege zona</option>
+                  {neighborhoods.map((n) => (
+                    <option key={n.slug} value={n.slug}>{n.fullName}</option>
+                  ))}
+                  <option value="alta">Altă zonă</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ap-area">Suprafață utilă (m²)</Label>
+                <Input
+                  id="ap-area"
+                  type="number"
+                  min={0}
+                  value={form.area}
+                  onChange={(e) => set("area", e.target.value)}
+                  placeholder="55"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-details">Detalii suplimentare</Label>
+              <Textarea
+                id="ap-details"
+                value={form.details}
+                onChange={(e) => set("details", e.target.value)}
+                placeholder="Etaj, an construcție, finisaje, dotări, disponibilitate..."
+                rows={4}
+              />
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="ap-consent"
+                checked={consent}
+                onCheckedChange={(v) => setConsent(v === true)}
+                aria-label="Consimțământ prelucrare date personale"
+              />
+              <Label htmlFor="ap-consent" className="text-sm font-normal text-muted-foreground leading-relaxed">
+                Sunt de acord cu prelucrarea datelor pentru a primi analiza solicitată, conform{" "}
+                <a
+                  href="/politica-confidentialitate"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                >
+                  Politicii de Confidențialitate
+                </a>
+                . *
+              </Label>
+            </div>
+
+            <Button type="submit" disabled={submitting} className="w-full min-h-12">
+              {submitting ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Se trimite...</>
+              ) : (
+                <><Send className="w-4 h-4 mr-2" /> Trimite cererea de analiză</>
+              )}
+            </Button>
+
+            <FormTrustBadges />
+          </form>
+        </section>
       </main>
       <Footer />
-    </>
+    </Suspense>
   );
 };
 
