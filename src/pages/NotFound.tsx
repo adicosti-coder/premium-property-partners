@@ -1,18 +1,26 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Home, MapPin } from "lucide-react";
+import { Home, MapPin, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
+import { supabase } from "@/integrations/supabase/client";
 
 const NotFound = () => {
   const location = useLocation();
   const { t, language } = useLanguage();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
+    const path = `${location.pathname}${location.search}`;
+    // Log broken links so admins can spot bad external references quickly.
+    void supabase.rpc("log_404", {
+      _path: path,
+      _referrer: typeof document !== "undefined" ? document.referrer || null : null,
+      _user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+    });
+  }, [location.pathname, location.search]);
+
 
   const seoContent = {
     ro: {
