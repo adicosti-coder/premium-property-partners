@@ -24,6 +24,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnalysisPhotoUploader, { type AnalysisPhoto } from "@/components/analiza/AnalysisPhotoUploader";
 import AnalysisAdjustPanel from "@/components/analiza/AnalysisAdjustPanel";
+import AnalysisComparePanel from "@/components/analiza/AnalysisComparePanel";
+import AnalysisEmailCard from "@/components/analiza/AnalysisEmailCard";
 import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 
 export interface ListingAnalysis {
