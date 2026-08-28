@@ -273,6 +273,7 @@ const App = () => (
                     <Route path="/contract/:token" element={<SemnareContract />} />
                     <Route path="/status-lead" element={<StatusLead />} />
                     <Route path="/status-lead/:token" element={<StatusLead />} />
+                    <Route path="/analiza/:token" element={<AnalizaPartajata />} />
                     <Route path="/programare-confirmata" element={<ProgramareConfirmata />} />
                     <Route path="/mulțumire" element={<Navigate to="/multumire" replace />} />
                     <Route path="/termeni-si-conditii" element={<LegalPage type="terms" />} />
