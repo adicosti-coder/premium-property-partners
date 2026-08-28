@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import type { ListingAnalysis } from "@/components/analiza/AiListingAnalyzer";
+import AnalysisComparePanel from "@/components/analiza/AnalysisComparePanel";
 
 interface SharedAnalysis {
   analysis: ListingAnalysis;
@@ -23,6 +24,7 @@ interface SharedAnalysis {
   mode: string;
   photoCount: number;
   createdAt: string | null;
+  expiresAt: string | null;
 }
 
 const fmt = (n: number | null | undefined, suffix = "") =>
@@ -54,6 +56,7 @@ const AnalizaPartajata = () => {
           mode: row.mode,
           photoCount: row.photo_count ?? 0,
           createdAt: row.created_at,
+          expiresAt: row.expires_at ?? null,
         });
       }
       setLoading(false);
@@ -144,6 +147,9 @@ const AnalizaPartajata = () => {
               a.suprafata ? `${fmt(a.suprafata, " mp")}` : null,
               data.createdAt
                 ? `Generat: ${new Date(data.createdAt).toLocaleDateString("ro-RO")}`
+                : null,
+              data.expiresAt
+                ? `Link valabil până la: ${new Date(data.expiresAt).toLocaleDateString("ro-RO")}`
                 : null,
             ]
               .filter(Boolean)
@@ -261,6 +267,8 @@ const AnalizaPartajata = () => {
             ))}
           </div>
         </section>
+
+        <AnalysisComparePanel analysis={a} />
 
         <p className="text-xs text-muted-foreground">
           Estimările folosesc 75% ocupare și 27% deducere management/taxe. Sunt orientative și nu
