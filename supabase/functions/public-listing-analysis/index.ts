@@ -232,38 +232,64 @@ Deno.serve(async (req) => {
     ];
   }
 
+  const MODELS = [
+    "google/gemini-3-flash",
+    "google/gemini-2.5-flash",
+    "google/gemini-2.5-flash-lite",
+    "openai/gpt-5-mini",
+  ];
+
   try {
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userContent },
-        ],
-      }),
-      signal: AbortSignal.timeout(90000),
-    });
+    let parsed: unknown = null;
+    let lastStatus = 0;
+    let usedModel: string | null = null;
 
-    if (aiRes.status === 429) {
-      return json({ error: "ai_rate_limited", message: "AI-ul este suprasolicitat. Reia analiza în câteva minute." }, 429);
-    }
-    if (aiRes.status === 402) {
-      return json({ error: "ai_credits", message: "Analiza AI este momentan indisponibilă. Trimite formularul și îți răspundem în 24h." }, 402);
-    }
-    if (!aiRes.ok) {
-      console.error("ai gateway error", aiRes.status, await aiRes.text());
-      return json({ error: "ai_error" }, 502);
+    for (const model of MODELS) {
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userContent },
+          ],
+        }),
+        signal: AbortSignal.timeout(90000),
+      });
+
+      lastStatus = aiRes.status;
+      if (!aiRes.ok) {
+        console.warn("ai model failed", model, aiRes.status, (await aiRes.text()).slice(0, 300));
+        continue;
+      }
+
+      const data = await aiRes.json();
+      const raw = data.choices?.[0]?.message?.content?.trim() || "";
+      const candidate = parseJsonLoose(raw);
+      if (candidate) {
+        parsed = candidate;
+        usedModel = model;
+        break;
+      }
+      console.warn("ai parse failed for model", model);
     }
 
-    const data = await aiRes.json();
-    const raw = data.choices?.[0]?.message?.content?.trim() || "";
-    const parsed = parseJsonLoose(raw);
-    if (!parsed) return json({ error: "ai_parse_failed" }, 502);
+    if (!parsed) {
+      if (lastStatus === 429) {
+        return json({ error: "ai_rate_limited", message: "AI-ul este suprasolicitat. Reia analiza în câteva minute." }, 429);
+      }
+      if (lastStatus === 402) {
+        return json({ error: "ai_credits", message: "Analiza AI este momentan indisponibilă. Trimite formularul și îți răspundem în 24h." }, 402);
+      }
+      return json({ error: "ai_error", message: "Nu am putut genera analiza. Trimite formularul și revenim în 24h." }, 502);
+    }
+
+    return json({ ok: true, mode, source_url: sourceUrl, model: usedModel, analysis: parsed });
+
 
     return json({ ok: true, mode, source_url: sourceUrl, analysis: parsed });
   } catch (e) {
