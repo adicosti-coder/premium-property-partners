@@ -133,8 +133,8 @@ const AnalizaProprietate = () => {
   return (
     <Suspense fallback={null}>
       <SEOHead
-        title="Analiză potențial imobiliar Timișoara | Calculator randament RealTrust"
-        description="Calculează randamentul proprietății tale în regim hotelier și primește analiza detaliată a potențialului imobiliar în Timișoara. Gratuit, în 24 de ore."
+        title="Analiză AI proprietate Timișoara | Link anunț sau poze | RealTrust"
+        description="Încarcă linkul anunțului sau fotografiile proprietății și primești instant analiza AI: tarif pe noapte, venit net lunar în regim hotelier și recomandări. Gratuit, Timișoara."
         url="https://realtrust.ro/analiza-proprietate"
       />
       <Header />
@@ -145,24 +145,29 @@ const AnalizaProprietate = () => {
               Analiza potențialului proprietății tale
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Simulează randamentul în regim hotelier, apoi cere analiza detaliată. Primești un link
-              unde urmărești în timp real fiecare etapă a cererii tale.
+              Lipește linkul anunțului sau încarcă fotografii — AI-ul le analizează instant. Apoi cere
+              analiza detaliată și urmărești în timp real fiecare etapă a cererii tale.
             </p>
             <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground pt-2">
-              <li className="flex items-center gap-1.5"><LineChart className="w-4 h-4 text-primary" /> Randament pe date reale</li>
-              <li className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" /> Răspuns în 24h lucrătoare</li>
-              <li className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> Fără obligații</li>
+              <li className="flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-primary" aria-hidden="true" /> Analiză AI din link sau poze</li>
+              <li className="flex items-center gap-1.5"><LineChart className="w-4 h-4 text-primary" aria-hidden="true" /> Randament pe date reale</li>
+              <li className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-primary" aria-hidden="true" /> Răspuns în 24h lucrătoare</li>
+              <li className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" aria-hidden="true" /> Fără obligații</li>
             </ul>
           </div>
         </section>
+
+        <AiListingAnalyzer onResult={setAiResult} onPrefill={handlePrefill} />
 
         <InvestmentYieldCalculator />
 
         <section className="px-4 pb-16">
           <form
+            id="formular-analiza"
             onSubmit={handleSubmit}
-            className="w-full max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 md:p-8 space-y-5 shadow-lg"
+            className="w-full max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 md:p-8 space-y-5 shadow-lg scroll-mt-24"
           >
+
             <div className="space-y-1">
               <h2 className="text-2xl font-serif font-bold text-foreground">
                 Formular de analiză a potențialului imobiliar
