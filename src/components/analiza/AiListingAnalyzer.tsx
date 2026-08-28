@@ -55,7 +55,9 @@ export interface AnalyzerResult {
   mode: "url" | "photos";
   photoCount: number;
   cached?: boolean;
+  shareToken?: string | null;
 }
+
 
 interface Props {
   onResult: (result: AnalyzerResult) => void;
