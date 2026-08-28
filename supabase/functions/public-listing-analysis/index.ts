@@ -205,6 +205,64 @@ async function cacheSet(hash: string, analysis: unknown, model: string | null) {
   }
 }
 
+// ---- History (property_analyses): persist every analysis + shareable token ----
+async function saveAnalysis(input: {
+  hash: string | null;
+  mode: string;
+  sourceUrl: string | null;
+  photoCount: number;
+  context: string;
+  model: string | null;
+  cached: boolean;
+  analysis: Record<string, unknown>;
+}): Promise<string | null> {
+  if (!SB_URL || !SB_SERVICE_KEY) return null;
+  const headers = {
+    apikey: SB_SERVICE_KEY,
+    Authorization: `Bearer ${SB_SERVICE_KEY}`,
+    "Content-Type": "application/json",
+  };
+  try {
+    if (input.hash) {
+      const existing = await fetch(
+        `${SB_URL}/rest/v1/property_analyses?select=share_token&input_hash=eq.${input.hash}&order=created_at.desc&limit=1`,
+        { headers },
+      );
+      if (existing.ok) {
+        const rows = await existing.json();
+        const token = Array.isArray(rows) ? rows[0]?.share_token : null;
+        if (token) return token as string;
+      }
+    }
+    const scoreRaw = (input.analysis as { scor?: unknown }).scor;
+    const zoneRaw = (input.analysis as { zona?: unknown }).zona;
+    const res = await fetch(`${SB_URL}/rest/v1/property_analyses`, {
+      method: "POST",
+      headers: { ...headers, Prefer: "return=representation" },
+      body: JSON.stringify({
+        mode: input.mode,
+        source_url: input.sourceUrl,
+        photo_count: input.photoCount,
+        context_text: input.context || null,
+        input_hash: input.hash,
+        model: input.model,
+        cached: input.cached,
+        analysis: input.analysis,
+        score: typeof scoreRaw === "number" ? Math.round(scoreRaw) : null,
+        zone: typeof zoneRaw === "string" ? zoneRaw.slice(0, 120) : null,
+      }),
+    });
+    if (!res.ok) {
+      console.warn("analysis history insert failed", res.status);
+      return null;
+    }
+    const rows = await res.json();
+    return (Array.isArray(rows) ? rows[0]?.share_token : null) ?? null;
+  } catch (e) {
+    console.warn("analysis history failed", (e as Error).message);
+    return null;
+  }
+}
 
 
 Deno.serve(async (req) => {
