@@ -292,6 +292,12 @@ const App = () => (
                     <Route path="/succes-calcul" element={<SuccesCalcul />} />
                     <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
+                    {/* Legacy / mistyped URLs shared manually — avoid 404 dead ends. */}
+                    <Route path="/favorites" element={<Navigate to="/favorite" replace />} />
+                    <Route path="/guests" element={<Navigate to="/pentru-oaspeti" replace />} />
+                    <Route path="/proprietati" element={<Navigate to="/imobiliare" replace />} />
+                    <Route path="/legal/politica-de-confidentialitate" element={<Navigate to="/politica-confidentialitate" replace />} />
+                    <Route path="/legal/termeni-si-conditii" element={<Navigate to="/termeni-si-conditii" replace />} />
                     <Route path="/index.html" element={<Navigate to="/" replace />} />
                     <Route path="/index-en.html" element={<Navigate to="/" replace />} />
                     <Route path="/index_EN.html" element={<Navigate to="/" replace />} />
