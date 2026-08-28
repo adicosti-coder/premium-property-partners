@@ -41,9 +41,23 @@ const AnalizaProprietate = () => {
   const [consent, setConsent] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [aiResult, setAiResult] = useState<AnalyzerResult | null>(null);
 
   const set = (key: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handlePrefill = ({
+    propertyType,
+    area,
+    details,
+  }: { propertyType?: string; area?: string; details?: string }) =>
+    setForm((prev) => ({
+      ...prev,
+      propertyType: propertyType || prev.propertyType,
+      area: area || prev.area,
+      details: details ? [details, prev.details.trim()].filter(Boolean).join(" | ") : prev.details,
+    }));
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
