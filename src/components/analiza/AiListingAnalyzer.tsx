@@ -26,7 +26,7 @@ import AnalysisPhotoUploader, { type AnalysisPhoto } from "@/components/analiza/
 import AnalysisAdjustPanel from "@/components/analiza/AnalysisAdjustPanel";
 import AnalysisComparePanel from "@/components/analiza/AnalysisComparePanel";
 import AnalysisEmailCard from "@/components/analiza/AnalysisEmailCard";
-import { supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
+import { supabase, supabaseConfig, getSupabasePublishableKey } from "@/lib/supabaseClient";
 
 export interface ListingAnalysis {
   titlu?: string | null;
