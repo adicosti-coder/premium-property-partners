@@ -20,6 +20,15 @@ export const escapeXml = (str: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
+/** URL-safe anchor slug for a POI name — mirrors `poiSlug` in the frontend. */
+export const poiSlug = (name: string): string =>
+  name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 const hreflang = (path: string) =>
   `    <xhtml:link rel="alternate" hreflang="ro" href="${BASE_URL}${path}" />
     <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path}" />
