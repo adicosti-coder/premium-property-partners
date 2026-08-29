@@ -20,6 +20,15 @@ export const escapeXml = (str: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
+/** URL-safe anchor slug for a POI name — mirrors `poiSlug` in the frontend. */
+export const poiSlug = (name: string): string =>
+  name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 const hreflang = (path: string) =>
   `    <xhtml:link rel="alternate" hreflang="ro" href="${BASE_URL}${path}" />
     <xhtml:link rel="alternate" hreflang="en" href="${BASE_URL}${path}" />
@@ -115,7 +124,7 @@ const day = (primary: string | null, fallback: string) =>
 export async function buildDynamicSitemap(supabase: any): Promise<string> {
   const storageBase = `${Deno.env.get("SUPABASE_URL") ?? ""}/storage/v1/object/public`;
 
-  const [blog, properties, complexes, community] = await Promise.all([
+  const [blog, properties, complexes, community, pois] = await Promise.all([
     supabase
       .from("blog_articles")
       .select("slug, title, published_at, created_at, cover_image")
@@ -136,6 +145,12 @@ export async function buildDynamicSitemap(supabase: any): Promise<string> {
       .select("id, updated_at, created_at")
       .eq("status", "approved")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("points_of_interest")
+      .select("id, name, category, updated_at, created_at, image_url")
+      .in("category", ["restaurant", "cafe"])
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
   ]);
 
   let xml = URLSET_OPEN;
@@ -195,5 +210,29 @@ ${hreflang(`/proprietate/${p.slug}`)}
 `;
   }
 
+  // POI deep-links (restaurants & cafes) inside the interactive guide article.
+  // Emitted as `?poi=<slug>` — an indexable, parameterised URL (Google ignores
+  // pure `#fragment` variants), one per venue.
+  const guideArticle = (blog.data ?? []).find(
+    // deno-lint-ignore no-explicit-any
+    (a: any) => typeof a.slug === "string" && /restaurant/i.test(a.slug),
+  );
+  if (guideArticle?.slug) {
+    for (const poi of pois.data ?? []) {
+      if (!poi.name) continue;
+      const slug = poiSlug(poi.name);
+      if (!slug) continue;
+      const path = `/blog/${guideArticle.slug}?poi=${slug}`;
+      xml += `  <url>
+    <loc>${escapeXml(`${BASE_URL}${path}`)}</loc>
+    <lastmod>${day(poi.updated_at, poi.created_at)}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>${imageTag(poi.image_url, "poi-images", poi.name)}
+  </url>
+`;
+    }
+  }
+
   return xml + `</urlset>`;
 }
+

@@ -14,6 +14,10 @@ export interface PoiReview {
   status?: 'pending' | 'approved' | 'rejected';
 }
 
+/** sessionStorage key holding the last submission timestamp (local throttle). */
+const THROTTLE_KEY = 'poi_review_last_submit';
+
+
 /** Aggregated guest ratings for a set of POIs (restaurants / cafes). */
 export const usePoiReviews = (poiIds: string[]) => {
   const queryClient = useQueryClient();
@@ -59,7 +63,24 @@ export const usePoiReviews = (poiIds: string[]) => {
       rating: number;
       comment?: string;
       guestName?: string;
+      /** Honeypot field — must stay empty; only bots fill it in. */
+      honeypot?: string;
     }) => {
+      if (input.honeypot && input.honeypot.trim().length > 0) throw new Error('SPAM_DETECTED');
+
+      const comment = input.comment?.trim() ?? '';
+      // Client-side anti-spam mirror of the DB checks (fast feedback, no round-trip).
+      if (/(https?:\/\/|www\.|<[a-z/][^>]*>)/i.test(comment) || /(.)\1{9,}/.test(comment)) {
+        throw new Error('SPAM_DETECTED');
+      }
+      if (!Number.isInteger(input.rating) || input.rating < 1 || input.rating > 5) {
+        throw new Error('INVALID_RATING');
+      }
+
+      // Local throttle: max 1 submission / 20s per browser (bot burst guard).
+      const lastAt = Number(sessionStorage.getItem(THROTTLE_KEY) ?? 0);
+      if (Date.now() - lastAt < 20_000) throw new Error('RATE_LIMITED');
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -70,7 +91,7 @@ export const usePoiReviews = (poiIds: string[]) => {
           poi_id: input.poiId,
           user_id: user.id,
           rating: input.rating,
-          comment: input.comment?.slice(0, 1000) || null,
+          comment: comment.slice(0, 1000) || null,
           guest_name: input.guestName?.slice(0, 80) || null,
           status: 'pending',
           rejection_reason: null,
@@ -79,17 +100,33 @@ export const usePoiReviews = (poiIds: string[]) => {
         },
         { onConflict: 'poi_id,user_id' },
       );
-      if (error) throw error;
+      if (error) {
+        // RLS rejection = rate limit / spam filter tripped server-side.
+        if (/row-level security|violates/i.test(error.message)) throw new Error('RATE_LIMITED');
+        throw error;
+      }
+      sessionStorage.setItem(THROTTLE_KEY, String(Date.now()));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['poi-reviews'] });
       toast.success('Mulțumim! Recenzia ta a fost trimisă și va apărea după validarea gazdelor.');
     },
     onError: (err: Error) => {
-      if (err.message === 'AUTH_REQUIRED') {
-        toast.error('Intră în cont pentru a lăsa o recenzie.');
-      } else {
-        toast.error('Nu am putut salva recenzia. Încearcă din nou.');
+      switch (err.message) {
+        case 'AUTH_REQUIRED':
+          toast.error('Intră în cont pentru a lăsa o recenzie.');
+          break;
+        case 'SPAM_DETECTED':
+          toast.error('Recenzia pare a fi spam (linkuri sau text repetitiv). Rescrie-o, te rugăm.');
+          break;
+        case 'INVALID_RATING':
+          toast.error('Alege o notă între 1 și 5 stele.');
+          break;
+        case 'RATE_LIMITED':
+          toast.error('Ai trimis prea multe recenzii într-un interval scurt. Încearcă mai târziu.');
+          break;
+        default:
+          toast.error('Nu am putut salva recenzia. Încearcă din nou.');
       }
     },
   });

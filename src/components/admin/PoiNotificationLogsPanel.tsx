@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Bell, RefreshCw, Mail, MessageCircle, AlertTriangle } from "lucide-react";
+import { Bell, RefreshCw, Mail, MessageCircle, AlertTriangle, Download } from "lucide-react";
+import { csvFileName, downloadCsv } from "@/utils/exportCsv";
+
 
 interface NotificationLogRow {
   id: string;
@@ -53,6 +55,37 @@ export default function PoiNotificationLogsPanel() {
     return { emailOk, waOk, failed };
   }, [rows]);
 
+  const handleExportCsv = useCallback(() => {
+    downloadCsv(
+      csvFileName("jurnal-notificari-recenzii"),
+      [
+        "Data",
+        "POI",
+        "Nota",
+        "Oaspete",
+        "Email destinatar",
+        "Email trimis",
+        "Fallback email",
+        "WhatsApp configurat",
+        "Status WhatsApp",
+        "Eroare",
+      ],
+      rows.map((r) => [
+        dt(r.created_at),
+        r.poi_name,
+        r.rating,
+        r.guest_name,
+        r.email_to,
+        r.email_sent,
+        r.email_fallback,
+        r.whatsapp_configured,
+        r.whatsapp_status,
+        r.error_message,
+      ]),
+    );
+  }, [rows]);
+
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -66,15 +99,27 @@ export default function PoiNotificationLogsPanel() {
             de la oaspeți.
           </CardDescription>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void qc.invalidateQueries({ queryKey: ["admin", "poi-review-notifications"] })}
-          aria-label="Reîncarcă jurnalul de notificări"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />
-          Reîncarcă
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={rows.length === 0}
+            onClick={handleExportCsv}
+            aria-label="Exportă jurnalul de notificări în format CSV"
+          >
+            <Download className="w-4 h-4 mr-2" aria-hidden="true" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void qc.invalidateQueries({ queryKey: ["admin", "poi-review-notifications"] })}
+            aria-label="Reîncarcă jurnalul de notificări"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />
+            Reîncarcă
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-3">

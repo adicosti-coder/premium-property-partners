@@ -31,7 +31,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Check, X, Trash2, Star, Loader2, MessageSquare, Inbox } from "lucide-react";
+import { Check, X, Trash2, Star, Loader2, MessageSquare, Inbox, Download } from "lucide-react";
+import { csvFileName, downloadCsv } from "@/utils/exportCsv";
 
 type ModerationStatus = "pending" | "approved" | "rejected";
 
@@ -174,7 +175,25 @@ const PoiReviewsModerationManager = () => {
     );
   }, [reviews, search, pois]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleExportCsv = () => {
+    downloadCsv(
+      csvFileName("moderare-recenzii-poi"),
+      ["Data", "Locație", "Nota", "Oaspete", "Comentariu", "Stare", "Motiv respingere", "Moderat la"],
+      filtered.map((r) => [
+        new Date(r.created_at).toLocaleString("ro-RO"),
+        poiName(r.poi_id),
+        r.rating,
+        r.guest_name,
+        r.comment,
+        r.status,
+        r.rejection_reason,
+        r.moderated_at ? new Date(r.moderated_at).toLocaleString("ro-RO") : "",
+      ]),
+    );
+  };
+
   const pendingCount = reviews.filter((r) => r.status === "pending").length;
+
 
   return (
     <div className="space-y-6">
@@ -211,7 +230,17 @@ const PoiReviewsModerationManager = () => {
                 <SelectItem value="all">Toate</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              disabled={filtered.length === 0}
+              onClick={handleExportCsv}
+              aria-label="Exportă recenziile filtrate în format CSV"
+            >
+              <Download className="w-4 h-4 mr-2" aria-hidden="true" />
+              Export CSV
+            </Button>
           </div>
+
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">

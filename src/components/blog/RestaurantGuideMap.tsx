@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { trackConversion } from '@/lib/conversionTracking';
 import { applyPoiSocialMeta, resetPoiSocialMeta } from '@/utils/poiSocialMeta';
+import { buildPoiItemListSchema } from '@/utils/poiStructuredData';
 import {
   Loader2,
   MapPin,
@@ -124,10 +125,37 @@ export const poiSlug = (name: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-const poiShareUrl = (name: string): string =>
-  typeof window === 'undefined'
-    ? ''
-    : `${window.location.origin}${window.location.pathname}#${poiSlug(name)}`;
+/** Marketing params we forward on share/deep-link so attribution survives. */
+const TRACKING_PARAM_KEYS = [
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_content',
+  'utm_term',
+  'gclid',
+  'fbclid',
+  'src',
+];
+
+/** Current URL's UTM / click-id params, preserved when sharing a POI link. */
+const currentTrackingParams = (): URLSearchParams => {
+  const out = new URLSearchParams();
+  if (typeof window === 'undefined') return out;
+  const params = new URLSearchParams(window.location.search);
+  for (const key of TRACKING_PARAM_KEYS) {
+    const value = params.get(key);
+    if (value) out.set(key, value);
+  }
+  return out;
+};
+
+const poiShareUrl = (name: string): string => {
+  if (typeof window === 'undefined') return '';
+  const tracking = currentTrackingParams();
+  // Keep an indexable `?poi=` param plus the hash anchor for in-page scroll.
+  tracking.set('poi', poiSlug(name));
+  return `${window.location.origin}${window.location.pathname}?${tracking.toString()}#${poiSlug(name)}`;
+};
 
 const RestaurantGuideMap: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -337,7 +365,8 @@ const RestaurantGuideMap: React.FC = () => {
     setShouldLoadMap(true);
     setActiveId(target.id);
     setDetailId(target.id);
-    // GA4 + Meta: arrival through a shared POI deep-link.
+    // GA4 + Meta: arrival through a shared POI deep-link, with the UTM /
+    // click-id params that came in on the link preserved for attribution.
     trackConversion({
       event: 'poi_deep_link_open',
       poi_id: target.id,
@@ -345,6 +374,7 @@ const RestaurantGuideMap: React.FC = () => {
       poi_category: target.category,
       deep_link_source: window.location.hash ? 'hash' : 'query',
       referrer: document.referrer || 'direct',
+      ...Object.fromEntries(currentTrackingParams().entries()),
     });
     window.requestAnimationFrame(() => {
       document
@@ -398,13 +428,14 @@ const RestaurantGuideMap: React.FC = () => {
     const url = poiShareUrl(poi.name);
     try {
       await navigator.clipboard.writeText(url);
-      // GA4 + Meta: guest shared a venue deep-link.
+      // GA4 + Meta: guest shared a venue deep-link (UTMs carried over).
       trackConversion({
         event: 'poi_link_copy',
         poi_id: poi.id,
         poi_name: poi.name,
         poi_category: poi.category,
         share_url: url,
+        ...Object.fromEntries(currentTrackingParams().entries()),
       });
       toast.success('Link copiat! Îl poți trimite direct oaspeților.');
     } catch {
@@ -468,10 +499,45 @@ const RestaurantGuideMap: React.FC = () => {
     return found ? (found as RestaurantModalPoi) : null;
   }, [enriched, detailId]);
 
+  // Schema.org: Restaurant / CafeOrCoffeeShop nodes with rating, address & GPS
+  // so Google can render rich snippets for each venue in the guide.
+  const structuredData = useMemo(() => {
+    if (enriched.length === 0) return null;
+    const origin = typeof window === 'undefined' ? 'https://realtrust.ro' : window.location.origin;
+    const path = typeof window === 'undefined' ? '' : window.location.pathname;
+    return buildPoiItemListSchema(
+      enriched.map((poi) => {
+        const summary = summaryFor(poi.id);
+        return {
+          id: poi.id,
+          name: poi.name,
+          category: poi.category,
+          description: poi.description,
+          address: poi.address,
+          latitude: poi.latitude,
+          longitude: poi.longitude,
+          phone: poi.phone,
+          website: poi.website,
+          imageUrl: poi.image_url,
+          ratingValue: summary.average ?? poi.rating,
+          ratingCount: summary.count,
+          url: `${origin}${path}?poi=${poiSlug(poi.name)}`,
+        };
+      }),
+    );
+  }, [enriched, summaryFor]);
 
   return (
     <section ref={sectionRef} className="not-prose my-10 rounded-2xl border border-border bg-card p-4 sm:p-6">
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          // Schema.org payload built from trusted DB fields only.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      )}
       <header className="mb-4">
+
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <MapPin className="w-5 h-5 text-primary" aria-hidden="true" />
           Hartă interactivă: restaurante & cafenele
@@ -703,8 +769,8 @@ const RestaurantGuideMap: React.FC = () => {
         isAuthenticated={isAuthenticated}
         isFavorite={detailPoi ? isFavorite(detailPoi.id) : false}
         onToggleFavorite={() => detailPoi && toggleFavorite(detailPoi.id)}
-        onSubmitReview={(rating, comment) =>
-          detailPoi && submitReview({ poiId: detailPoi.id, rating, comment })
+        onSubmitReview={(rating, comment, honeypot) =>
+          detailPoi && submitReview({ poiId: detailPoi.id, rating, comment, honeypot })
         }
         isSubmitting={isSubmitting}
       />
