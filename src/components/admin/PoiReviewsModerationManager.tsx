@@ -211,7 +211,17 @@ const PoiReviewsModerationManager = () => {
                 <SelectItem value="all">Toate</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              disabled={filtered.length === 0}
+              onClick={handleExportCsv}
+              aria-label="Exportă recenziile filtrate în format CSV"
+            >
+              <Download className="w-4 h-4 mr-2" aria-hidden="true" />
+              Export CSV
+            </Button>
           </div>
+
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
