@@ -170,8 +170,52 @@ const RestaurantGuideMap: React.FC = () => {
     }
   }, [enriched, filter, isFavorite]);
 
-  // Mapbox token
+  // Defer the whole map subsystem (token fetch + mapbox-gl chunk) until the
+  // guide section is close to the viewport. Keeps LCP/TBT clean on the article.
   useEffect(() => {
+    if (shouldLoadMap || typeof window === 'undefined') return;
+    const el = sectionRef.current;
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) {
+      setShouldLoadMap(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShouldLoadMap(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [shouldLoadMap]);
+
+  // Lazy-load the Mapbox GL runtime + stylesheet on demand.
+  useEffect(() => {
+    if (!shouldLoadMap || mapbox || !isWebGLSupported()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [mod] = await Promise.all([
+          import('mapbox-gl'),
+          import('mapbox-gl/dist/mapbox-gl.css'),
+        ]);
+        if (!cancelled) setMapbox((mod.default ? mod : mod) as MapboxModule);
+      } catch {
+        if (!cancelled) setTokenError(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldLoadMap, mapbox]);
+
+  // Mapbox token (only once the map is actually needed)
+  useEffect(() => {
+    if (!shouldLoadMap || token) return;
     const envToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undefined;
     if (envToken) {
       setToken(envToken);
@@ -190,31 +234,33 @@ const RestaurantGuideMap: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [shouldLoadMap, token]);
 
   // Init map
   useEffect(() => {
-    if (!token || !mapContainer.current || mapRef.current || !isWebGLSupported()) return;
-    mapboxgl.accessToken = token;
-    const map = new mapboxgl.Map({
+    const gl = mapbox?.default ?? mapbox;
+    if (!gl || !token || !mapContainer.current || mapRef.current || !isWebGLSupported()) return;
+    gl.accessToken = token;
+    const map = new gl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: MAP_CENTER,
       zoom: 12.6,
       attributionControl: true,
     });
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(new gl.NavigationControl({ showCompass: false }), 'top-right');
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = null;
     };
-  }, [token]);
+  }, [token, mapbox]);
 
   // Render markers
   useEffect(() => {
+    const gl = mapbox?.default ?? mapbox;
     const map = mapRef.current;
-    if (!map) return;
+    if (!gl || !map) return;
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -226,9 +272,9 @@ const RestaurantGuideMap: React.FC = () => {
       el.innerHTML =
         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg>';
       markersRef.current.push(
-        new mapboxgl.Marker({ element: el })
+        new gl.Marker({ element: el })
           .setLngLat(prop.coords)
-          .setPopup(new mapboxgl.Popup({ offset: 16 }).setText(prop.name))
+          .setPopup(new gl.Popup({ offset: 16 }).setText(prop.name))
           .addTo(map),
       );
     });
@@ -245,17 +291,18 @@ const RestaurantGuideMap: React.FC = () => {
         setActiveId(poi.id);
         setDetailId(poi.id);
       });
-      const popup = new mapboxgl.Popup({ offset: 18 }).setHTML(
+      const popup = new gl.Popup({ offset: 18 }).setHTML(
         `<strong>${poi.name}</strong><br/><span>${poi.walkMinutes} min pe jos de la ${poi.property}</span>`,
       );
       markersRef.current.push(
-        new mapboxgl.Marker({ element: el })
+        new gl.Marker({ element: el })
           .setLngLat([poi.longitude, poi.latitude])
           .setPopup(popup)
           .addTo(map),
       );
     });
-  }, [filtered]);
+  }, [filtered, mapbox]);
+
 
   const focusPoi = useCallback((poi: GuidePoi) => {
     setActiveId(poi.id);
