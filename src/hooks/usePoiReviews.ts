@@ -77,9 +77,17 @@ export const usePoiReviews = (poiIds: string[]) => {
         throw new Error('INVALID_RATING');
       }
 
-      // Local throttle: max 1 submission / 20s per browser (bot burst guard).
+      // Local throttle (admin-configurable, default 20s) as a bot burst guard.
+      let throttleMs = 20_000;
+      try {
+        const { data: cfg } = await supabase.rpc('get_poi_review_throttle');
+        if (typeof cfg === 'number' && cfg >= 0) throttleMs = cfg * 1000;
+      } catch {
+        /* keep the safe default when the setting cannot be read */
+      }
       const lastAt = Number(sessionStorage.getItem(THROTTLE_KEY) ?? 0);
-      if (Date.now() - lastAt < 20_000) throw new Error('RATE_LIMITED');
+      if (throttleMs > 0 && Date.now() - lastAt < throttleMs) throw new Error('RATE_LIMITED');
+
 
       const {
         data: { user },

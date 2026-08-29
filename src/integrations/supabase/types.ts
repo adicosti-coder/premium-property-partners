@@ -3992,6 +3992,33 @@ export type Database = {
         }
         Relationships: []
       }
+      poi_review_settings: {
+        Row: {
+          client_throttle_seconds: number
+          id: boolean
+          max_per_day: number
+          max_per_hour: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          client_throttle_seconds?: number
+          id?: boolean
+          max_per_day?: number
+          max_per_hour?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          client_throttle_seconds?: number
+          id?: boolean
+          max_per_day?: number
+          max_per_hour?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       poi_reviews: {
         Row: {
           comment: string | null
@@ -7786,6 +7813,24 @@ export type Database = {
         }
         Relationships: []
       }
+      sitemap_cache: {
+        Row: {
+          body: string
+          cache_key: string
+          generated_at: string
+        }
+        Insert: {
+          body: string
+          cache_key: string
+          generated_at?: string
+        }
+        Update: {
+          body?: string
+          cache_key?: string
+          generated_at?: string
+        }
+        Relationships: []
+      }
       stripe_webhook_events: {
         Row: {
           environment: string
@@ -10468,6 +10513,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_poi_review_throttle: { Args: never; Returns: number }
       get_prospect_injection_daily_summary: {
         Args: { p_days?: number }
         Returns: {

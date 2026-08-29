@@ -5,4 +5,10 @@ Disallow: /auth
 Disallow: /reset-password
 Disallow: /portal-proprietar
 
+# Ghidul de restaurante folosește deep-link-uri ?poi=<slug> — trebuie indexate.
+Allow: /blog/*?poi=
+Allow: /*?poi=
+
 Sitemap: https://realtrust.ro/sitemap.xml
+Sitemap: https://realtrust.ro/sitemap-static.xml
+Sitemap: https://realtrust.ro/sitemap-dynamic.xml
