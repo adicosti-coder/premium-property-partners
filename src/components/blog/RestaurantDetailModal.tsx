@@ -50,7 +50,7 @@ interface Props {
   isAuthenticated: boolean;
   isFavorite: boolean;
   onToggleFavorite: () => void;
-  onSubmitReview: (rating: number, comment: string) => void;
+  onSubmitReview: (rating: number, comment: string, honeypot?: string) => void;
   isSubmitting: boolean;
 }
 
