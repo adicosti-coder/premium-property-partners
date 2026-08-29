@@ -114,6 +114,22 @@ const CityGuideSection: React.FC = () => {
     checkSharedPois();
   }, [searchParams]);
 
+  // Deep-link support: ?poi_category=restaurant&poi=Noua+Timișoară (used by blog guides)
+  useEffect(() => {
+    const cat = searchParams.get('poi_category');
+    const poi = searchParams.get('poi');
+    if (cat) setSelectedCategory(cat);
+    if (poi) setSearchQuery(poi);
+    if (cat || poi) {
+      // let the list render, then scroll to the guide
+      const t = setTimeout(() => {
+        document.getElementById('ghid-oras')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 350);
+      return () => clearTimeout(t);
+    }
+  }, [searchParams]);
+
+
   // Fetch ALL POIs from Supabase (removed limit for filtering)
   const { data: pois = [], isLoading } = useQuery({
     queryKey: ['city-guide-pois'],
@@ -469,9 +485,11 @@ const CityGuideSection: React.FC = () => {
 
   return (
     <section 
+      id="ghid-oras"
       ref={animation.ref as React.RefObject<HTMLElement>}
-      className="py-20 bg-muted/30"
+      className="py-20 bg-muted/30 scroll-mt-24"
     >
+
       <div className="container mx-auto px-6">
         {/* Shared POIs Banner */}
         {showSharedPois && sharedPoiIds && (
