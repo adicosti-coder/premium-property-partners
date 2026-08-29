@@ -40,9 +40,12 @@ serve(async (req) => {
       }
     }
 
+    // Explicit column list: never return public_access_token or other internal fields
     const query = supabase
       .from("guest_guides")
-      .select("*");
+      .select(
+        "id, property_name, property_image, check_in_date, check_out_date, check_in_time, check_out_time, pin_code, wifi_name, wifi_password, access_instructions, access_video_url, parking_instructions, parking_gps_lat, parking_gps_lng, whatsapp_number, additional_notes",
+      );
 
     const { data: guide, error } = await (isValidAccessToken(bookingId)
       ? query.eq("public_access_token", bookingId)
