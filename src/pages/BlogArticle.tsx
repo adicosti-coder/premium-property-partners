@@ -22,6 +22,7 @@ const ArticleFAQ = lazy(() => import("@/components/blog/ArticleFAQ"));
 const ExpertSignature = lazy(() => import("@/components/ExpertSignature"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 import { RoiByNeighborhoodChart, MonthlyYieldChart, PriceAppreciationChart } from "@/components/blog/TimisoaraInvestmentCharts";
+const RestaurantGuideMap = lazy(() => import("@/components/blog/RestaurantGuideMap"));
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 const ReadingProgressBar = lazy(() => import("@/components/blog/ReadingProgressBar"));
 const FloatingShareRail = lazy(() => import("@/components/blog/FloatingShareRail"));
