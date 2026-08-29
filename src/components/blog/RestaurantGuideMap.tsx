@@ -365,7 +365,8 @@ const RestaurantGuideMap: React.FC = () => {
     setShouldLoadMap(true);
     setActiveId(target.id);
     setDetailId(target.id);
-    // GA4 + Meta: arrival through a shared POI deep-link.
+    // GA4 + Meta: arrival through a shared POI deep-link, with the UTM /
+    // click-id params that came in on the link preserved for attribution.
     trackConversion({
       event: 'poi_deep_link_open',
       poi_id: target.id,
@@ -373,6 +374,7 @@ const RestaurantGuideMap: React.FC = () => {
       poi_category: target.category,
       deep_link_source: window.location.hash ? 'hash' : 'query',
       referrer: document.referrer || 'direct',
+      ...Object.fromEntries(currentTrackingParams().entries()),
     });
     window.requestAnimationFrame(() => {
       document
