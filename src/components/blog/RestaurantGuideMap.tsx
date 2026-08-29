@@ -110,7 +110,7 @@ const isAradului = (poi: GuidePoi) =>
   /aradului/i.test(poi.address ?? '') ||
   distanceMeters([21.2245, 45.7765], [poi.longitude, poi.latitude]) < 1500;
 
-type MapboxModule = typeof import('mapbox-gl');
+type MapboxModule = (typeof import('mapbox-gl'))['default'];
 
 const RestaurantGuideMap: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -203,7 +203,7 @@ const RestaurantGuideMap: React.FC = () => {
           import('mapbox-gl'),
           import('mapbox-gl/dist/mapbox-gl.css'),
         ]);
-        if (!cancelled) setMapbox((mod.default ? mod : mod) as MapboxModule);
+        if (!cancelled) setMapbox(mod.default as MapboxModule);
       } catch {
         if (!cancelled) setTokenError(true);
       }
@@ -238,7 +238,7 @@ const RestaurantGuideMap: React.FC = () => {
 
   // Init map
   useEffect(() => {
-    const gl = mapbox?.default ?? mapbox;
+    const gl = mapbox;
     if (!gl || !token || !mapContainer.current || mapRef.current || !isWebGLSupported()) return;
     gl.accessToken = token;
     const map = new gl.Map({
@@ -258,7 +258,7 @@ const RestaurantGuideMap: React.FC = () => {
 
   // Render markers
   useEffect(() => {
-    const gl = mapbox?.default ?? mapbox;
+    const gl = mapbox;
     const map = mapRef.current;
     if (!gl || !map) return;
     markersRef.current.forEach((m) => m.remove());
