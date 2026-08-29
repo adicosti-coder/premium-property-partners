@@ -339,12 +339,37 @@ const RestaurantGuideMap: React.FC = () => {
         ))}
       </div>
 
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Button
+          size="sm"
+          variant="secondary"
+          className="min-h-[40px]"
+          onClick={handleExportPdf}
+          aria-label="Descarcă ghidul PDF cu locațiile salvate"
+        >
+          <FileDown className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+          Ghid PDF ({favoritesCount})
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="min-h-[40px]"
+          onClick={handleShareWhatsApp}
+          aria-label="Trimite lista salvată pe WhatsApp"
+        >
+          <Share2 className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+          Trimite pe WhatsApp
+        </Button>
+      </div>
+
       {!isAuthenticated && (
         <p className="text-xs text-muted-foreground mb-3">
           Locațiile premium recomandate de gazdele noastre devin vizibile pe hartă după autentificare.{' '}
-          <a href="/auth" className="underline font-medium">Intră în cont</a> pentru lista completă.
+          <a href="/auth" className="underline font-medium">Intră în cont</a> pentru lista completă și
+          sincronizarea favoritelor pe contul tău.
         </p>
       )}
+
 
       <div className="relative rounded-xl overflow-hidden border border-border">
         <div ref={mapContainer} className="w-full h-[360px] sm:h-[440px]" />
