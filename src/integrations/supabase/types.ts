@@ -7813,6 +7813,24 @@ export type Database = {
         }
         Relationships: []
       }
+      sitemap_cache: {
+        Row: {
+          body: string
+          cache_key: string
+          generated_at: string
+        }
+        Insert: {
+          body: string
+          cache_key: string
+          generated_at?: string
+        }
+        Update: {
+          body?: string
+          cache_key?: string
+          generated_at?: string
+        }
+        Relationships: []
+      }
       stripe_webhook_events: {
         Row: {
           environment: string
