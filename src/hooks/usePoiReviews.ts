@@ -14,6 +14,10 @@ export interface PoiReview {
   status?: 'pending' | 'approved' | 'rejected';
 }
 
+/** sessionStorage key holding the last submission timestamp (local throttle). */
+const THROTTLE_KEY = 'poi_review_last_submit';
+
+
 /** Aggregated guest ratings for a set of POIs (restaurants / cafes). */
 export const usePoiReviews = (poiIds: string[]) => {
   const queryClient = useQueryClient();
