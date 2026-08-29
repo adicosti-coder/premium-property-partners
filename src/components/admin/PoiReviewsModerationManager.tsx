@@ -197,7 +197,9 @@ const PoiReviewsModerationManager = () => {
 
   return (
     <div className="space-y-6">
+      <PoiReviewSettingsCard />
       <Card>
+
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-primary" aria-hidden="true" />
