@@ -115,7 +115,7 @@ const day = (primary: string | null, fallback: string) =>
 export async function buildDynamicSitemap(supabase: any): Promise<string> {
   const storageBase = `${Deno.env.get("SUPABASE_URL") ?? ""}/storage/v1/object/public`;
 
-  const [blog, properties, complexes, community] = await Promise.all([
+  const [blog, properties, complexes, community, pois] = await Promise.all([
     supabase
       .from("blog_articles")
       .select("slug, title, published_at, created_at, cover_image")
