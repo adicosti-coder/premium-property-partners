@@ -30,6 +30,7 @@ import {
   FileDown,
   Share2,
   Info,
+  Link as LinkIcon,
 } from 'lucide-react';
 
 
@@ -606,6 +607,16 @@ const RestaurantGuideMap: React.FC = () => {
               >
                 <Info className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
                 Detalii & recenzii
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="min-h-[40px]"
+                onClick={() => handleCopyPoiLink(poi.name)}
+                aria-label={`Copiază linkul direct către ${poi.name}`}
+              >
+                <LinkIcon className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+                Copiază link
               </Button>
               <Button
                 size="sm"
