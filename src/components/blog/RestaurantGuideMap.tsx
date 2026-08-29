@@ -337,12 +337,41 @@ const RestaurantGuideMap: React.FC = () => {
     setShouldLoadMap(true);
     setActiveId(target.id);
     setDetailId(target.id);
+    // GA4 + Meta: arrival through a shared POI deep-link.
+    trackConversion({
+      event: 'poi_deep_link_open',
+      poi_id: target.id,
+      poi_name: target.name,
+      poi_category: target.category,
+      deep_link_source: window.location.hash ? 'hash' : 'query',
+      referrer: document.referrer || 'direct',
+    });
     window.requestAnimationFrame(() => {
       document
         .getElementById(`guide-poi-${target.id}`)
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }, [enriched]);
+
+  // Dynamic Open Graph tags while a POI modal / deep-link is active, so shared
+  // links surface the venue name + photo instead of the generic article preview.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const poi = enriched.find((p) => p.id === detailId);
+    if (!poi) {
+      resetPoiSocialMeta();
+      return;
+    }
+    applyPoiSocialMeta({
+      name: poi.name,
+      category: poi.category,
+      description: poi.description,
+      address: poi.address,
+      imageUrl: poi.image_url,
+      url: poiShareUrl(poi.name),
+    });
+    return () => resetPoiSocialMeta();
+  }, [detailId, enriched]);
 
   // Keep the URL hash in sync with the open detail modal so the link is shareable.
   useEffect(() => {
