@@ -21,6 +21,7 @@ import {
   Clock,
 } from 'lucide-react';
 import type { PoiReview } from '@/hooks/usePoiReviews';
+import { trackConversion } from '@/lib/conversionTracking';
 
 export interface RestaurantModalPoi {
   id: string;
