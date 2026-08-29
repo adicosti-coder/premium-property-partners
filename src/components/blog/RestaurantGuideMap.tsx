@@ -394,10 +394,18 @@ const RestaurantGuideMap: React.FC = () => {
     mapRef.current.flyTo({ center: [poi.longitude, poi.latitude], zoom: 15.5, duration: 800 });
   }, [activeId, enriched, mapbox, token]);
 
-  const handleCopyPoiLink = useCallback(async (name: string) => {
-    const url = poiShareUrl(name);
+  const handleCopyPoiLink = useCallback(async (poi: GuidePoi) => {
+    const url = poiShareUrl(poi.name);
     try {
       await navigator.clipboard.writeText(url);
+      // GA4 + Meta: guest shared a venue deep-link.
+      trackConversion({
+        event: 'poi_link_copy',
+        poi_id: poi.id,
+        poi_name: poi.name,
+        poi_category: poi.category,
+        share_url: url,
+      });
       toast.success('Link copiat! Îl poți trimite direct oaspeților.');
     } catch {
       toast.error('Nu am putut copia linkul. Copiază-l manual din bara de adrese.');
@@ -643,7 +651,7 @@ const RestaurantGuideMap: React.FC = () => {
                 size="sm"
                 variant="ghost"
                 className="min-h-[40px]"
-                onClick={() => handleCopyPoiLink(poi.name)}
+                onClick={() => handleCopyPoiLink(poi)}
                 aria-label={`Copiază linkul direct către ${poi.name}`}
               >
                 <LinkIcon className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
