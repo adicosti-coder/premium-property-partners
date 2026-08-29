@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Bell, RefreshCw, Mail, MessageCircle, AlertTriangle } from "lucide-react";
+import { Bell, RefreshCw, Mail, MessageCircle, AlertTriangle, Download } from "lucide-react";
+import { csvFileName, downloadCsv } from "@/utils/exportCsv";
+
 
 interface NotificationLogRow {
   id: string;
