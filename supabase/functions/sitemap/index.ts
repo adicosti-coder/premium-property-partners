@@ -81,6 +81,6 @@ Deno.serve(async (req: Request) => {
     console.error("[sitemap] generation failed:", error);
     // Never return HTML/JSON to a crawler on this route — emit a valid,
     // minimal XML document with a 200 so the sitemap stays parseable.
-    return xml(buildSitemapIndex());
+    return xml(buildSitemapIndex(), false);
   }
 });
