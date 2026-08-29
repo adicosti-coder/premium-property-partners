@@ -178,7 +178,18 @@ const RestaurantDetailModal: React.FC<Props> = ({
         <div className="flex flex-wrap gap-2">
           {poi.phone && (
             <Button size="sm" className="min-h-[44px]" asChild>
-              <a href={`tel:${poi.phone.replace(/\s/g, '')}`} aria-label={`Sună la ${poi.name}`}>
+              <a
+                href={`tel:${poi.phone.replace(/\s/g, '')}`}
+                aria-label={`Sună la ${poi.name}`}
+                onClick={() =>
+                  trackConversion({
+                    event: 'phone_click',
+                    poi_id: poi.id,
+                    poi_name: poi.name,
+                    source: 'restaurant_guide_modal',
+                  })
+                }
+              >
                 <Phone className="w-4 h-4 mr-1" aria-hidden="true" /> Sună
               </a>
             </Button>
@@ -189,10 +200,19 @@ const RestaurantDetailModal: React.FC<Props> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Navigație GPS către ${poi.name}`}
+              onClick={() =>
+                trackConversion({
+                  event: 'poi_navigate_gps',
+                  poi_id: poi.id,
+                  poi_name: poi.name,
+                  walk_minutes: poi.walkMinutes,
+                })
+              }
             >
               <Navigation className="w-4 h-4 mr-1" aria-hidden="true" /> Navigare GPS
             </a>
           </Button>
+
           {poi.website && (
             <Button size="sm" variant="ghost" className="min-h-[44px]" asChild>
               <a
