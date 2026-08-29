@@ -155,6 +155,9 @@ const poiShareUrl = (name: string): string => {
   tracking.set('poi', poiSlug(name));
   return `${window.location.origin}${window.location.pathname}?${tracking.toString()}#${poiSlug(name)}`;
 };
+
+const RestaurantGuideMap: React.FC = () => {
+  const sectionRef = useRef<HTMLElement | null>(null);
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
