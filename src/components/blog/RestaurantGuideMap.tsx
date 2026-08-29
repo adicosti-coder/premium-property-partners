@@ -17,6 +17,8 @@ import {
   type RestaurantGuideItem,
 } from '@/utils/exportRestaurantGuidePdf';
 import { toast } from 'sonner';
+import { trackConversion } from '@/lib/conversionTracking';
+import { applyPoiSocialMeta, resetPoiSocialMeta } from '@/utils/poiSocialMeta';
 import {
   Loader2,
   MapPin,
