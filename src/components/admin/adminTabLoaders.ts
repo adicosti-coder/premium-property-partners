@@ -35,6 +35,7 @@ const loaders: Record<string, Loader> = {
   "followup-stats": () => import("@/components/admin/FollowupStatsManager"),
   "ab-testing": () => import("@/components/admin/ABTestManager"),
   reviews: () => import("@/components/admin/ReviewsManager"),
+  "poi-reviews": () => import("@/components/admin/PoiReviewsModerationManager"),
   captcha: () => import("@/components/admin/CaptchaLogsManager"),
   community: () => import("@/components/admin/CommunityManager"),
   "cta-analytics": () => import("@/components/admin/CtaAnalyticsManager"),
