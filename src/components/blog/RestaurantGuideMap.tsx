@@ -236,9 +236,7 @@ const RestaurantGuideMap: React.FC = () => {
       el.textContent = poi.category === 'cafe' ? '☕' : '🍽';
       el.addEventListener('click', () => {
         setActiveId(poi.id);
-        document
-          .getElementById(`guide-poi-${poi.id}`)
-          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setDetailId(poi.id);
       });
       const popup = new mapboxgl.Popup({ offset: 18 }).setHTML(
         `<strong>${poi.name}</strong><br/><span>${poi.walkMinutes} min pe jos de la ${poi.property}</span>`,
@@ -257,6 +255,57 @@ const RestaurantGuideMap: React.FC = () => {
     mapRef.current?.flyTo({ center: [poi.longitude, poi.latitude], zoom: 15.5, duration: 800 });
     mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
+
+  const favoriteItems = useMemo<RestaurantGuideItem[]>(
+    () =>
+      enriched
+        .filter((p) => favorites.includes(p.id))
+        .map((p) => {
+          const s = summaryFor(p.id);
+          return {
+            name: p.name,
+            category: p.category,
+            address: p.address,
+            phone: p.phone,
+            website: p.website,
+            walkMinutes: p.walkMinutes,
+            walkMeters: p.walkMeters,
+            property: p.property,
+            rating: p.rating,
+            guestRating: s.average,
+            guestReviews: s.count,
+          };
+        }),
+    [enriched, favorites, summaryFor],
+  );
+
+  const handleExportPdf = useCallback(async () => {
+    if (favoriteItems.length === 0) {
+      toast.error('Salvează cel puțin o locație pentru a genera ghidul PDF.');
+      return;
+    }
+    try {
+      await exportRestaurantGuidePdf(favoriteItems);
+      toast.success('Ghidul tău PDF a fost descărcat.');
+    } catch {
+      toast.error('Nu am putut genera PDF-ul. Încearcă din nou.');
+    }
+  }, [favoriteItems]);
+
+  const handleShareWhatsApp = useCallback(() => {
+    if (favoriteItems.length === 0) {
+      toast.error('Salvează cel puțin o locație pentru a trimite lista pe WhatsApp.');
+      return;
+    }
+    const text = encodeURIComponent(buildRestaurantGuideWhatsAppText(favoriteItems));
+    window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
+  }, [favoriteItems]);
+
+  const detailPoi = useMemo<RestaurantModalPoi | null>(() => {
+    const found = enriched.find((p) => p.id === detailId);
+    return found ? (found as RestaurantModalPoi) : null;
+  }, [enriched, detailId]);
+
 
   return (
     <section className="not-prose my-10 rounded-2xl border border-border bg-card p-4 sm:p-6">
