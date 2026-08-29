@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+// Mapbox GL (~800 kB JS + CSS) is loaded on demand — see `useDeferredMapbox` below.
+// Type-only import: erased at build time, so it does not pull the runtime bundle.
+import type mapboxgl from 'mapbox-gl';
+
 import { supabase } from '@/lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
