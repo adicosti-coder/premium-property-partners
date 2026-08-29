@@ -140,6 +140,23 @@ Deno.serve(async (req) => {
       waStatus = resp.status;
     }
 
+    // 3) Jurnal notificări pentru panoul de admin
+    await admin.from("poi_review_notifications").insert({
+      review_id: record.id,
+      poi_id: record.poi_id,
+      poi_name: poiName,
+      rating: record.rating,
+      guest_name: guest,
+      email_to: Deno.env.get("ADMIN_ALERT_EMAIL") || "info@realtrust.ro",
+      email_sent: emailResult.sent,
+      email_fallback: emailResult.storedFallback ?? false,
+      whatsapp_configured: Boolean(webhookUrl),
+      whatsapp_status: waStatus,
+      error_message: emailResult.sent || emailResult.storedFallback
+        ? (waStatus !== null && waStatus >= 300 ? `webhook status ${waStatus}` : null)
+        : "email_failed",
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
