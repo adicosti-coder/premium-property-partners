@@ -201,5 +201,29 @@ ${hreflang(`/proprietate/${p.slug}`)}
 `;
   }
 
+  // POI deep-links (restaurants & cafes) inside the interactive guide article.
+  // Emitted as `?poi=<slug>` — an indexable, parameterised URL (Google ignores
+  // pure `#fragment` variants), one per venue.
+  const guideArticle = (blog.data ?? []).find(
+    // deno-lint-ignore no-explicit-any
+    (a: any) => typeof a.slug === "string" && /restaurant/i.test(a.slug),
+  );
+  if (guideArticle?.slug) {
+    for (const poi of pois.data ?? []) {
+      if (!poi.name) continue;
+      const slug = poiSlug(poi.name);
+      if (!slug) continue;
+      const path = `/blog/${guideArticle.slug}?poi=${slug}`;
+      xml += `  <url>
+    <loc>${escapeXml(`${BASE_URL}${path}`)}</loc>
+    <lastmod>${day(poi.updated_at, poi.created_at)}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>${imageTag(poi.image_url, "poi-images", poi.name)}
+  </url>
+`;
+    }
+  }
+
   return xml + `</urlset>`;
 }
+
