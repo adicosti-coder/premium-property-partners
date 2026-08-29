@@ -93,6 +93,7 @@ const RestaurantDetailModal: React.FC<Props> = ({
 }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [honeypot, setHoneypot] = useState('');
 
   useEffect(() => {
     setRating(0);
