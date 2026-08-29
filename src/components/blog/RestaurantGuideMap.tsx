@@ -6,7 +6,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePoiFavorites } from '@/hooks/usePoiFavorites';
+import { usePoiReviews } from '@/hooks/usePoiReviews';
 import { isWebGLSupported } from '@/utils/webglSupport';
+import RestaurantDetailModal, { type RestaurantModalPoi } from './RestaurantDetailModal';
+import {
+  exportRestaurantGuidePdf,
+  buildRestaurantGuideWhatsAppText,
+  type RestaurantGuideItem,
+} from '@/utils/exportRestaurantGuidePdf';
+import { toast } from 'sonner';
 import {
   Loader2,
   MapPin,
@@ -17,7 +25,11 @@ import {
   ExternalLink,
   Navigation,
   Star,
+  FileDown,
+  Share2,
+  Info,
 } from 'lucide-react';
+
 
 /** ApArt Hotel / RealTrust properties used as walking-distance reference points. */
 const APART_PROPERTIES: { name: string; coords: [number, number] }[] = [
@@ -44,7 +56,10 @@ interface GuidePoi {
   address: string | null;
   website: string | null;
   rating: number | null;
+  phone: string | null;
+  image_url: string | null;
 }
+
 
 type FilterKey = 'all' | 'breakfast' | 'dinner' | 'centru' | 'aradului' | 'favorites';
 
@@ -101,14 +116,18 @@ const RestaurantGuideMap: React.FC = () => {
   const [tokenError, setTokenError] = useState(false);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const { isFavorite, toggleFavorite, favoritesCount, isAuthenticated } = usePoiFavorites();
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const { isFavorite, toggleFavorite, favorites, favoritesCount, isAuthenticated } =
+    usePoiFavorites();
 
   const { data: pois = [], isLoading } = useQuery({
     queryKey: ['restaurant-guide-pois'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('points_of_interest')
-        .select('id,name,category,description,latitude,longitude,address,website,rating')
+        .select(
+          'id,name,category,description,latitude,longitude,address,website,rating,phone,image_url',
+        )
         .in('category', ['restaurant', 'cafe'])
         .eq('is_active', true)
         .order('display_order', { ascending: true });
@@ -118,10 +137,14 @@ const RestaurantGuideMap: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
+  const poiIds = useMemo(() => pois.map((p) => p.id), [pois]);
+  const { reviewsFor, summaryFor, submitReview, isSubmitting } = usePoiReviews(poiIds);
+
   const enriched = useMemo(
     () => pois.map((poi) => ({ ...poi, ...nearestProperty(poi) })),
     [pois],
   );
+
 
   const filtered = useMemo(() => {
     switch (filter) {
@@ -213,9 +236,7 @@ const RestaurantGuideMap: React.FC = () => {
       el.textContent = poi.category === 'cafe' ? '☕' : '🍽';
       el.addEventListener('click', () => {
         setActiveId(poi.id);
-        document
-          .getElementById(`guide-poi-${poi.id}`)
-          ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setDetailId(poi.id);
       });
       const popup = new mapboxgl.Popup({ offset: 18 }).setHTML(
         `<strong>${poi.name}</strong><br/><span>${poi.walkMinutes} min pe jos de la ${poi.property}</span>`,
@@ -234,6 +255,57 @@ const RestaurantGuideMap: React.FC = () => {
     mapRef.current?.flyTo({ center: [poi.longitude, poi.latitude], zoom: 15.5, duration: 800 });
     mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
+
+  const favoriteItems = useMemo<RestaurantGuideItem[]>(
+    () =>
+      enriched
+        .filter((p) => favorites.includes(p.id))
+        .map((p) => {
+          const s = summaryFor(p.id);
+          return {
+            name: p.name,
+            category: p.category,
+            address: p.address,
+            phone: p.phone,
+            website: p.website,
+            walkMinutes: p.walkMinutes,
+            walkMeters: p.walkMeters,
+            property: p.property,
+            rating: p.rating,
+            guestRating: s.average,
+            guestReviews: s.count,
+          };
+        }),
+    [enriched, favorites, summaryFor],
+  );
+
+  const handleExportPdf = useCallback(async () => {
+    if (favoriteItems.length === 0) {
+      toast.error('Salvează cel puțin o locație pentru a genera ghidul PDF.');
+      return;
+    }
+    try {
+      await exportRestaurantGuidePdf(favoriteItems);
+      toast.success('Ghidul tău PDF a fost descărcat.');
+    } catch {
+      toast.error('Nu am putut genera PDF-ul. Încearcă din nou.');
+    }
+  }, [favoriteItems]);
+
+  const handleShareWhatsApp = useCallback(() => {
+    if (favoriteItems.length === 0) {
+      toast.error('Salvează cel puțin o locație pentru a trimite lista pe WhatsApp.');
+      return;
+    }
+    const text = encodeURIComponent(buildRestaurantGuideWhatsAppText(favoriteItems));
+    window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
+  }, [favoriteItems]);
+
+  const detailPoi = useMemo<RestaurantModalPoi | null>(() => {
+    const found = enriched.find((p) => p.id === detailId);
+    return found ? (found as RestaurantModalPoi) : null;
+  }, [enriched, detailId]);
+
 
   return (
     <section className="not-prose my-10 rounded-2xl border border-border bg-card p-4 sm:p-6">
@@ -267,12 +339,37 @@ const RestaurantGuideMap: React.FC = () => {
         ))}
       </div>
 
+      <div className="flex flex-wrap gap-2 mb-4">
+        <Button
+          size="sm"
+          variant="secondary"
+          className="min-h-[40px]"
+          onClick={handleExportPdf}
+          aria-label="Descarcă ghidul PDF cu locațiile salvate"
+        >
+          <FileDown className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+          Ghid PDF ({favoritesCount})
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="min-h-[40px]"
+          onClick={handleShareWhatsApp}
+          aria-label="Trimite lista salvată pe WhatsApp"
+        >
+          <Share2 className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+          Trimite pe WhatsApp
+        </Button>
+      </div>
+
       {!isAuthenticated && (
         <p className="text-xs text-muted-foreground mb-3">
           Locațiile premium recomandate de gazdele noastre devin vizibile pe hartă după autentificare.{' '}
-          <a href="/auth" className="underline font-medium">Intră în cont</a> pentru lista completă.
+          <a href="/auth" className="underline font-medium">Intră în cont</a> pentru lista completă și
+          sincronizarea favoritelor pe contul tău.
         </p>
       )}
+
 
       <div className="relative rounded-xl overflow-hidden border border-border">
         <div ref={mapContainer} className="w-full h-[360px] sm:h-[440px]" />
@@ -312,7 +409,14 @@ const RestaurantGuideMap: React.FC = () => {
                       {poi.rating}
                     </Badge>
                   ) : null}
+                  {summaryFor(poi.id).count > 0 && (
+                    <Badge className="gap-1">
+                      <Star className="w-3 h-3" aria-hidden="true" />
+                      {summaryFor(poi.id).average} ({summaryFor(poi.id).count})
+                    </Badge>
+                  )}
                 </div>
+
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                   <Footprints className="w-3.5 h-3.5" aria-hidden="true" />
                   {poi.walkMinutes} min ({poi.walkMeters < 1000
@@ -344,6 +448,15 @@ const RestaurantGuideMap: React.FC = () => {
               </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
+              <Button
+                size="sm"
+                className="min-h-[40px]"
+                onClick={() => setDetailId(poi.id)}
+                aria-label={`Vezi detalii despre ${poi.name}`}
+              >
+                <Info className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+                Detalii & recenzii
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -379,7 +492,24 @@ const RestaurantGuideMap: React.FC = () => {
             : 'Nu am găsit locații pentru acest filtru.'}
         </p>
       )}
+
+      <RestaurantDetailModal
+        poi={detailPoi}
+        open={!!detailPoi}
+        onOpenChange={(o) => !o && setDetailId(null)}
+        reviews={detailPoi ? reviewsFor(detailPoi.id) : []}
+        guestRating={detailPoi ? summaryFor(detailPoi.id).average : null}
+        guestReviewCount={detailPoi ? summaryFor(detailPoi.id).count : 0}
+        isAuthenticated={isAuthenticated}
+        isFavorite={detailPoi ? isFavorite(detailPoi.id) : false}
+        onToggleFavorite={() => detailPoi && toggleFavorite(detailPoi.id)}
+        onSubmitReview={(rating, comment) =>
+          detailPoi && submitReview({ poiId: detailPoi.id, rating, comment })
+        }
+        isSubmitting={isSubmitting}
+      />
     </section>
+
   );
 };
 

@@ -3944,6 +3944,47 @@ export type Database = {
           },
         ]
       }
+      poi_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          guest_name: string | null
+          id: string
+          poi_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          poi_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          guest_name?: string | null
+          id?: string
+          poi_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poi_reviews_poi_id_fkey"
+            columns: ["poi_id"]
+            isOneToOne: false
+            referencedRelation: "points_of_interest"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       points_of_interest: {
         Row: {
           address: string | null
