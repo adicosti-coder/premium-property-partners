@@ -116,16 +116,21 @@ const RestaurantGuideMap: React.FC = () => {
   const [tokenError, setTokenError] = useState(false);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const { isFavorite, toggleFavorite, favoritesCount, isAuthenticated } = usePoiFavorites();
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const { isFavorite, toggleFavorite, favorites, favoritesCount, isAuthenticated } =
+    usePoiFavorites();
 
   const { data: pois = [], isLoading } = useQuery({
     queryKey: ['restaurant-guide-pois'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('points_of_interest')
-        .select('id,name,category,description,latitude,longitude,address,website,rating')
+        .select(
+          'id,name,category,description,latitude,longitude,address,website,rating,phone,image_url',
+        )
         .in('category', ['restaurant', 'cafe'])
         .eq('is_active', true)
+
         .order('display_order', { ascending: true });
       if (error) throw error;
       return (data ?? []) as GuidePoi[];
