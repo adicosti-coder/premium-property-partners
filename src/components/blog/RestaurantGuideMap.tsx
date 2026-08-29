@@ -362,7 +362,7 @@ const RestaurantGuideMap: React.FC = () => {
 
 
   return (
-    <section className="not-prose my-10 rounded-2xl border border-border bg-card p-4 sm:p-6">
+    <section ref={sectionRef} className="not-prose my-10 rounded-2xl border border-border bg-card p-4 sm:p-6">
       <header className="mb-4">
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <MapPin className="w-5 h-5 text-primary" aria-hidden="true" />
@@ -427,7 +427,23 @@ const RestaurantGuideMap: React.FC = () => {
 
       <div className="relative rounded-xl overflow-hidden border border-border">
         <div ref={mapContainer} className="w-full h-[360px] sm:h-[440px]" />
-        {(!token || isLoading) && !tokenError && (
+        {!shouldLoadMap && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted/60 p-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Harta interactivă se încarcă doar la cerere, pentru o pagină mai rapidă.
+            </p>
+            <Button
+              size="sm"
+              className="min-h-[44px]"
+              onClick={() => setShouldLoadMap(true)}
+              aria-label="Încarcă harta interactivă cu restaurante"
+            >
+              <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
+              Încarcă harta
+            </Button>
+          </div>
+        )}
+        {shouldLoadMap && (!token || !mapbox || isLoading) && !tokenError && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/60">
             <Loader2 className="w-6 h-6 animate-spin text-primary" aria-label="Se încarcă harta" />
           </div>
@@ -450,6 +466,18 @@ const RestaurantGuideMap: React.FC = () => {
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
+                {poi.image_url && (
+                  <img
+                    src={poi.image_url}
+                    alt={`${poi.name} — ${poi.category === 'cafe' ? 'cafenea' : 'restaurant'} în Timișoara`}
+                    loading="lazy"
+                    decoding="async"
+                    width={480}
+                    height={270}
+                    className="mb-2 w-full h-28 object-cover rounded-lg"
+                    style={{ aspectRatio: '16 / 9' }}
+                  />
+                )}
                 <div className="flex items-center gap-2">
                   {poi.category === 'cafe' ? (
                     <Coffee className="w-4 h-4 text-amber-600 shrink-0" aria-hidden="true" />
