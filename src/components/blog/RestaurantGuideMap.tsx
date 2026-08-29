@@ -495,10 +495,45 @@ const RestaurantGuideMap: React.FC = () => {
     return found ? (found as RestaurantModalPoi) : null;
   }, [enriched, detailId]);
 
+  // Schema.org: Restaurant / CafeOrCoffeeShop nodes with rating, address & GPS
+  // so Google can render rich snippets for each venue in the guide.
+  const structuredData = useMemo(() => {
+    if (enriched.length === 0) return null;
+    const origin = typeof window === 'undefined' ? 'https://realtrust.ro' : window.location.origin;
+    const path = typeof window === 'undefined' ? '' : window.location.pathname;
+    return buildPoiItemListSchema(
+      enriched.map((poi) => {
+        const summary = summaryFor(poi.id);
+        return {
+          id: poi.id,
+          name: poi.name,
+          category: poi.category,
+          description: poi.description,
+          address: poi.address,
+          latitude: poi.latitude,
+          longitude: poi.longitude,
+          phone: poi.phone,
+          website: poi.website,
+          imageUrl: poi.image_url,
+          ratingValue: summary.average ?? poi.rating,
+          ratingCount: summary.count,
+          url: `${origin}${path}?poi=${poiSlug(poi.name)}`,
+        };
+      }),
+    );
+  }, [enriched, summaryFor]);
 
   return (
     <section ref={sectionRef} className="not-prose my-10 rounded-2xl border border-border bg-card p-4 sm:p-6">
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          // Schema.org payload built from trusted DB fields only.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      )}
       <header className="mb-4">
+
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <MapPin className="w-5 h-5 text-primary" aria-hidden="true" />
           Hartă interactivă: restaurante & cafenele
