@@ -450,6 +450,15 @@ const RestaurantGuideMap: React.FC = () => {
             <div className="flex flex-wrap gap-2 mt-3">
               <Button
                 size="sm"
+                className="min-h-[40px]"
+                onClick={() => setDetailId(poi.id)}
+                aria-label={`Vezi detalii despre ${poi.name}`}
+              >
+                <Info className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+                Detalii & recenzii
+              </Button>
+              <Button
+                size="sm"
                 variant="outline"
                 className="min-h-[40px]"
                 onClick={() => focusPoi(poi)}
@@ -483,7 +492,24 @@ const RestaurantGuideMap: React.FC = () => {
             : 'Nu am găsit locații pentru acest filtru.'}
         </p>
       )}
+
+      <RestaurantDetailModal
+        poi={detailPoi}
+        open={!!detailPoi}
+        onOpenChange={(o) => !o && setDetailId(null)}
+        reviews={detailPoi ? reviewsFor(detailPoi.id) : []}
+        guestRating={detailPoi ? summaryFor(detailPoi.id).average : null}
+        guestReviewCount={detailPoi ? summaryFor(detailPoi.id).count : 0}
+        isAuthenticated={isAuthenticated}
+        isFavorite={detailPoi ? isFavorite(detailPoi.id) : false}
+        onToggleFavorite={() => detailPoi && toggleFavorite(detailPoi.id)}
+        onSubmitReview={(rating, comment) =>
+          detailPoi && submitReview({ poiId: detailPoi.id, rating, comment })
+        }
+        isSubmitting={isSubmitting}
+      />
     </section>
+
   );
 };
 
