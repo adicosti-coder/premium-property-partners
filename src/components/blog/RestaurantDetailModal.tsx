@@ -289,11 +289,22 @@ const RestaurantDetailModal: React.FC<Props> = ({
                   className="mt-2"
                   rows={3}
                 />
+                {/* Honeypot: invisible to guests, filled in by bots. */}
+                <input
+                  type="text"
+                  name="website_url"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  className="absolute left-[-9999px] w-px h-px opacity-0"
+                />
                 <Button
                   size="sm"
                   className="mt-2 min-h-[44px]"
                   disabled={rating === 0 || isSubmitting}
-                  onClick={() => onSubmitReview(rating, comment)}
+                  onClick={() => onSubmitReview(rating, comment, honeypot)}
                   aria-label="Trimite recenzia"
                 >
                   {isSubmitting ? 'Se salvează...' : 'Trimite recenzia'}
