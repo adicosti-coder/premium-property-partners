@@ -16,8 +16,29 @@ import {
   buildDynamicSitemap,
 } from "../_shared/sitemapBuilder.ts";
 
-const xml = (body: string) =>
-  new Response(body, { status: 200, headers: XML_HEADERS });
+// In-memory cache so repeated crawler hits never re-query the database.
+// TTL is intentionally short enough that new POIs/articles appear same-day.
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const cache = new Map<string, { body: string; at: number }>();
+
+const cached = (key: string): string | null => {
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.body;
+  if (hit) cache.delete(key);
+  return null;
+};
+
+const store = (key: string, body: string) => {
+  cache.set(key, { body, at: Date.now() });
+  return body;
+};
+
+const xml = (body: string, hit: boolean) =>
+  new Response(body, {
+    status: 200,
+    headers: { ...XML_HEADERS, "x-sitemap-cache": hit ? "HIT" : "MISS" },
+  });
+
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
