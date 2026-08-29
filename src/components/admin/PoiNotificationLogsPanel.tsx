@@ -55,6 +55,37 @@ export default function PoiNotificationLogsPanel() {
     return { emailOk, waOk, failed };
   }, [rows]);
 
+  const handleExportCsv = useCallback(() => {
+    downloadCsv(
+      csvFileName("jurnal-notificari-recenzii"),
+      [
+        "Data",
+        "POI",
+        "Nota",
+        "Oaspete",
+        "Email destinatar",
+        "Email trimis",
+        "Fallback email",
+        "WhatsApp configurat",
+        "Status WhatsApp",
+        "Eroare",
+      ],
+      rows.map((r) => [
+        dt(r.created_at),
+        r.poi_name,
+        r.rating,
+        r.guest_name,
+        r.email_to,
+        r.email_sent,
+        r.email_fallback,
+        r.whatsapp_configured,
+        r.whatsapp_status,
+        r.error_message,
+      ]),
+    );
+  }, [rows]);
+
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
