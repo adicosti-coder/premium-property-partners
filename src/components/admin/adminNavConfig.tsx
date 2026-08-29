@@ -43,6 +43,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "bookings", label: "Rezervări", icon: CalendarDays },
       { value: "ical-sync", label: "iCal Sync", icon: Calendar },
       { value: "reviews", label: "Reviews", icon: MessageSquare },
+      { value: "poi-reviews", label: "Moderare Recenzii POI", icon: MessageSquare, keywords: ["recenzii", "moderare", "poi", "restaurante", "oaspeti", "rating", "aprobare"] },
     ],
   },
   {
