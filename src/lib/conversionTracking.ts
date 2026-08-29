@@ -147,6 +147,8 @@ const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
   newsletter_subscribe: { name: "Subscribe", custom: false },
   whatsapp_click: { name: "Contact", custom: false },
   phone_click: { name: "Contact", custom: false },
+  poi_detail_open: { name: "ViewContent", custom: false },
+  poi_navigate_gps: { name: "FindLocation", custom: false },
   // Booking funnel → Meta standard events so campaigns can optimise on them.
   select_booking_dates: { name: "AddToCart", custom: false },
   begin_checkout: { name: "InitiateCheckout", custom: false },
