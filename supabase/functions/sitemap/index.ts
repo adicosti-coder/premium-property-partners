@@ -56,19 +56,27 @@ Deno.serve(async (req: Request) => {
 
   const isStatic = requested.includes("static");
   const isDynamic = requested.includes("dynamic");
+  const key = isStatic ? "static" : isDynamic ? "dynamic" : "index";
+  const bypass = url.searchParams.get("fresh") === "1";
+
+  if (!bypass) {
+    const hit = cached(key);
+    if (hit) return xml(hit, true);
+  }
 
   try {
-    if (isStatic) return xml(buildStaticSitemap());
+    if (isStatic) return xml(store(key, buildStaticSitemap()), false);
 
     if (isDynamic) {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       );
-      return xml(await buildDynamicSitemap(supabase));
+      return xml(store(key, await buildDynamicSitemap(supabase)), false);
     }
 
-    return xml(buildSitemapIndex());
+    return xml(store(key, buildSitemapIndex()), false);
+
   } catch (error) {
     console.error("[sitemap] generation failed:", error);
     // Never return HTML/JSON to a crawler on this route — emit a valid,
