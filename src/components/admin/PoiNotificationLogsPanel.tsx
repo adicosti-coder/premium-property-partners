@@ -66,15 +66,27 @@ export default function PoiNotificationLogsPanel() {
             de la oaspeți.
           </CardDescription>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void qc.invalidateQueries({ queryKey: ["admin", "poi-review-notifications"] })}
-          aria-label="Reîncarcă jurnalul de notificări"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />
-          Reîncarcă
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={rows.length === 0}
+            onClick={handleExportCsv}
+            aria-label="Exportă jurnalul de notificări în format CSV"
+          >
+            <Download className="w-4 h-4 mr-2" aria-hidden="true" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void qc.invalidateQueries({ queryKey: ["admin", "poi-review-notifications"] })}
+            aria-label="Reîncarcă jurnalul de notificări"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />
+            Reîncarcă
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-3">
