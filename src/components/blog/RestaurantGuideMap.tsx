@@ -110,10 +110,15 @@ const isAradului = (poi: GuidePoi) =>
   /aradului/i.test(poi.address ?? '') ||
   distanceMeters([21.2245, 45.7765], [poi.longitude, poi.latitude]) < 1500;
 
+type MapboxModule = typeof import('mapbox-gl');
+
 const RestaurantGuideMap: React.FC = () => {
+  const sectionRef = useRef<HTMLElement | null>(null);
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [mapbox, setMapbox] = useState<MapboxModule | null>(null);
+  const [shouldLoadMap, setShouldLoadMap] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [tokenError, setTokenError] = useState(false);
   const [filter, setFilter] = useState<FilterKey>('all');
