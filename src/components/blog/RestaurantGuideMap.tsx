@@ -56,7 +56,10 @@ interface GuidePoi {
   address: string | null;
   website: string | null;
   rating: number | null;
+  phone: string | null;
+  image_url: string | null;
 }
+
 
 type FilterKey = 'all' | 'breakfast' | 'dinner' | 'centru' | 'aradului' | 'favorites';
 
