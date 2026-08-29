@@ -136,6 +136,12 @@ export async function buildDynamicSitemap(supabase: any): Promise<string> {
       .select("id, updated_at, created_at")
       .eq("status", "approved")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("points_of_interest")
+      .select("id, name, category, updated_at, created_at, image_url")
+      .in("category", ["restaurant", "cafe"])
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
   ]);
 
   let xml = URLSET_OPEN;
