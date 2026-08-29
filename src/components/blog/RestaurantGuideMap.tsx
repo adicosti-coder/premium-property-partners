@@ -124,13 +124,37 @@ export const poiSlug = (name: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-const poiShareUrl = (name: string): string =>
-  typeof window === 'undefined'
-    ? ''
-    : `${window.location.origin}${window.location.pathname}#${poiSlug(name)}`;
+/** Marketing params we forward on share/deep-link so attribution survives. */
+const TRACKING_PARAM_KEYS = [
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_content',
+  'utm_term',
+  'gclid',
+  'fbclid',
+  'src',
+];
 
-const RestaurantGuideMap: React.FC = () => {
-  const sectionRef = useRef<HTMLElement | null>(null);
+/** Current URL's UTM / click-id params, preserved when sharing a POI link. */
+const currentTrackingParams = (): URLSearchParams => {
+  const out = new URLSearchParams();
+  if (typeof window === 'undefined') return out;
+  const params = new URLSearchParams(window.location.search);
+  for (const key of TRACKING_PARAM_KEYS) {
+    const value = params.get(key);
+    if (value) out.set(key, value);
+  }
+  return out;
+};
+
+const poiShareUrl = (name: string): string => {
+  if (typeof window === 'undefined') return '';
+  const tracking = currentTrackingParams();
+  // Keep an indexable `?poi=` param plus the hash anchor for in-page scroll.
+  tracking.set('poi', poiSlug(name));
+  return `${window.location.origin}${window.location.pathname}?${tracking.toString()}#${poiSlug(name)}`;
+};
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
