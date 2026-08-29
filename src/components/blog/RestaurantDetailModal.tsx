@@ -99,6 +99,17 @@ const RestaurantDetailModal: React.FC<Props> = ({
     setComment('');
   }, [poi?.id]);
 
+  // GA4 + Meta: modal opened (guest engagement with a recommended venue).
+  useEffect(() => {
+    if (!open || !poi) return;
+    trackConversion({
+      event: 'poi_detail_open',
+      poi_id: poi.id,
+      poi_name: poi.name,
+      poi_category: poi.category,
+    });
+  }, [open, poi?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!poi) return null;
 
   const walk =
@@ -120,10 +131,14 @@ const RestaurantDetailModal: React.FC<Props> = ({
             src={poi.image_url}
             alt={`${poi.name} din Timișoara`}
             loading="lazy"
+            decoding="async"
+            width={640}
+            height={360}
             className="w-full h-44 object-cover rounded-lg"
             style={{ aspectRatio: '16 / 9' }}
           />
         )}
+
 
         <div className="flex flex-wrap items-center gap-2">
           {poi.rating ? (
