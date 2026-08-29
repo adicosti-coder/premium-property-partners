@@ -174,7 +174,25 @@ const PoiReviewsModerationManager = () => {
     );
   }, [reviews, search, pois]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleExportCsv = () => {
+    downloadCsv(
+      csvFileName("moderare-recenzii-poi"),
+      ["Data", "Locație", "Nota", "Oaspete", "Comentariu", "Stare", "Motiv respingere", "Moderat la"],
+      filtered.map((r) => [
+        new Date(r.created_at).toLocaleString("ro-RO"),
+        poiName(r.poi_id),
+        r.rating,
+        r.guest_name,
+        r.comment,
+        r.status,
+        r.rejection_reason,
+        r.moderated_at ? new Date(r.moderated_at).toLocaleString("ro-RO") : "",
+      ]),
+    );
+  };
+
   const pendingCount = reviews.filter((r) => r.status === "pending").length;
+
 
   return (
     <div className="space-y-6">
