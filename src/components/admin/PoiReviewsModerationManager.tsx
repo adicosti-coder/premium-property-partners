@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Check, X, Trash2, Star, Loader2, MessageSquare, Inbox, Download } from "lucide-react";
 import { csvFileName, downloadCsv } from "@/utils/exportCsv";
+import PoiReviewSettingsCard from "@/components/admin/PoiReviewSettingsCard";
+
 
 type ModerationStatus = "pending" | "approved" | "rejected";
 
