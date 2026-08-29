@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_admins_new_poi_review() FROM anon, authenticated, PUBLIC;
