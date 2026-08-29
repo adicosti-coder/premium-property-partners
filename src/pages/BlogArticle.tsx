@@ -22,6 +22,7 @@ const ArticleFAQ = lazy(() => import("@/components/blog/ArticleFAQ"));
 const ExpertSignature = lazy(() => import("@/components/ExpertSignature"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 import { RoiByNeighborhoodChart, MonthlyYieldChart, PriceAppreciationChart } from "@/components/blog/TimisoaraInvestmentCharts";
+const RestaurantGuideMap = lazy(() => import("@/components/blog/RestaurantGuideMap"));
 import InvestorGuideButton from "@/components/InvestorGuideButton";
 const ReadingProgressBar = lazy(() => import("@/components/blog/ReadingProgressBar"));
 const FloatingShareRail = lazy(() => import("@/components/blog/FloatingShareRail"));
@@ -833,20 +834,25 @@ const BlogArticlePage = () => {
           <ArticleTableOfContents htmlContent={displayContent} />
 
           {/* Article Content - sanitized for XSS protection */}
-          {article.slug === 'ghid-investitii-imobiliare-timisoara-2026' ? (
+          {/<div data-(chart|widget)="/.test(displayContent) ? (
             <div
               className="prose prose-lg dark:prose-invert max-w-none mb-8"
               data-blog-content-root="1"
             >
               {(() => {
-                const chartMap: Record<string, JSX.Element> = {
+                const widgetMap: Record<string, JSX.Element> = {
                   'roi-by-neighborhood': <RoiByNeighborhoodChart key="c1" />,
                   'monthly-yield': <MonthlyYieldChart key="c2" />,
                   'price-appreciation': <PriceAppreciationChart key="c3" />,
+                  'restaurant-map': (
+                    <Suspense key="w1" fallback={<div className="h-[360px] rounded-xl bg-muted animate-pulse" />}>
+                      <RestaurantGuideMap />
+                    </Suspense>
+                  ),
                 };
-                const parts = displayContent.split(/<div data-chart="([^"]+)"><\/div>/);
+                const parts = displayContent.split(/<div data-(?:chart|widget)="([^"]+)"><\/div>/);
                 return parts.map((part, i) => {
-                  if (i % 2 === 1) return chartMap[part] ?? null;
+                  if (i % 2 === 1) return widgetMap[part] ?? null;
                   return <div key={i} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part) }} />;
                 });
               })()}
@@ -858,6 +864,7 @@ const BlogArticlePage = () => {
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(displayContent) }}
             />
           )}
+
 
           {/* Expert Signature — E-E-A-T */}
           <ExpertSignature authorName={article.author_name} />
