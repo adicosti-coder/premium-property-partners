@@ -428,13 +428,14 @@ const RestaurantGuideMap: React.FC = () => {
     const url = poiShareUrl(poi.name);
     try {
       await navigator.clipboard.writeText(url);
-      // GA4 + Meta: guest shared a venue deep-link.
+      // GA4 + Meta: guest shared a venue deep-link (UTMs carried over).
       trackConversion({
         event: 'poi_link_copy',
         poi_id: poi.id,
         poi_name: poi.name,
         poi_category: poi.category,
         share_url: url,
+        ...Object.fromEntries(currentTrackingParams().entries()),
       });
       toast.success('Link copiat! Îl poți trimite direct oaspeților.');
     } catch {
