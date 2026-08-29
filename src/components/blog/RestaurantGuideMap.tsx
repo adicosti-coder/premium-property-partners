@@ -6,7 +6,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePoiFavorites } from '@/hooks/usePoiFavorites';
+import { usePoiReviews } from '@/hooks/usePoiReviews';
 import { isWebGLSupported } from '@/utils/webglSupport';
+import RestaurantDetailModal, { type RestaurantModalPoi } from './RestaurantDetailModal';
+import {
+  exportRestaurantGuidePdf,
+  buildRestaurantGuideWhatsAppText,
+  type RestaurantGuideItem,
+} from '@/utils/exportRestaurantGuidePdf';
+import { toast } from 'sonner';
 import {
   Loader2,
   MapPin,
@@ -17,7 +25,11 @@ import {
   ExternalLink,
   Navigation,
   Star,
+  FileDown,
+  Share2,
+  Info,
 } from 'lucide-react';
+
 
 /** ApArt Hotel / RealTrust properties used as walking-distance reference points. */
 const APART_PROPERTIES: { name: string; coords: [number, number] }[] = [
