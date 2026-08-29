@@ -3950,8 +3950,12 @@ export type Database = {
           created_at: string
           guest_name: string | null
           id: string
+          moderated_at: string | null
+          moderated_by: string | null
           poi_id: string
           rating: number
+          rejection_reason: string | null
+          status: string
           updated_at: string
           user_id: string
         }
@@ -3960,8 +3964,12 @@ export type Database = {
           created_at?: string
           guest_name?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
           poi_id: string
           rating: number
+          rejection_reason?: string | null
+          status?: string
           updated_at?: string
           user_id: string
         }
@@ -3970,8 +3978,12 @@ export type Database = {
           created_at?: string
           guest_name?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
           poi_id?: string
           rating?: number
+          rejection_reason?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
         }
