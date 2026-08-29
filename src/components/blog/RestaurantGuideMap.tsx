@@ -130,7 +130,6 @@ const RestaurantGuideMap: React.FC = () => {
         )
         .in('category', ['restaurant', 'cafe'])
         .eq('is_active', true)
-
         .order('display_order', { ascending: true });
       if (error) throw error;
       return (data ?? []) as GuidePoi[];
@@ -138,10 +137,14 @@ const RestaurantGuideMap: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
+  const poiIds = useMemo(() => pois.map((p) => p.id), [pois]);
+  const { reviewsFor, summaryFor, submitReview, isSubmitting } = usePoiReviews(poiIds);
+
   const enriched = useMemo(
     () => pois.map((poi) => ({ ...poi, ...nearestProperty(poi) })),
     [pois],
   );
+
 
   const filtered = useMemo(() => {
     switch (filter) {
