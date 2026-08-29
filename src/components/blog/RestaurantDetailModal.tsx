@@ -21,6 +21,7 @@ import {
   Clock,
 } from 'lucide-react';
 import type { PoiReview } from '@/hooks/usePoiReviews';
+import { trackConversion } from '@/lib/conversionTracking';
 
 export interface RestaurantModalPoi {
   id: string;
@@ -98,6 +99,17 @@ const RestaurantDetailModal: React.FC<Props> = ({
     setComment('');
   }, [poi?.id]);
 
+  // GA4 + Meta: modal opened (guest engagement with a recommended venue).
+  useEffect(() => {
+    if (!open || !poi) return;
+    trackConversion({
+      event: 'poi_detail_open',
+      poi_id: poi.id,
+      poi_name: poi.name,
+      poi_category: poi.category,
+    });
+  }, [open, poi?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!poi) return null;
 
   const walk =
@@ -119,10 +131,14 @@ const RestaurantDetailModal: React.FC<Props> = ({
             src={poi.image_url}
             alt={`${poi.name} din Timișoara`}
             loading="lazy"
+            decoding="async"
+            width={640}
+            height={360}
             className="w-full h-44 object-cover rounded-lg"
             style={{ aspectRatio: '16 / 9' }}
           />
         )}
+
 
         <div className="flex flex-wrap items-center gap-2">
           {poi.rating ? (
@@ -162,7 +178,18 @@ const RestaurantDetailModal: React.FC<Props> = ({
         <div className="flex flex-wrap gap-2">
           {poi.phone && (
             <Button size="sm" className="min-h-[44px]" asChild>
-              <a href={`tel:${poi.phone.replace(/\s/g, '')}`} aria-label={`Sună la ${poi.name}`}>
+              <a
+                href={`tel:${poi.phone.replace(/\s/g, '')}`}
+                aria-label={`Sună la ${poi.name}`}
+                onClick={() =>
+                  trackConversion({
+                    event: 'phone_click',
+                    poi_id: poi.id,
+                    poi_name: poi.name,
+                    source: 'restaurant_guide_modal',
+                  })
+                }
+              >
                 <Phone className="w-4 h-4 mr-1" aria-hidden="true" /> Sună
               </a>
             </Button>
@@ -173,10 +200,19 @@ const RestaurantDetailModal: React.FC<Props> = ({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Navigație GPS către ${poi.name}`}
+              onClick={() =>
+                trackConversion({
+                  event: 'poi_navigate_gps',
+                  poi_id: poi.id,
+                  poi_name: poi.name,
+                  walk_minutes: poi.walkMinutes,
+                })
+              }
             >
               <Navigation className="w-4 h-4 mr-1" aria-hidden="true" /> Navigare GPS
             </a>
           </Button>
+
           {poi.website && (
             <Button size="sm" variant="ghost" className="min-h-[44px]" asChild>
               <a

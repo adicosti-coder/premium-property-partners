@@ -11,6 +11,7 @@ export interface PoiReview {
   comment: string | null;
   guest_name: string | null;
   created_at: string;
+  status?: 'pending' | 'approved' | 'rejected';
 }
 
 /** Aggregated guest ratings for a set of POIs (restaurants / cafes). */
@@ -24,7 +25,7 @@ export const usePoiReviews = (poiIds: string[]) => {
       if (poiIds.length === 0) return [] as PoiReview[];
       const { data, error } = await supabase
         .from('poi_reviews')
-        .select('id,poi_id,user_id,rating,comment,guest_name,created_at')
+        .select('id,poi_id,user_id,rating,comment,guest_name,created_at,status')
         .in('poi_id', poiIds)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -34,19 +35,22 @@ export const usePoiReviews = (poiIds: string[]) => {
     staleTime: 2 * 60 * 1000,
   });
 
+  /** Only moderated (approved) reviews are shown publicly / used in averages. */
+  const approved = reviews.filter((r) => !r.status || r.status === 'approved');
+
   const reviewsFor = useCallback(
-    (poiId: string) => reviews.filter((r) => r.poi_id === poiId),
-    [reviews],
+    (poiId: string) => approved.filter((r) => r.poi_id === poiId),
+    [approved],
   );
 
   const summaryFor = useCallback(
     (poiId: string) => {
-      const list = reviews.filter((r) => r.poi_id === poiId);
+      const list = approved.filter((r) => r.poi_id === poiId);
       if (list.length === 0) return { average: null as number | null, count: 0 };
       const average = list.reduce((sum, r) => sum + r.rating, 0) / list.length;
       return { average: Math.round(average * 10) / 10, count: list.length };
     },
-    [reviews],
+    [approved],
   );
 
   const submitReview = useMutation({
@@ -68,6 +72,10 @@ export const usePoiReviews = (poiIds: string[]) => {
           rating: input.rating,
           comment: input.comment?.slice(0, 1000) || null,
           guest_name: input.guestName?.slice(0, 80) || null,
+          status: 'pending',
+          rejection_reason: null,
+          moderated_by: null,
+          moderated_at: null,
         },
         { onConflict: 'poi_id,user_id' },
       );
@@ -75,7 +83,7 @@ export const usePoiReviews = (poiIds: string[]) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['poi-reviews'] });
-      toast.success('Mulțumim! Recenzia ta a fost salvată.');
+      toast.success('Mulțumim! Recenzia ta a fost trimisă și va apărea după validarea gazdelor.');
     },
     onError: (err: Error) => {
       if (err.message === 'AUTH_REQUIRED') {

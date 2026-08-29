@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+// Mapbox GL (~800 kB JS + CSS) is loaded on demand — see `useDeferredMapbox` below.
+// Type-only import: erased at build time, so it does not pull the runtime bundle.
+import type mapboxgl from 'mapbox-gl';
+
 import { supabase } from '@/lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -108,10 +110,15 @@ const isAradului = (poi: GuidePoi) =>
   /aradului/i.test(poi.address ?? '') ||
   distanceMeters([21.2245, 45.7765], [poi.longitude, poi.latitude]) < 1500;
 
+type MapboxModule = (typeof import('mapbox-gl'))['default'];
+
 const RestaurantGuideMap: React.FC = () => {
+  const sectionRef = useRef<HTMLElement | null>(null);
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [mapbox, setMapbox] = useState<MapboxModule | null>(null);
+  const [shouldLoadMap, setShouldLoadMap] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [tokenError, setTokenError] = useState(false);
   const [filter, setFilter] = useState<FilterKey>('all');
@@ -163,8 +170,52 @@ const RestaurantGuideMap: React.FC = () => {
     }
   }, [enriched, filter, isFavorite]);
 
-  // Mapbox token
+  // Defer the whole map subsystem (token fetch + mapbox-gl chunk) until the
+  // guide section is close to the viewport. Keeps LCP/TBT clean on the article.
   useEffect(() => {
+    if (shouldLoadMap || typeof window === 'undefined') return;
+    const el = sectionRef.current;
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) {
+      setShouldLoadMap(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShouldLoadMap(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [shouldLoadMap]);
+
+  // Lazy-load the Mapbox GL runtime + stylesheet on demand.
+  useEffect(() => {
+    if (!shouldLoadMap || mapbox || !isWebGLSupported()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [mod] = await Promise.all([
+          import('mapbox-gl'),
+          import('mapbox-gl/dist/mapbox-gl.css'),
+        ]);
+        if (!cancelled) setMapbox(mod.default as MapboxModule);
+      } catch {
+        if (!cancelled) setTokenError(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldLoadMap, mapbox]);
+
+  // Mapbox token (only once the map is actually needed)
+  useEffect(() => {
+    if (!shouldLoadMap || token) return;
     const envToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undefined;
     if (envToken) {
       setToken(envToken);
@@ -183,31 +234,33 @@ const RestaurantGuideMap: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [shouldLoadMap, token]);
 
   // Init map
   useEffect(() => {
-    if (!token || !mapContainer.current || mapRef.current || !isWebGLSupported()) return;
-    mapboxgl.accessToken = token;
-    const map = new mapboxgl.Map({
+    const gl = mapbox;
+    if (!gl || !token || !mapContainer.current || mapRef.current || !isWebGLSupported()) return;
+    gl.accessToken = token;
+    const map = new gl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: MAP_CENTER,
       zoom: 12.6,
       attributionControl: true,
     });
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(new gl.NavigationControl({ showCompass: false }), 'top-right');
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = null;
     };
-  }, [token]);
+  }, [token, mapbox]);
 
   // Render markers
   useEffect(() => {
+    const gl = mapbox;
     const map = mapRef.current;
-    if (!map) return;
+    if (!gl || !map) return;
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -219,9 +272,9 @@ const RestaurantGuideMap: React.FC = () => {
       el.innerHTML =
         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg>';
       markersRef.current.push(
-        new mapboxgl.Marker({ element: el })
+        new gl.Marker({ element: el })
           .setLngLat(prop.coords)
-          .setPopup(new mapboxgl.Popup({ offset: 16 }).setText(prop.name))
+          .setPopup(new gl.Popup({ offset: 16 }).setText(prop.name))
           .addTo(map),
       );
     });
@@ -238,17 +291,18 @@ const RestaurantGuideMap: React.FC = () => {
         setActiveId(poi.id);
         setDetailId(poi.id);
       });
-      const popup = new mapboxgl.Popup({ offset: 18 }).setHTML(
+      const popup = new gl.Popup({ offset: 18 }).setHTML(
         `<strong>${poi.name}</strong><br/><span>${poi.walkMinutes} min pe jos de la ${poi.property}</span>`,
       );
       markersRef.current.push(
-        new mapboxgl.Marker({ element: el })
+        new gl.Marker({ element: el })
           .setLngLat([poi.longitude, poi.latitude])
           .setPopup(popup)
           .addTo(map),
       );
     });
-  }, [filtered]);
+  }, [filtered, mapbox]);
+
 
   const focusPoi = useCallback((poi: GuidePoi) => {
     setActiveId(poi.id);
@@ -308,7 +362,7 @@ const RestaurantGuideMap: React.FC = () => {
 
 
   return (
-    <section className="not-prose my-10 rounded-2xl border border-border bg-card p-4 sm:p-6">
+    <section ref={sectionRef} className="not-prose my-10 rounded-2xl border border-border bg-card p-4 sm:p-6">
       <header className="mb-4">
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <MapPin className="w-5 h-5 text-primary" aria-hidden="true" />
@@ -373,7 +427,23 @@ const RestaurantGuideMap: React.FC = () => {
 
       <div className="relative rounded-xl overflow-hidden border border-border">
         <div ref={mapContainer} className="w-full h-[360px] sm:h-[440px]" />
-        {(!token || isLoading) && !tokenError && (
+        {!shouldLoadMap && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted/60 p-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Harta interactivă se încarcă doar la cerere, pentru o pagină mai rapidă.
+            </p>
+            <Button
+              size="sm"
+              className="min-h-[44px]"
+              onClick={() => setShouldLoadMap(true)}
+              aria-label="Încarcă harta interactivă cu restaurante"
+            >
+              <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
+              Încarcă harta
+            </Button>
+          </div>
+        )}
+        {shouldLoadMap && (!token || !mapbox || isLoading) && !tokenError && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/60">
             <Loader2 className="w-6 h-6 animate-spin text-primary" aria-label="Se încarcă harta" />
           </div>
@@ -396,6 +466,18 @@ const RestaurantGuideMap: React.FC = () => {
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
+                {poi.image_url && (
+                  <img
+                    src={poi.image_url}
+                    alt={`${poi.name} — ${poi.category === 'cafe' ? 'cafenea' : 'restaurant'} în Timișoara`}
+                    loading="lazy"
+                    decoding="async"
+                    width={480}
+                    height={270}
+                    className="mb-2 w-full h-28 object-cover rounded-lg"
+                    style={{ aspectRatio: '16 / 9' }}
+                  />
+                )}
                 <div className="flex items-center gap-2">
                   {poi.category === 'cafe' ? (
                     <Coffee className="w-4 h-4 text-amber-600 shrink-0" aria-hidden="true" />
