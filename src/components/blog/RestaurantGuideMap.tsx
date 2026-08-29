@@ -769,8 +769,8 @@ const RestaurantGuideMap: React.FC = () => {
         isAuthenticated={isAuthenticated}
         isFavorite={detailPoi ? isFavorite(detailPoi.id) : false}
         onToggleFavorite={() => detailPoi && toggleFavorite(detailPoi.id)}
-        onSubmitReview={(rating, comment) =>
-          detailPoi && submitReview({ poiId: detailPoi.id, rating, comment })
+        onSubmitReview={(rating, comment, honeypot) =>
+          detailPoi && submitReview({ poiId: detailPoi.id, rating, comment, honeypot })
         }
         isSubmitting={isSubmitting}
       />
