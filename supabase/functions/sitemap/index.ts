@@ -16,29 +16,54 @@ import {
   buildDynamicSitemap,
 } from "../_shared/sitemapBuilder.ts";
 
-// In-memory cache so repeated crawler hits never re-query the database.
-// TTL is intentionally short enough that new POIs/articles appear same-day.
+// Two-level cache so crawler hits don't re-run the full multi-table query:
+//   1. per-isolate memory cache (free, but lost on cold start)
+//   2. `sitemap_cache` table — one tiny row read instead of a full rebuild
+// TTL stays short enough that new POIs/articles appear the same day.
 const CACHE_TTL_MS = 30 * 60 * 1000;
-const cache = new Map<string, { body: string; at: number }>();
+const memCache = new Map<string, { body: string; at: number }>();
 
-const cached = (key: string): string | null => {
-  const hit = cache.get(key);
+const memGet = (key: string): string | null => {
+  const hit = memCache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.body;
-  if (hit) cache.delete(key);
+  if (hit) memCache.delete(key);
   return null;
 };
 
-const store = (key: string, body: string) => {
-  cache.set(key, { body, at: Date.now() });
-  return body;
-};
-
-const xml = (body: string, hit: boolean) =>
+const xml = (body: string, cacheState: "HIT" | "DB" | "MISS") =>
   new Response(body, {
     status: 200,
-    headers: { ...XML_HEADERS, "x-sitemap-cache": hit ? "HIT" : "MISS" },
+    headers: { ...XML_HEADERS, "x-sitemap-cache": cacheState },
   });
 
+// deno-lint-ignore no-explicit-any
+type Client = any;
+
+const serviceClient = (): Client =>
+  createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+const dbGet = async (client: Client, key: string): Promise<string | null> => {
+  const { data, error } = await client
+    .from("sitemap_cache")
+    .select("body, generated_at")
+    .eq("cache_key", key)
+    .maybeSingle();
+  if (error || !data) return null;
+  const age = Date.now() - new Date(data.generated_at).getTime();
+  return age < CACHE_TTL_MS ? (data.body as string) : null;
+};
+
+const dbPut = async (client: Client, key: string, body: string) => {
+  await client
+    .from("sitemap_cache")
+    .upsert(
+      { cache_key: key, body, generated_at: new Date().toISOString() },
+      { onConflict: "cache_key" },
+    );
+};
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -57,30 +82,41 @@ Deno.serve(async (req: Request) => {
   const isStatic = requested.includes("static");
   const isDynamic = requested.includes("dynamic");
   const key = isStatic ? "static" : isDynamic ? "dynamic" : "index";
+  // ?fresh=1 forces a rebuild (used by the admin SEO redeploy panel).
   const bypass = url.searchParams.get("fresh") === "1";
 
   if (!bypass) {
-    const hit = cached(key);
-    if (hit) return xml(hit, true);
+    const hit = memGet(key);
+    if (hit) return xml(hit, "HIT");
   }
 
   try {
-    if (isStatic) return xml(store(key, buildStaticSitemap()), false);
-
-    if (isDynamic) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      );
-      return xml(store(key, await buildDynamicSitemap(supabase)), false);
+    // Static + index documents are pure string builders — no DB round trip.
+    if (isStatic || !isDynamic) {
+      const body = isStatic ? buildStaticSitemap() : buildSitemapIndex();
+      memCache.set(key, { body, at: Date.now() });
+      return xml(body, "MISS");
     }
 
-    return xml(store(key, buildSitemapIndex()), false);
+    const client = serviceClient();
 
+    if (!bypass) {
+      const dbHit = await dbGet(client, key);
+      if (dbHit) {
+        memCache.set(key, { body: dbHit, at: Date.now() });
+        return xml(dbHit, "DB");
+      }
+    }
+
+    const body = await buildDynamicSitemap(client);
+    memCache.set(key, { body, at: Date.now() });
+    await dbPut(client, key, body);
+    return xml(body, "MISS");
   } catch (error) {
     console.error("[sitemap] generation failed:", error);
     // Never return HTML/JSON to a crawler on this route — emit a valid,
     // minimal XML document with a 200 so the sitemap stays parseable.
-    return xml(buildSitemapIndex(), false);
+    return xml(buildSitemapIndex(), "MISS");
   }
 });
+
