@@ -112,6 +112,20 @@ const isAradului = (poi: GuidePoi) =>
 
 type MapboxModule = (typeof import('mapbox-gl'))['default'];
 
+/** URL-safe anchor slug for a POI name (ex: "Casa Bunicii" -> "casa-bunicii"). */
+export const poiSlug = (name: string): string =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+const poiShareUrl = (name: string): string =>
+  typeof window === 'undefined'
+    ? ''
+    : `${window.location.origin}${window.location.pathname}#${poiSlug(name)}`;
+
 const RestaurantGuideMap: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const mapContainer = useRef<HTMLDivElement | null>(null);
@@ -303,6 +317,60 @@ const RestaurantGuideMap: React.FC = () => {
     });
   }, [filtered, mapbox]);
 
+
+  // Deep-linking: /ghid-restaurante#nume-restaurant (sau ?poi=<id|slug>)
+  // deschide automat modalul cu detalii și centrează harta pe locație.
+  const deepLinkDone = useRef(false);
+  useEffect(() => {
+    if (deepLinkDone.current || enriched.length === 0 || typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = (window.location.hash.replace(/^#/, '') || params.get('poi') || '').trim();
+    if (!raw) return;
+    const target = enriched.find(
+      (p) => p.id === raw || poiSlug(p.name) === poiSlug(decodeURIComponent(raw)),
+    );
+    if (!target) return;
+    deepLinkDone.current = true;
+    setShouldLoadMap(true);
+    setActiveId(target.id);
+    setDetailId(target.id);
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(`guide-poi-${target.id}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [enriched]);
+
+  // Keep the URL hash in sync with the open detail modal so the link is shareable.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !deepLinkDone.current) {
+      if (detailId) deepLinkDone.current = true;
+    }
+    if (typeof window === 'undefined') return;
+    const poi = enriched.find((p) => p.id === detailId);
+    const next = poi
+      ? `${window.location.pathname}${window.location.search}#${poiSlug(poi.name)}`
+      : `${window.location.pathname}${window.location.search}`;
+    window.history.replaceState(null, '', next);
+  }, [detailId, enriched]);
+
+  // Once the map is ready, fly to the deep-linked / active location.
+  useEffect(() => {
+    if (!activeId || !mapRef.current) return;
+    const poi = enriched.find((p) => p.id === activeId);
+    if (!poi) return;
+    mapRef.current.flyTo({ center: [poi.longitude, poi.latitude], zoom: 15.5, duration: 800 });
+  }, [activeId, enriched, mapbox, token]);
+
+  const handleCopyPoiLink = useCallback(async (name: string) => {
+    const url = poiShareUrl(name);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copiat! Îl poți trimite direct oaspeților.');
+    } catch {
+      toast.error('Nu am putut copia linkul. Copiază-l manual din bara de adrese.');
+    }
+  }, []);
 
   const focusPoi = useCallback((poi: GuidePoi) => {
     setActiveId(poi.id);
