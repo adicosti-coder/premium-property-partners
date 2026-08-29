@@ -56,6 +56,31 @@ export const usePoiFavorites = () => {
     enabled: !!user,
   });
 
+  // Sync locally saved favorites into the guest account on login (one-time merge)
+  useEffect(() => {
+    if (!user) return;
+    let stored: string[] = [];
+    try {
+      stored = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
+    } catch {
+      stored = [];
+    }
+    if (!Array.isArray(stored) || stored.length === 0) return;
+
+    (async () => {
+      const rows = stored.map(poi_id => ({ user_id: user.id, poi_id }));
+      const { error } = await supabase
+        .from('poi_favorites')
+        .upsert(rows, { onConflict: 'user_id,poi_id', ignoreDuplicates: true });
+      if (!error) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        setLocalFavorites([]);
+        queryClient.invalidateQueries({ queryKey: ['poi-favorites'] });
+      }
+    })();
+  }, [user, queryClient]);
+
+
   // Get current favorites (from DB or localStorage)
   const favorites = user ? dbFavorites : localFavorites;
 
