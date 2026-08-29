@@ -101,7 +101,7 @@ const RestaurantGuideMap: React.FC = () => {
   const [tokenError, setTokenError] = useState(false);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const { isFavorite, toggleFavorite, favoritesCount } = usePoiFavorites();
+  const { isFavorite, toggleFavorite, favoritesCount, isAuthenticated } = usePoiFavorites();
 
   const { data: pois = [], isLoading } = useQuery({
     queryKey: ['restaurant-guide-pois'],
@@ -266,6 +266,13 @@ const RestaurantGuideMap: React.FC = () => {
           </Button>
         ))}
       </div>
+
+      {!isAuthenticated && (
+        <p className="text-xs text-muted-foreground mb-3">
+          Locațiile premium recomandate de gazdele noastre devin vizibile pe hartă după autentificare.{' '}
+          <a href="/auth" className="underline font-medium">Intră în cont</a> pentru lista completă.
+        </p>
+      )}
 
       <div className="relative rounded-xl overflow-hidden border border-border">
         <div ref={mapContainer} className="w-full h-[360px] sm:h-[440px]" />
