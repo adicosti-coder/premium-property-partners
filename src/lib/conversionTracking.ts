@@ -122,6 +122,9 @@ export type ConversionEvent =
   | "newsletter_subscribe"
   | "whatsapp_click"
   | "phone_click"
+  /* City guide / restaurant guide micro-conversions */
+  | "poi_detail_open"
+  | "poi_navigate_gps"
   /* Booking / management funnel (GA4 e-commerce taxonomy) */
   | "select_booking_dates"
   | "begin_checkout"
