@@ -409,7 +409,14 @@ const RestaurantGuideMap: React.FC = () => {
                       {poi.rating}
                     </Badge>
                   ) : null}
+                  {summaryFor(poi.id).count > 0 && (
+                    <Badge className="gap-1">
+                      <Star className="w-3 h-3" aria-hidden="true" />
+                      {summaryFor(poi.id).average} ({summaryFor(poi.id).count})
+                    </Badge>
+                  )}
                 </div>
+
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                   <Footprints className="w-3.5 h-3.5" aria-hidden="true" />
                   {poi.walkMinutes} min ({poi.walkMeters < 1000
