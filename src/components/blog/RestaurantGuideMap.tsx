@@ -17,6 +17,8 @@ import {
   type RestaurantGuideItem,
 } from '@/utils/exportRestaurantGuidePdf';
 import { toast } from 'sonner';
+import { trackConversion } from '@/lib/conversionTracking';
+import { applyPoiSocialMeta, resetPoiSocialMeta } from '@/utils/poiSocialMeta';
 import {
   Loader2,
   MapPin,
@@ -335,12 +337,41 @@ const RestaurantGuideMap: React.FC = () => {
     setShouldLoadMap(true);
     setActiveId(target.id);
     setDetailId(target.id);
+    // GA4 + Meta: arrival through a shared POI deep-link.
+    trackConversion({
+      event: 'poi_deep_link_open',
+      poi_id: target.id,
+      poi_name: target.name,
+      poi_category: target.category,
+      deep_link_source: window.location.hash ? 'hash' : 'query',
+      referrer: document.referrer || 'direct',
+    });
     window.requestAnimationFrame(() => {
       document
         .getElementById(`guide-poi-${target.id}`)
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }, [enriched]);
+
+  // Dynamic Open Graph tags while a POI modal / deep-link is active, so shared
+  // links surface the venue name + photo instead of the generic article preview.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const poi = enriched.find((p) => p.id === detailId);
+    if (!poi) {
+      resetPoiSocialMeta();
+      return;
+    }
+    applyPoiSocialMeta({
+      name: poi.name,
+      category: poi.category,
+      description: poi.description,
+      address: poi.address,
+      imageUrl: poi.image_url,
+      url: poiShareUrl(poi.name),
+    });
+    return () => resetPoiSocialMeta();
+  }, [detailId, enriched]);
 
   // Keep the URL hash in sync with the open detail modal so the link is shareable.
   useEffect(() => {
@@ -363,10 +394,18 @@ const RestaurantGuideMap: React.FC = () => {
     mapRef.current.flyTo({ center: [poi.longitude, poi.latitude], zoom: 15.5, duration: 800 });
   }, [activeId, enriched, mapbox, token]);
 
-  const handleCopyPoiLink = useCallback(async (name: string) => {
-    const url = poiShareUrl(name);
+  const handleCopyPoiLink = useCallback(async (poi: GuidePoi) => {
+    const url = poiShareUrl(poi.name);
     try {
       await navigator.clipboard.writeText(url);
+      // GA4 + Meta: guest shared a venue deep-link.
+      trackConversion({
+        event: 'poi_link_copy',
+        poi_id: poi.id,
+        poi_name: poi.name,
+        poi_category: poi.category,
+        share_url: url,
+      });
       toast.success('Link copiat! Îl poți trimite direct oaspeților.');
     } catch {
       toast.error('Nu am putut copia linkul. Copiază-l manual din bara de adrese.');
@@ -612,7 +651,7 @@ const RestaurantGuideMap: React.FC = () => {
                 size="sm"
                 variant="ghost"
                 className="min-h-[40px]"
-                onClick={() => handleCopyPoiLink(poi.name)}
+                onClick={() => handleCopyPoiLink(poi)}
                 aria-label={`Copiază linkul direct către ${poi.name}`}
               >
                 <LinkIcon className="w-3.5 h-3.5 mr-1" aria-hidden="true" />

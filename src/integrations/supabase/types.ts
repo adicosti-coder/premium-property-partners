@@ -3944,6 +3944,54 @@ export type Database = {
           },
         ]
       }
+      poi_review_notifications: {
+        Row: {
+          created_at: string
+          email_fallback: boolean
+          email_sent: boolean
+          email_to: string | null
+          error_message: string | null
+          guest_name: string | null
+          id: string
+          poi_id: string | null
+          poi_name: string | null
+          rating: number | null
+          review_id: string | null
+          whatsapp_configured: boolean
+          whatsapp_status: number | null
+        }
+        Insert: {
+          created_at?: string
+          email_fallback?: boolean
+          email_sent?: boolean
+          email_to?: string | null
+          error_message?: string | null
+          guest_name?: string | null
+          id?: string
+          poi_id?: string | null
+          poi_name?: string | null
+          rating?: number | null
+          review_id?: string | null
+          whatsapp_configured?: boolean
+          whatsapp_status?: number | null
+        }
+        Update: {
+          created_at?: string
+          email_fallback?: boolean
+          email_sent?: boolean
+          email_to?: string | null
+          error_message?: string | null
+          guest_name?: string | null
+          id?: string
+          poi_id?: string | null
+          poi_name?: string | null
+          rating?: number | null
+          review_id?: string | null
+          whatsapp_configured?: boolean
+          whatsapp_status?: number | null
+        }
+        Relationships: []
+      }
       poi_reviews: {
         Row: {
           comment: string | null

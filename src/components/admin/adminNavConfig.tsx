@@ -44,6 +44,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "ical-sync", label: "iCal Sync", icon: Calendar },
       { value: "reviews", label: "Reviews", icon: MessageSquare },
       { value: "poi-reviews", label: "Moderare Recenzii POI", icon: MessageSquare, keywords: ["recenzii", "moderare", "poi", "restaurante", "oaspeti", "rating", "aprobare"] },
+      { value: "poi-review-notifications", label: "Jurnal Notificări Recenzii", icon: MessageSquare, keywords: ["notificari", "jurnal", "log", "email", "whatsapp", "recenzii", "moderare"] },
     ],
   },
   {
