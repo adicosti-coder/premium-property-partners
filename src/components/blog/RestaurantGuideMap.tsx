@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { trackConversion } from '@/lib/conversionTracking';
 import { applyPoiSocialMeta, resetPoiSocialMeta } from '@/utils/poiSocialMeta';
+import { buildPoiItemListSchema } from '@/utils/poiStructuredData';
 import {
   Loader2,
   MapPin,
