@@ -140,5 +140,50 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  return json({ ok: true, checked: candidates.length, created: created.length, emailed, threshold });
+  // Webhook notification (WhatsApp / Make.com) — one payload per run.
+  let webhooked = false;
+  const webhookUrl = Deno.env.get("WHATSAPP_ALERT_WEBHOOK_URL") || Deno.env.get("LEAD_WEBHOOK_URL");
+  if (created.length > 0 && webhookUrl) {
+    try {
+      const res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "seo_alert",
+          site: "realtrust.ro",
+          count: created.length,
+          severity: created.some((c) => c.severity === "error") ? "error" : "warning",
+          message: `⚠️ ${created.length} alerte SEO noi pe realtrust.ro:\n` +
+            created.slice(0, 10).map((c) => `• ${c.title}`).join("\n"),
+          alerts: created.map((c) => ({
+            alert_type: c.alert_type,
+            alert_key: c.alert_key,
+            title: c.title,
+            severity: c.severity,
+          })),
+          admin_url: "https://realtrust.ro/admin?tab=seo",
+          sent_at: new Date().toISOString(),
+        }),
+      });
+      webhooked = res.ok;
+    } catch (e) {
+      console.error("[seo-alert-monitor] webhook failed", e);
+    }
+    if (webhooked) {
+      await admin
+        .from("seo_alerts")
+        .update({ webhook_sent_at: new Date().toISOString() })
+        .is("webhook_sent_at", null)
+        .gte("created_at", since);
+    }
+  }
+
+  return json({
+    ok: true,
+    checked: candidates.length,
+    created: created.length,
+    emailed,
+    webhooked,
+    threshold,
+  });
 });
