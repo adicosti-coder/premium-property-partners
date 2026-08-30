@@ -6375,6 +6375,7 @@ export type Database = {
           resolved_at: string | null
           severity: string
           title: string
+          webhook_sent_at: string | null
         }
         Insert: {
           alert_key: string
@@ -6386,6 +6387,7 @@ export type Database = {
           resolved_at?: string | null
           severity?: string
           title: string
+          webhook_sent_at?: string | null
         }
         Update: {
           alert_key?: string
@@ -6397,6 +6399,7 @@ export type Database = {
           resolved_at?: string | null
           severity?: string
           title?: string
+          webhook_sent_at?: string | null
         }
         Relationships: []
       }

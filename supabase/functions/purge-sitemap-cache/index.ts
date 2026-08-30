@@ -4,6 +4,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { logAudit } from "../_shared/auditLog.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
