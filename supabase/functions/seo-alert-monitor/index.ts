@@ -43,7 +43,21 @@ Deno.serve(async (req: Request) => {
     { auth: { persistSession: false } },
   );
 
-  let threshold = 5;
+  // Configurable thresholds (admin panel) with safe fallbacks.
+  const { data: settings } = await admin
+    .from("seo_alert_settings")
+    .select(
+      "min_404_hits, min_indexing_issues, webhook_min_severity, email_enabled, webhook_enabled, auto_reindex_on_alert",
+    )
+    .maybeSingle();
+
+  let threshold = Number(settings?.min_404_hits ?? 5);
+  const minIndexingIssues = Number(settings?.min_indexing_issues ?? 1);
+  const webhookMinSeverity = (settings?.webhook_min_severity ?? "warning") as "warning" | "error";
+  const emailEnabled = settings?.email_enabled !== false;
+  const webhookEnabled = settings?.webhook_enabled !== false;
+  const autoReindex = settings?.auto_reindex_on_alert === true;
+
   try {
     if (req.method === "POST") {
       const body = await req.json().catch(() => ({}));
@@ -51,6 +65,8 @@ Deno.serve(async (req: Request) => {
       if (Number.isFinite(t) && t >= 2 && t <= 1000) threshold = Math.floor(t);
     }
   } catch { /* ignore */ }
+  if (!Number.isFinite(threshold) || threshold < 2) threshold = 5;
+
 
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const candidates: NewAlert[] = [];
