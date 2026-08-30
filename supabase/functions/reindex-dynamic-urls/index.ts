@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   );
 
-  let body: { dry_run?: boolean; triggered_by?: string; submit_google?: boolean } = {};
+  let body: { dry_run?: boolean; triggered_by?: string; submit_google?: boolean; urls?: string[] } = {};
   try {
     body = await req.json();
   } catch { /* GET / empty body */ }
