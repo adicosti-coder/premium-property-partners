@@ -43,7 +43,21 @@ Deno.serve(async (req: Request) => {
     { auth: { persistSession: false } },
   );
 
-  let threshold = 5;
+  // Configurable thresholds (admin panel) with safe fallbacks.
+  const { data: settings } = await admin
+    .from("seo_alert_settings")
+    .select(
+      "min_404_hits, min_indexing_issues, webhook_min_severity, email_enabled, webhook_enabled, auto_reindex_on_alert",
+    )
+    .maybeSingle();
+
+  let threshold = Number(settings?.min_404_hits ?? 5);
+  const minIndexingIssues = Number(settings?.min_indexing_issues ?? 1);
+  const webhookMinSeverity = (settings?.webhook_min_severity ?? "warning") as "warning" | "error";
+  const emailEnabled = settings?.email_enabled !== false;
+  const webhookEnabled = settings?.webhook_enabled !== false;
+  const autoReindex = settings?.auto_reindex_on_alert === true;
+
   try {
     if (req.method === "POST") {
       const body = await req.json().catch(() => ({}));
@@ -51,6 +65,8 @@ Deno.serve(async (req: Request) => {
       if (Number.isFinite(t) && t >= 2 && t <= 1000) threshold = Math.floor(t);
     }
   } catch { /* ignore */ }
+  if (!Number.isFinite(threshold) || threshold < 2) threshold = 5;
+
 
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const candidates: NewAlert[] = [];
@@ -63,7 +79,7 @@ Deno.serve(async (req: Request) => {
     .limit(1)
     .maybeSingle();
 
-  if (snap && (snap.issues_count ?? 0) > 0) {
+  if (snap && (snap.issues_count ?? 0) >= minIndexingIssues) {
     candidates.push({
       alert_type: "indexing",
       alert_key: `snapshot:${snap.id}`,
@@ -114,7 +130,7 @@ Deno.serve(async (req: Request) => {
 
   // One digest email per run.
   let emailed = false;
-  if (created.length > 0) {
+  if (created.length > 0 && emailEnabled) {
     const rows = created
       .map((c) => `<tr><td>${c.alert_type}</td><td>${c.title}</td></tr>`)
       .join("");
@@ -141,9 +157,15 @@ Deno.serve(async (req: Request) => {
   }
 
   // Webhook notification (WhatsApp / Make.com) — one payload per run.
+  const severityRank = { warning: 1, error: 2 } as const;
+  const runSeverity: "warning" | "error" = created.some((c) => c.severity === "error")
+    ? "error"
+    : "warning";
+  const severityPasses = severityRank[runSeverity] >= severityRank[webhookMinSeverity];
+
   let webhooked = false;
   const webhookUrl = Deno.env.get("WHATSAPP_ALERT_WEBHOOK_URL") || Deno.env.get("LEAD_WEBHOOK_URL");
-  if (created.length > 0 && webhookUrl) {
+  if (created.length > 0 && webhookUrl && webhookEnabled && severityPasses) {
     try {
       const res = await fetch(webhookUrl, {
         method: "POST",
@@ -152,7 +174,7 @@ Deno.serve(async (req: Request) => {
           type: "seo_alert",
           site: "realtrust.ro",
           count: created.length,
-          severity: created.some((c) => c.severity === "error") ? "error" : "warning",
+          severity: runSeverity,
           message: `⚠️ ${created.length} alerte SEO noi pe realtrust.ro:\n` +
             created.slice(0, 10).map((c) => `• ${c.title}`).join("\n"),
           alerts: created.map((c) => ({
@@ -178,12 +200,61 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  // Optional: push the affected URLs straight to re-indexing.
+  let reindexed: number | null = null;
+  if (created.length > 0 && autoReindex) {
+    const urls = collectAlertUrls(created);
+    if (urls.length > 0) {
+      try {
+        const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/reindex-dynamic-urls`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ urls, triggered_by: "seo-alert-monitor", submit_google: false }),
+        });
+        reindexed = res.ok ? urls.length : 0;
+      } catch (e) {
+        console.error("[seo-alert-monitor] auto reindex failed", e);
+        reindexed = 0;
+      }
+    }
+  }
+
   return json({
     ok: true,
     checked: candidates.length,
     created: created.length,
     emailed,
     webhooked,
+    reindexed,
     threshold,
+    min_indexing_issues: minIndexingIssues,
   });
 });
+
+/** Extracts every absolute/relative URL referenced by a batch of alerts. */
+function collectAlertUrls(alerts: NewAlert[]): string[] {
+  const out = new Set<string>();
+  const push = (value: unknown) => {
+    if (typeof value !== "string" || !value) return;
+    if (value.startsWith("/")) out.add(`https://realtrust.ro${value}`);
+    else if (value.startsWith("https://realtrust.ro")) out.add(value);
+  };
+  for (const a of alerts) {
+    push(a.details?.path);
+    const issues = a.details?.issues;
+    if (Array.isArray(issues)) {
+      for (const issue of issues) {
+        if (typeof issue === "string") push(issue);
+        else if (issue && typeof issue === "object") {
+          const rec = issue as Record<string, unknown>;
+          push(rec.url ?? rec.path ?? rec.loc);
+        }
+      }
+    }
+  }
+  return [...out].slice(0, 200);
+}
+
