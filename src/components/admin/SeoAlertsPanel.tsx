@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, BellRing, CheckCircle2, Eye, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, BellRing, CheckCircle2, Eye, Loader2, RefreshCw, Send, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import SeoAlertSettingsCard from "@/components/admin/SeoAlertSettingsCard";
+import SitemapStatusBadge from "@/components/admin/SitemapStatusBadge";
+import { buildRemediationPlan, extractAlertUrls } from "@/lib/seoAlertRemediation";
 
 interface SeoAlert {
   id: string;
