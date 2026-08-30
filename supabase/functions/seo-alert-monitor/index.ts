@@ -79,7 +79,7 @@ Deno.serve(async (req: Request) => {
     .limit(1)
     .maybeSingle();
 
-  if (snap && (snap.issues_count ?? 0) > 0) {
+  if (snap && (snap.issues_count ?? 0) >= minIndexingIssues) {
     candidates.push({
       alert_type: "indexing",
       alert_key: `snapshot:${snap.id}`,
