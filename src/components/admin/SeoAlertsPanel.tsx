@@ -287,6 +287,61 @@ export const SeoAlertsPanel = () => {
                 </div>
               </div>
 
+              {plan && (
+                <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                  <div>
+                    <p className="font-medium">Diagnostic</p>
+                    <p className="text-muted-foreground">{plan.summary}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Cauză probabilă</p>
+                    <p className="text-muted-foreground">{plan.cause}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">Pași de remediere</p>
+                    <ol className="mt-1 list-decimal space-y-1 pl-5 text-muted-foreground">
+                      {plan.steps.map((s) => (
+                        <li key={s}>{s}</li>
+                      ))}
+                    </ol>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{plan.impact}</p>
+                </div>
+              )}
+
+              <div>
+                <span className="text-muted-foreground">URL-uri afectate ({detailUrls.length})</span>
+                {detailUrls.length > 0 ? (
+                  <>
+                    <ul className="mt-1 max-h-40 overflow-auto rounded-lg border p-2 font-mono text-xs">
+                      {detailUrls.map((u) => (
+                        <li key={u} className="break-all">
+                          {u}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      size="sm"
+                      className="mt-2 gap-2"
+                      onClick={() => reindex.mutate(detailUrls)}
+                      disabled={reindex.isPending}
+                      aria-label="Trimite URL-urile afectate la reindexare"
+                    >
+                      {reindex.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
+                      Reindexează URL-urile
+                    </Button>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Nu s-au putut extrage URL-uri din această alertă.
+                  </p>
+                )}
+              </div>
+
               <div>
                 <span className="text-muted-foreground">Detalii tehnice</span>
                 <pre className="mt-1 max-h-72 overflow-auto rounded-lg border bg-muted/40 p-3 text-xs whitespace-pre-wrap break-all">
@@ -295,6 +350,7 @@ export const SeoAlertsPanel = () => {
               </div>
             </div>
           )}
+
         </DialogContent>
       </Dialog>
     </div>
