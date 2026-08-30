@@ -25,6 +25,7 @@ import { SEOAutoFixPanel } from "./SEOAutoFixPanel";
 import { SEOQuickWinsPanel } from "./SEOQuickWinsPanel";
 import { SEOSchemaGeneratorPanel } from "./SEOSchemaGeneratorPanel";
 import { SEORedeployPanel } from "./SEORedeployPanel";
+import { SeoAlertsPanel } from "./SeoAlertsPanel";
 import { SEOCannibalizationPanel } from "./SEOCannibalizationPanel";
 import { SEOReauditSchedulerPanel } from "./SEOReauditSchedulerPanel";
 import { SEOCompetitorGapPanel } from "./SEOCompetitorGapPanel";
@@ -780,6 +781,8 @@ const SEOOptimizerManager = () => {
       <SEOSchemaGeneratorPanel history={history} overrides={overrides as any} />
 
       <SEORedeployPanel overrides={overrides as any} />
+
+      <SeoAlertsPanel />
 
       <SEOCannibalizationPanel history={history as any} />
 
