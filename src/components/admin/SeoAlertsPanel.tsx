@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, BellRing, CheckCircle2, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, BellRing, CheckCircle2, Eye, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface SeoAlert {
@@ -17,6 +24,7 @@ interface SeoAlert {
   severity: string;
   details: Record<string, unknown> | null;
   notified_at: string | null;
+  webhook_sent_at: string | null;
   resolved_at: string | null;
   created_at: string;
 }
@@ -24,13 +32,14 @@ interface SeoAlert {
 export const SeoAlertsPanel = () => {
   const qc = useQueryClient();
   const [minHits, setMinHits] = useState(5);
+  const [detail, setDetail] = useState<SeoAlert | null>(null);
 
   const { data: alerts, isLoading } = useQuery({
     queryKey: ["seo-alerts"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("seo_alerts")
-        .select("id, alert_type, alert_key, title, severity, details, notified_at, resolved_at, created_at")
+        .select("id, alert_type, alert_key, title, severity, details, notified_at, webhook_sent_at, resolved_at, created_at")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
@@ -44,10 +53,13 @@ export const SeoAlertsPanel = () => {
         body: { min_hits: minHits },
       });
       if (error) throw error;
-      return data as { created: number; checked: number; emailed: boolean };
+      return data as { created: number; checked: number; emailed: boolean; webhooked?: boolean };
     },
     onSuccess: (d) => {
-      toast.success(`Verificare completă — ${d?.created ?? 0} alerte noi din ${d?.checked ?? 0} verificate`);
+      toast.success(
+        `Verificare completă — ${d?.created ?? 0} alerte noi din ${d?.checked ?? 0} verificate` +
+          (d?.webhooked ? " · webhook trimis" : ""),
+      );
       qc.invalidateQueries({ queryKey: ["seo-alerts"] });
     },
     onError: (e: Error) => toast.error(`Verificarea a eșuat: ${e.message}`),
@@ -178,11 +190,22 @@ export const SeoAlertsPanel = () => {
                     <p className="text-xs text-muted-foreground mt-1">
                       {a.alert_type === "indexing" ? "Indexare" : "404"} ·{" "}
                       {new Date(a.created_at).toLocaleString("ro-RO")} ·{" "}
-                      {a.notified_at ? "e-mail trimis" : "fără e-mail"}
+                      {a.notified_at ? "e-mail trimis" : "fără e-mail"} ·{" "}
+                      {a.webhook_sent_at ? "webhook trimis" : "fără webhook"}
                       {a.resolved_at ? " · rezolvată" : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setDetail(a)}
+                      className="gap-1"
+                      aria-label={`Vezi detaliile alertei ${a.title}`}
+                    >
+                      <Eye className="w-4 h-4" />
+                      Detalii
+                    </Button>
                     {!a.resolved_at && (
                       <Button
                         size="sm"
@@ -208,6 +231,50 @@ export const SeoAlertsPanel = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="break-all">{detail?.title}</DialogTitle>
+            <DialogDescription>
+              {detail
+                ? `${detail.alert_type === "indexing" ? "Eroare de indexare" : "URL 404"} · severitate ${
+                    detail.severity
+                  } · ${new Date(detail.created_at).toLocaleString("ro-RO")}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {detail && (
+            <div className="space-y-4 text-sm">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <span className="text-muted-foreground">Cheie alertă</span>
+                  <p className="break-all font-mono text-xs">{detail.alert_key}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Notificări</span>
+                  <p>
+                    E-mail: {detail.notified_at ? new Date(detail.notified_at).toLocaleString("ro-RO") : "—"}
+                    <br />
+                    Webhook:{" "}
+                    {detail.webhook_sent_at
+                      ? new Date(detail.webhook_sent_at).toLocaleString("ro-RO")
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-muted-foreground">Detalii tehnice</span>
+                <pre className="mt-1 max-h-72 overflow-auto rounded-lg border bg-muted/40 p-3 text-xs whitespace-pre-wrap break-all">
+                  {JSON.stringify(detail.details ?? {}, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
