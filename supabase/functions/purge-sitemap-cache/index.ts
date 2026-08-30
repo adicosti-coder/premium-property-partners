@@ -56,9 +56,9 @@ Deno.serve(async (req: Request) => {
 
     await logAudit(admin, {
       action: "sitemap_cache_purge",
-      actor_user_id: auth.userId ?? null,
+      actor_user_id: actorUserId,
       entity_type: "sitemap",
-      details: { warmed },
+      details: { warmed, source: internal ? "cron" : "admin" },
       severity: "info",
     });
 
