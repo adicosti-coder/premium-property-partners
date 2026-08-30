@@ -20,8 +20,14 @@ const json = (body: unknown, status = 200) =>
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  // pg_cron (auto-rebuild sitemap) calls with x-cron-secret; admins use their JWT.
+  const internal = await isInternalCall(req);
+  let actorUserId: string | null = null;
+  if (!internal) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+    actorUserId = auth.userId ?? null;
+  }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -50,9 +56,9 @@ Deno.serve(async (req: Request) => {
 
     await logAudit(admin, {
       action: "sitemap_cache_purge",
-      actor_user_id: auth.userId ?? null,
+      actor_user_id: actorUserId,
       entity_type: "sitemap",
-      details: { warmed },
+      details: { warmed, source: internal ? "cron" : "admin" },
       severity: "info",
     });
 
