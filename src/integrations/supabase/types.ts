@@ -6364,6 +6364,42 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_alerts: {
+        Row: {
+          alert_key: string
+          alert_type: string
+          created_at: string
+          details: Json
+          id: string
+          notified_at: string | null
+          resolved_at: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          alert_key: string
+          alert_type: string
+          created_at?: string
+          details?: Json
+          id?: string
+          notified_at?: string | null
+          resolved_at?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          alert_key?: string
+          alert_type?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          notified_at?: string | null
+          resolved_at?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       seo_andrei_bridge: {
         Row: {
           auto_dial_response: Json | null
