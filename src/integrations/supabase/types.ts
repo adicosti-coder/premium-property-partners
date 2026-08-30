@@ -6364,6 +6364,42 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_alert_settings: {
+        Row: {
+          auto_reindex_on_alert: boolean
+          email_enabled: boolean
+          id: boolean
+          min_404_hits: number
+          min_indexing_issues: number
+          updated_at: string
+          updated_by: string | null
+          webhook_enabled: boolean
+          webhook_min_severity: string
+        }
+        Insert: {
+          auto_reindex_on_alert?: boolean
+          email_enabled?: boolean
+          id?: boolean
+          min_404_hits?: number
+          min_indexing_issues?: number
+          updated_at?: string
+          updated_by?: string | null
+          webhook_enabled?: boolean
+          webhook_min_severity?: string
+        }
+        Update: {
+          auto_reindex_on_alert?: boolean
+          email_enabled?: boolean
+          id?: boolean
+          min_404_hits?: number
+          min_indexing_issues?: number
+          updated_at?: string
+          updated_by?: string | null
+          webhook_enabled?: boolean
+          webhook_min_severity?: string
+        }
+        Relationships: []
+      }
       seo_alerts: {
         Row: {
           alert_key: string
@@ -10678,6 +10714,15 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      get_sitemap_status: {
+        Args: never
+        Returns: {
+          bytes: number
+          cache_key: string
+          generated_at: string
+          url_count: number
+        }[]
       }
       has_role: {
         Args: {
