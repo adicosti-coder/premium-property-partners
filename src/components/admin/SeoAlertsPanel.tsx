@@ -108,10 +108,29 @@ export const SeoAlertsPanel = () => {
     onError: (e: Error) => toast.error(`Purge eșuat: ${e.message}`),
   });
 
+  const reindex = useMutation({
+    mutationFn: async (urls: string[]) => {
+      const { data, error } = await supabase.functions.invoke("reindex-dynamic-urls", {
+        body: { urls, triggered_by: "seo-alert-panel", submit_google: true },
+      });
+      if (error) throw error;
+      return data as { submitted?: number };
+    },
+    onSuccess: (d) => {
+      qc.invalidateQueries({ queryKey: ["sitemap-status"] });
+      toast.success(`Reindexare trimisă pentru ${d?.submitted ?? 0} URL-uri`);
+    },
+    onError: (e: Error) => toast.error(`Reindexarea a eșuat: ${e.message}`),
+  });
+
   const open = (alerts ?? []).filter((a) => !a.resolved_at);
+  const detailUrls = extractAlertUrls(detail);
+  const plan = detail ? buildRemediationPlan(detail) : null;
 
   return (
     <div className="space-y-6">
+      <SitemapStatusBadge />
+      <SeoAlertSettingsCard />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
