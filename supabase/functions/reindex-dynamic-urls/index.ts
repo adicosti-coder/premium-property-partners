@@ -128,10 +128,24 @@ Deno.serve(async (req) => {
   const triggeredBy = (body.triggered_by || "reindex-dynamic-urls").slice(0, 100);
 
   try {
-    // 1. Sursa de adevăr: sitemap-ul dinamic
-    const xml = await buildDynamicSitemap(supabase);
-    const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]);
-    const urlList = [...new Set(locs.map(canonicalize).filter((u): u is string => Boolean(u)))];
+    // 1. Sursa: fie URL-urile explicite primite (reindexare din alerte SEO),
+    //    fie sitemap-ul dinamic complet.
+    let urlList: string[];
+    if (Array.isArray(body.urls) && body.urls.length > 0) {
+      urlList = [
+        ...new Set(
+          body.urls
+            .slice(0, 500)
+            .filter((u): u is string => typeof u === "string")
+            .map(canonicalize)
+            .filter((u): u is string => Boolean(u)),
+        ),
+      ];
+    } else {
+      const xml = await buildDynamicSitemap(supabase);
+      const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g)).map((m) => m[1]);
+      urlList = [...new Set(locs.map(canonicalize).filter((u): u is string => Boolean(u)))];
+    }
 
     if (urlList.length === 0) {
       return new Response(JSON.stringify({ ok: false, error: "no_dynamic_urls" }), {
@@ -139,6 +153,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     if (body.dry_run) {
       return new Response(
