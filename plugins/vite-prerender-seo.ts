@@ -423,8 +423,12 @@ export function parseStaticGuestProperties(): StaticGuestProperty[] {
     const amenities = amenitiesMatch
       ? Array.from(amenitiesMatch[1].matchAll(/"([^"]+)"/g)).map((m) => m[1])
       : [];
-    const imgMatch = block.match(/images:\s*\[\s*([^,\]]+)/);
-    const rawImg = imgMatch ? imgMatch[1].trim() : '';
+    const imgMatch = block.match(/images:\s*\[\s*([^,\]]+(?:,\s*\d+\s*,\s*\d+\s*\))?)/);
+    let rawImg = imgMatch ? imgMatch[1].trim() : '';
+    const pynMatch = block.match(/images:\s*\[\s*pyn\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/);
+    if (pynMatch) {
+      rawImg = `https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/${pynMatch[1]}/${pynMatch[2]}/${pynMatch[3]}-m.jpg`;
+    }
     out.push({
       slug,
       name,
@@ -436,7 +440,7 @@ export function parseStaticGuestProperties(): StaticGuestProperty[] {
       pricePerNight: num(block, 'pricePerNight'),
       amenities,
       image: /^"?https?:/.test(rawImg) ? rawImg.replace(/^"|"$/g, '') : undefined,
-      isActive: !/isActive:\s*false/.test(block),
+      isActive: !/\n\s{4}isActive:\s*false/.test(block),
     });
   }
   return out;
