@@ -305,24 +305,24 @@ const Header = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden lg:inline-flex min-w-[44px] min-h-[44px] text-amber-600 hover:text-amber-500 transition-all duration-300 hover:scale-105"
+                  className="hidden md:inline-flex min-w-[44px] min-h-[44px] text-amber-600 hover:text-amber-500 transition-all duration-300 hover:scale-105"
                   aria-label="Prospect Listings AI"
                 >
                   <span className="text-lg">📞</span>
-                  <span className="hidden xl:inline ml-1 text-xs font-semibold">Prospects</span>
+                  <span className="hidden md:inline ml-1 text-xs font-semibold">Prospects</span>
                 </Button>
               </Link>
             )}
             {isAuthenticated === true && (
               <Link to={isAdmin ? "/admin" : "/auth"} aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   className="hidden md:inline-flex min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
                   aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}
                 >
                   <ShieldIcon className="w-5 h-5" />
-                  <span className="hidden lg:inline ml-1 text-xs font-semibold">Admin</span>
+                  <span className="hidden md:inline ml-1 text-xs font-semibold">Admin</span>
                 </Button>
               </Link>
             )}
