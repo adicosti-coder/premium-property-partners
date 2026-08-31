@@ -59,6 +59,7 @@ const apartmentCoordinates: { name: string; slug: string; coords: [number, numbe
   { name: 'Ateneo ApArt Hotel Studio Deluxe', slug: 'ateneo-apart-hotel-studio-deluxe', coords: [21.2055, 45.7785] },
   { name: 'Modern Studio ApArt Hotel', slug: 'modern-studio-apart-hotel', coords: [21.2100, 45.7350] },
   { name: 'Moonlight Emerald Suite by RealTrust', slug: 'moonlight-emerald-suite', coords: [21.2390186, 45.731261] },
+  { name: 'XCity 3 ApArt Hotel by RealTrust', slug: 'xcity-3-apart-hotel', coords: [21.2097495, 45.7731836] },
 ];
 
 interface POI {
