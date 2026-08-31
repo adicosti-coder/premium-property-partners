@@ -142,6 +142,19 @@ const profiles: GeoProfile[] = [
     ],
   },
   {
+    key: 'apicultorilor',
+    aliases: ['apicultorilor', 'apicultorilor 31'],
+    center: { lng: 21.236043, lat: 45.72148 },
+    scores: { transport: 8.2, education: 7.8, lifestyle: 8.1, overallLabelRo: 'Foarte Bun', overallLabelEn: 'Very Good' },
+    pois: [
+      { name: 'Supermarket de cartier', nameEn: 'Neighborhood supermarket', lng: 21.2345, lat: 45.7225, category: 'supermarket', emoji: '🛒', minutes: 4, mode: 'walk' },
+      { name: 'Centrul Vechi', nameEn: 'Old Town Center', lng: 21.2265, lat: 45.7571, category: 'tourist', emoji: '🏛️', minutes: 12, mode: 'drive' },
+      { name: 'Iulius Town', nameEn: 'Iulius Town', lng: 21.227, lat: 45.7695, category: 'mall', emoji: '🛍️', minutes: 13, mode: 'drive' },
+      { name: 'Transport public Calea Martirilor', nameEn: 'Calea Martirilor public transport', lng: 21.2335, lat: 45.7228, category: 'transport', emoji: '🚌', minutes: 5, mode: 'walk' },
+      { name: 'Parc de cartier', nameEn: 'Neighborhood park', lng: 21.2372, lat: 45.7208, category: 'park', emoji: '🌳', minutes: 4, mode: 'walk' },
+    ],
+  },
+  {
     key: 'green_forest_constructorilor',
     aliases: ['green forest', 'constructorilor 52'],
     center: { lng: 21.248071, lat: 45.7791585 },
