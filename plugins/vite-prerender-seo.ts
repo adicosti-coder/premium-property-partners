@@ -400,7 +400,12 @@ export function parseStaticGuestProperties(): StaticGuestProperty[] {
   const file = path.resolve(process.cwd(), 'src/data/properties.ts');
   if (!fs.existsSync(file)) return [];
   const src = fs.readFileSync(file, 'utf-8');
-  const blocks = src.split(/\n\s{4}\{\n/).slice(1);
+  // Each property object is delimited by its `slug:` field; slice from one
+  // slug declaration to the next.
+  const slugPositions = Array.from(src.matchAll(/\n\s*slug:\s*"/g)).map((m) => m.index ?? 0);
+  const blocks = slugPositions.map((start, i) =>
+    src.slice(start, i + 1 < slugPositions.length ? slugPositions[i + 1] : src.length)
+  );
   const num = (block: string, key: string): number => {
     const m = block.match(new RegExp(`${key}:\\s*([0-9.]+)`));
     return m ? Number(m[1]) : 0;
