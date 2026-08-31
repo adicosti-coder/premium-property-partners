@@ -552,7 +552,9 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
         p.bedrooms ? `${p.bedrooms} ${p.bedrooms === 1 ? 'dormitor' : 'dormitoare'}` : '',
         p.capacity ? `${p.capacity} oaspeți` : '',
       ].filter(Boolean).join(', ');
-      const rawDesc = `Apartament în regim hotelier în ${zone}, Timișoara${specs ? ` — ${specs}` : ''}. ${amenityText}.${p.pricePerNight ? ` De la ${p.pricePerNight}€/noapte.` : ''} Rezervare directă, fără comision.`;
+      // Zona scurtată ca descrierea RO să rămână sub 160 caractere (fără trunchiere).
+      const shortZone = zone.length > 28 ? `${zone.slice(0, 27).trimEnd()}` : zone;
+      const rawDesc = `Cazare regim hotelier Timișoara, ${shortZone}${specs ? `: ${specs}` : ''}. ${amenityText}.${p.pricePerNight ? ` De la ${p.pricePerNight}€/noapte,` : ''} rezervare directă fără comision.`;
       const description = rawDesc.length > 158 ? `${rawDesc.slice(0, 155).trimEnd()}…` : rawDesc;
 
       const coords = geo[p.slug];
