@@ -57,6 +57,7 @@ const exactCoordinatesBySlug: Record<string, [number, number]> = {
   'mara-luxury-golden-apart-hotel': [21.2148126, 45.753754],
   'ateneo-apart-hotel-studio-deluxe': [21.2098, 45.779],
   'modern-studio-apart-hotel': [21.2602816, 45.7656277],
+  'moonlight-emerald-suite': [21.2390186, 45.731261],
   'apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda': [21.2402393, 45.7634713],
   'apartament-2-camere-vivalia-parter-parcare-terasa-mare-iulius-mall': [21.240401, 45.762866],
   'ideal-investitie-utilat-complet-mobilat': [21.234161, 45.7579883],
