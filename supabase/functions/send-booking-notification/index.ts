@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendTeamEmail } from "../_shared/teamEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -278,45 +278,42 @@ const handler = async (req: Request): Promise<Response> => {
     const data = validateBookingRequest(rawData);
     console.log("Validated booking for:", escapeHtml(data.guestName));
 
-    const sendEmail = async (to: string[], subject: string, html: string) => {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: "RealTrust <info@notify.realtrust.ro>",
-          to,
-          subject,
-          html,
-        }),
-      });
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(`Failed to send email: ${error}`);
-      }
-      return res.json();
-    };
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const admin = supabaseUrl && serviceKey ? createClient(supabaseUrl, serviceKey) : null;
 
-    // Admin notification
-    const adminEmailResponse = await sendEmail(
-      ["contact@realtrust.ro"],
-      `🏠 Cerere Rezervare - ${escapeHtml(data.guestName)} | ${escapeHtml(data.propertyName)}`,
-      buildAdminEmail(data)
+    // Admin notification — falls back to the verified sender and, if the send
+    // still fails, is stored in `admin_email_failures` for retry from /admin.
+    const adminEmailResult = await sendTeamEmail(
+      {
+        to: "contact@realtrust.ro",
+        subject: `🏠 Cerere Rezervare - ${data.guestName} | ${data.propertyName}`,
+        html: buildAdminEmail(data),
+        source: "booking-request-admin",
+      },
+      admin,
     );
-    console.log("Admin email sent:", adminEmailResponse);
+    console.log("Admin booking email:", adminEmailResult.sent ? "sent" : adminEmailResult.error);
 
     // Luxury guest confirmation
-    const guestEmailResponse = await sendEmail(
-      [data.guestEmail],
-      `✨ Rezervare Confirmată - ${escapeHtml(data.propertyName)} | RealTrust`,
-      buildGuestEmail(data)
+    const guestEmailResult = await sendTeamEmail(
+      {
+        to: data.guestEmail,
+        subject: `✨ Cerere de rezervare primită - ${data.propertyName} | RealTrust`,
+        html: buildGuestEmail(data),
+        source: "booking-request-guest",
+      },
+      admin,
     );
-    console.log("Guest email sent:", guestEmailResponse);
+    console.log("Guest booking email:", guestEmailResult.sent ? "sent" : guestEmailResult.error);
 
     return new Response(
-      JSON.stringify({ success: true, adminEmail: adminEmailResponse, guestEmail: guestEmailResponse }),
+      JSON.stringify({
+        success: true,
+        adminEmailSent: adminEmailResult.sent,
+        guestEmailSent: guestEmailResult.sent,
+        storedForRetry: adminEmailResult.storedFallback || guestEmailResult.storedFallback || false,
+      }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
