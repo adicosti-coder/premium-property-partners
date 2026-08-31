@@ -87,12 +87,16 @@ const Header = () => {
       subscription = data.subscription;
     };
 
+    let idleId: number | undefined;
     const trigger = () => {
       init().catch(() => {});
+      if (idleId !== undefined) clearTimeout(idleId);
       events.forEach(e => document.removeEventListener(e, trigger));
     };
     const events = ["click", "touchstart", "keydown"] as const;
     events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+    // Also resolve auth without interaction (keeps the Admin entry visible on desktop)
+    idleId = window.setTimeout(trigger, 2000);
 
     return () => {
       cancelled = true;
@@ -319,15 +323,15 @@ const Header = () => {
               </Link>
             )}
             {isAuthenticated === true && (
-              <Link to="/auth" aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
+              <Link to={isAdmin ? "/admin" : "/auth"} aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="hidden lg:inline-flex min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
+                  className="hidden md:inline-flex min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_12px_hsl(var(--primary)/0.3)]"
                   aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}
                 >
                   <ShieldIcon className="w-5 h-5" />
-                  <span className="hidden xl:inline">Admin</span>
+                  <span className="hidden lg:inline ml-1 text-xs font-semibold">Admin</span>
                 </Button>
               </Link>
             )}
