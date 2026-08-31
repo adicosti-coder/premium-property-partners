@@ -235,6 +235,7 @@ const App = () => (
                     <Route path="/ateneo-apart-hotel-studio-deluxe" element={<PropertyDetail />} />
                     <Route path="/modern-studio-apart-hotel" element={<PropertyDetail />} />
                     <Route path="/moonlight-emerald-suite" element={<PropertyDetail />} />
+                    <Route path="/xcity-3-apart-hotel" element={<PropertyDetail />} />
                     <Route path="/investitii" element={<Investitii />} />
                     <Route path="/rezerva-direct" element={<WhyBookDirect />} />
                     <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
