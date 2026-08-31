@@ -352,7 +352,7 @@ const PentruOaspeti = () => {
     "containsPlace": [
       { "@type": "Apartment", "name": "ATENEO", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 4 } },
       { "@type": "Apartment", "name": "GREEN FOREST", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 4 } },
-      { "@type": "Apartment", "name": "Cross Square House", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 6 } },
+      { "@type": "Apartment", "name": "Cross Square House", "numberOfRooms": 3, "numberOfBedrooms": 2, "numberOfBathroomsTotal": 3, "occupancy": { "@type": "QuantitativeValue", "maxValue": 6 } },
       { "@type": "Apartment", "name": "HELIOS", "numberOfRooms": 1, "occupancy": { "@type": "QuantitativeValue", "maxValue": 2 } },
     ],
   };
