@@ -579,7 +579,54 @@ const PropertyDetail = () => {
           "longitude": resolvedCoordinates[0],
         },
       }),
+      "description": (displayDescription || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 400),
+      ...(amenityList.length > 0 && {
+        "amenityFeature": amenityList.slice(0, 15).map((a) => ({
+          "@type": "LocationFeatureSpecification",
+          "name": a,
+          "value": true,
+        })),
+      }),
+      ...(property.pricePerNight ? { "priceRange": `€${property.pricePerNight}/noapte` } : {}),
     },
+
+    // HotelRoom pentru unitățile de cazare în regim hotelier
+    ...(normalizedListingType === 'cazare' ? [{
+      "@context": "https://schema.org",
+      "@type": "HotelRoom",
+      "@id": `https://realtrust.ro/proprietate/${slug}#hotelroom`,
+      "name": displayName,
+      "url": `https://realtrust.ro/proprietate/${slug}`,
+      "description": (displayDescription || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 400),
+      ...(galleryImages[0] ? { "image": galleryImages[0] } : {}),
+      "containedInPlace": { "@id": `https://realtrust.ro/proprietate/${slug}#lodgingbusiness` },
+      ...(property.capacity ? {
+        "occupancy": { "@type": "QuantitativeValue", "maxValue": property.capacity, "unitCode": "C62" },
+      } : {}),
+      ...(property.bedrooms ? { "numberOfRooms": property.bedrooms } : {}),
+      ...(property.bathrooms ? { "numberOfBathroomsTotal": property.bathrooms } : {}),
+      ...(property.size ? {
+        "floorSize": { "@type": "QuantitativeValue", "value": property.size, "unitCode": "MTK" },
+      } : {}),
+      ...(amenityList.length > 0 && {
+        "amenityFeature": amenityList.slice(0, 15).map((a) => ({
+          "@type": "LocationFeatureSpecification",
+          "name": a,
+          "value": true,
+        })),
+      }),
+      ...(property.pricePerNight ? {
+        "offers": {
+          "@type": "Offer",
+          "price": property.pricePerNight,
+          "priceCurrency": "EUR",
+          "url": `https://realtrust.ro/proprietate/${slug}#disponibilitate`,
+          "availability": "https://schema.org/InStock",
+        },
+      } : {}),
+    }] : []),
+
+
 
     // RealEstateListing schema from generatePropertySEO utility
     ...(dbProperty ? generatePropertySEO({
