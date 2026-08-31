@@ -396,7 +396,7 @@ interface StaticGuestProperty {
   isActive: boolean;
 }
 
-function parseStaticGuestProperties(): StaticGuestProperty[] {
+export function parseStaticGuestProperties(): StaticGuestProperty[] {
   const file = path.resolve(process.cwd(), 'src/data/properties.ts');
   if (!fs.existsSync(file)) return [];
   const src = fs.readFileSync(file, 'utf-8');
@@ -437,7 +437,7 @@ function parseStaticGuestProperties(): StaticGuestProperty[] {
   return out;
 }
 
-function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
+export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
   return parseStaticGuestProperties()
     .filter((p) => p.isActive && !taken.has(`/proprietate/${p.slug}`))
     .map((p) => {
