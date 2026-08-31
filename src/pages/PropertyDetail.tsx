@@ -495,6 +495,21 @@ const PropertyDetail = () => {
     category: poi.category,
   }));
 
+  // Facilități principale (RO) folosite în meta description + schema amenityFeature
+  const amenityList: string[] = (property.amenities || []).map((a: any) =>
+    typeof a === 'string' ? a : (a?.name || a?.label || '')
+  ).filter(Boolean);
+
+  const amenityHighlights = (() => {
+    const haystack = `${amenityList.join(' ')} ${displayDescription || ''}`.toLowerCase();
+    const picks: string[] = [];
+    if (/parcare|parking|garaj/.test(haystack)) picks.push('parcare');
+    if (/wi-?fi|internet/.test(haystack)) picks.push('Wi-Fi');
+    if (/self check|check-?in|acces cu cod|keybox/.test(haystack)) picks.push('self check-in');
+    return picks.length > 0 ? picks : ['parcare', 'Wi-Fi', 'self check-in'];
+  })();
+
+
   const propertySchemas = [
     ...generatePropertyPageSchemas({
       name: displayName,
@@ -564,7 +579,54 @@ const PropertyDetail = () => {
           "longitude": resolvedCoordinates[0],
         },
       }),
+      "description": (displayDescription || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 400),
+      ...(amenityList.length > 0 && {
+        "amenityFeature": amenityList.slice(0, 15).map((a) => ({
+          "@type": "LocationFeatureSpecification",
+          "name": a,
+          "value": true,
+        })),
+      }),
+      ...(property.pricePerNight ? { "priceRange": `€${property.pricePerNight}/noapte` } : {}),
     },
+
+    // HotelRoom pentru unitățile de cazare în regim hotelier
+    ...(normalizedListingType === 'cazare' ? [{
+      "@context": "https://schema.org",
+      "@type": "HotelRoom",
+      "@id": `https://realtrust.ro/proprietate/${slug}#hotelroom`,
+      "name": displayName,
+      "url": `https://realtrust.ro/proprietate/${slug}`,
+      "description": (displayDescription || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 400),
+      ...(galleryImages[0] ? { "image": galleryImages[0] } : {}),
+      "containedInPlace": { "@id": `https://realtrust.ro/proprietate/${slug}#lodgingbusiness` },
+      ...(property.capacity ? {
+        "occupancy": { "@type": "QuantitativeValue", "maxValue": property.capacity, "unitCode": "C62" },
+      } : {}),
+      ...(property.bedrooms ? { "numberOfRooms": property.bedrooms } : {}),
+      ...(property.bathrooms ? { "numberOfBathroomsTotal": property.bathrooms } : {}),
+      ...(property.size ? {
+        "floorSize": { "@type": "QuantitativeValue", "value": property.size, "unitCode": "MTK" },
+      } : {}),
+      ...(amenityList.length > 0 && {
+        "amenityFeature": amenityList.slice(0, 15).map((a) => ({
+          "@type": "LocationFeatureSpecification",
+          "name": a,
+          "value": true,
+        })),
+      }),
+      ...(property.pricePerNight ? {
+        "offers": {
+          "@type": "Offer",
+          "price": property.pricePerNight,
+          "priceCurrency": "EUR",
+          "url": `https://realtrust.ro/proprietate/${slug}#disponibilitate`,
+          "availability": "https://schema.org/InStock",
+        },
+      } : {}),
+    }] : []),
+
+
 
     // RealEstateListing schema from generatePropertySEO utility
     ...(dbProperty ? generatePropertySEO({
@@ -598,6 +660,9 @@ const PropertyDetail = () => {
           if ((lt === 'investitie' || lt === 'vanzare') && roi) {
             return `${displayName} | Randament ${roi} ROI — Investiție Timișoara`;
           }
+          if (normalizedListingType === 'cazare') {
+            return `${displayName} - Cazare Regim Hotelier Timișoara | RealTrust`;
+          }
           return `${displayName} | RealTrust Timișoara`;
         })()}
         description={(() => {
@@ -613,6 +678,16 @@ const PropertyDetail = () => {
             parts.push('Vezi detalii și randament estimat.');
             return parts.join(' ').slice(0, 160);
           }
+          // Cazare (regim hotelier): zonă exactă + facilități principale, sub 160 caractere
+          if (normalizedListingType === 'cazare' && language === 'ro') {
+            const zone = property.location?.replace(/,?\s*(Timișoara|Timisoara)\s*/gi, '').trim() || 'Timișoara';
+            const amenityText = amenityHighlights.length > 0
+              ? amenityHighlights.join(', ')
+              : 'parcare, Wi-Fi, self check-in';
+            const guests = property.capacity ? `${property.capacity} oaspeți. ` : '';
+            const base = `Cazare regim hotelier în ${zone}, Timișoara. ${guests}${amenityText}. Rezervare directă, fără comision.`;
+            return base.length > 158 ? base.slice(0, 155).trimEnd() + '…' : base;
+          }
           const rawDesc = displayDescription;
           if (rawDesc && rawDesc.length > 0) {
             const clean = rawDesc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
@@ -622,6 +697,7 @@ const PropertyDetail = () => {
             ? `${displayName} în ${property.location}, Timișoara — ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervare directă, fără comisioane suplimentare.`
             : `${displayName} in ${property.location}, Timișoara — ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct, no extra booking fees.`;
         })()}
+
         url={`https://realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
         imageAlt={(() => {
@@ -694,6 +770,21 @@ const PropertyDetail = () => {
               </Badge>
             )}
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{displayName}</h1>
+
+            {normalizedListingType === 'cazare' && (
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                <Button variant="hero" className="w-full sm:w-auto" onClick={openDirectBooking}>
+                  {language === 'ro' ? 'Rezervă direct' : 'Book direct'}
+                </Button>
+                <Button asChild variant="outline" className="w-full sm:w-auto">
+                  <a href="#disponibilitate">
+                    {language === 'ro' ? 'Verifică disponibilitatea' : 'Check availability'}
+                  </a>
+                </Button>
+              </div>
+            )}
+
+
 
             {/* ═══ PREȚ PROMINENT ═══ */}
             {(() => {
@@ -937,12 +1028,26 @@ const PropertyDetail = () => {
                   4. DISPONIBILITATE & PREȚURI (esențial pentru rezervări)
                   ═══════════════════════════════════════════════════════ */}
               {staticProperty && (
-                <div className="space-y-6">
+                <div id="disponibilitate" className="space-y-6 scroll-mt-24">
+                  <h2 className="text-2xl font-serif font-semibold">
+                    {language === 'ro' ? 'Verifică disponibilitatea și rezervă direct' : 'Check availability & book direct'}
+                  </h2>
                   <PriceCompareWidget basePrice={property.pricePerNight} />
                   <StayCalculator property={property as any} onBook={openDirectBooking} />
                   <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
+                  <div className="bg-card border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'ro'
+                        ? 'Cel mai bun preț îl obții rezervând direct, fără comision de intermediere.'
+                        : 'Get the best rate by booking direct, with no intermediary fee.'}
+                    </p>
+                    <Button variant="hero" className="w-full sm:w-auto" onClick={openDirectBooking}>
+                      {language === 'ro' ? 'Rezervă direct' : 'Book direct'}
+                    </Button>
+                  </div>
                 </div>
               )}
+
 
               {/* SECȚIUNEA PREȚ SIMPLU - pentru închirieri */}
               {dbProperty?.listing_type === 'inchiriere' && dbProperty.capital_necesar && (
