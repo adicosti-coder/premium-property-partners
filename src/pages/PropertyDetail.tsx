@@ -668,7 +668,7 @@ const PropertyDetail = () => {
           }
           if (normalizedListingType === 'cazare') {
             const shortName = displayName.replace(/\s+by RealTrust$/i, '').trim();
-            const price = displayPrice || property.pricePerNight;
+            const price = property.pricePerNight;
             const raw = price
               ? `${shortName} — Cazare Timișoara de la ${price}€/noapte | RealTrust`
               : `${shortName} — Cazare Regim Hotelier Timișoara | RealTrust`;
