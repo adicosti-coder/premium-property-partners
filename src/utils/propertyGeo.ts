@@ -46,7 +46,7 @@ const hasFiniteCoordinates = (latitude?: number | null, longitude?: number | nul
   Number.isFinite(latitude) && Number.isFinite(longitude);
 
 const exactCoordinatesBySlug: Record<string, [number, number]> = {
-  'ring-apart-hotel-spacious-deluxe': [21.2115815, 45.7801861],
+  'ring-apart-hotel-spacious-deluxe': [21.217955, 45.756134],
   'green-forest-apart-hotel': [21.248071, 45.7791585],
   'fructus-plaza-ultracentral-apart-hotel': [21.220902, 45.7595474],
   'fullview-studio-deluxe': [21.2148126, 45.753754],
@@ -363,7 +363,7 @@ export const getDisplayLocation = (input: GeoInput) => {
     case 'fructus_gh_lazar':
       return 'Gheorghe Lazăr / Fructus Plaza, Timișoara';
     case 'ring_aradului':
-      return 'RING / Calea Aradului, Timișoara';
+      return 'NordOne / Calea Circumvalațiunii, Timișoara';
     case 'ateneo_torontalului':
       return 'Torontalului / Ateneo, Timișoara';
     case 'green_forest_constructorilor':
