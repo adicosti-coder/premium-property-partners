@@ -21,6 +21,8 @@ interface PrerenderRoute {
    *  Used to give crawlers like Firecrawl/Bing dense local-SEO content even
    *  before React hydrates. Safe HTML — built from trusted constants only. */
   seoBody?: string;
+  /** Optional absolute image URL used for og:image / twitter:image. */
+  image?: string;
 }
 
 /**
@@ -963,6 +965,23 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     /<link rel="canonical" href="[^"]*"\s*\/?>/,
     `<link rel="canonical" href="${route.canonical}" />`
   );
+
+  // Per-route Open Graph / Twitter tags. The static shell ships sitewide
+  // values; without this, every prerendered page shares the homepage preview.
+  const socialImage = route.image || `${BASE_URL}/images/hero-optimized-1920w.webp`;
+  const setMeta = (attr: 'property' | 'name', key: string, value: string) => {
+    const re = new RegExp(`<meta ${attr}="${key.replace(':', ':')}" content="[^"]*"\\s*/?>`);
+    const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`;
+    html = re.test(html) ? html.replace(re, tag) : html.replace('</head>', `  ${tag}\n</head>`);
+  };
+  setMeta('property', 'og:title', route.title);
+  setMeta('property', 'og:description', route.description);
+  setMeta('property', 'og:url', route.canonical);
+  setMeta('property', 'og:image', socialImage);
+  setMeta('name', 'twitter:title', route.title);
+  setMeta('name', 'twitter:description', route.description);
+  setMeta('name', 'twitter:url', route.canonical);
+  setMeta('name', 'twitter:image', socialImage);
 
   const jsonLdStr = Array.isArray(route.jsonLd)
     ? route.jsonLd.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n      ')
