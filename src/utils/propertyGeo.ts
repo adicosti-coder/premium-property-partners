@@ -52,7 +52,7 @@ const exactCoordinatesBySlug: Record<string, [number, number]> = {
   'fullview-studio-deluxe': [21.232860, 45.741866],
   'avenue-of-mara-apart-hotel': [21.2148126, 45.753754],
   'helios-apart-hotel': [21.2344862, 45.7432988],
-  'ateneo-trevi-2-apart-hotel': [21.2098, 45.779],
+  'ateneo-trevi-2-apart-hotel': [21.236043, 45.721480],
   'sunset-da-ra-studio-deluxe': [21.2148126, 45.753754],
   'mara-luxury-golden-apart-hotel': [21.2148126, 45.753754],
   'ateneo-apart-hotel-studio-deluxe': [21.2098, 45.779],

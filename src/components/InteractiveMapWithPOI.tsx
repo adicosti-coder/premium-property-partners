@@ -53,7 +53,7 @@ const apartmentCoordinates: { name: string; slug: string; coords: [number, numbe
   { name: 'Cross Square House by RealTrust', slug: 'fullview-studio-deluxe', coords: [21.232860, 45.741866] },
   { name: 'Avenue of Mara ApArt Hotel', slug: 'avenue-of-mara-apart-hotel', coords: [21.2165, 45.7500] },
   { name: 'Helios ApArt Hotel', slug: 'helios-apart-hotel', coords: [21.2280, 45.7490] },
-  { name: 'Ateneo Trevi 2 ApArt Hotel', slug: 'ateneo-trevi-2-apart-hotel', coords: [21.2050, 45.7780] },
+  { name: 'Apicultorilor House by RealTrust', slug: 'ateneo-trevi-2-apart-hotel', coords: [21.236043, 45.721480] },
   { name: 'Sunset Da Ra Studio Deluxe', slug: 'sunset-da-ra-studio-deluxe', coords: [21.2180, 45.7495] },
   { name: 'Mara Luxury Golden ApArt Hotel', slug: 'mara-luxury-golden-apart-hotel', coords: [21.2240, 45.7555] },
   { name: 'Ateneo ApArt Hotel Studio Deluxe', slug: 'ateneo-apart-hotel-studio-deluxe', coords: [21.2055, 45.7785] },
