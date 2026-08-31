@@ -153,7 +153,9 @@ const META_EVENT_MAP: Record<string, { name: string; custom: boolean }> = {
   phone_click: { name: "Contact", custom: false },
   poi_detail_open: { name: "ViewContent", custom: false },
   poi_navigate_gps: { name: "FindLocation", custom: false },
+  poi_open_google_maps: { name: "FindLocation", custom: false },
   poi_deep_link_open: { name: "ViewContent", custom: false },
+
   poi_link_copy: { name: "Share", custom: true },
   // Booking funnel → Meta standard events so campaigns can optimise on them.
   select_booking_dates: { name: "AddToCart", custom: false },
