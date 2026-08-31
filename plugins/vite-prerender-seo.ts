@@ -502,9 +502,14 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
       const zone = extractZone(p.location);
       const canonical = `${BASE_URL}/proprietate/${p.slug}`;
       const title = `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`;
-      const highlights = ['parcare', 'Wi-Fi', 'self check-in'].filter((h) =>
-        p.amenities.some((a) => a.toLowerCase().includes(h.toLowerCase().split(' ')[0]))
-      );
+      const amenityBlob = p.amenities.join(' | ').toLowerCase();
+      const highlights = [
+        ['parcare', /parcare|parking|garaj/],
+        ['Wi-Fi', /wi-?fi|internet/],
+        ['self check-in', /self ?check|check-?in autonom|acces autonom|keybox|cutie cu chei/],
+      ]
+        .filter(([, re]) => (re as RegExp).test(amenityBlob))
+        .map(([label]) => label as string);
       const amenityText = (highlights.length ? highlights : ['parcare', 'Wi-Fi', 'self check-in']).join(', ');
       const rawDesc = `Cazare regim hotelier în ${zone}, Timișoara. ${p.capacity ? `${p.capacity} oaspeți. ` : ''}${amenityText}. Rezervare directă, fără comision.`;
       const description = rawDesc.length > 158 ? `${rawDesc.slice(0, 155).trimEnd()}…` : rawDesc;
