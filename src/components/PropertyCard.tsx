@@ -42,7 +42,11 @@ const PropertyCard = ({
   const viewerCount = viewersMap?.[String(property.id)] || 0;
   const displayRating = liveData?.rating ?? property.rating;
   const displayReviews = liveData?.reviews_count ?? property.reviews;
-  const displayPrice = liveData?.price_per_night ?? property.pricePerNight;
+  // Sanity guard: ignore implausible live prices (scraper poate prinde total sejur / RON)
+  const livePrice = liveData?.price_per_night;
+  const isPlausiblePrice =
+    typeof livePrice === "number" && livePrice >= 25 && livePrice <= 250;
+  const displayPrice = isPlausiblePrice ? livePrice! : property.pricePerNight;
   const displayCapacity = liveData?.capacity ?? property.capacity;
   const displayBedrooms = liveData?.bedrooms ?? property.bedrooms;
 
