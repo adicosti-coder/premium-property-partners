@@ -64,7 +64,7 @@ const PentruOaspeti = () => {
       badge: "Experiența ApArt Hotel",
       title: "Cazare în regim hotelier",
       titleHighlight: "în Timișoara",
-      subtitle: "Apartamente ATENEO, GREEN FOREST, FullView Studio și HELIOS — complet echipate, lângă Iulius Mall, Amazonia Aquapark și Centrul Vechi. Curățenie profesională, parcare subterană gratuită și self check-in non-stop.",
+      subtitle: "Apartamente ATENEO, GREEN FOREST, Cross Square House și HELIOS — complet echipate, lângă Iulius Mall, Amazonia Aquapark și Centrul Vechi. Curățenie profesională, parcare subterană gratuită și self check-in non-stop.",
       stats: [
         { value: "9,7/10", label: "Scor Booking.com", icon: Star },
         { value: "500+", label: "Recenzii verificate", icon: Award },
@@ -134,7 +134,7 @@ const PentruOaspeti = () => {
       ],
       propertiesTitle: "Apartamente",
       propertiesTitleHighlight: "disponibile",
-      propertiesSubtitle: "ATENEO, GREEN FOREST, FullView Studio și HELIOS — fiecare pregătit pentru confortul tău, cu parcare subterană și bucătărie complet echipată.",
+      propertiesSubtitle: "ATENEO, GREEN FOREST, Cross Square House și HELIOS — fiecare pregătit pentru confortul tău, cu parcare subterană și bucătărie complet echipată.",
       viewAll: "Vezi toate apartamentele",
       viewDetails: "Vezi detalii",
       perNight: "/noapte",
@@ -143,7 +143,7 @@ const PentruOaspeti = () => {
       faqItems: [
         {
           question: "Oferiți cazare în Timișoara cu parcare?",
-          answer: "Da. Toate apartamentele noastre (ATENEO, GREEN FOREST, FullView Studio, HELIOS) includ parcare subterană privată gratuită, securizată non-stop — utilă pentru călători business care vizitează Continental, Hella sau parcurile industriale din nord."
+          answer: "Da. Toate apartamentele noastre (ATENEO, GREEN FOREST, Cross Square House, HELIOS) includ parcare subterană privată gratuită, securizată non-stop — utilă pentru călători business care vizitează Continental, Hella sau parcurile industriale din nord."
         },
         {
           question: "Aveți apartament cu 2 camere în regim hotelier în Timișoara?",
@@ -188,7 +188,7 @@ const PentruOaspeti = () => {
       badge: "The ApArt Hotel Experience",
       title: "Premium Accommodation",
       titleHighlight: "in Timișoara",
-      subtitle: "ATENEO, GREEN FOREST, FullView Studio & HELIOS apartments — fully equipped, near Iulius Mall, Amazonia Aquapark & the Old Town. Professional cleaning, free underground parking and 24/7 self check-in.",
+      subtitle: "ATENEO, GREEN FOREST, Cross Square House & HELIOS apartments — fully equipped, near Iulius Mall, Amazonia Aquapark & the Old Town. Professional cleaning, free underground parking and 24/7 self check-in.",
       stats: [
         { value: "9.7", label: "Booking.com Rating", icon: Star },
         { value: "500+", label: "5-Star Reviews", icon: Award },
@@ -258,7 +258,7 @@ const PentruOaspeti = () => {
       ],
       propertiesTitle: "Premium",
       propertiesTitleHighlight: "Apartments",
-      propertiesSubtitle: "ATENEO, GREEN FOREST, FullView Studio, HELIOS — each prepared for your comfort, with underground parking & fully equipped kitchen",
+      propertiesSubtitle: "ATENEO, GREEN FOREST, Cross Square House, HELIOS — each prepared for your comfort, with underground parking & fully equipped kitchen",
       viewAll: "View All Apartments",
       viewDetails: "View Details",
       perNight: "/night",
@@ -267,7 +267,7 @@ const PentruOaspeti = () => {
       faqItems: [
         {
           question: "Do you offer accommodation in Timișoara with parking?",
-          answer: "Yes. All our apartments (ATENEO, GREEN FOREST, FullView Studio, HELIOS) include free private underground parking, secured 24/7 — ideal for business travelers visiting Continental, Hella or the northern industrial parks."
+          answer: "Yes. All our apartments (ATENEO, GREEN FOREST, Cross Square House, HELIOS) include free private underground parking, secured 24/7 — ideal for business travelers visiting Continental, Hella or the northern industrial parks."
         },
         {
           question: "Do you have 2-bedroom short-term rental apartments in Timișoara?",
@@ -352,7 +352,7 @@ const PentruOaspeti = () => {
     "containsPlace": [
       { "@type": "Apartment", "name": "ATENEO", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 4 } },
       { "@type": "Apartment", "name": "GREEN FOREST", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 4 } },
-      { "@type": "Apartment", "name": "FullView Studio", "numberOfRooms": 1, "occupancy": { "@type": "QuantitativeValue", "maxValue": 2 } },
+      { "@type": "Apartment", "name": "Cross Square House", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 6 } },
       { "@type": "Apartment", "name": "HELIOS", "numberOfRooms": 1, "occupancy": { "@type": "QuantitativeValue", "maxValue": 2 } },
     ],
   };
@@ -372,8 +372,8 @@ const PentruOaspeti = () => {
       <main className="pt-20">
         <div className="container mx-auto px-6">
           <PageSummary
-            summaryRo="Apartamente regim hotelier Timișoara: ATENEO, GREEN FOREST, FullView Studio, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Lidl, Gara de Nord. Parcare subterană gratuită, self check-in 24/7, bucătărie completă cu cafea și condimente."
-            summaryEn="Short-term rental apartments Timișoara: ATENEO, GREEN FOREST, FullView Studio, HELIOS — near Iulius Mall, Amazonia Aquapark, Lidl, North Station. Free underground parking, 24/7 self check-in, fully equipped kitchen with coffee & spices."
+            summaryRo="Apartamente regim hotelier Timișoara: ATENEO, GREEN FOREST, Cross Square House, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Lidl, Gara de Nord. Parcare subterană gratuită, self check-in 24/7, bucătărie completă cu cafea și condimente."
+            summaryEn="Short-term rental apartments Timișoara: ATENEO, GREEN FOREST, Cross Square House, HELIOS — near Iulius Mall, Amazonia Aquapark, Lidl, North Station. Free underground parking, 24/7 self check-in, fully equipped kitchen with coffee & spices."
           />
         </div>
         {/* Hero Section */}

@@ -50,7 +50,7 @@ const apartmentCoordinates: { name: string; slug: string; coords: [number, numbe
   { name: 'NordOne ApArt Hotel – Premium 60 mp', slug: 'ring-apart-hotel-spacious-deluxe', coords: [21.217955, 45.756134] },
   { name: 'Green Forest ApArt Hotel', slug: 'green-forest-apart-hotel', coords: [21.1950, 45.7750] },
   { name: 'Fructus Plaza Ultracentral', slug: 'fructus-plaza-ultracentral-apart-hotel', coords: [21.2260, 45.7565] },
-  { name: 'Fullview Studio Deluxe', slug: 'fullview-studio-deluxe', coords: [21.2170, 45.7505] },
+  { name: 'Cross Square House by RealTrust', slug: 'fullview-studio-deluxe', coords: [21.232860, 45.741866] },
   { name: 'Avenue of Mara ApArt Hotel', slug: 'avenue-of-mara-apart-hotel', coords: [21.2165, 45.7500] },
   { name: 'Helios ApArt Hotel', slug: 'helios-apart-hotel', coords: [21.2280, 45.7490] },
   { name: 'Ateneo Trevi 2 ApArt Hotel', slug: 'ateneo-trevi-2-apart-hotel', coords: [21.2050, 45.7780] },

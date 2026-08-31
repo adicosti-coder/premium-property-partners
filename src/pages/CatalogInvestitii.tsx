@@ -597,7 +597,7 @@ const CatalogInvestitii = () => {
                       { name: "Vivalia", status: isRo ? "Pre-vânzare — livrare 2027" : "Pre-sale — 2027 delivery" },
                       { name: "Nord One", status: isRo ? "Finalizat — apartamente cu grădină disponibile" : "Completed — garden apartments available" },
                       { name: "GREEN FOREST", status: isRo ? "Finalizat — Dumbrăvița" : "Completed — Dumbrăvița" },
-                      { name: "FullView", status: isRo ? "Finalizat — disponibil pentru investiție" : "Completed — investment-ready" },
+                      { name: "Cross Square House", status: isRo ? "Finalizat — disponibil pentru investiție" : "Completed — investment-ready" },
                     ].map((c) => (
                       <div key={c.name} className="rounded-xl border border-border bg-background p-4">
                         <div className="font-bold text-foreground">{c.name}</div>

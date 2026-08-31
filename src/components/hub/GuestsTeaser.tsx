@@ -14,7 +14,7 @@ const GuestsTeaser = () => {
       badge: "Pentru Oaspeți",
       title: "Experiență de",
       titleHighlight: "5 Stele",
-      subtitle: "Apartamente ATENEO, GREEN FOREST, FullView Studio și HELIOS — lângă Iulius Mall, Amazonia Aquapark și Centrul Vechi. Self check-in 24/7, parcare subterană gratuită, curățenie profesională.",
+      subtitle: "Apartamente ATENEO, GREEN FOREST, Cross Square House și HELIOS — lângă Iulius Mall, Amazonia Aquapark și Centrul Vechi. Self check-in 24/7, parcare subterană gratuită, curățenie profesională.",
       cta: "Explorează Apartamentele",
       ctaSecondary: "De ce să rezervi direct?",
       benefits: [
@@ -30,7 +30,7 @@ const GuestsTeaser = () => {
       badge: "For Guests",
       title: "A",
       titleHighlight: "5-Star Experience",
-      subtitle: "ATENEO, GREEN FOREST, FullView Studio & HELIOS apartments — near Iulius Mall, Amazonia Aquapark & Old Town. 24/7 self check-in, free underground parking, professional cleaning.",
+      subtitle: "ATENEO, GREEN FOREST, Cross Square House & HELIOS apartments — near Iulius Mall, Amazonia Aquapark & Old Town. 24/7 self check-in, free underground parking, professional cleaning.",
       cta: "Explore Apartments",
       ctaSecondary: "Why book direct?",
       benefits: [

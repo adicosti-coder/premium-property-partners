@@ -254,14 +254,14 @@ export const translations = {
       badge: "RealTrust Property Management",
       title: "Întrebări",
       titleHighlight: "Frecvente",
-      subtitle: "Răspunsuri clare despre apartamentele ATENEO, GREEN FOREST, FullView Studio, HELIOS și cazarea în regim hotelier în Timișoara.",
+      subtitle: "Răspunsuri clare despre apartamentele ATENEO, GREEN FOREST, Cross Square House, HELIOS și cazarea în regim hotelier în Timișoara.",
       notFound: "Nu ai găsit răspunsul căutat?",
       contactUs: "Contactează-ne direct",
       items: [
         // Profit & ROI
         { 
           question: "Ce randament pot estima realist din apartamentul meu în Timișoara?", 
-          answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, FullView Studio, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
+          answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, Cross Square House, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
         },
         // Transparență calcul randament
         {
@@ -296,7 +296,7 @@ export const translations = {
         // Program referral
         { 
           question: "Aveți program de recomandări?", 
-          answer: "Da. Dacă ne recomanzi un proprietar care semnează un contract de administrare, alegi între bonus de până la 100€, o cazare gratuită în unul dintre apartamentele noastre (ATENEO, GREEN FOREST, FullView, HELIOS) sau o reducere la comisionul de administrare." 
+          answer: "Da. Dacă ne recomanzi un proprietar care semnează un contract de administrare, alegi între bonus de până la 100€, o cazare gratuită în unul dintre apartamentele noastre (ATENEO, GREEN FOREST, Cross Square House, HELIOS) sau o reducere la comisionul de administrare." 
         },
       ],
     },
@@ -1360,14 +1360,14 @@ Mulțumesc!`,
       badge: "RealTrust Property Management",
       title: "Frequently Asked",
       titleHighlight: "Questions",
-      subtitle: "Clear answers about ATENEO, GREEN FOREST, FullView Studio, HELIOS apartments and short-term rental accommodation in Timișoara.",
+      subtitle: "Clear answers about ATENEO, GREEN FOREST, Cross Square House, HELIOS apartments and short-term rental accommodation in Timișoara.",
       notFound: "Didn't find the answer you were looking for?",
       contactUs: "Contact us directly",
       items: [
         // Profit & ROI
         { 
           question: "What net return can I realistically expect from my apartment in Timișoara?", 
-          answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, FullView Studio, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy, 27% deduction). The exact figure for your property comes after the evaluation." 
+          answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, Cross Square House, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy, 27% deduction). The exact figure for your property comes after the evaluation." 
         },
         // Yield transparency
         {
@@ -1402,7 +1402,7 @@ Mulțumesc!`,
         // Referral program
         { 
           question: "Do you have a referral program?", 
-          answer: "Yes. If you refer an owner who signs a management contract, you choose between a bonus of up to €100, a free stay in one of our apartments (ATENEO, GREEN FOREST, FullView, HELIOS) or a discount on the management fee." 
+          answer: "Yes. If you refer an owner who signs a management contract, you choose between a bonus of up to €100, a free stay in one of our apartments (ATENEO, GREEN FOREST, Cross Square House, HELIOS) or a discount on the management fee." 
         },
       ],
     },
