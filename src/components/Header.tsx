@@ -47,14 +47,15 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Defer auth check — dynamic import keeps vendor-supabase (~43KB) off critical path
+  // Resolve auth as early as possible so the Admin entry is visible on desktop
+  // without requiring a click/touch. The supabase client is still lazy-loaded.
   useEffect(() => {
     let cancelled = false;
     let subscription: { unsubscribe: () => void } | null = null;
 
     const init = async () => {
       const { supabase } = await import("@/lib/supabaseClient");
-      
+
       if (cancelled) return;
 
       // Check current session
@@ -87,21 +88,11 @@ const Header = () => {
       subscription = data.subscription;
     };
 
-    let idleId: number | undefined;
-    const trigger = () => {
-      init().catch(() => {});
-      if (idleId !== undefined) clearTimeout(idleId);
-      events.forEach(e => document.removeEventListener(e, trigger));
-    };
-    const events = ["click", "touchstart", "keydown"] as const;
-    events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
-    // Also resolve auth without interaction (keeps the Admin entry visible on desktop)
-    idleId = window.setTimeout(trigger, 2000);
+    init().catch(() => {});
 
     return () => {
       cancelled = true;
       subscription?.unsubscribe();
-      events.forEach(e => document.removeEventListener(e, trigger));
     };
   }, []);
 
