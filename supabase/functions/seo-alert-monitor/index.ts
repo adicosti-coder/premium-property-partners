@@ -241,7 +241,9 @@ Deno.serve(async (req: Request) => {
     reindexed,
     threshold,
     min_indexing_issues: minIndexingIssues,
+    indexing: indexingSummary,
   });
+
 });
 
 /** Extracts every absolute/relative URL referenced by a batch of alerts. */
