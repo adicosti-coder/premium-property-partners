@@ -116,6 +116,10 @@ const RestaurantDetailModal: React.FC<Props> = ({
   const walk =
     poi.walkMeters < 1000 ? `${poi.walkMeters} m` : `${(poi.walkMeters / 1000).toFixed(1)} km`;
   const gpsUrl = `https://www.google.com/maps/dir/?api=1&destination=${poi.latitude},${poi.longitude}&travelmode=walking`;
+  // Google Maps place lookup (local pack discovery → extra restaurant traffic).
+  const mapsPlaceUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${poi.name} Timișoara`,
+  )}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
