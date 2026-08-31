@@ -667,7 +667,14 @@ const PropertyDetail = () => {
             return `${displayName} | Randament ${roi} ROI — Investiție Timișoara`;
           }
           if (normalizedListingType === 'cazare') {
-            return `${displayName} - Cazare Regim Hotelier Timișoara | RealTrust`;
+            const shortName = displayName.replace(/\s+by RealTrust$/i, '').trim();
+            const price = property.pricePerNight;
+            const raw = price
+              ? `${shortName} — Cazare Timișoara de la ${price}€/noapte | RealTrust`
+              : `${shortName} — Cazare Regim Hotelier Timișoara | RealTrust`;
+            return raw.length > 65
+              ? `${shortName} — Cazare Regim Hotelier Timișoara`.slice(0, 65)
+              : raw;
           }
           return `${displayName} | RealTrust Timișoara`;
         })()}
