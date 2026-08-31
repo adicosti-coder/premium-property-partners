@@ -6,7 +6,6 @@ import apt05 from "@/assets/apt-05.webp";
 import apt06 from "@/assets/apt-06.webp";
 import apt07 from "@/assets/apt-07.webp";
 import apt08 from "@/assets/apt-08.webp";
-import apt09 from "@/assets/apt-09.webp";
 import apt11 from "@/assets/apt-11.webp";
 
 // These two images are served from Supabase Storage to bypass build/CDN caching issues
