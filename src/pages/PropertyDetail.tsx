@@ -190,6 +190,10 @@ const PropertyDetail = () => {
     setBookingOpen(true);
   }, [directBookingUrl]);
 
+  // Always reachable request form — saves the request in the database and
+  // triggers the confirmation email, even when an external engine exists.
+  const openBookingRequest = useCallback(() => setBookingOpen(true), []);
+
   // Track property views
   usePropertyViewTracking(dbProperty?.id);
 
@@ -778,7 +782,10 @@ const PropertyDetail = () => {
                 <Button variant="hero" className="w-full sm:w-auto" onClick={openDirectBooking}>
                   {language === 'ro' ? 'Rezervă direct' : 'Book direct'}
                 </Button>
-                <Button asChild variant="outline" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={openBookingRequest}>
+                  {language === 'ro' ? 'Solicită rezervare' : 'Request booking'}
+                </Button>
+                <Button asChild variant="ghost" className="w-full sm:w-auto">
                   <a href="#disponibilitate">
                     {language === 'ro' ? 'Verifică disponibilitatea' : 'Check availability'}
                   </a>
@@ -1043,9 +1050,14 @@ const PropertyDetail = () => {
                         ? 'Cel mai bun preț îl obții rezervând direct, fără comision de intermediere.'
                         : 'Get the best rate by booking direct, with no intermediary fee.'}
                     </p>
-                    <Button variant="hero" className="w-full sm:w-auto" onClick={openDirectBooking}>
-                      {language === 'ro' ? 'Rezervă direct' : 'Book direct'}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                      <Button variant="hero" className="w-full sm:w-auto" onClick={openDirectBooking}>
+                        {language === 'ro' ? 'Rezervă direct' : 'Book direct'}
+                      </Button>
+                      <Button variant="outline" className="w-full sm:w-auto" onClick={openBookingRequest}>
+                        {language === 'ro' ? 'Solicită rezervare' : 'Request booking'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1341,6 +1353,9 @@ const PropertyDetail = () => {
                   >
                     {language === 'ro' ? 'Verifică disponibilitatea' : 'Check availability'}
                   </Button>
+                  <Button variant="outline" className="w-full" onClick={openBookingRequest}>
+                    {language === 'ro' ? 'Solicită rezervare' : 'Request booking'}
+                  </Button>
                   {property.bookingUrl && (
                     <a
                       href={property.bookingUrl}
@@ -1494,7 +1509,14 @@ const PropertyDetail = () => {
         captions={imageCaptions}
       />
       <Footer />
-      <BookingForm isOpen={bookingOpen} onClose={() => setBookingOpen(false)} propertyName={property.name} />
+      <BookingForm
+        isOpen={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        propertyName={property.name}
+        propertySlug={property.slug}
+        propertyRefId={typeof property.id === "number" ? property.id : undefined}
+        pricePerNight={dbProperty?.base_price_per_night ?? (staticProperty ? property.pricePerNight : undefined)}
+      />
       <GlobalConversionWidgets showExitIntent={false} />
       </Suspense>
     </div>

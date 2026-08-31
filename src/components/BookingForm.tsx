@@ -9,6 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/lib/supabaseClient";
+import { FunctionsHttpError } from "@supabase/supabase-js";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 import { z } from "zod";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { useFunnelTracking } from "@/hooks/useFunnelTracking";
@@ -17,7 +20,27 @@ interface BookingFormProps {
   isOpen: boolean;
   onClose: () => void;
   propertyName?: string;
+  /** Slug of the apartment page the request comes from. */
+  propertySlug?: string;
+  /** Numeric id from the static guest catalogue, when available. */
+  propertyRefId?: number;
+  /** Nightly rate used to estimate the stay total. */
+  pricePerNight?: number;
 }
+
+const WHATSAPP_NUMBER = "40799069256";
+
+const readUtm = () => {
+  if (typeof window === "undefined") return undefined;
+  const params = new URLSearchParams(window.location.search);
+  const utm: Record<string, string> = {};
+  for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]) {
+    const value = params.get(key);
+    if (value) utm[key] = value.slice(0, 120);
+  }
+  if (document.referrer) utm.referrer = document.referrer.slice(0, 300);
+  return Object.keys(utm).length ? utm : undefined;
+};
 
 const countriesRo = [
   "România", "Germania", "Franța", "Italia", "Spania", "Marea Britanie",
@@ -31,7 +54,7 @@ const countriesEn = [
   "USA", "Canada", "Australia", "Other country"
 ];
 
-const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
+const BookingForm = ({ isOpen, onClose, propertyName, propertySlug, propertyRefId, pricePerNight }: BookingFormProps) => {
   const { toast } = useToast();
   const { t, language } = useLanguage();
   const { trackStep } = useFunnelTracking();
@@ -53,10 +76,11 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [consent, setConsent] = useState(false);
+  const [submitted, setSubmitted] = useState<{ reference: string; emailSent: boolean } | null>(null);
   
   // Turnstile state
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
 
   // Fetch Turnstile site key
@@ -80,6 +104,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
   useEffect(() => {
     if (!isOpen) {
       setCaptchaToken(null);
+      setSubmitted(null);
     }
   }, [isOpen]);
 
@@ -89,19 +114,6 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
 
   const handleCaptchaExpire = () => {
     setCaptchaToken(null);
-  };
-
-  const verifyCaptchaOnServer = async (token: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase.functions.invoke('verify-turnstile', {
-        body: { token, formType: 'booking_form' }
-      });
-      if (error) throw error;
-      return data.success === true;
-    } catch (error) {
-      console.error("Captcha verification error:", error);
-      return false;
-    }
   };
 
   const countries = language === 'en' ? countriesEn : countriesRo;
@@ -171,24 +183,28 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     }
   };
 
-  const sendEmailNotification = async () => {
-    try {
-      await supabase.functions.invoke('send-booking-notification', {
-        body: {
-          guestName: formData.name,
-          guestEmail: formData.email,
-          guestPhone: formData.phone,
-          checkIn: formData.checkIn,
-          checkOut: formData.checkOut,
-          guests: formData.guests,
-          country: formData.country,
-          message: formData.message,
-          propertyName: propertyName || (language === 'en' ? "Any available property" : "Orice proprietate disponibilă"),
-        }
-      });
-    } catch (error) {
-      console.error("Email notification error:", error);
-    }
+  const nights = (() => {
+    if (!formData.checkIn || !formData.checkOut) return 0;
+    const diff = new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime();
+    return diff > 0 ? Math.round(diff / 86400000) : 0;
+  })();
+
+  const estimatedTotal = (() => {
+    if (!pricePerNight || nights <= 0) return undefined;
+    const gross = pricePerNight * nights;
+    if (!discountInfo?.valid) return gross;
+    return discountInfo.discount_type === "percentage"
+      ? Math.max(0, Math.round(gross * (1 - discountInfo.discount_value / 100)))
+      : Math.max(0, Math.round(gross - discountInfo.discount_value));
+  })();
+
+  const propertyLabel = propertyName || (language === 'en' ? "Any available property" : "Orice proprietate disponibilă");
+
+  const whatsappUrl = (reference: string) => {
+    const lines = language === 'en'
+      ? [`Booking request ${reference}`, `Property: ${propertyLabel}`, `${formData.checkIn} → ${formData.checkOut} (${nights} nights)`, `Guests: ${formData.guests}`, `Name: ${formData.name}`]
+      : [`Cerere de rezervare ${reference}`, `Proprietate: ${propertyLabel}`, `${formData.checkIn} → ${formData.checkOut} (${nights} nopți)`, `Oaspeți: ${formData.guests}`, `Nume: ${formData.name}`];
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,7 +216,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
       onClose();
       return;
     }
-    
+
     if (!validateForm()) {
       toast({
         title: t.booking.error,
@@ -210,7 +226,17 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
       return;
     }
 
-    // Verify hCaptcha
+    if (!consent) {
+      toast({
+        title: language === 'en' ? "Consent required" : "Consimțământ necesar",
+        description: language === 'en'
+          ? "Please accept the processing of your data so we can contact you."
+          : "Acceptă prelucrarea datelor pentru a te putea contacta.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!captchaToken) {
       toast({
         title: language === 'en' ? "Verification required" : "Verificare necesară",
@@ -221,83 +247,64 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
     }
 
     setIsSubmitting(true);
-    setIsVerifyingCaptcha(true);
 
-    // Server-side captcha verification
-    const isCaptchaValid = await verifyCaptchaOnServer(captchaToken);
-    setIsVerifyingCaptcha(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('submit-booking-request', {
+        headers: { 'x-idempotency-key': `booking-${formData.email}-${formData.checkIn}-${formData.checkOut}-${propertySlug || propertyLabel}` },
+        body: {
+          guestName: formData.name,
+          guestEmail: formData.email,
+          guestPhone: formData.phone,
+          country: formData.country,
+          guests: formData.guests,
+          checkIn: formData.checkIn,
+          checkOut: formData.checkOut,
+          message: formData.message || undefined,
+          propertyName: propertyLabel,
+          propertySlug,
+          propertyRefId,
+          estimatedTotal,
+          discountCode: discountInfo?.valid ? discountCode.trim().toUpperCase() : undefined,
+          source: propertySlug ? 'property_detail' : 'booking_dialog',
+          utm: readUtm(),
+          captchaToken,
+        },
+      });
 
-    if (!isCaptchaValid) {
+      if (error || !data?.success) {
+        const details = error instanceof FunctionsHttpError
+          ? ((await error.context.json().catch(() => null))?.error as string | undefined)
+          : undefined;
+        throw new Error(details || (data as { error?: string } | null)?.error || 'submit failed');
+      }
+
+      trackStep("booking_form_submit", { propertyName, discountCode: discountInfo ? discountCode : undefined });
+
+      setSubmitted({ reference: data.reference as string, emailSent: data.emailSent === true });
       toast({
-        title: language === 'en' ? "Verification failed" : "Verificare eșuată",
-        description: language === 'en' ? "Security verification failed. Please try again." : "Verificarea de securitate a eșuat. Vă rugăm să încercați din nou.",
+        title: t.booking.success,
+        description: language === 'en'
+          ? `Request ${data.reference} saved. We will confirm availability shortly.`
+          : `Cererea ${data.reference} a fost înregistrată. Confirmăm disponibilitatea în cel mai scurt timp.`,
+      });
+
+      setFormData({ name: "", phone: "", email: "", checkIn: "", checkOut: "", guests: "", country: "", message: "" });
+      setConsent(false);
+      setDiscountCode("");
+      setDiscountInfo(null);
+    } catch (err) {
+      console.error("Booking request failed:", err);
+      toast({
+        title: t.booking.error,
+        description: err instanceof Error && err.message !== 'submit failed'
+          ? err.message
+          : (language === 'en' ? "We could not send your request. Please try again." : "Nu am putut trimite cererea. Te rugăm să încerci din nou."),
         variant: "destructive",
       });
       setCaptchaToken(null);
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    // Send email notification
-    await sendEmailNotification();
-
-    // Build WhatsApp message
-    const property = propertyName || (language === 'en' ? "Any available property" : "Orice proprietate disponibilă");
-    const whatsappMessage = language === 'en' 
-      ? `🏠 *Booking Request - RealTrust & ApArt Hotel*
-
-👤 *Name:* ${formData.name}
-📧 *Email:* ${formData.email}
-📱 *Phone:* ${formData.phone}
-🌍 *Country:* ${formData.country}
-
-📅 *Check-in:* ${formData.checkIn}
-📅 *Check-out:* ${formData.checkOut}
-👥 *Number of guests:* ${formData.guests}
-
-🏡 *Property:* ${property}
-
-💬 *Message:* ${formData.message || "No additional message"}`
-      : `🏠 *Cerere de Rezervare - RealTrust & ApArt Hotel*
-
-👤 *Nume:* ${formData.name}
-📧 *Email:* ${formData.email}
-📱 *Telefon:* ${formData.phone}
-🌍 *Țara:* ${formData.country}
-
-📅 *Check-in:* ${formData.checkIn}
-📅 *Check-out:* ${formData.checkOut}
-👥 *Număr oaspeți:* ${formData.guests}
-
-🏡 *Proprietate:* ${property}
-
-💬 *Mesaj:* ${formData.message || "Fără mesaj adițional"}`;
-
-    const encodedMessage = encodeURIComponent(whatsappMessage);
-    const whatsappUrl = `https://wa.me/40742000000?text=${encodedMessage}`;
-
-    // Open WhatsApp
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-
-    trackStep("booking_form_submit", { propertyName, discountCode: discountInfo ? discountCode : undefined });
-
-    toast({
-      title: t.booking.success,
-      description: t.booking.successMessage,
-    });
-
-    setIsSubmitting(false);
-    onClose();
-    setFormData({
-      name: "",
-      phone: "",
-      email: "",
-      checkIn: "",
-      checkOut: "",
-      guests: "",
-      country: "",
-      message: "",
-    });
   };
 
   // Get today's date for min date
@@ -320,6 +327,46 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
           </DialogDescription>
         </DialogHeader>
 
+        {submitted ? (
+          <div className="mt-4 space-y-4 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <CheckIcon className="h-7 w-7 text-primary" aria-hidden="true" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-semibold text-foreground">
+                {language === 'en' ? 'Request received' : 'Cerere înregistrată'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {language === 'en'
+                  ? 'We saved your request and will confirm availability by email or phone.'
+                  : 'Am salvat cererea și confirmăm disponibilitatea pe e-mail sau telefon.'}
+              </p>
+            </div>
+            <p className="text-sm">
+              <span className="text-muted-foreground">{language === 'en' ? 'Reference' : 'Referință'}: </span>
+              <span className="font-mono font-semibold text-foreground">{submitted.reference}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {submitted.emailSent
+                ? (language === 'en'
+                    ? 'A confirmation email is on its way to you.'
+                    : 'Ți-am trimis un e-mail de confirmare.')
+                : (language === 'en'
+                    ? 'The confirmation email is delayed, but our team already received your request.'
+                    : 'E-mailul de confirmare întârzie, dar echipa a primit deja cererea.')}
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button asChild variant="outline" className="flex-1">
+                <a href={whatsappUrl(submitted.reference)} target="_blank" rel="noopener noreferrer">
+                  {language === 'en' ? 'Continue on WhatsApp' : 'Continuă pe WhatsApp'}
+                </a>
+              </Button>
+              <Button className="flex-1" onClick={onClose}>
+                {language === 'en' ? 'Close' : 'Închide'}
+              </Button>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Honeypot field — hidden from real users, traps bots */}
           <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
@@ -516,6 +563,26 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             )}
           </div>
 
+          {/* GDPR consent */}
+          <div className="flex items-start gap-3 rounded-xl border bg-muted/30 p-3">
+            <Checkbox
+              id="booking-consent"
+              checked={consent}
+              onCheckedChange={(value) => setConsent(value === true)}
+              className="mt-0.5"
+              aria-label={language === 'en' ? 'Accept data processing' : 'Accept prelucrarea datelor'}
+            />
+            <Label htmlFor="booking-consent" className="text-xs font-normal leading-relaxed text-muted-foreground">
+              {language === 'en' ? (
+                <>I agree that RealTrust may store and use my contact details to confirm this booking request, as described in the{' '}
+                  <Link to="/politica-confidentialitate" className="text-primary underline">privacy policy</Link>.</>
+              ) : (
+                <>Sunt de acord ca RealTrust să păstreze și să folosească datele mele de contact pentru confirmarea acestei cereri de rezervare, conform{' '}
+                  <Link to="/politica-confidentialitate" className="text-primary underline">politicii de confidențialitate</Link>.</>
+              )}
+            </Label>
+          </div>
+
           {/* Turnstile widget */}
           <div className="flex flex-col items-center gap-2 pt-2">
             {turnstileSiteKey ? (
@@ -559,9 +626,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
               className="flex-1 bg-primary hover:bg-primary/90"
             >
               {isSubmitting ? (
-                isVerifyingCaptcha 
-                  ? (language === 'en' ? "Verifying..." : "Se verifică...")
-                  : t.booking.sending
+                t.booking.sending
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
@@ -571,6 +636,7 @@ const BookingForm = ({ isOpen, onClose, propertyName }: BookingFormProps) => {
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1023,6 +1023,90 @@ export type Database = {
           },
         ]
       }
+      booking_requests: {
+        Row: {
+          admin_email_sent: boolean
+          admin_notes: string | null
+          check_in: string
+          check_out: string
+          country: string | null
+          created_at: string
+          discount_code: string | null
+          estimated_total: number | null
+          guest_email: string
+          guest_email_sent: boolean
+          guest_name: string
+          guest_phone: string
+          guests: number
+          id: string
+          message: string | null
+          nights: number
+          notified_at: string | null
+          property_name: string
+          property_ref_id: number | null
+          property_slug: string | null
+          reference: string
+          source: string
+          status: string
+          updated_at: string
+          utm: Json | null
+        }
+        Insert: {
+          admin_email_sent?: boolean
+          admin_notes?: string | null
+          check_in: string
+          check_out: string
+          country?: string | null
+          created_at?: string
+          discount_code?: string | null
+          estimated_total?: number | null
+          guest_email: string
+          guest_email_sent?: boolean
+          guest_name: string
+          guest_phone: string
+          guests?: number
+          id?: string
+          message?: string | null
+          nights?: number
+          notified_at?: string | null
+          property_name: string
+          property_ref_id?: number | null
+          property_slug?: string | null
+          reference: string
+          source?: string
+          status?: string
+          updated_at?: string
+          utm?: Json | null
+        }
+        Update: {
+          admin_email_sent?: boolean
+          admin_notes?: string | null
+          check_in?: string
+          check_out?: string
+          country?: string | null
+          created_at?: string
+          discount_code?: string | null
+          estimated_total?: number | null
+          guest_email?: string
+          guest_email_sent?: boolean
+          guest_name?: string
+          guest_phone?: string
+          guests?: number
+          id?: string
+          message?: string | null
+          nights?: number
+          notified_at?: string | null
+          property_name?: string
+          property_ref_id?: number | null
+          property_slug?: string | null
+          reference?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          utm?: Json | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           check_in: string
