@@ -495,6 +495,21 @@ const PropertyDetail = () => {
     category: poi.category,
   }));
 
+  // Facilități principale (RO) folosite în meta description + schema amenityFeature
+  const amenityList: string[] = (property.amenities || []).map((a: any) =>
+    typeof a === 'string' ? a : (a?.name || a?.label || '')
+  ).filter(Boolean);
+
+  const amenityHighlights = (() => {
+    const haystack = `${amenityList.join(' ')} ${displayDescription || ''}`.toLowerCase();
+    const picks: string[] = [];
+    if (/parcare|parking|garaj/.test(haystack)) picks.push('parcare');
+    if (/wi-?fi|internet/.test(haystack)) picks.push('Wi-Fi');
+    if (/self check|check-?in|acces cu cod|keybox/.test(haystack)) picks.push('self check-in');
+    return picks.length > 0 ? picks : ['parcare', 'Wi-Fi', 'self check-in'];
+  })();
+
+
   const propertySchemas = [
     ...generatePropertyPageSchemas({
       name: displayName,
