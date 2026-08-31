@@ -379,6 +379,8 @@ export const getDisplayLocation = (input: GeoInput) => {
       return 'NordOne / Calea Circumvalațiunii, Timișoara';
     case 'ateneo_torontalului':
       return 'Torontalului / Ateneo, Timișoara';
+    case 'apicultorilor':
+      return 'Apicultorilor / Sud, Timișoara';
     case 'green_forest_constructorilor':
       return 'Constructorilor / Green Forest, Timișoara';
     case 'helios_elisabetin':
