@@ -17,7 +17,7 @@ const propertyCoordinates: Record<string, [number, number]> = {
   // Str. Gheorghe Lazăr nr.24, clădirea Fructus Plaza
   'fructus-plaza-ultracentral-apart-hotel': [21.2209, 45.7595],
   // Calea Circumvalațiunii nr.1, City of Mara, M9 (spread for tap-target spacing)
-  'fullview-studio-deluxe': [21.2165, 45.7522],
+  'fullview-studio-deluxe': [21.232860, 45.741866],
   // Calea Circumvalațiunii nr.1, City of Mara, M8
   'avenue-of-mara-apart-hotel': [21.2130, 45.7520],
   // Strada Argeș nr.4 (zona Elisabetin)
