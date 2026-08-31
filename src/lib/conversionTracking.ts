@@ -125,6 +125,8 @@ export type ConversionEvent =
   /* City guide / restaurant guide micro-conversions */
   | "poi_detail_open"
   | "poi_navigate_gps"
+  | "poi_open_google_maps"
+
   | "poi_deep_link_open"
   | "poi_link_copy"
   /* Booking / management funnel (GA4 e-commerce taxonomy) */
