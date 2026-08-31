@@ -396,7 +396,14 @@ const SEOHead = ({
     syncMeta('meta[property="og:description"]', { property: "og:description" }, finalSocialDescription);
     syncMeta('meta[name="twitter:title"]', { name: "twitter:title" }, finalTitle);
     syncMeta('meta[name="twitter:description"]', { name: "twitter:description" }, finalSocialDescription);
-  }, [finalTitle, finalDescription, finalSocialDescription]);
+    // og:url / og:image must self-reference the current route — the static
+    // shell keeps the homepage values, so crawlers reading the first tag would
+    // attribute this page's preview to "/".
+    syncMeta('meta[property="og:url"]', { property: "og:url" }, finalUrl);
+    syncMeta('meta[name="twitter:url"]', { name: "twitter:url" }, finalUrl);
+    syncMeta('meta[property="og:image"]', { property: "og:image" }, absoluteImage);
+    syncMeta('meta[name="twitter:image"]', { name: "twitter:image" }, absoluteImage);
+  }, [finalTitle, finalDescription, finalSocialDescription, finalUrl, absoluteImage]);
 
   return (
     <Helmet>
