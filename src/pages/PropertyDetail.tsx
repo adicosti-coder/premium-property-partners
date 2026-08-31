@@ -771,6 +771,21 @@ const PropertyDetail = () => {
             )}
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold break-words">{displayName}</h1>
 
+            {normalizedListingType === 'cazare' && (
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                <Button variant="hero" className="w-full sm:w-auto" onClick={openDirectBooking}>
+                  {language === 'ro' ? 'Rezervă direct' : 'Book direct'}
+                </Button>
+                <Button asChild variant="outline" className="w-full sm:w-auto">
+                  <a href="#disponibilitate">
+                    {language === 'ro' ? 'Verifică disponibilitatea' : 'Check availability'}
+                  </a>
+                </Button>
+              </div>
+            )}
+
+
+
             {/* ═══ PREȚ PROMINENT ═══ */}
             {(() => {
               const capital = dbProperty?.capital_necesar;
