@@ -177,7 +177,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // --- Notifications (guest confirmation + admin alert) ---
-    let notified = false;
+    let adminEmailSent = false;
+    let guestEmailSent = false;
     try {
       const { data: notifyData, error: notifyError } = await supabase.functions.invoke(
         "send-booking-notification",
@@ -196,7 +197,8 @@ const handler = async (req: Request): Promise<Response> => {
         },
       );
       if (notifyError) throw notifyError;
-      notified = notifyData?.success === true;
+      adminEmailSent = notifyData?.adminEmailSent === true;
+      guestEmailSent = notifyData?.guestEmailSent === true;
     } catch (notifyErr) {
       console.error("send-booking-notification failed:", notifyErr);
     }
@@ -204,9 +206,9 @@ const handler = async (req: Request): Promise<Response> => {
     await supabase
       .from("booking_requests")
       .update({
-        admin_email_sent: notified,
-        guest_email_sent: notified,
-        notified_at: notified ? new Date().toISOString() : null,
+        admin_email_sent: adminEmailSent,
+        guest_email_sent: guestEmailSent,
+        notified_at: adminEmailSent || guestEmailSent ? new Date().toISOString() : null,
       })
       .eq("id", saved.id);
 
@@ -215,7 +217,7 @@ const handler = async (req: Request): Promise<Response> => {
       requestId: saved.id,
       reference: saved.reference,
       nights,
-      emailSent: notified,
+      emailSent: guestEmailSent,
     };
     await idem.finish(payload);
     return json(payload);
