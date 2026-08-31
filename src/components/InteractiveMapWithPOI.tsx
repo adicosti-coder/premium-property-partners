@@ -58,6 +58,7 @@ const apartmentCoordinates: { name: string; slug: string; coords: [number, numbe
   { name: 'Mara Luxury Golden ApArt Hotel', slug: 'mara-luxury-golden-apart-hotel', coords: [21.2240, 45.7555] },
   { name: 'Ateneo ApArt Hotel Studio Deluxe', slug: 'ateneo-apart-hotel-studio-deluxe', coords: [21.2055, 45.7785] },
   { name: 'Modern Studio ApArt Hotel', slug: 'modern-studio-apart-hotel', coords: [21.2100, 45.7350] },
+  { name: 'Moonlight Emerald Suite by RealTrust', slug: 'moonlight-emerald-suite', coords: [21.2390186, 45.731261] },
 ];
 
 interface POI {
