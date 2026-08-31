@@ -598,6 +598,9 @@ const PropertyDetail = () => {
           if ((lt === 'investitie' || lt === 'vanzare') && roi) {
             return `${displayName} | Randament ${roi} ROI — Investiție Timișoara`;
           }
+          if (normalizedListingType === 'cazare') {
+            return `${displayName} - Cazare Regim Hotelier Timișoara | RealTrust`;
+          }
           return `${displayName} | RealTrust Timișoara`;
         })()}
         description={(() => {
@@ -613,6 +616,16 @@ const PropertyDetail = () => {
             parts.push('Vezi detalii și randament estimat.');
             return parts.join(' ').slice(0, 160);
           }
+          // Cazare (regim hotelier): zonă exactă + facilități principale, sub 160 caractere
+          if (normalizedListingType === 'cazare' && language === 'ro') {
+            const zone = property.location?.replace(/,?\s*(Timișoara|Timisoara)\s*/gi, '').trim() || 'Timișoara';
+            const amenityText = amenityHighlights.length > 0
+              ? amenityHighlights.join(', ')
+              : 'parcare, Wi-Fi, self check-in';
+            const guests = property.capacity ? `${property.capacity} oaspeți. ` : '';
+            const base = `Cazare regim hotelier în ${zone}, Timișoara. ${guests}${amenityText}. Rezervare directă, fără comision.`;
+            return base.length > 158 ? base.slice(0, 155).trimEnd() + '…' : base;
+          }
           const rawDesc = displayDescription;
           if (rawDesc && rawDesc.length > 0) {
             const clean = rawDesc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
@@ -622,6 +635,7 @@ const PropertyDetail = () => {
             ? `${displayName} în ${property.location}, Timișoara — ${property.capacity} oaspeți, ${property.bedrooms} dormitoare. Rezervare directă, fără comisioane suplimentare.`
             : `${displayName} in ${property.location}, Timișoara — ${property.capacity} guests, ${property.bedrooms} bedrooms. Book direct, no extra booking fees.`;
         })()}
+
         url={`https://realtrust.ro/proprietate/${slug}`}
         image={galleryImages[0] || undefined}
         imageAlt={(() => {
