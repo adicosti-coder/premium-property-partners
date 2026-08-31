@@ -529,12 +529,16 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
       const zone = extractZone(p.location);
       const canonical = `${BASE_URL}/proprietate/${p.slug}`;
       const shortName = p.name.replace(/\s+by RealTrust$/i, '').trim();
-      const priceBit = p.pricePerNight ? ` de la ${p.pricePerNight}€/noapte` : '';
-      // Titlu RO orientat pe intenția de căutare "cazare/apartament regim hotelier Timișoara"
-      const rawTitle = `${shortName} — Cazare Timișoara${priceBit} | RealTrust`;
-      const title = rawTitle.length > 65
-        ? `${shortName} — Cazare Regim Hotelier Timișoara`.slice(0, 65)
-        : rawTitle;
+      const priceBit = p.pricePerNight ? ` de la ${p.pricePerNight}€` : '';
+      // Titlu RO orientat pe intenția de căutare "cazare regim hotelier Timișoara".
+      // Fără tăieturi în mijlocul cuvintelor: alegem varianta care încape în 60 car.
+      const titleCandidates = [
+        `${shortName} — Cazare Timișoara${priceBit}/noapte`,
+        `${shortName} — Cazare Regim Hotelier Timișoara`,
+        `${shortName} — Cazare Timișoara${priceBit}`,
+        `${shortName} — Cazare Timișoara`,
+      ];
+      const title = titleCandidates.find((t) => t.length <= 60) || titleCandidates[3];
       const amenityBlob = p.amenities.join(' | ').toLowerCase();
       const highlights = [
         ['parcare', /parcare|parking|garaj/],
@@ -545,17 +549,25 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
         .filter(([, re]) => (re as RegExp).test(amenityBlob))
         .map(([label]) => label as string);
       const amenityText = (highlights.length ? highlights : ['parcare', 'Wi-Fi', 'self check-in'])
-        .slice(0, 3)
+        .slice(0, 2)
         .join(', ');
       const specs = [
         p.size ? `${p.size} mp` : '',
         p.bedrooms ? `${p.bedrooms} ${p.bedrooms === 1 ? 'dormitor' : 'dormitoare'}` : '',
         p.capacity ? `${p.capacity} oaspeți` : '',
       ].filter(Boolean).join(', ');
-      // Zona scurtată ca descrierea RO să rămână sub 160 caractere (fără trunchiere).
-      const shortZone = zone.length > 28 ? `${zone.slice(0, 27).trimEnd()}` : zone;
-      const rawDesc = `Cazare regim hotelier Timișoara, ${shortZone}${specs ? `: ${specs}` : ''}. ${amenityText}.${p.pricePerNight ? ` De la ${p.pricePerNight}€/noapte,` : ''} rezervare directă fără comision.`;
-      const description = rawDesc.length > 158 ? `${rawDesc.slice(0, 155).trimEnd()}…` : rawDesc;
+      // Descriere RO completă, sub 160 caractere, fără trunchiere la mijloc de frază.
+      const buildDesc = (z: string, withAmenities: boolean) =>
+        `Cazare regim hotelier Timișoara, ${z}${specs ? `: ${specs}` : ''}.${withAmenities ? ` ${amenityText}.` : ''}${p.pricePerNight ? ` De la ${p.pricePerNight}€/noapte,` : ''} rezervare directă.`;
+      const zoneShort = zone.replace(/\s*nr\.\s*/i, ' ');
+      const descCandidates = [
+        buildDesc(zoneShort, true),
+        buildDesc(zoneShort, false),
+        buildDesc(zoneShort.split(/\s+/).slice(0, 3).join(' '), true),
+      ];
+      const description =
+        descCandidates.find((d) => d.length <= 158) ||
+        `${descCandidates[1].slice(0, 155).trimEnd()}…`;
 
       const coords = geo[p.slug];
       const geoNode = coords
