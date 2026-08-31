@@ -1013,12 +1013,26 @@ const PropertyDetail = () => {
                   4. DISPONIBILITATE & PREȚURI (esențial pentru rezervări)
                   ═══════════════════════════════════════════════════════ */}
               {staticProperty && (
-                <div className="space-y-6">
+                <div id="disponibilitate" className="space-y-6 scroll-mt-24">
+                  <h2 className="text-2xl font-serif font-semibold">
+                    {language === 'ro' ? 'Verifică disponibilitatea și rezervă direct' : 'Check availability & book direct'}
+                  </h2>
                   <PriceCompareWidget basePrice={property.pricePerNight} />
                   <StayCalculator property={property as any} onBook={openDirectBooking} />
                   <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
+                  <div className="bg-card border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'ro'
+                        ? 'Cel mai bun preț îl obții rezervând direct, fără comision de intermediere.'
+                        : 'Get the best rate by booking direct, with no intermediary fee.'}
+                    </p>
+                    <Button variant="hero" className="w-full sm:w-auto" onClick={openDirectBooking}>
+                      {language === 'ro' ? 'Rezervă direct' : 'Book direct'}
+                    </Button>
+                  </div>
                 </div>
               )}
+
 
               {/* SECȚIUNEA PREȚ SIMPLU - pentru închirieri */}
               {dbProperty?.listing_type === 'inchiriere' && dbProperty.capital_necesar && (
