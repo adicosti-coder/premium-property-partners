@@ -21,6 +21,8 @@ interface PrerenderRoute {
    *  Used to give crawlers like Firecrawl/Bing dense local-SEO content even
    *  before React hydrates. Safe HTML — built from trusted constants only. */
   seoBody?: string;
+  /** Optional absolute image URL used for og:image / twitter:image. */
+  image?: string;
 }
 
 /**
@@ -329,6 +331,55 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
 
     const canonical = `${BASE_URL}/proprietate/${p.slug}`;
 
+    // Regim hotelier (cazare) listings need a guest-facing title and
+    // LodgingBusiness + HotelRoom structured data, not a sale listing.
+    if ((p.listing_type || '').trim().toLowerCase() === 'cazare') {
+      const cazareDescRaw = `Cazare regim hotelier în ${zone}, Timișoara. ${p.base_price_per_night ? `De la ${p.base_price_per_night}€/noapte. ` : ''}Parcare, Wi-Fi, self check-in. Rezervare directă, fără comision.`;
+      const cazareDesc = cazareDescRaw.length > 158 ? `${cazareDescRaw.slice(0, 155).trimEnd()}…` : cazareDescRaw;
+      return {
+        path: `/proprietate/${p.slug}`,
+        title: `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`,
+        description: cazareDesc,
+        h1: `${p.name} — cazare regim hotelier în ${zone}, Timișoara`,
+        canonical,
+        jsonLd: [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'LodgingBusiness',
+            name: p.name,
+            description: cazareDesc,
+            url: canonical,
+            priceRange: '€€',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: zone,
+              addressLocality: 'Timișoara',
+              addressRegion: 'Timiș',
+              addressCountry: 'RO',
+            },
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'HotelRoom',
+            name: p.name,
+            description: cazareDesc,
+            url: canonical,
+            numberOfRooms: rooms,
+            ...(p.size && { floorSize: { '@type': 'QuantitativeValue', value: p.size, unitCode: 'MTK' } }),
+            ...(p.base_price_per_night && {
+              offers: {
+                '@type': 'Offer',
+                price: p.base_price_per_night,
+                priceCurrency: 'EUR',
+                availability: 'https://schema.org/InStock',
+                url: `${canonical}#disponibilitate`,
+              },
+            }),
+          },
+        ],
+      };
+    }
+
     return {
       path: `/proprietate/${p.slug}`,
       title,
@@ -372,6 +423,161 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
       ],
     };
   });
+}
+
+/**
+ * Guest apartments live in src/data/properties.ts (static, not in the DB).
+ * Parse the minimal SEO fields out of the source so each unit gets a
+ * prerendered page with a "cazare regim hotelier" title, RO description and
+ * LodgingBusiness + HotelRoom structured data.
+ */
+interface StaticGuestProperty {
+  slug: string;
+  name: string;
+  location: string;
+  capacity: number;
+  bedrooms: number;
+  bathrooms: number;
+  size: number;
+  pricePerNight: number;
+  amenities: string[];
+  image?: string;
+  isActive: boolean;
+}
+
+export function parseStaticGuestProperties(): StaticGuestProperty[] {
+  const file = path.resolve(process.cwd(), 'src/data/properties.ts');
+  if (!fs.existsSync(file)) return [];
+  const src = fs.readFileSync(file, 'utf-8');
+  // Each property object is delimited by its `slug:` field; slice from one
+  // slug declaration to the next.
+  const slugPositions = Array.from(src.matchAll(/\n\s*slug:\s*"/g)).map((m) => m.index ?? 0);
+  const blocks = slugPositions.map((start, i) =>
+    src.slice(start, i + 1 < slugPositions.length ? slugPositions[i + 1] : src.length)
+  );
+  const num = (block: string, key: string): number => {
+    const m = block.match(new RegExp(`${key}:\\s*([0-9.]+)`));
+    return m ? Number(m[1]) : 0;
+  };
+  const str = (block: string, key: string): string => {
+    const m = block.match(new RegExp(`${key}:\\s*"([^"]*)"`));
+    return m ? m[1] : '';
+  };
+  const out: StaticGuestProperty[] = [];
+  for (const block of blocks) {
+    const slug = str(block, 'slug');
+    const name = str(block, 'name');
+    if (!slug || !name) continue;
+    const amenitiesMatch = block.match(/amenities:\s*\[([\s\S]*?)\]/);
+    const amenities = amenitiesMatch
+      ? Array.from(amenitiesMatch[1].matchAll(/"([^"]+)"/g)).map((m) => m[1])
+      : [];
+    const imgMatch = block.match(/images:\s*\[\s*([^,\]]+(?:,\s*\d+\s*,\s*\d+\s*\))?)/);
+    let rawImg = imgMatch ? imgMatch[1].trim() : '';
+    const pynMatch = block.match(/images:\s*\[\s*pyn\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/);
+    if (pynMatch) {
+      rawImg = `https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/${pynMatch[1]}/${pynMatch[2]}/${pynMatch[3]}-m.jpg`;
+    }
+    out.push({
+      slug,
+      name,
+      location: str(block, 'location'),
+      capacity: num(block, 'capacity'),
+      bedrooms: num(block, 'bedrooms'),
+      bathrooms: num(block, 'bathrooms'),
+      size: num(block, 'size'),
+      pricePerNight: num(block, 'pricePerNight'),
+      amenities,
+      image: /^"?https?:/.test(rawImg) ? rawImg.replace(/^"|"$/g, '') : undefined,
+      isActive: !/\n\s{4}isActive:\s*false/.test(block),
+    });
+  }
+  return out;
+}
+
+export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
+  return parseStaticGuestProperties()
+    .filter((p) => p.isActive && !taken.has(`/proprietate/${p.slug}`))
+    .map((p) => {
+      const zone = extractZone(p.location);
+      const canonical = `${BASE_URL}/proprietate/${p.slug}`;
+      const title = `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`;
+      const amenityBlob = p.amenities.join(' | ').toLowerCase();
+      const highlights = [
+        ['parcare', /parcare|parking|garaj/],
+        ['Wi-Fi', /wi-?fi|internet/],
+        ['self check-in', /self ?check|check-?in autonom|acces autonom|keybox|cutie cu chei/],
+      ]
+        .filter(([, re]) => (re as RegExp).test(amenityBlob))
+        .map(([label]) => label as string);
+      const amenityText = (highlights.length ? highlights : ['parcare', 'Wi-Fi', 'self check-in']).join(', ');
+      const rawDesc = `Cazare regim hotelier în ${zone}, Timișoara. ${p.capacity ? `${p.capacity} oaspeți. ` : ''}${amenityText}. Rezervare directă, fără comision.`;
+      const description = rawDesc.length > 158 ? `${rawDesc.slice(0, 155).trimEnd()}…` : rawDesc;
+
+      return {
+        path: `/proprietate/${p.slug}`,
+        title,
+        description,
+        h1: `${p.name} — cazare regim hotelier în ${zone}, Timișoara`,
+        canonical,
+        image: p.image,
+        jsonLd: [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'LodgingBusiness',
+            name: p.name,
+            description,
+            url: canonical,
+            ...(p.image && { image: p.image }),
+            priceRange: '€€',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: zone,
+              addressLocality: 'Timișoara',
+              addressRegion: 'Timiș',
+              addressCountry: 'RO',
+            },
+            ...(p.amenities.length > 0 && {
+              amenityFeature: p.amenities.slice(0, 15).map((a) => ({
+                '@type': 'LocationFeatureSpecification',
+                name: a,
+                value: true,
+              })),
+            }),
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'HotelRoom',
+            name: p.name,
+            description,
+            url: canonical,
+            ...(p.image && { image: p.image }),
+            ...(p.bedrooms && { numberOfRooms: p.bedrooms }),
+            ...(p.bathrooms && { numberOfBathroomsTotal: p.bathrooms }),
+            ...(p.size && { floorSize: { '@type': 'QuantitativeValue', value: p.size, unitCode: 'MTK' } }),
+            ...(p.capacity && {
+              occupancy: { '@type': 'QuantitativeValue', maxValue: p.capacity, unitText: 'oaspeți' },
+            }),
+            ...(p.amenities.length > 0 && {
+              amenityFeature: p.amenities.slice(0, 15).map((a) => ({
+                '@type': 'LocationFeatureSpecification',
+                name: a,
+                value: true,
+              })),
+            }),
+            ...(p.pricePerNight && {
+              offers: {
+                '@type': 'Offer',
+                price: p.pricePerNight,
+                priceCurrency: 'EUR',
+                availability: 'https://schema.org/InStock',
+                url: `${canonical}#disponibilitate`,
+              },
+            }),
+          },
+        ],
+      } satisfies PrerenderRoute;
+    });
 }
 
 function buildStaticRoutes(): PrerenderRoute[] {
@@ -964,6 +1170,23 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `<link rel="canonical" href="${route.canonical}" />`
   );
 
+  // Per-route Open Graph / Twitter tags. The static shell ships sitewide
+  // values; without this, every prerendered page shares the homepage preview.
+  const socialImage = route.image || `${BASE_URL}/images/hero-optimized-1920w.webp`;
+  const setMeta = (attr: 'property' | 'name', key: string, value: string) => {
+    const re = new RegExp(`<meta ${attr}="${key.replace(':', ':')}" content="[^"]*"\\s*/?>`);
+    const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`;
+    html = re.test(html) ? html.replace(re, tag) : html.replace('</head>', `  ${tag}\n</head>`);
+  };
+  setMeta('property', 'og:title', route.title);
+  setMeta('property', 'og:description', route.description);
+  setMeta('property', 'og:url', route.canonical);
+  setMeta('property', 'og:image', socialImage);
+  setMeta('name', 'twitter:title', route.title);
+  setMeta('name', 'twitter:description', route.description);
+  setMeta('name', 'twitter:url', route.canonical);
+  setMeta('name', 'twitter:image', socialImage);
+
   const jsonLdStr = Array.isArray(route.jsonLd)
     ? route.jsonLd.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n      ')
     : `<script type="application/ld+json">${JSON.stringify(route.jsonLd)}</script>`;
@@ -1046,7 +1269,18 @@ export default function vitePrerenderSeo(): Plugin {
         const propertyRoutes = buildPropertyRoutes(properties);
         console.log(`[prerender-seo] Found ${properties.length} active properties with slugs`);
         
-        const allRoutes = [...staticRoutes, ...propertyRoutes];
+        // Guest apartments (static data file) — richer cazare pages with
+        // HotelRoom schema; they take precedence over the DB-derived route.
+        const staticPaths = new Set(staticRoutes.map((r) => r.path));
+        const guestRoutes = buildGuestPropertyRoutes(staticPaths);
+        const guestPaths = new Set(guestRoutes.map((r) => r.path));
+        console.log(`[prerender-seo] Found ${guestRoutes.length} static guest apartments`);
+
+        const allRoutes = [
+          ...staticRoutes,
+          ...propertyRoutes.filter((r) => !guestPaths.has(r.path)),
+          ...guestRoutes,
+        ];
 
         console.log(`[prerender-seo] Generating ${allRoutes.length} static HTML files...`);
 
@@ -1073,7 +1307,7 @@ export default function vitePrerenderSeo(): Plugin {
           console.log(`  ✓ ${isRoot ? '/' : route.path}/index.html`);
         }
 
-        console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} properties)`);
+        console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} db properties + ${guestRoutes.length} guest apartments)`);
       },
     },
   };

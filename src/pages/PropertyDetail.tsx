@@ -177,7 +177,9 @@ const PropertyDetail = () => {
   const [isAutoplay, setIsAutoplay] = useState(false);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const directBookingUrl = dbProperty?.booking_url || staticProperty?.bookingUrl || "";
-  const normalizedListingType = (dbProperty?.listing_type || "").trim().toLowerCase();
+  // Static properties (src/data/properties.ts) are the guest apartments —
+  // always regim hotelier ("cazare") even when there is no DB row yet.
+  const normalizedListingType = ((dbProperty?.listing_type || (staticProperty ? "cazare" : "")).trim().toLowerCase());
 
   const openDirectBooking = useCallback(() => {
     if (directBookingUrl) {
