@@ -440,9 +440,26 @@ interface StaticGuestProperty {
   bathrooms: number;
   size: number;
   pricePerNight: number;
+  rating: number;
+  reviews: number;
+  checkInTime: string;
+  checkOutTime: string;
   amenities: string[];
   image?: string;
+  images: string[];
   isActive: boolean;
+}
+
+/** slug → [lng, lat] parsed from src/utils/propertyGeo.ts */
+function parseGuestGeo(): Record<string, [number, number]> {
+  const file = path.resolve(process.cwd(), 'src/utils/propertyGeo.ts');
+  if (!fs.existsSync(file)) return {};
+  const src = fs.readFileSync(file, 'utf-8');
+  const out: Record<string, [number, number]> = {};
+  for (const m of src.matchAll(/'([a-z0-9-]+)':\s*\[\s*(-?[0-9.]+)\s*,\s*(-?[0-9.]+)\s*\]/g)) {
+    out[m[1]] = [Number(m[2]), Number(m[3])];
+  }
+  return out;
 }
 
 export function parseStaticGuestProperties(): StaticGuestProperty[] {
@@ -463,6 +480,8 @@ export function parseStaticGuestProperties(): StaticGuestProperty[] {
     const m = block.match(new RegExp(`${key}:\\s*"([^"]*)"`));
     return m ? m[1] : '';
   };
+  const cdn = (folder: string, hotel: string, img: string) =>
+    `https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/${folder}/${hotel}/${img}-m.jpg`;
   const out: StaticGuestProperty[] = [];
   for (const block of blocks) {
     const slug = str(block, 'slug');
@@ -472,11 +491,13 @@ export function parseStaticGuestProperties(): StaticGuestProperty[] {
     const amenities = amenitiesMatch
       ? Array.from(amenitiesMatch[1].matchAll(/"([^"]+)"/g)).map((m) => m[1])
       : [];
-    const imgMatch = block.match(/images:\s*\[\s*([^,\]]+(?:,\s*\d+\s*,\s*\d+\s*\))?)/);
-    let rawImg = imgMatch ? imgMatch[1].trim() : '';
-    const pynMatch = block.match(/images:\s*\[\s*pyn\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)\)/);
-    if (pynMatch) {
-      rawImg = `https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/${pynMatch[1]}/${pynMatch[2]}/${pynMatch[3]}-m.jpg`;
+    const imagesMatch = block.match(/images:\s*\[([\s\S]*?)\]/);
+    const images: string[] = [];
+    if (imagesMatch) {
+      for (const m of imagesMatch[1].matchAll(/pyn\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/g)) {
+        images.push(cdn(m[1], m[2], m[3]));
+      }
+      for (const m of imagesMatch[1].matchAll(/"(https?:[^"]+)"/g)) images.push(m[1]);
     }
     out.push({
       slug,
@@ -487,8 +508,13 @@ export function parseStaticGuestProperties(): StaticGuestProperty[] {
       bathrooms: num(block, 'bathrooms'),
       size: num(block, 'size'),
       pricePerNight: num(block, 'pricePerNight'),
+      rating: num(block, 'rating'),
+      reviews: num(block, 'reviews'),
+      checkInTime: str(block, 'checkInTime'),
+      checkOutTime: str(block, 'checkOutTime'),
       amenities,
-      image: /^"?https?:/.test(rawImg) ? rawImg.replace(/^"|"$/g, '') : undefined,
+      image: images[0],
+      images: images.slice(0, 6),
       isActive: !/\n\s{4}isActive:\s*false/.test(block),
     });
   }
