@@ -376,8 +376,8 @@ const PentruOaspeti = () => {
       <main className="pt-20">
         <div className="container mx-auto px-6">
           <PageSummary
-            summaryRo="Apartamente regim hotelier Timișoara: ATENEO, GREEN FOREST, Cross Square House, HELIOS — lângă Iulius Mall, Amazonia Aquapark, Lidl, Gara de Nord. Parcare subterană gratuită, self check-in 24/7, bucătărie completă cu cafea și condimente."
-            summaryEn="Short-term rental apartments Timișoara: ATENEO, GREEN FOREST, Cross Square House, HELIOS — near Iulius Mall, Amazonia Aquapark, Lidl, North Station. Free underground parking, 24/7 self check-in, fully equipped kitchen with coffee & spices."
+            summaryRo="Cazare Timișoara în regim hotelier: NordOne, GREEN FOREST, Cross Square House, Apicultorilor House, HELIOS — lângă Iulius Town, Centrul Vechi și Gara de Nord. Parcare gratuită, self check-in 24/7, bucătărie complet echipată."
+            summaryEn="Short-term rental apartments Timișoara: NordOne, GREEN FOREST, Cross Square House, Apicultorilor House, HELIOS — near Iulius Town, Old Town and North Station. Free parking, 24/7 self check-in, fully equipped kitchen."
           />
         </div>
         {/* Hero Section */}
