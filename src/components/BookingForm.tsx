@@ -81,7 +81,6 @@ const BookingForm = ({ isOpen, onClose, propertyName, propertySlug, propertyRefI
   
   // Turnstile state
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
 
   // Fetch Turnstile site key
@@ -328,6 +327,46 @@ const BookingForm = ({ isOpen, onClose, propertyName, propertySlug, propertyRefI
           </DialogDescription>
         </DialogHeader>
 
+        {submitted ? (
+          <div className="mt-4 space-y-4 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+              <CheckIcon className="h-7 w-7 text-primary" aria-hidden="true" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-semibold text-foreground">
+                {language === 'en' ? 'Request received' : 'Cerere înregistrată'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {language === 'en'
+                  ? 'We saved your request and will confirm availability by email or phone.'
+                  : 'Am salvat cererea și confirmăm disponibilitatea pe e-mail sau telefon.'}
+              </p>
+            </div>
+            <p className="text-sm">
+              <span className="text-muted-foreground">{language === 'en' ? 'Reference' : 'Referință'}: </span>
+              <span className="font-mono font-semibold text-foreground">{submitted.reference}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {submitted.emailSent
+                ? (language === 'en'
+                    ? 'A confirmation email is on its way to you.'
+                    : 'Ți-am trimis un e-mail de confirmare.')
+                : (language === 'en'
+                    ? 'The confirmation email is delayed, but our team already received your request.'
+                    : 'E-mailul de confirmare întârzie, dar echipa a primit deja cererea.')}
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button asChild variant="outline" className="flex-1">
+                <a href={whatsappUrl(submitted.reference)} target="_blank" rel="noopener noreferrer">
+                  {language === 'en' ? 'Continue on WhatsApp' : 'Continuă pe WhatsApp'}
+                </a>
+              </Button>
+              <Button className="flex-1" onClick={onClose}>
+                {language === 'en' ? 'Close' : 'Închide'}
+              </Button>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           {/* Honeypot field — hidden from real users, traps bots */}
           <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
@@ -524,6 +563,26 @@ const BookingForm = ({ isOpen, onClose, propertyName, propertySlug, propertyRefI
             )}
           </div>
 
+          {/* GDPR consent */}
+          <div className="flex items-start gap-3 rounded-xl border bg-muted/30 p-3">
+            <Checkbox
+              id="booking-consent"
+              checked={consent}
+              onCheckedChange={(value) => setConsent(value === true)}
+              className="mt-0.5"
+              aria-label={language === 'en' ? 'Accept data processing' : 'Accept prelucrarea datelor'}
+            />
+            <Label htmlFor="booking-consent" className="text-xs font-normal leading-relaxed text-muted-foreground">
+              {language === 'en' ? (
+                <>I agree that RealTrust may store and use my contact details to confirm this booking request, as described in the{' '}
+                  <Link to="/politica-confidentialitate" className="text-primary underline">privacy policy</Link>.</>
+              ) : (
+                <>Sunt de acord ca RealTrust să păstreze și să folosească datele mele de contact pentru confirmarea acestei cereri de rezervare, conform{' '}
+                  <Link to="/politica-confidentialitate" className="text-primary underline">politicii de confidențialitate</Link>.</>
+              )}
+            </Label>
+          </div>
+
           {/* Turnstile widget */}
           <div className="flex flex-col items-center gap-2 pt-2">
             {turnstileSiteKey ? (
@@ -567,9 +626,7 @@ const BookingForm = ({ isOpen, onClose, propertyName, propertySlug, propertyRefI
               className="flex-1 bg-primary hover:bg-primary/90"
             >
               {isSubmitting ? (
-                isVerifyingCaptcha 
-                  ? (language === 'en' ? "Verifying..." : "Se verifică...")
-                  : t.booking.sending
+                t.booking.sending
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
@@ -579,6 +636,7 @@ const BookingForm = ({ isOpen, onClose, propertyName, propertySlug, propertyRefI
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
