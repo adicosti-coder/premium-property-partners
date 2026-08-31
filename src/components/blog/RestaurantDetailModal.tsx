@@ -214,6 +214,27 @@ const RestaurantDetailModal: React.FC<Props> = ({
             </a>
           </Button>
 
+          <Button size="sm" variant="outline" className="min-h-[44px]" asChild>
+            <a
+              href={mapsPlaceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Deschide ${poi.name} în Google Maps`}
+              onClick={() =>
+                trackConversion({
+                  event: 'poi_open_google_maps',
+                  poi_id: poi.id,
+                  poi_name: poi.name,
+                  poi_category: poi.category,
+                })
+              }
+            >
+              <MapPin className="w-4 h-4 mr-1" aria-hidden="true" /> Deschide în Google Maps
+            </a>
+          </Button>
+
+
+
           {poi.website && (
             <Button size="sm" variant="ghost" className="min-h-[44px]" asChild>
               <a
