@@ -123,6 +123,28 @@ export const SeoAlertsPanel = () => {
     onError: (e: Error) => toast.error(`Reindexarea a eșuat: ${e.message}`),
   });
 
+  const { data: coverage } = useQuery({
+    queryKey: ["seo-indexing-coverage"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seo_indexing_snapshots")
+        .select("checked_pages, issues_count, created_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      const checked = Number(data.checked_pages ?? 0);
+      const notIndexed = Number(data.issues_count ?? 0);
+      return {
+        checked,
+        notIndexed,
+        indexed: Math.max(checked - notIndexed, 0),
+        at: data.created_at as string,
+      };
+    },
+  });
+
   const open = (alerts ?? []).filter((a) => !a.resolved_at);
   const detailUrls = extractAlertUrls(detail);
   const plan = detail ? buildRemediationPlan(detail) : null;
@@ -144,7 +166,23 @@ export const SeoAlertsPanel = () => {
             Detectează automat erorile de indexare Google și URL-urile 404 accesate frecvent. Rulează zilnic
             și trimite e-mail administratorului la alerte noi.
           </CardDescription>
+          {coverage && (
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <Badge variant="outline" className="gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" aria-hidden="true" />
+                {coverage.indexed} pagini indexate
+              </Badge>
+              <Badge variant={coverage.notIndexed > 0 ? "destructive" : "outline"} className="gap-1">
+                <AlertTriangle className="w-3 h-3" aria-hidden="true" />
+                {coverage.notIndexed} neindexate
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                din {coverage.checked} verificate · {new Date(coverage.at).toLocaleString("ro-RO")}
+              </span>
+            </div>
+          )}
         </CardHeader>
+
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-1">

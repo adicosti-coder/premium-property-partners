@@ -79,20 +79,30 @@ Deno.serve(async (req: Request) => {
     .limit(1)
     .maybeSingle();
 
-  if (snap && (snap.issues_count ?? 0) >= minIndexingIssues) {
+  // Indexing coverage summary (indexed vs not indexed), not just error counts.
+  const checkedPages = Number(snap?.checked_pages ?? 0);
+  const issuesCount = Number(snap?.issues_count ?? 0);
+  const indexingSummary = {
+    checked_pages: checkedPages,
+    not_indexed: issuesCount,
+    indexed: Math.max(checkedPages - issuesCount, 0),
+    snapshot_at: snap?.created_at ?? null,
+  };
+
+  if (snap && issuesCount >= minIndexingIssues) {
     candidates.push({
       alert_type: "indexing",
       alert_key: `snapshot:${snap.id}`,
-      title: `${snap.issues_count} pagini cu probleme de indexare în Google`,
+      title: `${issuesCount} pagini neindexate din ${checkedPages} verificate în Google`,
       severity: "error",
       details: {
-        checked_pages: snap.checked_pages,
-        issues_count: snap.issues_count,
+        ...indexingSummary,
+        issues_count: issuesCount,
         issues: snap.issues,
-        snapshot_at: snap.created_at,
       },
     });
   }
+
 
   // 2. Frequently hit 404 URLs in the last 24h.
   const { data: notFound } = await admin
@@ -231,7 +241,9 @@ Deno.serve(async (req: Request) => {
     reindexed,
     threshold,
     min_indexing_issues: minIndexingIssues,
+    indexing: indexingSummary,
   });
+
 });
 
 /** Extracts every absolute/relative URL referenced by a batch of alerts. */
