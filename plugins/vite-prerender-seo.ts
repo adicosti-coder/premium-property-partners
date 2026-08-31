@@ -522,23 +522,59 @@ export function parseStaticGuestProperties(): StaticGuestProperty[] {
 }
 
 export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
+  const geo = parseGuestGeo();
   return parseStaticGuestProperties()
     .filter((p) => p.isActive && !taken.has(`/proprietate/${p.slug}`))
     .map((p) => {
       const zone = extractZone(p.location);
       const canonical = `${BASE_URL}/proprietate/${p.slug}`;
-      const title = `${p.name} - Cazare Regim Hotelier Timișoara | RealTrust`;
+      const shortName = p.name.replace(/\s+by RealTrust$/i, '').trim();
+      const priceBit = p.pricePerNight ? ` de la ${p.pricePerNight}€/noapte` : '';
+      // Titlu RO orientat pe intenția de căutare "cazare/apartament regim hotelier Timișoara"
+      const rawTitle = `${shortName} — Cazare Timișoara${priceBit} | RealTrust`;
+      const title = rawTitle.length > 65
+        ? `${shortName} — Cazare Regim Hotelier Timișoara`.slice(0, 65)
+        : rawTitle;
       const amenityBlob = p.amenities.join(' | ').toLowerCase();
       const highlights = [
         ['parcare', /parcare|parking|garaj/],
         ['Wi-Fi', /wi-?fi|internet/],
-        ['self check-in', /self ?check|check-?in autonom|acces autonom|keybox|cutie cu chei/],
+        ['self check-in', /self ?check|check-?in autonom|acces autonom|auto check|keybox|cutie cu chei/],
+        ['aer condiționat', /aer condi/],
       ]
         .filter(([, re]) => (re as RegExp).test(amenityBlob))
         .map(([label]) => label as string);
-      const amenityText = (highlights.length ? highlights : ['parcare', 'Wi-Fi', 'self check-in']).join(', ');
-      const rawDesc = `Cazare regim hotelier în ${zone}, Timișoara. ${p.capacity ? `${p.capacity} oaspeți. ` : ''}${amenityText}. Rezervare directă, fără comision.`;
+      const amenityText = (highlights.length ? highlights : ['parcare', 'Wi-Fi', 'self check-in'])
+        .slice(0, 3)
+        .join(', ');
+      const specs = [
+        p.size ? `${p.size} mp` : '',
+        p.bedrooms ? `${p.bedrooms} ${p.bedrooms === 1 ? 'dormitor' : 'dormitoare'}` : '',
+        p.capacity ? `${p.capacity} oaspeți` : '',
+      ].filter(Boolean).join(', ');
+      const rawDesc = `Apartament în regim hotelier în ${zone}, Timișoara${specs ? ` — ${specs}` : ''}. ${amenityText}.${p.pricePerNight ? ` De la ${p.pricePerNight}€/noapte.` : ''} Rezervare directă, fără comision.`;
       const description = rawDesc.length > 158 ? `${rawDesc.slice(0, 155).trimEnd()}…` : rawDesc;
+
+      const coords = geo[p.slug];
+      const geoNode = coords
+        ? { geo: { '@type': 'GeoCoordinates', latitude: coords[1], longitude: coords[0] } }
+        : {};
+      const ratingNode = p.rating && p.reviews
+        ? {
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: p.rating,
+              reviewCount: p.reviews,
+              bestRating: 10,
+              worstRating: 1,
+            },
+          }
+        : {};
+      const amenityFeature = p.amenities.slice(0, 15).map((a) => ({
+        '@type': 'LocationFeatureSpecification',
+        name: a,
+        value: true,
+      }));
 
       return {
         path: `/proprietate/${p.slug}`,
@@ -551,11 +587,13 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
           {
             '@context': 'https://schema.org',
             '@type': 'LodgingBusiness',
+            '@id': `${canonical}#lodgingbusiness`,
             name: p.name,
             description,
             url: canonical,
-            ...(p.image && { image: p.image }),
-            priceRange: '€€',
+            ...(p.images.length > 0 && { image: p.images }),
+            priceRange: p.pricePerNight ? `€${p.pricePerNight}/noapte` : '€€',
+            currenciesAccepted: 'EUR, RON',
             address: {
               '@type': 'PostalAddress',
               streetAddress: zone,
@@ -563,34 +601,31 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
               addressRegion: 'Timiș',
               addressCountry: 'RO',
             },
-            ...(p.amenities.length > 0 && {
-              amenityFeature: p.amenities.slice(0, 15).map((a) => ({
-                '@type': 'LocationFeatureSpecification',
-                name: a,
-                value: true,
-              })),
-            }),
+            ...geoNode,
+            ...ratingNode,
+            ...(p.checkInTime && { checkinTime: p.checkInTime }),
+            ...(p.checkOutTime && { checkoutTime: p.checkOutTime }),
+            ...(p.amenities.length > 0 && { amenityFeature }),
           },
           {
             '@context': 'https://schema.org',
             '@type': 'HotelRoom',
+            '@id': `${canonical}#hotelroom`,
             name: p.name,
             description,
             url: canonical,
-            ...(p.image && { image: p.image }),
+            ...(p.images.length > 0 && { image: p.images }),
+            containedInPlace: { '@id': `${canonical}#lodgingbusiness` },
             ...(p.bedrooms && { numberOfRooms: p.bedrooms }),
+            ...(p.bedrooms && {
+              bed: { '@type': 'BedDetails', numberOfBeds: p.bedrooms, typeOfBed: 'Queen' },
+            }),
             ...(p.bathrooms && { numberOfBathroomsTotal: p.bathrooms }),
             ...(p.size && { floorSize: { '@type': 'QuantitativeValue', value: p.size, unitCode: 'MTK' } }),
             ...(p.capacity && {
-              occupancy: { '@type': 'QuantitativeValue', maxValue: p.capacity, unitText: 'oaspeți' },
+              occupancy: { '@type': 'QuantitativeValue', maxValue: p.capacity, unitCode: 'C62' },
             }),
-            ...(p.amenities.length > 0 && {
-              amenityFeature: p.amenities.slice(0, 15).map((a) => ({
-                '@type': 'LocationFeatureSpecification',
-                name: a,
-                value: true,
-              })),
-            }),
+            ...(p.amenities.length > 0 && { amenityFeature }),
             ...(p.pricePerNight && {
               offers: {
                 '@type': 'Offer',
@@ -598,8 +633,24 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
                 priceCurrency: 'EUR',
                 availability: 'https://schema.org/InStock',
                 url: `${canonical}#disponibilitate`,
+                priceSpecification: {
+                  '@type': 'UnitPriceSpecification',
+                  price: p.pricePerNight,
+                  priceCurrency: 'EUR',
+                  unitCode: 'DAY',
+                  unitText: 'noapte',
+                },
               },
             }),
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Acasă', item: `${BASE_URL}/` },
+              { '@type': 'ListItem', position: 2, name: 'Cazare Timișoara', item: `${BASE_URL}/pentru-oaspeti` },
+              { '@type': 'ListItem', position: 3, name: p.name, item: canonical },
+            ],
           },
         ],
       } satisfies PrerenderRoute;
