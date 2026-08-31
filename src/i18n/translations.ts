@@ -337,7 +337,7 @@ export const translations = {
       message: "Cerințe speciale (opțional)",
       messagePlaceholder: "Menționează orice cerințe speciale: pat suplimentar, parcare, etc.",
       cancel: "Anulează",
-      submit: "Trimite pe WhatsApp",
+      submit: "Trimite cererea",
       sending: "Se trimite...",
       success: "Cerere trimisă!",
       successMessage: "Te vom contacta în curând pentru confirmare.",
