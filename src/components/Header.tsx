@@ -87,12 +87,16 @@ const Header = () => {
       subscription = data.subscription;
     };
 
+    let idleId: number | undefined;
     const trigger = () => {
       init().catch(() => {});
+      if (idleId !== undefined) clearTimeout(idleId);
       events.forEach(e => document.removeEventListener(e, trigger));
     };
     const events = ["click", "touchstart", "keydown"] as const;
     events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
+    // Also resolve auth without interaction (keeps the Admin entry visible on desktop)
+    idleId = window.setTimeout(trigger, 2000);
 
     return () => {
       cancelled = true;
