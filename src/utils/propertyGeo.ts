@@ -52,7 +52,7 @@ const exactCoordinatesBySlug: Record<string, [number, number]> = {
   'fullview-studio-deluxe': [21.232860, 45.741866],
   'avenue-of-mara-apart-hotel': [21.2148126, 45.753754],
   'helios-apart-hotel': [21.2344862, 45.7432988],
-  'ateneo-trevi-2-apart-hotel': [21.2098, 45.779],
+  'ateneo-trevi-2-apart-hotel': [21.236043, 45.721480],
   'sunset-da-ra-studio-deluxe': [21.2148126, 45.753754],
   'mara-luxury-golden-apart-hotel': [21.2148126, 45.753754],
   'ateneo-apart-hotel-studio-deluxe': [21.2098, 45.779],
@@ -139,6 +139,19 @@ const profiles: GeoProfile[] = [
       { name: 'Restaurante rezidențiale', nameEn: 'Residential-area restaurants', lng: 21.212, lat: 45.779, category: 'restaurant', emoji: '🍽️', minutes: 3, mode: 'walk' },
       { name: 'Transport public Torontalului', nameEn: 'Torontalului public transport', lng: 21.2108, lat: 45.7788, category: 'transport', emoji: '🚌', minutes: 3, mode: 'walk' },
       { name: 'Piața Unirii', nameEn: 'Union Square', lng: 21.2265, lat: 45.7571, category: 'tourist', emoji: '🏛️', minutes: 9, mode: 'drive' },
+    ],
+  },
+  {
+    key: 'apicultorilor',
+    aliases: ['apicultorilor', 'apicultorilor 31'],
+    center: { lng: 21.236043, lat: 45.72148 },
+    scores: { transport: 8.2, education: 7.8, lifestyle: 8.1, overallLabelRo: 'Foarte Bun', overallLabelEn: 'Very Good' },
+    pois: [
+      { name: 'Supermarket de cartier', nameEn: 'Neighborhood supermarket', lng: 21.2345, lat: 45.7225, category: 'supermarket', emoji: '🛒', minutes: 4, mode: 'walk' },
+      { name: 'Centrul Vechi', nameEn: 'Old Town Center', lng: 21.2265, lat: 45.7571, category: 'tourist', emoji: '🏛️', minutes: 12, mode: 'drive' },
+      { name: 'Iulius Town', nameEn: 'Iulius Town', lng: 21.227, lat: 45.7695, category: 'mall', emoji: '🛍️', minutes: 13, mode: 'drive' },
+      { name: 'Transport public Calea Martirilor', nameEn: 'Calea Martirilor public transport', lng: 21.2335, lat: 45.7228, category: 'transport', emoji: '🚌', minutes: 5, mode: 'walk' },
+      { name: 'Parc de cartier', nameEn: 'Neighborhood park', lng: 21.2372, lat: 45.7208, category: 'park', emoji: '🌳', minutes: 4, mode: 'walk' },
     ],
   },
   {
@@ -366,6 +379,8 @@ export const getDisplayLocation = (input: GeoInput) => {
       return 'NordOne / Calea Circumvalațiunii, Timișoara';
     case 'ateneo_torontalului':
       return 'Torontalului / Ateneo, Timișoara';
+    case 'apicultorilor':
+      return 'Apicultorilor / Sud, Timișoara';
     case 'green_forest_constructorilor':
       return 'Constructorilor / Green Forest, Timișoara';
     case 'helios_elisabetin':

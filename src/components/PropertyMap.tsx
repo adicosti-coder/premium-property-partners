@@ -23,7 +23,7 @@ const propertyCoordinates: Record<string, [number, number]> = {
   // Strada Argeș nr.4 (zona Elisabetin)
   'helios-apart-hotel': [21.2345, 45.7433],
   // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo (spread for tap-target spacing)
-  'ateneo-trevi-2-apart-hotel': [21.2095, 45.7792],
+  'ateneo-trevi-2-apart-hotel': [21.236043, 45.721480],
   // Calea Circumvalațiunii nr.1, City of Mara, M11
   'sunset-da-ra-studio-deluxe': [21.2150, 45.7540],
   // Strada Sinaia nr.2B - City of Mara M2-M7
