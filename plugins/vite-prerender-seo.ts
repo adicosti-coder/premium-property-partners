@@ -1256,10 +1256,13 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
     `<meta name="description" content="${escapeHtml(route.description)}">`
   );
 
-  html = html.replace(
-    /<link rel="canonical" href="[^"]*"\s*\/?>/,
-    `<link rel="canonical" href="${route.canonical}" />`
-  );
+  // Self-referencing canonical. The static shell ships without one, so fall
+  // back to injecting before </head> instead of silently dropping the tag.
+  const canonicalTag = `<link rel="canonical" href="${route.canonical}" />`;
+  const canonicalRe = /<link rel="canonical" href="[^"]*"\s*\/?>/;
+  html = canonicalRe.test(html)
+    ? html.replace(canonicalRe, canonicalTag)
+    : html.replace('</head>', `  ${canonicalTag}\n</head>`);
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
   // values; without this, every prerendered page shares the homepage preview.
