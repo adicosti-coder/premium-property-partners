@@ -163,6 +163,10 @@ const PropertyDetail = () => {
   const staticProperty = !isDbProperty ? getPropertyBySlug(slug || "") : undefined;
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  // Live Pynbooking data (preț/noapte, rating, recenzii) — sincronizat automat
+  // de jobul zilnic `scrape-property-data`, deci nu mai necesită editare manuală.
+  const { data: liveDataMap } = usePropertyLiveData();
+  const liveData = liveDataMap?.[slug || ""];
   
   // State pentru proprietatea din DB
   const [dbProperty, setDbProperty] = useState<DbPropertyData | null>(null);
