@@ -541,7 +541,7 @@ const PropertyDetail = () => {
       image: galleryImages[0] || "",
       images: galleryImages,
       location: property.location,
-      pricePerNight: property.pricePerNight || 0,
+      pricePerNight: effectivePrice || 0,
       capacity: property.capacity || 2,
       bedrooms: property.bedrooms || 1,
       bathrooms: property.bathrooms || 1,
@@ -610,7 +610,8 @@ const PropertyDetail = () => {
           "value": true,
         })),
       }),
-      ...(property.pricePerNight ? { "priceRange": `€${property.pricePerNight}/noapte` } : {}),
+      ...(effectivePrice ? { "priceRange": `€${effectivePrice}/noapte` } : {}),
+      "currenciesAccepted": "EUR, RON",
     },
 
     // HotelRoom pentru unitățile de cazare în regim hotelier
@@ -638,14 +639,39 @@ const PropertyDetail = () => {
           "value": true,
         })),
       }),
-      ...(property.pricePerNight ? {
-        "offers": {
-          "@type": "Offer",
-          "price": property.pricePerNight,
-          "priceCurrency": "EUR",
-          "url": `https://realtrust.ro/proprietate/${slug}#disponibilitate`,
-          "availability": "https://schema.org/InStock",
-        },
+      ...(effectivePrice ? {
+        // Ofertă dublă: preț de referință în EUR + echivalent în RON (lei),
+        // pentru rezultatele Google din România.
+        "offers": [
+          {
+            "@type": "Offer",
+            "price": effectivePrice,
+            "priceCurrency": "EUR",
+            "url": `https://realtrust.ro/proprietate/${slug}#disponibilitate`,
+            "availability": "https://schema.org/InStock",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": effectivePrice,
+              "priceCurrency": "EUR",
+              "unitCode": "DAY",
+              "unitText": "noapte",
+            },
+          },
+          {
+            "@type": "Offer",
+            "price": effectivePriceRon,
+            "priceCurrency": "RON",
+            "url": `https://realtrust.ro/proprietate/${slug}#disponibilitate`,
+            "availability": "https://schema.org/InStock",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": effectivePriceRon,
+              "priceCurrency": "RON",
+              "unitCode": "DAY",
+              "unitText": "noapte",
+            },
+          },
+        ],
       } : {}),
     }] : []),
 
@@ -685,7 +711,7 @@ const PropertyDetail = () => {
           }
           if (normalizedListingType === 'cazare') {
             const shortName = displayName.replace(/\s+by RealTrust$/i, '').trim();
-            const price = property.pricePerNight;
+            const price = effectivePrice;
             const raw = price
               ? `${shortName} — Cazare Timișoara de la ${price}€/noapte | RealTrust`
               : `${shortName} — Cazare Regim Hotelier Timișoara | RealTrust`;
@@ -739,7 +765,7 @@ const PropertyDetail = () => {
           return staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${displayName} — cazare regim hotelier ${property.location}, Timișoara`;
         })()}
         type="product"
-        productPrice={property.pricePerNight || undefined}
+        productPrice={effectivePrice || undefined}
         productCurrency="EUR"
         jsonLd={propertySchemas}
       />
@@ -1023,7 +1049,7 @@ const PropertyDetail = () => {
                   bathrooms={property.bathrooms}
                   capacity={property.capacity}
                   floor={dbProperty?.floor}
-                  pricePerNight={dbProperty?.base_price_per_night || property.pricePerNight}
+                  pricePerNight={dbProperty?.base_price_per_night || effectivePrice}
                   amenities={property.amenities}
                   listingType={dbProperty?.listing_type}
                   yearBuilt={dbProperty?.year_built}
@@ -1065,7 +1091,7 @@ const PropertyDetail = () => {
                   <h2 className="text-2xl font-serif font-semibold">
                     {language === 'ro' ? 'Verifică disponibilitatea și rezervă direct' : 'Check availability & book direct'}
                   </h2>
-                  <PriceCompareWidget basePrice={property.pricePerNight} />
+                  <PriceCompareWidget basePrice={effectivePrice} />
                   <StayCalculator property={property as any} onBook={openDirectBooking} />
                   <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
                   <div className="bg-card border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1109,7 +1135,7 @@ const PropertyDetail = () => {
                 location={property.location}
                 capacity={staticProperty ? property.capacity : undefined}
                 bedrooms={staticProperty ? property.bedrooms : undefined}
-                pricePerNight={staticProperty ? property.pricePerNight : undefined}
+                pricePerNight={staticProperty ? effectivePrice : undefined}
                 isInvestment={dbProperty?.listing_type !== 'inchiriere' && (isDbProperty || dbProperty?.status_operativ === 'investitie')}
                 listingType={dbProperty?.listing_type}
                 amenities={dbProperty?.amenities || (staticProperty ? property.amenities : [])}
@@ -1539,7 +1565,7 @@ const PropertyDetail = () => {
         propertyName={property.name}
         propertySlug={property.slug}
         propertyRefId={typeof property.id === "number" ? property.id : undefined}
-        pricePerNight={dbProperty?.base_price_per_night ?? (staticProperty ? property.pricePerNight : undefined)}
+        pricePerNight={dbProperty?.base_price_per_night ?? (staticProperty ? effectivePrice : undefined)}
       />
       <GlobalConversionWidgets showExitIntent={false} />
       </Suspense>
