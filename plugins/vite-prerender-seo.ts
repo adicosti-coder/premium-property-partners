@@ -108,6 +108,8 @@ const HOMEPAGE_SEO_BODY = `
 `;
 
 const BASE_URL = 'https://realtrust.ro';
+/** Curs orientativ EUR→RON folosit pentru prețul dual din datele structurate. */
+const EUR_TO_RON = 5.05;
 const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8';
 const PROTECTED_HEAD_PATTERNS = [
@@ -557,13 +559,16 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
         p.capacity ? `${p.capacity} oaspeți` : '',
       ].filter(Boolean).join(', ');
       // Descriere RO completă, sub 160 caractere, fără trunchiere la mijloc de frază.
-      const buildDesc = (z: string, withAmenities: boolean) =>
-        `Cazare regim hotelier Timișoara, ${z}${specs ? `: ${specs}` : ''}.${withAmenities ? ` ${amenityText}.` : ''}${p.pricePerNight ? ` De la ${p.pricePerNight}€/noapte,` : ''} rezervare directă.`;
+      const priceRon = p.pricePerNight ? Math.round(p.pricePerNight * EUR_TO_RON) : 0;
+      const buildDesc = (z: string, withAmenities: boolean, withRon = true) =>
+        `Cazare regim hotelier Timișoara, ${z}${specs ? `: ${specs}` : ''}.${withAmenities ? ` ${amenityText}.` : ''}${p.pricePerNight ? ` De la ${p.pricePerNight}€${withRon ? ` (${priceRon} lei)` : ''}/noapte,` : ''} rezervare directă.`;
       const zoneShort = zone.replace(/\s*nr\.\s*/i, ' ');
       const descCandidates = [
         buildDesc(zoneShort, true),
         buildDesc(zoneShort, false),
         buildDesc(zoneShort.split(/\s+/).slice(0, 3).join(' '), true),
+        buildDesc(zoneShort, true, false),
+        buildDesc(zoneShort, false, false),
       ];
       const description =
         descCandidates.find((d) => d.length <= 158) ||
@@ -641,20 +646,37 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
             }),
             ...(p.amenities.length > 0 && { amenityFeature }),
             ...(p.pricePerNight && {
-              offers: {
-                '@type': 'Offer',
-                price: p.pricePerNight,
-                priceCurrency: 'EUR',
-                availability: 'https://schema.org/InStock',
-                url: `${canonical}#disponibilitate`,
-                priceSpecification: {
-                  '@type': 'UnitPriceSpecification',
+              // Ofertă dublă: EUR (referință) + RON (lei) pentru SERP-ul din România.
+              offers: [
+                {
+                  '@type': 'Offer',
                   price: p.pricePerNight,
                   priceCurrency: 'EUR',
-                  unitCode: 'DAY',
-                  unitText: 'noapte',
+                  availability: 'https://schema.org/InStock',
+                  url: `${canonical}#disponibilitate`,
+                  priceSpecification: {
+                    '@type': 'UnitPriceSpecification',
+                    price: p.pricePerNight,
+                    priceCurrency: 'EUR',
+                    unitCode: 'DAY',
+                    unitText: 'noapte',
+                  },
                 },
-              },
+                {
+                  '@type': 'Offer',
+                  price: Math.round(p.pricePerNight * EUR_TO_RON),
+                  priceCurrency: 'RON',
+                  availability: 'https://schema.org/InStock',
+                  url: `${canonical}#disponibilitate`,
+                  priceSpecification: {
+                    '@type': 'UnitPriceSpecification',
+                    price: Math.round(p.pricePerNight * EUR_TO_RON),
+                    priceCurrency: 'RON',
+                    unitCode: 'DAY',
+                    unitText: 'noapte',
+                  },
+                },
+              ],
             }),
           },
           {

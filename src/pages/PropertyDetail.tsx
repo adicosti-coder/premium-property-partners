@@ -48,6 +48,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
 import { usePropertyViewTracking } from "@/hooks/usePropertyViewTracking";
+import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
+import { eurToRon } from "@/utils/currency";
 import { supabase } from "@/lib/supabaseClient";
 import { 
   generatePropertyPageSchemas, 
@@ -163,6 +165,10 @@ const PropertyDetail = () => {
   const staticProperty = !isDbProperty ? getPropertyBySlug(slug || "") : undefined;
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  // Live Pynbooking data (preț/noapte, rating, recenzii) — sincronizat automat
+  // de jobul zilnic `scrape-property-data`, deci nu mai necesită editare manuală.
+  const { data: liveDataMap } = usePropertyLiveData();
+  const liveData = liveDataMap?.[slug || ""];
   
   // State pentru proprietatea din DB
   const [dbProperty, setDbProperty] = useState<DbPropertyData | null>(null);
@@ -312,6 +318,17 @@ const PropertyDetail = () => {
     latitude: dbProperty.latitude || null,
     longitude: dbProperty.longitude || null,
   } : null);
+
+  // Prețul afișat: valoarea live din Pynbooking când este plauzibilă,
+  // altfel prețul de referință al proprietății (fallback).
+  const livePricePerNight = liveData?.price_per_night;
+  const isPlausibleLivePrice =
+    typeof livePricePerNight === "number" && livePricePerNight >= 25 && livePricePerNight <= 250;
+  const effectivePrice = isPlausibleLivePrice
+    ? livePricePerNight!
+    : (property?.pricePerNight || 0);
+  const effectivePriceRon = effectivePrice ? eurToRon(effectivePrice) : 0;
+
 
   // Track dwell time for 'lux' and 'gradina' tagged properties
   useListingDwellTracker({
@@ -524,7 +541,7 @@ const PropertyDetail = () => {
       image: galleryImages[0] || "",
       images: galleryImages,
       location: property.location,
-      pricePerNight: property.pricePerNight || 0,
+      pricePerNight: effectivePrice || 0,
       capacity: property.capacity || 2,
       bedrooms: property.bedrooms || 1,
       bathrooms: property.bathrooms || 1,
@@ -593,7 +610,8 @@ const PropertyDetail = () => {
           "value": true,
         })),
       }),
-      ...(property.pricePerNight ? { "priceRange": `€${property.pricePerNight}/noapte` } : {}),
+      ...(effectivePrice ? { "priceRange": `€${effectivePrice}/noapte` } : {}),
+      "currenciesAccepted": "EUR, RON",
     },
 
     // HotelRoom pentru unitățile de cazare în regim hotelier
@@ -621,14 +639,39 @@ const PropertyDetail = () => {
           "value": true,
         })),
       }),
-      ...(property.pricePerNight ? {
-        "offers": {
-          "@type": "Offer",
-          "price": property.pricePerNight,
-          "priceCurrency": "EUR",
-          "url": `https://realtrust.ro/proprietate/${slug}#disponibilitate`,
-          "availability": "https://schema.org/InStock",
-        },
+      ...(effectivePrice ? {
+        // Ofertă dublă: preț de referință în EUR + echivalent în RON (lei),
+        // pentru rezultatele Google din România.
+        "offers": [
+          {
+            "@type": "Offer",
+            "price": effectivePrice,
+            "priceCurrency": "EUR",
+            "url": `https://realtrust.ro/proprietate/${slug}#disponibilitate`,
+            "availability": "https://schema.org/InStock",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": effectivePrice,
+              "priceCurrency": "EUR",
+              "unitCode": "DAY",
+              "unitText": "noapte",
+            },
+          },
+          {
+            "@type": "Offer",
+            "price": effectivePriceRon,
+            "priceCurrency": "RON",
+            "url": `https://realtrust.ro/proprietate/${slug}#disponibilitate`,
+            "availability": "https://schema.org/InStock",
+            "priceSpecification": {
+              "@type": "UnitPriceSpecification",
+              "price": effectivePriceRon,
+              "priceCurrency": "RON",
+              "unitCode": "DAY",
+              "unitText": "noapte",
+            },
+          },
+        ],
       } : {}),
     }] : []),
 
@@ -668,7 +711,7 @@ const PropertyDetail = () => {
           }
           if (normalizedListingType === 'cazare') {
             const shortName = displayName.replace(/\s+by RealTrust$/i, '').trim();
-            const price = property.pricePerNight;
+            const price = effectivePrice;
             const raw = price
               ? `${shortName} — Cazare Timișoara de la ${price}€/noapte | RealTrust`
               : `${shortName} — Cazare Regim Hotelier Timișoara | RealTrust`;
@@ -722,7 +765,7 @@ const PropertyDetail = () => {
           return staticProperty ? getImageAlt(staticProperty, 0, language as 'ro' | 'en') : `${displayName} — cazare regim hotelier ${property.location}, Timișoara`;
         })()}
         type="product"
-        productPrice={property.pricePerNight || undefined}
+        productPrice={effectivePrice || undefined}
         productCurrency="EUR"
         jsonLd={propertySchemas}
       />
@@ -805,7 +848,7 @@ const PropertyDetail = () => {
             {/* ═══ PREȚ PROMINENT ═══ */}
             {(() => {
               const capital = dbProperty?.capital_necesar;
-              const nightlyPrice = dbProperty?.base_price_per_night ?? (staticProperty as any)?.price;
+              const nightlyPrice = dbProperty?.base_price_per_night ?? (effectivePrice || undefined);
               const weekendPrice = dbProperty?.weekend_price_per_night;
               const roi = displayRoi;
 
@@ -843,9 +886,19 @@ const PropertyDetail = () => {
                         </span>
                       )}
                     </span>
+                    {!isRental && !isSale && (
+                      <span className="text-sm text-muted-foreground">
+                        ≈ {eurToRon(nightlyPrice).toLocaleString('ro-RO')} lei{language === 'ro' ? '/noapte' : '/night'}
+                      </span>
+                    )}
                     {!isRental && !isSale && weekendPrice && weekendPrice !== nightlyPrice && (
                       <span className="text-sm text-muted-foreground">
                         ({language === 'ro' ? 'weekend' : 'weekend'}: €{weekendPrice}/{language === 'ro' ? 'noapte' : 'night'})
+                      </span>
+                    )}
+                    {isPlausibleLivePrice && !isRental && !isSale && (
+                      <span className="text-xs text-muted-foreground">
+                        {language === 'ro' ? 'tarif sincronizat automat' : 'rate synced automatically'}
                       </span>
                     )}
                   </div>
@@ -1006,7 +1059,7 @@ const PropertyDetail = () => {
                   bathrooms={property.bathrooms}
                   capacity={property.capacity}
                   floor={dbProperty?.floor}
-                  pricePerNight={dbProperty?.base_price_per_night || property.pricePerNight}
+                  pricePerNight={dbProperty?.base_price_per_night || effectivePrice}
                   amenities={property.amenities}
                   listingType={dbProperty?.listing_type}
                   yearBuilt={dbProperty?.year_built}
@@ -1048,7 +1101,7 @@ const PropertyDetail = () => {
                   <h2 className="text-2xl font-serif font-semibold">
                     {language === 'ro' ? 'Verifică disponibilitatea și rezervă direct' : 'Check availability & book direct'}
                   </h2>
-                  <PriceCompareWidget basePrice={property.pricePerNight} />
+                  <PriceCompareWidget basePrice={effectivePrice} />
                   <StayCalculator property={property as any} onBook={openDirectBooking} />
                   <AvailabilityCalendar propertyId={property.id} propertySlug={property.slug} bookingUrl={property.bookingUrl} />
                   <div className="bg-card border rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1092,7 +1145,7 @@ const PropertyDetail = () => {
                 location={property.location}
                 capacity={staticProperty ? property.capacity : undefined}
                 bedrooms={staticProperty ? property.bedrooms : undefined}
-                pricePerNight={staticProperty ? property.pricePerNight : undefined}
+                pricePerNight={staticProperty ? effectivePrice : undefined}
                 isInvestment={dbProperty?.listing_type !== 'inchiriere' && (isDbProperty || dbProperty?.status_operativ === 'investitie')}
                 listingType={dbProperty?.listing_type}
                 amenities={dbProperty?.amenities || (staticProperty ? property.amenities : [])}
@@ -1522,7 +1575,7 @@ const PropertyDetail = () => {
         propertyName={property.name}
         propertySlug={property.slug}
         propertyRefId={typeof property.id === "number" ? property.id : undefined}
-        pricePerNight={dbProperty?.base_price_per_night ?? (staticProperty ? property.pricePerNight : undefined)}
+        pricePerNight={dbProperty?.base_price_per_night ?? (staticProperty ? effectivePrice : undefined)}
       />
       <GlobalConversionWidgets showExitIntent={false} />
       </Suspense>
