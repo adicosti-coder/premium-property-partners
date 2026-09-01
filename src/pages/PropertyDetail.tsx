@@ -48,6 +48,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useImagePreload } from "@/hooks/useImagePreload";
 import { usePropertyViewTracking } from "@/hooks/usePropertyViewTracking";
+import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
+import { eurToRon } from "@/utils/currency";
 import { supabase } from "@/lib/supabaseClient";
 import { 
   generatePropertyPageSchemas, 
