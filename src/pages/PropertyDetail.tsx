@@ -848,7 +848,7 @@ const PropertyDetail = () => {
             {/* ═══ PREȚ PROMINENT ═══ */}
             {(() => {
               const capital = dbProperty?.capital_necesar;
-              const nightlyPrice = dbProperty?.base_price_per_night ?? (staticProperty as any)?.price;
+              const nightlyPrice = dbProperty?.base_price_per_night ?? (effectivePrice || undefined);
               const weekendPrice = dbProperty?.weekend_price_per_night;
               const roi = displayRoi;
 
