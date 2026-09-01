@@ -641,20 +641,37 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
             }),
             ...(p.amenities.length > 0 && { amenityFeature }),
             ...(p.pricePerNight && {
-              offers: {
-                '@type': 'Offer',
-                price: p.pricePerNight,
-                priceCurrency: 'EUR',
-                availability: 'https://schema.org/InStock',
-                url: `${canonical}#disponibilitate`,
-                priceSpecification: {
-                  '@type': 'UnitPriceSpecification',
+              // Ofertă dublă: EUR (referință) + RON (lei) pentru SERP-ul din România.
+              offers: [
+                {
+                  '@type': 'Offer',
                   price: p.pricePerNight,
                   priceCurrency: 'EUR',
-                  unitCode: 'DAY',
-                  unitText: 'noapte',
+                  availability: 'https://schema.org/InStock',
+                  url: `${canonical}#disponibilitate`,
+                  priceSpecification: {
+                    '@type': 'UnitPriceSpecification',
+                    price: p.pricePerNight,
+                    priceCurrency: 'EUR',
+                    unitCode: 'DAY',
+                    unitText: 'noapte',
+                  },
                 },
-              },
+                {
+                  '@type': 'Offer',
+                  price: Math.round(p.pricePerNight * EUR_TO_RON),
+                  priceCurrency: 'RON',
+                  availability: 'https://schema.org/InStock',
+                  url: `${canonical}#disponibilitate`,
+                  priceSpecification: {
+                    '@type': 'UnitPriceSpecification',
+                    price: Math.round(p.pricePerNight * EUR_TO_RON),
+                    priceCurrency: 'RON',
+                    unitCode: 'DAY',
+                    unitText: 'noapte',
+                  },
+                },
+              ],
             }),
           },
           {
