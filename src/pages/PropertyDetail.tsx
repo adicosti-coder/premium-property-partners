@@ -886,9 +886,19 @@ const PropertyDetail = () => {
                         </span>
                       )}
                     </span>
+                    {!isRental && !isSale && (
+                      <span className="text-sm text-muted-foreground">
+                        ≈ {eurToRon(nightlyPrice).toLocaleString('ro-RO')} lei{language === 'ro' ? '/noapte' : '/night'}
+                      </span>
+                    )}
                     {!isRental && !isSale && weekendPrice && weekendPrice !== nightlyPrice && (
                       <span className="text-sm text-muted-foreground">
                         ({language === 'ro' ? 'weekend' : 'weekend'}: €{weekendPrice}/{language === 'ro' ? 'noapte' : 'night'})
+                      </span>
+                    )}
+                    {isPlausibleLivePrice && !isRental && !isSale && (
+                      <span className="text-xs text-muted-foreground">
+                        {language === 'ro' ? 'tarif sincronizat automat' : 'rate synced automatically'}
                       </span>
                     )}
                   </div>
