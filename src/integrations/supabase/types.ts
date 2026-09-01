@@ -11036,6 +11036,7 @@ export type Database = {
         | "pending_credentials"
         | "failed"
         | "expired"
+        | "to_review"
       listing_category: "vanzare" | "inchiriere" | "regim_hotelier"
       listing_status: "pending_inspection" | "approved" | "rejected"
       offer_category: "vanzare" | "inchiriere" | "hotelier"
@@ -11188,6 +11189,7 @@ export const Constants = {
         "pending_credentials",
         "failed",
         "expired",
+        "to_review",
       ],
       listing_category: ["vanzare", "inchiriere", "regim_hotelier"],
       listing_status: ["pending_inspection", "approved", "rejected"],

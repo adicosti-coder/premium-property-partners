@@ -1,0 +1,1 @@
+ALTER TYPE public.lead_lifecycle_status ADD VALUE IF NOT EXISTS 'to_review';
