@@ -67,6 +67,36 @@ const ContactPage = () => {
         { "@type": "City", "name": "Timișoara" },
         { "@type": "AdministrativeArea", "name": "Județul Timiș" },
       ],
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "contactType": isRo ? "Relații clienți" : "customer service",
+          "telephone": "+40799069256",
+          "email": "info@realtrust.ro",
+          "availableLanguage": ["ro", "en"],
+          "areaServed": "RO",
+          "hoursAvailable": [
+            { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "09:00", "closes": "18:00" },
+            { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "10:00", "closes": "14:00" },
+          ],
+        },
+        {
+          "@type": "ContactPoint",
+          "contactType": isRo ? "Vânzări și investiții" : "sales",
+          "telephone": "+40799069256",
+          "email": "info@realtrust.ro",
+          "availableLanguage": ["ro", "en"],
+          "areaServed": "RO",
+        },
+        {
+          "@type": "ContactPoint",
+          "contactType": isRo ? "Suport oaspeți ApArt Hotel (24/7)" : "reservations",
+          "telephone": "+40770635252",
+          "email": "info@realtrust.ro",
+          "availableLanguage": ["ro", "en"],
+          "areaServed": "RO",
+        },
+      ],
       "department": [
         {
           "@type": "RealEstateAgent",
