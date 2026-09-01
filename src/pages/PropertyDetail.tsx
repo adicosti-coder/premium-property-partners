@@ -319,6 +319,17 @@ const PropertyDetail = () => {
     longitude: dbProperty.longitude || null,
   } : null);
 
+  // Prețul afișat: valoarea live din Pynbooking când este plauzibilă,
+  // altfel prețul de referință al proprietății (fallback).
+  const livePricePerNight = liveData?.price_per_night;
+  const isPlausibleLivePrice =
+    typeof livePricePerNight === "number" && livePricePerNight >= 25 && livePricePerNight <= 250;
+  const effectivePrice = isPlausibleLivePrice
+    ? livePricePerNight!
+    : (property?.pricePerNight || 0);
+  const effectivePriceRon = effectivePrice ? eurToRon(effectivePrice) : 0;
+
+
   // Track dwell time for 'lux' and 'gradina' tagged properties
   useListingDwellTracker({
     propertyId: dbProperty?.id,
