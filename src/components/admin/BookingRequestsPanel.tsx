@@ -29,10 +29,11 @@ interface BookingRequestRow {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  new: "Nouă",
+  pending: "Nouă",
   contacted: "Contactat",
   confirmed: "Confirmată",
   declined: "Refuzată",
+  cancelled: "Anulată",
 };
 
 const fmtDate = (value: string) =>
