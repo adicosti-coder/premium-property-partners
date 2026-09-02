@@ -4,8 +4,24 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Inbox, MailWarning, MailCheck, RefreshCw } from "lucide-react";
+import { Loader2, Inbox, MailWarning, MailCheck, RefreshCw, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import BookingFunnelChart from "@/components/admin/BookingFunnelChart";
+import { properties } from "@/data/properties";
+import { buildPynbookingUrl, isPynbookingUrl } from "@/lib/pynbooking";
+
+/** Link către motorul real de rezervări, cu sejurul pre-completat. */
+const engineLink = (slug: string | null, checkIn: string, checkOut: string, guests: number | null, reference: string) => {
+  const property = properties.find((p) => p.slug === slug);
+  if (!property || !isPynbookingUrl(property.bookingUrl)) return null;
+  return buildPynbookingUrl(property.bookingUrl, {
+    checkIn,
+    checkOut,
+    guests: guests ?? undefined,
+    reference,
+  });
+};
+
 
 interface BookingRequestRow {
   id: string;
