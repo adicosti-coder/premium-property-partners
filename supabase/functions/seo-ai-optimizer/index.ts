@@ -139,6 +139,20 @@ serve(async (req) => {
       const scraped = await scrapePage(url, FIRECRAWL_API_KEY, forceRefresh);
       const scrapeMs = Date.now() - scrapeStart;
 
+      // Nicio sursă de scraping nu a răspuns (ex: credite Firecrawl epuizate / 429).
+      // Nu mai continuăm cu AI + salvare pe conținut gol — returnăm un mesaj clar.
+      if ((scraped as any).source === "none") {
+        return json(
+          {
+            error: "Audit indisponibil momentan: nu am putut citi pagina (furnizorul de scraping a refuzat cererea). Reîncearcă mai târziu.",
+            code: "scrape_unavailable",
+            url,
+            scrape_ms: scrapeMs,
+          },
+          503,
+        );
+      }
+
       const hashSource = (scraped as any).fullText || scraped.markdown || "";
       const hashBody = hashSource.length > 1500 ? hashSource.slice(1500) : hashSource;
       const contentHash = await sha256(hashBody);
