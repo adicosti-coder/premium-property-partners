@@ -151,7 +151,8 @@ Deno.serve(async (req: Request) => {
         html: `<h2>Alerte SEO noi</h2>
           <table border="1" cellpadding="6" style="border-collapse:collapse;font-family:sans-serif;font-size:13px">
           <tr style="background:#f3f4f6"><th>Tip</th><th>Detaliu</th></tr>${rows}</table>
-          <p style="color:#6b7280">Vezi tot în /admin → SEO → Alerte.</p>`,
+          <p><a href="https://realtrust.ro/admin?tab=seo-optimizer#seo-alerte" style="background:#1d4ed8;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-family:sans-serif">Deschide alertele SEO (Admin → SEO AI)</a></p>
+          <p style="color:#6b7280;font-family:sans-serif;font-size:12px">Panoul „Alerte SEO” se află în tabul <strong>SEO AI</strong> din /admin.</p>`,
         source: "seo-alert-monitor",
       },
       admin,
@@ -193,7 +194,7 @@ Deno.serve(async (req: Request) => {
             title: c.title,
             severity: c.severity,
           })),
-          admin_url: "https://realtrust.ro/admin?tab=seo",
+          admin_url: "https://realtrust.ro/admin?tab=seo-optimizer#seo-alerte",
           sent_at: new Date().toISOString(),
         }),
       });
