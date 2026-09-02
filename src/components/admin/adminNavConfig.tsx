@@ -41,6 +41,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "leads", label: "Lead-uri", icon: Users, badgeKey: "newLeads" },
       { value: "contracts", label: "Contracte & Plăți", icon: FileText, keywords: ["contract", "semnare", "plata", "stripe", "onboarding"] },
       { value: "bookings", label: "Rezervări", icon: CalendarDays },
+      { value: "booking-requests", label: "Cereri rezervare", icon: CalendarDays, keywords: ["cereri", "rezervare", "booking requests", "site", "oaspeti"] },
       { value: "ical-sync", label: "iCal Sync", icon: Calendar },
       { value: "reviews", label: "Reviews", icon: MessageSquare },
       { value: "poi-reviews", label: "Moderare Recenzii POI", icon: MessageSquare, keywords: ["recenzii", "moderare", "poi", "restaurante", "oaspeti", "rating", "aprobare"] },
