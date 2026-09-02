@@ -89,6 +89,8 @@ export default function BookingRequestsPanel() {
   };
 
   return (
+    <div className="space-y-4">
+    <BookingFunnelChart />
     <Card id="cereri-rezervare" className="scroll-mt-24">
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="flex items-center gap-2 text-lg">
@@ -154,6 +156,21 @@ export default function BookingRequestsPanel() {
                 </div>
                 {r.message && <p className="mt-2 text-sm">{r.message}</p>}
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {(() => {
+                    const url = engineLink(r.property_slug, r.check_in, r.check_out, r.guests, r.reference);
+                    return url ? (
+                      <Button asChild size="sm" variant="secondary">
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Confirmă rezervarea ${r.reference} în sistemul de rezervări`}
+                        >
+                          Confirmă în sistem <ExternalLink className="ml-1 w-3 h-3" aria-hidden="true" />
+                        </a>
+                      </Button>
+                    ) : null;
+                  })()}
                   {(["contacted", "confirmed", "declined", "cancelled"] as const).map((s) => (
                     <Button
                       key={s}
@@ -172,5 +189,6 @@ export default function BookingRequestsPanel() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
