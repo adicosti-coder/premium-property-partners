@@ -320,15 +320,18 @@ const PropertyDetail = () => {
     longitude: dbProperty.longitude || null,
   } : null);
 
-  // Prețul afișat: valoarea live din Pynbooking când este plauzibilă,
-  // altfel prețul de referință al proprietății (fallback).
+  // Tariful pe noapte: valoarea live din Pynbooking când este plauzibilă,
+  // altfel tariful de referință al proprietății. Se aplică DOAR listărilor de
+  // cazare — la închiriere/vânzare/investiție prețul nu este un tarif pe noapte.
+  const isNightlyRateListing = normalizedListingType === "cazare";
   const livePricePerNight = liveData?.price_per_night;
   const isPlausibleLivePrice =
+    isNightlyRateListing &&
     typeof livePricePerNight === "number" && livePricePerNight >= 25 && livePricePerNight <= 250;
-  const effectivePrice = isPlausibleLivePrice
-    ? livePricePerNight!
-    : (property?.pricePerNight || 0);
+  const fallbackNightly = isNightlyRateListing ? (property?.pricePerNight || 0) : 0;
+  const effectivePrice = isPlausibleLivePrice ? livePricePerNight! : fallbackNightly;
   const effectivePriceRon = effectivePrice ? eurToRon(effectivePrice) : 0;
+
 
 
   // Track dwell time for 'lux' and 'gradina' tagged properties
