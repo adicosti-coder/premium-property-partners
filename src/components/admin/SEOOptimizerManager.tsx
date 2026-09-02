@@ -182,7 +182,26 @@ const SEOOptimizerManager = () => {
       const { data, error } = await supabase.functions.invoke("seo-ai-optimizer", {
         body: { url: targetUrl, language, forceRefresh: force },
       });
-      if (error) throw error;
+      if (error) {
+        // 503 = scraping indisponibil (credite Firecrawl epuizate / rate limit).
+        // Afișăm un avertisment clar, fără să blocăm restul panoului.
+        try {
+          const res = (error as any)?.context as Response | undefined;
+          if (res && typeof res.json === "function") {
+            const body = await res.clone().json();
+            if (body?.code === "scrape_unavailable" || res.status === 503) {
+              const unavailable = new Error(
+                body?.error || "Audit SEO indisponibil momentan: serviciul de scraping nu răspunde (credite epuizate sau limită atinsă). Reîncearcă mai târziu.",
+              );
+              (unavailable as any).code = "scrape_unavailable";
+              throw unavailable;
+            }
+          }
+        } catch (parseErr: any) {
+          if (parseErr?.code === "scrape_unavailable") throw parseErr;
+        }
+        throw error;
+      }
       if (data?.error) throw new Error(data.error);
       return data;
     },
@@ -191,7 +210,13 @@ const SEOOptimizerManager = () => {
       setSelectedAudit(data.audit);
       qc.invalidateQueries({ queryKey: ["seo-audits-history"] });
     },
-    onError: (e: any) => toast.error(e.message || "Eroare audit"),
+    onError: (e: any) => {
+      if (e?.code === "scrape_unavailable") {
+        toast.warning(e.message, { duration: 8000 });
+        return;
+      }
+      toast.error(e.message || "Eroare audit");
+    },
   });
 
   // Active overrides per URL path → shows badge "Aplicat" in UI
