@@ -15,6 +15,8 @@ import { Link } from "react-router-dom";
 import { z } from "zod";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { useFunnelTracking } from "@/hooks/useFunnelTracking";
+import { properties } from "@/data/properties";
+import { buildPynbookingUrl, isPynbookingUrl } from "@/lib/pynbooking";
 
 interface BookingFormProps {
   isOpen: boolean;
@@ -200,6 +202,17 @@ const BookingForm = ({ isOpen, onClose, propertyName, propertySlug, propertyRefI
 
   const propertyLabel = propertyName || (language === 'en' ? "Any available property" : "Orice proprietate disponibilă");
 
+  const engineUrl = (reference: string) => {
+    const property = properties.find((p) => p.slug === propertySlug);
+    if (!property || !isPynbookingUrl(property.bookingUrl)) return null;
+    return buildPynbookingUrl(property.bookingUrl, {
+      checkIn: formData.checkIn,
+      checkOut: formData.checkOut,
+      guests: Number(formData.guests) || undefined,
+      reference,
+    });
+  };
+
   const whatsappUrl = (reference: string) => {
     const lines = language === 'en'
       ? [`Booking request ${reference}`, `Property: ${propertyLabel}`, `${formData.checkIn} → ${formData.checkOut} (${nights} nights)`, `Guests: ${formData.guests}`, `Name: ${formData.name}`]
@@ -355,6 +368,13 @@ const BookingForm = ({ isOpen, onClose, propertyName, propertySlug, propertyRefI
                     ? 'The confirmation email is delayed, but our team already received your request.'
                     : 'E-mailul de confirmare întârzie, dar echipa a primit deja cererea.')}
             </p>
+            {engineUrl(submitted.reference) && (
+              <Button asChild className="w-full">
+                <a href={engineUrl(submitted.reference)!} target="_blank" rel="noopener noreferrer">
+                  {language === 'en' ? 'Confirm now in the booking system' : 'Confirmă acum în sistemul de rezervări'}
+                </a>
+              </Button>
+            )}
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button asChild variant="outline" className="flex-1">
                 <a href={whatsappUrl(submitted.reference)} target="_blank" rel="noopener noreferrer">
