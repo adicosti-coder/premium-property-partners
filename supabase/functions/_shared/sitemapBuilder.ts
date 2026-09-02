@@ -190,8 +190,10 @@ ${hreflang(`/blog/${a.slug}`)}
 `;
   }
 
+  const emittedProperties = new Set<string>();
   for (const p of properties.data ?? []) {
     if (!p.slug) continue;
+    emittedProperties.add(p.slug);
     xml += `  <url>
     <loc>${BASE_URL}/proprietate/${p.slug}</loc>
     <lastmod>${day(p.updated_at, p.created_at)}</lastmod>
@@ -201,6 +203,20 @@ ${hreflang(`/proprietate/${p.slug}`)}
   </url>
 `;
   }
+
+  const today = new Date().toISOString().split("T")[0];
+  for (const g of GUEST_APARTMENTS) {
+    if (emittedProperties.has(g.slug)) continue;
+    xml += `  <url>
+    <loc>${BASE_URL}/proprietate/${g.slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>${imageTag(g.image ?? null, "property-images", `${g.name} - cazare regim hotelier Timișoara`)}
+${hreflang(`/proprietate/${g.slug}`)}
+  </url>
+`;
+  }
+
 
   for (const c of complexes.data ?? []) {
     if (!c.slug) continue;
