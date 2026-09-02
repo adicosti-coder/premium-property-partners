@@ -112,8 +112,8 @@ export default function BookingRequestsPanel() {
                     {r.reference} · {r.property_name}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={r.status === "new" ? "default" : "secondary"}>
-                      {STATUS_LABEL[r.status || "new"] || r.status}
+                    <Badge variant={r.status === "pending" ? "default" : "secondary"}>
+                      {STATUS_LABEL[r.status || "pending"] || r.status}
                     </Badge>
                     {r.admin_email_sent ? (
                       <Badge variant="outline" className="gap-1">
@@ -138,7 +138,7 @@ export default function BookingRequestsPanel() {
                 </div>
                 {r.message && <p className="mt-2 text-sm">{r.message}</p>}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {(["contacted", "confirmed", "declined"] as const).map((s) => (
+                  {(["contacted", "confirmed", "declined", "cancelled"] as const).map((s) => (
                     <Button
                       key={s}
                       size="sm"
