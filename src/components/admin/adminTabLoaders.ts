@@ -20,6 +20,7 @@ const loaders: Record<string, Loader> = {
 
 
   bookings: () => import("@/components/admin/BookingManager"),
+  "booking-requests": () => import("@/components/admin/BookingRequestsPanel"),
   cazare: () => import("@/components/admin/CazareManager"),
   properties: () => import("@/components/admin/PropertyManager"),
   "investitii-premium": () => import("@/components/admin/InvestitiiPremiumManager"),

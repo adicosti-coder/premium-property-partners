@@ -203,6 +203,57 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("send-booking-notification failed:", notifyErr);
     }
 
+    // In-app admin notification — canalul care funcționează chiar dacă Resend
+    // refuză trimiterea (domeniu neverificat). Non-fatal.
+    try {
+      const { data: admins } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "super_admin"]);
+      const unique = Array.from(new Set((admins || []).map((a: { user_id: string }) => a.user_id)));
+      if (unique.length) {
+        await supabase.from("user_notifications").insert(
+          unique.map((user_id) => ({
+            user_id,
+            title: `Cerere rezervare nouă — ${propertyName}`,
+            message: `${guestName} · ${checkInRaw} → ${checkOutRaw} (${nights} nopți, ${guests} oaspeți) · ref ${saved!.reference}`,
+            type: "info",
+            action_url: "/admin?tab=booking-requests#cereri-rezervare",
+            action_label: "Vezi cererea",
+          })),
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("admin in-app notification failed (non-fatal):", (notifyErr as Error)?.message);
+    }
+
+    // Optional outbound webhook (Make/Zapier) — util când e-mailul e blocat.
+    const bookingWebhook = Deno.env.get("BOOKING_WEBHOOK_URL");
+    if (bookingWebhook) {
+      try {
+        await fetch(bookingWebhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reference: saved.reference,
+            propertyName,
+            propertySlug,
+            guestName,
+            guestEmail,
+            guestPhone,
+            checkIn: checkInRaw,
+            checkOut: checkOutRaw,
+            nights,
+            guests,
+            estimatedTotal,
+            source,
+          }),
+        });
+      } catch (hookErr) {
+        console.warn("booking webhook failed (non-fatal):", (hookErr as Error)?.message);
+      }
+    }
+
     await supabase
       .from("booking_requests")
       .update({
@@ -211,6 +262,7 @@ const handler = async (req: Request): Promise<Response> => {
         notified_at: adminEmailSent || guestEmailSent ? new Date().toISOString() : null,
       })
       .eq("id", saved.id);
+
 
     const payload = {
       success: true,
