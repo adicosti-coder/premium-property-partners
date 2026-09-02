@@ -103,7 +103,20 @@ export function buildSitemapIndex(): string {
 </sitemapindex>`;
 }
 
+// Apartamentele de oaspeți definite static în `src/data/properties.ts` (nu
+// există rânduri în `public.properties`). Sunt emise pe canonical-ul
+// /proprietate/<slug>, identic cu prerender-ul SEO. Ține lista sincronizată
+// când adaugi un apartament nou.
+export const GUEST_APARTMENTS: { slug: string; name: string; image?: string }[] = [
+  { slug: "fullview-studio-deluxe", name: "Cross Square House by RealTrust", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/97/7773/73271-m.jpg" },
+  { slug: "sunset-da-ra-studio-deluxe", name: "Sunset Da Ra Studio DeLuxe", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/15/7388/63154-m.jpg" },
+  { slug: "moonlight-emerald-suite", name: "Moonlight Emerald Suite by RealTrust", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/22/7799/73158-m.jpg" },
+  { slug: "xcity-3-apart-hotel", name: "XCity 3 ApArt Hotel by RealTrust", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/42/7718/69009-m.jpg" },
+  { slug: "ring-residence-apart-hotel", name: "Ring Residence ApArt Hotel by RealTrust", image: "https://d3hj7i5wny7p5d.cloudfront.net/upload/hotel/1/7778/73005-m.jpg" },
+];
+
 export function buildStaticSitemap(): string {
+
   let xml = URLSET_OPEN;
   for (const page of STATIC_PAGES) {
     xml += `  <url>
@@ -177,8 +190,10 @@ ${hreflang(`/blog/${a.slug}`)}
 `;
   }
 
+  const emittedProperties = new Set<string>();
   for (const p of properties.data ?? []) {
     if (!p.slug) continue;
+    emittedProperties.add(p.slug);
     xml += `  <url>
     <loc>${BASE_URL}/proprietate/${p.slug}</loc>
     <lastmod>${day(p.updated_at, p.created_at)}</lastmod>
@@ -188,6 +203,20 @@ ${hreflang(`/proprietate/${p.slug}`)}
   </url>
 `;
   }
+
+  const today = new Date().toISOString().split("T")[0];
+  for (const g of GUEST_APARTMENTS) {
+    if (emittedProperties.has(g.slug)) continue;
+    xml += `  <url>
+    <loc>${BASE_URL}/proprietate/${g.slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>${imageTag(g.image ?? null, "property-images", `${g.name} - cazare regim hotelier Timișoara`)}
+${hreflang(`/proprietate/${g.slug}`)}
+  </url>
+`;
+  }
+
 
   for (const c of complexes.data ?? []) {
     if (!c.slug) continue;
