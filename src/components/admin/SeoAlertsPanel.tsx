@@ -150,7 +150,7 @@ export const SeoAlertsPanel = () => {
   const plan = detail ? buildRemediationPlan(detail) : null;
 
   return (
-    <div className="space-y-6">
+    <div id="seo-alerte" className="space-y-6 scroll-mt-24">
       <SitemapStatusBadge />
       <SeoAlertSettingsCard />
       <Card>

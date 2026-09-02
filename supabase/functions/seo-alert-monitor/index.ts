@@ -194,7 +194,7 @@ Deno.serve(async (req: Request) => {
             title: c.title,
             severity: c.severity,
           })),
-          admin_url: "https://realtrust.ro/admin?tab=seo",
+          admin_url: "https://realtrust.ro/admin?tab=seo-optimizer#seo-alerte",
           sent_at: new Date().toISOString(),
         }),
       });
