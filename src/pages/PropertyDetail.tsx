@@ -307,7 +307,8 @@ const PropertyDetail = () => {
     bedrooms: dbProperty.bedrooms || 0,
     bathrooms: dbProperty.bathrooms || 0,
     size: dbProperty.size || 0,
-    pricePerNight: dbProperty.capital_necesar || 0,
+    // Tariful pe noapte vine DOAR din prețul de cazare, niciodată din capitalul de investiție.
+    pricePerNight: dbProperty.base_price_per_night || 0,
     amenities: dbProperty.amenities || [],
     amenitiesEn: dbProperty.amenities_en || [],
     houseRules: dbProperty.house_rules || [],
