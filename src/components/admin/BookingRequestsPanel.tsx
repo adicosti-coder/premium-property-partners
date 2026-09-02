@@ -4,8 +4,24 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Inbox, MailWarning, MailCheck, RefreshCw } from "lucide-react";
+import { Loader2, Inbox, MailWarning, MailCheck, RefreshCw, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import BookingFunnelChart from "@/components/admin/BookingFunnelChart";
+import { properties } from "@/data/properties";
+import { buildPynbookingUrl, isPynbookingUrl } from "@/lib/pynbooking";
+
+/** Link către motorul real de rezervări, cu sejurul pre-completat. */
+const engineLink = (slug: string | null, checkIn: string, checkOut: string, guests: number | null, reference: string) => {
+  const property = properties.find((p) => p.slug === slug);
+  if (!property || !isPynbookingUrl(property.bookingUrl)) return null;
+  return buildPynbookingUrl(property.bookingUrl, {
+    checkIn,
+    checkOut,
+    guests: guests ?? undefined,
+    reference,
+  });
+};
+
 
 interface BookingRequestRow {
   id: string;
@@ -73,6 +89,8 @@ export default function BookingRequestsPanel() {
   };
 
   return (
+    <div className="space-y-4">
+    <BookingFunnelChart />
     <Card id="cereri-rezervare" className="scroll-mt-24">
       <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="flex items-center gap-2 text-lg">
@@ -138,6 +156,21 @@ export default function BookingRequestsPanel() {
                 </div>
                 {r.message && <p className="mt-2 text-sm">{r.message}</p>}
                 <div className="mt-3 flex flex-wrap gap-2">
+                  {(() => {
+                    const url = engineLink(r.property_slug, r.check_in, r.check_out, r.guests, r.reference);
+                    return url ? (
+                      <Button asChild size="sm" variant="secondary">
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Confirmă rezervarea ${r.reference} în sistemul de rezervări`}
+                        >
+                          Confirmă în sistem <ExternalLink className="ml-1 w-3 h-3" aria-hidden="true" />
+                        </a>
+                      </Button>
+                    ) : null;
+                  })()}
                   {(["contacted", "confirmed", "declined", "cancelled"] as const).map((s) => (
                     <Button
                       key={s}
@@ -156,5 +189,6 @@ export default function BookingRequestsPanel() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

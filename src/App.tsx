@@ -118,6 +118,7 @@ const FastReview = lazyWithRetry(() => import("./pages/admin/FastReview"));
 const PageLoader = () => null;
 
 const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
+const Rezervare = lazyWithRetry(() => import("./pages/Rezervare"));
 const AdaugaAnunt = lazyWithRetry(() => import("./pages/AdaugaAnunt"));
 const ProcesulNostru = lazyWithRetry(() => import("./pages/ProcesulNostru"));
 const ServiciiImobiliareTimisoara = lazyWithRetry(() => import("./pages/ServiciiImobiliareTimisoara"));
@@ -290,6 +291,7 @@ const App = () => (
                     <Route path="/admin/properties/fast-review" element={<FastReview />} />
                     <Route path="/prospect-listings" element={<Navigate to="/admin/prospect-listings" replace />} />
                     <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/rezervare" element={<Rezervare />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
                     <Route path="/procesul-nostru" element={<ProcesulNostru />} />
                     <Route path="/servicii-imobiliare-timisoara" element={<ServiciiImobiliareTimisoara />} />
