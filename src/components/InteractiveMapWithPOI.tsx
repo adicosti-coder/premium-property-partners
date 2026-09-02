@@ -60,6 +60,7 @@ const apartmentCoordinates: { name: string; slug: string; coords: [number, numbe
   { name: 'Modern Studio ApArt Hotel', slug: 'modern-studio-apart-hotel', coords: [21.2100, 45.7350] },
   { name: 'Moonlight Emerald Suite by RealTrust', slug: 'moonlight-emerald-suite', coords: [21.2390186, 45.731261] },
   { name: 'XCity 3 ApArt Hotel by RealTrust', slug: 'xcity-3-apart-hotel', coords: [21.2097495, 45.7731836] },
+  { name: 'Ring Residence ApArt Hotel by RealTrust', slug: 'ring-residence-apart-hotel', coords: [21.2089144, 45.7818452] },
 ];
 
 interface POI {

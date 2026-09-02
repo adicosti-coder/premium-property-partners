@@ -36,6 +36,7 @@ const propertyCoordinates: Record<string, [number, number]> = {
   'moonlight-emerald-suite': [21.2390186, 45.731261],
   // Strada Marin Constantin nr.5, ansamblul XCity Towers (zona Torontalului)
   'xcity-3-apart-hotel': [21.2097495, 45.7731836],
+  'ring-residence-apart-hotel': [21.2089144, 45.7818452],
 };
 
 interface PropertyMapProps {
