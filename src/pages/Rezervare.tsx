@@ -25,7 +25,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { properties } from "@/data/properties";
 import { usePropertyLiveData } from "@/hooks/usePropertyLiveData";
 import { buildPynbookingUrl, isPynbookingUrl, nightsBetween, sanitizeLiveRate } from "@/lib/pynbooking";
-import { eurToRon, formatRon } from "@/utils/currency";
+import { eurToRon } from "@/utils/currency";
 
 const WHATSAPP_NUMBER = "40799069256";
 const CANONICAL = "https://realtrust.ro/rezervare";
@@ -438,7 +438,7 @@ export default function Rezervare() {
                             {isLiveRate ? " live" : ""}
                           </span>
                           <span className="font-semibold text-foreground">
-                            €{rate}/noapte · {formatRon(eurToRon(rate))}
+                            €{rate}/noapte · {eurToRon(rate).toLocaleString("ro-RO")} lei
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
