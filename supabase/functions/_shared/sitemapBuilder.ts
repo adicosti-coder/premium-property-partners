@@ -61,6 +61,8 @@ export const STATIC_PAGES: { url: string; priority: string; changefreq: string }
   { url: "/analiza-proprietate", priority: "0.8", changefreq: "weekly" },
   { url: "/catalog-investitii", priority: "0.7", changefreq: "weekly" },
   { url: "/contact", priority: "0.7", changefreq: "monthly" },
+  { url: "/rezervare", priority: "0.9", changefreq: "daily" },
+
   { url: "/adauga-anunt", priority: "0.6", changefreq: "monthly" },
   { url: "/calculator-roi", priority: "0.8", changefreq: "weekly" },
   { url: "/evaluare-gratuita", priority: "0.7", changefreq: "monthly" },
