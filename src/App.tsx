@@ -244,6 +244,8 @@ const App = () => (
                     <Route path="/autentificare-proprietar" element={<OwnerAuth />} />
                     <Route path="/portal-proprietar" element={<OwnerDashboard />} />
                     <Route path="/despre-noi" element={<AboutUs />} />
+                    <Route path="/intrebari-frecvente" element={<IntrebariFrecvente />} />
+                    <Route path="/faq" element={<Navigate to="/intrebari-frecvente" replace />} />
                     <Route path="/pentru-proprietari" element={<PentruProprietari />} />
                     {/* Short alias people type / share manually — keeps one canonical URL. */}
                     <Route path="/proprietari" element={<Navigate to="/pentru-proprietari" replace />} />
