@@ -99,6 +99,14 @@ const DualServicePaths = () => {
       dot: "bg-amber-500",
       gradient: "from-amber-500/10 via-transparent to-transparent",
     },
+    blue: {
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/30 hover:border-blue-500/50",
+      iconBg: "bg-blue-500/15",
+      iconText: "text-blue-500",
+      dot: "bg-blue-500",
+      gradient: "from-blue-500/10 via-transparent to-transparent",
+    },
     purple: {
       bg: "bg-purple-500/10",
       border: "border-purple-500/30 hover:border-purple-500/50",
@@ -129,7 +137,7 @@ const DualServicePaths = () => {
         {/* Two Path Cards */}
         <div
           ref={cardsRef}
-          className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto"
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto"
         >
           {t.paths.map((path, index) => {
             const Icon = path.icon;
