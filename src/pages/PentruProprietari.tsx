@@ -290,8 +290,8 @@ const PentruProprietari = () => {
 
   const seoContent = {
     ro: {
-      title: "Property Management Timișoara — Administrare Apartamente 9,4% Net",
-      description: "Property management în Timișoara: administrăm apartamente în regim hotelier — listare, oaspeți verificați, curățenie, mentenanță, raportare lunară. ROI net țintă 9,4%.",
+      title: "Administrare Regim Hotelier & Property Management Timișoara | RealTrust",
+      description: "Servicii complete de administrare apartamente și case în regim hotelier în Timișoara. Property management profesional cu randament mediu de 9,4% net.",
     },
     en: {
       title: "Property Management Timișoara — Apartment Management, 9.4% Net",
