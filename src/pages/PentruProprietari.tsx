@@ -46,6 +46,7 @@ const OwnersFAQ = lazy(() => import("@/components/owners/OwnersFAQ"));
 const OwnerObjectionsFAQ = lazy(() => import("@/components/owners/OwnerObjectionsFAQ"));
 const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
 const PageSummary = lazy(() => import("@/components/PageSummary"));
+const AIQuoteBlock = lazy(() => import("@/components/AIQuoteBlock"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 const ServiceOptionsComparison = lazy(() => import("@/components/ServiceOptionsComparison"));
 const ServiceGuaranteesGrid = lazy(() => import("@/components/ServiceGuaranteesGrid"));
