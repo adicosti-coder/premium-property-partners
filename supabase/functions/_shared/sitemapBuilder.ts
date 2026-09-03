@@ -51,6 +51,7 @@ export const STATIC_PAGES: { url: string; priority: string; changefreq: string }
   { url: "/blog/categorie/sfaturi-proprietari", priority: "0.8", changefreq: "weekly" },
   { url: "/blog/categorie/taxe-legislatie", priority: "0.8", changefreq: "weekly" },
   { url: "/despre-noi", priority: "0.7", changefreq: "monthly" },
+  { url: "/intrebari-frecvente", priority: "0.8", changefreq: "monthly" },
   { url: "/imobiliare", priority: "0.8", changefreq: "weekly" },
   { url: "/investitii", priority: "0.8", changefreq: "weekly" },
   { url: "/rezerva-direct", priority: "0.7", changefreq: "monthly" },
