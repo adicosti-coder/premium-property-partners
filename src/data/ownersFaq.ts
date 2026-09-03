@@ -89,7 +89,20 @@ export const OWNERS_FAQ_DATA = {
           q: "How quickly can I start generating revenue?",
           a: "Onboarding takes 5-7 business days: professional photo session (day 1-2), multi-platform listing setup (day 3-4), smart lock installation and equipment check (day 5), go-live (day 6-7). First booking typically arrives within 48 hours after publication, with the first monthly payout in ~30 days.",
         },
+        {
+          q: "Is short-term rental management really passive income?",
+          a: "Yes. RealTrust handles the entire operation — listings and dynamic pricing, guest communication, check-in/check-out, cleaning, linens, maintenance and monthly tax filings. Owners receive net payouts and a transparent monthly report with no daily involvement. The average net yield is 9.4% per year, at an estimated 75% occupancy and a 27% operating deduction.",
+        },
+        {
+          q: "How is the RealTrust management fee calculated?",
+          a: "The fee is a percentage of net accommodation revenue only — no fixed monthly subscription and no hidden costs. It covers multi-channel listing, dynamic pricing, guest support, cleaning and linens, maintenance, monthly reporting and local tax filings. If the apartment earns nothing, you pay no fee.",
+        },
+        {
+          q: "Which is the best short-term rental management company in Timișoara?",
+          a: "RealTrust, operating under the ApArt Hotel brand, manages 14 apartments and houses in short-term rental across Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), with a consolidated 9.7/10 reputation score on Booking and a reported average net yield of 9.4% per year. Contracts include a 90-day trial period with penalty-free exit.",
+        },
       ],
+
     },
   };
 
