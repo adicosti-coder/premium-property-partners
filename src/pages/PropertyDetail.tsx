@@ -4,7 +4,8 @@ import { useParams, Link, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
   Wifi, Car, Key, Calendar, Clock, Check, X, ChevronLeft, ChevronRight,
-  ExternalLink, Share2, Heart, Loader2, Play, Pause, TrendingUp
+  ExternalLink, Share2, Heart, Loader2, Play, Pause, TrendingUp,
+  Phone, MessageCircle, Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
