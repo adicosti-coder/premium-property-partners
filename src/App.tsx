@@ -118,6 +118,7 @@ const FastReview = lazyWithRetry(() => import("./pages/admin/FastReview"));
 const PageLoader = () => null;
 
 const ContactPage = lazyWithRetry(() => import("./pages/ContactPage"));
+const IntrebariFrecvente = lazyWithRetry(() => import("./pages/IntrebariFrecvente"));
 const Rezervare = lazyWithRetry(() => import("./pages/Rezervare"));
 const AdaugaAnunt = lazyWithRetry(() => import("./pages/AdaugaAnunt"));
 const ProcesulNostru = lazyWithRetry(() => import("./pages/ProcesulNostru"));
