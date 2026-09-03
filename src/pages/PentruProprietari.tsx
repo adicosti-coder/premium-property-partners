@@ -290,14 +290,15 @@ const PentruProprietari = () => {
 
   const seoContent = {
     ro: {
-      title: "Administrare apartamente în regim hotelier — Timișoara | RealTrust",
-      description: "Administrăm apartamente în Timișoara în regim hotelier: listare, oaspeți, curățenie, mentenanță, raportare lunară. ROI net țintă 9,4% pe ipoteze publice."
+      title: "Property Management Timișoara — Administrare Apartamente 9,4% Net",
+      description: "Property management în Timișoara: administrăm apartamente în regim hotelier — listare, oaspeți verificați, curățenie, mentenanță, raportare lunară. ROI net țintă 9,4%.",
     },
     en: {
-      title: "Apartment management in Timișoara | RealTrust",
-      description: "We manage apartments in Timișoara as short-term rentals: listing, guests, cleaning, maintenance, monthly reporting. 9.4% target net ROI on public assumptions."
-    }
+      title: "Property Management Timișoara — Apartment Management, 9.4% Net",
+      description: "Property management in Timișoara: full short-term rental management — listing, vetted guests, cleaning, maintenance, monthly reports. 9.4% target net ROI.",
+    },
   };
+
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
