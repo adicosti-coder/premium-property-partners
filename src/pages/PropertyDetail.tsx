@@ -4,7 +4,8 @@ import { useParams, Link, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, Star, Users, BedDouble, Bath, Maximize2, 
   Wifi, Car, Key, Calendar, Clock, Check, X, ChevronLeft, ChevronRight,
-  ExternalLink, Share2, Heart, Loader2, Play, Pause, TrendingUp
+  ExternalLink, Share2, Heart, Loader2, Play, Pause, TrendingUp,
+  Phone, MessageCircle, Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1430,6 +1431,39 @@ const PropertyDetail = () => {
                       {language === 'ro' ? 'Vezi și pe Pynbooking →' : 'Also on Pynbooking →'}
                     </a>
                   )}
+
+                  {/* Date de contact directe pentru această proprietate */}
+                  <div className="pt-4 border-t border-border space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {language === 'ro' ? 'Contact direct' : 'Direct contact'}
+                    </p>
+                    <a
+                      href="tel:+40799069256"
+                      className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors min-h-12"
+                      aria-label={language === 'ro' ? 'Sună la +40 799 069 256' : 'Call +40 799 069 256'}
+                    >
+                      <Phone className="w-4 h-4 text-primary" aria-hidden="true" />
+                      +40 799 069 256
+                    </a>
+                    <a
+                      href={`https://wa.me/40799069256?text=${encodeURIComponent(`${language === 'ro' ? 'Bună ziua, sunt interesat de' : "Hello, I'm interested in"} ${property.name}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors min-h-12"
+                      aria-label={language === 'ro' ? 'Scrie-ne pe WhatsApp' : 'Message us on WhatsApp'}
+                    >
+                      <MessageCircle className="w-4 h-4 text-primary" aria-hidden="true" />
+                      WhatsApp
+                    </a>
+                    <a
+                      href={`mailto:info@realtrust.ro?subject=${encodeURIComponent(property.name)}`}
+                      className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors min-h-12"
+                      aria-label={language === 'ro' ? 'Trimite e-mail' : 'Send email'}
+                    >
+                      <Mail className="w-4 h-4 text-primary" aria-hidden="true" />
+                      info@realtrust.ro
+                    </a>
+                  </div>
                 </div>
               ) : (
                 <div className="bg-card rounded-2xl border p-6 space-y-4 sticky top-24">
