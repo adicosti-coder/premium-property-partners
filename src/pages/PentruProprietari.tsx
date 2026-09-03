@@ -290,14 +290,15 @@ const PentruProprietari = () => {
 
   const seoContent = {
     ro: {
-      title: "Administrare apartamente în regim hotelier — Timișoara | RealTrust",
-      description: "Administrăm apartamente în Timișoara în regim hotelier: listare, oaspeți, curățenie, mentenanță, raportare lunară. ROI net țintă 9,4% pe ipoteze publice."
+      title: "Property Management Timișoara — Administrare Apartamente 9,4% Net",
+      description: "Property management în Timișoara: administrăm apartamente în regim hotelier — listare, oaspeți verificați, curățenie, mentenanță, raportare lunară. ROI net țintă 9,4%.",
     },
     en: {
-      title: "Apartment management in Timișoara | RealTrust",
-      description: "We manage apartments in Timișoara as short-term rentals: listing, guests, cleaning, maintenance, monthly reporting. 9.4% target net ROI on public assumptions."
-    }
+      title: "Property Management Timișoara — Apartment Management, 9.4% Net",
+      description: "Property management in Timișoara: full short-term rental management — listing, vetted guests, cleaning, maintenance, monthly reports. 9.4% target net ROI.",
+    },
   };
+
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
@@ -735,8 +736,8 @@ const PentruProprietari = () => {
               </h2>
              <p className="text-lg text-muted-foreground">
                 {language === "ro"
-                  ? "Pentru proprietarii care vor venit lunar, transparență totală și zero implicare zilnică. Comparăm onest randament chirie Timișoara pe termen lung vs. regim hotelier și aplicăm yield management pentru optimizare venituri Airbnb Timișoara — preluăm operarea, fiscalitatea, mentenanța și relația cu oaspeții, iar tu păstrezi controlul prin rapoarte clare și acces 24/7 în portal."
-                  : "Built for owners who want monthly income, full transparency and zero daily involvement. We honestly compare long-term rental yield in Timișoara vs. short-term rentals and apply yield management to optimize your Airbnb revenue in Timișoara — we take over operations, tax compliance, maintenance and guest relations while you stay in control through clear reports and 24/7 portal access."}
+                  ? "Servicii complete de property management în Timișoara, pentru proprietarii care vor venit lunar, transparență totală și zero implicare zilnică. Comparăm onest randament chirie Timișoara pe termen lung vs. regim hotelier și aplicăm yield management pentru optimizare venituri Airbnb Timișoara — preluăm operarea, fiscalitatea, mentenanța și relația cu oaspeții, iar tu păstrezi controlul prin rapoarte clare și acces 24/7 în portal."
+                  : "Full property management in Timișoara, built for owners who want monthly income, full transparency and zero daily involvement. We honestly compare long-term rental yield in Timișoara vs. short-term rentals and apply yield management to optimize your Airbnb revenue in Timișoara — we take over operations, tax compliance, maintenance and guest relations while you stay in control through clear reports and 24/7 portal access."}
               </p>
             </div>
 
