@@ -15,6 +15,8 @@ import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
 // PageSummary is the LCP element — import directly (1KB) to avoid the
 // 2.5s render delay measured by Lighthouse when it was lazy + Suspense fallback null.
 import PageSummary from "@/components/PageSummary";
+// GEO citable answer block (~1KB) — kept eager to stay crawlable in the initial HTML.
+import AIQuoteBlock from "@/components/AIQuoteBlock";
 
 // Hero MUST be eager: it is the LCP element and the static shell in
 // index.html is wiped by React mount. Any Suspense gap here produces
