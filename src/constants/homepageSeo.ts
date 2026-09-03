@@ -13,20 +13,20 @@
 
 export const HOMEPAGE_SEO = {
   ro: {
-    title: "RealTrust Timișoara | Regim Hotelier & Servicii Imobiliare",
+    title: "Agenție Imobiliară & Property Management Timișoara | RealTrust",
     description:
-      "RealTrust oferă servicii profesionale de regim hotelier, property management și consultanță imobiliară în Timișoara. Maximizează randamentul investiției tale.",
+      "Vânzări, cumpărări, închirieri și administrare apartamente în regim hotelier în Timișoara. Consultanță pentru investiții imobiliare cu randament net 9,4%.",
     socialDescription:
-      "Servicii profesionale de regim hotelier, property management și consultanță imobiliară în Timișoara.",
-    h1: "RealTrust Timișoara — regim hotelier & property management, servicii imobiliare complete.",
+      "Vânzări, cumpărări, închirieri și administrare apartamente în regim hotelier în Timișoara.",
+    h1: "Servicii imobiliare integrate & property management în Timișoara.",
   },
   en: {
-    title: "RealTrust Timișoara | Real estate & short-term rentals",
+    title: "Real Estate Agency & Property Management Timișoara | RealTrust",
     description:
-      "Timișoara real estate with hotel-style operations by ApArt Hotel: sales, rentals and management. 9.4% net yield, calculated transparently. Request your simulation.",
+      "Sales, purchases, long-term rentals and short-term rental apartment management in Timișoara. Investment consulting with 9.4% net yield, calculated transparently.",
     socialDescription:
-      "Professional short-term rental, property management and real estate consulting in Timișoara.",
-    h1: "RealTrust Timișoara — short-term rentals, property management and complete real estate services.",
+      "Sales, rentals and short-term rental apartment management in Timișoara.",
+    h1: "Integrated real estate services & property management in Timișoara.",
   },
 } as const;
 

@@ -26,7 +26,7 @@ export const LODGING_BUSINESS_ID = `${SITE_ORIGIN}/#lodgingbusiness`;
 /** Canonical contact data — change here only. */
 export const BRAND = {
   name: "RealTrust & ApArt Hotel",
-  legalName: "RealTrust Imobiliare SRL",
+  legalName: "Imo Business Centrum SRL",
   alternateNames: ["ApArt Hotel Timișoara", "RealTrust Imobiliare"],
   telephone: "+40799069256",
   email: "info@realtrust.ro",
