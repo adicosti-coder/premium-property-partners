@@ -954,7 +954,38 @@ function buildStaticRoutes(): PrerenderRoute[] {
         <li>Curățenie, mentenanță și raportare</li>
       </ul>
     `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Ce este regimul hotelier?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Regimul hotelier presupune închirierea apartamentului pe termen scurt (noapte/câteva nopți), cu servicii de tip hotel: curățenie, lenjerie, check-in și suport oaspeți.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Ce randament pot obține în Timișoara?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Randamentul mediu net este de aproximativ 9,4% pe an, calculat la o ocupare de 75% și după deducerea de 27% pentru management, taxe și costuri operaționale.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Ce include serviciul de administrare RealTrust?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Listare și optimizare pe platforme, dynamic pricing, comunicare cu oaspeții, check-in/check-out, curățenie și lenjerie, mentenanță, raportare lunară și încasări.',
+          },
+        },
+      ],
+    },
   });
+
 
 
   // /oaspeti & /pentru-oaspeti — premium stays for guests
