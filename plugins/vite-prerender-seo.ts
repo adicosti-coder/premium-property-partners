@@ -1046,9 +1046,9 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // /pentru-proprietari — pillar page for property owners
   routes.push({
     path: '/pentru-proprietari',
-    title: 'Property Management Timișoara — Administrare Apartamente 9,4% Net',
-    description: 'Property management în Timișoara: administrăm apartamente în regim hotelier — listare, oaspeți verificați, curățenie, mentenanță, raportare lunară. ROI net țintă 9,4%.',
-    h1: 'Administrare Proprietăți și Apartamente Regim Hotelier în Timișoara',
+    title: 'Administrare Regim Hotelier & Property Management Timișoara | RealTrust',
+    description: 'Servicii complete de administrare apartamente și case în regim hotelier în Timișoara. Property management profesional cu randament mediu de 9,4% net.',
+    h1: 'Administrare apartamente și case în regim hotelier în Timișoara',
     canonical: `${BASE_URL}/pentru-proprietari`,
     seoBody: `
       <h2>Property management Timișoara — operare hotelieră zilnică pentru proprietari</h2>

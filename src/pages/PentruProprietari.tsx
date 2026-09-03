@@ -200,13 +200,13 @@ const PentruProprietari = () => {
   const content = {
     ro: {
       badge: "Administrare proprietăți · Timișoara",
-      title: "Transformă-ți apartamentul într-o investiție de",
-      titleHighlight: "9,4% net pe an, fără bătăi de cap",
-      subtitle: "Preluăm complet apartamentul tău în regim hotelier: listare pe 15+ platforme, tarifare dinamică, oaspeți verificați, curățenie hotelieră, mentenanță și raportare lunară. Tu primești venitul net în cont, la dată fixă.",
+      title: "Administrare apartamente și case în regim hotelier în",
+      titleHighlight: "Timișoara",
+      subtitle: "Administrare apartamente și case în regim hotelier în Timișoara: listare pe 15+ platforme, tarifare dinamică, oaspeți verificați, curățenie hotelieră, mentenanță și raportare lunară. Property management profesional cu randament mediu de 9,4% net.",
       // Variant B heading — same offer, framed on safety & full management
-      titleB: "Apartamentul tău, administrat complet și protejat, cu",
-      titleHighlightB: "9,4% randament net pe an",
-      subtitleB: "Verificăm fiecare oaspete, ne ocupăm de curățenie, mentenanță, taxe și rapoarte, iar tu vezi totul în portalul proprietarului. Zero drumuri, zero surprize, venit încasat la dată fixă.",
+      titleB: "Administrare apartamente și case în regim hotelier în",
+      titleHighlightB: "Timișoara",
+      subtitleB: "Administrare apartamente și case în regim hotelier în Timișoara: verificăm fiecare oaspete, ne ocupăm de curățenie, mentenanță, taxe și rapoarte, iar tu vezi totul în portalul proprietarului. Randament mediu 9,4% net.",
       socialProof: [
         "9,7/10 rating oaspeți (Booking)",
         "100+ proprietăți administrate",
@@ -236,13 +236,13 @@ const PentruProprietari = () => {
     },
     en: {
       badge: "Property management · Timișoara",
-      title: "Turn your apartment into an investment yielding",
-      titleHighlight: "9.4% net per year, hassle-free",
-      subtitle: "We fully take over your apartment as a short-term rental: listing on 15+ platforms, dynamic pricing, verified guests, hotel-grade cleaning, maintenance and monthly reporting. You receive the net income on a fixed date.",
+      title: "Short-term rental management for apartments and houses in",
+      titleHighlight: "Timișoara",
+      subtitle: "Short-term rental management for apartments and houses in Timișoara: listing on 15+ platforms, dynamic pricing, verified guests, hotel-grade cleaning, maintenance and monthly reporting. Professional property management with a 9.4% average net yield.",
       // Variant B heading — same offer, framed on safety & full management
-      titleB: "Your apartment, fully managed and protected, at",
-      titleHighlightB: "9.4% net annual yield",
-      subtitleB: "We vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. No trips, no surprises, income paid on a fixed date.",
+      titleB: "Short-term rental management for apartments and houses in",
+      titleHighlightB: "Timișoara",
+      subtitleB: "Short-term rental management for apartments and houses in Timișoara: we vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. 9.4% average net yield.",
       socialProof: [
         "9.7/10 guest rating (Booking)",
         "100+ properties managed",
@@ -290,8 +290,8 @@ const PentruProprietari = () => {
 
   const seoContent = {
     ro: {
-      title: "Property Management Timișoara — Administrare Apartamente 9,4% Net",
-      description: "Property management în Timișoara: administrăm apartamente în regim hotelier — listare, oaspeți verificați, curățenie, mentenanță, raportare lunară. ROI net țintă 9,4%.",
+      title: "Administrare Regim Hotelier & Property Management Timișoara | RealTrust",
+      description: "Servicii complete de administrare apartamente și case în regim hotelier în Timișoara. Property management profesional cu randament mediu de 9,4% net.",
     },
     en: {
       title: "Property Management Timișoara — Apartment Management, 9.4% Net",
