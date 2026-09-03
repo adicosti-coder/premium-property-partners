@@ -736,8 +736,8 @@ const PentruProprietari = () => {
               </h2>
              <p className="text-lg text-muted-foreground">
                 {language === "ro"
-                  ? "Pentru proprietarii care vor venit lunar, transparență totală și zero implicare zilnică. Comparăm onest randament chirie Timișoara pe termen lung vs. regim hotelier și aplicăm yield management pentru optimizare venituri Airbnb Timișoara — preluăm operarea, fiscalitatea, mentenanța și relația cu oaspeții, iar tu păstrezi controlul prin rapoarte clare și acces 24/7 în portal."
-                  : "Built for owners who want monthly income, full transparency and zero daily involvement. We honestly compare long-term rental yield in Timișoara vs. short-term rentals and apply yield management to optimize your Airbnb revenue in Timișoara — we take over operations, tax compliance, maintenance and guest relations while you stay in control through clear reports and 24/7 portal access."}
+                  ? "Servicii complete de property management în Timișoara, pentru proprietarii care vor venit lunar, transparență totală și zero implicare zilnică. Comparăm onest randament chirie Timișoara pe termen lung vs. regim hotelier și aplicăm yield management pentru optimizare venituri Airbnb Timișoara — preluăm operarea, fiscalitatea, mentenanța și relația cu oaspeții, iar tu păstrezi controlul prin rapoarte clare și acces 24/7 în portal."
+                  : "Full property management in Timișoara, built for owners who want monthly income, full transparency and zero daily involvement. We honestly compare long-term rental yield in Timișoara vs. short-term rentals and apply yield management to optimize your Airbnb revenue in Timișoara — we take over operations, tax compliance, maintenance and guest relations while you stay in control through clear reports and 24/7 portal access."}
               </p>
             </div>
 
