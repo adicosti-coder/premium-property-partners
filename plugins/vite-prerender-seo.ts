@@ -934,6 +934,29 @@ function buildStaticRoutes(): PrerenderRoute[] {
     },
   });
 
+  // /intrebari-frecvente — FAQ hub (regim hotelier, administrare, ROI)
+  routes.push({
+    path: '/intrebari-frecvente',
+    title: 'Întrebări Frecvente Regim Hotelier & Administrare Timișoara | RealTrust',
+    description: 'Răspunsuri despre regim hotelier, administrare apartamente și randament (ROI 9,4% net) în Timișoara: autorizații, taxe, contract, daune și încasări.',
+    h1: 'Întrebări frecvente despre regim hotelier, administrare și randament',
+    canonical: `${BASE_URL}/intrebari-frecvente`,
+    seoBody: `
+      <h2>Regim hotelier, administrare și randament în Timișoara</h2>
+      <p>Răspunsuri pentru proprietarii din Timișoara: ce este <strong>regimul hotelier</strong>, ce autorizații sunt necesare (clasificare, DSP, ISU, taxă hotelieră), ce include comisionul de <strong>administrare apartamente Timișoara</strong> și cum se ajunge la un randament net de 9,4% pe an.</p>
+      <h3>Teme acoperite</h3>
+      <ul>
+        <li>Regim hotelier vs. chirie clasică</li>
+        <li>Randament (ROI) realist și deducerea de 27%</li>
+        <li>Autorizații și legislație</li>
+        <li>Taxe locale în Timișoara</li>
+        <li>Contract, preaviz și daune</li>
+        <li>Curățenie, mentenanță și raportare</li>
+      </ul>
+    `,
+  });
+
+
   // /oaspeti & /pentru-oaspeti — premium stays for guests
   for (const path of ['/oaspeti', '/pentru-oaspeti']) {
     routes.push({
