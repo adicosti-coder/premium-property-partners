@@ -135,7 +135,25 @@ const AnalizaProprietate = () => {
       <SEOHead
         title="Analiză AI proprietate Timișoara | Link anunț sau poze | RealTrust"
         description="Încarcă linkul anunțului sau fotografiile proprietății și primești instant analiza AI: tarif pe noapte, venit net lunar în regim hotelier și recomandări. Gratuit, Timișoara."
+        socialDescription="Analiză AI gratuită: tarif pe noapte, venit net lunar și potențial în regim hotelier, în Timișoara."
         url="https://realtrust.ro/analiza-proprietate"
+        breadcrumbItems={[
+          { name: "Acasă", url: "https://realtrust.ro/" },
+          { name: "Analiză proprietate", url: "https://realtrust.ro/analiza-proprietate" },
+        ]}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "Analiză AI potențial regim hotelier — RealTrust",
+          url: "https://realtrust.ro/analiza-proprietate",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          inLanguage: "ro-RO",
+          description:
+            "Instrument gratuit care analizează linkul anunțului sau fotografiile proprietății și estimează tariful pe noapte, venitul net lunar și ROI-ul în regim hotelier în Timișoara.",
+          offers: { "@type": "Offer", price: 0, priceCurrency: "RON" },
+          areaServed: { "@type": "City", name: "Timișoara" },
+        }}
       />
       <Header />
       <main className="min-h-[80vh]">
