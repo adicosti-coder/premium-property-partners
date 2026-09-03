@@ -236,13 +236,13 @@ const PentruProprietari = () => {
     },
     en: {
       badge: "Property management · Timișoara",
-      title: "Turn your apartment into an investment yielding",
-      titleHighlight: "9.4% net per year, hassle-free",
-      subtitle: "We fully take over your apartment as a short-term rental: listing on 15+ platforms, dynamic pricing, verified guests, hotel-grade cleaning, maintenance and monthly reporting. You receive the net income on a fixed date.",
+      title: "Short-term rental management for apartments and houses in",
+      titleHighlight: "Timișoara",
+      subtitle: "Short-term rental management for apartments and houses in Timișoara: listing on 15+ platforms, dynamic pricing, verified guests, hotel-grade cleaning, maintenance and monthly reporting. Professional property management with a 9.4% average net yield.",
       // Variant B heading — same offer, framed on safety & full management
-      titleB: "Your apartment, fully managed and protected, at",
-      titleHighlightB: "9.4% net annual yield",
-      subtitleB: "We vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. No trips, no surprises, income paid on a fixed date.",
+      titleB: "Short-term rental management for apartments and houses in",
+      titleHighlightB: "Timișoara",
+      subtitleB: "Short-term rental management for apartments and houses in Timișoara: we vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. 9.4% average net yield.",
       socialProof: [
         "9.7/10 guest rating (Booking)",
         "100+ properties managed",
