@@ -9,6 +9,93 @@ Disallow: /portal-proprietar
 Allow: /blog/*?poi=
 Allow: /*?poi=
 
+# ---------------------------------------------------------------
+# Crawleri AI / Generative Engine Optimization (GEO)
+# Acces explicit permis pentru citare în răspunsuri generative.
+# ---------------------------------------------------------------
+
+User-agent: GPTBot
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /portal-proprietar
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /portal-proprietar
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin
+Disallow: /portal-proprietar
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /portal-proprietar
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /admin
+Disallow: /portal-proprietar
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /admin
+Disallow: /portal-proprietar
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /portal-proprietar
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /admin
+Disallow: /portal-proprietar
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /portal-proprietar
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /admin
+Disallow: /portal-proprietar
+
+User-agent: CCBot
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /portal-proprietar
+
+User-agent: Bytespider
+Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /portal-proprietar
+
+User-agent: meta-externalagent
+Allow: /
+Disallow: /admin
+Disallow: /portal-proprietar
+
+User-agent: cohere-ai
+Allow: /
+Disallow: /admin
+Disallow: /portal-proprietar
+
+# Sumar în text simplu pentru LLM-uri:
+# https://realtrust.ro/llms.txt
+# https://realtrust.ro/llms-full.txt
+
 Sitemap: https://realtrust.ro/sitemap.xml
 Sitemap: https://realtrust.ro/sitemap-static.xml
 Sitemap: https://realtrust.ro/sitemap-dynamic.xml
