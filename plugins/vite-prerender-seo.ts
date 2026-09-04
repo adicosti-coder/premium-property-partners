@@ -26,6 +26,31 @@ interface PrerenderRoute {
 }
 
 /**
+ * ENTITY SEO / GEO — canonical "Ce este RealTrust?" answer.
+ * MUST stay byte-identical to ENTITY_ANSWER.ro in src/lib/entityDefinition.ts
+ * (this plugin runs standalone at build time and cannot import from src).
+ */
+const ENTITY_ANSWER_RO = 'RealTrust este o companie imobiliară din Timișoara care oferă servicii de investiții imobiliare, vânzare și închiriere de proprietăți și administrare în regim hotelier. Este operată de entitatea juridică SC Imo Business Centrum SRL (CUI RO14380627) și activează în Timișoara și zona metropolitană. Se adresează proprietarilor care vor să externalizeze administrarea, investitorilor care caută randament și cumpărătorilor sau chiriașilor de apartamente și case. Apartamentele administrate în regim hotelier sunt operate sub brandul propriu de cazare, ApArt Hotel. Colaborarea se face pe bază de contract scris, cu comisioane comunicate în avans și raportare financiară lunară. Contact: +40 799 069 256, info@realtrust.ro.';
+
+const ENTITY_DEFINITION_HTML = `
+  <h2>Ce este RealTrust?</h2>
+  <p>${ENTITY_ANSWER_RO}</p>
+`;
+
+const ENTITY_QUESTION_SCHEMA = (pageUrl: string) => ({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': `${pageUrl}#what-is-realtrust`,
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Ce este RealTrust?',
+      acceptedAnswer: { '@type': 'Answer', text: ENTITY_ANSWER_RO },
+    },
+  ],
+});
+
+/**
  * Rich, dense local-SEO HTML for the homepage. Mirrors SEOLocalEntitiesBlock.tsx
  * but injected into the static HTML so crawlers without JS still see it.
  * Includes all 27 local entities tracked by seo-ai-optimizer/localGeo.ts.
@@ -126,30 +151,6 @@ const HOMEPAGE_SEO_BODY = `
 
 const BASE_URL = 'https://realtrust.ro';
 
-/**
- * ENTITY SEO / GEO — canonical "Ce este RealTrust?" answer.
- * MUST stay byte-identical to ENTITY_ANSWER.ro in src/lib/entityDefinition.ts
- * (this plugin runs standalone at build time and cannot import from src).
- */
-const ENTITY_ANSWER_RO = 'RealTrust este o companie imobiliară din Timișoara care oferă servicii de investiții imobiliare, vânzare și închiriere de proprietăți și administrare în regim hotelier. Este operată de entitatea juridică SC Imo Business Centrum SRL (CUI RO14380627) și activează în Timișoara și zona metropolitană. Se adresează proprietarilor care vor să externalizeze administrarea, investitorilor care caută randament și cumpărătorilor sau chiriașilor de apartamente și case. Apartamentele administrate în regim hotelier sunt operate sub brandul propriu de cazare, ApArt Hotel. Colaborarea se face pe bază de contract scris, cu comisioane comunicate în avans și raportare financiară lunară. Contact: +40 799 069 256, info@realtrust.ro.';
-
-const ENTITY_DEFINITION_HTML = `
-  <h2>Ce este RealTrust?</h2>
-  <p>${ENTITY_ANSWER_RO}</p>
-`;
-
-const ENTITY_QUESTION_SCHEMA = (pageUrl: string) => ({
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  '@id': `${pageUrl}#what-is-realtrust`,
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Ce este RealTrust?',
-      acceptedAnswer: { '@type': 'Answer', text: ENTITY_ANSWER_RO },
-    },
-  ],
-});
 
 /** Curs orientativ EUR→RON folosit pentru prețul dual din datele structurate. */
 const EUR_TO_RON = 5.05;
