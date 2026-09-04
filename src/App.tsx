@@ -307,14 +307,17 @@ const App = () => (
                     <Route path="/rezervare" element={<Rezervare />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
                     <Route path="/procesul-nostru" element={<ProcesulNostru />} />
-                    <Route path="/servicii-imobiliare-timisoara" element={<ServiciiImobiliareTimisoara />} />
+                    {/* Canonical: /servicii-imobiliare */}
+                    <Route path="/servicii-imobiliare" element={<ServiciiImobiliareTimisoara />} />
+                    <Route path="/servicii-imobiliare-timisoara" element={<Navigate to="/servicii-imobiliare" replace />} />
                     <Route path="/multumim" element={<Multumim />} />
                     <Route path="/succes-calcul" element={<SuccesCalcul />} />
                     <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
                     {/* Legacy / mistyped URLs shared manually — avoid 404 dead ends. */}
                     <Route path="/favorites" element={<Navigate to="/favorite" replace />} />
-                    <Route path="/guests" element={<Navigate to="/pentru-oaspeti" replace />} />
+                    <Route path="/guests" element={<Navigate to="/cazare" replace />} />
+
                     <Route path="/proprietati" element={<Navigate to="/imobiliare" replace />} />
                     <Route path="/legal/politica-de-confidentialitate" element={<Navigate to="/politica-confidentialitate" replace />} />
                     <Route path="/legal/termeni-si-conditii" element={<Navigate to="/termeni-si-conditii" replace />} />
