@@ -30,9 +30,26 @@ interface PrerenderRoute {
  * but injected into the static HTML so crawlers without JS still see it.
  * Includes all 27 local entities tracked by seo-ai-optimizer/localGeo.ts.
  */
+const HOMEPAGE_AUTHORITY_BODY = `
+  <h2>Ce este RealTrust?</h2>
+  <p>RealTrust este o companie de servicii imobiliare și property management din Timișoara, operată de SC Imo Business Centrum SRL (CUI RO14380627). Intermediază vânzări de apartamente și case și închirieri pe termen lung, consiliază investitorii la achiziția de proprietăți pentru randament și administrează apartamente în regim hotelier sub brandul propriu de cazare, ApArt Hotel. Clienții sunt proprietari, investitori și cumpărători din Timișoara și zona metropolitană. Colaborarea se face pe bază de contract scris, cu comisioane comunicate în avans și raportare lunară.</p>
+
+  <h2>Investiții imobiliare</h2>
+  <p>Analizăm proprietăți din perspectiva randamentului: preț de achiziție, costuri de amenajare, tarife realizabile pe noapte și grad de ocupare estimat. Fiecare estimare este prezentată ca scenariu, cu ipotezele afișate; randamentul mediu raportat pentru apartamentele administrate este de 9,4% net. Detalii pe pagina de investiții.</p>
+
+  <h2>Vânzare și închiriere proprietăți</h2>
+  <p>Intermediem vânzări și închirieri pe termen lung în Timișoara și zona metropolitană: evaluare, pregătirea proprietății, promovare, negociere și asistență până la semnarea actelor. Comisioanele sunt comunicate înainte de începerea colaborării.</p>
+
+  <h2>Administrare proprietăți în regim hotelier</h2>
+  <p>Administrăm apartamente în regim hotelier sub brandul ApArt Hotel: listare pe Booking și Airbnb, comunicarea cu oaspeții, check-in, curățenie, mentenanță și raport financiar lunar. În prezent gestionăm 14 proprietăți, cu un scor consolidat de reputație de 9,7/10 raportat pe Booking.</p>
+
+  <h2>Contact</h2>
+  <p>RealTrust Timișoara, județul Timiș, România. Telefon +40 799 069 256, e-mail info@realtrust.ro.</p>
+`;
+
 const HOMEPAGE_SEO_BODY = `
   <h2>Servicii imobiliare și regim hotelier în toate cartierele Timișoarei</h2>
-  <p>RealTrust &amp; ApArt Hotel Timișoara este partenerul tău pentru <strong>investiții imobiliare profitabile</strong>, <strong>vânzări apartamente Timișoara</strong>, <strong>închirieri pe termen lung</strong> și <strong>administrare apartamente regim hotelier</strong> cu un randament net verificat de 9.4% anual. Acoperim toate cartierele importante ale orașului și zonele metropolitane: Complex Studențesc (lângă UVT — Universitatea de Vest, UPT — Politehnica Timișoara și UMF Medicină), Iosefin, Elisabetin (lângă Parcul Rozelor și Parcul Botanic), Fabric, ISHO, Cetate și Centrul Vechi (Piața Unirii, Piața Victoriei, Catedrala Mitropolitană), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii, Calea Lipovei, precum și zonele metropolitane <strong>imobiliare Dumbrăvița</strong>, <strong>apartamente Ghiroda</strong> (acces rapid la Aeroport și zona industrială) și <strong>case Moșnița Nouă</strong> pentru investitorii interesați de vile și case noi.</p>
+  <p>RealTrust &amp; ApArt Hotel Timișoara este partenerul tău pentru <strong>investiții imobiliare profitabile</strong>, <strong>vânzări apartamente Timișoara</strong>, <strong>închirieri pe termen lung</strong> și <strong>administrare apartamente regim hotelier</strong> cu un randament net mediu raportat de 9,4% anual. Acoperim toate cartierele importante ale orașului și zonele metropolitane: Complex Studențesc (lângă UVT — Universitatea de Vest, UPT — Politehnica Timișoara și UMF Medicină), Iosefin, Elisabetin (lângă Parcul Rozelor și Parcul Botanic), Fabric, ISHO, Cetate și Centrul Vechi (Piața Unirii, Piața Victoriei, Catedrala Mitropolitană), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Girocului, Calea Șagului, Circumvalațiunii, Calea Lipovei, precum și zonele metropolitane <strong>imobiliare Dumbrăvița</strong>, <strong>apartamente Ghiroda</strong> (acces rapid la Aeroport și zona industrială) și <strong>case Moșnița Nouă</strong> pentru investitorii interesați de vile și case noi.</p>
 
   <h2>Ansambluri rezidențiale Timișoara — colaborări cu dezvoltatori</h2>
   <p>Lucrăm cu cele mai importante <strong>ansambluri rezidențiale Timișoara</strong>: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers, Openville Residential, Vox Park și complexele noi din Dumbrăvița și Ghiroda. Selecție premium de <strong>apartamente noi Timișoara</strong> — eficiență energetică clasa A, finisaje moderne, smart-home și apreciere a capitalului peste media pieței.</p>
@@ -62,7 +79,7 @@ const HOMEPAGE_SEO_BODY = `
   <p>Pentru chiriași și proprietari oferim <strong>apartamente de închiriat Timișoara</strong> și <strong>închirieri apartamente Timișoara pe termen lung</strong> (contracte 12 luni sau mai mult) — apartamente mobilate și utilate în Centru, Iosefin, Elisabetin, Complex Studențesc, Iulius Town, Calea Aradului și zona universitară (UVT, UPT, UMF). Verificare chiriași, contracte standardizate și gestionare profesională pe toată durata închirierii.</p>
 
   <h3>Administrare proprietăți Timișoara — servicii complete pentru proprietari</h3>
-  <p><strong>Administrare proprietăți Timișoara</strong> oferită de RealTrust acoperă tot ciclul: marketing pe Booking, Airbnb și directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară transparentă și optimizare yield management. <strong>Administrare apartamente regim hotelier Timișoara</strong> cu ROI 9.4% net verificat anual — partener de încredere pentru proprietari și investitori.</p>
+  <p><strong>Administrare proprietăți Timișoara</strong> oferită de RealTrust acoperă tot ciclul: marketing pe Booking, Airbnb și directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară transparentă și optimizare yield management. <strong>Administrare apartamente regim hotelier Timișoara</strong> cu randament net mediu raportat de 9,4% anual — partener de încredere pentru proprietari și investitori.</p>
 
   <h3>Servicii oferite</h3>
   <p>Investiții imobiliare Timișoara cu randament verificat, vânzări apartamente Timișoara, închirieri pe termen lung Timișoara, evaluare gratuită proprietate, calculator ROI online, consultanță investiții imobiliare și administrare profesională pentru proprietari, investitori și oaspeți.</p>
@@ -77,7 +94,7 @@ const HOMEPAGE_SEO_BODY = `
   <p><strong>Închirieri apartamente studenți Timișoara</strong> în Complexul Studențesc, la 5 minute pe jos de UVT, UPT (Politehnica) și UMF Medicină „Victor Babeș" — garsoniere și apartamente cu 2 camere mobilate, contracte 9–12 luni, utilități incluse, internet de mare viteză și verificare proprietar pentru siguranță.</p>
 
   <h3>Administrare proprietăți Timișoara — prețuri transparente</h3>
-  <p><strong>Administrare proprietăți Timișoara prețuri</strong> transparente: comision 15–25% management + 15–23% comision platforme (Booking, Airbnb). Pachet complet care include marketing pe toate platformele, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară și optimizare yield management. ROI 9.4% net verificat anual.</p>
+  <p><strong>Administrare proprietăți Timișoara prețuri</strong> transparente: comision 15–25% management + 15–23% comision platforme (Booking, Airbnb). Pachet complet care include marketing pe toate platformele, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară financiară și optimizare yield management. randament net mediu raportat de 9,4% anual.</p>
 
   <h3>Cazare temporară Timișoara Centru și apartamente lângă Iulius Town</h3>
   <p><strong>Cazare temporară Timișoara Centru</strong>, <strong>închirieri apartamente Timișoara termen scurt</strong> și <strong>apartamente de închiriat lângă Iulius Town</strong> — soluții flexibile pentru sejururi de 1 noapte până la 1 lună, ideale pentru turism business, conferințe, vizite medicale și relocare temporară. Proprietăți premium la 5–15 minute de Iulius Mall, Openville, Piața Unirii și Piața Victoriei.</p>
@@ -704,7 +721,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     description: 'RealTrust Timișoara oferă servicii imobiliare, investiții și administrare de proprietăți în regim hotelier. Analiză de randament, vânzări, închirieri și property management.',
     h1: 'RealTrust Timișoara — Imobiliare, Investiții și Property Management',
     canonical: `${BASE_URL}/`,
-    seoBody: HOMEPAGE_SEO_BODY,
+    seoBody: HOMEPAGE_AUTHORITY_BODY,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
@@ -1033,7 +1050,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     canonical: `${BASE_URL}/investitii`,
     seoBody: `
       <h2>Tipuri de investiții imobiliare în Timișoara</h2>
-      <p>Ca <strong>consultant imobiliar Timișoara</strong>, RealTrust structurează portofoliul de oportunități pentru investitori pe trei direcții clare: <strong>investiții în regim hotelier</strong> (ROI 9.4% net verificat anual), <strong>investiții buy-to-let</strong> pentru chirii pe termen lung (randament 6–7% brut) și <strong>flip imobiliar</strong> cu renovare strategică pentru revânzare (marjă 15–25% în 8–14 luni). Fiecare oportunitate include due diligence complet, proiecții ROI conservative și administrare profesională inclusă.</p>
+      <p>Ca <strong>consultant imobiliar Timișoara</strong>, RealTrust structurează portofoliul de oportunități pentru investitori pe trei direcții clare: <strong>investiții în regim hotelier</strong> (randament net mediu raportat de 9,4% anual), <strong>investiții buy-to-let</strong> pentru chirii pe termen lung (randament 6–7% brut) și <strong>flip imobiliar</strong> cu renovare strategică pentru revânzare (marjă 15–25% în 8–14 luni). Fiecare oportunitate include due diligence complet, proiecții ROI conservative și administrare profesională inclusă.</p>
 
       <h2>Evoluție prețuri imobiliare Timișoara 2020–2026</h2>
       <p><strong>Evoluție prețuri imobiliare Timișoara</strong>: media €/mp a crescut de la 1.250 € (2020) la 1.890 € (Q1 2026), cu un CAGR de aproximativ 7,1%. Cele mai puternice creșteri s-au înregistrat în ISHO (+62%), Circumvalațiunii / City of Mara (+48%) și Complex Studențesc (+41%). Prognoză 2026–2028: apreciere medie 5–8% anual, susținută de cererea din partea companiilor mari (Continental, Nokia, Hella, Flex, Atos) și de fluxul universitar (UVT, UPT, UMF — peste 40.000 studenți activi).</p>
