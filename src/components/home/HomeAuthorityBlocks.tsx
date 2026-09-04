@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MapPin, Users, Building2, ListChecks, LineChart, FileText } from "lucide-react";
+import EntityDefinitionBlock from "@/components/EntityDefinitionBlock";
+
 
 /**
  * Homepage authority blocks:
