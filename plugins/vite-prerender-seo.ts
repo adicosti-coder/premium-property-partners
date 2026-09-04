@@ -311,6 +311,7 @@ interface DbProperty {
   listing_type: string | null;
   year_built: number | null;
   base_price_per_night: number | null;
+  booking_url: string | null;
 }
 
 /**
@@ -318,7 +319,7 @@ interface DbProperty {
  */
 async function fetchActiveProperties(): Promise<DbProperty[]> {
   try {
-    const url = `${SUPABASE_URL}/rest/v1/properties?is_active=eq.true&slug=not.is.null&select=slug,name,location,bedrooms,size,floor,roi_percentage,capital_necesar,listing_type,year_built,base_price_per_night&order=display_order.asc`;
+    const url = `${SUPABASE_URL}/rest/v1/properties?is_active=eq.true&slug=not.is.null&select=slug,name,location,bedrooms,size,floor,roi_percentage,capital_necesar,listing_type,year_built,base_price_per_night,booking_url&order=display_order.asc`;
     const res = await fetch(url, {
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -377,6 +378,24 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
 
     const canonical = `${BASE_URL}/proprietate/${p.slug}`;
 
+    // Motorul real de rezervări (Pynbooking) pentru această unitate.
+    const bookingUrl = (p.booking_url || '').trim();
+    const reserveAction = bookingUrl
+      ? {
+          '@type': 'ReserveAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: bookingUrl,
+            inLanguage: 'ro-RO',
+            actionPlatform: [
+              'http://schema.org/DesktopWebPlatform',
+              'http://schema.org/MobileWebPlatform',
+            ],
+          },
+          result: { '@type': 'LodgingReservation', name: p.name },
+        }
+      : null;
+
     // Regim hotelier (cazare) listings need a guest-facing title and
     // LodgingBusiness + HotelRoom structured data, not a sale listing.
     if ((p.listing_type || '').trim().toLowerCase() === 'cazare') {
@@ -421,6 +440,8 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
                 url: `${canonical}#disponibilitate`,
               },
             }),
+            ...(bookingUrl && { sameAs: bookingUrl }),
+            ...(reserveAction && { potentialAction: reserveAction }),
           },
         ],
       };
@@ -450,6 +471,8 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
             ...(zone !== 'Timișoara' && { streetAddress: zone }),
           },
           ...(p.year_built && { yearBuilt: p.year_built }),
+          ...(bookingUrl && { sameAs: bookingUrl }),
+          ...(reserveAction && { potentialAction: reserveAction }),
         },
         {
           '@context': 'https://schema.org',
@@ -465,6 +488,8 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
             availability: 'https://schema.org/InStock',
             url: canonical,
           },
+          ...(bookingUrl && { sameAs: bookingUrl }),
+          ...(reserveAction && { potentialAction: reserveAction }),
         },
       ],
     };
@@ -737,8 +762,63 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
     });
 }
 
+/**
+ * Bloc de conținut tranzacțional pentru paginile de cartier — acoperă
+ * intențiile comerciale „vânzări apartamente Timișoara” și
+ * „închirieri Timișoara” cu limbaj natural și legături interne.
+ */
+function neighborhoodTransactionBlock(zone: string): string {
+  return `
+    <h3>Vânzări apartamente Timișoara și închirieri în ${zone}</h3>
+    <p>RealTrust intermediază <strong>vânzări apartamente Timișoara</strong> și <strong>închirieri Timișoara</strong> în ${zone}: evaluare corectă a prețului, promovare profesională, verificarea cumpărătorilor și a chiriașilor, plus asistență la semnarea contractului. Pentru proprietarii care preferă randament mai mare, aceeași locuință poate trece în administrare în regim hotelier.</p>
+    <p>Vezi toate <a href="${BASE_URL}/servicii-imobiliare">serviciile imobiliare din Timișoara</a>, cere o <a href="${BASE_URL}/evaluare-gratuita">evaluare gratuită</a> sau compară randamentul cu <a href="${BASE_URL}/pentru-proprietari">administrarea în regim hotelier</a>.</p>
+  `;
+}
+
 function buildStaticRoutes(): PrerenderRoute[] {
   const routes: PrerenderRoute[] = [];
+
+  // /servicii-imobiliare — pagina pilon pentru intențiile tranzacționale
+  routes.push({
+    path: '/servicii-imobiliare',
+    title: 'Vânzări Apartamente Timișoara și Închirieri Timișoara | RealTrust',
+    description: 'RealTrust intermediază vânzări apartamente Timișoara și închirieri Timișoara: evaluare gratuită, promovare, contracte și administrare în regim hotelier pentru proprietari și investitori.',
+    h1: 'Servicii imobiliare în Timișoara — vânzări, închirieri și administrare',
+    canonical: `${BASE_URL}/servicii-imobiliare`,
+    seoBody: `
+      <h2>Vânzări apartamente Timișoara</h2>
+      <p>Intermediem <strong>vânzări apartamente Timișoara</strong> în Cetate, Iosefin, Fabric, Complex Studențesc, Dumbrăvița și zona Aradului: stabilirea prețului pe baza tranzacțiilor reale, fotografie și promovare profesională, filtrarea cumpărătorilor și asistență juridică până la notar.</p>
+      <h2>Închirieri Timișoara</h2>
+      <p>Pentru <strong>închirieri Timișoara</strong> gestionăm anunțul, vizionările, verificarea chiriașilor, contractul și predarea locuinței. Acoperim cererea din partea angajaților companiilor locale și a studenților, atât pe termen lung, cât și pe termen scurt.</p>
+      <h2>Administrare în regim hotelier</h2>
+      <p>Proprietarii care vor un randament mai mare pot trece apartamentul în administrare completă sub brandul ApArt Hotel by RealTrust: listare, tarifare dinamică, curățenie, mentenanță și raportare financiară lunară.</p>
+      <p>Legături utile: <a href="${BASE_URL}/pentru-proprietari">pentru proprietari</a>, <a href="${BASE_URL}/investitii">investiții imobiliare</a>, <a href="${BASE_URL}/preturi">prețuri și comisioane</a>, <a href="${BASE_URL}/cartiere">apartamente pe cartiere</a>, <a href="${BASE_URL}/evaluare-gratuita">evaluare gratuită</a>, <a href="${BASE_URL}/contact">contact</a>.</p>
+    `,
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'RealEstateAgent',
+        name: 'RealTrust — Servicii imobiliare Timișoara',
+        url: `${BASE_URL}/servicii-imobiliare`,
+        telephone: '+40799069256',
+        areaServed: [
+          { '@type': 'City', name: 'Timișoara' },
+          { '@type': 'AdministrativeArea', name: 'Județul Timiș' },
+        ],
+        address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
+        hasOfferCatalog: {
+          '@type': 'OfferCatalog',
+          name: 'Servicii imobiliare RealTrust',
+          itemListElement: [
+            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Vânzări apartamente Timișoara' } },
+            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Închirieri Timișoara' } },
+            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Administrare apartamente în regim hotelier' } },
+            { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Evaluare gratuită proprietate' } },
+          ],
+        },
+      },
+    ],
+  });
 
   // Homepage — overrides dist/index.html with rich SEO body so crawlers
   // (Firecrawl, Bingbot, AI Overviews) see local entities without JS.
@@ -820,7 +900,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       description: `Apartamente de vânzare în ${n.fullName}, Timișoara. Prețuri de la ${n.avgPrice.toLocaleString('ro-RO')} €/mp, administrare RealTrust inclusă.`,
       h1: `Apartamente de vânzare în ${n.fullName}, Timișoara`,
       canonical: `${BASE_URL}/imobiliare-timisoara/${n.slug}`,
-      seoBody: (n as Neighborhood).seoBody,
+      seoBody: `${(n as Neighborhood).seoBody ?? ''}${neighborhoodTransactionBlock(n.fullName)}`,
       jsonLd: faqSchema ? [
         {
           '@context': 'https://schema.org',
