@@ -1452,9 +1452,17 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   setMeta('name', 'twitter:url', route.canonical);
   setMeta('name', 'twitter:image', socialImage);
 
-  const jsonLdStr = Array.isArray(route.jsonLd)
-    ? route.jsonLd.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n      ')
-    : `<script type="application/ld+json">${JSON.stringify(route.jsonLd)}</script>`;
+  // Every page ships BreadcrumbList markup; routes that already declare their
+  // own trail keep it (no duplicates).
+  const baseSchemas = Array.isArray(route.jsonLd) ? [...route.jsonLd] : [route.jsonLd];
+  if (!hasBreadcrumb(route.jsonLd)) {
+    const crumb = buildBreadcrumbJsonLd(route);
+    if (crumb) baseSchemas.push(crumb);
+  }
+  const jsonLdStr = baseSchemas
+    .map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`)
+    .join('\n      ');
+
 
   // Use `inert` (not aria-hidden) so focusable descendants like <a> are properly removed
   // from the accessibility tree and tab order — fixes Lighthouse "aria-hidden with focusable
