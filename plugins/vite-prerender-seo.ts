@@ -991,6 +991,55 @@ function buildStaticRoutes(): PrerenderRoute[] {
     }],
   });
 
+  // /contact — NAP page (address, phone, hours) + entity definition
+  routes.push({
+    path: '/contact',
+    title: 'Contact RealTrust Timișoara | Adresă, Telefon & Program',
+    description: 'Contact RealTrust Timișoara: Strada Samuel Clain Micu nr. 14, ap. 4, telefon +40 799 069 256, info@realtrust.ro. Program luni–vineri 10:00–18:00.',
+    h1: 'Contact & Locație — Sediu RealTrust Timișoara',
+    canonical: `${BASE_URL}/contact`,
+    seoBody: `
+      ${ENTITY_DEFINITION_HTML}
+      <h2>Date de contact RealTrust Timișoara</h2>
+      <p>Sediu: Strada Samuel Clain Micu nr. 14, ap. 4, 300125 Timișoara, județul Timiș. Telefon: +40 799 069 256. E-mail: info@realtrust.ro. Program: luni–vineri, 10:00–18:00 (Europe/Bucharest).</p>
+    `,
+    jsonLd: [
+      ENTITY_QUESTION_SCHEMA(`${BASE_URL}/contact`),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: 'Contact RealTrust Timișoara',
+        url: `${BASE_URL}/contact`,
+        mainEntity: {
+          '@type': 'RealEstateAgent',
+          '@id': `${BASE_URL}/#realestateagent`,
+          name: 'RealTrust & ApArt Hotel',
+          url: BASE_URL,
+          telephone: '+40799069256',
+          email: 'info@realtrust.ro',
+          openingHours: 'Mo-Fr 10:00-18:00',
+          areaServed: { '@type': 'City', name: 'Timișoara' },
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+            addressLocality: 'Timișoara',
+            addressRegion: 'Timiș',
+            postalCode: '300125',
+            addressCountry: 'RO',
+          },
+          contactPoint: {
+            '@type': 'ContactPoint',
+            telephone: '+40799069256',
+            email: 'info@realtrust.ro',
+            contactType: 'customer service',
+            areaServed: 'RO',
+            availableLanguage: ['Romanian', 'English'],
+          },
+        },
+      },
+    ],
+  });
+
   // /intrebari-frecvente — FAQ hub (regim hotelier, administrare, ROI)
   routes.push({
     path: '/intrebari-frecvente',
