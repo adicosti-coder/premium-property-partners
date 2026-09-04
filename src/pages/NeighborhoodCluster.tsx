@@ -242,7 +242,7 @@ const NeighborhoodCluster = () => {
   const isRo = language === "ro";
 
   const n = slug ? data[slug] : null;
-  if (!n) return <Navigate to="/imobiliare-timisoara" replace />;
+  if (!n) return <Navigate to="/cartiere" replace />;
 
   const url = `https://realtrust.ro/cartier/${n.slug}`;
   const hero = isRo ? n.hero.ro : n.hero.en;
@@ -323,7 +323,7 @@ const NeighborhoodCluster = () => {
           { name: isRo ? "Acasă" : "Home", url: "https://realtrust.ro" },
           {
             name: isRo ? "Imobiliare Timișoara" : "Timișoara Real Estate",
-            url: "https://realtrust.ro/imobiliare-timisoara",
+            url: "https://realtrust.ro/cartiere",
           },
           { name: n.name, url },
         ]}
@@ -335,7 +335,7 @@ const NeighborhoodCluster = () => {
         <div className="container mx-auto px-6 mb-8">
           <PageBreadcrumb
             items={[
-              { label: isRo ? "Imobiliare Timișoara" : "Timișoara Real Estate", href: "/imobiliare-timisoara" },
+              { label: isRo ? "Imobiliare Timișoara" : "Timișoara Real Estate", href: "/cartiere" },
               { label: n.name },
             ]}
           />

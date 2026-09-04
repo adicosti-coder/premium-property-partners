@@ -25,11 +25,11 @@ const NeighborhoodDetail = () => {
   const { properties, isLoading } = useNeighborhoodProperties(zona);
 
   if (!neighborhood) {
-    return <Navigate to="/imobiliare-timisoara" replace />;
+    return <Navigate to="/cartiere" replace />;
   }
 
   const breadcrumbItems = [
-    { label: "Imobiliare Timișoara", href: "/imobiliare-timisoara" },
+    { label: "Imobiliare Timișoara", href: "/cartiere" },
     { label: neighborhood.fullName },
   ];
 

@@ -77,7 +77,7 @@ const SharedComparison = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground">Comparația nu a fost găsită sau a expirat.</p>
-        <Link to="/imobiliare-timisoara">
+        <Link to="/cartiere">
           <Button><ArrowLeft className="w-4 h-4 mr-2" />Înapoi la proprietăți</Button>
         </Link>
       </div>
@@ -188,7 +188,7 @@ const SharedComparison = () => {
         </div>
 
         <div className="mt-8 text-center">
-          <Link to="/imobiliare-timisoara">
+          <Link to="/cartiere">
             <Button variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Vezi toate proprietățile

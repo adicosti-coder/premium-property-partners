@@ -206,17 +206,17 @@ const Header = () => {
     {
       label: language === "ro" ? "Proprietari" : "Owners",
       links: [
-        { href: "/servicii-imobiliare-timisoara", label: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services", isPage: true, icon: <BuildingIcon /> },
+        { href: "/servicii-imobiliare", label: language === "ro" ? "Servicii Imobiliare" : "Real Estate Services", isPage: true, icon: <BuildingIcon /> },
         { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners", isPage: true, icon: <BuildingIcon /> },
         { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages", isPage: true, icon: <TrendingIcon /> },
-        { href: "/analiza-proprietate", label: language === "ro" ? "HostScan AI" : "HostScan AI", isPage: true, icon: <ScanIcon /> },
+        { href: "/hostscan-ai", label: language === "ro" ? "HostScan AI" : "HostScan AI", isPage: true, icon: <ScanIcon /> },
       ],
     },
     {
       label: language === "ro" ? "Oaspeți" : "Guests",
       links: [
-        { href: "/pentru-oaspeti", label: language === "ro" ? "Cazare Regim Hotelier" : "Hotel Accommodation", isPage: true, icon: <BedIcon /> },
-        { href: "/complexe", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes", isPage: true, icon: <BuildingIcon /> },
+        { href: "/cazare", label: language === "ro" ? "Cazare Regim Hotelier" : "Hotel Accommodation", isPage: true, icon: <BedIcon /> },
+        { href: "/ansambluri-rezidentiale", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes", isPage: true, icon: <BuildingIcon /> },
       ],
     },
     {
@@ -225,7 +225,7 @@ const Header = () => {
         { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments", isPage: true, icon: <TrendingIcon /> },
         { href: "/catalog-investitii", label: language === "ro" ? "Catalog Investiții 2026" : "Investment Catalog 2026", isPage: true, icon: <BookOpenIcon /> },
         { href: "/imobiliare", label: t.nav.realEstate, isPage: true, icon: <BuildingIcon /> },
-        { href: "/imobiliare-timisoara", label: language === "ro" ? "Cartiere Timișoara" : "Timișoara Neighborhoods", isPage: true, icon: <BuildingIcon /> },
+        { href: "/cartiere", label: language === "ro" ? "Cartiere Timișoara" : "Timișoara Neighborhoods", isPage: true, icon: <BuildingIcon /> },
       ],
     },
     {

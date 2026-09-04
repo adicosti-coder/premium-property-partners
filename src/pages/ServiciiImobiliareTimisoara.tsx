@@ -45,7 +45,7 @@ const ServiciiImobiliareTimisoara = () => {
     {
       "@context": "https://schema.org",
       "@type": "Service",
-      "@id": `${BASE_URL}/servicii-imobiliare-timisoara#service`,
+      "@id": `${BASE_URL}/servicii-imobiliare#service`,
       "name": isRo ? "Servicii Imobiliare Timișoara" : "Real Estate Services Timișoara",
       "provider": {
         ...REAL_ESTATE_AGENT_REF,
@@ -77,7 +77,7 @@ const ServiciiImobiliareTimisoara = () => {
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": isRo ? "Acasă" : "Home", "item": BASE_URL },
-        { "@type": "ListItem", "position": 2, "name": isRo ? "Servicii Imobiliare Timișoara" : "Real Estate Services Timișoara", "item": `${BASE_URL}/servicii-imobiliare-timisoara` },
+        { "@type": "ListItem", "position": 2, "name": isRo ? "Servicii Imobiliare Timișoara" : "Real Estate Services Timișoara", "item": `${BASE_URL}/servicii-imobiliare` },
       ],
     },
   ];
@@ -89,7 +89,7 @@ const ServiciiImobiliareTimisoara = () => {
       desc: isRo
         ? "Intermediere completă pentru vânzări apartamente și case de vânzare Timișoara. Fiecare agent imobiliar Timișoara din echipă este specializat pe cartiere și tipologii (apartamente noi, vile, case în Dumbrăvița, Giroc, Mehala, Braytim)."
         : "Full brokerage for apartment and house sales in Timișoara. Each RealTrust real estate agent is specialized by neighborhood and property type (new apartments, villas, houses in Dumbrăvița, Giroc, Mehala, Braytim).",
-      link: "/imobiliare-timisoara",
+      link: "/cartiere",
     },
     {
       icon: Shield,
@@ -97,7 +97,7 @@ const ServiciiImobiliareTimisoara = () => {
       desc: isRo
         ? "Contracte de închiriere pe termen lung pentru proprietari și chiriași verificați. Acoperire pentru apartamente lângă Continental Automotive, Hella, Iulius Town și marii angajatori."
         : "Long-term rental contracts for owners and verified tenants. Coverage for apartments near Continental Automotive, Hella, Iulius Town and major employers.",
-      link: "/imobiliare-timisoara",
+      link: "/cartiere",
     },
     {
       icon: Building2,
@@ -147,7 +147,7 @@ const ServiciiImobiliareTimisoara = () => {
         description={isRo
           ? "Pagina pilon RealTrust: vânzări apartamente și case de vânzare Timișoara, închirieri, administrare regim hotelier (ROI 9.4%). Agent imobiliar Timișoara dedicat, expertiză pe piața imobiliară Timișoara."
           : "RealTrust pillar page: apartment and house sales Timișoara, rentals, short-term rental management (9.4% ROI). Dedicated Timișoara real estate agents and local market expertise."}
-        url={`${BASE_URL}/servicii-imobiliare-timisoara`}
+        url={`${BASE_URL}/servicii-imobiliare`}
         jsonLd={jsonLd}
       />
       <Header />

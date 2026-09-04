@@ -62,7 +62,7 @@ const ImobiliareTimisoara = () => {
     "@type": "LocalBusiness",
     name: "RealTrust Imobiliare Timișoara",
     description: "Agenție imobiliară din Timișoara, specializată în vânzări, investiții și administrare de apartamente în regim hotelier.",
-    url: "https://realtrust.ro/imobiliare-timisoara",
+    url: "https://realtrust.ro/cartiere",
     telephone: "+40799069256",
     address: {
       "@type": "PostalAddress",
@@ -86,7 +86,7 @@ const ImobiliareTimisoara = () => {
       <SEOHead
         title="Imobiliare Timișoara — apartamente pe zone | RealTrust"
         description="Explorează apartamentele de vânzare din Timișoara, pe cartiere: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO. Prețuri actualizate și randamente calculate transparent."
-        url="https://realtrust.ro/imobiliare-timisoara"
+        url="https://realtrust.ro/cartiere"
       />
       <script
         type="application/ld+json"

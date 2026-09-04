@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       </p>
       <div style="border-top:1px solid #e6e8ec;margin-top:18px;padding-top:18px">
         <p style="margin:0 0 10px;font-size:14px"><strong>Vrei o re-evaluare actualizată?</strong><br/>Tarifele și ocuparea din Timișoara se schimbă lunar — refacem analiza gratuit, pe date curente.</p>
-        <a href="${SITE}/analiza-proprietate" style="display:inline-block;border:1px solid #0f2340;color:#0f2340;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:bold">Cere re-evaluarea</a>
+        <a href="${SITE}/hostscan-ai" style="display:inline-block;border:1px solid #0f2340;color:#0f2340;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:bold">Cere re-evaluarea</a>
       </div>
       <p style="margin:20px 0 0;font-size:11px;color:#939aa5">Estimările folosesc 75% ocupare și 27% deducere management/taxe. RealTrust Timișoara.</p>
     </div>

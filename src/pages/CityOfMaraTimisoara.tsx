@@ -329,7 +329,7 @@ const CityOfMaraTimisoara = () => {
           <img src={cityHero} alt="Apartamente City of Mara Timișoara cu finisaje moderne" className="absolute inset-0 h-full w-full object-cover" {...({ fetchpriority: "high" } as Record<string, string>)} />
           <div className="absolute inset-0 bg-foreground/65" />
           <div className="relative container mx-auto flex min-h-[calc(88svh-6rem)] flex-col justify-end px-4 pb-10 md:pb-14">
-            <PageBreadcrumb items={[{ label: "Complexe", href: "/complexe" }, { label: "City of Mara Timișoara" }]} className="mb-8 text-primary-foreground/90" />
+            <PageBreadcrumb items={[{ label: "Complexe", href: "/ansambluri-rezidentiale" }, { label: "City of Mara Timișoara" }]} className="mb-8 text-primary-foreground/90" />
             <div className="max-w-4xl text-primary-foreground">
               <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-foreground/25 bg-background/15 px-4 py-2 text-sm font-semibold">
                 <Building2 className="h-4 w-4" /> Vânzare apartamente noi City of Mara
@@ -866,7 +866,7 @@ const CityOfMaraTimisoara = () => {
               <p className="mt-2 text-muted-foreground">Comparăm randamentul, prețul de intrare, lichiditatea și riscul operațional între complexele premium din Timișoara.</p>
             </div>
             <div className="mt-5 flex flex-wrap gap-3 md:mt-0">
-              <Button asChild><Link to="/complexe">Vezi Complexe</Link></Button>
+              <Button asChild><Link to="/ansambluri-rezidentiale">Vezi Complexe</Link></Button>
               <Button asChild variant="outline"><Link to="/catalog-investitii">Catalog Investiții</Link></Button>
             </div>
           </div>
@@ -884,7 +884,7 @@ const CityOfMaraTimisoara = () => {
               <h3 className="mt-4 text-xl font-semibold text-foreground">Piața imobiliară Timișoara</h3>
               <p className="mt-2 text-sm text-muted-foreground">Vezi contextul local al prețurilor, cererii și principalelor zone de interes pentru investitori.</p>
             </Link>
-            <Link to="/complexe" className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40">
+            <Link to="/ansambluri-rezidentiale" className="rounded-lg border border-border bg-card p-6 transition-colors hover:border-primary/40">
               <Building2 className="h-6 w-6 text-primary" />
               <h3 className="mt-4 text-xl font-semibold text-foreground">Alte complexe premium</h3>
               <p className="mt-2 text-sm text-muted-foreground">Compară City of Mara cu alte ansambluri relevante din Timișoara înainte de decizia finală.</p>

@@ -166,7 +166,7 @@ const PropertyAIScore = ({
               ? "Scor calculat pe baza locației, rating-ului, facilităților, recenziilor și prețului."
               : "Score based on location, rating, amenities, reviews and pricing."}
           </p>
-          <a href="/analiza-proprietate" className="text-xs text-primary hover:underline font-medium">
+          <a href="/hostscan-ai" className="text-xs text-primary hover:underline font-medium">
             {language === "ro" ? "Analiză completă →" : "Full analysis →"}
           </a>
         </TooltipContent>

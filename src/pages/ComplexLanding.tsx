@@ -231,7 +231,7 @@ const ComplexLanding = () => {
   const complex = slug ? complexesData[slug] : null;
 
   if (!complex) {
-    return <Navigate to="/complexe" replace />;
+    return <Navigate to="/ansambluri-rezidentiale" replace />;
   }
 
   const isRo = language === "ro";
@@ -285,7 +285,7 @@ const ComplexLanding = () => {
         <div className="container mx-auto px-6 mb-8">
           <PageBreadcrumb
             items={[
-              { label: isRo ? "Complexe" : "Complexes", href: "/complexe" },
+              { label: isRo ? "Complexe" : "Complexes", href: "/ansambluri-rezidentiale" },
               { label: complex.name },
             ]}
           />

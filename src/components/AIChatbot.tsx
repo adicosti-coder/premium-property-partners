@@ -293,7 +293,7 @@ const getContextualQuickActions = (lang: "ro" | "en"): string[] => {
       ? ["📅 Verifică disponibilitatea live", "🏷️ Aplică codul DIRECT5 (-5%)", "🛎️ Ce facilități premium sunt incluse?", "📞 Rezervă direct cu discount"]
       : ["📅 Check live availability", "🏷️ Apply DIRECT5 code (-5%)", "🛎️ What premium amenities are included?", "📞 Book directly with discount"];
   }
-  if (path.startsWith("/oaspeti") || path.startsWith("/pentru-oaspeti")) {
+  if (path.startsWith("/oaspeti") || path.startsWith("/cazare")) {
     return lang === "ro"
       ? ["🏠 Ce apartamente sunt libere acum?", "👨‍👩‍👧 Recomandă-mi cazare pentru familie", "🍽️ Top restaurante lângă apartament", "✈️ Transfer aeroport & check-in rapid"]
       : ["🏠 Which apartments are free now?", "👨‍👩‍👧 Recommend family-friendly stays", "🍽️ Top restaurants near apartment", "✈️ Airport transfer & express check-in"];

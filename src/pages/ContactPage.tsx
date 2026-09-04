@@ -180,7 +180,7 @@ const ContactPage = () => {
                 ? "Adresă, telefon, program și hartă. Pentru detalii despre serviciile noastre, vezi pagina dedicată."
                 : "Address, phone, hours and map. For details about our services, see the dedicated page."}
             </p>
-            <Link to="/servicii-imobiliare-timisoara" className="inline-block">
+            <Link to="/servicii-imobiliare" className="inline-block">
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold shadow-lg shadow-amber-500/30 gap-2"
@@ -311,7 +311,7 @@ const ContactPage = () => {
             </div>
             <p className="text-center text-sm text-muted-foreground mt-6">
               {isRo ? "Cauți detalii despre servicii? " : "Looking for service details? "}
-              <Link to="/servicii-imobiliare-timisoara" className="text-primary hover:underline font-medium">
+              <Link to="/servicii-imobiliare" className="text-primary hover:underline font-medium">
                 {isRo ? "Vezi pagina Servicii Imobiliare Timișoara" : "See the Real Estate Services Timișoara page"}
               </Link>
             </p>

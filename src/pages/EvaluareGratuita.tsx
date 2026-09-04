@@ -390,7 +390,7 @@ const EvaluareGratuita = () => {
             </p>
             <p className="text-sm text-muted-foreground">
               Vrei să vinzi după evaluare?{" "}
-              <Link to="/imobiliare-timisoara" className="text-primary underline">
+              <Link to="/cartiere" className="text-primary underline">
                 Vezi cum vindem proprietățile
               </Link>{" "}
               sau{" "}

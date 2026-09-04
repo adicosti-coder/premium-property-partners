@@ -14,10 +14,10 @@ const corsHeaders = {
 
 const TARGET_URLS = [
   "https://www.realtrust.ro/",
-  "https://www.realtrust.ro/imobiliare-timisoara",
+  "https://www.realtrust.ro/cartiere",
   "https://www.realtrust.ro/pentru-proprietari",
   "https://www.realtrust.ro/investitii",
-  "https://www.realtrust.ro/pentru-oaspeti",
+  "https://www.realtrust.ro/cazare",
 ];
 
 const ALERT_THRESHOLD = 5; // points drop triggers alert

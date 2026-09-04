@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
       step2: "Contactează-ne pe WhatsApp sau email",
       step3: "Menționează codul pentru a primi reducerea",
       ctaText: "Rezervă Acum",
-      ctaUrl: "https://realtrustaparthotel.lovable.app/pentru-oaspeti",
+      ctaUrl: "https://realtrustaparthotel.lovable.app/cazare",
       footer: "Cu drag, Echipa ApArt Hotel Timișoara",
       unsubscribe: "Dacă nu dorești să mai primești emailuri, te rugăm să ne contactezi.",
     } : {
@@ -65,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
       step2: "Contact us via WhatsApp or email",
       step3: "Mention the code to receive your discount",
       ctaText: "Book Now",
-      ctaUrl: "https://realtrustaparthotel.lovable.app/pentru-oaspeti",
+      ctaUrl: "https://realtrustaparthotel.lovable.app/cazare",
       footer: "Best regards, ApArt Hotel Timișoara Team",
       unsubscribe: "If you don't want to receive emails, please contact us.",
     };

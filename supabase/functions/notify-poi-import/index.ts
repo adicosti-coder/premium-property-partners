@@ -106,7 +106,7 @@ async function sendEmailNotification(
             </div>
             
             <div style="text-align: center; margin-top: 30px;">
-              <a href="https://realtrustaparthotel.lovable.app/pentru-oaspeti#ghid-local" 
+              <a href="https://realtrustaparthotel.lovable.app/cazare#ghid-local" 
                  style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600;">
                 Vezi statisticile tale
               </a>

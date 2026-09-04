@@ -46,17 +46,17 @@ const QUICK_URLS = [
   // Proprietari
   "https://realtrust.ro/pentru-proprietari",
   "https://realtrust.ro/preturi",
-  "https://realtrust.ro/analiza-proprietate",
+  "https://realtrust.ro/hostscan-ai",
   "https://realtrust.ro/evaluare-gratuita",
   // Oaspeți
-  "https://realtrust.ro/pentru-oaspeti",
+  "https://realtrust.ro/cazare",
   "https://realtrust.ro/oaspeti",
   "https://realtrust.ro/complexe",
   // Investiții & Imobiliare
   "https://realtrust.ro/investitii",
   "https://realtrust.ro/catalog-investitii",
   "https://realtrust.ro/imobiliare",
-  "https://realtrust.ro/imobiliare-timisoara",
+  "https://realtrust.ro/cartiere",
   "https://realtrust.ro/calculator-roi",
   "https://realtrust.ro/analiza-roi-apartament",
   "https://realtrust.ro/piata-imobiliara-timisoara",
