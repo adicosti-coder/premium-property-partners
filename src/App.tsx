@@ -219,8 +219,11 @@ const App = () => (
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/favorite" element={<Favorites />} />
                     <Route path="/oaspeti" element={<Guests />} />
-                    <Route path="/pentru-oaspeti" element={<PentruOaspeti />} />
+                    {/* Canonical: /cazare (short brand structure). */}
+                    <Route path="/cazare" element={<PentruOaspeti />} />
+                    <Route path="/pentru-oaspeti" element={<Navigate to="/cazare" replace />} />
                     <Route path="/imobiliare" element={<Imobiliare />} />
+
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/categorie/:slug" element={<BlogCategory />} />
                     <Route path="/blog/locatie/:location" element={<BlogLocation />} />
