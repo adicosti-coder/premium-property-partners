@@ -26,13 +26,38 @@ interface PrerenderRoute {
 }
 
 /**
+ * ENTITY SEO / GEO — canonical "Ce este RealTrust?" answer.
+ * MUST stay byte-identical to ENTITY_ANSWER.ro in src/lib/entityDefinition.ts
+ * (this plugin runs standalone at build time and cannot import from src).
+ */
+const ENTITY_ANSWER_RO = 'RealTrust este o companie imobiliară din Timișoara care oferă servicii de investiții imobiliare, vânzare și închiriere de proprietăți și administrare în regim hotelier. Este operată de entitatea juridică SC Imo Business Centrum SRL (CUI RO14380627) și activează în Timișoara și zona metropolitană. Se adresează proprietarilor care vor să externalizeze administrarea, investitorilor care caută randament și cumpărătorilor sau chiriașilor de apartamente și case. Apartamentele administrate în regim hotelier sunt operate sub brandul propriu de cazare, ApArt Hotel. Colaborarea se face pe bază de contract scris, cu comisioane comunicate în avans și raportare financiară lunară. Contact: +40 799 069 256, info@realtrust.ro.';
+
+const ENTITY_DEFINITION_HTML = `
+  <h2>Ce este RealTrust?</h2>
+  <p>${ENTITY_ANSWER_RO}</p>
+`;
+
+const ENTITY_QUESTION_SCHEMA = (pageUrl: string) => ({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': `${pageUrl}#what-is-realtrust`,
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Ce este RealTrust?',
+      acceptedAnswer: { '@type': 'Answer', text: ENTITY_ANSWER_RO },
+    },
+  ],
+});
+
+/**
  * Rich, dense local-SEO HTML for the homepage. Mirrors SEOLocalEntitiesBlock.tsx
  * but injected into the static HTML so crawlers without JS still see it.
  * Includes all 27 local entities tracked by seo-ai-optimizer/localGeo.ts.
  */
 const HOMEPAGE_AUTHORITY_BODY = `
   <h2>Ce este RealTrust?</h2>
-  <p>RealTrust este o companie de servicii imobiliare și property management din Timișoara, operată de SC Imo Business Centrum SRL (CUI RO14380627). Intermediază vânzări de apartamente și case și închirieri pe termen lung, consiliază investitorii la achiziția de proprietăți pentru randament și administrează apartamente în regim hotelier sub brandul propriu de cazare, ApArt Hotel. Clienții sunt proprietari, investitori și cumpărători din Timișoara și zona metropolitană. Colaborarea se face pe bază de contract scris, cu comisioane comunicate în avans și raportare lunară.</p>
+  <p>${ENTITY_ANSWER_RO}</p>
 
   <h2>Investiții imobiliare</h2>
   <p>Analizăm proprietăți din perspectiva randamentului: preț de achiziție, costuri de amenajare, tarife realizabile pe noapte și grad de ocupare estimat. Fiecare estimare este prezentată ca scenariu, cu ipotezele afișate; randamentul mediu raportat pentru apartamentele administrate este de 9,4% net. Detalii pe pagina de investiții.</p>
@@ -125,6 +150,8 @@ const HOMEPAGE_SEO_BODY = `
 `;
 
 const BASE_URL = 'https://realtrust.ro';
+
+
 /** Curs orientativ EUR→RON folosit pentru prețul dual din datele structurate. */
 const EUR_TO_RON = 5.05;
 const SUPABASE_URL = 'https://mvzssjyzbwccioqvhjpo.supabase.co';
@@ -933,6 +960,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     h1: 'Echipa din spatele RealTrust Timișoara',
     canonical: `${BASE_URL}/despre-noi`,
     seoBody: `
+      ${ENTITY_DEFINITION_HTML}
       <h2>Despre echipa RealTrust Timișoara</h2>
       <p>RealTrust este o echipă locală din Timișoara, coordonată de Adrian Costi (Fondator & CEO), specializată în <strong>consultanță imobiliară Timișoara</strong>, administrare proprietăți și regim hotelier.</p>
       <h3>Misiune, transparență și rezultate măsurabile</h3>
@@ -947,7 +975,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         <li>Întrebări frecvente</li>
       </ul>
     `,
-    jsonLd: {
+    jsonLd: [ENTITY_QUESTION_SCHEMA(`${BASE_URL}/despre-noi`), {
       '@context': 'https://schema.org',
       '@type': 'AboutPage',
       name: 'Despre RealTrust Timișoara',
@@ -961,7 +989,56 @@ function buildStaticRoutes(): PrerenderRoute[] {
         address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
         founder: { '@type': 'Person', name: 'Adrian Costi', jobTitle: 'Fondator & CEO' },
       },
-    },
+    }],
+  });
+
+  // /contact — NAP page (address, phone, hours) + entity definition
+  routes.push({
+    path: '/contact',
+    title: 'Contact RealTrust Timișoara | Adresă, Telefon & Program',
+    description: 'Contact RealTrust Timișoara: Strada Samuel Clain Micu nr. 14, ap. 4, telefon +40 799 069 256, info@realtrust.ro. Program luni–vineri 10:00–18:00.',
+    h1: 'Contact & Locație — Sediu RealTrust Timișoara',
+    canonical: `${BASE_URL}/contact`,
+    seoBody: `
+      ${ENTITY_DEFINITION_HTML}
+      <h2>Date de contact RealTrust Timișoara</h2>
+      <p>Sediu: Strada Samuel Clain Micu nr. 14, ap. 4, 300125 Timișoara, județul Timiș. Telefon: +40 799 069 256. E-mail: info@realtrust.ro. Program: luni–vineri, 10:00–18:00 (Europe/Bucharest).</p>
+    `,
+    jsonLd: [
+      ENTITY_QUESTION_SCHEMA(`${BASE_URL}/contact`),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: 'Contact RealTrust Timișoara',
+        url: `${BASE_URL}/contact`,
+        mainEntity: {
+          '@type': 'RealEstateAgent',
+          '@id': `${BASE_URL}/#realestateagent`,
+          name: 'RealTrust & ApArt Hotel',
+          url: BASE_URL,
+          telephone: '+40799069256',
+          email: 'info@realtrust.ro',
+          openingHours: 'Mo-Fr 10:00-18:00',
+          areaServed: { '@type': 'City', name: 'Timișoara' },
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+            addressLocality: 'Timișoara',
+            addressRegion: 'Timiș',
+            postalCode: '300125',
+            addressCountry: 'RO',
+          },
+          contactPoint: {
+            '@type': 'ContactPoint',
+            telephone: '+40799069256',
+            email: 'info@realtrust.ro',
+            contactType: 'customer service',
+            areaServed: 'RO',
+            availableLanguage: ['Romanian', 'English'],
+          },
+        },
+      },
+    ],
   });
 
   // /intrebari-frecvente — FAQ hub (regim hotelier, administrare, ROI)
@@ -1135,6 +1212,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     h1: 'Administrare apartamente și case în regim hotelier în Timișoara',
     canonical: `${BASE_URL}/pentru-proprietari`,
     seoBody: `
+      ${ENTITY_DEFINITION_HTML}
       <h2>Property management Timișoara — operare hotelieră zilnică pentru proprietari</h2>
       <p>RealTrust este firmă specializată de <strong>property management Timișoara</strong> dedicată exclusiv proprietarilor care vor să externalizeze complet operarea apartamentului. Ne ocupăm de tot ce ține de exploatarea zilnică: listare multi-canal, comunicare cu oaspeții 24/7, check-in / check-out, curățenie hotelieră între rezervări, lenjerie, mentenanță, raportare lunară. Tu primești venitul; restul îl gestionăm noi cu o echipă locală de 12 persoane.</p>
 

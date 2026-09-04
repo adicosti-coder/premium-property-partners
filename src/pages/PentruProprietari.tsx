@@ -19,6 +19,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
+import EntityDefinitionBlock from "@/components/EntityDefinitionBlock";
 import BackToTop from "@/components/BackToTop";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
@@ -513,6 +514,13 @@ const PentruProprietari = () => {
       {/* Breadcrumb */}
       <div className="container mx-auto px-6">
         <PageBreadcrumb items={breadcrumbItems} />
+      </div>
+
+      {/* ENTITY SEO / GEO: canonical "Ce este RealTrust?" definition */}
+      <div className="container mx-auto px-6 mt-4">
+        <div className="max-w-4xl mx-auto">
+          <EntityDefinitionBlock pagePath="/pentru-proprietari" as="h2" />
+        </div>
       </div>
 
       {/* Hero Section - Investor Blue/Gold Theme */}

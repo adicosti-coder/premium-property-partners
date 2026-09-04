@@ -32,6 +32,8 @@ import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
+import EntityDefinitionBlock from "@/components/EntityDefinitionBlock";
+
 import BackToTop from "@/components/BackToTop";
 import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 import PageSummary from "@/components/PageSummary";
@@ -414,6 +416,14 @@ const AboutUs = () => {
         <div className="container mx-auto px-4 pt-4">
           <PageBreadcrumb items={breadcrumbItems} />
         </div>
+
+        {/* ENTITY SEO / GEO: canonical "Ce este RealTrust?" definition */}
+        <div className="container mx-auto px-4 mt-4">
+          <div className="max-w-4xl mx-auto">
+            <EntityDefinitionBlock pagePath="/despre-noi" />
+          </div>
+        </div>
+
 
         {/* Table of Contents — jump links for long page (mobile-friendly) */}
         <nav
