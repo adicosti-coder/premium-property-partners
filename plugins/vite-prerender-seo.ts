@@ -723,12 +723,24 @@ function buildStaticRoutes(): PrerenderRoute[] {
       geo: { '@type': 'GeoCoordinates', latitude: 45.7489, longitude: 21.2087 },
       areaServed: 'Timișoara',
       priceRange: '$$',
+      sameAs: [
+        'https://www.facebook.com/realtrust.ro',
+        'https://www.instagram.com/realtrust_timisoara',
+        'https://www.google.com/maps/place/RealTrust/data=!4m2!3m1!1s0x40918b091135b1b3:0x714fdcd64f129651',
+      ],
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '9.7',
+        reviewCount: '150',
+        bestRating: '10',
+        worstRating: '1',
+      },
     },
   });
 
   // /cartiere
   routes.push({
-    path: '/imobiliare-timisoara',
+    path: '/cartiere',
     title: 'Imobiliare Timișoara — Apartamente pe Zone | RealTrust',
     description: 'Explorează apartamentele de vânzare din Timișoara pe zone: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO.',
     h1: 'Apartamente de Vânzare în Timișoara',
@@ -744,6 +756,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
     },
   });
+
 
   // Neighborhood pages
   for (const n of neighborhoods) {
@@ -1215,16 +1228,16 @@ function buildStaticRoutes(): PrerenderRoute[] {
     ],
   });
 
-  // /complexe — managed residential complexes
+  // /ansambluri-rezidentiale — managed residential complexes (canonical short route)
   routes.push({
-    path: '/complexe',
+    path: '/ansambluri-rezidentiale',
     title: 'Ansambluri Rezidențiale Timișoara — ISHO, ATENEO, City of Mara | RealTrust',
     description: 'Complexe rezidențiale Timișoara administrate de RealTrust: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers. Investiții cu randament verificat.',
     h1: 'Complexe Rezidențiale Premium Timișoara',
-    canonical: `${BASE_URL}${BASE_URL}/ansambluri-rezidentiale`,
+    canonical: `${BASE_URL}/ansambluri-rezidentiale`,
     seoBody: `
       <h2>Complexe rezidențiale din Timișoara administrate de RealTrust</h2>
-      <p>Pagina /complexe este dedicată ansamblurilor rezidențiale și proprietăților administrate de RealTrust în Timișoara: <strong>ISHO</strong>, <strong>ATENEO Residence</strong>, <strong>City of Mara</strong>, <strong>Fructus Plaza</strong>, <strong>XCity Towers</strong> și alte dezvoltări premium.</p>
+      <p>Pagina /ansambluri-rezidentiale este dedicată ansamblurilor rezidențiale și proprietăților administrate de RealTrust în Timișoara: <strong>ISHO</strong>, <strong>ATENEO Residence</strong>, <strong>City of Mara</strong>, <strong>Fructus Plaza</strong>, <strong>XCity Towers</strong> și alte dezvoltări premium.</p>
       <h3>Ansambluri rezidențiale Timișoara cu potențial investițional</h3>
       <p>Prezentăm zone, facilități și rezultate reale de ocupare pentru investitori interesați de apartamente noi, randament verificat și administrare în regim hotelier în cele mai căutate micro-piețe din Timișoara.</p>
     `,
@@ -1232,9 +1245,10 @@ function buildStaticRoutes(): PrerenderRoute[] {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       name: 'Complexe Rezidențiale Timișoara',
-      url: `${BASE_URL}${BASE_URL}/ansambluri-rezidentiale`,
+      url: `${BASE_URL}/ansambluri-rezidentiale`,
     },
   });
+
 
   // Blog category hubs — prerender meta + JSON-LD so Google has them
   // immediately when discovering them via the new blog sitemap.
