@@ -48,14 +48,14 @@ Lista completă cu specificații, facilități și linkuri de rezervare: [/llms-
 ## Pagini principale
 
 - [Acasă](/): Prezentare RealTrust și ApArt Hotel — imobiliare și operare hotelieră în Timișoara.
-- [Pentru oaspeți](/oaspeti): Cazare în apartamente premium în regim hotelier în Timișoara.
+- [Cazare regim hotelier](/cazare): Cazare în apartamente premium în regim hotelier în Timișoara.
 - [Pentru proprietari](/pentru-proprietari): Servicii de administrare apartamente în regim hotelier.
 - [Calculator ROI](/calculator-roi): Calculator randament net pentru apartamente în regim hotelier vs. închiriere clasică.
 - [Catalog investiții](/catalog-investitii): Apartamente cu randament calculat transparent (9,4% net).
 - [Imobiliare Timișoara](/imobiliare): Anunțuri vânzări și închirieri în Timișoara.
-- [Hub cartiere](/imobiliare-timisoara): Ghid pe cartiere — Cetate, Iosefin, Fabric, Dumbrăvița, Aradului.
+- [Hub cartiere](/cartiere): Ghid pe cartiere — Cetate, Iosefin, Fabric, Dumbrăvița, Aradului.
 - [Piața imobiliară](/piata-imobiliara-timisoara): Prețuri €/mp și tendințe lunare pe cartiere.
-- [Servicii imobiliare](/servicii-imobiliare-timisoara): Vânzări, închirieri, administrare, consultanță.
+- [Servicii imobiliare](/servicii-imobiliare): Vânzări, închirieri, administrare, consultanță.
 - [Procesul nostru](/procesul-nostru): Cum lucrăm cu proprietarii și investitorii.
 - [Evaluare gratuită](/evaluare-gratuita): Estimare de preț pentru apartamentul tău.
 - [Despre noi](/despre-noi): Echipă fondată de Adrian Costi în Timișoara.

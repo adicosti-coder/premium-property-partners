@@ -179,10 +179,10 @@ Direct pe https://realtrust.ro/rezervare sau prin linkul Pynbooking al fiecărui
 ## Pagini de referință
 
 - Pentru proprietari (administrare regim hotelier): https://realtrust.ro/pentru-proprietari
-- Pentru oaspeți (cazare): https://realtrust.ro/pentru-oaspeti
+- Pentru oaspeți (cazare): https://realtrust.ro/cazare
 - Calculator ROI: https://realtrust.ro/calculator-roi
 - Catalog investiții: https://realtrust.ro/catalog-investitii
-- Analiză proprietate (AI): https://realtrust.ro/analiza-proprietate
+- Analiză proprietate (AI): https://realtrust.ro/hostscan-ai
 - Rezervare directă: https://realtrust.ro/rezervare
 - Întrebări frecvente: https://realtrust.ro/intrebari-frecvente
 - Despre noi: https://realtrust.ro/despre-noi
