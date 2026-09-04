@@ -72,7 +72,7 @@ serve(async (req: Request) => {
       { url: "/adauga-anunt", priority: "0.6", changefreq: "monthly" },
       { url: "/calculator-roi", priority: "0.8", changefreq: "weekly" },
       { url: "/evaluare-gratuita", priority: "0.7", changefreq: "monthly" },
-      { url: "/hostscan-ai", priority: "0.8", changefreq: "monthly" },
+      
       { url: "/piata-imobiliara-timisoara", priority: "0.7", changefreq: "weekly" },
       { url: "/cartiere", priority: "0.9", changefreq: "daily" },
       { url: "/imobiliare-timisoara/zona-girocului", priority: "0.8", changefreq: "monthly" },

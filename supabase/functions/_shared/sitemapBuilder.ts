@@ -45,6 +45,8 @@ export const STATIC_PAGES: { url: string; priority: string; changefreq: string }
   { url: "/oaspeti", priority: "0.9", changefreq: "daily" },
   { url: "/pentru-proprietari", priority: "0.9", changefreq: "weekly" },
   { url: "/ansambluri-rezidentiale", priority: "0.9", changefreq: "weekly" },
+  { url: "/servicii-imobiliare", priority: "0.9", changefreq: "weekly" },
+  { url: "/intrebari-frecvente", priority: "0.7", changefreq: "monthly" },
   { url: "/blog", priority: "0.8", changefreq: "daily" },
   { url: "/blog/categorie/ghid-turistic-timisoara", priority: "0.8", changefreq: "weekly" },
   { url: "/blog/categorie/investitii-imobiliare", priority: "0.8", changefreq: "weekly" },
