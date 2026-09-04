@@ -1,3 +1,4 @@
+import { GOOGLE_BUSINESS_PROFILE_URL } from "@/lib/orgIdentity";
 import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -13,7 +14,7 @@ import QuickContactForm from "@/components/contact/QuickContactForm";
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 const BASE_URL = "https://realtrust.ro";
-const GOOGLE_BUSINESS_URL = "https://share.google/oNmn1ltr7L0OEiHet";
+const GOOGLE_BUSINESS_URL = GOOGLE_BUSINESS_PROFILE_URL;
 const GOOGLE_MAPS_QUERY = encodeURIComponent("Strada Samuil Micu 14, Timișoara");
 const GOOGLE_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${GOOGLE_MAPS_QUERY}`;
 

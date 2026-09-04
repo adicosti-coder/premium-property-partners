@@ -18,6 +18,7 @@ import {
   ORGANIZATION_SCHEMA,
   LODGING_BUSINESS_ID,
   SITE_ORIGIN,
+  GOOGLE_BUSINESS_PROFILE_URL,
 } from "@/lib/orgIdentity";
 
 const BASE_URL = SITE_ORIGIN;
@@ -906,6 +907,7 @@ export const generateOrganizationSchema = () => ({
     "https://www.facebook.com/realtrust.ro",
     "https://www.instagram.com/realtrust_timisoara",
     "https://www.booking.com",
+    GOOGLE_BUSINESS_PROFILE_URL,
   ],
   "contactPoint": [
     {
@@ -1037,6 +1039,7 @@ export const generateHomepageRealEstateAgentSchema = () => ({
     "https://www.facebook.com/realtrust.ro",
     "https://www.instagram.com/realtrust_timisoara",
     "https://www.booking.com",
+    GOOGLE_BUSINESS_PROFILE_URL,
   ],
 });
 
