@@ -17,6 +17,9 @@ import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
 import PageSummary from "@/components/PageSummary";
 // GEO citable answer block (~1KB) — kept eager to stay crawlable in the initial HTML.
 import AIQuoteBlock from "@/components/AIQuoteBlock";
+// Factual intro paragraph directly under the H1 — tiny, kept eager so it is
+// present in the initial HTML for crawlers and AI engines.
+import HomeIntro from "@/components/home/HomeIntro";
 
 // Hero MUST be eager: it is the LCP element and the static shell in
 // index.html is wiped by React mount. Any Suspense gap here produces
@@ -54,6 +57,7 @@ const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm")
 const HomeRecommendedLinks = lazy(() => import("@/components/home/HomeRecommendedLinks"));
 const BrandPillarsHub = lazy(() => import("@/components/home/BrandPillarsHub"));
 const ProcessStepsTimeline = lazy(() => import("@/components/ProcessStepsTimeline"));
+const HomeAuthorityBlocks = lazy(() => import("@/components/home/HomeAuthorityBlocks"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -279,6 +283,8 @@ const Index = () => {
             index.html paints first; React Hero replaces it on mount with
             an identical layout (#root has min-height to prevent CLS). */}
         <Hero />
+        {/* Factual, link-rich intro right under the H1 */}
+        <HomeIntro />
         {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
             still see the semantic content without causing the page to start with H2. */}
         <SEOLocalEntitiesBlock />
@@ -304,6 +310,11 @@ const Index = () => {
 
         {belowFoldReady && (
           <>
+            {/* Brand authority: "Ce este RealTrust?" (GEO) + "De ce RealTrust?" */}
+            <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+              <HomeAuthorityBlocks />
+            </Suspense>
+
             {/* SEO H2 strip — explicit service headings (per audit) */}
             <ServicesH2Strip />
 
