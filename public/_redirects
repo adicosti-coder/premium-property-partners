@@ -1,7 +1,0 @@
-# Legacy URL consolidation -> canonical short routes (301 permanent)
-/pentru-oaspeti /cazare 301
-/pentru-oaspeți /cazare 301
-/complexe /ansambluri-rezidentiale 301
-/imobiliare-timisoara /cartiere 301
-/servicii-imobiliare-timisoara /servicii-imobiliare 301
-/analiza-proprietate /hostscan-ai 301
