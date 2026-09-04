@@ -9,7 +9,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 ## Identitate
 
 - Nume: RealTrust & ApArt Hotel
-- Denumire legală: RealTrust Imobiliare SRL
+- Denumire legală: SC Imo Business Centrum SRL (CUI RO14380627)
 - Fondator: Adrian Costi
 - Oraș: Timișoara, județul Timiș, România
 - Adresă: Strada Samuel Clain Micu nr. 14, ap. 4, 300125 Timișoara
@@ -43,7 +43,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 60 mp, 1 dormitor(e), 1 baie/băi, capacitate 4 persoane, de la 85 €/noapte, rating 9.7/10
 - Descriere: NordOne, pe Calea Circumvalațiunii nr. 4, oferă un apartament nou și generos de 60 mp la etajul 1, într-un ansamblu rezidențial premium din Timișoara. Finisaje moderne, bucătărie complet utilată, WiFi de mare viteză și auto check-in — ideal pentru sejururi rafinate, la câțiva minute de centru.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Mașină de spălat, Bucătărie complet utilată, Parcare, Auto check-in, Lenjerie premium, Ansamblu rezidențial premium
-- Pagină: https://realtrust.ro/ring-apart-hotel-spacious-deluxe
+- Pagină: https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe
 - Rezervare: https://nordone.pynbooking.direct/
 
 ### GREEN FOREST ApArt Hotel
@@ -51,7 +51,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 58 mp, 2 dormitor(e), 1 baie/băi, capacitate 4 persoane, de la 75 €/noapte, rating 10.0/10
 - Descriere: GREEN FOREST ApArt Hotel este situat pe Strada Constructorilor 52, în complexul Denya Forest 5, Et.7, apt.73. Oferă un apartament spațios de 58mp cu balcon, parcare gratuită și apropierea de parcul acvatic Amazonia. Rating excepțional 10/10!
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie complet utilată, Parcare gratuită, Auto check-in, Balcon, Transfer aeroport, Vedere panoramică
-- Pagină: https://realtrust.ro/green-forest-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/green-forest-apart-hotel
 - Rezervare: https://denya-forest-5.pynbooking.direct/
 
 ### Fructus Plaza ULTRACENTRAL ApArt Hotel
@@ -59,7 +59,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 100 mp, 2 dormitor(e), 1 baie/băi, capacitate 6 persoane, de la 95 €/noapte, rating 9.6/10
 - Descriere: Fructus Plaza ULTRACENTRAL ApArt Hotel, Et.7, ap.19, oferă un apartament DeLuxe spațios de 100mp într-o poziție privilegiată în centrul Timișoarei. Balconul generos și parcarea gratuită fac din acest loc alegerea perfectă pentru sejururi de afaceri sau leisure.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie complet utilată, Parcare gratuită, Auto check-in, Balcon mare, Transfer aeroport, Baie privată
-- Pagină: https://realtrust.ro/fructus-plaza-ultracentral-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel
 - Rezervare: https://fructus-plaza.pynbooking.direct/
 
 ### Cross Square House by RealTrust
@@ -67,7 +67,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 105 mp, 2 dormitor(e), 3 baie/băi, capacitate 6 persoane, de la 95 €/noapte, rating 9.6/10
 - Descriere: Cross Square House by RealTrust, pe Str. 1 Decembrie 1918 nr. 38, oferă 105 mp distribuiți pe două niveluri: 2 dormitoare, living spațios și 3 băi. Spațiu generos pentru familii sau grupuri, bucătărie complet utilată, WiFi de mare viteză și auto check-in, la câțiva pași de centrul istoric.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie complet utilată, Mașină de spălat, Auto check-in, Două niveluri, Locație centrală, Lenjerie premium
-- Pagină: https://realtrust.ro/fullview-studio-deluxe
+- Pagină: https://realtrust.ro/proprietate/fullview-studio-deluxe
 - Rezervare: https://cross-square-house.pynbooking.direct/
 
 ### AVENUE of MARA ApArt Hotel
@@ -75,7 +75,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 40 mp, 1 dormitor(e), 1 baie/băi, capacitate 2 persoane, de la 60 €/noapte, rating 9.4/10
 - Descriere: AVENUE of MARA ApArt Hotel pe Calea Circumvalațiunii nr.1, City of Mara M8, et.1, ap.5 oferă un studio ultracentral de 40mp cu parcare subterană. Combină locația premium cu confortul modern pentru o experiență de neuitat.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie utilată, Parcare subterană gratuită, Auto check-in, Balcon, Transfer aeroport, Baie privată
-- Pagină: https://realtrust.ro/avenue-of-mara-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/avenue-of-mara-apart-hotel
 - Rezervare: https://apart-hotel.pynbooking.direct/
 
 ### HELIOS ApArt Hotel - DeLuxe Residence
@@ -83,7 +83,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 50 mp, 1 dormitor(e), 1 baie/băi, capacitate 2 persoane, de la 55 €/noapte, rating 9.2/10
 - Descriere: HELIOS ApArt Hotel pe Strada Argeș 4 oferă o reședință DeLuxe de 50mp cu acces facil la centrul Timișoarei. Spațiu confortabil și modern cu balcon, parcare și transfer aeroport inclus.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie complet utilată, Parcare, Balcon, Transfer aeroport, Vedere, Camere nefumători
-- Pagină: https://realtrust.ro/helios-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/helios-apart-hotel
 - Rezervare: https://helios.pynbooking.direct/
 
 ### Apicultorilor House by RealTrust
@@ -91,7 +91,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 130 mp, 2 dormitor(e), 2 baie/băi, capacitate 6 persoane, de la 99 €/noapte, rating 9.5/10
 - Descriere: Apicultorilor House by RealTrust, pe strada Apicultorilor 31, într-o zonă liniștită din Timișoara, oferă 130 mp pe două niveluri, ideali pentru familii, grupuri de prieteni sau călătorii de afaceri. La parter: living generos, bucătărie complet echipată și baie de serviciu. La etaj: două dormitoare luminoase și o baie principală modernă. Grădină relaxantă, terasă privată și parcare sigură direct în curte.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Mașină de spălat, Bucătărie complet utilată, Parcare gratuită în curte, Auto check-in, Grădină, Terasă privată, Potrivit pentru familii
-- Pagină: https://realtrust.ro/ateneo-trevi-2-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel
 - Rezervare: https://apicultorilor.pynbooking.direct/
 
 ### Sunset Da-Ra - Studio DeLuxe
@@ -99,7 +99,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 42 mp, 1 dormitor(e), 1 baie/băi, capacitate 2 persoane, de la 58 €/noapte, rating 9.5/10
 - Descriere: Sunset Da-Ra pe Calea Circumvalațiunii, nr. 1, M11, Et.6, ap.51, în complexul rezidențial City of Mara, oferă un studio elegant de 42mp cu parcare subterană gratuită. Parte din portofoliul FullViewTour, acest apartament combină confortul modern cu o locație accesibilă în Timișoara.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie utilată, Parcare subterană gratuită, Balcon, Baie privată, Camere nefumători, Duș
-- Pagină: https://realtrust.ro/sunset-da-ra-studio-deluxe
+- Pagină: https://realtrust.ro/proprietate/sunset-da-ra-studio-deluxe
 - Rezervare: https://m11.pynbooking.direct/
 
 ### MARA Luxury Golden ApArt Hotel
@@ -107,7 +107,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 54 mp, 2 dormitor(e), 1 baie/băi, capacitate 4 persoane, de la 90 €/noapte, rating 9.7/10
 - Descriere: MARA Luxury Golden ApArt Hotel pe Strada Sinaia nr.2B, sc.5, et.7, ap.45 oferă o experiență de cazare premium de 54mp. Cu design deosebit, finisaje de lux, parcare gratuită și acces facil la toate atracțiile din centrul orașului. Rating excepțional 9.8/10!
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie complet utilată, Parcare gratuită, Transfer aeroport, Vedere, Camere nefumători, Baie privată
-- Pagină: https://realtrust.ro/mara-luxury-golden-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/mara-luxury-golden-apart-hotel
 - Rezervare: https://www.booking.com/hotel/ro/mara-gold-accent-deluxe-residence.html
 
 ### ATENEO ApArt Hotel - Studio DeLuxe
@@ -115,7 +115,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 44 mp, 1 dormitor(e), 1 baie/băi, capacitate 2 persoane, de la 68 €/noapte, rating 9.5/10
 - Descriere: ATENEO ApArt Hotel - Studio DeLuxe pe Calea Torontalului, nr. 104K, Trevi 2, et.4, ap.23, în ansamblul rezidențial Ateneo, oferă un apartament modern de 44mp cu balcon generos și parcare gratuită. Design elegant pentru o experiență de cazare memorabilă.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie utilată, Parcare gratuită, Balcon mare, Transfer aeroport, Baie privată
-- Pagină: https://realtrust.ro/ateneo-apart-hotel-studio-deluxe
+- Pagină: https://realtrust.ro/proprietate/ateneo-apart-hotel-studio-deluxe
 - Rezervare: https://ateneo-1.pynbooking.direct/
 
 ### MODERN Studio ApArt Hotel
@@ -123,7 +123,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 36 mp, 1 dormitor(e), 1 baie/băi, capacitate 2 persoane, de la 52 €/noapte, rating 9.5/10
 - Descriere: MODERN Studio ApArt Hotel pe Bd. Simion Bărnuțiu, nr. 79, Et.5, ap.19, oferă un spațiu modern de 36mp, perfect pentru cei care vizitează AquaPark Amazonia sau spitalele din zonă. Design contemporan cu toate facilitățile necesare.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie utilată, Parcare gratuită, Balcon, Baie privată, Camere nefumători, Duș
-- Pagină: https://realtrust.ro/modern-studio-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/modern-studio-apart-hotel
 - Rezervare: https://modern.pynbooking.direct/
 
 ### Moonlight Emerald Suite by RealTrust
@@ -131,7 +131,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 52 mp, 1 dormitor(e), 1 baie/băi, capacitate 4 persoane, de la 76 €/noapte, rating 9.6/10
 - Descriere: Moonlight Emerald Suite by RealTrust, pe Strada Mareșal Constantin Prezan 8 (sc.A, et.2, ap.7), este un apartament elegant de 52 mp pentru până la 4 oaspeți — ideal pentru călătorii de afaceri, escapade romantice sau vacanțe relaxante. Living confortabil cu canapea din catifea smarald, iluminare ambientală LED, aer condiționat și Smart TV. Dormitor matrimonial cu pat queen-size, lenjerie premium și draperii opace. Bucătărie complet utilată (cuptor, microunde, frigider spațios, espressor Nespresso cu capsule gratuite), baie modernă cu duș walk-in și mașină de spălat, plus balcon privat mobilat. Parcarea privată acoperită este gratuită, chiar la parterul clădirii.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie complet utilată, Espressor Nespresso, Mașină de spălat, Duș walk-in, Balcon privat, Parcare acoperită gratuită, Auto check-in, Camere nefumători
-- Pagină: https://realtrust.ro/moonlight-emerald-suite
+- Pagină: https://realtrust.ro/proprietate/moonlight-emerald-suite
 - Rezervare: https://prezan.pynbooking.direct/
 
 ### XCity 3 ApArt Hotel by RealTrust
@@ -139,7 +139,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 52 mp, 1 dormitor(e), 1 baie/băi, capacitate 4 persoane, de la 80 €/noapte, rating 10.0/10
 - Descriere: XCity 3 ApArt Hotel by RealTrust, pe Strada Marin Constantin 5, este un apartament de 52 mp în ansamblul XCity Towers — proiectul cu cele mai spectaculoase panorame asupra Timișoarei. Compartimentare confortabilă: dormitor matrimonial cu pat queen-size și draperii opace, living luminos cu Smart TV și aer condiționat, bucătărie complet utilată, baie modernă cu duș și mașină de spălat, plus loggie cu vedere panoramică asupra orașului. Check-in autonom (self check-in) la orice oră și parcare privată inclusă. Ideal pentru călătorii de afaceri, sejururi în cuplu sau familii mici, cu acces rapid la Calea Torontalului, zona comercială și centrul orașului.
 - Facilități: WiFi de mare viteză, Smart TV, Aer condiționat, Bucătărie complet utilată, Mașină de spălat, Loggie cu panoramă, Parcare privată inclusă, Auto check-in, Lift, Camere nefumători
-- Pagină: https://realtrust.ro/xcity-3-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/xcity-3-apart-hotel
 - Rezervare: https://xcity-3-apart-hotel.pynbooking.direct/
 
 ### Ring Residence ApArt Hotel by RealTrust
@@ -147,7 +147,7 @@ RealTrust este o companie de property management și investiții imobiliare din 
 - Specificații: 75 mp, 2 dormitor(e), 1 baie/băi, capacitate 6 persoane, de la 80 €/noapte, rating 9.7/10
 - Descriere: Ring Residence ApArt Hotel by RealTrust, pe Strada Vasile Loichiță 1-3, este un apartament DeLuxe spațios din ansamblul rezidențial Ring: 2 dormitoare, living generos, bucătărie complet utilată și baie cu cadă și cabină de duș separată. Bloc nou, mobilat modern și utilat la cheie, ideal atât pentru sejururi scurte, cât și pentru șederi mai lungi. Parcare privată în garajul subteran inclusă, lift, terasă și grădină în ansamblu. Locație practică în zona Aradului Vest: aproape de Spitalul Premiere, Vox Technology Park și Iulius Town, la 15 minute cu transportul în comun (30 de minute pe jos) de Piața Unirii.
 - Facilități: WiFi gratuit, Smart TV, Aer condiționat, Bucătărie complet utilată, Mașină de spălat, Baie cu cadă și duș, Parcare subterană inclusă, Auto check-in, Lift, Terasă & grădină, Camere pentru familii, Camere nefumători
-- Pagină: https://realtrust.ro/ring-residence-apart-hotel
+- Pagină: https://realtrust.ro/proprietate/ring-residence-apart-hotel
 - Rezervare: https://ring-residence.pynbooking.direct/
 
 ## Întrebări frecvente
