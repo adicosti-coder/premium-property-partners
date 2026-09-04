@@ -415,6 +415,14 @@ const AboutUs = () => {
           <PageBreadcrumb items={breadcrumbItems} />
         </div>
 
+        {/* ENTITY SEO / GEO: canonical "Ce este RealTrust?" definition */}
+        <div className="container mx-auto px-4 mt-4">
+          <div className="max-w-4xl mx-auto">
+            <EntityDefinitionBlock pagePath="/despre-noi" />
+          </div>
+        </div>
+
+
         {/* Table of Contents — jump links for long page (mobile-friendly) */}
         <nav
           aria-label={language === "ro" ? "Cuprins pagină" : "Page contents"}
