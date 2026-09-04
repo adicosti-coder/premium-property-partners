@@ -1400,7 +1400,11 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   // content but the inert SEO div outside #root remains for crawlers.
   const isHomepage = route.path === '/' || route.path === '';
   const isNeighborhood = route.path.startsWith('/imobiliare-timisoara/');
-  const headingTag = (isHomepage || isNeighborhood) ? 'h1' : 'h2';
+  // The homepage static shell already renders a visible <h1class="ash-h1">, so
+  // emitting another one here would give crawlers two H1s on the same document.
+  const shellHasH1 = isHomepage && /<h1[^>]*class="[^"]*ash-h1/.test(html);
+  const headingTag = ((isHomepage && !shellHasH1) || isNeighborhood) ? 'h1' : 'h2';
+
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
     <div id="seo-prerender" inert style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden">
