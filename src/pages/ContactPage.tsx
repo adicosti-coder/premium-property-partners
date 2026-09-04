@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
+import EntityDefinitionBlock from "@/components/EntityDefinitionBlock";
 import BackToTop from "@/components/BackToTop";
 import { MapPin, Phone, Mail, Clock, ExternalLink, Building2, Shield, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -169,6 +170,11 @@ const ContactPage = () => {
               { label: isRo ? "Contact & Locație" : "Contact & Location" },
             ]}
           />
+
+          {/* ENTITY SEO / GEO: canonical "Ce este RealTrust?" definition */}
+          <div className="mt-4 max-w-4xl mx-auto">
+            <EntityDefinitionBlock pagePath="/contact" />
+          </div>
 
           {/* Hero */}
           <section className="text-center max-w-2xl mx-auto mb-10">
