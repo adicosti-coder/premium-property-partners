@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { BRAND } from "@/lib/orgIdentity";
 import { generateHomepageSchemas, generateSpeakableSchema, DatabaseReview } from "@/utils/schemaGenerators";
 
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
@@ -89,10 +90,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   // Add sameAs and openingHours to the main schema instead of duplicating
   if (homepageSchemas.length > 0) {
     const mainSchema = homepageSchemas[0] as Record<string, unknown>;
-    mainSchema.sameAs = [
-      "https://www.facebook.com/realtrust.ro",
-      "https://www.booking.com"
-    ];
+    mainSchema.sameAs = [...BRAND.sameAs];
     mainSchema.openingHours = "Mo-Su 00:00-24:00";
     mainSchema.currenciesAccepted = "EUR";
     mainSchema.priceRange = "€€";
