@@ -263,18 +263,25 @@ const App = () => (
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                     <Route path="/recomanda" element={<ReferralProgram />} />
 
-                    <Route path="/complexe" element={<Complexe />} />
+                    {/* Canonical: /ansambluri-rezidentiale (hub). Detail pages keep /complexe/:slug. */}
+                    <Route path="/ansambluri-rezidentiale" element={<Complexe />} />
+                    <Route path="/complexe" element={<Navigate to="/ansambluri-rezidentiale" replace />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
                     <Route path="/complexe/city-of-mara" element={<CityOfMaraTimisoara />} />
                     <Route path="/complexe/:slug" element={<ComplexLanding />} />
                     <Route path="/cartier/:slug" element={<NeighborhoodCluster />} />
                     <Route path="/preturi" element={<Preturi />} />
                     <Route path="/zona/:zone" element={<ZoneLanding />} />
-                    <Route path="/analiza-proprietate" element={<AnalizaProprietate />} />
+                    {/* Canonical: /hostscan-ai */}
+                    <Route path="/hostscan-ai" element={<AnalizaProprietate />} />
+                    <Route path="/analiza-proprietate" element={<Navigate to="/hostscan-ai" replace />} />
                     <Route path="/guide/:bookingId" element={<GuestGuide />} />
                     <Route path="/catalog-investitii" element={<CatalogInvestitii />} />
-                    <Route path="/imobiliare-timisoara" element={<ImobiliareTimisoara />} />
+                    {/* Canonical: /cartiere (hub). Zone pages keep /imobiliare-timisoara/:zona. */}
+                    <Route path="/cartiere" element={<ImobiliareTimisoara />} />
+                    <Route path="/imobiliare-timisoara" element={<Navigate to="/cartiere" replace />} />
                     <Route path="/imobiliare-timisoara/:zona" element={<NeighborhoodDetail />} />
+
                     <Route path="/calculator-roi" element={<CalculatorROI />} />
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
