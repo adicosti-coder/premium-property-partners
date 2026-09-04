@@ -122,7 +122,7 @@ function build(props: Prop[]): string {
   lines.push("## Identitate");
   lines.push("");
   lines.push("- Nume: RealTrust & ApArt Hotel");
-  lines.push("- Denumire legală: RealTrust Imobiliare SRL");
+  lines.push("- Denumire legală: SC Imo Business Centrum SRL (CUI RO14380627)");
   lines.push("- Fondator: Adrian Costi");
   lines.push("- Oraș: Timișoara, județul Timiș, România");
   lines.push("- Adresă: Strada Samuel Clain Micu nr. 14, ap. 4, 300125 Timișoara");
@@ -169,7 +169,7 @@ function build(props: Prop[]): string {
     if (specs.length) lines.push(`- Specificații: ${specs.join(", ")}`);
     if (p.longDescription || p.description) lines.push(`- Descriere: ${p.longDescription || p.description}`);
     if (p.amenities.length) lines.push(`- Facilități: ${p.amenities.join(", ")}`);
-    lines.push(`- Pagină: ${BASE_URL}/${p.slug}`);
+    lines.push(`- Pagină: ${BASE_URL}/proprietate/${p.slug}`);
     if (p.bookingUrl) lines.push(`- Rezervare: ${p.bookingUrl}`);
     lines.push("");
   }
