@@ -278,7 +278,7 @@ const ComplexDetail = () => {
         {/* Back Navigation */}
         <div className="container mx-auto px-6 pt-24 pb-4">
           <Link
-            to="/complexe"
+            to="/ansambluri-rezidentiale"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

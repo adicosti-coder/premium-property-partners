@@ -119,7 +119,7 @@ const AnalizaPartajata = () => {
           Linkul este invalid sau a expirat. Poți genera oricând o analiză nouă, gratuit.
         </p>
         <Button asChild>
-          <Link to="/analiza-proprietate">Generează o analiză nouă</Link>
+          <Link to="/hostscan-ai">Generează o analiză nouă</Link>
         </Button>
       </div>
     );

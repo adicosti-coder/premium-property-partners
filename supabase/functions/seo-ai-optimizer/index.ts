@@ -315,7 +315,7 @@ function json(body: any, status = 200) {
 function detectPageType(url: string): string {
   if (url.includes("/proprietate/")) return "property_detail";
   if (url.includes("/blog/")) return "blog_article";
-  if (url.includes("/imobiliare-timisoara")) return "listings";
+  if (url.includes("/cartiere")) return "listings";
   if (url.includes("/cartier") || url.includes("/zona")) return "neighborhood";
   if (url.endsWith("/") || url.match(/realtrust\.ro\/?$/)) return "homepage";
   return "general";

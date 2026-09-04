@@ -1043,7 +1043,7 @@ const CityGuideSection: React.FC = () => {
                         {/* Action buttons */}
                         <div className="flex items-center gap-1.5 mt-2">
                           <Link
-                            to={`/pentru-oaspeti?poi=${poi.id}#city-guide-map`}
+                            to={`/cazare?poi=${poi.id}#city-guide-map`}
                             className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-medium"
                           >
                             <Sparkles className="w-3 h-3" />

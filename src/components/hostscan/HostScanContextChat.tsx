@@ -101,7 +101,7 @@ const HostScanContextChat = ({ report, analysisText, language, ownerName, zone }
           message: contextPrefix + content,
           language,
           conversationHistory: messages.slice(-8).map((m) => ({ role: m.role, content: m.content })),
-          pageContext: "/analiza-proprietate",
+          pageContext: "/hostscan-ai",
           qualificationContext: { name: ownerName, zone },
         }),
       });

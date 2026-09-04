@@ -401,7 +401,7 @@ const Blog = () => {
                 <Link to="/piata-imobiliara-timisoara" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
                   Prețuri pe cartiere
                 </Link>
-                <Link to="/imobiliare-timisoara" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
+                <Link to="/cartiere" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">
                   Apartamente pe zone
                 </Link>
                 <Link to="/catalog-investitii" className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-primary/40 hover:text-primary transition-colors">

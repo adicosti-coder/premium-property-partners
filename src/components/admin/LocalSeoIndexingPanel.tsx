@@ -185,7 +185,7 @@ export default function LocalSeoIndexingPanel() {
     setResubmitting(true);
     const urls = [
       "/",
-      "/complexe",
+      "/ansambluri-rezidentiale",
       "/complexe/isho",
       "/complexe/paltim",
       "/complexe/fructus-plaza",

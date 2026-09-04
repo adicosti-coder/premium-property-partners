@@ -684,7 +684,7 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
             '@type': 'BreadcrumbList',
             itemListElement: [
               { '@type': 'ListItem', position: 1, name: 'Acasă', item: `${BASE_URL}/` },
-              { '@type': 'ListItem', position: 2, name: 'Cazare Timișoara', item: `${BASE_URL}/pentru-oaspeti` },
+              { '@type': 'ListItem', position: 2, name: 'Cazare Timișoara', item: `${BASE_URL}/cazare` },
               { '@type': 'ListItem', position: 3, name: p.name, item: canonical },
             ],
           },
@@ -726,20 +726,20 @@ function buildStaticRoutes(): PrerenderRoute[] {
     },
   });
 
-  // /imobiliare-timisoara
+  // /cartiere
   routes.push({
     path: '/imobiliare-timisoara',
     title: 'Imobiliare Timișoara — Apartamente pe Zone | RealTrust',
     description: 'Explorează apartamentele de vânzare din Timișoara pe zone: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO.',
     h1: 'Apartamente de Vânzare în Timișoara',
-    canonical: `${BASE_URL}/imobiliare-timisoara`,
+    canonical: `${BASE_URL}/cartiere`,
     seoBody: HOMEPAGE_SEO_BODY,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       name: 'RealTrust Imobiliare Timișoara',
       description: 'Agenție imobiliară premium din Timișoara specializată în vânzări, investiții și administrare apartamente în regim hotelier.',
-      url: `${BASE_URL}/imobiliare-timisoara`,
+      url: `${BASE_URL}/cartiere`,
       telephone: '+40799069256',
       address: { '@type': 'PostalAddress', addressLocality: 'Timișoara', addressRegion: 'Timiș', addressCountry: 'RO' },
     },
@@ -988,8 +988,8 @@ function buildStaticRoutes(): PrerenderRoute[] {
 
 
 
-  // /oaspeti & /pentru-oaspeti — premium stays for guests
-  for (const path of ['/oaspeti', '/pentru-oaspeti']) {
+  // /oaspeti & /cazare — premium stays for guests
+  for (const path of ['/oaspeti', '/cazare']) {
     routes.push({
       path,
       title: 'Cazare Premium Timișoara — Apartamente Regim Hotelier | RealTrust',
@@ -1221,7 +1221,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     title: 'Ansambluri Rezidențiale Timișoara — ISHO, ATENEO, City of Mara | RealTrust',
     description: 'Complexe rezidențiale Timișoara administrate de RealTrust: ISHO, ATENEO, City of Mara, Fructus Plaza, XCity Towers. Investiții cu randament verificat.',
     h1: 'Complexe Rezidențiale Premium Timișoara',
-    canonical: `${BASE_URL}/complexe`,
+    canonical: `${BASE_URL}${BASE_URL}/ansambluri-rezidentiale`,
     seoBody: `
       <h2>Complexe rezidențiale din Timișoara administrate de RealTrust</h2>
       <p>Pagina /complexe este dedicată ansamblurilor rezidențiale și proprietăților administrate de RealTrust în Timișoara: <strong>ISHO</strong>, <strong>ATENEO Residence</strong>, <strong>City of Mara</strong>, <strong>Fructus Plaza</strong>, <strong>XCity Towers</strong> și alte dezvoltări premium.</p>
@@ -1232,7 +1232,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       name: 'Complexe Rezidențiale Timișoara',
-      url: `${BASE_URL}/complexe`,
+      url: `${BASE_URL}${BASE_URL}/ansambluri-rezidentiale`,
     },
   });
 

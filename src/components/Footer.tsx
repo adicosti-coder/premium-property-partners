@@ -74,19 +74,19 @@ const Footer = () => {
   };
 
   const serviceLinks = [
-    { href: "/servicii-imobiliare-timisoara", label: language === "ro" ? "Servicii Imobiliare Timișoara" : "Real Estate Services Timișoara" },
+    { href: "/servicii-imobiliare", label: language === "ro" ? "Servicii Imobiliare Timișoara" : "Real Estate Services Timișoara" },
     { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners" },
-    { href: "/pentru-oaspeti", label: language === "ro" ? "Cazare Regim Hotelier" : "Hotel Accommodation" },
+    { href: "/cazare", label: language === "ro" ? "Cazare Regim Hotelier" : "Hotel Accommodation" },
     { href: "/preturi", label: language === "ro" ? "Prețuri & Pachete" : "Pricing & Packages" },
     { href: "/investitii", label: language === "ro" ? "Investiții Premium" : "Premium Investments" },
-    { href: "/complexe", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes" },
+    { href: "/ansambluri-rezidentiale", label: language === "ro" ? "Complexuri Rezidențiale" : "Residential Complexes" },
     { href: "#", label: language === "ro" ? "Caut o proprietate potrivită" : "Find a suitable property", isRequestModal: true },
   ];
 
   const infoLinks = [
     { href: "/blog", label: "Blog" },
     { href: "/despre-noi", label: language === "ro" ? "Despre Noi" : "About Us" },
-    { href: "/analiza-proprietate", label: "HostScan AI" },
+    { href: "/hostscan-ai", label: "HostScan AI" },
     { href: "/catalog-investitii", label: language === "ro" ? "Catalog 2026" : "Catalog 2026" },
     { href: "/calculator-roi", label: "Calculator ROI" },
     { href: "/analiza-roi-apartament", label: language === "ro" ? "Analiza ROI Apartament" : "Apartment ROI Analysis" },
@@ -196,7 +196,7 @@ const Footer = () => {
             {language === "ro" ? "Zone de interes" : "Areas of Interest"}
           </h3>
           <nav className="flex flex-wrap gap-x-4 gap-y-2">
-            <Link to="/imobiliare-timisoara" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/cartiere" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               {language === "ro" ? "Toate zonele" : "All areas"}
             </Link>
             {neighborhoods.map((n) => (

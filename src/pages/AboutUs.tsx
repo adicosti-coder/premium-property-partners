@@ -526,9 +526,9 @@ const AboutUs = () => {
               </h3>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { to: "/imobiliare-timisoara", label: language === "ro" ? "Vânzări apartamente & case Timișoara" : "Apartments & houses for sale Timișoara", icon: Building2 },
+                  { to: "/cartiere", label: language === "ro" ? "Vânzări apartamente & case Timișoara" : "Apartments & houses for sale Timișoara", icon: Building2 },
                   { to: "/calculator-roi", label: language === "ro" ? "Calculator ROI Regim Hotelier" : "Short-term Rental ROI Calculator", icon: TrendingUp },
-                  { to: "/pentru-oaspeti", label: language === "ro" ? "Cazare Premium pentru oaspeți" : "Premium stays for guests", icon: Home },
+                  { to: "/cazare", label: language === "ro" ? "Cazare Premium pentru oaspeți" : "Premium stays for guests", icon: Home },
                   { to: "/evaluare-gratuita", label: language === "ro" ? "Evaluare gratuită proprietate" : "Free property valuation", icon: Award }
                 ].map((p, i) => (
                   <Link key={i} to={p.to} className="group">

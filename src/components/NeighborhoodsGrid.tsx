@@ -147,7 +147,7 @@ export function NeighborhoodsGrid() {
         {/* View All */}
         <div className="text-center mt-8">
           <Link
-            to="/imobiliare-timisoara"
+            to="/cartiere"
             className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm px-6 py-3 rounded-full transition-colors"
             aria-label={
               language === "ro"

@@ -77,7 +77,7 @@ const MainNavigationCards = () => {
           title: "Ansambluri Rezidențiale",
           description: "Complexuri noi cu potențial ridicat",
           cta: "Vezi Complexuri",
-          link: "/complexe",
+          link: "/ansambluri-rezidentiale",
           accent: "from-teal-500/20 to-teal-600/5",
         },
         {
@@ -151,7 +151,7 @@ const MainNavigationCards = () => {
           title: "Residential Complexes",
           description: "New complexes with high potential",
           cta: "View Complexes",
-          link: "/complexe",
+          link: "/ansambluri-rezidentiale",
           accent: "from-teal-500/20 to-teal-600/5",
         },
         {

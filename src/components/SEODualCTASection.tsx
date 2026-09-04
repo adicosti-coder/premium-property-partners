@@ -17,7 +17,7 @@ export function SEODualCTASection() {
 
   const blocks = [
     {
-      to: "/complexe",
+      to: "/ansambluri-rezidentiale",
       icon: TrendingUp,
       h2: isRo
         ? "Investiții Imobiliare în Ansambluri Rezidențiale Timișoara"

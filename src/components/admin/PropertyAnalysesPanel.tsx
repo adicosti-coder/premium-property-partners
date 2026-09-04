@@ -103,7 +103,7 @@ export default function PropertyAnalysesPanel() {
             Istoric analize AI
           </CardTitle>
           <CardDescription>
-            Toate analizele generate pe /analiza-proprietate, cu link de partajare și export PDF.
+            Toate analizele generate pe /hostscan-ai, cu link de partajare și export PDF.
           </CardDescription>
         </div>
         <Button

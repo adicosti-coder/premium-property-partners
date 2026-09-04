@@ -73,7 +73,7 @@ function detectPageType(p: string): string {
   if (p === "/" || p === "") return "homepage";
   if (p.startsWith("/proprietate/")) return "property_detail";
   if (p.startsWith("/blog/")) return "article";
-  if (p.startsWith("/imobiliare-timisoara")) return "neighborhood";
+  if (p.startsWith("/cartiere")) return "neighborhood";
   if (p.startsWith("/calculator-roi") || p.startsWith("/analiza-roi-apartament")) return "tool";
   return "general";
 }

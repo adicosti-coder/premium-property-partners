@@ -1,4 +1,4 @@
-// Public AI analysis for /analiza-proprietate: accepts a listing URL or property photos
+// Public AI analysis for /hostscan-ai: accepts a listing URL or property photos
 // and returns a structured evaluation (score, estimated hotel-regime revenue, recommendations).
 import { checkRateLimit } from "../_shared/rateLimiter.ts";
 

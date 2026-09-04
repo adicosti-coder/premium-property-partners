@@ -131,7 +131,7 @@ const OwnerCoverageMap = () => {
               ))}
             </ul>
             <Link
-              to="/imobiliare-timisoara"
+              to="/cartiere"
               className="inline-flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               {t.cta} →

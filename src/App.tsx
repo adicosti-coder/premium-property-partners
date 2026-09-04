@@ -219,8 +219,11 @@ const App = () => (
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/favorite" element={<Favorites />} />
                     <Route path="/oaspeti" element={<Guests />} />
-                    <Route path="/pentru-oaspeti" element={<PentruOaspeti />} />
+                    {/* Canonical: /cazare (short brand structure). */}
+                    <Route path="/cazare" element={<PentruOaspeti />} />
+                    <Route path="/pentru-oaspeti" element={<Navigate to="/cazare" replace />} />
                     <Route path="/imobiliare" element={<Imobiliare />} />
+
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/categorie/:slug" element={<BlogCategory />} />
                     <Route path="/blog/locatie/:location" element={<BlogLocation />} />
@@ -260,18 +263,25 @@ const App = () => (
                     <Route path="/recomanda-proprietar" element={<ReferralProgram />} />
                     <Route path="/recomanda" element={<ReferralProgram />} />
 
-                    <Route path="/complexe" element={<Complexe />} />
+                    {/* Canonical: /ansambluri-rezidentiale (hub). Detail pages keep /complexe/:slug. */}
+                    <Route path="/ansambluri-rezidentiale" element={<Complexe />} />
+                    <Route path="/complexe" element={<Navigate to="/ansambluri-rezidentiale" replace />} />
                     <Route path="/complex/:slug" element={<ComplexDetail />} />
                     <Route path="/complexe/city-of-mara" element={<CityOfMaraTimisoara />} />
                     <Route path="/complexe/:slug" element={<ComplexLanding />} />
                     <Route path="/cartier/:slug" element={<NeighborhoodCluster />} />
                     <Route path="/preturi" element={<Preturi />} />
                     <Route path="/zona/:zone" element={<ZoneLanding />} />
-                    <Route path="/analiza-proprietate" element={<AnalizaProprietate />} />
+                    {/* Canonical: /hostscan-ai */}
+                    <Route path="/hostscan-ai" element={<AnalizaProprietate />} />
+                    <Route path="/analiza-proprietate" element={<Navigate to="/hostscan-ai" replace />} />
                     <Route path="/guide/:bookingId" element={<GuestGuide />} />
                     <Route path="/catalog-investitii" element={<CatalogInvestitii />} />
-                    <Route path="/imobiliare-timisoara" element={<ImobiliareTimisoara />} />
+                    {/* Canonical: /cartiere (hub). Zone pages keep /imobiliare-timisoara/:zona. */}
+                    <Route path="/cartiere" element={<ImobiliareTimisoara />} />
+                    <Route path="/imobiliare-timisoara" element={<Navigate to="/cartiere" replace />} />
                     <Route path="/imobiliare-timisoara/:zona" element={<NeighborhoodDetail />} />
+
                     <Route path="/calculator-roi" element={<CalculatorROI />} />
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
                     <Route path="/piata-imobiliara-timisoara" element={<PiataImobiliara />} />
@@ -297,14 +307,17 @@ const App = () => (
                     <Route path="/rezervare" element={<Rezervare />} />
                     <Route path="/adauga-anunt" element={<AdaugaAnunt />} />
                     <Route path="/procesul-nostru" element={<ProcesulNostru />} />
-                    <Route path="/servicii-imobiliare-timisoara" element={<ServiciiImobiliareTimisoara />} />
+                    {/* Canonical: /servicii-imobiliare */}
+                    <Route path="/servicii-imobiliare" element={<ServiciiImobiliareTimisoara />} />
+                    <Route path="/servicii-imobiliare-timisoara" element={<Navigate to="/servicii-imobiliare" replace />} />
                     <Route path="/multumim" element={<Multumim />} />
                     <Route path="/succes-calcul" element={<SuccesCalcul />} />
                     <Route path="/comparatie/:shareCode" element={<SharedComparison />} />
                     <Route path="/contact-locatie" element={<Navigate to="/contact" replace />} />
                     {/* Legacy / mistyped URLs shared manually — avoid 404 dead ends. */}
                     <Route path="/favorites" element={<Navigate to="/favorite" replace />} />
-                    <Route path="/guests" element={<Navigate to="/pentru-oaspeti" replace />} />
+                    <Route path="/guests" element={<Navigate to="/cazare" replace />} />
+
                     <Route path="/proprietati" element={<Navigate to="/imobiliare" replace />} />
                     <Route path="/legal/politica-de-confidentialitate" element={<Navigate to="/politica-confidentialitate" replace />} />
                     <Route path="/legal/termeni-si-conditii" element={<Navigate to="/termeni-si-conditii" replace />} />

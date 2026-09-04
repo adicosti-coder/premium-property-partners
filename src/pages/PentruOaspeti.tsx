@@ -322,7 +322,7 @@ const PentruOaspeti = () => {
     "@context": "https://schema.org",
     "@type": "LodgingBusiness",
     "name": "ApArt Hotel by RealTrust — Cazare Regim Hotelier Timișoara",
-    "url": "https://realtrust.ro/pentru-oaspeti",
+    "url": "https://realtrust.ro/cazare",
     "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
     "priceRange": "€45 – €120 / noapte",
     "telephone": "+40799069256",
@@ -367,7 +367,7 @@ const PentruOaspeti = () => {
         socialDescription={language === "ro"
           ? "Apartamente și case în regim hotelier în Timișoara — parcare gratuită, self check-in 24/7, preț mai bun la rezervare directă."
           : "Premium short-term rental apartments in Timișoara — free parking, 24/7 self check-in, best rate when booking direct."}
-        url="https://realtrust.ro/pentru-oaspeti"
+        url="https://realtrust.ro/cazare"
         jsonLd={lodgingJsonLd}
       />
 

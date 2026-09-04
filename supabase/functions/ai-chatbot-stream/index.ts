@@ -167,7 +167,7 @@ ${investmentLines || "Portofoliul investițional se actualizează continuu. Reco
 The user is currently on: ${pageContext}
 ${pageContext.includes("/pentru-proprietari") || pageContext.includes("/investitii") ? "→ OWNER/INVESTOR page: Focus on ROI, management packages, Investor Guide 2026. Proactively offer calculate_roi." : ""}
 ${pageContext.includes("/proprietate/") ? "→ PROPERTY DETAIL page: Focus on this specific property — availability, price, amenities, DIRECT5 discount. Proactively offer check_availability." : ""}
-${pageContext.includes("/oaspeti") || pageContext.includes("/pentru-oaspeti") ? "→ GUEST page: Focus on booking, availability, local tips, transfer. Proactively use check_availability and get_tourist_recommendations." : ""}
+${pageContext.includes("/oaspeti") || pageContext.includes("/cazare") ? "→ GUEST page: Focus on booking, availability, local tips, transfer. Proactively use check_availability and get_tourist_recommendations." : ""}
 ${pageContext.includes("/zona/") ? "→ ZONE LANDING page: Focus on this neighborhood — properties, investment potential, local attractions. Offer ROI comparison." : ""}
 ${pageContext.includes("/blog") ? "→ BLOG page: Connect article topics to services. Suggest related properties or investment analysis." : ""}
 ${pageContext.includes("/imobiliare") ? "→ REAL ESTATE page: Focus on property listings, investment opportunities, consultancy. Offer calculate_roi proactively." : ""}

@@ -451,7 +451,7 @@ const SharedLinksStats = () => {
   }, [currentUserId, sharedLinks, language]);
 
   const copyShareLink = async (shareCode: string) => {
-    const shareUrl = `${window.location.origin}/pentru-oaspeti?share=${shareCode}`;
+    const shareUrl = `${window.location.origin}/cazare?share=${shareCode}`;
     await navigator.clipboard.writeText(shareUrl);
     setCopiedCode(shareCode);
     toast({
@@ -980,7 +980,7 @@ const SharedLinksStats = () => {
                                       asChild
                                     >
                                       <a
-                                        href={`/pentru-oaspeti?share=${link.share_code}`}
+                                        href={`/cazare?share=${link.share_code}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                       >

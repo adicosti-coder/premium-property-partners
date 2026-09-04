@@ -160,7 +160,7 @@ const OwnerGuideHub = () => {
 
         <div className="text-center">
           <Link
-            to="/imobiliare-timisoara"
+            to="/cartiere"
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
           >
             {t.complexCta} <ArrowRight className="w-4 h-4" />

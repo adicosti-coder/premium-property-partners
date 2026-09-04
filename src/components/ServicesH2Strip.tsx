@@ -24,7 +24,7 @@ export function ServicesH2Strip() {
         : "Real estate services in Timișoara: sales, rentals and local consulting with professional valuation.",
     },
     {
-      to: "/imobiliare-timisoara",
+      to: "/cartiere",
       icon: Building2,
       h2: isRo ? "Apartamente de vânzare Timișoara" : "Apartments for sale Timișoara",
       desc: isRo
@@ -48,7 +48,7 @@ export function ServicesH2Strip() {
         : "Full short-term rental management: bookings, guests, cleaning, monthly reports.",
     },
     {
-      to: "/pentru-oaspeti",
+      to: "/cazare",
       icon: BedDouble,
       h2: isRo ? "Cazare Timișoara regim hotelier" : "Short-term stays Timișoara",
       desc: isRo

@@ -52,6 +52,7 @@ import VerifiedReviewsBadges from "@/components/VerifiedReviewsBadges";
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
 const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm"));
 const HomeRecommendedLinks = lazy(() => import("@/components/home/HomeRecommendedLinks"));
+const BrandPillarsHub = lazy(() => import("@/components/home/BrandPillarsHub"));
 const ProcessStepsTimeline = lazy(() => import("@/components/ProcessStepsTimeline"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
@@ -74,6 +75,7 @@ const NearFoldSection = () => {
       <Suspense fallback={<div style={{ minHeight: '400px' }} />}>
         <StatsCounters />
         <MainNavigationCards />
+        <BrandPillarsHub />
       </Suspense>
       {/* ProfitCalculator (recharts ~170KiB) deferred until near-scroll */}
       <div ref={calcRef} style={{ minHeight: calcVisible ? undefined : '200px' }}>

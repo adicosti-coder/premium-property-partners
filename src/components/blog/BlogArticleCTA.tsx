@@ -140,7 +140,7 @@ const BlogArticleCTA = () => {
               variants={buttonVariants}
             >
               <Button asChild className="gap-2 group/btn">
-                <Link to="/pentru-oaspeti">
+                <Link to="/cazare">
                   {t.guestCta}
                   <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                 </Link>
@@ -189,7 +189,7 @@ const BlogArticleCTA = () => {
               variants={buttonVariants}
             >
               <Button asChild variant="premium" className="gap-2 group/btn">
-                <Link to="/analiza-proprietate">
+                <Link to="/hostscan-ai">
                   {t.aiCta}
                   <BrainCircuit className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
                 </Link>

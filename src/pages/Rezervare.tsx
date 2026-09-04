@@ -283,7 +283,7 @@ export default function Rezervare() {
                     </a>
                   </Button>
                   <Button asChild variant="ghost">
-                    <Link to="/pentru-oaspeti">Vezi toate apartamentele</Link>
+                    <Link to="/cazare">Vezi toate apartamentele</Link>
                   </Button>
                 </div>
               </CardContent>

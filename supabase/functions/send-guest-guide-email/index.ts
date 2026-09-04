@@ -134,7 +134,7 @@ serve(async (req) => {
           : "🏠 Looking for premium accommodation in Timișoara?"
         }
       </p>
-      <a href="${siteUrl}/pentru-oaspeti" style="display:inline-block;padding:12px 32px;background:#ffffff;color:#1e3a5f;font-size:14px;font-weight:700;text-decoration:none;border-radius:10px;">
+      <a href="${siteUrl}/cazare" style="display:inline-block;padding:12px 32px;background:#ffffff;color:#1e3a5f;font-size:14px;font-weight:700;text-decoration:none;border-radius:10px;">
         ${isRo ? "Vezi Apartamentele Noastre" : "View Our Apartments"}
       </a>
     </div>

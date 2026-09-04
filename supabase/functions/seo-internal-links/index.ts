@@ -16,9 +16,9 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 const STATIC_HUB_PAGES: Array<{ path: string; title: string; topic: string }> = [
   { path: "/", title: "Acasă RealTrust", topic: "Investiții imobiliare Timișoara, regim hotelier, ROI 9.4%" },
-  { path: "/imobiliare-timisoara", title: "Imobiliare Timișoara", topic: "Listări apartamente, regim hotelier, vânzare" },
+  { path: "/cartiere", title: "Imobiliare Timișoara", topic: "Listări apartamente, regim hotelier, vânzare" },
   { path: "/pentru-proprietari", title: "Pentru Proprietari", topic: "Administrare regim hotelier, ROI, calculator" },
-  { path: "/pentru-oaspeti", title: "Pentru Oaspeți", topic: "Cazare premium Timișoara, apartamente verificate" },
+  { path: "/cazare", title: "Pentru Oaspeți", topic: "Cazare premium Timișoara, apartamente verificate" },
   { path: "/investitii", title: "Investiții", topic: "Catalog investiții imobiliare, dealroom, ROI" },
   { path: "/calculator-roi", title: "Calculator ROI", topic: "Compară ROI hotelier vs închiriere clasică" },
   { path: "/blog", title: "Blog ApArt Hotel", topic: "Ghiduri investiții și regim hotelier" },

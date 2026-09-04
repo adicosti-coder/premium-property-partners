@@ -57,7 +57,7 @@ const MarketPulse = () => {
               <p>Actualizat: Aprilie 2026</p>
             </div>
             <Link
-              to="/imobiliare-timisoara"
+              to="/cartiere"
               className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
             >
               Vezi toate cartierele →

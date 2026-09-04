@@ -184,10 +184,10 @@ function build(props: Prop[]): string {
   lines.push("");
   for (const [label, path] of [
     ["Pentru proprietari (administrare regim hotelier)", "/pentru-proprietari"],
-    ["Pentru oaspeți (cazare)", "/pentru-oaspeti"],
+    ["Pentru oaspeți (cazare)", "/cazare"],
     ["Calculator ROI", "/calculator-roi"],
     ["Catalog investiții", "/catalog-investitii"],
-    ["Analiză proprietate (AI)", "/analiza-proprietate"],
+    ["Analiză proprietate (AI)", "/hostscan-ai"],
     ["Rezervare directă", "/rezervare"],
     ["Întrebări frecvente", "/intrebari-frecvente"],
     ["Despre noi", "/despre-noi"],

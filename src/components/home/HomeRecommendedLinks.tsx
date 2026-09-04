@@ -112,7 +112,7 @@ export default function HomeRecommendedLinks() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button asChild variant="outline"><Link to="/servicii-imobiliare-timisoara">{isRo ? "Servicii" : "Services"}</Link></Button>
+                <Button asChild variant="outline"><Link to="/servicii-imobiliare">{isRo ? "Servicii" : "Services"}</Link></Button>
                 <Button asChild><Link to="/evaluare-gratuita">{isRo ? "Evaluare gratuită" : "Free valuation"}</Link></Button>
               </div>
             </CardContent>
