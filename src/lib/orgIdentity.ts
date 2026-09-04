@@ -17,6 +17,8 @@
  * instead of inlining a duplicate Organization block.
  */
 
+import { ENTITY_SHORT, ENTITY_ANSWER } from "./entityDefinition";
+
 export const SITE_ORIGIN = "https://realtrust.ro";
 
 /** Verified Google Business Profile (Google Maps) listing for RealTrust. */
@@ -80,6 +82,9 @@ export const ORGANIZATION_SCHEMA = {
   name: BRAND.name,
   legalName: BRAND.legalName,
   alternateName: BRAND.alternateNames,
+  // ENTITY SEO: identical wording to the visible "Ce este RealTrust?" block.
+  description: ENTITY_ANSWER.ro,
+  slogan: ENTITY_SHORT.ro,
   url: BRAND.url,
   logo: {
     "@type": "ImageObject",
@@ -122,8 +127,7 @@ export const REAL_ESTATE_AGENT_SCHEMA = {
   "@id": REAL_ESTATE_AGENT_ID,
   name: "RealTrust / Trust Estate",
   alternateName: "RealTrust - Servicii Imobiliare Timișoara",
-  description:
-    "Firmă de property management și investiții imobiliare în Timișoara. Operăm ApArt Hotel și oferim consultanță financiară pentru ansambluri rezidențiale premium.",
+  description: ENTITY_ANSWER.ro,
   url: BRAND.url,
   logo: BRAND.logo,
   image: BRAND.image,
