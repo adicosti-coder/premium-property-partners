@@ -387,7 +387,17 @@ const SEOHead = ({
         node.setAttribute("content", content);
         if (!node.parentElement) document.head.appendChild(node);
       });
+      // Deduplicate: keep the react-helmet-managed tag when present (it owns
+      // re-renders), otherwise the first one, and drop the leftovers so audits
+      // never see two tags for the same meta name/property.
+      if (targets.length > 1) {
+        const keep = targets.find((n) => n.hasAttribute("data-rh")) ?? targets[0];
+        targets.forEach((node) => {
+          if (node !== keep && !node.hasAttribute("data-rh")) node.remove();
+        });
+      }
     };
+
 
     document.title = finalTitle;
     syncMeta('meta[name="title"]', { name: "title" }, finalTitle);

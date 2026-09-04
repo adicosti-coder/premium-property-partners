@@ -17,6 +17,9 @@ import { HOMEPAGE_SEO, HOMEPAGE_CANONICAL } from "@/constants/homepageSeo";
 import PageSummary from "@/components/PageSummary";
 // GEO citable answer block (~1KB) — kept eager to stay crawlable in the initial HTML.
 import AIQuoteBlock from "@/components/AIQuoteBlock";
+// Factual intro paragraph directly under the H1 — tiny, kept eager so it is
+// present in the initial HTML for crawlers and AI engines.
+import HomeIntro from "@/components/home/HomeIntro";
 
 // Hero MUST be eager: it is the LCP element and the static shell in
 // index.html is wiped by React mount. Any Suspense gap here produces
@@ -54,6 +57,7 @@ const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm")
 const HomeRecommendedLinks = lazy(() => import("@/components/home/HomeRecommendedLinks"));
 const BrandPillarsHub = lazy(() => import("@/components/home/BrandPillarsHub"));
 const ProcessStepsTimeline = lazy(() => import("@/components/ProcessStepsTimeline"));
+const HomeAuthorityBlocks = lazy(() => import("@/components/home/HomeAuthorityBlocks"));
 
 // Near-fold section: stats + calculator — ALWAYS rendered (no lazy gate)
 // to prevent mobile deadlock where Hero fills 100vh and observer never fires
@@ -279,12 +283,15 @@ const Index = () => {
             index.html paints first; React Hero replaces it on mount with
             an identical layout (#root has min-height to prevent CLS). */}
         <Hero />
+        {/* Factual, link-rich intro right under the H1 */}
+        <HomeIntro />
         {/* SEO-only block (sr-only) — rendered after the visual hero so crawlers
             still see the semantic content without causing the page to start with H2. */}
         <SEOLocalEntitiesBlock />
         <PageSummary
-          summaryRo="RealTrust este agenție imobiliară Timișoara și operator de regim hotelier, oferind consultanță imobiliară Timișoara personalizată, evaluare apartament Timișoara gratuită și analize de randament închiriere Timișoara pentru investitori. Avem apartamente noi Timișoara de vânzare, proprietăți în Centru Vechi, ISHO, Iosefin, Calea Girocului și închirieri apartamente Timișoara Complex Studențesc pentru studenți. Oferim investiții imobiliare cu randament în Timișoara, administrare profesională și cazare aproape de UVT, UPT, UMF, Iulius Town, Spitalul Județean, Gara de Nord și Aeroport, cu acces rapid la stațiile Piața Maria, Prefectură, Complex Studențesc și liniile E4/E7."
-          summaryEn="RealTrust & ApArt Hotel Timișoara — real estate consulting Timișoara, free apartment valuation Timișoara and long-term rental yield analysis for investors. Short-term rental apartments and real estate investments in Timișoara's most sought-after neighborhoods: Old Town (near Central Park and Rose Park), Iosefin, Elisabetin, Fabric, ISHO, Student Complex (next to UVT, UPT, UMF universities), Take Ionescu, Soarelui, Dâmbovița, Calea Aradului, Calea Lipovei. Properties 5–10 minutes from Iulius Town, Shopping City Timișoara, the International Airport and North Railway Station. Professional management, 9.4% net verified ROI."
+          summaryRo="RealTrust este o companie de servicii imobiliare și property management din Timișoara. Intermediem vânzări și închirieri pe termen lung, consiliem investitorii la achiziția de proprietăți pentru randament și administrăm apartamente în regim hotelier sub brandul ApArt Hotel. Lucrăm cu proprietari, investitori și cumpărători din oraș și din zona metropolitană, pe bază de contract scris, cu comisioane comunicate în avans și raportare lunară. Randamentul mediu raportat pentru apartamentele administrate este de 9,4% net, calculat la o ocupare de 75% și o deducere operațională de 27%."
+          summaryEn="RealTrust is a real estate and property management company based in Timișoara, Romania. We broker sales and long-term rentals, advise investors buying property for yield, and manage short-stay apartments under our ApArt Hotel brand. We work with owners, investors and buyers across the city and its metropolitan area, under written contracts, with fees stated in advance and monthly reporting. The reported average return for managed apartments is 9.4% net, based on 75% occupancy and a 27% operating deduction."
+
         />
         <div className="container mx-auto px-6">
           <AIQuoteBlock
@@ -304,6 +311,11 @@ const Index = () => {
 
         {belowFoldReady && (
           <>
+            {/* Brand authority: "Ce este RealTrust?" (GEO) + "De ce RealTrust?" */}
+            <Suspense fallback={<div style={{ minHeight: '200px' }} />}>
+              <HomeAuthorityBlocks />
+            </Suspense>
+
             {/* SEO H2 strip — explicit service headings (per audit) */}
             <ServicesH2Strip />
 
