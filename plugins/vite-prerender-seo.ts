@@ -1437,7 +1437,14 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
   // values; without this, every prerendered page shares the homepage preview.
-  const socialImage = route.image || `${BASE_URL}/images/hero-optimized-1920w.webp`;
+  // Social crawlers drop relative images, so normalise to an absolute URL.
+  const rawImage = (route.image || '').trim();
+  const socialImage = /^https?:\/\//i.test(rawImage)
+    ? rawImage
+    : rawImage
+      ? `${BASE_URL}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`
+      : `${BASE_URL}/images/hero-optimized-1920w.webp`;
+
   const setMeta = (attr: 'property' | 'name', key: string, value: string) => {
     const re = new RegExp(`<meta ${attr}="${key.replace(':', ':')}" content="[^"]*"\\s*/?>`);
     const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`;
