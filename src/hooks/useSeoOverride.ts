@@ -77,16 +77,36 @@ export function useSeoOverride(pathname?: string): SeoOverride | null {
   useEffect(() => {
     let cancelled = false;
 
-    readSeoOverride(pathname).then((value) => {
-      if (!cancelled) setOverride(value);
-    }).catch(() => {
-      if (!cancelled) setOverride(null);
-    });
+    // Defer to idle time: the override only refines head tags, so it must never
+    // compete with the first paint (LCP) or block input responsiveness (INP).
+    const run = () => {
+      readSeoOverride(pathname).then((value) => {
+        if (!cancelled) setOverride(value);
+      }).catch(() => {
+        if (!cancelled) setOverride(null);
+      });
+    };
+
+    const idle = (window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    }).requestIdleCallback;
+    let handle: number;
+    if (typeof idle === "function") {
+      handle = idle(run, { timeout: 3000 });
+    } else {
+      handle = window.setTimeout(run, 1200);
+    }
 
     return () => {
       cancelled = true;
+      const cancelIdle = (window as unknown as {
+        cancelIdleCallback?: (h: number) => void;
+      }).cancelIdleCallback;
+      if (typeof idle === "function" && typeof cancelIdle === "function") cancelIdle(handle);
+      else window.clearTimeout(handle);
     };
   }, [pathname]);
+
 
   return override;
 }

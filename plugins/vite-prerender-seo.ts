@@ -1352,7 +1352,71 @@ function ensureProtectedHeadNodes(html: string, protectedHeadNodes: string[]): s
   );
 }
 
+/** Human labels for path segments used in breadcrumb trails. */
+const SEGMENT_LABELS: Record<string, string> = {
+  'pentru-proprietari': 'Pentru proprietari',
+  'servicii-imobiliare': 'Servicii imobiliare',
+  investitii: 'Investiții imobiliare',
+  preturi: 'Prețuri',
+  'hostscan-ai': 'HostScan AI',
+  cazare: 'Cazare',
+  'ansambluri-rezidentiale': 'Ansambluri rezidențiale',
+  cartiere: 'Cartiere',
+  blog: 'Blog',
+  categorie: 'Categorii',
+  'despre-noi': 'Despre noi',
+  contact: 'Contact',
+  'intrebari-frecvente': 'Întrebări frecvente',
+  proprietate: 'Proprietăți',
+  'imobiliare-timisoara': 'Cartiere',
+  complexe: 'Ansambluri rezidențiale',
+  'calculator-roi': 'Calculator ROI',
+  'analiza-roi-apartament': 'Analiză ROI apartament',
+  'piata-imobiliara-timisoara': 'Piața imobiliară Timișoara',
+  'evaluare-gratuita': 'Evaluare gratuită',
+};
+
+function segmentLabel(segment: string): string {
+  if (SEGMENT_LABELS[segment]) return SEGMENT_LABELS[segment];
+  const words = segment.replace(/-/g, ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * Builds a BreadcrumbList for any route from its path, so every prerendered
+ * page ships hierarchical navigation markup. Returns null for the homepage
+ * (a single-item trail adds nothing) — callers skip it there.
+ */
+function buildBreadcrumbJsonLd(route: PrerenderRoute): Record<string, unknown> | null {
+  const clean = route.path.replace(/^\/+|\/+$/g, '');
+  if (!clean) return null;
+  const segments = clean.split('/');
+  const items: Record<string, unknown>[] = [
+    { '@type': 'ListItem', position: 1, name: 'Acasă', item: `${BASE_URL}/` },
+  ];
+  segments.forEach((segment, i) => {
+    const isLast = i === segments.length - 1;
+    items.push({
+      '@type': 'ListItem',
+      position: i + 2,
+      name: isLast ? route.h1 || segmentLabel(segment) : segmentLabel(segment),
+      item: isLast ? route.canonical : `${BASE_URL}/${segments.slice(0, i + 1).join('/')}`,
+    });
+  });
+  return { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items };
+}
+
+function hasBreadcrumb(jsonLd: PrerenderRoute['jsonLd']): boolean {
+  const list = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+  return list.some((s) => {
+    if (s?.['@type'] === 'BreadcrumbList') return true;
+    const graph = s?.['@graph'];
+    return Array.isArray(graph) && graph.some((g) => (g as Record<string, unknown>)?.['@type'] === 'BreadcrumbList');
+  });
+}
+
 function generateHtml(template: string, route: PrerenderRoute, protectedHeadNodes: string[]): string {
+
   let html = template.replace(
     /<title>[^<]*<\/title>/,
     `<title>${escapeHtml(route.title)}</title>`
@@ -1373,7 +1437,14 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
 
   // Per-route Open Graph / Twitter tags. The static shell ships sitewide
   // values; without this, every prerendered page shares the homepage preview.
-  const socialImage = route.image || `${BASE_URL}/images/hero-optimized-1920w.webp`;
+  // Social crawlers drop relative images, so normalise to an absolute URL.
+  const rawImage = (route.image || '').trim();
+  const socialImage = /^https?:\/\//i.test(rawImage)
+    ? rawImage
+    : rawImage
+      ? `${BASE_URL}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`
+      : `${BASE_URL}/images/hero-optimized-1920w.webp`;
+
   const setMeta = (attr: 'property' | 'name', key: string, value: string) => {
     const re = new RegExp(`<meta ${attr}="${key.replace(':', ':')}" content="[^"]*"\\s*/?>`);
     const tag = `<meta ${attr}="${key}" content="${escapeHtml(value)}" />`;
@@ -1388,9 +1459,17 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   setMeta('name', 'twitter:url', route.canonical);
   setMeta('name', 'twitter:image', socialImage);
 
-  const jsonLdStr = Array.isArray(route.jsonLd)
-    ? route.jsonLd.map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n      ')
-    : `<script type="application/ld+json">${JSON.stringify(route.jsonLd)}</script>`;
+  // Every page ships BreadcrumbList markup; routes that already declare their
+  // own trail keep it (no duplicates).
+  const baseSchemas = Array.isArray(route.jsonLd) ? [...route.jsonLd] : [route.jsonLd];
+  if (!hasBreadcrumb(route.jsonLd)) {
+    const crumb = buildBreadcrumbJsonLd(route);
+    if (crumb) baseSchemas.push(crumb);
+  }
+  const jsonLdStr = baseSchemas
+    .map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`)
+    .join('\n      ');
+
 
   // Use `inert` (not aria-hidden) so focusable descendants like <a> are properly removed
   // from the accessibility tree and tab order — fixes Lighthouse "aria-hidden with focusable

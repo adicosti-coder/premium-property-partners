@@ -255,7 +255,12 @@ const SEOHead = ({
     }
     return canonical;
   };
-  const finalUrl = override?.canonical_url || buildCanonical();
+  // Overrides may be stored with a www host; force the non-www official origin
+  // so og:url can never disagree with the canonical / hreflang tags.
+  const forceNonWww = (url: string): string =>
+    url.replace(/^https?:\/\/(www\.)?realtrust\.ro/i, BASE_URL);
+  const finalUrl = forceNonWww(override?.canonical_url || buildCanonical());
+
 
   // og:image / twitter:image MUST be absolute URLs — Facebook, LinkedIn,
   // WhatsApp, and X silently drop previews when the value is relative
