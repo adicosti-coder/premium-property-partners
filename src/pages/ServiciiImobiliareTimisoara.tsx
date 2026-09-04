@@ -85,17 +85,17 @@ const ServiciiImobiliareTimisoara = () => {
   const services = [
     {
       icon: Home,
-      title: isRo ? "Vânzări Apartamente și Case Timișoara" : "Apartment & House Sales Timișoara",
+      title: isRo ? "Vânzări Apartamente Timișoara" : "Apartment Sales Timișoara",
       desc: isRo
-        ? "Intermediere completă pentru vânzări apartamente și case de vânzare Timișoara. Fiecare agent imobiliar Timișoara din echipă este specializat pe cartiere și tipologii (apartamente noi, vile, case în Dumbrăvița, Giroc, Mehala, Braytim)."
+        ? "Intermediere completă pentru vânzări apartamente Timișoara și case de vânzare. Fiecare agent imobiliar Timișoara din echipă este specializat pe cartiere și tipologii (apartamente noi, vile, case în Dumbrăvița, Giroc, Mehala, Braytim)."
         : "Full brokerage for apartment and house sales in Timișoara. Each RealTrust real estate agent is specialized by neighborhood and property type (new apartments, villas, houses in Dumbrăvița, Giroc, Mehala, Braytim).",
       link: "/cartiere",
     },
     {
       icon: Shield,
-      title: isRo ? "Închirieri Rezidențiale" : "Residential Rentals",
+      title: isRo ? "Închirieri Timișoara — Rezidențial" : "Rentals in Timișoara — Residential",
       desc: isRo
-        ? "Contracte de închiriere pe termen lung pentru proprietari și chiriași verificați. Acoperire pentru apartamente lângă Continental Automotive, Hella, Iulius Town și marii angajatori."
+        ? "Închirieri Timișoara cu contracte pe termen lung, proprietari și chiriași verificați. Acoperire pentru apartamente lângă Continental Automotive, Hella, Iulius Town și marii angajatori."
         : "Long-term rental contracts for owners and verified tenants. Coverage for apartments near Continental Automotive, Hella, Iulius Town and major employers.",
       link: "/cartiere",
     },
@@ -143,9 +143,9 @@ const ServiciiImobiliareTimisoara = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={isRo ? "Servicii Imobiliare Timișoara — Vânzări, Închirieri, Administrare | RealTrust" : "Real Estate Services Timișoara — Sales, Rentals, Management | RealTrust"}
+        title={isRo ? "Vânzări Apartamente Timișoara și Închirieri Timișoara | RealTrust" : "Apartment Sales & Rentals in Timișoara | RealTrust"}
         description={isRo
-          ? "Pagina pilon RealTrust: vânzări apartamente și case de vânzare Timișoara, închirieri, administrare regim hotelier (ROI 9.4%). Agent imobiliar Timișoara dedicat, expertiză pe piața imobiliară Timișoara."
+          ? "RealTrust intermediază vânzări apartamente Timișoara și închirieri Timișoara: evaluare gratuită, promovare, contracte și administrare în regim hotelier. Agent imobiliar dedicat pentru fiecare cartier."
           : "RealTrust pillar page: apartment and house sales Timișoara, rentals, short-term rental management (9.4% ROI). Dedicated Timișoara real estate agents and local market expertise."}
         url={`${BASE_URL}/servicii-imobiliare`}
         jsonLd={jsonLd}
@@ -163,11 +163,11 @@ const ServiciiImobiliareTimisoara = () => {
 
           <section className="text-center max-w-3xl mx-auto mb-12">
             <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4">
-              {isRo ? "Servicii Imobiliare Timișoara — Hub Central RealTrust" : "Real Estate Services Timișoara — RealTrust Hub"}
+              {isRo ? "Servicii imobiliare în Timișoara — vânzări, închirieri și administrare" : "Real Estate Services in Timișoara — Sales, Rentals and Management"}
             </h1>
             <p className="text-lg text-muted-foreground">
               {isRo
-                ? "Vânzări apartamente și case de vânzare Timișoara, închirieri rezidențiale, administrare regim hotelier și consultanță pentru investiții. Echipa de agent imobiliar Timișoara RealTrust acoperă întreaga piață imobiliară Timișoara și județul Timiș."
+                ? "Vânzări apartamente Timișoara, închirieri Timișoara pe termen lung, administrare în regim hotelier și consultanță pentru investiții. Echipa RealTrust acoperă orașul și județul Timiș, cu agenți specializați pe cartiere."
                 : "Apartment and house sales Timișoara, residential rentals, short-term rental management and investment consulting. The RealTrust Timișoara real estate agent team covers the entire Timișoara real estate market and Timiș county."}
             </p>
           </section>
