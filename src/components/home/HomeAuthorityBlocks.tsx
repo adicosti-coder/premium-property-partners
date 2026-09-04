@@ -33,17 +33,10 @@ const HomeAuthorityBlocks = () => {
 
   return (
     <div className="container mx-auto px-6 py-16 space-y-16">
-      {/* GEO: self-contained answer block */}
-      <section className="ai-quote rounded-xl border-l-4 border-accent bg-muted/40 p-6">
-        <h2 className="text-xl font-serif font-semibold text-foreground">
-          {isEn ? "What is RealTrust?" : "Ce este RealTrust?"}
-        </h2>
-        <p className="mt-3 max-w-3xl text-sm md:text-base leading-relaxed text-foreground/90">
-          {isEn
-            ? "RealTrust is a real estate and property management company operating in Timișoara, Romania, run by the legal entity SC Imo Business Centrum SRL (CUI RO14380627). It brokers apartment and house sales and long-term rentals, advises investors on buying rental property, and manages short-stay apartments under its own accommodation brand, ApArt Hotel. Its clients are property owners, investors and buyers in Timișoara and the surrounding metropolitan area. Work is done under written contracts, with commissions stated in advance and monthly financial reporting. Contact: +40 799 069 256, info@realtrust.ro."
-            : "RealTrust este o companie de servicii imobiliare și property management care operează în Timișoara, România, prin entitatea juridică SC Imo Business Centrum SRL (CUI RO14380627). Intermediază vânzări de apartamente și case și închirieri pe termen lung, consiliază investitorii la achiziția de proprietăți pentru randament și administrează apartamente în regim hotelier sub propriul brand de cazare, ApArt Hotel. Clienții sunt proprietari, investitori și cumpărători din Timișoara și zona metropolitană. Colaborarea se face pe bază de contract scris, cu comisioane comunicate în avans și raportare financiară lunară. Contact: +40 799 069 256, info@realtrust.ro."}
-        </p>
-      </section>
+      {/* GEO: canonical entity answer, shared with /despre-noi, /contact and
+          /pentru-proprietari via src/lib/entityDefinition.ts */}
+      <EntityDefinitionBlock pagePath="/" />
+
 
       {/* Evidence-based reasons */}
       <section aria-labelledby="de-ce-realtrust">
