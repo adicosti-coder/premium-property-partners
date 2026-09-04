@@ -28,12 +28,12 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/pentru-proprietari" />
   </url>
 <url>
-    <loc>https://realtrust.ro/complexe</loc>
+    <loc>https://realtrust.ro/ansambluri-rezidentiale</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/complexe" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/complexe" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/complexe" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/ansambluri-rezidentiale" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/ansambluri-rezidentiale" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/ansambluri-rezidentiale" />
   </url>
 <url>
     <loc>https://realtrust.ro/blog</loc>
@@ -92,12 +92,12 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/comunitate" />
   </url>
 <url>
-    <loc>https://realtrust.ro/pentru-oaspeti</loc>
+    <loc>https://realtrust.ro/cazare</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/pentru-oaspeti" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/pentru-oaspeti" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/pentru-oaspeti" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/cazare" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/cazare" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/cazare" />
   </url>
 <url>
     <loc>https://realtrust.ro/preturi</loc>
@@ -108,12 +108,12 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/preturi" />
   </url>
 <url>
-    <loc>https://realtrust.ro/analiza-proprietate</loc>
+    <loc>https://realtrust.ro/hostscan-ai</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/analiza-proprietate" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/analiza-proprietate" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/analiza-proprietate" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/hostscan-ai" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/hostscan-ai" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/hostscan-ai" />
   </url>
 <url>
     <loc>https://realtrust.ro/catalog-investitii</loc>
@@ -164,11 +164,11 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/piata-imobiliara-timisoara" />
   </url>
 <url>
-    <loc>https://realtrust.ro/imobiliare-timisoara</loc>
+    <loc>https://realtrust.ro/cartiere</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/imobiliare-timisoara" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/imobiliare-timisoara" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/imobiliare-timisoara" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/cartiere" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/cartiere" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/cartiere" />
   </url>
 </urlset>
