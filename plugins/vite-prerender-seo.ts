@@ -32,7 +32,7 @@ interface PrerenderRoute {
  */
 const HOMEPAGE_AUTHORITY_BODY = `
   <h2>Ce este RealTrust?</h2>
-  <p>RealTrust este o companie de servicii imobiliare și property management din Timișoara, operată de SC Imo Business Centrum SRL (CUI RO14380627). Intermediază vânzări de apartamente și case și închirieri pe termen lung, consiliază investitorii la achiziția de proprietăți pentru randament și administrează apartamente în regim hotelier sub brandul propriu de cazare, ApArt Hotel. Clienții sunt proprietari, investitori și cumpărători din Timișoara și zona metropolitană. Colaborarea se face pe bază de contract scris, cu comisioane comunicate în avans și raportare lunară.</p>
+  <p>${ENTITY_ANSWER_RO}</p>
 
   <h2>Investiții imobiliare</h2>
   <p>Analizăm proprietăți din perspectiva randamentului: preț de achiziție, costuri de amenajare, tarife realizabile pe noapte și grad de ocupare estimat. Fiecare estimare este prezentată ca scenariu, cu ipotezele afișate; randamentul mediu raportat pentru apartamentele administrate este de 9,4% net. Detalii pe pagina de investiții.</p>
