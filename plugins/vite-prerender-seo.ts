@@ -1352,7 +1352,71 @@ function ensureProtectedHeadNodes(html: string, protectedHeadNodes: string[]): s
   );
 }
 
+/** Human labels for path segments used in breadcrumb trails. */
+const SEGMENT_LABELS: Record<string, string> = {
+  'pentru-proprietari': 'Pentru proprietari',
+  'servicii-imobiliare': 'Servicii imobiliare',
+  investitii: 'Investiții imobiliare',
+  preturi: 'Prețuri',
+  'hostscan-ai': 'HostScan AI',
+  cazare: 'Cazare',
+  'ansambluri-rezidentiale': 'Ansambluri rezidențiale',
+  cartiere: 'Cartiere',
+  blog: 'Blog',
+  categorie: 'Categorii',
+  'despre-noi': 'Despre noi',
+  contact: 'Contact',
+  'intrebari-frecvente': 'Întrebări frecvente',
+  proprietate: 'Proprietăți',
+  'imobiliare-timisoara': 'Cartiere',
+  complexe: 'Ansambluri rezidențiale',
+  'calculator-roi': 'Calculator ROI',
+  'analiza-roi-apartament': 'Analiză ROI apartament',
+  'piata-imobiliara-timisoara': 'Piața imobiliară Timișoara',
+  'evaluare-gratuita': 'Evaluare gratuită',
+};
+
+function segmentLabel(segment: string): string {
+  if (SEGMENT_LABELS[segment]) return SEGMENT_LABELS[segment];
+  const words = segment.replace(/-/g, ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * Builds a BreadcrumbList for any route from its path, so every prerendered
+ * page ships hierarchical navigation markup. Returns null for the homepage
+ * (a single-item trail adds nothing) — callers skip it there.
+ */
+function buildBreadcrumbJsonLd(route: PrerenderRoute): Record<string, unknown> | null {
+  const clean = route.path.replace(/^\/+|\/+$/g, '');
+  if (!clean) return null;
+  const segments = clean.split('/');
+  const items: Record<string, unknown>[] = [
+    { '@type': 'ListItem', position: 1, name: 'Acasă', item: `${BASE_URL}/` },
+  ];
+  segments.forEach((segment, i) => {
+    const isLast = i === segments.length - 1;
+    items.push({
+      '@type': 'ListItem',
+      position: i + 2,
+      name: isLast ? route.h1 || segmentLabel(segment) : segmentLabel(segment),
+      item: isLast ? route.canonical : `${BASE_URL}/${segments.slice(0, i + 1).join('/')}`,
+    });
+  });
+  return { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items };
+}
+
+function hasBreadcrumb(jsonLd: PrerenderRoute['jsonLd']): boolean {
+  const list = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+  return list.some((s) => {
+    if (s?.['@type'] === 'BreadcrumbList') return true;
+    const graph = s?.['@graph'];
+    return Array.isArray(graph) && graph.some((g) => (g as Record<string, unknown>)?.['@type'] === 'BreadcrumbList');
+  });
+}
+
 function generateHtml(template: string, route: PrerenderRoute, protectedHeadNodes: string[]): string {
+
   let html = template.replace(
     /<title>[^<]*<\/title>/,
     `<title>${escapeHtml(route.title)}</title>`
