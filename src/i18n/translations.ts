@@ -19,9 +19,9 @@ export const translations = {
     // Hero
     hero: {
       badge: "ApArt Hotel Timișoara\nVânzare · Administrare · Cazare",
-      title: "Servicii imobiliare integrate &",
-      titleMid: "property management",
-      titleHighlight: "în Timișoara.",
+      title: "RealTrust Timișoara —",
+      titleMid: "Imobiliare, Investiții",
+      titleHighlight: "și Property Management",
       subtitle: "Vânzări, cumpărări, închirieri pe termen lung și administrare apartamente în regim hotelier.\nSoluții complete pentru proprietari și investitori imobiliari.\nRandament net 9,4% — ocupare 75%, deducere 27%.",
       cta: "Vezi cât produce apartamentul tău",
       ctaSecondary: "Vezi oportunitățile de investiție",
@@ -1126,9 +1126,9 @@ Mulțumesc!`,
     // Hero
     hero: {
       badge: "Apart-Hotel Timișoara\nSales · Management · Accommodation",
-      title: "Integrated real estate services &",
-      titleMid: "property management",
-      titleHighlight: "in Timișoara.",
+      title: "RealTrust Timișoara —",
+      titleMid: "Real Estate, Investments",
+      titleHighlight: "and Property Management",
       subtitle: "Sales, purchases, long-term rentals and short-term rental (hotel-regime) apartment management.\nComplete solutions for property owners and real estate investors.\n9.4% net yield — 75% occupancy, 27% deduction.",
       cta: "See what your apartment can earn",
       ctaSecondary: "I want a high-performing investment in Timișoara",

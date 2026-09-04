@@ -700,16 +700,16 @@ function buildStaticRoutes(): PrerenderRoute[] {
   // (Firecrawl, Bingbot, AI Overviews) see local entities without JS.
   routes.push({
     path: '/',
-    title: 'RealTrust Timișoara | Imobiliare, Regim Hotelier & ROI',
-    description: 'Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!',
-    h1: 'RealTrust Timișoara — Investiții Imobiliare Profitabile & Regim Hotelier',
+    title: 'RealTrust Timișoara | Imobiliare, Investiții & Property Management',
+    description: 'RealTrust Timișoara oferă servicii imobiliare, investiții și administrare de proprietăți în regim hotelier. Analiză de randament, vânzări, închirieri și property management.',
+    h1: 'RealTrust Timișoara — Imobiliare, Investiții și Property Management',
     canonical: `${BASE_URL}/`,
     seoBody: HOMEPAGE_SEO_BODY,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       name: 'RealTrust & ApArt Hotel Timișoara',
-      description: 'Investește profitabil în imobiliare Timișoara! Apartamente regim hotelier, vânzări, închirieri lângă UVT, Iulius Town, Aeroport. Calculează ROI gratuit!',
+      description: 'Servicii imobiliare, investiții și administrare de proprietăți în regim hotelier în Timișoara.',
       url: `${BASE_URL}/`,
       telephone: '+40799069256',
       address: {
