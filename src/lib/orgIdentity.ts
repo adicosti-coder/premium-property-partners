@@ -19,6 +19,10 @@
 
 export const SITE_ORIGIN = "https://realtrust.ro";
 
+/** Verified Google Business Profile (Google Maps) listing for RealTrust. */
+export const GOOGLE_BUSINESS_PROFILE_URL =
+  "https://www.google.com/maps/place/RealTrust/data=!4m2!3m1!1s0x40918b091135b1b3:0x714fdcd64f129651";
+
 export const ORG_ID = `${SITE_ORIGIN}/#organization`;
 export const REAL_ESTATE_AGENT_ID = `${SITE_ORIGIN}/#realestateagent`;
 export const LODGING_BUSINESS_ID = `${SITE_ORIGIN}/#lodgingbusiness`;
