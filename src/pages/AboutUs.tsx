@@ -32,6 +32,8 @@ import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
+import EntityDefinitionBlock from "@/components/EntityDefinitionBlock";
+
 import BackToTop from "@/components/BackToTop";
 import { REAL_ESTATE_AGENT_SCHEMA, REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 import PageSummary from "@/components/PageSummary";
