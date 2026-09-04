@@ -30,7 +30,7 @@ interface PrerenderRoute {
  * MUST stay byte-identical to ENTITY_ANSWER.ro in src/lib/entityDefinition.ts
  * (this plugin runs standalone at build time and cannot import from src).
  */
-const ENTITY_ANSWER_RO = 'RealTrust este o companie imobiliară din Timișoara care oferă servicii de investiții imobiliare, vânzare și închiriere de proprietăți și administrare în regim hotelier. Este operată de entitatea juridică SC Imo Business Centrum SRL (CUI RO14380627) și activează în Timișoara și zona metropolitană. Se adresează proprietarilor care vor să externalizeze administrarea, investitorilor care caută randament și cumpărătorilor sau chiriașilor de apartamente și case. Apartamentele administrate în regim hotelier sunt operate sub brandul propriu de cazare, ApArt Hotel. Colaborarea se face pe bază de contract scris, cu comisioane comunicate în avans și raportare financiară lunară. Contact: +40 799 069 256, info@realtrust.ro.';
+const ENTITY_ANSWER_RO = 'RealTrust este o companie imobiliară din Timișoara specializată în investiții imobiliare, vânzare, închiriere și administrare de apartamente și case în regim hotelier. Este operată de entitatea juridică SC Imo Business Centrum SRL (CUI RO14380627) și activează în Timișoara și județul Timiș, inclusiv în ansambluri precum ISHO, RING, Paltim, Fructus Plaza și City of Mara. Se adresează proprietarilor, investitorilor și oaspeților. Serviciile de cazare pe termen scurt sunt gestionate sub brandul ApArt Hotel by RealTrust și includ promovare, curățenie, mentenanță și optimizare tarifară. Colaborarea se face pe bază de contracte clare, cu transparență și raportare financiară detaliată. Contact: +40 799 069 256, info@realtrust.ro.';
 
 const ENTITY_DEFINITION_HTML = `
   <h2>Ce este RealTrust?</h2>
