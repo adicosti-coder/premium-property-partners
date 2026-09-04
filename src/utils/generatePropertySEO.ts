@@ -25,6 +25,8 @@ export interface PropertySEOInput {
   longitude?: number | null;
   booking_rating?: number | null;
   booking_review_count?: number | null;
+  /** URL-ul motorului real de rezervări (Pynbooking) pentru această unitate. */
+  booking_url?: string | null;
 }
 
 export interface PropertySEOOutput {
@@ -100,6 +102,24 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
   // Image alt
   const imageAlt = `${type} - Apartament de vânzare în zona ${zone}, Timișoara`;
 
+  // Motorul real de rezervări (Pynbooking) — legat în datele structurate.
+  const bookingUrl = property.booking_url?.trim() || "";
+  const reserveAction = bookingUrl
+    ? {
+        "@type": "ReserveAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": bookingUrl,
+          "inLanguage": "ro-RO",
+          "actionPlatform": [
+            "http://schema.org/DesktopWebPlatform",
+            "http://schema.org/MobileWebPlatform",
+          ],
+        },
+        "result": { "@type": "LodgingReservation", "name": property.name },
+      }
+    : null;
+
   // JSON-LD: RealEstateListing + Product
   const jsonLd: Record<string, unknown>[] = [
     {
@@ -129,6 +149,8 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
         },
       }),
       ...(property.year_built && { "yearBuilt": property.year_built }),
+      ...(bookingUrl && { "sameAs": bookingUrl }),
+      ...(reserveAction && { "potentialAction": reserveAction }),
     },
     {
       "@context": "https://schema.org",
@@ -140,6 +162,8 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
         "@type": "Organization",
         "name": "RealTrust & ApArt Hotel",
       },
+      ...(bookingUrl && { "sameAs": bookingUrl }),
+      ...(reserveAction && { "potentialAction": reserveAction }),
       "offers": {
         "@type": "Offer",
         "priceCurrency": "EUR",

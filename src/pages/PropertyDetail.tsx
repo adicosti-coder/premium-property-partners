@@ -700,6 +700,7 @@ const PropertyDetail = () => {
       longitude: resolvedCoordinates?.[0],
       booking_rating: dbProperty.booking_rating,
       booking_review_count: dbProperty.booking_review_count,
+      booking_url: directBookingUrl,
     }).jsonLd : []),
   ];
 
