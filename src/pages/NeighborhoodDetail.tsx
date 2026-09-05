@@ -9,6 +9,8 @@ import RealPropertyCard from "@/components/RealPropertyCard";
 import CompareDrawer from "@/components/CompareDrawer";
 
 import { getNeighborhoodBySlug } from "@/data/neighborhoods";
+import { getNeighborhoodProfile } from "@/data/neighborhoodProfiles";
+import NeighborhoodProfileSection from "@/components/seo/NeighborhoodProfileSection";
 import ContextualLinks from "@/components/seo/ContextualLinks";
 import { buildNeighborhoodLinks } from "@/lib/internalLinking";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
@@ -25,6 +27,8 @@ const NeighborhoodDetail = () => {
   const { zona } = useParams<{ zona: string }>();
   const neighborhood = zona ? getNeighborhoodBySlug(zona) : undefined;
   const { properties, isLoading } = useNeighborhoodProperties(zona);
+  const profile = zona ? getNeighborhoodProfile(zona) : undefined;
+
 
   if (!neighborhood) {
     return <Navigate to="/cartiere" replace />;
@@ -152,6 +156,11 @@ const NeighborhoodDetail = () => {
             </div>
             <CompareDrawer />
           </CompareProvider>
+
+          {/* Local editorial profile (only for zones with a dedicated profile) */}
+          {profile && <NeighborhoodProfileSection profile={profile} />}
+
+
 
           {/* Investor Insight — internal link to pillar guide */}
           <Suspense fallback={null}>
