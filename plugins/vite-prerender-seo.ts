@@ -11,10 +11,8 @@ import fs from 'fs';
 import path from 'path';
 import {
   fetchPublicArticles,
-  fetchPremiumArticleStubs,
   fetchComplexes,
   buildArticleRoutes,
-  buildPremiumStubRoutes,
   buildBlogHubRoutes,
   buildComplexRoutes,
   buildRemainingStaticRoutes,
@@ -1936,13 +1934,17 @@ export default function vitePrerenderSeo(): Plugin {
         // blog articles + hubs, residential complexes, zone landings and the
         // rest of the commercial/service pages.
         console.log('[prerender-seo] Fetching public articles and complexes...');
-        const [articles, premiumStubs, complexes] = await Promise.all([
+        // Only publicly readable content is prerendered. Premium (member-only)
+        // articles are deliberately NOT enumerated here: their slugs and titles
+        // are gated data, so the build has no access to them and cannot leak
+        // them into static HTML. Those pages stay client-rendered and mark
+        // themselves `noindex` while locked (see src/pages/BlogArticle.tsx).
+        const [articles, complexes] = await Promise.all([
           fetchPublicArticles(),
-          fetchPremiumArticleStubs(),
           fetchComplexes(),
         ]);
         console.log(
-          `[prerender-seo] Found ${articles.length} public articles, ${premiumStubs.length} premium (noindex), ${complexes.length} complexes`,
+          `[prerender-seo] Found ${articles.length} public articles, ${complexes.length} complexes`,
         );
 
         const complexLandingSlugs = readComplexLandingSlugs(
@@ -1957,7 +1959,6 @@ export default function vitePrerenderSeo(): Plugin {
 
         const contentRoutes = [
           ...buildArticleRoutes(articles),
-          ...buildPremiumStubRoutes(premiumStubs),
           ...buildBlogHubRoutes(articles),
           ...buildComplexRoutes(complexes, complexLandingSlugs, takenPaths),
           ...buildRemainingStaticRoutes(),

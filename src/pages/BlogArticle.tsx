@@ -545,6 +545,15 @@ const BlogArticlePage = () => {
   if (isPremiumLocked) {
     return (
       <div className="min-h-screen bg-background">
+        {/* Gated content: the page is not a public document, so it must never
+            enter the index. Premium slugs are not prerendered either, which
+            makes this the only robots signal crawlers get for the locked view. */}
+        <SEOHead
+          title={displayTitle}
+          description={displayExcerpt}
+          type="article"
+          noIndex
+        />
         <Header />
         <main className="pt-24 pb-16">
           <article className="container mx-auto px-6 max-w-4xl">

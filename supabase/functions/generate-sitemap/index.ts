@@ -264,15 +264,22 @@ ${hreflang(`/proprietate/${property.slug}`)}
       }
     }
 
-    // Add residential complexes
+    // Add residential complexes. Slugs with a dedicated landing page are
+    // already in the static list as /complexe/<slug>; the rest are served by
+    // the generic detail route /complex/<slug>, which is their canonical form.
+    const LANDING_SLUGS = new Set([
+      "isho", "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
+      "city-of-mara", "vivalia", "nord-one", "xcity-towers", "denya-forest",
+    ]);
     if (complexes && complexes.length > 0) {
       for (const complex of complexes as Property[]) {
+        if (!complex.slug || LANDING_SLUGS.has(complex.slug)) continue;
         const lastmod = complex.updated_at
           ? new Date(complex.updated_at).toISOString().split("T")[0]
           : new Date(complex.created_at).toISOString().split("T")[0];
 
         xml += `  <url>
-    <loc>${BASE_URL}/complexe/${complex.slug}</loc>
+    <loc>${BASE_URL}/complex/${complex.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

@@ -151,26 +151,21 @@ const SUPABASE_ANON_KEY =
  * Premium articles are readable only by authenticated members, so they are not
  * public documents and must never be listed. Their pages ship `noindex`.
  */
-const fetchPremiumArticleSlugs = async (): Promise<Set<string>> => {
+const fetchPublicArticleSlugs = async (): Promise<Set<string> | null> => {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_premium_article_slugs`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        "content-type": "application/json",
-      },
-      body: "{}",
-    });
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/blog_articles?is_published=eq.true&is_premium=eq.false&select=slug`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } },
+    );
     if (!res.ok) {
-      console.warn(`[sitemap] premium slug lookup responded ${res.status}`);
-      return new Set();
+      console.warn(`[sitemap] public slug lookup responded ${res.status}`);
+      return null;
     }
-    const rows = (await res.json()) as Array<{ slug: string }>;
-    return new Set(rows.map((r) => r.slug).filter(Boolean));
+    const rows = (await res.json()) as Array<{ slug: string | null }>;
+    return new Set(rows.map((r) => r.slug).filter((s): s is string => Boolean(s)));
   } catch (err) {
-    console.warn("[sitemap] premium slug lookup failed:", (err as Error).message);
-    return new Set();
+    console.warn("[sitemap] public slug lookup failed:", (err as Error).message);
+    return null;
   }
 };
 
@@ -189,7 +184,7 @@ const REDIRECT_ONLY_PATHS = new Set([
  * Rejects any URL that is not a valid, public, canonical page: missing or
  * placeholder slugs, legacy redirect-only routes and gated premium articles.
  */
-const isListable = (block: string, premiumSlugs: Set<string>): boolean => {
+const isListable = (block: string, publicSlugs: Set<string> | null): boolean => {
   const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "";
   const path = loc.slice(BASE_URL.length) || "/";
 
@@ -206,7 +201,10 @@ const isListable = (block: string, premiumSlugs: Set<string>): boolean => {
   }
 
   const articleSlug = path.match(/^\/blog\/([^/]+)$/)?.[1];
-  if (articleSlug && premiumSlugs.has(articleSlug)) return false;
+  // Only articles a visitor can actually read may be listed. The gated
+  // (member-only) list is not readable at build time by design, so the check is
+  // an allowlist of public slugs rather than a blocklist of premium ones.
+  if (articleSlug && publicSlugs && !publicSlugs.has(articleSlug)) return false;
 
   return true;
 };
@@ -268,7 +266,7 @@ const main = async () => {
     }
   }
 
-  const premiumSlugs = await fetchPremiumArticleSlugs();
+  const publicSlugs = await fetchPublicArticleSlugs();
 
   const canonical = raw
     .map(canonicalizeBlock)
@@ -276,7 +274,7 @@ const main = async () => {
   const unique = dedupeByLoc(canonical);
 
   // Only valid, public, canonical URLs may reach Search Console.
-  const listable = unique.filter((b) => isListable(b, premiumSlugs));
+  const listable = unique.filter((b) => isListable(b, publicSlugs));
 
   // Drop /complex/<slug> when the same complex also has a /complexe/<slug>
   // landing page: those two URLs share one canonical (/complexe/<slug>). The
@@ -293,7 +291,7 @@ const main = async () => {
     return !(legacy && landingSlugs.has(legacy));
   });
   console.log(
-    `[sitemap] ${unique.length - deduped.length} URLs dropped (invalid, redirect-only or gated); ${premiumSlugs.size} premium articles excluded`,
+    `[sitemap] ${unique.length - deduped.length} URLs dropped (invalid, redirect-only or gated); ${publicSlugs ? `${publicSlugs.size} public articles allowed` : "article gating check skipped"}`,
   );
 
   const dynamicBlocks = deduped.filter(isDynamic);
