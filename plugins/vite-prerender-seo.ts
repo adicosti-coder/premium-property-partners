@@ -239,6 +239,16 @@ const neighborhoods = [
     <h3>Apartamente de închiriat Iosefin Timișoara</h3>
     <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
   ` },
+  { slug: 'elisabetin', name: 'Elisabetin', fullName: 'Elisabetin', avgPrice: 1820, faq: [
+    { q: 'Ce face Elisabetin un cartier premium?', a: 'Elisabetin se distinge prin arhitectura interbelică, vile elegante, Parcul Rozelor și o densitate ridicată de cafenele și restaurante de autor. Atmosferă rezidențială liniștită la 10 minute pietonal de Piața Victoriei.' },
+    { q: 'Sunt apartamentele din Elisabetin potrivite pentru investiții?', a: 'Da. Cererea constantă din partea familiilor tinere și a turiștilor premium asigură ocupare ridicată în regim hotelier, cu randamente nete de 7-9%. Prețul mediu este 1.820 €/mp.' },
+    { q: 'Cât de aproape este Elisabetin de universități?', a: 'Tramvaiul direct leagă Elisabetin de Universitatea de Vest (UVT) și Universitatea Politehnica (UPT) în 8-12 minute, atrăgând și chiriași academici.' },
+  ], seoBody: `
+    <h2>Apartamente în Elisabetin, Timișoara — cartier rezidențial premium</h2>
+    <p><strong>Elisabetin</strong> este unul dintre cele mai elegante cartiere rezidențiale ale Timișoarei, recunoscut pentru vilele interbelice, străzile umbrite și atmosfera liniștită. Situat la sud de centrul istoric, oferă acces pietonal de 10 minute spre Piața Victoriei și legătură directă de tramvai către UVT și UPT.</p>
+    <h3>Prețuri și randament</h3>
+    <p>Prețul mediu este de aproximativ 1.820 €/mp. Zona include Parcul Rozelor și o densitate ridicată de cafenele specialty, ceea ce susține ocuparea în regim hotelier și randamente nete de 7–9%. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/cartiere">celelalte cartiere</a>.</p>
+  ` },
   { slug: 'dumbravita', name: 'Dumbrăvița', fullName: 'Dumbrăvița', avgPrice: 1680, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Dumbrăvița?', a: 'Apartamente noi 1.680 €/mp, cu 15–20% sub media Timișoara. Case și vile între 180.000 și 380.000 €.' },
     { q: 'Ce ansambluri rezidențiale sunt disponibile în Dumbrăvița?', a: 'Iris Residence, Lipovei Residence, Cetatea Veche Residence — apartamente clasa A energetică cu parcare inclusă.' },
