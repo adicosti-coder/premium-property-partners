@@ -103,8 +103,11 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
   const imageAlt = `${type} - Apartament de vânzare în zona ${zone}, Timișoara`;
 
   // Motorul real de rezervări (Pynbooking) — legat în datele structurate.
-  const bookingUrl = property.booking_url?.trim() || "";
+  // Doar URL-uri http(s) reale; valorile placeholder ("-", "#") sunt ignorate.
+  const rawBookingUrl = property.booking_url?.trim() || "";
+  const bookingUrl = /^https?:\/\/\S+$/i.test(rawBookingUrl) ? rawBookingUrl : "";
   const reserveAction = bookingUrl
+
     ? {
         "@type": "ReserveAction",
         "target": {
