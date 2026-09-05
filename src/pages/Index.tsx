@@ -205,7 +205,7 @@ const BottomFoldSecondarySection = () => (
 
 const STATIC_HOMEPAGE_SCHEMAS = [
   ...generateHomepageSchemas(),
-  generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://realtrust.ro", [
+  generateSpeakableSchema("RealTrust", "https://realtrust.ro", [
     ".page-summary",
     "h1",
     "h2",

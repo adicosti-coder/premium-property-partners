@@ -101,7 +101,7 @@ const generateBreadcrumbJsonLd = (items: Array<{ name: string; url: string }>) =
 const generateWebSiteJsonLd = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "RealTrust & ApArt Hotel Timișoara",
+  "name": "RealTrust",
   "alternateName": "RealTrust",
   "url": BASE_URL,
   "potentialAction": {
