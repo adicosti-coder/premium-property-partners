@@ -314,6 +314,7 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
     { href: "/contact", label: "vorbește cu un consultant RealTrust", description: "Program, telefon și adresă." },
   ],
   cartiere: [
+    { href: "/zone-investitii-timisoara", label: "compararea zonelor pentru investiții", description: "Preț, chirie, cerere, lichiditate și risc, într-un singur tabel." },
     { href: "/ansambluri-rezidentiale", label: "ansamblurile rezidențiale din fiecare zonă", description: "Proiectele noi și unitățile administrate acolo." },
     { href: "/investitii", label: "investiții imobiliare în Timișoara", description: "Cum alegem zonele cu cel mai bun randament." },
     { href: "/servicii-imobiliare", label: "servicii imobiliare complete în Timișoara", description: "Vânzare, achiziție și închiriere cu asistență completă." },
