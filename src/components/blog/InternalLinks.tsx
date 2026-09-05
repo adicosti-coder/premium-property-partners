@@ -17,41 +17,74 @@ interface InternalLink {
   matchTags: string[];
 }
 
+/**
+ * Ordered by cluster priority: servicii → investiții → pagini locale →
+ * proprietăți → conținut conex. Anchor text is descriptive and varied on
+ * purpose (no exact-match keyword repetition across the blog).
+ */
 const SITE_LINKS: InternalLink[] = [
   {
-    label: "Vezi toate proprietățile disponibile",
-    labelEn: "View all available properties",
-    href: "/oaspeti",
-    matchCategories: ["Cazare", "Turism", "Guest Experience"],
-    matchTags: ["cazare", "timișoara", "apartament", "booking"],
+    label: "administrarea apartamentului în regim hotelier",
+    labelEn: "short-stay apartment management",
+    href: "/pentru-proprietari",
+    matchCategories: ["Management", "Administrare", "Proprietari", "Sfaturi proprietari"],
+    matchTags: ["proprietar", "administrare", "management", "regim hotelier", "booking", "airbnb"],
   },
   {
-    label: "Calculează randamentul investiției tale",
-    labelEn: "Calculate your investment yield",
+    label: "comisioanele și pachetele de administrare",
+    labelEn: "management fees and packages",
+    href: "/preturi",
+    matchCategories: ["Management", "Financiar", "Taxe & Legislație"],
+    matchTags: ["comision", "costuri", "preț", "taxe", "impozit"],
+  },
+  {
+    label: "cum evaluăm o investiție imobiliară în Timișoara",
+    labelEn: "how we assess a real estate investment in Timișoara",
     href: "/investitii",
-    matchCategories: ["Investiții", "Management", "Financiar"],
+    matchCategories: ["Investiții", "Management", "Financiar", "Investiții imobiliare"],
     matchTags: ["roi", "randament", "investiție", "profit", "yield"],
   },
   {
-    label: "Servicii pentru proprietari",
-    labelEn: "Services for owners",
-    href: "/pentru-proprietari",
-    matchCategories: ["Management", "Administrare", "Proprietari"],
-    matchTags: ["proprietar", "administrare", "management", "regim hotelier"],
+    label: "analiza de randament pentru apartamentul tău",
+    labelEn: "yield analysis for your apartment",
+    href: "/calculator-roi",
+    matchCategories: ["Investiții", "Financiar"],
+    matchTags: ["roi", "calcul", "randament", "yield", "venit"],
   },
   {
-    label: "Ghidul zonelor din Timișoara",
-    labelEn: "Timișoara area guide",
-    href: "/oaspeti#city-guide",
-    matchCategories: ["Turism", "Ghid"],
-    matchTags: ["timișoara", "zone", "cartier", "locație"],
+    label: "prețurile și randamentele pe cartiere",
+    labelEn: "prices and yields by neighbourhood",
+    href: "/cartiere",
+    matchCategories: ["Turism", "Ghid", "Imobiliare", "Investiții"],
+    matchTags: ["timișoara", "zone", "cartier", "locație", "preț mediu"],
   },
   {
-    label: "Servicii imobiliare complete",
-    labelEn: "Complete real estate services",
-    href: "/imobiliare",
+    label: "ansamblurile rezidențiale monitorizate de echipa noastră",
+    labelEn: "residential complexes we monitor",
+    href: "/ansambluri-rezidentiale",
+    matchCategories: ["Imobiliare", "Investiții"],
+    matchTags: ["ansamblu", "complex", "isho", "bloc nou", "dezvoltator"],
+  },
+  {
+    label: "vânzări, închirieri și consultanță imobiliară",
+    labelEn: "sales, rentals and real estate consulting",
+    href: "/servicii-imobiliare",
     matchCategories: ["Imobiliare"],
-    matchTags: ["vânzare", "cumpărare", "imobiliare", "apartament"],
+    matchTags: ["vânzare", "cumpărare", "imobiliare", "închiriere"],
+  },
+  {
+    label: "apartamentele disponibile pentru cazare",
+    labelEn: "apartments available for stays",
+    href: "/cazare",
+    matchCategories: ["Cazare", "Turism", "Guest Experience", "Ghid turistic Timișoara"],
+    matchTags: ["cazare", "apartament", "sejur", "turist"],
+  },
+  {
+    label: "evaluare gratuită a proprietății",
+    labelEn: "free property valuation",
+    href: "/evaluare-gratuita",
+    matchCategories: ["Proprietari", "Imobiliare", "Management"],
+    matchTags: ["evaluare", "estimare", "preț", "vânzare"],
   },
 ];
 
