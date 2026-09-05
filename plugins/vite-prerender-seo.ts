@@ -1145,6 +1145,48 @@ function buildStaticRoutes(): PrerenderRoute[] {
     ],
   });
 
+  // /zone-investitii-timisoara — comparație zone pentru investiții
+  routes.push({
+    path: '/zone-investitii-timisoara',
+    title: 'Cele mai bune zone pentru investiții imobiliare în Timișoara | RealTrust',
+    description: 'Comparație între zonele din Timișoara pentru investiții: preț, chirie realizabilă, potențial de regim hotelier, cerere, lichiditate și risc, zonă cu zonă.',
+    h1: 'Cele mai bune zone pentru investiții imobiliare în Timișoara',
+    canonical: `${BASE_URL}/zone-investitii-timisoara`,
+    seoBody: `
+      <h2>Comparație între zonele din Timișoara</h2>
+      <p>Analiză pe zone — Centru/Cetate, Iosefin, ISHO, Fabric, Circumvalațiunii, Calea Aradului, Calea Lipovei, Complex Studențesc, Girocului, Calea Șagului, Dumbrăvița și Giroc — după preț de achiziție, chirie realizabilă, potențial de <strong>regim hotelier</strong>, intensitatea cererii, lichiditate la revânzare și riscuri specifice.</p>
+      <p>Indicii de preț sunt estimări interne RealTrust, nu date oficiale de tranzacționare. Ipotezele de randament folosite sunt ocupare 75%, deducere operațională 27% și randament net de referință 9,4% pe an.</p>
+    `,
+  });
+
+  // /ghid-evaluare-apartament-timisoara — ghid metodologic de evaluare
+  routes.push({
+    path: '/ghid-evaluare-apartament-timisoara',
+    title: 'Cum se evaluează un apartament în Timișoara — ghid pas cu pas | RealTrust',
+    description: 'Ghid de evaluare pentru apartamentele din Timișoara: suprafață, etaj, an de construcție, compartimentare, parcare, finisaje, comparabile, venit potențial și randament net.',
+    h1: 'Cum se evaluează un apartament în Timișoara',
+    canonical: `${BASE_URL}/ghid-evaluare-apartament-timisoara`,
+    seoBody: `
+      <h2>Factorii care determină valoarea unui apartament</h2>
+      <p>Suprafața utilă din cartea funciară, etajul, anul construcției și structura, poziționarea exactă, compartimentarea, parcarea, balconul sau terasa, orientarea, finisajele, eficiența energetică și costurile de întreținere.</p>
+      <h3>De la valoare la randament</h3>
+      <p>Comparabilele din același perimetru se corectează cu marja de negociere, iar pentru un apartament de investiție se estimează separat chiria clasică și venitul din <strong>regim hotelier</strong> (ocupare 75%, deducere operațională 27%), pentru a obține randamentul net raportat la capitalul total investit.</p>
+    `,
+  });
+
+  // /autor/adrian-costi — profil editorial (E-E-A-T)
+  routes.push({
+    path: '/autor/adrian-costi',
+    title: 'Adrian Costi — Fondator RealTrust Timișoara | Autor articole imobiliare',
+    description: 'Adrian Costi, fondator și CEO RealTrust Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți. Autorul ghidurilor despre investiții, regim hotelier și evaluare.',
+    h1: 'Adrian Costi',
+    canonical: `${BASE_URL}/autor/adrian-costi`,
+    seoBody: `
+      <h2>Fondator &amp; CEO RealTrust</h2>
+      <p>Adrian Costi este fondatorul și CEO-ul RealTrust (Imo Business Centrum SRL), companie imobiliară din Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara și vestul României. Coordonează direct administrarea celor 15 apartamente din portofoliu, operate în regim hotelier sub brandul ApArt Hotel.</p>
+    `,
+  });
+
   // /intrebari-frecvente — FAQ hub (regim hotelier, administrare, ROI)
   routes.push({
     path: '/intrebari-frecvente',
