@@ -138,15 +138,73 @@ async function runDnsChecks(): Promise<{
       : "Apare doar după ce zona delegată devine activă.",
   };
 
+  const spfMxValues = (spfMx?.Answer ?? [])
+    .filter((a) => a.type === 15)
+    .map((a) => clean(a.data.replace(/^\d+\s+/, "")));
+  const spfMxCheck: RecordCheck = {
+    type: "MX",
+    host: RESEND_SPF_HOST,
+    expected: `10 ${RESEND_SPF_MX}`,
+    observed: spfMxValues,
+    verdict: spfMxValues.includes(RESEND_SPF_MX) ? "ok" : spfMxValues.length ? "drifted" : "missing",
+    note: spfMxValues.includes(RESEND_SPF_MX)
+      ? undefined
+      : "Necesar pentru expedierea reală a e-mailurilor (SPF/return-path). Nu afectează MX-ul principal al domeniului.",
+  };
+
+  const spfTxtValues = (spfTxt?.Answer ?? []).filter((a) => a.type === 16).map((a) => clean(a.data));
+  const spfTxtCheck: RecordCheck = {
+    type: "TXT",
+    host: RESEND_SPF_HOST,
+    expected: RESEND_SPF_TXT,
+    observed: spfTxtValues,
+    verdict: spfTxtValues.includes(RESEND_SPF_TXT.toLowerCase())
+      ? "ok"
+      : spfTxtValues.length
+        ? "drifted"
+        : "missing",
+    note: spfTxtValues.some((v) => v.includes("amazonses.com"))
+      ? undefined
+      : "SPF pentru expeditor — se adaugă pe subdomeniul send, separat de SPF-ul principal.",
+  };
+
+  const senderReady = spfMxCheck.verdict === "ok" && spfTxtCheck.verdict === "ok";
+
   return {
-    records: [txtCheck, nsCheck, mxCheck],
+    records: [txtCheck, nsCheck, mxCheck, spfMxCheck, spfTxtCheck],
     delegationServing: mxValues.length > 0 && nsCheck.verdict === "ok",
+    senderReady,
     delegationNote: lame
       ? "lame_delegation"
       : nsCheck.verdict === "missing"
         ? "ns_missing"
         : null,
   };
+}
+
+/** Ask Resend to re-verify the sending domain (no-op when the key is absent). */
+async function reverifyResendDomain(): Promise<{ status: string | null; error?: string }> {
+  const key = Deno.env.get("RESEND_API_KEY");
+  if (!key) return { status: null, error: "RESEND_API_KEY missing" };
+  try {
+    const list = await fetch("https://api.resend.com/domains", {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const body = await list.json();
+    const domain = (body?.data ?? []).find((d: { name?: string }) => d.name === ROOT_DOMAIN);
+    if (!domain?.id) return { status: null, error: "domain not registered at provider" };
+    await fetch(`https://api.resend.com/domains/${domain.id}/verify`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const after = await fetch(`https://api.resend.com/domains/${domain.id}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const detail = await after.json();
+    return { status: (detail?.status as string) ?? null };
+  } catch (e) {
+    return { status: null, error: (e as Error).message };
+  }
 }
 
 Deno.serve(async (req) => {
