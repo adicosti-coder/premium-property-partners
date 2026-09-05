@@ -1773,13 +1773,19 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   // Inject H1 for routes that don't reliably render one in the static shell
   // (homepage + neighborhood landing pages). React hydration replaces #root
   // content but the inert SEO div outside #root remains for crawlers.
-  // Every prerendered document ships exactly one H1: the injected SEO heading.
-  // The client removes #seo-prerender on mount (see src/main.tsx), so the live
-  // DOM keeps only the React heading — no duplicate H1 either way. The single
-  // exception is the homepage, whose static shell already paints a visible H1.
+  // Every prerendered document must ship exactly one H1. The static app shell
+  // paints a homepage hero H1; on every other route that heading is not the
+  // page's own title, so it is demoted to a <p> (same class → identical
+  // styling) and the route's real H1 is injected instead. The client removes
+  // #seo-prerender on mount (src/main.tsx), so the live DOM keeps only the
+  // React heading.
   const isHomepage = route.path === '/' || route.path === '';
-  const shellHasH1 = isHomepage && /<h1[^>]*class="[^"]*ash-h1/.test(html);
-  const headingTag = shellHasH1 ? 'h2' : 'h1';
+  const shellH1Re = /<h1(\s[^>]*class="[^"]*ash-h1[^"]*"[^>]*)>([\s\S]*?)<\/h1>/;
+  const shellHasH1 = shellH1Re.test(html);
+  if (shellHasH1 && !isHomepage) {
+    html = html.replace(shellH1Re, (_m, attrs: string, inner: string) => `<p${attrs}>${inner}</p>`);
+  }
+  const headingTag = shellHasH1 && isHomepage ? 'h2' : 'h1';
 
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
@@ -1811,6 +1817,69 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   }
 
   return ensureProtectedHeadNodes(html, protectedHeadNodes);
+}
+
+/**
+ * Search-result titles are truncated past ~60 characters, so trim the least
+ * important pipe-separated segments (price, secondary claims) until the title
+ * fits, always keeping the leading subject and — when possible — the brand.
+ */
+function fitTitle(title: string): string {
+  const clean = title.replace(/\s+/g, ' ').trim();
+  if (clean.length <= 60) return clean;
+
+  const parts = clean.split(/\s*\|\s*/).filter(Boolean);
+  if (parts.length > 1) {
+    const [subject, ...rest] = parts;
+    const brand = rest[rest.length - 1];
+    const candidates: string[] = [];
+    for (let k = rest.length - 1; k >= 0; k--) {
+      candidates.push([subject, ...rest.slice(0, k)].join(' | '));
+      if (brand && k < rest.length - 1) candidates.push([subject, ...rest.slice(0, k), brand].join(' | '));
+    }
+    const fitted = candidates.find((c) => c.length <= 60 && c.length > 0);
+    if (fitted) return fitted;
+  }
+
+  const cut = clean.slice(0, 60);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > 36 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.\-–—|]+$/, '');
+}
+
+/**
+ * Duplicate titles compete with each other in search results. Disambiguate by
+ * folding distinctive words from the route's own slug into the title.
+ */
+function dedupeTitles(routes: PrerenderRoute[]): number {
+  const used = new Map<string, string>();
+  let changed = 0;
+  for (const route of routes) {
+    route.title = fitTitle(route.title);
+    const existing = used.get(route.title);
+    if (existing === undefined || existing === route.path) {
+      used.set(route.title, route.path);
+      continue;
+    }
+    const words = route.path
+      .split('/')
+      .pop()!
+      .split('-')
+      .filter((w) => w.length > 2 && !route.title.toLowerCase().includes(w.toLowerCase()));
+    for (let take = 1; take <= words.length; take++) {
+      const extra = words.slice(0, take).join(' ');
+      const candidate = fitTitle(`${route.title.split(/\s*\|\s*/)[0]} ${extra} | RealTrust`);
+      if (!used.has(candidate)) {
+        route.title = candidate;
+        break;
+      }
+    }
+    if (used.has(route.title)) {
+      console.warn(`[prerender-seo] duplicate title kept for ${route.path}: ${route.title}`);
+    }
+    used.set(route.title, route.path);
+    changed++;
+  }
+  return changed;
 }
 
 function escapeHtml(str: string): string {
@@ -1898,6 +1967,10 @@ export default function vitePrerenderSeo(): Plugin {
           ...guestRoutes,
           ...contentRoutes,
         ];
+
+        // One title per page, at most 60 characters, no duplicates.
+        const retitled = dedupeTitles(allRoutes);
+        if (retitled) console.log(`[prerender-seo] ${retitled} duplicate titles disambiguated`);
 
         console.log(`[prerender-seo] Generating ${allRoutes.length} static HTML files...`);
 
