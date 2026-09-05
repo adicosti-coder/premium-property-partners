@@ -393,6 +393,17 @@ const ComplexLanding = () => {
           </div>
         </section>
 
+        {/* Contextual internal links — zonă, investiții, servicii, alte ansambluri */}
+        <section className="pb-4">
+          <div className="container mx-auto px-6">
+            <ContextualLinks
+              title={`Ce mai poți afla despre ${complex.name}`}
+              intro="Zona în care se află ansamblul, serviciile conexe și celelalte proiecte monitorizate."
+              links={buildComplexLinks(complex.slug, complex.name)}
+            />
+          </div>
+        </section>
+
         {/* CTA Section */}
         <Suspense fallback={null}>
           <CTA />
