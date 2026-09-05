@@ -446,7 +446,11 @@ const PentruOaspeti = () => {
                   </Button>
                 </Link>
                 <Link to="/oaspeti">
-                  <Button size="lg" variant="outline">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-2 border-primary bg-background text-primary font-semibold shadow-sm hover:bg-primary hover:text-primary-foreground"
+                  >
                     {t.ctaSecondary}
                   </Button>
                 </Link>
