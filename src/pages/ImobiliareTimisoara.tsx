@@ -13,6 +13,8 @@ import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { lazy, Suspense } from "react";
 import { CompareProvider } from "@/contexts/CompareContext";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { CLUSTER_LINKS } from "@/lib/internalLinking";
 
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
