@@ -3,6 +3,7 @@ import { MapPin, TrendingUp, Building2, ArrowRight, Loader2, Calculator, LineCha
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import { REAL_ESTATE_AGENT_ID } from "@/lib/orgIdentity";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import RealPropertyCard from "@/components/RealPropertyCard";
@@ -57,28 +58,26 @@ const ImobiliareTimisoara = () => {
 
   useRegisterFAQs("imobiliare-timisoara", faqItems);
 
+  // Zone hub: a CollectionPage about the areas served. The agency identity
+  // itself lives in the canonical RealEstateAgent node (no duplicate business).
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: "RealTrust Imobiliare Timișoara",
-    description: "Agenție imobiliară din Timișoara, specializată în vânzări, investiții și administrare de apartamente în regim hotelier.",
+    "@type": "CollectionPage",
+    "@id": "https://realtrust.ro/cartiere",
+    name: "Imobiliare Timișoara — apartamente pe cartiere",
+    description:
+      "Apartamente de vânzare din Timișoara, organizate pe cartiere, cu prețuri actualizate și randamente calculate transparent.",
     url: "https://realtrust.ro/cartiere",
-    telephone: "+40799069256",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Timișoara",
-      addressRegion: "Timiș",
-      addressCountry: "RO",
+    about: { "@id": REAL_ESTATE_AGENT_ID },
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: neighborhoods.map((n, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        name: `${n.fullName}, Timișoara`,
+        url: `https://realtrust.ro/imobiliare-timisoara/${n.slug}`,
+      })),
     },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: 45.7489,
-      longitude: 21.2087,
-    },
-    areaServed: neighborhoods.map((n) => ({
-      "@type": "Place",
-      name: `${n.fullName}, Timișoara`,
-    })),
   };
 
   return (
@@ -87,10 +86,11 @@ const ImobiliareTimisoara = () => {
         title="Imobiliare Timișoara — apartamente pe zone | RealTrust"
         description="Explorează apartamentele de vânzare din Timișoara, pe cartiere: Girocului, Aradului, Circumvalațiunii, Șagului, Complex Studențesc, Calea Lipovei, ISHO. Prețuri actualizate și randamente calculate transparent."
         url="https://realtrust.ro/cartiere"
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        jsonLd={jsonLd}
+        breadcrumbItems={[
+          { name: "Acasă", url: "https://realtrust.ro" },
+          { name: "Imobiliare Timișoara", url: "https://realtrust.ro/cartiere" },
+        ]}
       />
       <Header />
 

@@ -203,48 +203,43 @@ const ComplexDetail = () => {
   const metaDescription = language === "en" ? complex.meta_description_en : complex.meta_description_ro;
   const description = language === "en" ? complex.description_en : complex.description_ro;
   const features = language === "en" ? complex.features_en : complex.features;
-  const pageUrl = `https://realtrust.ro/complex/${complex.slug}`;
+  // Complexes that also have a richer landing page under /complexe/:slug must
+  // point search engines at that single canonical URL (no duplicate content).
+  const LANDING_SLUGS = new Set([
+    "isho", "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
+    "city-of-mara", "vivalia", "nord-one", "xcity-towers", "denya-forest",
+  ]);
+  const pageUrl = LANDING_SLUGS.has(complex.slug)
+    ? `https://realtrust.ro/complexe/${complex.slug}`
+    : `https://realtrust.ro/complex/${complex.slug}`;
 
-  // Generate LocalBusiness + Apartment JSON-LD for rich snippets
+  // A residential complex is an ApartmentComplex / Place — not a business of
+  // its own, and it carries no review content, so no LocalBusiness + no rating.
   const jsonLd = [
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": `RealTrust - Management ${complex.name}`,
-      "description": description,
-      "image": images[0]?.image_path || "https://realtrust.ro/images/hero-optimized-1920w.webp",
-      "url": pageUrl,
-      "telephone": "+40799069256",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Timișoara",
-        "addressRegion": "Timiș",
-        "addressCountry": "RO",
-        "streetAddress": complex.location,
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": complex.latitude,
-        "longitude": complex.longitude,
-      },
-      "priceRange": "$$",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "reviewCount": "150",
-      },
-    },
-    {
-      "@context": "https://schema.org",
       "@type": "ApartmentComplex",
+      "@id": `${pageUrl}#apartmentcomplex`,
       "name": complex.name,
       "description": description,
+      "url": pageUrl,
+      "image": images[0]?.image_path || undefined,
       "address": {
         "@type": "PostalAddress",
+        "streetAddress": complex.location,
         "addressLocality": "Timișoara",
         "addressRegion": "Timiș",
         "addressCountry": "RO",
       },
+      ...(complex.latitude && complex.longitude
+        ? {
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: complex.latitude,
+              longitude: complex.longitude,
+            },
+          }
+        : {}),
       "numberOfAvailableAccommodationUnits": complex.property_count,
       "amenityFeature": features?.map((f) => ({
         "@type": "LocationFeatureSpecification",

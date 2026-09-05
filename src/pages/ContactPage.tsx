@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import QuickContactForm from "@/components/contact/QuickContactForm";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
@@ -35,12 +36,18 @@ const ContactPage = () => {
         { q: "How do I get to the RealTrust office in Timișoara?", a: "The office is at Strada Samuel Clain Micu Nr.14, ap.4, central area — near Iulius Town. Use the 'Open in Google Maps' button for directions." },
       ];
 
+  // Visible FAQ → single consolidated FAQPage node via the provider.
+  useRegisterFAQs(
+    "contact",
+    faqItems.map((f) => ({ question: f.q, answer: f.a })),
+  );
+
   const jsonLdSchemas = [
     {
       "@context": "https://schema.org",
       "@type": ["RealEstateAgent", "LocalBusiness"],
       "@id": `${BASE_URL}/contact`,
-      "name": "RealTrust & ApArt Hotel Timișoara",
+      "name": "RealTrust",
       "description": isRo
         ? "Sediu RealTrust Timișoara — date contact, program și locație. Departamente: Vânzări, Închirieri, Administrare regim hotelier."
         : "RealTrust Timișoara office — contact details, hours and location. Departments: Sales, Rentals, Short-term rental management.",
@@ -130,15 +137,6 @@ const ContactPage = () => {
         "@id": `${BASE_URL}/despre-noi#adrian-costi`,
         "name": "Adrian Costi",
       },
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqItems.map((f) => ({
-        "@type": "Question",
-        "name": f.q,
-        "acceptedAnswer": { "@type": "Answer", "text": f.a },
-      })),
     },
     {
       "@context": "https://schema.org",

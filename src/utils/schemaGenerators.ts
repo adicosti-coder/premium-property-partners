@@ -19,6 +19,7 @@ import {
   LODGING_BUSINESS_ID,
   SITE_ORIGIN,
   GOOGLE_BUSINESS_PROFILE_URL,
+  HOTEL_BRAND_NAME,
 } from "@/lib/orgIdentity";
 
 const BASE_URL = SITE_ORIGIN;
@@ -27,15 +28,16 @@ const BASE_URL = SITE_ORIGIN;
 const ORGANIZATION = ORGANIZATION_REF;
 
 
-// LodgingBusiness Schema for homepage — uses canonical brand identity.
+// LodgingBusiness Schema for the ApArt Hotel accommodation brand.
+// This is the brand node — the legal entity lives in ORGANIZATION_SCHEMA.
 export const generateLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LodgingBusiness",
   "@id": LODGING_BUSINESS_ID,
-  "name": `${BRAND.name} Timișoara`,
-  "alternateName": [...BRAND.alternateNames],
+  "name": HOTEL_BRAND_NAME,
+  "alternateName": ["ApArt Hotel", "ApArt Hotel by RealTrust"],
   "description": "Apartamente regim hotelier, închirieri pe termen scurt și investiții imobiliare în Timișoara, aproape de Aeroport Timișoara, Iulius Town, Openville, Gara de Nord și Spitalul Județean.",
-  "url": BRAND.url,
+  "url": `${SITE_ORIGIN}/cazare`,
   "telephone": BRAND.telephone,
   "email": BRAND.email,
   "image": BRAND.image,
@@ -43,11 +45,7 @@ export const generateLocalBusinessSchema = () => ({
   "foundingDate": BRAND.foundingDate,
   "parentOrganization": { "@id": ORG_ID },
 
-  "numberOfEmployees": {
-    "@type": "QuantitativeValue",
-    "minValue": 10,
-    "maxValue": 25,
-  },
+
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
@@ -295,60 +293,9 @@ export interface AggregateRatingData {
   worstRating?: number;
 }
 
-export const generateAggregateRatingSchema = (
-  itemName: string,
-  itemUrl: string,
-  rating: AggregateRatingData
-) => ({
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": itemName,
-  "url": itemUrl,
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": Math.max(1, Math.min(5, rating.ratingValue)).toFixed(1),
-    "reviewCount": String(rating.reviewCount),
-    "bestRating": "5",
-    "worstRating": "1",
-  },
-});
-
-// Individual Review Schema
-export interface ReviewData {
-  author: string;
-  datePublished: string;
-  reviewBody: string;
-  ratingValue: number;
-}
-
-export const generateReviewSchema = (
-  itemName: string,
-  itemUrl: string,
-  reviews: ReviewData[]
-) => {
-  const validReviews = reviews.filter((r) => r.ratingValue >= 1 && r.ratingValue <= 5);
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": itemName,
-    "url": itemUrl,
-    "review": validReviews.map((review) => ({
-      "@type": "Review",
-      "author": {
-        "@type": "Person",
-        "name": review.author,
-      },
-      "datePublished": review.datePublished,
-      "reviewBody": review.reviewBody,
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": String(Math.max(1, Math.min(5, review.ratingValue))),
-        "bestRating": "5",
-        "worstRating": "1",
-      },
-    })),
-  };
-};
+// NOTE: standalone Product-based rating/review generators were removed.
+// Ratings and reviews must live on the entity they describe (LodgingBusiness,
+// RealEstateAgent) and only when the reviews are visible on the page.
 
 // Blog Article Schema
 export interface ArticleSchemaData {
@@ -445,7 +392,7 @@ export const generateBreadcrumbSchema = (items: BreadcrumbItem[]) => ({
 export const generateWebSiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "RealTrust & ApArt Hotel Timișoara",
+  "name": "RealTrust",
   "url": BASE_URL,
   "potentialAction": {
     "@type": "SearchAction",
@@ -741,13 +688,15 @@ export const generatePlaceSchema = (property: PropertySchemaData) => {
 // Property BreadcrumbList Schema — Acasă > Apartamente > Timișoara > [Cartier]
 export const generatePropertyBreadcrumbSchema = (property: PropertySchemaData) => {
   const neighborhood = property.neighborhood || property.location;
+  const isStay = (property.listingType || "cazare") === "cazare";
+  const hubName = isStay ? "Cazare Timișoara" : "Proprietăți Timișoara";
+  const hubUrl = isStay ? `${BASE_URL}/cazare` : `${BASE_URL}/imobiliare`;
   const items: BreadcrumbItem[] = [
     { name: "Acasă", url: BASE_URL },
-    { name: "Apartamente", url: `${BASE_URL}/oaspeti` },
-    { name: "Timișoara", url: `${BASE_URL}/oaspeti?city=timisoara` },
+    { name: hubName, url: hubUrl },
   ];
   if (neighborhood) {
-    items.push({ name: neighborhood, url: `${BASE_URL}/oaspeti?zona=${encodeURIComponent(neighborhood)}` });
+    items.push({ name: neighborhood, url: `${hubUrl}?zona=${encodeURIComponent(neighborhood)}` });
   }
   items.push({ name: property.name, url: `${BASE_URL}/proprietate/${property.slug}` });
 
@@ -845,103 +794,42 @@ export const generateInvestmentOpportunitySchema = (property: PropertySchemaData
   };
 };
 
-// Combined schema for property pages
+/**
+ * Combined schema for property pages — intentionally minimal and typed by the
+ * real nature of the listing:
+ *  - cazare (accommodation unit): the page emits LodgingBusiness + HotelRoom
+ *    (built in PropertyDetail / prerender), so here we only add the breadcrumb.
+ *  - vânzare / investiție / închiriere: a single RealEstateListing-oriented
+ *    graph (Accommodation for the physical unit) + optional investment node.
+ * No Product, no duplicated Apartment/Accommodation/Place/ImageGallery nodes.
+ */
 export const generatePropertyPageSchemas = (
   property: PropertySchemaData,
-  reviews?: ReviewData[]
+  _reviews?: ReviewData[]
 ) => {
+  const isStay = (property.listingType || "cazare") === "cazare";
   const schemas: Record<string, unknown>[] = [
-    generateApartmentSchema(property),
-    generateAccommodationSchema(property),
-    generateRealEstateListingSchema(property),
-    generatePlaceSchema(property),
     generatePropertyBreadcrumbSchema(property),
-    generateImageObjectSchemas(property),
-    generateHotelRoomOfferSchema(property),
   ];
 
-  // Add Investment schema if property has ROI/capital data
+  if (isStay) {
+    return schemas;
+  }
+
+  // Non-stay listings: the RealEstateListing node comes from
+  // generatePropertySEO (correct price/offer per listing type).
   const investmentSchema = generateInvestmentOpportunitySchema(property);
   if (investmentSchema) {
     schemas.push(investmentSchema);
   }
 
-  if (property.rating > 0 && property.reviewCount > 0) {
-    schemas.push(
-      generateAggregateRatingSchema(
-        property.name,
-        `${BASE_URL}/proprietate/${property.slug}`,
-        {
-          ratingValue: property.rating,
-          reviewCount: property.reviewCount,
-        }
-      )
-    );
-  }
-
-  if (reviews && reviews.length > 0) {
-    schemas.push(
-      generateReviewSchema(
-        property.name,
-        `${BASE_URL}/proprietate/${property.slug}`,
-        reviews.slice(0, 5)
-      )
-    );
-  }
-
   return schemas;
 };
 
-// Standalone Organization schema for E-E-A-T signals
-export const generateOrganizationSchema = () => ({
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "@id": `${BASE_URL}/#org`,
-  "name": "RealTrust / Trust Estate",
-  "alternateName": ["RealTrust Imobiliare", "ApArt Hotel", "RealTrust & ApArt Hotel Timișoara"],
-  "url": BASE_URL,
-  "logo": `${BASE_URL}/images/hero-optimized-800w.webp`,
-  "foundingDate": "2001",
-  "description": "Firmă de property management și investiții imobiliare în Timișoara. Operăm ApArt Hotel și oferim consultanță pentru ansambluri rezidențiale premium.",
-  "sameAs": [
-    "https://www.facebook.com/realtrust.ro",
-    "https://www.instagram.com/realtrust_timisoara",
-    "https://www.booking.com",
-    GOOGLE_BUSINESS_PROFILE_URL,
-  ],
-  "contactPoint": [
-    {
-      "@type": "ContactPoint",
-      "telephone": "+40799069256",
-      "contactType": "customer service",
-      "availableLanguage": ["Romanian", "English"],
-      "areaServed": "RO",
-    },
-    {
-      "@type": "ContactPoint",
-      "telephone": "+40744488844",
-      "contactType": "sales",
-      "availableLanguage": ["Romanian", "English"],
-      "areaServed": "RO",
-    },
-  ],
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
-    "addressLocality": "Timișoara",
-    "addressRegion": "Timiș",
-    "postalCode": "300125",
-    "addressCountry": "RO",
-  },
-  "knowsAbout": [
-    "property management Timișoara",
-    "investiții imobiliare Timișoara",
-    "real estate investment Romania",
-    "Airbnb management Timișoara",
-    "Booking.com management",
-    "vacation rental ROI",
-  ],
-});
+
+// Canonical Organization node (single source of truth: orgIdentity.ts).
+// Kept as a function for back-compat with existing call sites.
+export const generateOrganizationSchema = () => ({ ...ORGANIZATION_SCHEMA });
 
 // Homepage combined schema with reviews from database
 export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
@@ -951,7 +839,7 @@ export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
   if (reviews && reviews.length > 0) {
     const reviewData = generateReviewsFromDatabase(
       reviews,
-      "RealTrust & ApArt Hotel Timișoara",
+      HOTEL_BRAND_NAME,
       BASE_URL
     );
     if (reviewData) {
@@ -971,15 +859,17 @@ export const generateHomepageSchemas = (reviews?: DatabaseReview[]) => {
   return schemas;
 }
 
-// Homepage-specific RealEstateAgent schema — explicit signal for Google's real estate vertical
+// Homepage RealEstateAgent schema — same canonical @id, so Google merges it
+// with the site-wide RealEstateAgent node instead of creating a duplicate.
 export const generateHomepageRealEstateAgentSchema = () => ({
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
-  "@id": `${BASE_URL}/#realestateagent-home`,
+  "@id": REAL_ESTATE_AGENT_ID,
   "name": "RealTrust / Trust Estate",
   "alternateName": ["RealTrust Imobiliare Timișoara", "Agenție imobiliară Timișoara RealTrust", "RealTrust Real Estate"],
   "description": "Firmă de property management și investiții imobiliare în Timișoara. Operăm ApArt Hotel și oferim consultanță pentru ansambluri rezidențiale premium. Servicii complete de vânzări, închirieri, administrare regim hotelier și evaluare proprietăți în Timișoara.",
   "url": BASE_URL,
+
   "telephone": "+40799069256",
   "email": "info@realtrust.ro",
   "image": `${BASE_URL}/images/hero-optimized-1920w.webp`,
@@ -1057,12 +947,12 @@ export const generateBlogCollectionSchema = (articles: BlogListingArticle[]) => 
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   "@id": `${BASE_URL}/blog`,
-  "name": "Blog RealTrust & ApArt Hotel",
+  "name": "Blog RealTrust",
   "description": "Articole, ghiduri și sfaturi pentru proprietari și oaspeți. Regim hotelier, investiții, administrare proprietăți în Timișoara.",
   "url": `${BASE_URL}/blog`,
   "isPartOf": {
     "@type": "WebSite",
-    "name": "RealTrust & ApArt Hotel Timișoara",
+    "name": "RealTrust",
     "url": BASE_URL,
   },
   "mainEntity": {
@@ -1118,7 +1008,7 @@ export const generateSpeakableSchema = (
   "url": pageUrl,
   "creator": {
     "@type": "Organization",
-    "name": "RealTrust & ApArt Hotel Timișoara",
+    "name": "Imo Business Centrum SRL",
     "url": "https://realtrust.ro",
   },
   "license": "https://creativecommons.org/licenses/by-nc-nd/4.0/",

@@ -578,7 +578,9 @@ const PropertyDetail = () => {
     // LodgingBusiness with AggregateRating + real reviews. Stable @id +
     // provider reference to the canonical RealEstateAgent so Google merges
     // entities across pages.
-    {
+    // Only accommodation units are a LodgingBusiness; sale/investment
+    // listings must not claim to be one.
+    ...(normalizedListingType === 'cazare' ? [{
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
       "@id": `https://realtrust.ro/proprietate/${slug}#lodgingbusiness`,
@@ -586,13 +588,16 @@ const PropertyDetail = () => {
       "url": `https://realtrust.ro/proprietate/${slug}`,
       "image": galleryImages[0] || "",
       "provider": { "@id": "https://realtrust.ro/#realestateagent" },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": avgRating,
-        "reviewCount": reviewCount,
-        "bestRating": "5",
-        "worstRating": "1",
-      },
+      "parentOrganization": { "@id": "https://realtrust.ro/#lodgingbusiness" },
+      ...(reviewCount > 0 && parseFloat(avgRating) > 0 ? {
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": avgRating,
+          "reviewCount": reviewCount,
+          "bestRating": "5",
+          "worstRating": "1",
+        },
+      } : {}),
       ...(reviewSchemaItems && { "review": reviewSchemaItems }),
       "address": {
         "@type": "PostalAddress",
@@ -617,7 +622,7 @@ const PropertyDetail = () => {
       }),
       ...(effectivePrice ? { "priceRange": `€${effectivePrice}/noapte` } : {}),
       "currenciesAccepted": "EUR, RON",
-    },
+    }] : []),
 
     // HotelRoom pentru unitățile de cazare în regim hotelier
     ...(normalizedListingType === 'cazare' ? [{
@@ -682,8 +687,8 @@ const PropertyDetail = () => {
 
 
 
-    // RealEstateListing schema from generatePropertySEO utility
-    ...(dbProperty ? generatePropertySEO({
+    // RealEstateListing schema — only for sale/investment/rental listings.
+    ...(dbProperty && normalizedListingType !== 'cazare' ? generatePropertySEO({
       name: displayName,
       slug: slug || "",
       location: dbProperty.location || property.location,

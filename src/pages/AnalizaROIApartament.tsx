@@ -164,6 +164,10 @@ const AnalizaROIApartament = () => {
         title="Analiza ROI Apartament | Randament investiții imobiliare"
         description="Analiză profit apartament România: calculează randament investiții imobiliare, ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe."
         url="https://realtrust.ro/analiza-roi-apartament"
+        breadcrumbItems={[
+          { name: "Acasă", url: "https://realtrust.ro" },
+          { name: "Analiza ROI Apartament", url: "https://realtrust.ro/analiza-roi-apartament" },
+        ]}
         jsonLd={{
           "@context": "https://schema.org",
           "@graph": [

@@ -71,7 +71,7 @@ const DeferredHomeSEO = ({ language }: { language: string }) => {
   // Register FAQ items via centralized context instead of inline FAQPage schema
   useRegisterFAQs("homepage", homepageFaqItems);
 
-  const speakableSchema = generateSpeakableSchema("RealTrust & ApArt Hotel Timișoara", "https://realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
+  const speakableSchema = generateSpeakableSchema("RealTrust", "https://realtrust.ro", [".page-summary", "h1", "h2", ".faq-section"]);
   const homepageSchemas = [...generateHomepageSchemas(reviews), speakableSchema];
 
   // Inject real AggregateRating into the first schema (LocalBusiness/LodgingBusiness)

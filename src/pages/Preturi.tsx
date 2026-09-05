@@ -307,6 +307,10 @@ const Preturi = () => {
         title={s.title}
         description={s.description}
         url={`${BASE_URL}/preturi`}
+        breadcrumbItems={[
+          { name: "Acasă", url: BASE_URL },
+          { name: "Prețuri", url: `${BASE_URL}/preturi` },
+        ]}
         jsonLd={[realEstateAgentSchema, servicePriceSchema]}
       />
       <Header />

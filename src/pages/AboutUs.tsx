@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import GlobalConversionWidgets from "@/components/GlobalConversionWidgets";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import EntityDefinitionBlock from "@/components/EntityDefinitionBlock";
@@ -345,18 +346,20 @@ const AboutUs = () => {
 
   const seo = seoContent[language as keyof typeof seoContent] || seoContent.ro;
 
+  // Visible FAQ contributes to the page's single consolidated FAQPage node.
+  useRegisterFAQs(
+    "about-us",
+    (t.faq.items as { q: string; a: string }[]).map((item) => ({
+      question: item.q,
+      answer: item.a,
+    })),
+  );
+
   // Organization JSON-LD schema — canonical identity + page-specific extras
   const organizationSchema = {
     ...REAL_ESTATE_AGENT_SCHEMA,
     "legalName": "Imo Business Centrum SRL",
     "description": seo.description,
-    "foundingDate": "1999",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "9.7",
-      "bestRating": "10",
-      "ratingCount": "180"
-    },
   };
 
   // Person schema for the founder (E-E-A-T)
@@ -376,18 +379,7 @@ const AboutUs = () => {
     "url": "https://realtrust.ro/despre-noi"
   };
 
-  // FAQPage schema
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": t.faq.items.map((item: { q: string; a: string }) => ({
-      "@type": "Question",
-      "name": item.q,
-      "acceptedAnswer": { "@type": "Answer", "text": item.a }
-    }))
-  };
-
-  const combinedSchema = [organizationSchema, founderSchema, faqSchema];
+  const combinedSchema = [organizationSchema, founderSchema];
 
   const breadcrumbItems = [
     { label: language === "ro" ? "Despre Noi" : "About Us" }

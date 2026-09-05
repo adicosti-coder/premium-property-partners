@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -75,15 +75,11 @@ const OwnerObjectionsFAQ = () => {
         ],
       };
 
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: t.items.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.a },
-    })),
-  };
+  // Single FAQPage per URL: register the visible Q&A centrally.
+  useRegisterFAQs(
+    "owner-objections",
+    t.items.map((item) => ({ question: item.q, answer: item.a })),
+  );
 
   const handleCta = () => {
     trackConversion({
@@ -98,10 +94,6 @@ const OwnerObjectionsFAQ = () => {
 
   return (
     <section id="obiectii-frecvente" className="py-16 md:py-20 scroll-mt-24">
-      <Helmet>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-      </Helmet>
-
       <div className="container mx-auto px-4 max-w-3xl">
         <div className="text-center mb-8">
           <Badge variant="outline" className="mb-4 border-primary/30 bg-primary/5">

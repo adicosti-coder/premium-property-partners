@@ -94,24 +94,9 @@ const VideoTestimonials = () => {
     },
   })) ?? [];
 
-  const aggregateRating =
-    testimonials && testimonials.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "LocalBusiness",
-          name: "RealTrust & ApArt Hotel Timișoara",
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: (
-              testimonials.reduce((s, t) => s + t.rating, 0) / testimonials.length
-            ).toFixed(1),
-            reviewCount: String(testimonials.length),
-            bestRating: "5",
-          },
-        }
-      : null;
-
-  const allSchemas = [...videoSchemas, ...(aggregateRating ? [aggregateRating] : [])];
+  // Only VideoObject nodes here: a self-serving LocalBusiness aggregateRating
+  // built from on-site testimonials is not eligible structured data.
+  const allSchemas = [...videoSchemas];
 
   return (
     <>

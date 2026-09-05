@@ -2,42 +2,17 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Star } from "lucide-react";
 
 /**
- * Booking.com reviews widget with embedded iframe + LodgingBusiness JSON-LD.
+ * Booking.com reviews widget with embedded iframe (visual only).
  * Displays both an official Booking badge and a summary card.
  */
 const BookingReviewsWidget = () => {
   const { language } = useLanguage();
 
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "LodgingBusiness",
-    "name": "ApArt Hotel Timișoara by RealTrust",
-    "image": "https://realtrust.ro/images/hero-optimized-1920w.webp",
-    "url": "https://realtrust.ro",
-    "telephone": "+40799069256",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Timișoara",
-      "addressRegion": "Timiș",
-      "addressCountry": "RO"
-    },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "9.7",
-      "bestRating": "10",
-      "reviewCount": "527",
-      "ratingCount": "527"
-    },
-    "priceRange": "€50 - €150"
-  };
-
+  // No JSON-LD here: the site-level ApArt Hotel LodgingBusiness node is emitted
+  // once per page, and a hardcoded self-serving aggregateRating would not be
+  // backed by review content rendered on this page.
   return (
     <section className="py-16 bg-card/50">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-      />
-
       <div className="container mx-auto px-6">
         <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-4 text-foreground">
           {language === "ro"

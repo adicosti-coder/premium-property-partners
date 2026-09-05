@@ -1,16 +1,11 @@
-import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/i18n/LanguageContext";
-import {
-  ENTITY_ANSWER,
-  ENTITY_HEADING,
-  buildEntityQuestionSchema,
-} from "@/lib/entityDefinition";
-import { SITE_ORIGIN } from "@/lib/orgIdentity";
+import { ENTITY_ANSWER, ENTITY_HEADING } from "@/lib/entityDefinition";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 interface EntityDefinitionBlockProps {
-  /** Path of the hosting page, used for the Question schema @id. */
+  /** Kept for API compatibility; the schema no longer needs a per-page @id. */
   pagePath?: string;
-  /** Emit the Question/Answer JSON-LD. Keep true on one block per page. */
+  /** Contribute the Q&A to the page's single FAQPage node. */
   withSchema?: boolean;
   /** Heading level so the block fits each page's semantic hierarchy. */
   as?: "h2" | "h3";
@@ -32,20 +27,22 @@ const EntityDefinitionBlock = ({
 }: EntityDefinitionBlockProps) => {
   const { language } = useLanguage();
   const lang = language === "en" ? "en" : "ro";
-  const pageUrl = `${SITE_ORIGIN}${pagePath === "/" ? "/" : pagePath}`;
+  void pagePath;
+
+  // The visible Q&A joins the page's single consolidated FAQPage node instead
+  // of emitting a second FAQPage on the same URL.
+  useRegisterFAQs(
+    "entity-definition",
+    withSchema
+      ? [{ question: ENTITY_HEADING[lang], answer: ENTITY_ANSWER[lang] }]
+      : [],
+  );
 
   return (
     <section
       className={`ai-quote rounded-xl border-l-4 border-accent bg-muted/40 p-6 ${className}`}
       aria-labelledby="ce-este-realtrust"
     >
-      {withSchema && (
-        <Helmet>
-          <script type="application/ld+json">
-            {JSON.stringify(buildEntityQuestionSchema(pageUrl, lang))}
-          </script>
-        </Helmet>
-      )}
       <Heading
         id="ce-este-realtrust"
         className="text-xl font-serif font-semibold text-foreground"

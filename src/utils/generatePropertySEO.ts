@@ -123,17 +123,24 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
       }
     : null;
 
-  // JSON-LD: RealEstateListing + Product
+  // JSON-LD: a single RealEstateListing node (no Product — this is a real
+  // estate offer, not a retail product).
   const jsonLd: Record<string, unknown>[] = [
     {
       "@context": "https://schema.org",
       "@type": "RealEstateListing",
+      "@id": `${canonical}#listing`,
       "name": property.name,
       "url": canonical,
       "description": description,
       ...(property.capital_necesar && {
-        "price": property.capital_necesar,
-        "priceCurrency": "EUR",
+        "offers": {
+          "@type": "Offer",
+          "price": property.capital_necesar,
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "url": canonical,
+        },
       }),
       "numberOfRooms": rooms,
       ...(property.size && { "floorSize": { "@type": "QuantitativeValue", "value": property.size, "unitCode": "MTK" } }),
@@ -155,35 +162,8 @@ export function generatePropertySEO(property: PropertySEOInput): PropertySEOOutp
       ...(bookingUrl && { "sameAs": bookingUrl }),
       ...(reserveAction && { "potentialAction": reserveAction }),
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": property.name,
-      "description": description,
-      "url": canonical,
-      "brand": {
-        "@type": "Organization",
-        "name": "RealTrust & ApArt Hotel",
-      },
-      ...(bookingUrl && { "sameAs": bookingUrl }),
-      ...(reserveAction && { "potentialAction": reserveAction }),
-      "offers": {
-        "@type": "Offer",
-        "priceCurrency": "EUR",
-        "price": property.capital_necesar || property.base_price_per_night || 0,
-        "availability": "https://schema.org/InStock",
-        "url": canonical,
-      },
-      ...(property.booking_rating && property.booking_review_count && {
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": property.booking_rating,
-          "reviewCount": property.booking_review_count,
-          "bestRating": 10,
-        },
-      }),
-    },
   ];
+
 
   return { title, description, canonical, h1, jsonLd, imageAlt };
 }

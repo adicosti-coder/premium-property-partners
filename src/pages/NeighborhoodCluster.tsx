@@ -278,12 +278,6 @@ const NeighborhoodCluster = () => {
         "@type": "Place",
         name: `${n.name}, Timișoara`,
       },
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "9.7",
-        bestRating: "10",
-        ratingCount: "180",
-      },
     },
     {
       "@context": "https://schema.org",

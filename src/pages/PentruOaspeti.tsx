@@ -348,7 +348,6 @@ const PentruOaspeti = () => {
       { "@type": "LocationFeatureSpecification", "name": "Netflix / Smart TV", "value": true },
       { "@type": "LocationFeatureSpecification", "name": "Hotel linens & towels", "value": true },
     ],
-    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "9.7", "reviewCount": "180", "bestRating": "10" },
     "containsPlace": [
       { "@type": "Apartment", "name": "ATENEO", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 4 } },
       { "@type": "Apartment", "name": "GREEN FOREST", "numberOfRooms": 2, "occupancy": { "@type": "QuantitativeValue", "maxValue": 4 } },

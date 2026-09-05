@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { BRAND, ORG_ID, SITE_ORIGIN, REAL_ESTATE_AGENT_SCHEMA } from "@/lib/orgIdentity";
+import { BRAND, ORG_ID, SITE_ORIGIN, ORGANIZATION_SCHEMA } from "@/lib/orgIdentity";
 import { validateJsonLdConsistency } from "@/lib/schemaConsistency";
 
 // Canonical host: NO www, matches CanonicalHreflang.tsx + prerender + sitemap.
@@ -64,10 +64,9 @@ const generateArticleJsonLd = (
   "image": image,
   "url": url,
   "datePublished": publishedTime,
-  "author": {
-    "@type": "Person",
-    "name": author || "RealTrust Team",
-  },
+  ...(author ? { "author": { "@type": "Person", "name": author } } : {
+    "author": { "@type": "Organization", "@id": ORG_ID, "name": BRAND.legalName },
+  }),
   "publisher": {
     "@type": "Organization",
     "@id": ORG_ID,
@@ -81,40 +80,6 @@ const generateArticleJsonLd = (
   },
   ...(tags && tags.length > 0 && { "keywords": tags.join(", ") }),
   ...(category && { "articleSection": category }),
-});
-
-// Helper to generate Product JSON-LD (for properties)
-const generateProductJsonLd = (
-  name: string,
-  description: string,
-  image: string,
-  url: string,
-  price?: number,
-  currency: string = "EUR",
-  availability: string = "InStock"
-) => ({
-  "@context": "https://schema.org",
-  "@type": "LodgingBusiness",
-  "name": name,
-  "description": description,
-  "image": image,
-  "url": url,
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
-    "addressLocality": "Timișoara",
-    "addressRegion": "Timiș",
-    "postalCode": "300125",
-    "addressCountry": "RO",
-  },
-  "offers": {
-    "@type": "Offer",
-    "priceCurrency": currency,
-    "price": price || 0,
-    "availability": `https://schema.org/${availability}`,
-    "url": url,
-  },
-  // AggregateRating removed — injected dynamically with real DB values when available
 });
 
 // FAQ schema is now handled centrally by FAQSchemaProvider (useFAQSchema.tsx)
@@ -136,7 +101,7 @@ const generateBreadcrumbJsonLd = (items: Array<{ name: string; url: string }>) =
 const generateWebSiteJsonLd = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "RealTrust & ApArt Hotel Timișoara",
+  "name": "RealTrust",
   "alternateName": "RealTrust",
   "url": BASE_URL,
   "potentialAction": {
@@ -284,35 +249,11 @@ const SEOHead = ({
   // URL as a single canonical page in multiple languages.
   const getAlternateUrl = (_lang: string) => finalUrl;
   
-  // Default LocalBusiness — uses canonical brand identity. Links to the
-  // canonical Organization node via parentOrganization @id, so Google merges
-  // this with the homepage Organization/RealEstateAgent entities.
-  const defaultJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "@id": `${BASE_URL}/#localbusiness`,
-    "name": `${BRAND.name} Timișoara`,
-    "image": absoluteImage,
-    "description": finalDescription,
-    "url": BASE_URL,
-    "telephone": BRAND.telephone,
-    "email": BRAND.email,
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": BRAND.address.streetAddress,
-      "addressLocality": BRAND.address.addressLocality,
-      "addressRegion": BRAND.address.addressRegion,
-      "postalCode": BRAND.address.postalCode,
-      "addressCountry": BRAND.address.addressCountry,
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": BRAND.geo.latitude,
-      "longitude": BRAND.geo.longitude,
-    },
-    "parentOrganization": { "@id": ORG_ID },
-    "priceRange": "€€",
-  };
+  // Default schema: only the canonical Organization node. Per-page
+  // LocalBusiness / RealEstateAgent nodes are emitted by the pages that
+  // actually describe those services, so no page carries irrelevant or
+  // duplicated business schema.
+  const defaultJsonLd: Record<string, unknown> = { ...ORGANIZATION_SCHEMA };
 
   
   // SEO override from admin can inject a custom JSON-LD that wins over everything below.
@@ -321,7 +262,7 @@ const SEOHead = ({
   let finalJsonLd: Record<string, unknown> | Record<string, unknown>[] =
     overrideJsonLd || jsonLd || defaultJsonLd;
   if (!jsonLd && !overrideJsonLd) {
-    const schemas: Record<string, unknown>[] = [defaultJsonLd, REAL_ESTATE_AGENT_SCHEMA];
+    const schemas: Record<string, unknown>[] = [defaultJsonLd];
     
     // Add Organization reference so every page carries the canonical brand node
     
@@ -341,21 +282,9 @@ const SEOHead = ({
       );
     }
     
-    // Add Product schema if type is product
-    if (type === "product") {
-      schemas.push(
-        generateProductJsonLd(
-          finalTitle,
-          finalDescription,
-          absoluteImage,
-          finalUrl,
-          productPrice,
-          productCurrency,
-          productAvailability
-        )
-      );
-    }
-    
+    // Property pages pass their own listing schema via the jsonLd prop.
+    // No generic Product/LodgingBusiness fallback is injected here.
+
     // FAQ schema is now handled by the centralized FAQSchemaProvider (useFAQSchema.tsx)
     // Do NOT inject inline FAQPage here — it causes duplicate structured data
     
@@ -370,6 +299,19 @@ const SEOHead = ({
     }
     
     finalJsonLd = schemas.length === 1 ? schemas[0] : schemas;
+  }
+
+  // BreadcrumbList must also be emitted when a page supplies custom JSON-LD,
+  // as long as the custom graph does not already contain one.
+  if (breadcrumbItems && breadcrumbItems.length > 0) {
+    const nodes = Array.isArray(finalJsonLd) ? finalJsonLd : [finalJsonLd];
+    const hasBreadcrumb = nodes.some((n) => {
+      const t = (n as Record<string, unknown>)?.["@type"];
+      return t === "BreadcrumbList" || (Array.isArray(t) && t.includes("BreadcrumbList"));
+    });
+    if (!hasBreadcrumb) {
+      finalJsonLd = [...nodes, generateBreadcrumbJsonLd(breadcrumbItems)];
+    }
   }
 
   // Dev-only: warn if any node in the assembled JSON-LD conflicts with the
