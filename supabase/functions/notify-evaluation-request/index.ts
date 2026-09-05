@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendTeamEmail } from "../_shared/teamEmail.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const TEAM_EMAIL = "info@realtrust.ro";
-const FROM = "RealTrust <info@notify.realtrust.ro>";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,22 +48,17 @@ function num(v: unknown, max: number): number {
 const isEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 255;
 const ro = (n: number) => n.toLocaleString("ro-RO");
 
-async function sendEmail(to: string, subject: string, html: string) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(`Resend failed [${res.status}]: ${body}`);
-    return { ok: false, status: res.status, details: body };
-  }
-  return { ok: true, status: res.status };
+const adminClient = () => {
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+};
+
+async function sendEmail(to: string, subject: string, html: string, source: string) {
+  return await sendTeamEmail({ to, subject, html, source }, adminClient());
 }
+
 
 const wrap = (inner: string) => `
 <div style="font-family:Arial,Helvetica,sans-serif;background:#ffffff;padding:24px;color:#1a202c">
@@ -98,11 +95,9 @@ serve(async (req) => {
   }
 
   if (!RESEND_API_KEY) {
-    return new Response(JSON.stringify({ error: "Email provider not configured" }), {
-      status: 503,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.warn("RESEND_API_KEY missing — notificarea va fi salvată în panoul de erori");
   }
+
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -168,9 +163,10 @@ serve(async (req) => {
       </p>`);
 
     const [team, owner] = await Promise.all([
-      sendEmail(TEAM_EMAIL, `📈 Cerere evaluare: ${name} — ${ro(propertyValue)} € · ${surface} mp`, teamHtml),
-      sendEmail(email, "Proiecția ta de randament RealTrust", ownerHtml),
+      sendEmail(TEAM_EMAIL, `📈 Cerere evaluare: ${name} — ${ro(propertyValue)} € · ${surface} mp`, teamHtml, "evaluation_team"),
+      sendEmail(email, "Proiecția ta de randament RealTrust", ownerHtml, "evaluation_owner"),
     ]);
+
 
     return new Response(JSON.stringify({ success: true, team, owner }), {
       status: 200,
