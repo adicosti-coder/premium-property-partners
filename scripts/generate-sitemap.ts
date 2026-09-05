@@ -67,6 +67,17 @@ const neighborhoodBlocks = (): string[] => {
   }
 };
 
+/** Slugs with a hand-written landing page at /complexe/<slug>. */
+const complexLandingSlugsFromSource = (): string[] => {
+  try {
+    const src = readFileSync(resolve("src/pages/ComplexLanding.tsx"), "utf8");
+    return Array.from(src.matchAll(/^\s*slug:\s*["']([a-z0-9-]+)["']/gm)).map((m) => m[1]);
+  } catch (err) {
+    console.warn("[sitemap] could not read complex landing slugs:", (err as Error).message);
+    return [];
+  }
+};
+
 /**
  * Canonicalize a single URL: force https + apex host, strip every query string
  * and fragment, strip trailing slashes (root excepted).
@@ -268,12 +279,15 @@ const main = async () => {
   const listable = unique.filter((b) => isListable(b, premiumSlugs));
 
   // Drop /complex/<slug> when the same complex also has a /complexe/<slug>
-  // landing page: those two URLs share one canonical (/complexe/<slug>).
-  const landingSlugs = new Set(
-    listable
+  // landing page: those two URLs share one canonical (/complexe/<slug>). The
+  // landing slugs come both from the fetched URLs and from the landing page
+  // source, so a missing sitemap entry can't resurrect a duplicate URL.
+  const landingSlugs = new Set<string>([
+    ...listable
       .map((b) => b.match(/<loc>[^<]*\/complexe\/([a-z0-9-]+)<\/loc>/)?.[1])
       .filter((s): s is string => Boolean(s)),
-  );
+    ...complexLandingSlugsFromSource(),
+  ]);
   const deduped = listable.filter((b) => {
     const legacy = b.match(/<loc>[^<]*\/complex\/([a-z0-9-]+)<\/loc>/)?.[1];
     return !(legacy && landingSlugs.has(legacy));
