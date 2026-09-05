@@ -7,6 +7,8 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import ContextualLinks from "@/components/seo/ContextualLinks";
+import GeoAnswers from "@/components/seo/GeoAnswers";
+import DataProvenance from "@/components/seo/DataProvenance";
 import { CLUSTER_LINKS } from "@/lib/internalLinking";
 import { neighborhoods } from "@/data/neighborhoods";
 
@@ -188,6 +190,28 @@ const ZONES: ZoneRow[] = [
     access: "Dependență de mașină pentru rutina zilnică",
     note: "Preț de intrare mic pentru suprafețe mari, dar lichiditate mai lentă la revânzare și cerere de cazare ocazională.",
   },
+  {
+    name: "Torontalului",
+    rent: "Mediu",
+    hotelPotential: "Scăzut",
+    demand: "Mediu",
+    liquidity: "Mediu",
+    profile: "Familii, angajați din nordul și vestul orașului",
+    risk: "Scăzut",
+    access: "Artera spre nord-vest, transport public spre centru, ieșire spre Dumbrăvița",
+    note: "Zonă de locuit cu ofertă mixtă (blocuri vechi și proiecte noi) și cerere constantă de chirie clasică. Fără generatori de trafic turistic în apropiere, un model de cazare pe termen scurt este greu de susținut — evaluare internă, nu statistică publicată.",
+  },
+  {
+    name: "Moșnița Nouă",
+    rent: "Scăzut",
+    hotelPotential: "Scăzut",
+    demand: "Mediu",
+    liquidity: "Scăzut",
+    profile: "Familii tinere care caută casă sau apartament spațios",
+    risk: "Mediu",
+    access: "Dependență de mașină; comună separată de Timișoara",
+    note: "Cel mai mic preț de intrare dintre zonele analizate, cu cerere de chirie de la familii, dar lichiditate lentă la revânzare și infrastructură încă în formare. Nu are indice de preț propriu la noi, așa că am lăsat coloana necompletată în loc să estimăm.",
+  },
 ];
 
 const priceOf = (slug?: string) => {
@@ -196,30 +220,10 @@ const priceOf = (slug?: string) => {
 };
 
 const ZoneInvestitiiTimisoara = () => {
-  const jsonLd = [
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "Care sunt cele mai bune zone din Timișoara pentru investiții imobiliare?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Nu există o zonă „cea mai bună” în mod absolut — depinde de strategie. Pentru tarif pe noapte și cerere pe tot anul, Cetate/Centru, Iosefin și ISHO conduc. Pentru lichiditate și cerere mixtă, Circumvalațiunii și Calea Aradului sunt cele mai echilibrate. Pentru preț de intrare mic și chiriaș stabil pe termen lung, Calea Șagului, Calea Lipovei și Girocului sunt mai potrivite. Complexul Studențesc oferă venit brut ridicat, dar cu sezonalitate accentuată.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Ce criterii compari între zonele din Timișoara înainte de o investiție?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Preț de achiziție, nivelul chiriei realizabile, potențialul de regim hotelier, intensitatea cererii, lichiditatea la revânzare, profilul chiriașilor sau oaspeților, riscul specific zonei, accesul și maturitatea infrastructurii. O zonă bună pentru chirie clasică nu este automat bună pentru cazare pe termen scurt.",
-          },
-        },
-      ],
-    },
-  ];
+  // NOTE: FAQPage structured data for this page is emitted by the central
+  // FAQSchemaProvider from the visible <GeoAnswers group="zone" /> block below.
+  // Do not add an inline FAQPage here — it would duplicate the schema.
+  const jsonLd: Record<string, unknown>[] = [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -380,6 +384,28 @@ const ZoneInvestitiiTimisoara = () => {
               explică exact ce cântărim.
             </p>
           </section>
+
+          <GeoAnswers
+            group="zone"
+            title="Răspunsuri directe despre zonele de investiții din Timișoara"
+            intro="Întrebările cele mai frecvente despre alegerea zonei, cu răspuns scurt și trimitere la analiza detaliată."
+          />
+
+          <DataProvenance
+            className="mb-10"
+            external={[
+              "Indicele de preț pe metru pătrat provine din anunțurile pe care le intermediem și din listările publice din Timișoara; nu este o cotație oficială de piață.",
+            ]}
+            assumptions={[
+              "Coloanele calitative (chirie, potențial de regim hotelier, cerere, lichiditate, risc) sunt evaluări interne RealTrust, marcate ca estimări.",
+              "Ocupare 75%, deducere operațională 27%, randament net de referință 9,4% pe an.",
+              "Zonele fără indice de preț propriu (Centru/Cetate, Fabric, Torontalului, Moșnița Nouă) rămân necompletate, în loc să fie estimate.",
+            ]}
+            calculations={[
+              "Compararea zonelor se face pe strategie (chirie clasică vs. regim hotelier), nu pe un scor unic.",
+            ]}
+            verifiedOn="5 septembrie 2026"
+          />
 
           <ContextualLinks
             title="Continuă documentarea despre investițiile imobiliare din Timișoara"

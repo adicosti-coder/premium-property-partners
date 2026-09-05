@@ -7,6 +7,8 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import ContextualLinks from "@/components/seo/ContextualLinks";
+import GeoAnswers from "@/components/seo/GeoAnswers";
+import DataProvenance from "@/components/seo/DataProvenance";
 import { Button } from "@/components/ui/button";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -108,28 +110,8 @@ const GhidEvaluareApartament = () => {
         url: `${URL}#${encodeURIComponent(c.name.toLowerCase().replace(/\s+/g, "-"))}`,
       })),
     },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "Cum se evaluează un apartament în Timișoara?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Evaluarea pornește de la suprafața utilă din cartea funciară, etaj, anul construcției și poziționarea exactă, apoi corectează valoarea cu compartimentarea, parcarea, balconul, finisajele, eficiența energetică și costurile de întreținere. Urmează comparabilele din același perimetru, corectate cu marja de negociere, iar pentru un apartament de investiție se estimează separat chiria clasică și venitul din regim hotelier, pentru a obține randamentul net raportat la capitalul total investit.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Care este diferența dintre valoarea de piață, prețul cerut și prețul de tranzacționare?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Prețul cerut este cel din anunț și reflectă așteptarea vânzătorului. Prețul de tranzacționare este cel plătit efectiv, după negociere. Valoarea de piață este estimarea sumei la care proprietatea s-ar vinde între un cumpărător și un vânzător informați, într-un interval rezonabil de expunere. Valoarea investițională este diferită: reflectă cât valorează proprietatea pentru un investitor anume, în funcție de venitul pe care o poate produce.",
-          },
-        },
-      ],
-    },
+    // FAQPage structured data for this page comes from the visible
+    // <GeoAnswers group="evaluare" /> block via the central FAQSchemaProvider.
   ];
 
   return (
@@ -276,6 +258,29 @@ const GhidEvaluareApartament = () => {
               </Button>
             </div>
           </section>
+
+          <GeoAnswers
+            group="evaluare"
+            title="Răspunsuri directe despre evaluarea unui apartament"
+            intro="Cele mai frecvente întrebări despre valoare, preț și €/mp, cu răspuns scurt și trimitere la explicația completă."
+          />
+
+          <DataProvenance
+            className="mb-10"
+            external={[
+              "Comparabilele provin din anunțurile publice și din tranzacțiile pe care le intermediem; prețurile de tranzacționare nu sunt publice în România.",
+              "Certificatul energetic și suprafața utilă se preiau din documentele proprietății (carte funciară, certificat energetic).",
+            ]}
+            assumptions={[
+              "Ocupare 75% și deducere operațională de aproximativ 27% pentru estimarea venitului în regim hotelier.",
+              "Randament net de referință 9,4% pe an, folosit ca test de decizie, nu ca promisiune.",
+            ]}
+            calculations={[
+              "Randament net = venit net anual / capital total investit (preț + taxe + renovare + mobilare) × 100.",
+              "Estimările de valoare sunt comerciale; nu înlocuiesc un raport de evaluare autorizat ANEVAR.",
+            ]}
+            verifiedOn="5 septembrie 2026"
+          />
 
           <ContextualLinks
             title="Pași următori"
