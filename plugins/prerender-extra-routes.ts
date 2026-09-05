@@ -442,42 +442,72 @@ export function buildBlogHubRoutes(articles: DbArticle[]): ExtraRoute[] {
 interface DbComplex {
   slug: string;
   name: string;
-  zone: string | null;
+  location: string | null;
+  neighborhood: string | null;
   description_ro: string | null;
-  seo_title: string | null;
-  seo_description: string | null;
+  meta_title_ro: string | null;
+  meta_description_ro: string | null;
 }
 
 export async function fetchComplexes(): Promise<DbComplex[]> {
   return restGet<DbComplex>(
-    'residential_complexes?is_active=eq.true&slug=not.is.null&select=slug,name,zone,description_ro,seo_title,seo_description&order=slug.asc',
+    'residential_complexes?is_active=eq.true&slug=not.is.null&select=slug,name,location,neighborhood,description_ro,meta_title_ro,meta_description_ro&order=slug.asc',
   );
 }
 
 /**
- * Complex detail pages. `/complexe/<slug>` is the canonical route (the legacy
- * `/complex/<slug>` form redirects), so only that form is emitted. Complexes
- * that already have a hand-written landing route are skipped.
+ * Slugs that have a hand-written landing page at /complexe/<slug>
+ * (src/pages/ComplexLanding.tsx). Read from the source file so the two stay in
+ * sync automatically. Every other complex lives at /complex/<slug>.
+ */
+export function readComplexLandingSlugs(source: string): Set<string> {
+  return new Set(
+    Array.from(source.matchAll(/^\s*slug:\s*["']([a-z0-9-]+)["']/gm)).map((m) => m[1]),
+  );
+}
+
+/**
+ * Complex pages. Complexes with a hand-written landing page are emitted at
+ * `/complexe/<slug>`; the rest use the generic detail route `/complex/<slug>`.
+ * Paths already produced elsewhere in the prerender are skipped.
  */
 export function buildComplexRoutes(
   complexes: DbComplex[],
+  landingSlugs: Set<string>,
   takenPaths: Set<string>,
 ): ExtraRoute[] {
   const routes: ExtraRoute[] = [];
-  for (const c of complexes) {
-    const zone = (c.zone || 'Timișoara').trim();
-    const detailPath = `/complexe/${c.slug}`;
+  const seen = new Set<string>();
+
+  // Landing pages that have no database row still need static HTML.
+  const extra: DbComplex[] = Array.from(landingSlugs)
+    .filter((slug) => !complexes.some((c) => c.slug === slug))
+    .map((slug) => ({
+      slug,
+      name: slug.replace(/-/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()),
+      location: 'Timișoara',
+      neighborhood: null,
+      description_ro: null,
+      meta_title_ro: null,
+      meta_description_ro: null,
+    }));
+
+  for (const c of [...complexes, ...extra]) {
+    if (seen.has(c.slug)) continue;
+    seen.add(c.slug);
+    const zone = (c.neighborhood || c.location || 'Timișoara').replace(/^Timișoara,\s*/, '').trim();
+    const detailPath = landingSlugs.has(c.slug) ? `/complexe/${c.slug}` : `/complex/${c.slug}`;
     if (takenPaths.has(detailPath)) continue;
     const canonical = `${BASE_URL}${detailPath}`;
     const description = clampText(
-      c.seo_description?.trim() ||
+      c.meta_description_ro?.trim() ||
         c.description_ro?.trim() ||
         `Apartamente în ansamblul ${c.name} din ${zone}, Timișoara: disponibilitate, administrare în regim hotelier și analiză de randament cu RealTrust.`,
       158,
     );
     routes.push({
       path: detailPath,
-      title: clampText(c.seo_title?.trim() || `${c.name} Timișoara | Apartamente RealTrust`, 60),
+      title: clampText(c.meta_title_ro?.trim() || `${c.name} Timișoara | Apartamente RealTrust`, 60),
       description,
       h1: `${c.name}, Timișoara`,
       canonical,
