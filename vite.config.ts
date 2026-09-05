@@ -71,6 +71,8 @@ export default defineConfig(({ mode }) => {
       // Critical above-the-fold CSS is inlined in index.html so no FOUC occurs.
       mode === "production" && viteAsyncCss(),
       mode === "production" && vitePrerenderSeo(),
+      mode === "production" && viteHashStaticAssets(),
+
     ].filter(Boolean),
     resolve: {
       alias: {
