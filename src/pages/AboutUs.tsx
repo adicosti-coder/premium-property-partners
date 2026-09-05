@@ -204,7 +204,7 @@ const AboutUs = () => {
       story: {
         title: "Our Story",
         subtitle: "From the first transaction to 15 properties managed",
-        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage over 60 apartments with a verified 9.4% net ROI and a consolidated 9.7/10 rating.",
+        intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage 15 apartments with a verified 9.4% net ROI and a consolidated 9.7/10 rating.",
         realEstate: {
           title: "Complete Real Estate Services",
           description: "Under the RealTrust brand, we offer a complete spectrum of real estate services covering all needs of owners and investors:",

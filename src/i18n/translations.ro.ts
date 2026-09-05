@@ -250,7 +250,7 @@ export const ro = {
   
   // FAQ
   faq: {
-    badge: "RealTrust Property Management",
+    badge: "RealTrust · administrare proprietăți",
     title: "Întrebări",
     titleHighlight: "Frecvente",
     subtitle: "Răspunsuri clare despre apartamentele ATENEO, GREEN FOREST, Cross Square House, HELIOS și cazarea în regim hotelier în Timișoara.",
