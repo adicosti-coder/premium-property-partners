@@ -143,7 +143,7 @@ export const COMPLEXES: ComplexEntry[] = [
   { slug: "iris", name: "Iris", href: "/complex/iris", matchers: ["iris"] },
   { slug: "monarch", name: "Monarch", href: "/complex/monarch", matchers: ["monarch"] },
   // Paltim has a richer landing page; ComplexDetail canonicalizes there too.
-  { slug: "paltim", name: "Paltim", href: "/complexe/paltim", zoneSlug: "elisabetin", matchers: ["paltim"] },
+  { slug: "paltim", name: "Paltim", href: "/complexe/paltim", matchers: ["paltim"] },
   { slug: "campeador", name: "Campeador", href: "/complex/campeador", matchers: ["campeador"] },
 ];
 

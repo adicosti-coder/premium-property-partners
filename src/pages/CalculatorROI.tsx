@@ -137,7 +137,7 @@ const CalculatorROI = () => {
                 <h2 className="text-2xl font-serif font-semibold text-foreground">Costuri de achiziție</h2>
               </div>
               <p className="text-muted-foreground">
-                Prețul de achiziție al unui apartament în Timișoara variază în funcție de cartier: <Link to="/imobiliare-timisoara/iosho" className="text-primary hover:underline">ISHO</Link> (2.400-2.600 €/mp), <Link to="/imobiliare-timisoara/complex-studentesc" className="text-primary hover:underline">Complex Studențesc</Link> (1.900-2.200 €/mp), Dumbrăvița și Giroc (1.800-2.100 €/mp). La preț se adaugă: notar (~1%), comision agenție (1-3%), TVA (dacă este cazul), mobilier și amenajare (5.000-15.000€).
+                Prețul de achiziție al unui apartament în Timișoara variază în funcție de cartier: <Link to="/imobiliare-timisoara/isho" className="text-primary hover:underline">ISHO</Link> (2.400-2.600 €/mp), <Link to="/imobiliare-timisoara/complex-studentesc" className="text-primary hover:underline">Complex Studențesc</Link> (1.900-2.200 €/mp), Dumbrăvița și Giroc (1.800-2.100 €/mp). La preț se adaugă: notar (~1%), comision agenție (1-3%), TVA (dacă este cazul), mobilier și amenajare (5.000-15.000€).
               </p>
             </div>
 
