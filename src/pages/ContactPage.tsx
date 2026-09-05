@@ -17,7 +17,7 @@ const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversion
 
 const BASE_URL = "https://realtrust.ro";
 const GOOGLE_BUSINESS_URL = GOOGLE_BUSINESS_PROFILE_URL;
-const GOOGLE_MAPS_QUERY = encodeURIComponent("Strada Samuel Clain Micu 14, ap.4, Timișoara");
+const GOOGLE_MAPS_QUERY = encodeURIComponent("Strada Samuil Micu 14, ap.4, Timișoara");
 const GOOGLE_MAPS_URL = `https://www.google.com/maps/search/?api=1&query=${GOOGLE_MAPS_QUERY}`;
 
 const ContactPage = () => {
@@ -26,14 +26,14 @@ const ContactPage = () => {
 
   const faqItems = isRo
     ? [
-        { q: "Care este programul agenției imobiliare RealTrust din Timișoara?", a: "Sediul RealTrust din Strada Samuel Clain Micu Nr.14, ap.4, Timișoara este deschis Luni-Vineri 09:00-18:00 și Sâmbătă 10:00-14:00. Suport oaspeți disponibil 24/7 prin WhatsApp." },
+        { q: "Care este programul agenției imobiliare RealTrust din Timișoara?", a: "Sediul RealTrust din Strada Samuil Micu Nr.14, ap.4, Timișoara este deschis Luni-Vineri 09:00-18:00 și Sâmbătă 10:00-14:00. Suport oaspeți disponibil 24/7 prin WhatsApp." },
         { q: "Aveți departamente separate pentru vânzări, închirieri și administrare?", a: "Da. Departamentul Vânzări gestionează tranzacțiile imobiliare, Departamentul Închirieri se ocupă de contracte rezidențiale, iar Departamentul Administrare operează portofoliul ApArt Hotel. Vezi toate serviciile pe pagina Servicii Imobiliare Timișoara." },
-        { q: "Cum ajung la sediul RealTrust din Timișoara?", a: "Sediul este în Strada Samuel Clain Micu Nr.14, ap.4, sector central — vis-à-vis de zona Iulius Town. Folosește butonul „Deschide în Google Maps” pentru rută." },
+        { q: "Cum ajung la sediul RealTrust din Timișoara?", a: "Sediul este în Strada Samuil Micu Nr.14, ap.4, sector central — vis-à-vis de zona Iulius Town. Folosește butonul „Deschide în Google Maps” pentru rută." },
       ]
     : [
-        { q: "What are RealTrust office hours in Timișoara?", a: "Our office at Strada Samuel Clain Micu Nr.14, ap.4, Timișoara is open Mon-Fri 09:00-18:00 and Sat 10:00-14:00. Guest support is available 24/7 via WhatsApp." },
+        { q: "What are RealTrust office hours in Timișoara?", a: "Our office at Strada Samuil Micu Nr.14, ap.4, Timișoara is open Mon-Fri 09:00-18:00 and Sat 10:00-14:00. Guest support is available 24/7 via WhatsApp." },
         { q: "Do you have separate departments for sales, rentals and management?", a: "Yes. The Sales department handles transactions, the Rentals department covers long-term residential contracts, and the Management department operates the ApArt Hotel portfolio. See all services on the Real Estate Services Timișoara page." },
-        { q: "How do I get to the RealTrust office in Timișoara?", a: "The office is at Strada Samuel Clain Micu Nr.14, ap.4, central area — near Iulius Town. Use the 'Open in Google Maps' button for directions." },
+        { q: "How do I get to the RealTrust office in Timișoara?", a: "The office is at Strada Samuil Micu Nr.14, ap.4, central area — near Iulius Town. Use the 'Open in Google Maps' button for directions." },
       ];
 
   // Visible FAQ → single consolidated FAQPage node via the provider.
@@ -57,7 +57,7 @@ const ContactPage = () => {
       "image": `${BASE_URL}/images/hero-optimized-800w.webp`,
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+        "streetAddress": "Strada Samuil Micu Nr.14, ap.4",
         "addressLocality": "Timișoara",
         "addressRegion": "Timiș",
         "postalCode": "300125",
@@ -153,8 +153,8 @@ const ContactPage = () => {
       <SEOHead
         title={isRo ? "Contact & Locație | Management Proprietăți Timișoara — RealTrust" : "Contact & Location | Property Management Timișoara — RealTrust"}
         description={isRo
-          ? "Contactează echipa RealTrust Timișoara: sediu Str. Samuel Clain Micu 14, ap.4, telefon +40 799 069 256, hartă și program. Suntem aici pentru a te ajuta!"
-          : "Contact the RealTrust Timișoara team: office Str. Samuel Clain Micu 14, ap.4, phone +40 799 069 256, map and hours. We're here to help!"}
+          ? "Contactează echipa RealTrust Timișoara: sediu Str. Samuil Micu 14, ap.4, telefon +40 799 069 256, hartă și program. Suntem aici pentru a te ajuta!"
+          : "Contact the RealTrust Timișoara team: office Str. Samuil Micu 14, ap.4, phone +40 799 069 256, map and hours. We're here to help!"}
         url={`${BASE_URL}/contact`}
         jsonLd={jsonLdSchemas}
       />
@@ -265,7 +265,7 @@ const ContactPage = () => {
                 </h2>
                 <address className="not-italic text-muted-foreground space-y-1">
                   <p className="font-medium text-foreground">RealTrust & ApArt Hotel</p>
-                  <p>Strada Samuel Clain Micu Nr.14, ap.4</p>
+                  <p>Strada Samuil Micu Nr.14, ap.4</p>
                   <p>Timișoara, Timiș 300125</p>
                   <p>România</p>
                 </address>

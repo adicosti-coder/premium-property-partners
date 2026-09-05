@@ -69,7 +69,7 @@ const wrap = (inner: string) => `
     </div>
     <div style="padding:24px">${inner}</div>
     <div style="padding:16px 24px;background:#f7fafc;font-size:12px;color:#4a5568">
-      RealTrust · Strada Samuel Clain Micu Nr.14, ap.4, Timișoara · +40 799 069 256 · info@realtrust.ro
+      RealTrust · Strada Samuil Micu Nr.14, ap.4, Timișoara · +40 799 069 256 · info@realtrust.ro
     </div>
   </div>
 </div>`;
