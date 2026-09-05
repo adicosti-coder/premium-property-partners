@@ -1201,6 +1201,26 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h2>Fondator &amp; CEO RealTrust</h2>
       <p>Adrian Costi este fondatorul și CEO-ul RealTrust (Imo Business Centrum SRL), companie imobiliară din Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara și vestul României. Coordonează direct administrarea celor 15 apartamente din portofoliu, operate în regim hotelier sub brandul ApArt Hotel.</p>
     `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'ProfilePage',
+      url: `${BASE_URL}/autor/adrian-costi`,
+      inLanguage: 'ro-RO',
+      mainEntity: {
+        '@type': 'Person',
+        '@id': `${BASE_URL}/despre-noi#adrian-costi`,
+        name: 'Adrian Costi',
+        jobTitle: 'Fondator & CEO RealTrust',
+        url: `${BASE_URL}/autor/adrian-costi`,
+        sameAs: ['https://www.linkedin.com/in/costi-adrian-2b50931a'],
+        worksFor: {
+          '@type': 'Organization',
+          name: 'RealTrust',
+          legalName: 'Imo Business Centrum SRL',
+          url: BASE_URL,
+        },
+      },
+    },
   });
 
   // /intrebari-frecvente — FAQ hub (regim hotelier, administrare, ROI)
