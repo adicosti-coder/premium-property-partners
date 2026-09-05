@@ -13,6 +13,8 @@ const QuickAvailabilitySearch = lazy(() => import("@/components/QuickAvailabilit
 const AISearchBar = lazy(() => import("@/components/AISearchBar"));
 const CityGuideSection = lazy(() => import("@/components/CityGuideSection"));
 import SEOHead from "@/components/SEOHead";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { CLUSTER_LINKS } from "@/lib/internalLinking";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import PageSummary from "@/components/PageSummary";
