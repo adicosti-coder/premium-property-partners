@@ -19,7 +19,7 @@ const HomeAuthorityBlocks = () => {
     ? [
         { icon: MapPin, title: "Local experience", text: "The team operates only in Timișoara and its metropolitan area, so pricing and demand are assessed on local data." },
         { icon: Users, title: "Dedicated team", text: "One consultant per client, plus operations staff for check-in, cleaning and maintenance." },
-        { icon: Building2, title: "Portfolio", text: "14 apartments and houses currently managed under the ApArt Hotel brand." },
+        { icon: Building2, title: "Portfolio", text: "15 apartments and houses currently managed under the ApArt Hotel brand." },
         { icon: ListChecks, title: "Documented process", text: "Onboarding in 7-14 days: valuation, photography, listing on Booking and Airbnb, check-in setup." },
         { icon: LineChart, title: "Reported results", text: "Consolidated guest reputation score of 9.7/10 on Booking; owner yield reported as a 9.4% net average scenario." },
         { icon: FileText, title: "Transparency", text: "Commissions stated up front (15-25% management plus platform fees) and monthly written reporting." },
@@ -27,7 +27,7 @@ const HomeAuthorityBlocks = () => {
     : [
         { icon: MapPin, title: "Experiență locală", text: "Echipa lucrează exclusiv în Timișoara și zona metropolitană, deci prețurile și cererea sunt evaluate pe date locale." },
         { icon: Users, title: "Echipă dedicată", text: "Un consultant alocat fiecărui client, plus personal de operațiuni pentru check-in, curățenie și mentenanță." },
-        { icon: Building2, title: "Portofoliu", text: "14 apartamente și case administrate în prezent sub brandul ApArt Hotel." },
+        { icon: Building2, title: "Portofoliu", text: "15 apartamente și case administrate în prezent sub brandul ApArt Hotel." },
         { icon: ListChecks, title: "Proces documentat", text: "Onboarding în 7-14 zile: evaluare, fotografie, listare pe Booking și Airbnb, configurare check-in." },
         { icon: LineChart, title: "Rezultate raportate", text: "Scor consolidat de reputație 9,7/10 pe Booking; randamentul pentru proprietari este raportat ca scenariu mediu de 9,4% net." },
         { icon: FileText, title: "Transparență", text: "Comisioane comunicate în avans (15-25% administrare plus comisioanele platformelor) și raportare lunară scrisă." },

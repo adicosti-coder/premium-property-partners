@@ -103,8 +103,10 @@ export default defineConfig(({ mode }) => {
               if (id.includes("framer-motion")) return "vendor-motion";
               // Isolate lucide-react icons (~50KB tree-shaken) — same rationale.
               if (id.includes("lucide-react")) return "vendor-icons";
-              // Group all Radix UI primitives together — keeps HTTP requests low
-              if (id.includes("@radix-ui/")) return "vendor-radix";
+              // NOTE: Radix primitives are deliberately NOT grouped — a single
+              // vendor-radix chunk was ~239 KiB eagerly loaded and 85% unused.
+              // Per-component splitting keeps the initial payload small.
+
               return undefined;
             }
             // NOTE: Do NOT force a "ui-primitives" chunk. Letting Rollup split

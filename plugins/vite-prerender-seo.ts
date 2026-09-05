@@ -66,7 +66,7 @@ const HOMEPAGE_AUTHORITY_BODY = `
   <p>Intermediem vânzări și închirieri pe termen lung în Timișoara și zona metropolitană: evaluare, pregătirea proprietății, promovare, negociere și asistență până la semnarea actelor. Comisioanele sunt comunicate înainte de începerea colaborării.</p>
 
   <h2>Administrare proprietăți în regim hotelier</h2>
-  <p>Administrăm apartamente în regim hotelier sub brandul ApArt Hotel: listare pe Booking și Airbnb, comunicarea cu oaspeții, check-in, curățenie, mentenanță și raport financiar lunar. În prezent gestionăm 14 proprietăți, cu un scor consolidat de reputație de 9,7/10 raportat pe Booking.</p>
+  <p>Administrăm apartamente în regim hotelier sub brandul ApArt Hotel: listare pe Booking și Airbnb, comunicarea cu oaspeții, check-in, curățenie, mentenanță și raport financiar lunar. În prezent gestionăm 15 proprietăți, cu un scor consolidat de reputație de 9,7/10 raportat pe Booking.</p>
 
   <h2>Contact</h2>
   <p>RealTrust Timișoara, județul Timiș, România. Telefon +40 799 069 256, e-mail info@realtrust.ro.</p>

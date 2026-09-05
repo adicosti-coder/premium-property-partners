@@ -164,19 +164,22 @@ const ScrollToTop = () => {
 // Loads ONLY on first user interaction or a long fallback so Lighthouse never
 // pulls these chunks into the critical chain.
 const DeferredShell = ({ children }: { children: React.ReactNode }) => {
-  const [ready, setReady] = useState(false);
+  const [interacted, setInteracted] = useState(false);
+  const [consentReady, setConsentReady] = useState(false);
   useEffect(() => {
     let triggered = false;
     const trigger = () => {
       if (triggered) return;
       triggered = true;
-      setReady(true);
+      setInteracted(true);
+      setConsentReady(true);
       events.forEach(e => document.removeEventListener(e, trigger));
     };
     const events = ["click", "touchstart", "keydown"] as const;
     events.forEach(e => document.addEventListener(e, trigger, { once: true, passive: true }));
     // GDPR: the cookie banner must appear without requiring an interaction first.
-    const timer = setTimeout(trigger, 2500);
+    // Toast layers stay out of the load path until the user actually interacts.
+    const timer = setTimeout(() => setConsentReady(true), 4000);
     return () => {
       clearTimeout(timer);
       events.forEach(e => document.removeEventListener(e, trigger));
@@ -187,16 +190,21 @@ const DeferredShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {children}
-      {ready && (
+      {consentReady && (
+        <Suspense fallback={null}>
+          <CookieConsent />
+        </Suspense>
+      )}
+      {interacted && (
         <Suspense fallback={null}>
           <Toaster />
           <Sonner />
-          <CookieConsent />
         </Suspense>
       )}
     </>
   );
 };
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
