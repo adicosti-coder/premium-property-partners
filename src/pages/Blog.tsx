@@ -324,7 +324,7 @@ const Blog = () => {
         "url": "https://realtrust.ro/blog",
         "publisher": {
           "@type": "Organization",
-          "name": "RealTrust & ApArt Hotel"
+          "name": "RealTrust"
         }
       },
       // WebPage schema (pillar page semantics)

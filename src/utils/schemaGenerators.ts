@@ -443,7 +443,7 @@ export const generateBreadcrumbSchema = (items: BreadcrumbItem[]) => ({
 export const generateWebSiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "RealTrust & ApArt Hotel Timișoara",
+  "name": "RealTrust",
   "url": BASE_URL,
   "potentialAction": {
     "@type": "SearchAction",
@@ -998,12 +998,12 @@ export const generateBlogCollectionSchema = (articles: BlogListingArticle[]) => 
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   "@id": `${BASE_URL}/blog`,
-  "name": "Blog RealTrust & ApArt Hotel",
+  "name": "Blog RealTrust",
   "description": "Articole, ghiduri și sfaturi pentru proprietari și oaspeți. Regim hotelier, investiții, administrare proprietăți în Timișoara.",
   "url": `${BASE_URL}/blog`,
   "isPartOf": {
     "@type": "WebSite",
-    "name": "RealTrust & ApArt Hotel Timișoara",
+    "name": "RealTrust",
     "url": BASE_URL,
   },
   "mainEntity": {
@@ -1059,7 +1059,7 @@ export const generateSpeakableSchema = (
   "url": pageUrl,
   "creator": {
     "@type": "Organization",
-    "name": "RealTrust & ApArt Hotel Timișoara",
+    "name": "Imo Business Centrum SRL",
     "url": "https://realtrust.ro",
   },
   "license": "https://creativecommons.org/licenses/by-nc-nd/4.0/",

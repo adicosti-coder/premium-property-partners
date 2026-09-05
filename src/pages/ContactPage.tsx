@@ -47,7 +47,7 @@ const ContactPage = () => {
       "@context": "https://schema.org",
       "@type": ["RealEstateAgent", "LocalBusiness"],
       "@id": `${BASE_URL}/contact`,
-      "name": "RealTrust & ApArt Hotel Timișoara",
+      "name": "RealTrust",
       "description": isRo
         ? "Sediu RealTrust Timișoara — date contact, program și locație. Departamente: Vânzări, Închirieri, Administrare regim hotelier."
         : "RealTrust Timișoara office — contact details, hours and location. Departments: Sales, Rentals, Short-term rental management.",
