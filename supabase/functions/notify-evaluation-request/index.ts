@@ -48,22 +48,17 @@ function num(v: unknown, max: number): number {
 const isEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 255;
 const ro = (n: number) => n.toLocaleString("ro-RO");
 
-async function sendEmail(to: string, subject: string, html: string) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(`Resend failed [${res.status}]: ${body}`);
-    return { ok: false, status: res.status, details: body };
-  }
-  return { ok: true, status: res.status };
+const adminClient = () => {
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+};
+
+async function sendEmail(to: string, subject: string, html: string, source: string) {
+  return await sendTeamEmail({ to, subject, html, source }, adminClient());
 }
+
 
 const wrap = (inner: string) => `
 <div style="font-family:Arial,Helvetica,sans-serif;background:#ffffff;padding:24px;color:#1a202c">
