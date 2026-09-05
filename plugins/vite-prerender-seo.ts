@@ -1180,6 +1180,14 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h3>De la valoare la randament</h3>
       <p>Comparabilele din același perimetru se corectează cu marja de negociere, iar pentru un apartament de investiție se estimează separat chiria clasică și venitul din <strong>regim hotelier</strong> (ocupare 75%, deducere operațională 27%), pentru a obține randamentul net raportat la capitalul total investit.</p>
     `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Cum se evaluează un apartament în Timișoara',
+      url: `${BASE_URL}/ghid-evaluare-apartament-timisoara`,
+      inLanguage: 'ro-RO',
+      about: { '@type': 'Place', name: 'Timișoara, Timiș, România' },
+    },
   });
 
   // /autor/adrian-costi — profil editorial (E-E-A-T)
