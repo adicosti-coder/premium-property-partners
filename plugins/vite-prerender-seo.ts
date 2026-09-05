@@ -668,7 +668,10 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
 
       // Motorul real de rezervări (Pynbooking) al unității — legat explicit
       // în datele structurate, ca Google/AI să știe unde se rezervă direct.
-      const bookingUrl = (p.bookingUrl || '').trim();
+      const rawBookingUrl = (p.bookingUrl || '').trim();
+      // Doar URL-uri reale http(s); placeholder-urile ("-", "#") sunt ignorate.
+      const bookingUrl = /^https?:\/\/\S+$/i.test(rawBookingUrl) ? rawBookingUrl : '';
+
       const bookingNodes = bookingUrl
         ? {
             sameAs: bookingUrl,
