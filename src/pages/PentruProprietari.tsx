@@ -1164,6 +1164,21 @@ const PentruProprietari = () => {
         </div>
       </section>
 
+      {/* Contextual internal links — cluster property management */}
+      <section className="pb-4 bg-background">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <ContextualLinks
+            title={language === "ro" ? "Ce urmează după această pagină" : "What comes next"}
+            intro={
+              language === "ro"
+                ? "Costuri, simulări de randament, evaluare și ghiduri practice pentru proprietari."
+                : "Costs, yield simulations, valuation and practical guides for owners."
+            }
+            links={CLUSTER_LINKS["pentru-proprietari"]}
+          />
+        </div>
+      </section>
+
       {/* Lead Magnet Banner */}
       <section className="py-12 bg-background">
         <div className="container mx-auto px-6">
