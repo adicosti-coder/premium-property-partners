@@ -1,4 +1,5 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, Navigate } from "react-router-dom";
+import { resolveConsolidatedArticle } from "@/data/consolidatedArticleRedirects";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
@@ -1007,4 +1008,11 @@ const BlogArticlePage = () => {
   );
 };
 
-export default BlogArticlePage;
+const BlogArticleRoute = () => {
+  const { slug } = useParams();
+  const consolidatedTarget = resolveConsolidatedArticle(slug);
+  if (consolidatedTarget) return <Navigate to={consolidatedTarget} replace />;
+  return <BlogArticlePage />;
+};
+
+export default BlogArticleRoute;
