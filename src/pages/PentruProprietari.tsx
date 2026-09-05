@@ -60,6 +60,8 @@ const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
 const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
 const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
 import ContextualLinks from "@/components/seo/ContextualLinks";
+import GeoAnswers from "@/components/seo/GeoAnswers";
+import DataProvenance from "@/components/seo/DataProvenance";
 import { CLUSTER_LINKS } from "@/lib/internalLinking";
 const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
 const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));

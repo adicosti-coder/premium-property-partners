@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import InvestmentAnalysisModal from "@/components/InvestmentAnalysisModal";
 import ContextualLinks from "@/components/seo/ContextualLinks";
+import GeoAnswers from "@/components/seo/GeoAnswers";
+import DataProvenance from "@/components/seo/DataProvenance";
 import { CLUSTER_LINKS } from "@/lib/internalLinking";
 import { 
   TrendingUp, 

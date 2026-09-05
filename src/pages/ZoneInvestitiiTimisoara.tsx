@@ -7,6 +7,8 @@ import SEOHead from "@/components/SEOHead";
 import PageBreadcrumb from "@/components/PageBreadcrumb";
 import BackToTop from "@/components/BackToTop";
 import ContextualLinks from "@/components/seo/ContextualLinks";
+import GeoAnswers from "@/components/seo/GeoAnswers";
+import DataProvenance from "@/components/seo/DataProvenance";
 import { CLUSTER_LINKS } from "@/lib/internalLinking";
 import { neighborhoods } from "@/data/neighborhoods";
 
