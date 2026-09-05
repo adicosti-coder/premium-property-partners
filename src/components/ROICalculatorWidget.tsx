@@ -22,6 +22,12 @@ import {
   Cell,
 } from "recharts";
 import { toast } from "sonner";
+import { submitLead } from "@/lib/leadSubmission";
+import { withCampaignTracking } from "@/lib/campaignAttribution";
+import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
+
+/** Randament net de referință RealTrust (ocupare 75%, deducere 27%). */
+const TARGET_NET_YIELD = 0.094;
 
 const TIERS = [
   { value: 15, label: "15%" },
@@ -37,6 +43,7 @@ const ROICalculatorWidget = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: "", phone: "", email: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   const calculations = useMemo(() => {
     // Chirie clasică: valoare × 0.004 / lună
@@ -48,7 +55,12 @@ const ROICalculatorWidget = () => {
     const classicROI = ((classicRent * 12) / propertyValue) * 100;
     const realtrustROI = ((realtrustIncome * 12) / propertyValue) * 100;
 
+    // Referință RealTrust: randament net țintă 9,4% pe an.
+    const targetNetAnnual = propertyValue * TARGET_NET_YIELD;
+
     return {
+      targetNetAnnual: Math.round(targetNetAnnual),
+      targetNetMonthly: Math.round(targetNetAnnual / 12),
       classicRent: Math.round(classicRent),
       realtrustIncome: Math.round(realtrustIncome),
       monthlyDelta: Math.round(monthlyDelta),
@@ -62,14 +74,57 @@ const ROICalculatorWidget = () => {
     { name: "RealTrust", value: calculations.realtrustIncome, color: "hsl(var(--primary))" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     if (!formData.name || !formData.phone || !formData.email) {
       toast.error("Completează toate câmpurile");
       return;
     }
-    setFormSubmitted(true);
-    toast.success("Proiecția va fi trimisă pe email!");
+
+    setSubmitting(true);
+    try {
+      const result = await submitLead({
+        name: formData.name,
+        whatsapp_number: formatPhoneInput(formData.phone),
+        email: formData.email,
+        property_type: "apartament",
+        property_area: surface,
+        message: `[calculator_roi] Valoare: ${propertyValue} € · Suprafață: ${surface} mp · Tier management: ${selectedTier}%`,
+        source: "calculator_roi_widget",
+        simulation_data: withCampaignTracking({
+          property_value: propertyValue,
+          surface,
+          management_tier: selectedTier,
+          classic_rent: calculations.classicRent,
+          realtrust_income: calculations.realtrustIncome,
+          target_net_yield: TARGET_NET_YIELD,
+          target_net_annual: calculations.targetNetAnnual,
+        }) as never,
+      });
+
+      if (result.ok !== true) {
+        if (result.reason === "validation") {
+          toast.error("Verifică numele, telefonul și emailul introduse.");
+        } else {
+          toast.error("Nu am putut trimite cererea. Te rugăm să încerci din nou.");
+        }
+        return;
+      }
+
+      trackConversion({
+        event: "roi_calculator_lead",
+        source: "calculator_roi_widget",
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+      });
+
+      setFormSubmitted(true);
+      toast.success("Cerere trimisă! Îți trimitem proiecția pe email.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -173,6 +228,20 @@ const ROICalculatorWidget = () => {
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               ROI anual: {calculations.realtrustROI}%
+            </p>
+          </div>
+
+          {/* Randament net de referință 9,4% */}
+          <div className="bg-muted/20 border border-border rounded-xl p-4">
+            <p className="text-sm text-muted-foreground mb-1">
+              Estimare la randamentul net de referință RealTrust (9,4%)
+            </p>
+            <p className="text-xl font-bold text-foreground">
+              {calculations.targetNetAnnual.toLocaleString("ro-RO")} €
+              <span className="text-sm font-normal text-muted-foreground">/an net</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, deducere 27% (management, costuri, taxe)
             </p>
           </div>
 
@@ -285,8 +354,8 @@ const ROICalculatorWidget = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full">
-                  Vreau proiecția gratuită
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? "Se trimite..." : "Vreau proiecția gratuită"}
                 </Button>
               </form>
             )}
