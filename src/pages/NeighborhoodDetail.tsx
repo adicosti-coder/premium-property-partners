@@ -41,6 +41,14 @@ const NeighborhoodDetail = () => {
         title={neighborhood.metaTitle}
         description={neighborhood.metaDescription}
         url={`https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`}
+        breadcrumbItems={[
+          { name: "Acasă", url: "https://realtrust.ro" },
+          { name: "Imobiliare Timișoara", url: "https://realtrust.ro/cartiere" },
+          {
+            name: neighborhood.fullName,
+            url: `https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
+          },
+        ]}
         jsonLd={[
           {
             "@context": "https://schema.org",
@@ -49,26 +57,6 @@ const NeighborhoodDetail = () => {
             description: neighborhood.metaDescription,
             url: `https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
             address: { "@type": "PostalAddress", addressLocality: "Timișoara", addressRegion: "Timiș", addressCountry: "RO" },
-          },
-          {
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            "@id": `https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}#localbusiness`,
-            name: `RealTrust & ApArt Hotel — ${neighborhood.fullName}, Timișoara`,
-            description: neighborhood.description.slice(0, 300),
-            url: `https://realtrust.ro/imobiliare-timisoara/${neighborhood.slug}`,
-            telephone: "+40799069256",
-            email: "info@realtrust.ro",
-            priceRange: "€€",
-            areaServed: { "@type": "Place", name: `${neighborhood.fullName}, Timișoara` },
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: "Strada Samuel Clain Micu Nr.14, ap.4",
-              addressLocality: "Timișoara",
-              addressRegion: "Timiș",
-              postalCode: "300125",
-              addressCountry: "RO",
-            },
           },
           {
             "@context": "https://schema.org",
