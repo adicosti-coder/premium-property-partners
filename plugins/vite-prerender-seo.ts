@@ -511,6 +511,7 @@ interface StaticGuestProperty {
   bathrooms: number;
   size: number;
   pricePerNight: number;
+  bookingUrl: string;
   rating: number;
   reviews: number;
   checkInTime: string;
@@ -579,6 +580,7 @@ export function parseStaticGuestProperties(): StaticGuestProperty[] {
       bathrooms: num(block, 'bathrooms'),
       size: num(block, 'size'),
       pricePerNight: num(block, 'pricePerNight'),
+      bookingUrl: str(block, 'bookingUrl'),
       rating: num(block, 'rating'),
       reviews: num(block, 'reviews'),
       checkInTime: str(block, 'checkInTime'),
@@ -664,6 +666,28 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
         value: true,
       }));
 
+      // Motorul real de rezervări (Pynbooking) al unității — legat explicit
+      // în datele structurate, ca Google/AI să știe unde se rezervă direct.
+      const bookingUrl = (p.bookingUrl || '').trim();
+      const bookingNodes = bookingUrl
+        ? {
+            sameAs: bookingUrl,
+            potentialAction: {
+              '@type': 'ReserveAction',
+              target: {
+                '@type': 'EntryPoint',
+                urlTemplate: bookingUrl,
+                inLanguage: 'ro-RO',
+                actionPlatform: [
+                  'http://schema.org/DesktopWebPlatform',
+                  'http://schema.org/MobileWebPlatform',
+                ],
+              },
+              result: { '@type': 'LodgingReservation', name: p.name },
+            },
+          }
+        : {};
+
       return {
         path: `/proprietate/${p.slug}`,
         title,
@@ -694,6 +718,7 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
             ...(p.checkInTime && { checkinTime: p.checkInTime }),
             ...(p.checkOutTime && { checkoutTime: p.checkOutTime }),
             ...(p.amenities.length > 0 && { amenityFeature }),
+            ...bookingNodes,
           },
           {
             '@context': 'https://schema.org',
@@ -747,6 +772,7 @@ export function buildGuestPropertyRoutes(taken: Set<string>): PrerenderRoute[] {
                 },
               ],
             }),
+            ...bookingNodes,
           },
           {
             '@context': 'https://schema.org',
