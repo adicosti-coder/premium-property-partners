@@ -69,11 +69,18 @@ const sourceLabels: Record<string, { ro: string; en: string; color: string }> = 
   calculator: { ro: "Profit Calculator", en: "Profit Calculator", color: "bg-blue-500" },
   "profit-calculator": { ro: "Profit Calculator", en: "Profit Calculator", color: "bg-blue-500" },
   "rental-calculator": { ro: "Rental Income", en: "Rental Income", color: "bg-green-500" },
+  calculator_roi_widget: { ro: "Proiecție Randament", en: "Yield Projection", color: "bg-amber-500" },
+  evaluare_gratuita: { ro: "Evaluare Gratuită", en: "Free Valuation", color: "bg-teal-500" },
+  pentru_proprietari_precalc: { ro: "Precalcul Proprietari", en: "Owners Precalc", color: "bg-indigo-500" },
+  homepage_owners_teaser: { ro: "Homepage Proprietari", en: "Homepage Owners", color: "bg-sky-500" },
+  lead_capture_form: { ro: "Formular Lead", en: "Lead Form", color: "bg-rose-500" },
+  pagina_contact: { ro: "Pagina Contact", en: "Contact Page", color: "bg-slate-500" },
   quick_form: { ro: "Formular Rapid", en: "Quick Form", color: "bg-purple-500" },
   real_estate_contact: { ro: "Contact Imobiliare", en: "Real Estate Contact", color: "bg-orange-500" },
   "HostScan AI Report": { ro: "HostScan AI", en: "HostScan AI", color: "bg-emerald-500" },
   "AI Chat (Tools)": { ro: "Chat AI", en: "AI Chat", color: "bg-cyan-500" },
 };
+
 
 const playNotificationSound = () => {
   try {
