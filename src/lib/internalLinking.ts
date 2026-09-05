@@ -298,6 +298,7 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
   ],
   investitii: [
     { href: "/catalog-investitii", label: "catalogul de investiții disponibile", description: "Apartamente cu capital necesar și randament estimat." },
+    { href: "/zone-investitii-timisoara", label: "cele mai bune zone pentru investiții în Timișoara", description: "Preț, chirie, cerere, lichiditate și risc, zonă cu zonă." },
     { href: "/calculator-roi", label: "simulare de randament net", description: "Compară regimul hotelier cu chiria clasică." },
     { href: "/cartiere", label: "prețuri și randamente pe zone", description: "Care cartiere din Timișoara susțin cel mai bine investiția." },
     { href: "/ansambluri-rezidentiale", label: "ansamblurile rezidențiale din Timișoara", description: "Proiecte noi cu cerere constantă de cazare." },
