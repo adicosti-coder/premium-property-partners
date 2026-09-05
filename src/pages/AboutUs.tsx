@@ -61,8 +61,8 @@ const AboutUs = () => {
       },
       story: {
         title: "Povestea Noastră",
-        subtitle: "De la prima tranzacție la 60+ proprietăți administrate",
-        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Cu peste 15 ani de experiență directă pe piața imobiliară Timișoara, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm peste 60 de apartamente cu un ROI net verificat de 9,4% și un rating consolidat de 9,7/10.",
+        subtitle: "De la prima tranzacție la 15 proprietăți administrate",
+        intro: "Am început în Timișoara ca o agenție imobiliară locală, axată pe tranzacții corecte și pe relații pe termen lung. Cu peste 15 ani de experiență directă pe piața imobiliară Timișoara, urmărim zilnic evoluția prețurilor apartamente Timișoara pe fiecare cartier — de la Centru și Iosefin la ISHO, Dumbrăvița și Complex Studențesc — și oferim consultanță credit ipotecar prin parteneriate cu brokeri și bănci (BCR, BT, ING, Raiffeisen, BRD). Pe măsură ce piața s-a maturizat, am observat că tot mai mulți proprietari căutau venituri pasive fără bătăi de cap — așa s-a născut ApArt Hotel, divizia noastră de regim hotelier. Astăzi gestionăm 15 apartamente cu un ROI net verificat de 9,4% și un rating consolidat de 9,7/10.",
         realEstate: {
           title: "Servicii Imobiliare Complete",
           description: "Sub brandul RealTrust, oferim un spectru complet de servicii imobiliare care acoperă toate nevoile proprietarilor și investitorilor:",
@@ -155,7 +155,7 @@ const AboutUs = () => {
       stats: {
         title: "În Cifre",
         items: [
-          { value: "60+", label: "Proprietăți administrate" },
+          { value: "15", label: "Proprietăți administrate" },
           { value: "75%", label: "Ocupare medie anuală" },
           { value: "9,7/10", label: "Rating consolidat oaspeți" },
           { value: "9,4%", label: "Randament net țintă" }
@@ -203,7 +203,7 @@ const AboutUs = () => {
       },
       story: {
         title: "Our Story",
-        subtitle: "From the first transaction to 60+ properties managed",
+        subtitle: "From the first transaction to 15 properties managed",
         intro: "We started in Timișoara as a local real estate agency, focused on fair transactions and long-term relationships. As the market matured, we noticed more owners sought passive income without hassle — that's how ApArt Hotel was born, our short-term rental division. Today we manage over 60 apartments with a verified 9.4% net ROI and a consolidated 9.7/10 rating.",
         realEstate: {
           title: "Complete Real Estate Services",
@@ -297,7 +297,7 @@ const AboutUs = () => {
       stats: {
         title: "In Numbers",
         items: [
-          { value: "60+", label: "Properties under management" },
+          { value: "15", label: "Properties under management" },
           { value: "75%", label: "Average annual occupancy" },
           { value: "9.7/10", label: "Consolidated guest rating" },
           { value: "9.4%", label: "Target net yield" }
@@ -336,11 +336,11 @@ const AboutUs = () => {
   const seoContent = {
     ro: {
       title: "Despre RealTrust: Imobiliare & Regim Hotelier Timișoara",
-      description: "Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. Peste 60 proprietăți administrate cu ROI 9.4% net. Contactează-ne acum!"
+      description: "Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. 15 proprietăți administrate cu ROI 9.4% net. Contactează-ne acum!"
     },
     en: {
       title: "About RealTrust: Real Estate & Short-Term Rentals Timișoara",
-      description: "RealTrust team: real estate and short-term rental experts in Timișoara. Over 60 properties managed with 9.4% net ROI. Contact us today!"
+      description: "RealTrust team: real estate and short-term rental experts in Timișoara. 15 properties managed with 9.4% net ROI. Contact us today!"
     }
   };
 

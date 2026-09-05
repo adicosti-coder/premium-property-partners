@@ -211,7 +211,7 @@ const PentruProprietari = () => {
       subtitleB: "Administrare apartamente și case în regim hotelier în Timișoara: verificăm fiecare oaspete, ne ocupăm de curățenie, mentenanță, taxe și rapoarte, iar tu vezi totul în portalul proprietarului. Randament mediu 9,4% net.",
       socialProof: [
         "9,7/10 rating oaspeți (Booking)",
-        "100+ proprietăți administrate",
+        "15 proprietăți administrate",
         "Contract flexibil, ieșire în 30 de zile",
       ],
       cta: "Calculează venitul tău lunar",
@@ -247,7 +247,7 @@ const PentruProprietari = () => {
       subtitleB: "Short-term rental management for apartments and houses in Timișoara: we vet every guest and handle cleaning, maintenance, taxes and reporting, while you follow everything in the owner portal. 9.4% average net yield.",
       socialProof: [
         "9.7/10 guest rating (Booking)",
-        "100+ properties managed",
+        "15 properties managed",
         "Flexible contract, exit in 30 days",
       ],
       cta: "Calculate your monthly income",

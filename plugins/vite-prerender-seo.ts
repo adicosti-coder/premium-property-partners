@@ -1060,7 +1060,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
   routes.push({
     path: '/despre-noi',
     title: 'Despre RealTrust: Imobiliare & Regim Hotelier Timișoara',
-    description: 'Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. Peste 60 proprietăți administrate cu ROI 9.4% net. Contactează-ne acum!',
+    description: 'Echipa RealTrust: experți în imobiliare și regim hotelier Timișoara. 15 proprietăți administrate cu ROI 9.4% net. Contactează-ne acum!',
     h1: 'Echipa din spatele RealTrust Timișoara',
     canonical: `${BASE_URL}/despre-noi`,
     seoBody: `
@@ -1068,7 +1068,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h2>Despre echipa RealTrust Timișoara</h2>
       <p>RealTrust este o echipă locală din Timișoara, coordonată de Adrian Costi (Fondator & CEO), specializată în <strong>consultanță imobiliară Timișoara</strong>, administrare proprietăți și regim hotelier.</p>
       <h3>Misiune, transparență și rezultate măsurabile</h3>
-      <p>Oferim <strong>evaluare apartament Timișoara</strong> gratuită, analiză de <strong>randament chirie Timișoara</strong> versus regim hotelier, și comunicare transparentă pentru fiecare colaborare — ROI 9.4% net verificat pe peste 60 proprietăți.</p>
+      <p>Oferim <strong>evaluare apartament Timișoara</strong> gratuită, analiză de <strong>randament chirie Timișoara</strong> versus regim hotelier, și comunicare transparentă pentru fiecare colaborare — ROI 9.4% net verificat pe cele 15 proprietăți administrate.</p>
       <h3>Cuprins pagină</h3>
       <ul>
         <li>Misiunea noastră</li>
@@ -1240,7 +1240,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Cele mai performante micro-piețe pentru investitori în 2026: <strong>ISHO</strong> (2.150 €/mp, ocupare 85–90% regim hotelier), <strong>Centru / Cetate</strong> (apreciere capital + venit dual din business travel și turism), <strong>Complex Studențesc</strong> (cerere garantată 9 luni/an, randament 8–10% net), <strong>Calea Aradului</strong> (proximitate Aeroport + Continental Automotive — chiriași business cu venituri mari) și <strong>Dumbrăvița / Ghiroda</strong> (case noi, profil familial, apreciere capital peste media orașului).</p>
 
       <h3>Investiții în regim hotelier — randament verificat</h3>
-      <p>Modelul nostru de <strong>regim hotelier Timișoara</strong> generează ROI 9.4% net verificat pe portofoliul activ (60+ apartamente). Include marketing pe Booking, Airbnb și platforme directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară și yield management dinamic. Comision 15–25% management + 15–23% comision platforme. Capital necesar de la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc.</p>
+      <p>Modelul nostru de <strong>regim hotelier Timișoara</strong> generează ROI 9.4% net verificat pe portofoliul activ (15 apartamente). Include marketing pe Booking, Airbnb și platforme directe, check-in / check-out 24/7, curățenie hotelieră, mentenanță, raportare lunară și yield management dinamic. Comision 15–25% management + 15–23% comision platforme. Capital necesar de la 75.000 € pentru o garsonieră în Centru sau Complex Studențesc.</p>
 
       <h3>Calculator taxe notariale și costuri tranzacție</h3>
       <p>Costurile complete pentru cumpărarea unui apartament în Timișoara includ: <strong>onorariu notarial</strong> (~1% din valoarea tranzacției, conform grilei Camerei Notarilor Timiș), <strong>impozit pe tranzacție</strong> (3% peste 450.000 RON pentru proprietăți deținute sub 3 ani de vânzător; 1% peste 3 ani — suportat de vânzător), <strong>taxe ANCPI</strong> (intabulare ~0,15% + tarife fixe), <strong>comision agenție</strong> (2% RealTrust). Exemplu: pentru un apartament de 100.000 €, costurile suplimentare ale cumpărătorului sunt aproximativ 3.500–4.500 €. Folosește <a href="${BASE_URL}/calculator-roi" tabindex="-1">calculatorul ROI</a> pentru proiecția completă a investiției.</p>
@@ -1249,7 +1249,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Consultanță gratuită <strong>credit ipotecar Timișoara</strong> prin parteneriatele cu BCR, BRD, Raiffeisen, ING și Banca Transilvania. Pentru investiții optime: avans 25–35%, perioadă 25–30 ani, DAE competitiv 6,5–7,5% (aprilie 2026). Te ajutăm să compari ofertele și să optimizezi structura financiară pentru maximizarea cash-flow-ului lunar.</p>
 
       <h3>Consultant imobiliar Timișoara — due diligence complet</h3>
-      <p>Ca <strong>consultant imobiliar Timișoara</strong> de top, RealTrust verifică pentru fiecare oportunitate: situația juridică (extras CF actualizat, sarcini, litigii), starea tehnică (expertiză structurală, instalații), eficiența energetică, istoricul tranzacțiilor și potențialul real de venit (analiză comparabilă cu portofoliul nostru de 60+ proprietăți administrate). Raportul complet de due diligence este livrat în 5–7 zile.</p>
+      <p>Ca <strong>consultant imobiliar Timișoara</strong> de top, RealTrust verifică pentru fiecare oportunitate: situația juridică (extras CF actualizat, sarcini, litigii), starea tehnică (expertiză structurală, instalații), eficiența energetică, istoricul tranzacțiilor și potențialul real de venit (analiză comparabilă cu portofoliul nostru de 15 proprietăți administrate). Raportul complet de due diligence este livrat în 5–7 zile.</p>
 
       <h3>Ghid investitor 2026 — descarcă gratuit</h3>
       <p>Ghidul investitorului 2026 (PDF, 40 pagini) include: analiză detaliată pe cartiere, calculator ROI cu scenarii multiple, structură fiscală optimă (PFA vs SRL), checklist due diligence, top 5 ansambluri rezidențiale recomandate și studii de caz reale din portofoliul RealTrust.</p>
@@ -1291,7 +1291,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
           {
             '@type': 'Question',
             name: 'Care este randamentul mediu al investițiilor imobiliare în Timișoara?',
-            acceptedAnswer: { '@type': 'Answer', text: 'Pentru regim hotelier administrat de RealTrust, ROI mediu este 9.4% net anual, verificat pe portofoliul de 60+ apartamente. Pentru chirii pe termen lung, randamentul brut este 6–7%.' },
+            acceptedAnswer: { '@type': 'Answer', text: 'Pentru regim hotelier administrat de RealTrust, ROI mediu este 9.4% net anual, verificat pe portofoliul de 15 apartamente. Pentru chirii pe termen lung, randamentul brut este 6–7%.' },
           },
           {
             '@type': 'Question',

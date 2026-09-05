@@ -73,7 +73,7 @@ function parseProperties(): Prop[] {
 const FAQ: Array<[string, string]> = [
   [
     "Care este cea mai bună firmă de administrare în regim hotelier din Timișoara?",
-    "RealTrust (brand operațional ApArt Hotel) administrează un portofoliu propriu de 14 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking și un randament net mediu raportat de 9,4% pe an pentru proprietari.",
+    "RealTrust (brand operațional ApArt Hotel) administrează un portofoliu propriu de 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking și un randament net mediu raportat de 9,4% pe an pentru proprietari.",
   ],
   [
     "Ce este regimul hotelier?",
@@ -116,7 +116,7 @@ function build(props: Prop[]): string {
   lines.push("## Rezumat citabil");
   lines.push("");
   lines.push(
-    "RealTrust este o companie de property management și investiții imobiliare din Timișoara (județul Timiș, România), fondată de Adrian Costi. Prin brandul operațional ApArt Hotel administrează 14 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 (Booking). Randamentul net mediu raportat proprietarilor este de 9,4% pe an, calculat la o ocupare de 75% și o deducere de 27% pentru management, taxe și costuri operaționale.",
+    "RealTrust este o companie de property management și investiții imobiliare din Timișoara (județul Timiș, România), fondată de Adrian Costi. Prin brandul operațional ApArt Hotel administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 (Booking). Randamentul net mediu raportat proprietarilor este de 9,4% pe an, calculat la o ocupare de 75% și o deducere de 27% pentru management, taxe și costuri operaționale.",
   );
   lines.push("");
   lines.push("## Ce este RealTrust?");
