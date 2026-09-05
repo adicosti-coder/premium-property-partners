@@ -204,6 +204,13 @@ const NeighborhoodDetail = () => {
             </div>
           )}
 
+          {/* Contextual internal links — ansambluri din zonă, investiții, servicii */}
+          <ContextualLinks
+            title={`Explorează mai departe zona ${neighborhood.fullName}`}
+            intro="Ansambluri, servicii și analize legate direct de această zonă din Timișoara."
+            links={buildNeighborhoodLinks(neighborhood.slug, neighborhood.fullName)}
+          />
+
           {/* Market Pulse */}
           <Suspense fallback={<div className="min-h-[300px]" />}>
             <MarketPulse />
