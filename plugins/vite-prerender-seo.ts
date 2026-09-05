@@ -1157,6 +1157,14 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Analiză pe zone — Centru/Cetate, Iosefin, ISHO, Fabric, Circumvalațiunii, Calea Aradului, Calea Lipovei, Complex Studențesc, Girocului, Calea Șagului, Dumbrăvița și Giroc — după preț de achiziție, chirie realizabilă, potențial de <strong>regim hotelier</strong>, intensitatea cererii, lichiditate la revânzare și riscuri specifice.</p>
       <p>Indicii de preț sunt estimări interne RealTrust, nu date oficiale de tranzacționare. Ipotezele de randament folosite sunt ocupare 75%, deducere operațională 27% și randament net de referință 9,4% pe an.</p>
     `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Cele mai bune zone pentru investiții imobiliare în Timișoara',
+      url: `${BASE_URL}/zone-investitii-timisoara`,
+      inLanguage: 'ro-RO',
+      about: { '@type': 'Place', name: 'Timișoara, Timiș, România' },
+    },
   });
 
   // /ghid-evaluare-apartament-timisoara — ghid metodologic de evaluare
