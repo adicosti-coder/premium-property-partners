@@ -95,11 +95,9 @@ serve(async (req) => {
   }
 
   if (!RESEND_API_KEY) {
-    return new Response(JSON.stringify({ error: "Email provider not configured" }), {
-      status: 503,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.warn("RESEND_API_KEY missing — notificarea va fi salvată în panoul de erori");
   }
+
 
   try {
     const body = await req.json().catch(() => ({}));
