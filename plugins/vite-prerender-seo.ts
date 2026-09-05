@@ -1300,14 +1300,18 @@ function buildStaticRoutes(): PrerenderRoute[] {
 
 
 
-  // /oaspeti & /cazare — premium stays for guests
+  // /cazare is the canonical stays hub. /oaspeti is the older address for the
+  // same page: it still ships HTML, but it self-declares /cazare as canonical
+  // and is kept out of the index so the two don't compete.
   for (const path of ['/oaspeti', '/cazare']) {
+    const isLegacy = path === '/oaspeti';
     routes.push({
       path,
+      noindex: isLegacy,
       title: 'Cazare Premium Timișoara — Apartamente Regim Hotelier | RealTrust',
       description: 'Apartamente premium pentru cazare în Timișoara: check-in flexibil, rezervare directă, locații lângă Iulius Town, Centru, Spitalul Județean și Aeroport.',
       h1: 'Cazare Premium pentru Oaspeți în Timișoara',
-      canonical: `${BASE_URL}${path}`,
+      canonical: `${BASE_URL}/cazare`,
       seoBody: `
         <h2>Apartamente premium pentru oaspeți în Timișoara</h2>
         <p>Listăm apartamentele disponibile pentru cazare în <strong>regim hotelier Timișoara</strong>, cu check-in flexibil, rezervare directă și filtrare după locație, preț, rating și capacitate.</p>
@@ -1318,7 +1322,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
         name: 'Cazare Premium Timișoara',
-        url: `${BASE_URL}${path}`,
+        url: `${BASE_URL}/cazare`,
       },
     });
   }
