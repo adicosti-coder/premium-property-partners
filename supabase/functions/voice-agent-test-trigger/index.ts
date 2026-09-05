@@ -29,7 +29,13 @@ serve(async (req) => {
       });
     }
 
-    const toNumber = body.toNumber || "+40770294069";
+    const toNumber = typeof body.toNumber === "string" ? body.toNumber.trim() : "";
+    if (!toNumber) {
+      return new Response(
+        JSON.stringify({ error: "toNumber is required (no hardcoded fallback number)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     const objective = body.objective || "Test E2E – validare webhook status";
     const customPrompt = body.customPrompt || "";
 
