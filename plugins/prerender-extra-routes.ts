@@ -455,20 +455,18 @@ export async function fetchComplexes(): Promise<DbComplex[]> {
 }
 
 /**
- * Complex pages. `/complexe/<slug>` is the canonical SEO landing route where it
- * exists (a dedicated landing page is prerendered elsewhere for those); this
- * builder covers every remaining complex on both routes, using the same
- * canonical target the app itself declares.
+ * Complex detail pages. `/complexe/<slug>` is the canonical route (the legacy
+ * `/complex/<slug>` form redirects), so only that form is emitted. Complexes
+ * that already have a hand-written landing route are skipped.
  */
 export function buildComplexRoutes(
   complexes: DbComplex[],
-  landingSlugs: Set<string>,
   takenPaths: Set<string>,
 ): ExtraRoute[] {
   const routes: ExtraRoute[] = [];
   for (const c of complexes) {
     const zone = (c.zone || 'Timișoara').trim();
-    const detailPath = landingSlugs.has(c.slug) ? `/complexe/${c.slug}` : `/complex/${c.slug}`;
+    const detailPath = `/complexe/${c.slug}`;
     if (takenPaths.has(detailPath)) continue;
     const canonical = `${BASE_URL}${detailPath}`;
     const description = clampText(
