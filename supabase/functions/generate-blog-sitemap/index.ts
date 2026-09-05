@@ -32,6 +32,10 @@ serve(async (req: Request) => {
       .from("blog_articles")
       .select("slug, title, published_at, updated_at, created_at, cover_image, main_image_url, geo_location")
       .eq("is_published", true)
+      // Premium articles are members-only: they are not public documents, so
+      // they must never appear in the sitemap.
+      .eq("is_premium", false)
+      .not("slug", "is", null)
       .order("published_at", { ascending: false });
 
     const STORAGE_BASE = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/blog-images`;
