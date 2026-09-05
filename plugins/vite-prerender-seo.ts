@@ -9,6 +9,16 @@
 import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
+import {
+  fetchPublicArticles,
+  fetchPremiumArticleStubs,
+  fetchComplexes,
+  buildArticleRoutes,
+  buildPremiumStubRoutes,
+  buildBlogHubRoutes,
+  buildComplexRoutes,
+  buildRemainingStaticRoutes,
+} from './prerender-extra-routes';
 
 interface PrerenderRoute {
   path: string;
@@ -23,6 +33,8 @@ interface PrerenderRoute {
   seoBody?: string;
   /** Optional absolute image URL used for og:image / twitter:image. */
   image?: string;
+  /** Emits `<meta name="robots" content="noindex, follow">` for gated pages. */
+  noindex?: boolean;
 }
 
 /**
@@ -1723,6 +1735,15 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   setMeta('name', 'twitter:url', route.canonical);
   setMeta('name', 'twitter:image', socialImage);
 
+  // Gated content (members-only articles) must never be presented to crawlers
+  // as an indexable public document.
+  const robotsValue = route.noindex ? 'noindex, follow' : 'index, follow';
+  const robotsRe = /<meta name="robots" content="[^"]*"\s*\/?>/;
+  const robotsTag = `<meta name="robots" content="${robotsValue}" />`;
+  html = robotsRe.test(html)
+    ? html.replace(robotsRe, robotsTag)
+    : html.replace('</head>', `  ${robotsTag}\n</head>`);
+
   // Every page ships BreadcrumbList markup; routes that already declare their
   // own trail keep it (no duplicates).
   const baseSchemas = Array.isArray(route.jsonLd) ? [...route.jsonLd] : [route.jsonLd];
@@ -1741,12 +1762,13 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   // Inject H1 for routes that don't reliably render one in the static shell
   // (homepage + neighborhood landing pages). React hydration replaces #root
   // content but the inert SEO div outside #root remains for crawlers.
+  // Every prerendered document ships exactly one H1: the injected SEO heading.
+  // The client removes #seo-prerender on mount (see src/main.tsx), so the live
+  // DOM keeps only the React heading — no duplicate H1 either way. The single
+  // exception is the homepage, whose static shell already paints a visible H1.
   const isHomepage = route.path === '/' || route.path === '';
-  const isNeighborhood = route.path.startsWith('/imobiliare-timisoara/');
-  // The homepage static shell already renders a visible <h1class="ash-h1">, so
-  // emitting another one here would give crawlers two H1s on the same document.
   const shellHasH1 = isHomepage && /<h1[^>]*class="[^"]*ash-h1/.test(html);
-  const headingTag = ((isHomepage && !shellHasH1) || isNeighborhood) ? 'h1' : 'h2';
+  const headingTag = shellHasH1 ? 'h2' : 'h1';
 
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
@@ -1824,10 +1846,42 @@ export default function vitePrerenderSeo(): Plugin {
         const guestPaths = new Set(guestRoutes.map((r) => r.path));
         console.log(`[prerender-seo] Found ${guestRoutes.length} static guest apartments`);
 
+        // Remaining public routes that previously shipped without any HTML:
+        // blog articles + hubs, residential complexes, zone landings and the
+        // rest of the commercial/service pages.
+        console.log('[prerender-seo] Fetching public articles and complexes...');
+        const [articles, premiumStubs, complexes] = await Promise.all([
+          fetchPublicArticles(),
+          fetchPremiumArticleStubs(),
+          fetchComplexes(),
+        ]);
+        console.log(
+          `[prerender-seo] Found ${articles.length} public articles, ${premiumStubs.length} premium (noindex), ${complexes.length} complexes`,
+        );
+
+        const takenPaths = new Set<string>([
+          ...staticPaths,
+          ...guestPaths,
+          ...propertyRoutes.map((r) => r.path),
+        ]);
+
+        const contentRoutes = [
+          ...buildArticleRoutes(articles),
+          ...buildPremiumStubRoutes(premiumStubs),
+          ...buildBlogHubRoutes(articles),
+          ...buildComplexRoutes(complexes, takenPaths),
+          ...buildRemainingStaticRoutes(),
+        ].filter((r) => {
+          if (takenPaths.has(r.path)) return false;
+          takenPaths.add(r.path);
+          return true;
+        });
+
         const allRoutes = [
           ...staticRoutes,
           ...propertyRoutes.filter((r) => !guestPaths.has(r.path)),
           ...guestRoutes,
+          ...contentRoutes,
         ];
 
         console.log(`[prerender-seo] Generating ${allRoutes.length} static HTML files...`);
@@ -1855,7 +1909,7 @@ export default function vitePrerenderSeo(): Plugin {
           console.log(`  ✓ ${isRoot ? '/' : route.path}/index.html`);
         }
 
-        console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} db properties + ${guestRoutes.length} guest apartments)`);
+        console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} db properties + ${guestRoutes.length} guest apartments + ${contentRoutes.length} content routes)`);
       },
     },
   };
