@@ -540,7 +540,6 @@ export function buildComplexRoutes(
         },
       ],
     });
-    takenPaths.add(detailPath);
   }
   return routes;
 }
