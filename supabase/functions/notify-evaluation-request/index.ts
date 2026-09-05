@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendTeamEmail } from "../_shared/teamEmail.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const TEAM_EMAIL = "info@realtrust.ro";
-const FROM = "RealTrust <info@notify.realtrust.ro>";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
