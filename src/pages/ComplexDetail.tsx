@@ -427,6 +427,16 @@ const ComplexDetail = () => {
           </div>
         </section>
 
+        {/* Contextual internal links — zonă, investiții, servicii, alte ansambluri */}
+        <section className="pt-4">
+          <div className="container mx-auto px-6">
+            <ContextualLinks
+              title={`Legături utile pentru ${complex.name}`}
+              links={buildComplexLinks(complex.slug, complex.name)}
+            />
+          </div>
+        </section>
+
         {/* Lead Capture Form */}
         <section className="py-16 bg-gradient-to-br from-primary/5 to-primary/10">
           <div className="container mx-auto px-6">
