@@ -59,6 +59,8 @@ import {
 } from "@/utils/schemaGenerators";
 import { generatePropertySEO } from "@/utils/generatePropertySEO";
 import { getDisplayLocation, resolvePropertyCoordinates, getPropertyPois } from "@/utils/propertyGeo";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { buildPropertyLinks } from "@/lib/internalLinking";
 
 // Extindem interfața pentru a include noile câmpuri de investiție
 interface DbPropertyData {
