@@ -332,6 +332,16 @@ const ServiciiImobiliareTimisoara = () => {
               </Link>
             </div>
           </section>
+          {/* Contextual internal links — cluster servicii imobiliare */}
+          <ContextualLinks
+            title={isRo ? "Resurse conexe" : "Related resources"}
+            intro={
+              isRo
+                ? "Proprietăți disponibile, evaluare, zone și oportunități de investiție."
+                : "Available properties, valuation, areas and investment opportunities."
+            }
+            links={CLUSTER_LINKS["servicii-imobiliare"]}
+          />
         </div>
       </main>
 
