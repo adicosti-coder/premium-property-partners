@@ -91,6 +91,7 @@ export const STATIC_PAGES: { url: string; priority: string; changefreq: string }
   { url: "/complexe/nord-one", priority: "0.7", changefreq: "weekly" },
   { url: "/complexe/xcity-towers", priority: "0.7", changefreq: "weekly" },
   { url: "/complexe/denya-forest", priority: "0.7", changefreq: "weekly" },
+  { url: "/complexe/paltim", priority: "0.7", changefreq: "weekly" },
 ];
 
 export function buildSitemapIndex(): string {
