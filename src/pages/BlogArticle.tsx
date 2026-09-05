@@ -73,7 +73,6 @@ interface BlogArticle {
 const BlogArticlePage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const consolidatedTarget = resolveConsolidatedArticle(slug);
   const { language } = useLanguage();
   const dateLocale = language === "ro" ? ro : enUS;
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -1009,4 +1008,11 @@ const BlogArticlePage = () => {
   );
 };
 
-export default BlogArticlePage;
+const BlogArticleRoute = () => {
+  const { slug } = useParams();
+  const consolidatedTarget = resolveConsolidatedArticle(slug);
+  if (consolidatedTarget) return <Navigate to={consolidatedTarget} replace />;
+  return <BlogArticlePage />;
+};
+
+export default BlogArticleRoute;
