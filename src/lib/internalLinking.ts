@@ -245,6 +245,11 @@ export const buildPropertyLinks = (p: PropertyLinkInput): ContextualLink[] => {
 export const buildNeighborhoodLinks = (zoneSlug: string, zoneName: string): ContextualLink[] => {
   const out: ContextualLink[] = [
     link("investitii", "/investitii", zoneSlug, `De ce ${zoneName} intră în calculele investitorilor noștri.`),
+    {
+      href: "/zone-investitii-timisoara",
+      label: `cum se compară ${zoneName} cu celelalte zone`,
+      description: "Preț, chirie realizabilă, cerere, lichiditate și risc, zonă cu zonă.",
+    },
     link("servicii", "/servicii-imobiliare", zoneSlug, "Asistență la vânzare, achiziție și închiriere."),
     link("catalog", "/catalog-investitii", zoneSlug, "Oportunități cu randament estimat, actualizate periodic."),
     link("cartiere", "/cartiere", zoneSlug, "Compară zonele Timișoarei după preț și randament."),
@@ -298,6 +303,7 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
   ],
   investitii: [
     { href: "/catalog-investitii", label: "catalogul de investiții disponibile", description: "Apartamente cu capital necesar și randament estimat." },
+    { href: "/zone-investitii-timisoara", label: "cele mai bune zone pentru investiții în Timișoara", description: "Preț, chirie, cerere, lichiditate și risc, zonă cu zonă." },
     { href: "/calculator-roi", label: "simulare de randament net", description: "Compară regimul hotelier cu chiria clasică." },
     { href: "/cartiere", label: "prețuri și randamente pe zone", description: "Care cartiere din Timișoara susțin cel mai bine investiția." },
     { href: "/ansambluri-rezidentiale", label: "ansamblurile rezidențiale din Timișoara", description: "Proiecte noi cu cerere constantă de cazare." },
@@ -307,11 +313,13 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
   "servicii-imobiliare": [
     { href: "/imobiliare", label: "proprietățile disponibile acum", description: "Apartamente de vânzare și de închiriat, verificate." },
     { href: "/evaluare-gratuita", label: "cere o estimare de preț pentru apartament", description: "Evaluare gratuită, fără obligații." },
+    { href: "/ghid-evaluare-apartament-timisoara", label: "cum se evaluează un apartament în Timișoara", description: "Factorii care determină prețul, pas cu pas." },
     { href: "/cartiere", label: "ghidul cartierelor din Timișoara", description: "Prețul mediu pe metru pătrat, zonă cu zonă." },
     { href: "/investitii", label: "oportunități de investiție cu randament", description: "Pentru cumpărătorii care caută venit pasiv." },
     { href: "/contact", label: "vorbește cu un consultant RealTrust", description: "Program, telefon și adresă." },
   ],
   cartiere: [
+    { href: "/zone-investitii-timisoara", label: "compararea zonelor pentru investiții", description: "Preț, chirie, cerere, lichiditate și risc, într-un singur tabel." },
     { href: "/ansambluri-rezidentiale", label: "ansamblurile rezidențiale din fiecare zonă", description: "Proiectele noi și unitățile administrate acolo." },
     { href: "/investitii", label: "investiții imobiliare în Timișoara", description: "Cum alegem zonele cu cel mai bun randament." },
     { href: "/servicii-imobiliare", label: "servicii imobiliare complete în Timișoara", description: "Vânzare, achiziție și închiriere cu asistență completă." },

@@ -75,6 +75,9 @@ serve(async (req: Request) => {
       
       { url: "/piata-imobiliara-timisoara", priority: "0.7", changefreq: "weekly" },
       { url: "/cartiere", priority: "0.9", changefreq: "daily" },
+      { url: "/zone-investitii-timisoara", priority: "0.8", changefreq: "weekly" },
+      { url: "/ghid-evaluare-apartament-timisoara", priority: "0.8", changefreq: "monthly" },
+      { url: "/autor/adrian-costi", priority: "0.5", changefreq: "monthly" },
       { url: "/imobiliare-timisoara/zona-girocului", priority: "0.8", changefreq: "monthly" },
       { url: "/imobiliare-timisoara/zona-aradului", priority: "0.8", changefreq: "monthly" },
       { url: "/imobiliare-timisoara/circumvalatiunii", priority: "0.8", changefreq: "monthly" },

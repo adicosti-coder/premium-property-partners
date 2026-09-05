@@ -98,6 +98,9 @@ const ScraperPreview = lazyWithRetry(() => import("./pages/ScraperPreview"));
 const ProspectListings = lazyWithRetry(() => import("./pages/ProspectListings"));
 const ImobiliareTimisoara = lazyWithRetry(() => import("./pages/ImobiliareTimisoara"));
 const NeighborhoodDetail = lazyWithRetry(() => import("./pages/NeighborhoodDetail"));
+const ZoneInvestitiiTimisoara = lazyWithRetry(() => import("./pages/ZoneInvestitiiTimisoara"));
+const GhidEvaluareApartament = lazyWithRetry(() => import("./pages/GhidEvaluareApartament"));
+const AutorAdrianCosti = lazyWithRetry(() => import("./pages/AutorAdrianCosti"));
 const CalculatorROI = lazyWithRetry(() => import("./pages/CalculatorROI"));
 const AnalizaROIApartament = lazyWithRetry(() => import("./pages/AnalizaROIApartament"));
 const CityOfMaraTimisoara = lazyWithRetry(() => import("./pages/CityOfMaraTimisoara"));
@@ -289,6 +292,9 @@ const App = () => (
                     <Route path="/cartiere" element={<ImobiliareTimisoara />} />
                     <Route path="/imobiliare-timisoara" element={<Navigate to="/cartiere" replace />} />
                     <Route path="/imobiliare-timisoara/:zona" element={<NeighborhoodDetail />} />
+                    <Route path="/zone-investitii-timisoara" element={<ZoneInvestitiiTimisoara />} />
+                    <Route path="/ghid-evaluare-apartament-timisoara" element={<GhidEvaluareApartament />} />
+                    <Route path="/autor/adrian-costi" element={<AutorAdrianCosti />} />
 
                     <Route path="/calculator-roi" element={<CalculatorROI />} />
                     <Route path="/analiza-roi-apartament" element={<AnalizaROIApartament />} />
