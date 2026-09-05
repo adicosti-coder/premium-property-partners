@@ -245,6 +245,11 @@ export const buildPropertyLinks = (p: PropertyLinkInput): ContextualLink[] => {
 export const buildNeighborhoodLinks = (zoneSlug: string, zoneName: string): ContextualLink[] => {
   const out: ContextualLink[] = [
     link("investitii", "/investitii", zoneSlug, `De ce ${zoneName} intră în calculele investitorilor noștri.`),
+    {
+      href: "/zone-investitii-timisoara",
+      label: `cum se compară ${zoneName} cu celelalte zone`,
+      description: "Preț, chirie realizabilă, cerere, lichiditate și risc, zonă cu zonă.",
+    },
     link("servicii", "/servicii-imobiliare", zoneSlug, "Asistență la vânzare, achiziție și închiriere."),
     link("catalog", "/catalog-investitii", zoneSlug, "Oportunități cu randament estimat, actualizate periodic."),
     link("cartiere", "/cartiere", zoneSlug, "Compară zonele Timișoarei după preț și randament."),
