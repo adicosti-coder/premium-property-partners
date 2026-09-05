@@ -165,9 +165,10 @@ serve(async (req) => {
       </p>`);
 
     const [team, owner] = await Promise.all([
-      sendEmail(TEAM_EMAIL, `📈 Cerere evaluare: ${name} — ${ro(propertyValue)} € · ${surface} mp`, teamHtml),
-      sendEmail(email, "Proiecția ta de randament RealTrust", ownerHtml),
+      sendEmail(TEAM_EMAIL, `📈 Cerere evaluare: ${name} — ${ro(propertyValue)} € · ${surface} mp`, teamHtml, "evaluation_team"),
+      sendEmail(email, "Proiecția ta de randament RealTrust", ownerHtml, "evaluation_owner"),
     ]);
+
 
     return new Response(JSON.stringify({ success: true, team, owner }), {
       status: 200,
