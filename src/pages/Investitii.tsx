@@ -692,6 +692,20 @@ const Investitii = () => {
           </div>
         </div>
       </section>
+      {/* Contextual internal links — cluster investiții */}
+      <section className="pb-8">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <ContextualLinks
+            title={language === "ro" ? "Următorii pași pentru investitori" : "Next steps for investors"}
+            intro={
+              language === "ro"
+                ? "Catalog, simulări de randament, zone și ansambluri — tot ce urmează după această pagină."
+                : "Catalogue, yield simulations, areas and complexes — everything that follows this page."
+            }
+            links={CLUSTER_LINKS.investitii}
+          />
+        </div>
+      </section>
       </main>
 
       {/* Analysis Request Modal */}
