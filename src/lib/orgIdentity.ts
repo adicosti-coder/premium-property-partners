@@ -38,7 +38,7 @@ export const BRAND = {
   alternateNames: ["RealTrust Imobiliare", "RealTrust Timișoara"],
   telephone: "+40799069256",
   email: "info@realtrust.ro",
-  logo: `${SITE_ORIGIN}/images/hero-optimized-800w.webp`,
+  logo: `${SITE_ORIGIN}/images/icon-512.png`,
   image: `${SITE_ORIGIN}/images/hero-optimized-1920w.webp`,
   url: SITE_ORIGIN,
   foundingDate: "2001",
@@ -95,8 +95,8 @@ export const ORGANIZATION_SCHEMA = {
   logo: {
     "@type": "ImageObject",
     url: BRAND.logo,
-    width: 800,
-    height: 450,
+    width: 512,
+    height: 512,
   },
   image: BRAND.image,
   email: BRAND.email,
@@ -112,7 +112,9 @@ export const ORGANIZATION_SCHEMA = {
     name: HOTEL_BRAND_NAME,
     url: `${SITE_ORIGIN}/cazare`,
   },
-  subOrganization: [
+  // The agency, the investment advisory and the ApArt Hotel accommodation
+  // operation are departments of the same legal entity, not separate companies.
+  department: [
     { "@id": REAL_ESTATE_AGENT_ID },
     { "@id": `${SITE_ORIGIN}/#financialservice` },
     { "@id": LODGING_BUSINESS_ID },
