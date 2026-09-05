@@ -36,6 +36,11 @@ const VERIFY_TXT_VALUE =
   "lovable_email_verify=93b02816026ae3bae71167cef04ff097df93c40a915ffc4284a6525b968f1504";
 const EXPECTED_NS = ["ns3.lovable.cloud", "ns4.lovable.cloud"];
 
+/** Resend (actual transport used by the notification functions) SPF host. */
+const RESEND_SPF_HOST = `send.${ROOT_DOMAIN}`;
+const RESEND_SPF_MX = "feedback-smtp.eu-west-1.amazonses.com";
+const RESEND_SPF_TXT = "v=spf1 include:amazonses.com ~all";
+
 type Verdict = "ok" | "missing" | "drifted" | "indeterminate";
 
 interface RecordCheck {
@@ -71,12 +76,15 @@ const clean = (v: string) => v.replace(/^"|"$/g, "").replace(/\.$/, "").trim().t
 async function runDnsChecks(): Promise<{
   records: RecordCheck[];
   delegationServing: boolean;
+  senderReady: boolean;
   delegationNote: string | null;
 }> {
-  const [txt, ns, mx] = await Promise.all([
+  const [txt, ns, mx, spfMx, spfTxt] = await Promise.all([
     doh(VERIFY_TXT_HOST, "TXT"),
     doh(SENDER_DOMAIN, "NS"),
     doh(SENDER_DOMAIN, "MX"),
+    doh(RESEND_SPF_HOST, "MX"),
+    doh(RESEND_SPF_HOST, "TXT"),
   ]);
 
   const txtValues = (txt?.Answer ?? []).filter((a) => a.type === 16).map((a) => clean(a.data));
@@ -131,15 +139,73 @@ async function runDnsChecks(): Promise<{
       : "Apare doar după ce zona delegată devine activă.",
   };
 
+  const spfMxValues = (spfMx?.Answer ?? [])
+    .filter((a) => a.type === 15)
+    .map((a) => clean(a.data.replace(/^\d+\s+/, "")));
+  const spfMxCheck: RecordCheck = {
+    type: "MX",
+    host: RESEND_SPF_HOST,
+    expected: `10 ${RESEND_SPF_MX}`,
+    observed: spfMxValues,
+    verdict: spfMxValues.includes(RESEND_SPF_MX) ? "ok" : spfMxValues.length ? "drifted" : "missing",
+    note: spfMxValues.includes(RESEND_SPF_MX)
+      ? undefined
+      : "Necesar pentru expedierea reală a e-mailurilor (SPF/return-path). Nu afectează MX-ul principal al domeniului.",
+  };
+
+  const spfTxtValues = (spfTxt?.Answer ?? []).filter((a) => a.type === 16).map((a) => clean(a.data));
+  const spfTxtCheck: RecordCheck = {
+    type: "TXT",
+    host: RESEND_SPF_HOST,
+    expected: RESEND_SPF_TXT,
+    observed: spfTxtValues,
+    verdict: spfTxtValues.includes(RESEND_SPF_TXT.toLowerCase())
+      ? "ok"
+      : spfTxtValues.length
+        ? "drifted"
+        : "missing",
+    note: spfTxtValues.some((v) => v.includes("amazonses.com"))
+      ? undefined
+      : "SPF pentru expeditor — se adaugă pe subdomeniul send, separat de SPF-ul principal.",
+  };
+
+  const senderReady = spfMxCheck.verdict === "ok" && spfTxtCheck.verdict === "ok";
+
   return {
-    records: [txtCheck, nsCheck, mxCheck],
+    records: [txtCheck, nsCheck, mxCheck, spfMxCheck, spfTxtCheck],
     delegationServing: mxValues.length > 0 && nsCheck.verdict === "ok",
+    senderReady,
     delegationNote: lame
       ? "lame_delegation"
       : nsCheck.verdict === "missing"
         ? "ns_missing"
         : null,
   };
+}
+
+/** Ask Resend to re-verify the sending domain (no-op when the key is absent). */
+async function reverifyResendDomain(): Promise<{ status: string | null; error?: string }> {
+  const key = Deno.env.get("RESEND_API_KEY");
+  if (!key) return { status: null, error: "RESEND_API_KEY missing" };
+  try {
+    const list = await fetch("https://api.resend.com/domains", {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const body = await list.json();
+    const domain = (body?.data ?? []).find((d: { name?: string }) => d.name === ROOT_DOMAIN);
+    if (!domain?.id) return { status: null, error: "domain not registered at provider" };
+    await fetch(`https://api.resend.com/domains/${domain.id}/verify`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const after = await fetch(`https://api.resend.com/domains/${domain.id}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const detail = await after.json();
+    return { status: (detail?.status as string) ?? null };
+  } catch (e) {
+    return { status: null, error: (e as Error).message };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -223,6 +289,13 @@ Deno.serve(async (req) => {
   const dns = await runDnsChecks();
   const dnsHealthy = dns.records.every((r) => r.verdict === "ok");
 
+  // The transport actually used by the notification functions is the sending
+  // provider, so re-verify it whenever its SPF records are publicly visible.
+  const provider = dns.senderReady
+    ? await reverifyResendDomain()
+    : { status: null as string | null, error: "SPF records not visible yet" };
+  const sendingActive = provider.status === "verified";
+
   const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
   const [pending, failed30d, resent30d] = await Promise.all([
     admin
@@ -242,7 +315,7 @@ Deno.serve(async (req) => {
   ]);
 
   let autoRetry: { attempted: number; sent: number; failed: number } | null = null;
-  if (internal && dnsHealthy && (pending.count ?? 0) > 0) {
+  if (sendingActive && (pending.count ?? 0) > 0) {
     try {
       autoRetry = await retryPending();
     } catch (e) {
@@ -255,6 +328,10 @@ Deno.serve(async (req) => {
     dns_healthy: dnsHealthy,
     delegation_serving: dns.delegationServing,
     delegation_note: dns.delegationNote,
+    sender_dns_ready: dns.senderReady,
+    provider_status: provider.status,
+    provider_error: provider.error ?? null,
+    sending_active: sendingActive,
     records: dns.records,
     pending_emails: pending.count ?? 0,
     failed_30d: failed30d.count ?? 0,
@@ -262,6 +339,7 @@ Deno.serve(async (req) => {
     auto_retry: autoRetry,
     source: internal ? "cron" : "admin",
   };
+
 
   try {
     await admin.from("email_domain_checks").insert({

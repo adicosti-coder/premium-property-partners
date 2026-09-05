@@ -39,6 +39,10 @@ interface StatusPayload {
   dns_healthy: boolean;
   delegation_serving: boolean;
   delegation_note: string | null;
+  sender_dns_ready?: boolean;
+  provider_status?: string | null;
+  provider_error?: string | null;
+  sending_active?: boolean;
   records: RecordCheck[];
   pending_emails: number;
   failed_30d: number;
@@ -204,6 +208,19 @@ export default function EmailDomainHealthPanel() {
                   </p>
                 </div>
               </div>
+
+              {d.sending_active === false && (
+                <p className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+                  <span>
+                    Expedierea reală a e-mailurilor este încă blocată
+                    {d.provider_status ? ` (stare expeditor: ${d.provider_status})` : ""}. Adaugă în
+                    Cloudflare cele două înregistrări marcate „Lipsește” pe gazda <strong>send</strong>
+                    {" "}— nu afectează serverele de e-mail existente. După adăugare, apasă „Reverifică
+                    acum”: validarea și retrimiterea notificărilor se fac automat.
+                  </span>
+                </p>
+              )}
 
               {d.delegation_note === "lame_delegation" && (
                 <p className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
