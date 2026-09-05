@@ -28,10 +28,16 @@ const mountApp = () => {
   // Only load these after real user intent; idle fallback was polluting Lighthouse runs.
   events.forEach(e => document.addEventListener(e, loadNonCritical, { once: true, passive: true }));
 
+  // The prerendered SEO block exists only for crawlers that don't run JS.
+  // Once React takes over, the real page renders its own heading, so remove it
+  // to avoid a second H1 in the live DOM.
+  document.getElementById("seo-prerender")?.remove();
+
   const rootEl = document.getElementById("root");
   if (rootEl) {
     try {
       const root = createRoot(rootEl);
+
       const renderApp = () => {
         root.render(
           <HelmetProvider>
