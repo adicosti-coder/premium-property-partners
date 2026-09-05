@@ -76,6 +76,7 @@ const clean = (v: string) => v.replace(/^"|"$/g, "").replace(/\.$/, "").trim().t
 async function runDnsChecks(): Promise<{
   records: RecordCheck[];
   delegationServing: boolean;
+  senderReady: boolean;
   delegationNote: string | null;
 }> {
   const [txt, ns, mx, spfMx, spfTxt] = await Promise.all([
