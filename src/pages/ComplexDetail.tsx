@@ -256,7 +256,7 @@ const ComplexDetail = () => {
   // Breadcrumb for SEO
   const breadcrumbItems = [
     { name: "Acasă", url: "https://realtrust.ro" },
-    { name: "Complexe Rezidențiale", url: "https://realtrust.ro/complexe" },
+    { name: "Complexe Rezidențiale", url: "https://realtrust.ro/ansambluri-rezidentiale" },
     { name: complex.name, url: pageUrl },
   ];
 

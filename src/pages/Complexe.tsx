@@ -181,7 +181,7 @@ const Complexe = () => {
 
   const breadcrumbItems = [
     { name: "Acasă", url: "https://realtrust.ro" },
-    { name: "Complexe Rezidențiale", url: "https://realtrust.ro/complexe" },
+    { name: "Complexe Rezidențiale", url: "https://realtrust.ro/ansambluri-rezidentiale" },
   ];
 
   const jsonLd = {
@@ -237,7 +237,7 @@ const Complexe = () => {
       <SEOHead
         title={t.title}
         description={t.metaDescription}
-        url="https://realtrust.ro/complexe"
+        url="https://realtrust.ro/ansambluri-rezidentiale"
         jsonLd={jsonLd}
         breadcrumbItems={breadcrumbItems}
       />
