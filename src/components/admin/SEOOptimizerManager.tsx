@@ -51,7 +51,7 @@ const QUICK_URLS = [
   // Oaspeți
   "https://realtrust.ro/cazare",
   "https://realtrust.ro/oaspeti",
-  "https://realtrust.ro/complexe",
+  "https://realtrust.ro/ansambluri-rezidentiale",
   // Investiții & Imobiliare
   "https://realtrust.ro/investitii",
   "https://realtrust.ro/catalog-investitii",

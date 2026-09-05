@@ -273,7 +273,7 @@ const ComplexLanding = () => {
         jsonLd={jsonLd}
         breadcrumbItems={[
           { name: isRo ? "Acasă" : "Home", url: "https://realtrust.ro" },
-          { name: isRo ? "Complexe" : "Complexes", url: "https://realtrust.ro/complexe" },
+          { name: isRo ? "Complexe" : "Complexes", url: "https://realtrust.ro/ansambluri-rezidentiale" },
           { name: complex.name, url: `https://realtrust.ro/complexe/${complex.slug}` },
         ]}
       />

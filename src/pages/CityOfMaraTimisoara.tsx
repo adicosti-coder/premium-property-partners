@@ -318,7 +318,7 @@ const CityOfMaraTimisoara = () => {
         jsonLd={jsonLd}
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
-          { name: "Complexe", url: "https://realtrust.ro/complexe" },
+          { name: "Complexe", url: "https://realtrust.ro/ansambluri-rezidentiale" },
           { name: "City of Mara", url: "https://realtrust.ro/complexe/city-of-mara" },
         ]}
       />
