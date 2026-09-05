@@ -293,60 +293,9 @@ export interface AggregateRatingData {
   worstRating?: number;
 }
 
-export const generateAggregateRatingSchema = (
-  itemName: string,
-  itemUrl: string,
-  rating: AggregateRatingData
-) => ({
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": itemName,
-  "url": itemUrl,
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": Math.max(1, Math.min(5, rating.ratingValue)).toFixed(1),
-    "reviewCount": String(rating.reviewCount),
-    "bestRating": "5",
-    "worstRating": "1",
-  },
-});
-
-// Individual Review Schema
-export interface ReviewData {
-  author: string;
-  datePublished: string;
-  reviewBody: string;
-  ratingValue: number;
-}
-
-export const generateReviewSchema = (
-  itemName: string,
-  itemUrl: string,
-  reviews: ReviewData[]
-) => {
-  const validReviews = reviews.filter((r) => r.ratingValue >= 1 && r.ratingValue <= 5);
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": itemName,
-    "url": itemUrl,
-    "review": validReviews.map((review) => ({
-      "@type": "Review",
-      "author": {
-        "@type": "Person",
-        "name": review.author,
-      },
-      "datePublished": review.datePublished,
-      "reviewBody": review.reviewBody,
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": String(Math.max(1, Math.min(5, review.ratingValue))),
-        "bestRating": "5",
-        "worstRating": "1",
-      },
-    })),
-  };
-};
+// NOTE: standalone Product-based rating/review generators were removed.
+// Ratings and reviews must live on the entity they describe (LodgingBusiness,
+// RealEstateAgent) and only when the reviews are visible on the page.
 
 // Blog Article Schema
 export interface ArticleSchemaData {
