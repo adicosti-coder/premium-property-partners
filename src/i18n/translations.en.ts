@@ -251,7 +251,7 @@ export const en: Translations = {
   
   // FAQ
   faq: {
-    badge: "RealTrust Property Management",
+    badge: "RealTrust · property management",
     title: "Frequently Asked",
     titleHighlight: "Questions",
     subtitle: "Clear answers about ATENEO, GREEN FOREST, Cross Square House, HELIOS apartments and short-term rental accommodation in Timișoara.",

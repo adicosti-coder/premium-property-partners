@@ -186,7 +186,7 @@ function getAdvancedSimulationFollowupEmail(
                 <tr>
                   <td style="background-color: #f8f9fa; padding: 25px 40px; border-top: 1px solid #e9ecef;">
                     <p style="color: #6c757d; font-size: 13px; margin: 0; text-align: center;">
-                      RealTrust Property Management<br>
+                      RealTrust · Imo Business Centrum SRL<br>
                       Timișoara, România<br>
                       <a href="${websiteUrl}" style="color: #1a1a2e; text-decoration: none;">realtrust.ro</a>
                     </p>
