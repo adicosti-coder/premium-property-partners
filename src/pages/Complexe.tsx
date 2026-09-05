@@ -26,6 +26,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { COMPLEXES, CLUSTER_LINKS } from "@/lib/internalLinking";
 
 interface ComplexImage {
   id: string;
