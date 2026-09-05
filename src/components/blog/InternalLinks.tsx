@@ -118,13 +118,21 @@ const InternalLinks = ({ category, tags, currentSlug }: InternalLinksProps) => {
     enabled: !!category,
   });
 
-  const relevantLinks = SITE_LINKS.filter((link) => {
+  const matched = SITE_LINKS.filter((link) => {
     const catMatch = link.matchCategories.some(
       (c) => c.toLowerCase() === category.toLowerCase()
     );
     const tagMatch = link.matchTags.some((t) => lowerTags.includes(t.toLowerCase()));
     return catMatch || tagMatch;
-  }).slice(0, 3);
+  });
+
+  // Every article keeps at least 2 contextual links (no dead-end articles),
+  // but never more than 4 so the text doesn't turn into a link list.
+  const FALLBACK_HREFS = ["/investitii", "/pentru-proprietari", "/cartiere"];
+  const fallback = SITE_LINKS.filter(
+    (l) => FALLBACK_HREFS.includes(l.href) && !matched.some((m) => m.href === l.href)
+  );
+  const relevantLinks = [...matched, ...fallback].slice(0, 4);
 
   const hasContent = relevantLinks.length > 0 || (relatedArticles && relatedArticles.length > 0);
   if (!hasContent) return null;
