@@ -124,6 +124,8 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "poi", label: "POI", icon: MapPin },
       { value: "maintenance", label: "Mentenanță", icon: Wrench },
       { value: "captcha", label: "Captcha", icon: Shield },
+      { value: "email-health", label: "Stare E-mail", icon: MailCheck, keywords: ["email", "notify", "dns", "domeniu", "resend", "livrare", "retry", "verificare"] },
+
       { value: "security", label: "Securitate", icon: ShieldCheck },
       { value: "ai-security", label: "Securitate AI", icon: ShieldCheck, keywords: ["ai", "openrouter", "scan", "tokens", "permissions"] },
       { value: "system-health", label: "System Health", icon: Activity, keywords: ["audit", "cron", "monitor", "health", "alerts"] },
