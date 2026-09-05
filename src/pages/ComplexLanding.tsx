@@ -19,6 +19,8 @@ import {
   Phone,
   MapPin,
 } from "lucide-react";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { buildComplexLinks } from "@/lib/internalLinking";
 
 const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
