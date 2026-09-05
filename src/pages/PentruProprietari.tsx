@@ -1166,7 +1166,39 @@ const PentruProprietari = () => {
         </div>
       </section>
 
+      {/* GEO — direct answers owned by the property-management pillar */}
+      {language === "ro" && (
+        <section className="pb-4 bg-background">
+          <div className="container mx-auto px-6 max-w-5xl">
+            <GeoAnswers
+              group="pentru-proprietari"
+              title="Răspunsuri directe despre administrarea în regim hotelier"
+              intro="Ce ne întreabă proprietarii din Timișoara înainte de a semna: costuri, operare, tarife, rezervări directe și raportare."
+            />
+            <DataProvenance
+              className="mb-4"
+              external={[
+                "Comisioanele platformelor de rezervare și taxa hotelieră locală se aplică la nivelurile publicate de Booking, Airbnb, Expedia și de Primăria Timișoara.",
+                "Obligațiile fiscale se verifică la ANAF înainte de fiecare declarație.",
+              ]}
+              assumptions={[
+                "Pachete de administrare: Starter 15%, Esențial 18%, Standard 20%, Premium 25% din încasările realizate.",
+                "Ocupare medie 75% pe an și deducere operațională de aproximativ 27% din încasări.",
+                "Randament net de referință 9,4% pe an, raportat la capitalul total investit.",
+                "Portofoliu administrat: 15 unități în Timișoara, operate sub brandul de cazare ApArt Hotel.",
+              ]}
+              calculations={[
+                "Estimările de venit lunar din calculator aplică ipotezele de mai sus pe tariful și ocuparea introduse.",
+                "Comparația regim hotelier vs. chirie clasică pornește de la un venit brut de aproximativ 1,6× chiria clasică pentru apartamente comparabile.",
+              ]}
+              verifiedOn="5 septembrie 2026"
+            />
+          </div>
+        </section>
+      )}
+
       {/* Contextual internal links — cluster property management */}
+
       <section className="pb-4 bg-background">
         <div className="container mx-auto px-6 max-w-5xl">
           <ContextualLinks
