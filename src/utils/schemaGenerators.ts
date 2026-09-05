@@ -805,7 +805,7 @@ export const generateInvestmentOpportunitySchema = (property: PropertySchemaData
  */
 export const generatePropertyPageSchemas = (
   property: PropertySchemaData,
-  _reviews?: ReviewData[]
+  _reviews?: unknown[]
 ) => {
   const isStay = (property.listingType || "cazare") === "cazare";
   const schemas: Record<string, unknown>[] = [
