@@ -78,10 +78,12 @@ async function runDnsChecks(): Promise<{
   delegationServing: boolean;
   delegationNote: string | null;
 }> {
-  const [txt, ns, mx] = await Promise.all([
+  const [txt, ns, mx, spfMx, spfTxt] = await Promise.all([
     doh(VERIFY_TXT_HOST, "TXT"),
     doh(SENDER_DOMAIN, "NS"),
     doh(SENDER_DOMAIN, "MX"),
+    doh(RESEND_SPF_HOST, "MX"),
+    doh(RESEND_SPF_HOST, "TXT"),
   ]);
 
   const txtValues = (txt?.Answer ?? []).filter((a) => a.type === 16).map((a) => clean(a.data));
