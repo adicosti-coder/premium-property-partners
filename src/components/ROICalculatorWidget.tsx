@@ -120,8 +120,30 @@ const ROICalculatorWidget = () => {
         email: formData.email,
       });
 
+      // Notificare echipă + confirmare proprietar (best-effort)
+      try {
+        await supabase.functions.invoke("notify-evaluation-request", {
+          body: {
+            name: formData.name,
+            email: formData.email,
+            phone: formatPhoneInput(formData.phone),
+            propertyValue,
+            surface,
+            managementTier: selectedTier,
+            classicRent: calculations.classicRent,
+            realtrustIncome: calculations.realtrustIncome,
+            targetNetAnnual: calculations.targetNetAnnual,
+            targetNetMonthly: calculations.targetNetMonthly,
+            source: "calculator_roi_widget",
+          },
+        });
+      } catch (notifyError) {
+        console.error("notify-evaluation-request failed:", notifyError);
+      }
+
       setFormSubmitted(true);
       toast.success("Cerere trimisă! Îți trimitem proiecția pe email.");
+
     } finally {
       setSubmitting(false);
     }
