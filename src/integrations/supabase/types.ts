@@ -10712,6 +10712,13 @@ export type Database = {
         }[]
       }
       get_poi_review_throttle: { Args: never; Returns: number }
+      get_premium_article_slugs: {
+        Args: never
+        Returns: {
+          slug: string
+          title: string
+        }[]
+      }
       get_prospect_injection_daily_summary: {
         Args: { p_days?: number }
         Returns: {
