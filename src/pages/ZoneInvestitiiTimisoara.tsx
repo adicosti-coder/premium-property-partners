@@ -246,8 +246,12 @@ const ZoneInvestitiiTimisoara = () => {
           />
 
           <h1 className="text-3xl md:text-4xl font-serif font-semibold text-foreground mb-4">
-            Care sunt cele mai bune zone din Timișoara pentru investiții imobiliare?
+            Cele mai bune zone pentru investiții imobiliare în Timișoara
           </h1>
+          <p className="text-sm text-muted-foreground mb-4">
+            Care sunt zonele din Timișoara care susțin cel mai bine o investiție în 2026 — și pentru
+            ce strategie funcționează fiecare.
+          </p>
 
           <section
             className="ai-quote my-6 rounded-xl border-l-4 border-accent bg-muted/40 p-5"

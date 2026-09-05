@@ -1157,6 +1157,14 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <p>Analiză pe zone — Centru/Cetate, Iosefin, ISHO, Fabric, Circumvalațiunii, Calea Aradului, Calea Lipovei, Complex Studențesc, Girocului, Calea Șagului, Dumbrăvița și Giroc — după preț de achiziție, chirie realizabilă, potențial de <strong>regim hotelier</strong>, intensitatea cererii, lichiditate la revânzare și riscuri specifice.</p>
       <p>Indicii de preț sunt estimări interne RealTrust, nu date oficiale de tranzacționare. Ipotezele de randament folosite sunt ocupare 75%, deducere operațională 27% și randament net de referință 9,4% pe an.</p>
     `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Cele mai bune zone pentru investiții imobiliare în Timișoara',
+      url: `${BASE_URL}/zone-investitii-timisoara`,
+      inLanguage: 'ro-RO',
+      about: { '@type': 'Place', name: 'Timișoara, Timiș, România' },
+    },
   });
 
   // /ghid-evaluare-apartament-timisoara — ghid metodologic de evaluare
@@ -1172,6 +1180,14 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h3>De la valoare la randament</h3>
       <p>Comparabilele din același perimetru se corectează cu marja de negociere, iar pentru un apartament de investiție se estimează separat chiria clasică și venitul din <strong>regim hotelier</strong> (ocupare 75%, deducere operațională 27%), pentru a obține randamentul net raportat la capitalul total investit.</p>
     `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Cum se evaluează un apartament în Timișoara',
+      url: `${BASE_URL}/ghid-evaluare-apartament-timisoara`,
+      inLanguage: 'ro-RO',
+      about: { '@type': 'Place', name: 'Timișoara, Timiș, România' },
+    },
   });
 
   // /autor/adrian-costi — profil editorial (E-E-A-T)
@@ -1185,6 +1201,26 @@ function buildStaticRoutes(): PrerenderRoute[] {
       <h2>Fondator &amp; CEO RealTrust</h2>
       <p>Adrian Costi este fondatorul și CEO-ul RealTrust (Imo Business Centrum SRL), companie imobiliară din Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți în Timișoara și vestul României. Coordonează direct administrarea celor 15 apartamente din portofoliu, operate în regim hotelier sub brandul ApArt Hotel.</p>
     `,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'ProfilePage',
+      url: `${BASE_URL}/autor/adrian-costi`,
+      inLanguage: 'ro-RO',
+      mainEntity: {
+        '@type': 'Person',
+        '@id': `${BASE_URL}/despre-noi#adrian-costi`,
+        name: 'Adrian Costi',
+        jobTitle: 'Fondator & CEO RealTrust',
+        url: `${BASE_URL}/autor/adrian-costi`,
+        sameAs: ['https://www.linkedin.com/in/costi-adrian-2b50931a'],
+        worksFor: {
+          '@type': 'Organization',
+          name: 'RealTrust',
+          legalName: 'Imo Business Centrum SRL',
+          url: BASE_URL,
+        },
+      },
+    },
   });
 
   // /intrebari-frecvente — FAQ hub (regim hotelier, administrare, ROI)

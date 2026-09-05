@@ -162,6 +162,16 @@ const TeamSection = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {member.description}
                 </p>
+                {member.name === "Adrian Costi" && (
+                  <a
+                    href="/autor/adrian-costi"
+                    className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
+                  >
+                    {language === "en"
+                      ? "Author profile & published guides"
+                      : "Profil de autor și ghiduri publicate"}
+                  </a>
+                )}
               </CardContent>
             </Card>
           ))}
