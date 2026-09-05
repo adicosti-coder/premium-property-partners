@@ -11,6 +11,8 @@ import { lazy, Suspense } from "react";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { CLUSTER_LINKS } from "@/lib/internalLinking";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
@@ -330,6 +332,16 @@ const ServiciiImobiliareTimisoara = () => {
               </Link>
             </div>
           </section>
+          {/* Contextual internal links — cluster servicii imobiliare */}
+          <ContextualLinks
+            title={isRo ? "Resurse conexe" : "Related resources"}
+            intro={
+              isRo
+                ? "Proprietăți disponibile, evaluare, zone și oportunități de investiție."
+                : "Available properties, valuation, areas and investment opportunities."
+            }
+            links={CLUSTER_LINKS["servicii-imobiliare"]}
+          />
         </div>
       </main>
 

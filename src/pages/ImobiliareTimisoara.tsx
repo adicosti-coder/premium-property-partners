@@ -13,6 +13,8 @@ import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { lazy, Suspense } from "react";
 import { CompareProvider } from "@/contexts/CompareContext";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { CLUSTER_LINKS } from "@/lib/internalLinking";
 
 
 const MarketPulse = lazy(() => import("@/components/MarketPulse"));
@@ -303,6 +305,13 @@ const ImobiliareTimisoara = () => {
               <MarketPulse />
             </Suspense>
           </div>
+
+          {/* Contextual internal links — cluster local */}
+          <ContextualLinks
+            title="Continuă cu pașii următori"
+            intro="Ansambluri, servicii și analize care completează informațiile despre cartierele Timișoarei."
+            links={CLUSTER_LINKS.cartiere}
+          />
 
           {/* FAQ */}
           <section id="faq" className="mt-16">

@@ -28,6 +28,8 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import QuickLeadForm from "@/components/QuickLeadForm";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { buildComplexLinks } from "@/lib/internalLinking";
 
 interface ComplexImage {
   id: string;
@@ -422,6 +424,16 @@ const ComplexDetail = () => {
                 ))}
               </ul>
             </div>
+          </div>
+        </section>
+
+        {/* Contextual internal links — zonă, investiții, servicii, alte ansambluri */}
+        <section className="pt-4">
+          <div className="container mx-auto px-6">
+            <ContextualLinks
+              title={`Legături utile pentru ${complex.name}`}
+              links={buildComplexLinks(complex.slug, complex.name)}
+            />
           </div>
         </section>
 

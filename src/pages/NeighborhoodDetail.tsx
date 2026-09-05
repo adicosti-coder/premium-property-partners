@@ -9,6 +9,8 @@ import RealPropertyCard from "@/components/RealPropertyCard";
 import CompareDrawer from "@/components/CompareDrawer";
 
 import { getNeighborhoodBySlug } from "@/data/neighborhoods";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { buildNeighborhoodLinks } from "@/lib/internalLinking";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { MapPin, TrendingUp, Home, Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -203,6 +205,13 @@ const NeighborhoodDetail = () => {
               </div>
             </div>
           )}
+
+          {/* Contextual internal links — ansambluri din zonă, investiții, servicii */}
+          <ContextualLinks
+            title={`Explorează mai departe zona ${neighborhood.fullName}`}
+            intro="Ansambluri, servicii și analize legate direct de această zonă din Timișoara."
+            links={buildNeighborhoodLinks(neighborhood.slug, neighborhood.fullName)}
+          />
 
           {/* Market Pulse */}
           <Suspense fallback={<div className="min-h-[300px]" />}>

@@ -13,6 +13,8 @@ const QuickAvailabilitySearch = lazy(() => import("@/components/QuickAvailabilit
 const AISearchBar = lazy(() => import("@/components/AISearchBar"));
 const CityGuideSection = lazy(() => import("@/components/CityGuideSection"));
 import SEOHead from "@/components/SEOHead";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { CLUSTER_LINKS } from "@/lib/internalLinking";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import PageSummary from "@/components/PageSummary";
@@ -814,6 +816,20 @@ const PentruOaspeti = () => {
                 </a>
               </div>
             </motion.div>
+          </div>
+        </section>
+        {/* Contextual internal links — cluster cazare */}
+        <section className="pb-12">
+          <div className="container mx-auto px-6 max-w-5xl">
+            <ContextualLinks
+              title={language === "ro" ? "Alege zona potrivită pentru sejurul tău" : "Pick the right area for your stay"}
+              intro={
+                language === "ro"
+                  ? "Apartamente, zone turistice și avantajele rezervării directe."
+                  : "Apartments, city areas and the benefits of booking direct."
+              }
+              links={CLUSTER_LINKS.cazare}
+            />
           </div>
         </section>
       </main>

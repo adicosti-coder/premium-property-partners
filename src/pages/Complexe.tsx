@@ -26,6 +26,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { COMPLEXES, CLUSTER_LINKS } from "@/lib/internalLinking";
 
 interface ComplexImage {
   id: string;
@@ -444,6 +446,32 @@ const Complexe = () => {
                 ))}
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Analize dedicate pe ansambluri — asigură un link intern pentru
+            fiecare pagină de ansamblu (fără pagini orfane). */}
+        <section className="py-12 border-t border-border">
+          <div className="container mx-auto px-6">
+            <ContextualLinks
+              title={language === "ro" ? "Analize dedicate pe ansambluri" : "Dedicated complex analyses"}
+              intro={
+                language === "ro"
+                  ? "Randament, ocupare și unități administrate, pentru fiecare proiect rezidențial din Timișoara."
+                  : "Yield, occupancy and managed units for each residential project in Timișoara."
+              }
+              links={COMPLEXES.map((c) => ({
+                href: c.href,
+                label:
+                  language === "ro"
+                    ? `randamentul apartamentelor din ${c.name}`
+                    : `apartment yield in ${c.name}`,
+              }))}
+            />
+            <ContextualLinks
+              title={language === "ro" ? "Context util pentru investitori" : "Useful context for investors"}
+              links={CLUSTER_LINKS.investitii.slice(0, 4)}
+            />
           </div>
         </section>
 
