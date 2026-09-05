@@ -730,7 +730,20 @@ const LeadsManager = () => {
                   <SelectItem value="real_estate_contact">
                     {lang === "ro" ? "Contact Imobiliare" : "Real Estate"}
                   </SelectItem>
+                  <SelectItem value="calculator_roi_widget">
+                    {lang === "ro" ? "Proiecție Randament" : "Yield Projection"}
+                  </SelectItem>
+                  <SelectItem value="evaluare_gratuita">
+                    {lang === "ro" ? "Evaluare Gratuită" : "Free Valuation"}
+                  </SelectItem>
+                  <SelectItem value="pentru_proprietari_precalc">
+                    {lang === "ro" ? "Precalcul Proprietari" : "Owners Precalc"}
+                  </SelectItem>
+                  <SelectItem value="pagina_contact">
+                    {lang === "ro" ? "Pagina Contact" : "Contact Page"}
+                  </SelectItem>
                   <SelectItem value="HostScan AI Report">HostScan AI</SelectItem>
+
                   <SelectItem value="AI Chat (Tools)">
                     {lang === "ro" ? "Chat AI" : "AI Chat"}
                   </SelectItem>
