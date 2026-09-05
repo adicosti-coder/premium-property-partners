@@ -289,6 +289,13 @@ Deno.serve(async (req) => {
   const dns = await runDnsChecks();
   const dnsHealthy = dns.records.every((r) => r.verdict === "ok");
 
+  // The transport actually used by the notification functions is the sending
+  // provider, so re-verify it whenever its SPF records are publicly visible.
+  const provider = dns.senderReady
+    ? await reverifyResendDomain()
+    : { status: null as string | null, error: "SPF records not visible yet" };
+  const sendingActive = provider.status === "verified";
+
   const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
   const [pending, failed30d, resent30d] = await Promise.all([
     admin
@@ -308,7 +315,7 @@ Deno.serve(async (req) => {
   ]);
 
   let autoRetry: { attempted: number; sent: number; failed: number } | null = null;
-  if (internal && dnsHealthy && (pending.count ?? 0) > 0) {
+  if (sendingActive && (pending.count ?? 0) > 0) {
     try {
       autoRetry = await retryPending();
     } catch (e) {
@@ -321,6 +328,10 @@ Deno.serve(async (req) => {
     dns_healthy: dnsHealthy,
     delegation_serving: dns.delegationServing,
     delegation_note: dns.delegationNote,
+    sender_dns_ready: dns.senderReady,
+    provider_status: provider.status,
+    provider_error: provider.error ?? null,
+    sending_active: sendingActive,
     records: dns.records,
     pending_emails: pending.count ?? 0,
     failed_30d: failed30d.count ?? 0,
@@ -328,6 +339,7 @@ Deno.serve(async (req) => {
     auto_retry: autoRetry,
     source: internal ? "cron" : "admin",
   };
+
 
   try {
     await admin.from("email_domain_checks").insert({
