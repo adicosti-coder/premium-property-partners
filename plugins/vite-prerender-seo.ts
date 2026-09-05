@@ -18,6 +18,7 @@ import {
   buildBlogHubRoutes,
   buildComplexRoutes,
   buildRemainingStaticRoutes,
+  readComplexLandingSlugs,
 } from './prerender-extra-routes';
 
 interface PrerenderRoute {
@@ -1869,6 +1870,10 @@ export default function vitePrerenderSeo(): Plugin {
           `[prerender-seo] Found ${articles.length} public articles, ${premiumStubs.length} premium (noindex), ${complexes.length} complexes`,
         );
 
+        const complexLandingSlugs = readComplexLandingSlugs(
+          fs.readFileSync(path.resolve(process.cwd(), 'src/pages/ComplexLanding.tsx'), 'utf-8'),
+        );
+
         const takenPaths = new Set<string>([
           ...staticPaths,
           ...guestPaths,
@@ -1879,7 +1884,7 @@ export default function vitePrerenderSeo(): Plugin {
           ...buildArticleRoutes(articles),
           ...buildPremiumStubRoutes(premiumStubs),
           ...buildBlogHubRoutes(articles),
-          ...buildComplexRoutes(complexes, takenPaths),
+          ...buildComplexRoutes(complexes, complexLandingSlugs, takenPaths),
           ...buildRemainingStaticRoutes(),
         ].filter((r) => {
           if (takenPaths.has(r.path)) return false;

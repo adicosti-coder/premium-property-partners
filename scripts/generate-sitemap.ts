@@ -183,8 +183,6 @@ const isListable = (block: string, premiumSlugs: Set<string>): boolean => {
   const path = loc.slice(BASE_URL.length) || "/";
 
   if (REDIRECT_ONLY_PATHS.has(path)) return false;
-  // Legacy complex route — /complexe/<slug> is the canonical form.
-  if (path.startsWith("/complex/")) return false;
 
   const segments = path.split("/").filter(Boolean);
   if (segments.some((s) => INVALID_SEGMENTS.has(s.toLowerCase()))) {
@@ -267,7 +265,19 @@ const main = async () => {
   const unique = dedupeByLoc(canonical);
 
   // Only valid, public, canonical URLs may reach Search Console.
-  const deduped = unique.filter((b) => isListable(b, premiumSlugs));
+  const listable = unique.filter((b) => isListable(b, premiumSlugs));
+
+  // Drop /complex/<slug> when the same complex also has a /complexe/<slug>
+  // landing page: those two URLs share one canonical (/complexe/<slug>).
+  const landingSlugs = new Set(
+    listable
+      .map((b) => b.match(/<loc>[^<]*\/complexe\/([a-z0-9-]+)<\/loc>/)?.[1])
+      .filter((s): s is string => Boolean(s)),
+  );
+  const deduped = listable.filter((b) => {
+    const legacy = b.match(/<loc>[^<]*\/complex\/([a-z0-9-]+)<\/loc>/)?.[1];
+    return !(legacy && landingSlugs.has(legacy));
+  });
   console.log(
     `[sitemap] ${unique.length - deduped.length} URLs dropped (invalid, redirect-only or gated); ${premiumSlugs.size} premium articles excluded`,
   );
