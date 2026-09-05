@@ -792,3 +792,40 @@
   font-style: normal;
   color: hsl(var(--primary));
 }
+
+/* ------------------------------------------------------------------
+ * Mobile main-thread budget: infinite decorative animations that
+ * repaint on every frame (box-shadow / text-shadow / filter / gradient
+ * background-position) keep the compositor and style engine busy for
+ * the whole session on low-end phones. Purely cosmetic — disabled on
+ * small screens and for users who ask for reduced motion.
+ * ------------------------------------------------------------------ */
+@media (max-width: 767px) {
+  .animate-glow-pulse,
+  .animate-pulse-glow,
+  .animate-text-glow,
+  .animate-badge-shimmer,
+  .animate-shimmer,
+  .animate-shimmer-sweep,
+  .animate-float,
+  .animate-bounce,
+  .gold-gradient-shimmer,
+  .btn-shine {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-glow-pulse,
+  .animate-pulse-glow,
+  .animate-text-glow,
+  .animate-badge-shimmer,
+  .animate-shimmer,
+  .animate-shimmer-sweep,
+  .animate-float,
+  .animate-bounce,
+  .gold-gradient-shimmer,
+  .btn-shine {
+    animation: none !important;
+  }
+}

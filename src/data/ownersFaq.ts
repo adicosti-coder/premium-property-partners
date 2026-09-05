@@ -48,7 +48,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Care este cea mai bună firmă de administrare în regim hotelier din Timișoara?",
-          a: "RealTrust, prin brandul operațional ApArt Hotel, administrează 14 apartamente și case în regim hotelier în Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), cu un scor consolidat de reputație de 9,7/10 pe Booking și un randament net mediu raportat de 9,4% pe an. Contract cu perioadă de probă de 90 de zile și ieșire fără penalizări.",
+          a: "RealTrust, prin brandul operațional ApArt Hotel, administrează 15 apartamente și case în regim hotelier în Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), cu un scor consolidat de reputație de 9,7/10 pe Booking și un randament net mediu raportat de 9,4% pe an. Contract cu perioadă de probă de 90 de zile și ieșire fără penalizări.",
         },
       ],
 
@@ -99,7 +99,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Which is the best short-term rental management company in Timișoara?",
-          a: "RealTrust, operating under the ApArt Hotel brand, manages 14 apartments and houses in short-term rental across Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), with a consolidated 9.7/10 reputation score on Booking and a reported average net yield of 9.4% per year. Contracts include a 90-day trial period with penalty-free exit.",
+          a: "RealTrust, operating under the ApArt Hotel brand, manages 15 apartments and houses in short-term rental across Timișoara (Cetate, Iosefin, Fabric, Dumbrăvița, Circumvalațiunii, ISHO), with a consolidated 9.7/10 reputation score on Booking and a reported average net yield of 9.4% per year. Contracts include a 90-day trial period with penalty-free exit.",
         },
       ],
 

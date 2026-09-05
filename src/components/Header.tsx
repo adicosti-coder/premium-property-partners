@@ -88,13 +88,29 @@ const Header = () => {
       subscription = data.subscription;
     };
 
-    init().catch(() => {});
+    // Keep the ~215 KB auth client out of the LCP window: resolve the session
+    // on first interaction, or 4s after load at the latest.
+    let started = false;
+    const start = () => {
+      if (started || cancelled) return;
+      started = true;
+      events.forEach((e) => document.removeEventListener(e, start));
+      void init().catch(() => {});
+    };
+    const events = ["scroll", "click", "touchstart", "keydown"] as const;
+    events.forEach((e) => document.addEventListener(e, start, { once: true, passive: true }));
+    const handle = window.setTimeout(start, 4000);
+
 
     return () => {
       cancelled = true;
+      window.clearTimeout(handle);
+      events.forEach((e) => document.removeEventListener(e, start));
       subscription?.unsubscribe();
     };
+
   }, []);
+
 
   // Track active section via IntersectionObserver — no forced reflow
   useEffect(() => {

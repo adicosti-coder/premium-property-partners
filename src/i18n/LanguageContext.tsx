@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { translations, Language, Translations } from './translations';
+import { ro, loadEnglish, Language, Translations } from './translations';
 import { isBrowser, safeLocalStorage } from '@/utils/browserStorage';
 
 interface LanguageContextType {
@@ -9,6 +9,9 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+// Cached once loaded so switching back to English is instant.
+let englishDict: Translations | null = null;
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(() => {
@@ -20,6 +23,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     // Default to Romanian — primary audience is Romanian
     return 'ro';
   });
+
+  // Romanian ships in the initial bundle; English is fetched on demand so the
+  // second dictionary never weighs on first paint.
+  const [dict, setDict] = useState<Translations>(() =>
+    language === 'en' && englishDict ? englishDict : ro,
+  );
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
@@ -35,10 +44,31 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [language]);
 
-  const t = translations[language];
+  useEffect(() => {
+    let cancelled = false;
+    if (language !== 'en') {
+      setDict(ro);
+      return;
+    }
+    if (englishDict) {
+      setDict(englishDict);
+      return;
+    }
+    loadEnglish()
+      .then((en) => {
+        englishDict = en;
+        if (!cancelled) setDict(en);
+      })
+      .catch(() => {
+        // Fallback: keep Romanian copy rather than breaking the page.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [language]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t: dict }}>
       {children}
     </LanguageContext.Provider>
   );

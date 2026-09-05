@@ -26,15 +26,22 @@ export function useLazyVisible(rootMargin = "400px", timeoutMs: number | null = 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
           observer.disconnect();
           if (timer) clearTimeout(timer);
+          // Yield to the browser before mounting the heavy subtree so the
+          // hydration/LCP task chain is never extended by it (mobile TBT).
+          const ric = (window as unknown as {
+            requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+          }).requestIdleCallback;
+          if (ric) ric(() => setIsVisible(true), { timeout: 1500 });
+          else setTimeout(() => setIsVisible(true), 0);
         }
       },
       { rootMargin }
     );
 
     observer.observe(el);
+
     return () => {
       observer.disconnect();
       if (timer) clearTimeout(timer);
