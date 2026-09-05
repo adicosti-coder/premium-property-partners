@@ -213,46 +213,33 @@ const ComplexDetail = () => {
     ? `https://realtrust.ro/complexe/${complex.slug}`
     : `https://realtrust.ro/complex/${complex.slug}`;
 
-  // Generate LocalBusiness + Apartment JSON-LD for rich snippets
+  // A residential complex is an ApartmentComplex / Place — not a business of
+  // its own, and it carries no review content, so no LocalBusiness + no rating.
   const jsonLd = [
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": `RealTrust - Management ${complex.name}`,
-      "description": description,
-      "image": images[0]?.image_path || "https://realtrust.ro/images/hero-optimized-1920w.webp",
-      "url": pageUrl,
-      "telephone": "+40799069256",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Timișoara",
-        "addressRegion": "Timiș",
-        "addressCountry": "RO",
-        "streetAddress": complex.location,
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": complex.latitude,
-        "longitude": complex.longitude,
-      },
-      "priceRange": "$$",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "reviewCount": "150",
-      },
-    },
-    {
-      "@context": "https://schema.org",
       "@type": "ApartmentComplex",
+      "@id": `${pageUrl}#apartmentcomplex`,
       "name": complex.name,
       "description": description,
+      "url": pageUrl,
+      "image": images[0]?.image_path || undefined,
       "address": {
         "@type": "PostalAddress",
+        "streetAddress": complex.location,
         "addressLocality": "Timișoara",
         "addressRegion": "Timiș",
         "addressCountry": "RO",
       },
+      ...(complex.latitude && complex.longitude
+        ? {
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: complex.latitude,
+              longitude: complex.longitude,
+            },
+          }
+        : {}),
       "numberOfAvailableAccommodationUnits": complex.property_count,
       "amenityFeature": features?.map((f) => ({
         "@type": "LocationFeatureSpecification",
