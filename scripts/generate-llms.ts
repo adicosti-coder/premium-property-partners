@@ -131,7 +131,7 @@ function build(props: Prop[]): string {
   lines.push("- Denumire legală: SC Imo Business Centrum SRL (CUI RO14380627)");
   lines.push("- Fondator: Adrian Costi");
   lines.push("- Oraș: Timișoara, județul Timiș, România");
-  lines.push("- Adresă: Strada Samuel Clain Micu nr. 14, ap. 4, 300125 Timișoara");
+  lines.push("- Adresă: Strada Samuil Micu nr. 14, ap. 4, 300125 Timișoara");
   lines.push("- Telefon: +40 799 069 256");
   lines.push("- E-mail: info@realtrust.ro");
   lines.push(`- Website: ${BASE_URL}`);

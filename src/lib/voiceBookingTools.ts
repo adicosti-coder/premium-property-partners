@@ -276,7 +276,7 @@ const get_guest_guide = async (params: { booking_id?: string; property_name?: st
       body: { bookingId: params.booking_id },
     });
     if (error) return `Eroare: ${error.message}`;
-    if (!data?.guide) return "Nu am găsit un ghid de oaspete pentru această rezervare. Contactați-ne pe WhatsApp la +40770635252.";
+    if (!data?.guide) return "Nu am găsit un ghid de oaspete pentru această rezervare. Contactați-ne pe WhatsApp la +40799069256.";
 
     const g = data.guide;
     const parts = [`Ghid oaspete — ${g.property_name}`];
@@ -322,7 +322,7 @@ const submit_review = async (params: { rating: number; feedback?: string; proper
     } else if (rating === 3) {
       return `Mulțumim pentru feedback-ul de ${rating} stele. Apreciem onestitatea dumneavoastră. Vom ține cont de observații pentru a ne îmbunătăți serviciile.`;
     } else {
-      return `Ne pare rău că experiența nu a fost la nivelul așteptărilor. Am înregistrat feedback-ul dumneavoastră cu ${rating} stele. Un manager vă va contacta pe WhatsApp la +40770635252 pentru a discuta cum putem remedia situația.`;
+      return `Ne pare rău că experiența nu a fost la nivelul așteptărilor. Am înregistrat feedback-ul dumneavoastră cu ${rating} stele. Un manager vă va contacta pe WhatsApp la +40799069256 pentru a discuta cum putem remedia situația.`;
     }
   } catch (e: any) {
     return `Eroare la trimiterea review-ului: ${e.message}`;

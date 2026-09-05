@@ -1,0 +1,2 @@
+ALTER TABLE public.guest_guides ALTER COLUMN whatsapp_number SET DEFAULT '+40799069256';
+UPDATE public.guest_guides SET whatsapp_number = '+40799069256', updated_at = now() WHERE whatsapp_number IN ('+40770635252', '0770635252', '+40 770 635 252', '0770 635 252');

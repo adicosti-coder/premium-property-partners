@@ -43,7 +43,7 @@ export const BRAND = {
   url: SITE_ORIGIN,
   foundingDate: "2001",
   address: {
-    streetAddress: "Strada Samuel Clain Micu Nr.14, ap.4",
+    streetAddress: "Strada Samuil Micu Nr.14, ap.4",
     addressLocality: "Timișoara",
     addressRegion: "Timiș",
     postalCode: "300125",

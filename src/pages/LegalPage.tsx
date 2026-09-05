@@ -14,7 +14,7 @@ const LegalPage = ({ type }: { type: "terms" | "privacy" }) => {
       headingEn: "Terms & Conditions",
       bodyRo: `
 ## 1. Informații Generale
-Acest site web este operat de Imo Business Centrum SRL (CUI: RO14380627), cu sediul în Timișoara, str. Samuel Clain Micu Nr.14, ap.4. Prin accesarea și utilizarea site-ului www.realtrust.ro, acceptați acești termeni și condiții.
+Acest site web este operat de Imo Business Centrum SRL (CUI: RO14380627), cu sediul în Timișoara, str. Samuil Micu Nr.14, ap.4. Prin accesarea și utilizarea site-ului www.realtrust.ro, acceptați acești termeni și condiții.
 
 ## 2. Serviciile Noastre
 RealTrust & ApArt Hotel oferă servicii de administrare a proprietăților în regim hotelier, consultanță imobiliară și intermediere în tranzacții imobiliare în Timișoara și împrejurimi.
@@ -35,7 +35,7 @@ Pentru orice întrebări legate de acești termeni, ne puteți contacta la info@
       `,
       bodyEn: `
 ## 1. General Information
-This website is operated by Imo Business Centrum SRL (Tax ID: RO14380627), headquartered in Timișoara, str. Samuel Clain Micu Nr.14, ap.4. By accessing and using www.realtrust.ro, you accept these terms and conditions.
+This website is operated by Imo Business Centrum SRL (Tax ID: RO14380627), headquartered in Timișoara, str. Samuil Micu Nr.14, ap.4. By accessing and using www.realtrust.ro, you accept these terms and conditions.
 
 ## 2. Our Services
 RealTrust & ApArt Hotel provides property management services for short-term rentals, real estate consulting, and transaction brokerage in Timișoara and surrounding areas.
@@ -62,7 +62,7 @@ For any questions regarding these terms, you can contact us at info@realtrust.ro
       headingEn: "Privacy Policy",
       bodyRo: `
 ## 1. Operatorul de Date
-Imo Business Centrum SRL (CUI: RO14380627), cu sediul în Timișoara, str. Samuel Clain Micu Nr.14, ap.4, este operatorul datelor dumneavoastră personale.
+Imo Business Centrum SRL (CUI: RO14380627), cu sediul în Timișoara, str. Samuil Micu Nr.14, ap.4, este operatorul datelor dumneavoastră personale.
 
 ## 2. Date Colectate
 Colectăm următoarele categorii de date personale:
@@ -99,7 +99,7 @@ Pentru întrebări privind protecția datelor: info@realtrust.ro, tel. 0799 069 
       `,
       bodyEn: `
 ## 1. Data Controller
-Imo Business Centrum SRL (Tax ID: RO14380627), headquartered in Timișoara, str. Samuel Clain Micu Nr.14, ap.4, is the controller of your personal data.
+Imo Business Centrum SRL (Tax ID: RO14380627), headquartered in Timișoara, str. Samuil Micu Nr.14, ap.4, is the controller of your personal data.
 
 ## 2. Data Collected
 We collect the following categories of personal data:

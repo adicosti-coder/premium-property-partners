@@ -330,7 +330,7 @@ const PentruOaspeti = () => {
     "telephone": "+40799069256",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "Strada Samuel Clain Micu Nr.14, ap.4",
+      "streetAddress": "Strada Samuil Micu Nr.14, ap.4",
       "addressLocality": "Timișoara",
       "addressRegion": "Timiș",
       "postalCode": "300125",

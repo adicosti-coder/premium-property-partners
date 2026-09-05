@@ -869,7 +869,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       telephone: '+40799069256',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+        streetAddress: 'Strada Samuil Micu Nr.14, ap.4',
         addressLocality: 'Timișoara',
         addressRegion: 'Timiș',
         postalCode: '300125',
@@ -1100,13 +1100,13 @@ function buildStaticRoutes(): PrerenderRoute[] {
   routes.push({
     path: '/contact',
     title: 'Contact RealTrust Timișoara | Adresă, Telefon & Program',
-    description: 'Contact RealTrust Timișoara: Strada Samuel Clain Micu nr. 14, ap. 4, telefon +40 799 069 256, info@realtrust.ro. Program luni–vineri 10:00–18:00.',
+    description: 'Contact RealTrust Timișoara: Strada Samuil Micu nr. 14, ap. 4, telefon +40 799 069 256, info@realtrust.ro. Program luni–vineri 10:00–18:00.',
     h1: 'Contact & Locație — Sediu RealTrust Timișoara',
     canonical: `${BASE_URL}/contact`,
     seoBody: `
       ${ENTITY_DEFINITION_HTML}
       <h2>Date de contact RealTrust Timișoara</h2>
-      <p>Sediu: Strada Samuel Clain Micu nr. 14, ap. 4, 300125 Timișoara, județul Timiș. Telefon: +40 799 069 256. E-mail: info@realtrust.ro. Program: luni–vineri, 10:00–18:00 (Europe/Bucharest).</p>
+      <p>Sediu: Strada Samuil Micu nr. 14, ap. 4, 300125 Timișoara, județul Timiș. Telefon: +40 799 069 256. E-mail: info@realtrust.ro. Program: luni–vineri, 10:00–18:00 (Europe/Bucharest).</p>
     `,
     jsonLd: [
       ENTITY_QUESTION_SCHEMA(`${BASE_URL}/contact`),
@@ -1126,7 +1126,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
           areaServed: { '@type': 'City', name: 'Timișoara' },
           address: {
             '@type': 'PostalAddress',
-            streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+            streetAddress: 'Strada Samuil Micu Nr.14, ap.4',
             addressLocality: 'Timișoara',
             addressRegion: 'Timiș',
             postalCode: '300125',
@@ -1342,7 +1342,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         areaServed: 'Timișoara',
         address: {
           '@type': 'PostalAddress',
-          streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+          streetAddress: 'Strada Samuil Micu Nr.14, ap.4',
           addressLocality: 'Timișoara',
           addressRegion: 'Timiș',
           postalCode: '300125',
@@ -1444,7 +1444,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         areaServed: 'Timișoara',
         address: {
           '@type': 'PostalAddress',
-          streetAddress: 'Strada Samuel Clain Micu Nr.14, ap.4',
+          streetAddress: 'Strada Samuil Micu Nr.14, ap.4',
           addressLocality: 'Timișoara',
           addressRegion: 'Timiș',
           postalCode: '300125',
