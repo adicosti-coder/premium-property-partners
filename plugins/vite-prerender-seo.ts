@@ -11,10 +11,8 @@ import fs from 'fs';
 import path from 'path';
 import {
   fetchPublicArticles,
-  fetchPremiumArticleStubs,
   fetchComplexes,
   buildArticleRoutes,
-  buildPremiumStubRoutes,
   buildBlogHubRoutes,
   buildComplexRoutes,
   buildRemainingStaticRoutes,

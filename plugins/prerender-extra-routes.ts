@@ -55,28 +55,6 @@ async function restGet<T>(pathAndQuery: string): Promise<T[]> {
   }
 }
 
-async function rpc<T>(name: string): Promise<T[]> {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'content-type': 'application/json',
-      },
-      body: '{}',
-    });
-    if (!res.ok) {
-      console.warn(`[prerender-seo] rpc ${name} → ${res.status}`);
-      return [];
-    }
-    return (await res.json()) as T[];
-  } catch (err) {
-    console.warn(`[prerender-seo] rpc ${name} failed:`, (err as Error).message);
-    return [];
-  }
-}
-
 /* ------------------------------------------------------------------ markdown */
 
 /**
@@ -199,11 +177,6 @@ export async function fetchPublicArticles(): Promise<DbArticle[]> {
   );
 }
 
-/** Published premium articles (slug + title only, via a security-definer RPC). */
-export async function fetchPremiumArticleStubs(): Promise<Array<{ slug: string; title: string }>> {
-  return rpc<{ slug: string; title: string }>('get_premium_article_slugs');
-}
-
 const imageUrl = (a: DbArticle): string | undefined => {
   const raw = (a.main_image_url || a.cover_image || '').trim();
   if (!raw) return undefined;
@@ -317,34 +290,6 @@ export function buildArticleRoutes(articles: DbArticle[]): ExtraRoute[] {
       seoBody,
       image: img,
       jsonLd,
-    };
-  });
-}
-
-/**
- * Premium articles are readable only by authenticated members, so they must not
- * be presented to crawlers as public documents: they ship a `noindex` head and
- * are excluded from the sitemap.
- */
-export function buildPremiumStubRoutes(stubs: Array<{ slug: string; title: string }>): ExtraRoute[] {
-  return stubs.map((s) => {
-    const canonical = `${BASE_URL}/blog/${s.slug}`;
-    return {
-      path: `/blog/${s.slug}`,
-      title: clampText(`${s.title} | RealTrust`, 60),
-      description:
-        'Articol disponibil exclusiv pentru membrii autentificați RealTrust. Autentifică-te pentru a-l citi integral.',
-      h1: s.title,
-      canonical,
-      noindex: true,
-      seoBody: `<p>Acest articol este disponibil exclusiv pentru membrii autentificați RealTrust. <a href="${BASE_URL}/blog">Vezi articolele publice</a>.</p>`,
-      jsonLd: {
-        '@context': 'https://schema.org',
-        '@type': 'WebPage',
-        url: canonical,
-        name: s.title,
-        isAccessibleForFree: false,
-      },
     };
   });
 }
