@@ -306,6 +306,13 @@ const ImobiliareTimisoara = () => {
             </Suspense>
           </div>
 
+          {/* Contextual internal links — cluster local */}
+          <ContextualLinks
+            title="Continuă cu pașii următori"
+            intro="Ansambluri, servicii și analize care completează informațiile despre cartierele Timișoarei."
+            links={CLUSTER_LINKS.cartiere}
+          />
+
           {/* FAQ */}
           <section id="faq" className="mt-16">
             <div className="flex items-center gap-2 mb-4">
