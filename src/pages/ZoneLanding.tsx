@@ -176,30 +176,27 @@ const ZoneLanding = () => {
   const desc = language === "en" ? data.descriptionEn : data.description;
   const highlights = language === "en" ? data.highlightsEn : data.highlights;
 
-  // LocalBusiness JSON-LD
+  // A zone page describes a place + the accommodation offer there — it is not
+  // itself a LodgingBusiness, and it carries no review content, so no rating.
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "LodgingBusiness",
-    name: `ApArt Hotel Timișoara — ${data.name}`,
+    "@type": "CollectionPage",
+    name: language === "en" ? data.seoTitleEn : data.seoTitle,
     description: language === "en" ? data.seoDescriptionEn : data.seoDescription,
     url: `https://realtrust.ro/zona/${data.slug}`,
-    telephone: "+40799069256",
-    email: "info@realtrust.ro",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Timișoara",
-      addressRegion: data.name,
-      addressCountry: "RO",
+    about: {
+      "@type": "Place",
+      name: `${data.name}, Timișoara`,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Timișoara",
+        addressRegion: "Timiș",
+        addressCountry: "RO",
+      },
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: data.rating,
-      bestRating: "5",
-      worstRating: "1",
-      reviewCount: "500",
-    },
-    priceRange: data.avgPrice,
+    provider: { "@id": "https://realtrust.ro/#lodgingbusiness" },
   };
+
 
   return (
     <>
@@ -207,6 +204,10 @@ const ZoneLanding = () => {
         title={language === "en" ? data.seoTitleEn : data.seoTitle}
         description={language === "en" ? data.seoDescriptionEn : data.seoDescription}
         url={`https://realtrust.ro/zona/${data.slug}`}
+        breadcrumbItems={[
+          { name: language === "ro" ? "Acasă" : "Home", url: "https://realtrust.ro" },
+          { name: data.name, url: `https://realtrust.ro/zona/${data.slug}` },
+        ]}
         jsonLd={jsonLd}
       />
       <Header />

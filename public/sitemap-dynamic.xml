@@ -1154,19 +1154,6 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-tipografilor-investitie-strategica-randament-9" />
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana</loc>
-    <lastmod>2026-07-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/041558df-fb27-4e46-a255-eb1d21ccc5ba/1783974406792-optimized-0.webp</image:loc>
-      <image:title>Apartament Premium Calea Torontalului | Parcare Subterană - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana" />
-  </url>
-<url>
     <loc>https://realtrust.ro/proprietate/3-camere-complet-decomandat-hol-spatios-medicina-garaj</loc>
     <lastmod>2026-04-28</lastmod>
     <changefreq>weekly</changefreq>
@@ -1349,6 +1336,19 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/garsoniera-calea-buziasului-investitie-cu-randament-ridicat-si-management-realtr" />
   </url>
 <url>
+    <loc>https://realtrust.ro/proprietate/null</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/0c241545-e956-434e-9949-51f164e9ce35/1770490598602-3baqb69d3na.webp</image:loc>
+      <image:title>Apartament 3 Camere Universitate - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/null" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/null" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/null" />
+  </url>
+<url>
     <loc>https://realtrust.ro/proprietate/investitie-premium-timisoara-apartament-zona-soarelui-yield-9-2-management-realt</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -1479,17 +1479,26 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/investitie-premium-studio-pe-take-ionescu-randament-9-in-regim-hotelier" />
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/null</loc>
-    <lastmod>2026-04-16</lastmod>
+    <loc>https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana</loc>
+    <lastmod>2026-07-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/0c241545-e956-434e-9949-51f164e9ce35/1770490598602-3baqb69d3na.webp</image:loc>
-      <image:title>Apartament 3 Camere Universitate - ApArt Hotel Timișoara</image:title>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/041558df-fb27-4e46-a255-eb1d21ccc5ba/1783974406792-optimized-0.webp</image:loc>
+      <image:title>Apartament Premium Calea Torontalului | Parcare Subterană - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/null" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/null" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/null" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-premium-calea-torontalului-parcare-subterana" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/studio-deluxe-city-of-mara-design-premium-etaj-9-management-realtrust</loc>
@@ -1505,15 +1514,6 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/studio-deluxe-city-of-mara-design-premium-etaj-9-management-realtrust" />
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe</loc>
-    <lastmod>2026-07-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
-  </url>
-<url>
     <loc>https://realtrust.ro/proprietate/green-forest-apart-hotel</loc>
     <lastmod>2026-07-28</lastmod>
     <changefreq>weekly</changefreq>
@@ -1527,19 +1527,6 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/green-forest-apart-hotel" />
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere</loc>
-    <lastmod>2026-04-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/30eac8d0-97d3-4479-a4d5-73d0a246199d/imported-0.jpg</image:loc>
-      <image:title>City of Mara Apartament cu 2 camere - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
-  </url>
-<url>
     <loc>https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -1551,6 +1538,19 @@
     <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel" />
     <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere</loc>
+    <lastmod>2026-09-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/30eac8d0-97d3-4479-a4d5-73d0a246199d/imported-0.jpg</image:loc>
+      <image:title>City of Mara Apartament cu 2 camere - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie</loc>
@@ -1567,12 +1567,12 @@
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/fullview-studio-deluxe</loc>
-    <lastmod>2026-07-28</lastmod>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/fullview-deluxe.jpg?width=800&amp;quality=75</image:loc>
-      <image:title>FullView Studio DeLuxe - ApArt Hotel Timișoara</image:title>
+      <image:title>Cross Square House by RealTrust - ApArt Hotel Timișoara</image:title>
     </image:image>
     <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
     <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
@@ -1606,12 +1606,12 @@
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel</loc>
-    <lastmod>2026-07-28</lastmod>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images//assets/apt-05.webp</image:loc>
-      <image:title>ATENEO - TREVI 2 ApArt Hotel - ApArt Hotel Timișoara</image:title>
+      <image:title>Apicultorilor House by RealTrust - ApArt Hotel Timișoara</image:title>
     </image:image>
     <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel" />
     <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/ateneo-trevi-2-apart-hotel" />
@@ -1670,49 +1670,13 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/modern-studio-apart-hotel" />
   </url>
 <url>
-    <loc>https://realtrust.ro/complex/fructus-plaza</loc>
-    <lastmod>2026-02-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-<url>
-    <loc>https://realtrust.ro/complex/city-of-mara</loc>
-    <lastmod>2026-02-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-<url>
-    <loc>https://realtrust.ro/complex/ateneo</loc>
-    <lastmod>2026-02-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-<url>
     <loc>https://realtrust.ro/complex/ring</loc>
     <lastmod>2026-02-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 <url>
-    <loc>https://realtrust.ro/complex/denya-forest</loc>
-    <lastmod>2026-02-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-<url>
-    <loc>https://realtrust.ro/complex/vivalia</loc>
-    <lastmod>2026-02-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-<url>
     <loc>https://realtrust.ro/complex/iris</loc>
-    <lastmod>2026-02-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-<url>
-    <loc>https://realtrust.ro/complex/nord-one</loc>
     <lastmod>2026-02-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -1731,12 +1695,6 @@
   </url>
 <url>
     <loc>https://realtrust.ro/complex/campeador</loc>
-    <lastmod>2026-02-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-<url>
-    <loc>https://realtrust.ro/complex/xcity-towers</loc>
     <lastmod>2026-02-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

@@ -31,9 +31,11 @@ export const LODGING_BUSINESS_ID = `${SITE_ORIGIN}/#lodgingbusiness`;
 
 /** Canonical contact data — change here only. */
 export const BRAND = {
-  name: "RealTrust & ApArt Hotel",
+  // Legal/commercial entity. The accommodation brand (ApArt Hotel) is a
+  // separate node — see LODGING_BUSINESS_ID / HOTEL_BRAND_NAME below.
+  name: "RealTrust",
   legalName: "Imo Business Centrum SRL",
-  alternateNames: ["ApArt Hotel Timișoara", "RealTrust Imobiliare"],
+  alternateNames: ["RealTrust Imobiliare", "RealTrust Timișoara"],
   telephone: "+40799069256",
   email: "info@realtrust.ro",
   logo: `${SITE_ORIGIN}/images/hero-optimized-800w.webp`,
@@ -51,13 +53,17 @@ export const BRAND = {
     latitude: 45.7489,
     longitude: 21.2087,
   },
+  // Only externally verifiable profiles belong here.
   sameAs: [
     "https://www.facebook.com/realtrust.ro",
     "https://www.instagram.com/realtrust_timisoara",
-    "https://www.booking.com",
     GOOGLE_BUSINESS_PROFILE_URL,
   ],
 } as const;
+
+/** Accommodation brand operated by RealTrust — a brand, not the legal entity. */
+export const HOTEL_BRAND_NAME = "ApArt Hotel Timișoara";
+
 
 const POSTAL_ADDRESS = {
   "@type": "PostalAddress",
@@ -99,6 +105,24 @@ export const ORGANIZATION_SCHEMA = {
   address: POSTAL_ADDRESS,
   areaServed: { "@type": "City", name: "Timișoara" },
   sameAs: [...BRAND.sameAs],
+  // Semantic relations: RealTrust → services + the ApArt Hotel brand.
+  brand: {
+    "@type": "Brand",
+    "@id": `${SITE_ORIGIN}/#apart-hotel`,
+    name: HOTEL_BRAND_NAME,
+    url: `${SITE_ORIGIN}/cazare`,
+  },
+  subOrganization: [
+    { "@id": REAL_ESTATE_AGENT_ID },
+    { "@id": `${SITE_ORIGIN}/#financialservice` },
+    { "@id": LODGING_BUSINESS_ID },
+  ],
+  knowsAbout: [
+    "servicii imobiliare Timișoara",
+    "property management regim hotelier",
+    "investiții imobiliare Timișoara",
+  ],
+
   contactPoint: {
     "@type": "ContactPoint",
     telephone: BRAND.telephone,

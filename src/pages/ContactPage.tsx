@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import QuickContactForm from "@/components/contact/QuickContactForm";
+import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
@@ -34,6 +35,12 @@ const ContactPage = () => {
         { q: "Do you have separate departments for sales, rentals and management?", a: "Yes. The Sales department handles transactions, the Rentals department covers long-term residential contracts, and the Management department operates the ApArt Hotel portfolio. See all services on the Real Estate Services Timișoara page." },
         { q: "How do I get to the RealTrust office in Timișoara?", a: "The office is at Strada Samuel Clain Micu Nr.14, ap.4, central area — near Iulius Town. Use the 'Open in Google Maps' button for directions." },
       ];
+
+  // Visible FAQ → single consolidated FAQPage node via the provider.
+  useRegisterFAQs(
+    "contact",
+    faqItems.map((f) => ({ question: f.q, answer: f.a })),
+  );
 
   const jsonLdSchemas = [
     {
@@ -130,15 +137,6 @@ const ContactPage = () => {
         "@id": `${BASE_URL}/despre-noi#adrian-costi`,
         "name": "Adrian Costi",
       },
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": faqItems.map((f) => ({
-        "@type": "Question",
-        "name": f.q,
-        "acceptedAnswer": { "@type": "Answer", "text": f.a },
-      })),
     },
     {
       "@context": "https://schema.org",

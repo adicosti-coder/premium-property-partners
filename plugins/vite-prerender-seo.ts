@@ -462,7 +462,15 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
           name: p.name,
           url: canonical,
           description,
-          ...(p.capital_necesar && { price: p.capital_necesar, priceCurrency: 'EUR' }),
+          ...(p.capital_necesar && {
+            offers: {
+              '@type': 'Offer',
+              price: p.capital_necesar,
+              priceCurrency: 'EUR',
+              availability: 'https://schema.org/InStock',
+              url: canonical,
+            },
+          }),
           numberOfRooms: rooms,
           ...(p.size && { floorSize: { '@type': 'QuantitativeValue', value: p.size, unitCode: 'MTK' } }),
           address: {
@@ -478,20 +486,12 @@ function buildPropertyRoutes(properties: DbProperty[]): PrerenderRoute[] {
         },
         {
           '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: p.name,
-          description,
-          url: canonical,
-          brand: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
-          offers: {
-            '@type': 'Offer',
-            priceCurrency: 'EUR',
-            price: p.capital_necesar || p.base_price_per_night || 0,
-            availability: 'https://schema.org/InStock',
-            url: canonical,
-          },
-          ...(bookingUrl && { sameAs: bookingUrl }),
-          ...(reserveAction && { potentialAction: reserveAction }),
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Acasă', item: `${BASE_URL}/` },
+            { '@type': 'ListItem', position: 2, name: 'Proprietăți Timișoara', item: `${BASE_URL}/imobiliare` },
+            { '@type': 'ListItem', position: 3, name: p.name, item: canonical },
+          ],
         },
       ],
     };
@@ -863,7 +863,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      name: 'RealTrust & ApArt Hotel Timișoara',
+      name: 'RealTrust Timișoara',
       description: 'Servicii imobiliare, investiții și administrare de proprietăți în regim hotelier în Timișoara.',
       url: `${BASE_URL}/`,
       telephone: '+40799069256',
@@ -883,13 +883,6 @@ function buildStaticRoutes(): PrerenderRoute[] {
         'https://www.instagram.com/realtrust_timisoara',
         'https://www.google.com/maps/place/RealTrust/data=!4m2!3m1!1s0x40918b091135b1b3:0x714fdcd64f129651',
       ],
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '9.7',
-        reviewCount: '150',
-        bestRating: '10',
-        worstRating: '1',
-      },
     },
   });
 
@@ -997,7 +990,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         name: 'Analiza ROI Apartament România',
         description: 'Calculator pentru randament investiții imobiliare, profit apartament și evoluția prețurilor în România.',
         url: `${BASE_URL}/analiza-roi-apartament`,
-        provider: { '@type': 'RealEstateAgent', name: 'RealTrust & ApArt Hotel' },
+        provider: { '@type': 'RealEstateAgent', name: 'RealTrust' },
       },
       {
         '@context': 'https://schema.org',
@@ -1059,7 +1052,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       name: 'Evaluare Gratuită Proprietate',
       description: 'Evaluare gratuită a proprietății tale din Timișoara de către echipa RealTrust',
       url: `${BASE_URL}/evaluare-gratuita`,
-      provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+      provider: { '@type': 'Organization', name: 'RealTrust' },
     },
   });
 
@@ -1093,7 +1086,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       url: `${BASE_URL}/despre-noi`,
       mainEntity: {
         '@type': 'RealEstateAgent',
-        name: 'RealTrust & ApArt Hotel',
+        name: 'RealTrust',
         url: `${BASE_URL}/despre-noi`,
         telephone: '+40799069256',
         areaServed: 'Timișoara',
@@ -1125,7 +1118,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         mainEntity: {
           '@type': 'RealEstateAgent',
           '@id': `${BASE_URL}/#realestateagent`,
-          name: 'RealTrust & ApArt Hotel',
+          name: 'RealTrust',
           url: BASE_URL,
           telephone: '+40799069256',
           email: 'info@realtrust.ro',
@@ -1265,7 +1258,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       {
         '@context': 'https://schema.org',
         '@type': 'RealEstateAgent',
-        name: 'RealTrust & ApArt Hotel — Investiții Imobiliare Timișoara',
+        name: 'RealTrust — Investiții Imobiliare Timișoara',
         url: `${BASE_URL}/investitii`,
         telephone: '+40799069256',
         areaServed: 'Timișoara',
@@ -1283,10 +1276,10 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@type': 'Article',
         headline: 'Investiții Imobiliare Timișoara: Ghid Complet pentru Randament Profitabil',
         description: 'Ghid complet de investiții imobiliare în Timișoara: ROI 9.4% net, analiză cartiere, evoluție prețuri 2020–2026 și calculator costuri tranzacție.',
-        author: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+        author: { '@type': 'Organization', name: 'RealTrust' },
         publisher: {
           '@type': 'Organization',
-          name: 'RealTrust & ApArt Hotel',
+          name: 'RealTrust',
           logo: { '@type': 'ImageObject', url: `${BASE_URL}/images/hero-optimized-800w.webp` },
         },
         mainEntityOfPage: `${BASE_URL}/investitii`,
@@ -1367,7 +1360,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
       {
         '@context': 'https://schema.org',
         '@type': 'RealEstateAgent',
-        name: 'RealTrust & ApArt Hotel — Servicii Proprietari Timișoara',
+        name: 'RealTrust — Servicii Proprietari Timișoara',
         url: `${BASE_URL}/pentru-proprietari`,
         telephone: '+40799069256',
         areaServed: 'Timișoara',
@@ -1385,7 +1378,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@context': 'https://schema.org',
         '@type': 'Service',
         serviceType: 'Administrare apartamente regim hotelier',
-        provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+        provider: { '@type': 'Organization', name: 'RealTrust' },
         areaServed: 'Timișoara',
         url: `${BASE_URL}/pentru-proprietari`,
       },
@@ -1393,7 +1386,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@context': 'https://schema.org',
         '@type': 'Service',
         serviceType: 'Vânzare apartamente Timișoara',
-        provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+        provider: { '@type': 'Organization', name: 'RealTrust' },
         areaServed: 'Timișoara',
         url: `${BASE_URL}/pentru-proprietari`,
       },
@@ -1401,7 +1394,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@context': 'https://schema.org',
         '@type': 'Service',
         serviceType: 'Închirieri pe termen lung Timișoara',
-        provider: { '@type': 'Organization', name: 'RealTrust & ApArt Hotel' },
+        provider: { '@type': 'Organization', name: 'RealTrust' },
         areaServed: 'Timișoara',
         url: `${BASE_URL}/pentru-proprietari`,
       },

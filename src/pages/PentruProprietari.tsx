@@ -341,12 +341,6 @@ const PentruProprietari = () => {
           "@type": "Person",
           "@id": "https://realtrust.ro/despre-noi#adrian-costi",
         },
-        aggregateRating: {
-          "@type": "AggregateRating",
-          "ratingValue": "9.7",
-          "bestRating": "10",
-          "ratingCount": "180",
-        },
         hasOfferCatalog: {
           "@type": "OfferCatalog",
           "name": "Servicii pentru Proprietari",
@@ -473,7 +467,10 @@ const PentruProprietari = () => {
       // FAQ accordions register the same questions through FAQSchemaProvider, and
       // two FAQPage nodes on one URL invalidate the rich result.
       void faqPageSchema;
-      setSchemas([serviceSchema, speakable, serviceSchemaFix3B, realEstateAgentSchema, taxAdvisorySchema]);
+      // serviceSchemaFix3B duplicated the property-management Service node
+      // (same service, same page) — kept out to avoid duplicate structured data.
+      void serviceSchemaFix3B;
+      setSchemas([serviceSchema, speakable, realEstateAgentSchema, taxAdvisorySchema]);
     });
   }, [seo.title]);
 

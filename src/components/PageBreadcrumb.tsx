@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Fragment } from "react";
 import { Home } from "lucide-react";
-import { Helmet } from "react-helmet-async";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -28,33 +27,12 @@ const PageBreadcrumb = ({ items, className = "" }: PageBreadcrumbProps) => {
   const { language } = useLanguage();
   const homeLabel = language === "ro" ? "Acasă" : "Home";
 
-  // Build BreadcrumbList JSON-LD
-  const schemaItems = [
-    { name: homeLabel, url: BASE_URL },
-    ...items.map((item) => ({
-      name: item.label,
-      url: item.href ? `${BASE_URL}${item.href}` : undefined,
-    })),
-  ];
-
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: schemaItems.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: item.name,
-      ...(item.url ? { item: item.url } : {}),
-    })),
-  };
+  // NOTE: no JSON-LD here. BreadcrumbList is emitted once per page by
+  // SEOHead (breadcrumbItems) or by the page's own jsonLd graph, so this
+  // component only renders the visible breadcrumb trail.
 
   return (
     <>
-      <Helmet>
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
-      </Helmet>
       <Breadcrumb className={className}>
         <BreadcrumbList>
           <BreadcrumbItem>
