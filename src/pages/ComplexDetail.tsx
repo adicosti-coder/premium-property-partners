@@ -28,6 +28,8 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import QuickLeadForm from "@/components/QuickLeadForm";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { buildComplexLinks } from "@/lib/internalLinking";
 
 interface ComplexImage {
   id: string;
