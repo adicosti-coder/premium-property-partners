@@ -9,6 +9,8 @@ import RealPropertyCard from "@/components/RealPropertyCard";
 import CompareDrawer from "@/components/CompareDrawer";
 
 import { getNeighborhoodBySlug } from "@/data/neighborhoods";
+import ContextualLinks from "@/components/seo/ContextualLinks";
+import { buildNeighborhoodLinks } from "@/lib/internalLinking";
 import { useNeighborhoodProperties } from "@/hooks/useNeighborhoodProperties";
 import { MapPin, TrendingUp, Home, Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
