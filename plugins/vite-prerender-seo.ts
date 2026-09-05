@@ -1859,6 +1859,8 @@ function dedupeTitles(routes: PrerenderRoute[]): number {
   let changed = 0;
   for (const route of routes) {
     route.title = fitTitle(route.title);
+    // Non-indexable pages don't compete in search, so they never claim a title.
+    if (route.noindex) continue;
     const existing = used.get(route.title);
     if (existing === undefined || existing === route.path) {
       used.set(route.title, route.path);
