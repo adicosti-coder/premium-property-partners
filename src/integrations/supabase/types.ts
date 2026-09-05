@@ -2135,6 +2135,45 @@ export type Database = {
         }
         Relationships: []
       }
+      email_domain_checks: {
+        Row: {
+          auto_retried: number
+          checked_at: string
+          delegation_note: string | null
+          delegation_serving: boolean
+          details: Json | null
+          dns_healthy: boolean
+          domain: string
+          id: string
+          pending_emails: number
+          source: string
+        }
+        Insert: {
+          auto_retried?: number
+          checked_at?: string
+          delegation_note?: string | null
+          delegation_serving?: boolean
+          details?: Json | null
+          dns_healthy?: boolean
+          domain: string
+          id?: string
+          pending_emails?: number
+          source?: string
+        }
+        Update: {
+          auto_retried?: number
+          checked_at?: string
+          delegation_note?: string | null
+          delegation_serving?: boolean
+          details?: Json | null
+          dns_healthy?: boolean
+          domain?: string
+          id?: string
+          pending_emails?: number
+          source?: string
+        }
+        Relationships: []
+      }
       email_open_tracking: {
         Row: {
           ab_assignment_id: string | null

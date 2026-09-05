@@ -39,6 +39,7 @@ const loaders: Record<string, Loader> = {
   "poi-reviews": () => import("@/components/admin/PoiReviewsModerationManager"),
   "poi-review-notifications": () => import("@/components/admin/PoiNotificationLogsPanel"),
   captcha: () => import("@/components/admin/CaptchaLogsManager"),
+  "email-health": () => import("@/components/admin/EmailDomainHealthPanel"),
   community: () => import("@/components/admin/CommunityManager"),
   "cta-analytics": () => import("@/components/admin/CtaAnalyticsManager"),
   "blog-cta-ab": () => import("@/components/admin/BlogCtaABDashboard"),
