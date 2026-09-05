@@ -272,7 +272,7 @@ ${hreflang(`/proprietate/${property.slug}`)}
           : new Date(complex.created_at).toISOString().split("T")[0];
 
         xml += `  <url>
-    <loc>${BASE_URL}/complex/${complex.slug}</loc>
+    <loc>${BASE_URL}/complexe/${complex.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
