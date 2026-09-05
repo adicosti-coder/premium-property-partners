@@ -132,6 +132,77 @@ const isDynamic = (block: string): boolean => {
   return DYNAMIC_PREFIXES.some((p) => path.startsWith(p) && path.length > p.length);
 };
 
+const SUPABASE_URL = "https://mvzssjyzbwccioqvhjpo.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12enNzanl6YndjY2lvcXZoanBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjQxNjIsImV4cCI6MjA4MjAwMDE2Mn0.60JJMqMaDwIz1KXi3AZNqOd0lUU9pu2kqbg3Os3qbC8";
+
+/**
+ * Premium articles are readable only by authenticated members, so they are not
+ * public documents and must never be listed. Their pages ship `noindex`.
+ */
+const fetchPremiumArticleSlugs = async (): Promise<Set<string>> => {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_premium_article_slugs`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "content-type": "application/json",
+      },
+      body: "{}",
+    });
+    if (!res.ok) {
+      console.warn(`[sitemap] premium slug lookup responded ${res.status}`);
+      return new Set();
+    }
+    const rows = (await res.json()) as Array<{ slug: string }>;
+    return new Set(rows.map((r) => r.slug).filter(Boolean));
+  } catch (err) {
+    console.warn("[sitemap] premium slug lookup failed:", (err as Error).message);
+    return new Set();
+  }
+};
+
+/** Path segments that mean "this record has no usable slug/id". */
+const INVALID_SEGMENTS = new Set(["null", "undefined", "nan", "false", "0"]);
+
+/** Routes that only ever redirect, so they must not be listed as canonical. */
+const REDIRECT_ONLY_PATHS = new Set([
+  "/oaspeti",
+  "/pentru-oaspeti",
+  "/complexe",
+  "/proprietati",
+]);
+
+/**
+ * Rejects any URL that is not a valid, public, canonical page: missing or
+ * placeholder slugs, legacy redirect-only routes and gated premium articles.
+ */
+const isListable = (block: string, premiumSlugs: Set<string>): boolean => {
+  const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1] ?? "";
+  const path = loc.slice(BASE_URL.length) || "/";
+
+  if (REDIRECT_ONLY_PATHS.has(path)) return false;
+  // Legacy complex route — /complexe/<slug> is the canonical form.
+  if (path.startsWith("/complex/")) return false;
+
+  const segments = path.split("/").filter(Boolean);
+  if (segments.some((s) => INVALID_SEGMENTS.has(s.toLowerCase()))) {
+    console.warn(`[sitemap] dropped invalid URL: ${loc}`);
+    return false;
+  }
+  // A detail route whose final segment is missing entirely (e.g. "/blog/").
+  for (const prefix of DYNAMIC_PREFIXES) {
+    if (path === prefix.replace(/\/$/, "") + "/") return false;
+  }
+
+  const articleSlug = path.match(/^\/blog\/([^/]+)$/)?.[1];
+  if (articleSlug && premiumSlugs.has(articleSlug)) return false;
+
+  return true;
+};
+
+
 const wrapUrlset = (blocks: string[]): string =>
   [
     `<?xml version="1.0" encoding="UTF-8"?>`,
