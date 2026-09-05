@@ -17,7 +17,7 @@ const AboutTeaser = () => {
       subtitle: "RealTrust administrează proprietățile, ApArt Hotel găzduiește oaspeții. Un singur partener pentru proprietari, raportare clară și experiențe consecvente în Timișoara.",
       cta: "Citește povestea echipei",
       stats: [
-        { icon: Building, value: "60+", label: "Proprietăți administrate" },
+        { icon: Building, value: "15", label: "Proprietăți administrate" },
         { icon: Star, value: "9,7/10", label: "Scor consolidat oaspeți" },
         { icon: Clock, value: "75%", label: "Ocupare medie anuală" },
         { icon: MapPin, value: "9,4%", label: "Randament net țintă" },
@@ -30,7 +30,7 @@ const AboutTeaser = () => {
       subtitle: "RealTrust manages the properties, ApArt Hotel hosts the guests. One partner for owners, clear reporting and consistent experiences across Timișoara.",
       cta: "Read our story",
       stats: [
-        { icon: Building, value: "60+", label: "Properties managed" },
+        { icon: Building, value: "15", label: "Properties managed" },
         { icon: Star, value: "9.7/10", label: "Consolidated guest score" },
         { icon: Clock, value: "75%", label: "Average annual occupancy" },
         { icon: MapPin, value: "9.4%", label: "Target net yield" },

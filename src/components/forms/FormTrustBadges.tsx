@@ -26,7 +26,7 @@ const COPY = {
     badges: ["Răspuns în 24 de ore lucrătoare", "Gratuit, fără obligații", "Consultanți din Timișoara"],
     proof: [
       { icon: Star, label: "Rating 9,7 pe Booking" },
-      { icon: Building2, label: "Peste 100 de proprietăți administrate" },
+      { icon: Building2, label: "15 proprietăți administrate" },
       { icon: Clock, label: "Răspuns în max. 15 minute în orar" },
     ],
     privacy:
@@ -36,7 +36,7 @@ const COPY = {
     badges: ["Reply within 24 business hours", "Free, no obligation", "Consultants based in Timișoara"],
     proof: [
       { icon: Star, label: "9.7 rating on Booking" },
-      { icon: Building2, label: "100+ properties managed" },
+      { icon: Building2, label: "15 properties managed" },
       { icon: Clock, label: "Reply within 15 minutes in office hours" },
     ],
     privacy:
