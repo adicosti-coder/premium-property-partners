@@ -154,10 +154,20 @@ const ReferralManager = () => {
       rewardCheckIn?: string;
       rewardCheckOut?: string;
     }) => {
-      const updates: Record<string, unknown> = {
+      const updates: {
+        status: string;
+        admin_notes: string;
+        contacted_at?: string;
+        contract_signed_at?: string;
+        reward_granted_at?: string;
+        reward_property_id?: string;
+        reward_check_in?: string;
+        reward_check_out?: string;
+      } = {
         status,
         admin_notes: notes,
       };
+
 
       // Set timestamps based on status
       if (status === "contacted" && !selectedReferral?.contacted_at) {
