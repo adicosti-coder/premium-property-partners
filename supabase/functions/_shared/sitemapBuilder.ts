@@ -223,8 +223,16 @@ ${hreflang(`/proprietate/${g.slug}`)}
   }
 
 
+  // Slugs with a dedicated landing page are already listed as /complexe/<slug>
+  // in the static sitemap; /complex/<slug> only canonicalizes there, so
+  // emitting both would put a duplicate URL in the index.
+  const LANDING_SLUGS = new Set([
+    "isho", "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
+    "city-of-mara", "vivalia", "nord-one", "xcity-towers", "denya-forest",
+  ]);
+
   for (const c of complexes.data ?? []) {
-    if (!c.slug) continue;
+    if (!c.slug || LANDING_SLUGS.has(c.slug)) continue;
     xml += `  <url>
     <loc>${BASE_URL}/complex/${c.slug}</loc>
     <lastmod>${day(c.updated_at, c.created_at)}</lastmod>
