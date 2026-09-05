@@ -51,7 +51,6 @@ const ANCHORS = {
     "analiză gratuită a potențialului proprietății",
   ],
   investitii: [
-    { href: "/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara", label: "cât costă administrarea unui apartament în regim hotelier", description: "Comisioane 15–25%, ce este inclus și ce rămâne în sarcina proprietarului." },
     "investiții imobiliare în Timișoara",
     "oportunități de investiție cu randament",
     "ghidul investițiilor în apartamente",
@@ -304,6 +303,7 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
     { href: "/blog/categorie/sfaturi-proprietari", label: "ghiduri pentru proprietari și gazde", description: "Regim hotelier, Booking, Airbnb și administrare practică." },
   ],
   investitii: [
+    { href: "/blog/cat-costa-administrarea-apartament-regim-hotelier-timisoara", label: "cât costă administrarea unui apartament în regim hotelier", description: "Comisioane 15–25%, ce este inclus și ce rămâne în sarcina proprietarului." },
     { href: "/catalog-investitii", label: "catalogul de investiții disponibile", description: "Apartamente cu capital necesar și randament estimat." },
     { href: "/zone-investitii-timisoara", label: "cele mai bune zone pentru investiții în Timișoara", description: "Preț, chirie, cerere, lichiditate și risc, zonă cu zonă." },
     { href: "/calculator-roi", label: "simulare de randament net", description: "Compară regimul hotelier cu chiria clasică." },
