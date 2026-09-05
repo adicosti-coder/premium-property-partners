@@ -308,6 +308,7 @@ export const CLUSTER_LINKS: Record<string, ContextualLink[]> = {
   "servicii-imobiliare": [
     { href: "/imobiliare", label: "proprietățile disponibile acum", description: "Apartamente de vânzare și de închiriat, verificate." },
     { href: "/evaluare-gratuita", label: "cere o estimare de preț pentru apartament", description: "Evaluare gratuită, fără obligații." },
+    { href: "/ghid-evaluare-apartament-timisoara", label: "cum se evaluează un apartament în Timișoara", description: "Factorii care determină prețul, pas cu pas." },
     { href: "/cartiere", label: "ghidul cartierelor din Timișoara", description: "Prețul mediu pe metru pătrat, zonă cu zonă." },
     { href: "/investitii", label: "oportunități de investiție cu randament", description: "Pentru cumpărătorii care caută venit pasiv." },
     { href: "/contact", label: "vorbește cu un consultant RealTrust", description: "Program, telefon și adresă." },
