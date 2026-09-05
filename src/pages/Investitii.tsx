@@ -692,8 +692,40 @@ const Investitii = () => {
           </div>
         </div>
       </section>
+      {/* GEO — direct answers owned by the investment pillar */}
+      {language === "ro" && (
+        <section className="pb-4">
+          <div className="container mx-auto px-6 max-w-5xl">
+            <GeoAnswers
+              group="investitii"
+              title="Răspunsuri directe despre investițiile imobiliare din Timișoara"
+              intro="Întrebările pe care le primim cel mai des înainte de o achiziție de investiție, cu răspunsul scurt și trimitere la pagina care explică pe larg."
+            />
+            <DataProvenance
+              className="mb-4"
+              external={[
+                "Prețurile de achiziție folosite în exemple provin din anunțurile pe care le intermediem și din listările publice de pe piața din Timișoara.",
+                "Taxele notariale, de intabulare și impozitele se verifică la sursă (ANAF, notar public) înainte de fiecare tranzacție.",
+              ]}
+              assumptions={[
+                "Ocupare medie 75% pe an pentru regim hotelier.",
+                "Deducere operațională și fiscală de aproximativ 27% din încasări, fără comisionul de administrare.",
+                "Randament net de referință 9,4% pe an, raportat la capitalul total investit.",
+                "Venit brut în regim hotelier de aproximativ 1,6× chiria clasică, pentru apartamente comparabile bine poziționate.",
+              ]}
+              calculations={[
+                "Exemplu: 120.000 € capital investit × 9,4% ≈ 11.280 € net pe an (~940 €/lună). Este un scenariu, nu un venit garantat.",
+                "Simulările din calculatorul de randament aplică aceleași ipoteze pe datele introduse de utilizator.",
+              ]}
+              verifiedOn="5 septembrie 2026"
+            />
+          </div>
+        </section>
+      )}
+
       {/* Contextual internal links — cluster investiții */}
       <section className="pb-8">
+
         <div className="container mx-auto px-6 max-w-5xl">
           <ContextualLinks
             title={language === "ro" ? "Următorii pași pentru investitori" : "Next steps for investors"}
