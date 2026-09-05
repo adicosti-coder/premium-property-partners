@@ -583,8 +583,8 @@ const Investitii = () => {
               </h2>
               <p className="text-muted-foreground mb-6">
                 {language === "ro"
-                  ? "Analiză completă PDF, gratuită, cu evoluția prețurilor pe cartiere, randamente verificate, taxe notariale și calculator de investiție la cheie. Folosit de peste 1.200 de investitori din Timișoara."
-                  : "Complete free PDF analysis with neighborhood price trends, verified yields, notary fees and turnkey investment calculator. Used by 1,200+ investors in Timișoara."}
+                  ? "Analiză completă PDF, gratuită, cu evoluția prețurilor pe cartiere, randamente verificate, taxe notariale și calculator de investiție la cheie."
+                  : "Complete free PDF analysis with neighborhood price trends, verified yields, notary fees and turnkey investment calculator."}
               </p>
               <ul className="space-y-2 mb-6">
                 {(language === "ro" ? [

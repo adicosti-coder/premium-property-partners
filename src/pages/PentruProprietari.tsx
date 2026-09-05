@@ -375,7 +375,7 @@ const PentruProprietari = () => {
             "name": "Care este randamentul net real al unui apartament administrat în regim hotelier în Timișoara?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "ROI-ul net mediu verificat în portofoliul nostru este de 9.4% anual, cu o ocupare medie de peste 80%. Acest randament este cu aproximativ 40% mai mare decât chiria clasică pe termen lung."
+              "text": "Reperul nostru este un randament net de 9,4% pe an, calculat la o ocupare medie de 75% și după deducerea a aproximativ 27% din încasări pentru costuri operaționale și fiscale, plus comisionul de administrare. Venitul brut dintr-un apartament comparabil în regim hotelier este de aproximativ 1,6 ori mai mare decât chiria clasică pe termen lung."
             }
           },
           {
