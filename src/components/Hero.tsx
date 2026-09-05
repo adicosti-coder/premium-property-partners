@@ -223,7 +223,7 @@ const Hero = () => {
             const nextSection = document.getElementById('calculator') || document.getElementById('benefits');
             nextSection?.scrollIntoView({ behavior: 'smooth' });
           }}
-          aria-label={language === 'ro' ? 'Derulează la calculator' : 'Scroll to calculator'}
+          aria-label={language === 'ro' ? 'Vezi cât poate produce apartamentul tău — derulează la calculator' : 'See your apartment’s monthly potential — scroll to calculator'}
         >
           <span className="text-sm md:text-base font-bold text-primary-foreground tracking-wide uppercase px-4 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm shadow-lg">
             {language === 'ro' ? 'Vezi cât poate produce apartamentul tău' : 'See your apartment’s monthly potential'}
