@@ -107,6 +107,9 @@ serve(async (req: Request) => {
       .from("blog_articles")
       .select("slug, title, published_at, created_at, cover_image")
       .eq("is_published", true)
+      // Members-only articles are not public pages — keep them out.
+      .eq("is_premium", false)
+      .not("slug", "is", null)
       .order("published_at", { ascending: false });
 
     if (blogError) {
@@ -118,6 +121,10 @@ serve(async (req: Request) => {
       .from("properties")
       .select("id, slug, name, updated_at, created_at, image_path")
       .eq("is_active", true)
+      // A property without a slug has no public URL (it used to emit
+      // /proprietate/null), so exclude it at the source.
+      .not("slug", "is", null)
+      .neq("slug", "")
       .order("display_order", { ascending: true });
 
     if (propError) {
@@ -129,6 +136,7 @@ serve(async (req: Request) => {
       .from("residential_complexes")
       .select("slug, updated_at, created_at")
       .eq("is_active", true)
+      .not("slug", "is", null)
       .order("display_order", { ascending: true });
 
     if (complexError) {
@@ -264,7 +272,7 @@ ${hreflang(`/proprietate/${property.slug}`)}
           : new Date(complex.created_at).toISOString().split("T")[0];
 
         xml += `  <url>
-    <loc>${BASE_URL}/complex/${complex.slug}</loc>
+    <loc>${BASE_URL}/complexe/${complex.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

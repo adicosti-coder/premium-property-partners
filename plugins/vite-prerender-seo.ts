@@ -9,6 +9,17 @@
 import type { Plugin } from 'vite';
 import fs from 'fs';
 import path from 'path';
+import {
+  fetchPublicArticles,
+  fetchPremiumArticleStubs,
+  fetchComplexes,
+  buildArticleRoutes,
+  buildPremiumStubRoutes,
+  buildBlogHubRoutes,
+  buildComplexRoutes,
+  buildRemainingStaticRoutes,
+  readComplexLandingSlugs,
+} from './prerender-extra-routes';
 
 interface PrerenderRoute {
   path: string;
@@ -23,6 +34,8 @@ interface PrerenderRoute {
   seoBody?: string;
   /** Optional absolute image URL used for og:image / twitter:image. */
   image?: string;
+  /** Emits `<meta name="robots" content="noindex, follow">` for gated pages. */
+  noindex?: boolean;
 }
 
 /**
@@ -226,6 +239,16 @@ const neighborhoods = [
     <p><strong>Piața Iosefin</strong> (reper comercial, 2 min), <strong>Sinagoga din Iosefin</strong> (monument istoric, 5 min), Catedrala Romano-Catolică (3 min), malul Begăi (1 min), Piața Unirii (8 min pe jos), Gara de Nord (5 min), UVT (10 min cu tramvaiul de pe Bulevardul 16 Decembrie 1989), Iulius Town (10 min).</p>
     <h3>Apartamente de închiriat Iosefin Timișoara</h3>
     <p>Pentru chirie clasică, Iosefin atrage expați, profesioniști creativi și familii tinere. Chirie medie 1 cameră: 380–480 €/lună; 2 camere: 520–680 €/lună. Pentru regim hotelier, ocupare 78–85% și ADR 55–80€/noapte. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/piata-imobiliara-timisoara">analiza pieței Timișoara</a>.</p>
+  ` },
+  { slug: 'elisabetin', name: 'Elisabetin', fullName: 'Elisabetin', avgPrice: 1820, faq: [
+    { q: 'Ce face Elisabetin un cartier premium?', a: 'Elisabetin se distinge prin arhitectura interbelică, vile elegante, Parcul Rozelor și o densitate ridicată de cafenele și restaurante de autor. Atmosferă rezidențială liniștită la 10 minute pietonal de Piața Victoriei.' },
+    { q: 'Sunt apartamentele din Elisabetin potrivite pentru investiții?', a: 'Da. Cererea constantă din partea familiilor tinere și a turiștilor premium asigură ocupare ridicată în regim hotelier, cu randamente nete de 7-9%. Prețul mediu este 1.820 €/mp.' },
+    { q: 'Cât de aproape este Elisabetin de universități?', a: 'Tramvaiul direct leagă Elisabetin de Universitatea de Vest (UVT) și Universitatea Politehnica (UPT) în 8-12 minute, atrăgând și chiriași academici.' },
+  ], seoBody: `
+    <h2>Apartamente în Elisabetin, Timișoara — cartier rezidențial premium</h2>
+    <p><strong>Elisabetin</strong> este unul dintre cele mai elegante cartiere rezidențiale ale Timișoarei, recunoscut pentru vilele interbelice, străzile umbrite și atmosfera liniștită. Situat la sud de centrul istoric, oferă acces pietonal de 10 minute spre Piața Victoriei și legătură directă de tramvai către UVT și UPT.</p>
+    <h3>Prețuri și randament</h3>
+    <p>Prețul mediu este de aproximativ 1.820 €/mp. Zona include Parcul Rozelor și o densitate ridicată de cafenele specialty, ceea ce susține ocuparea în regim hotelier și randamente nete de 7–9%. Vezi <a href="https://realtrust.ro/calculator-roi">calculatorul de randament</a> și <a href="https://realtrust.ro/cartiere">celelalte cartiere</a>.</p>
   ` },
   { slug: 'dumbravita', name: 'Dumbrăvița', fullName: 'Dumbrăvița', avgPrice: 1680, faq: [
     { q: 'Care este prețul mediu pe metru pătrat în Dumbrăvița?', a: 'Apartamente noi 1.680 €/mp, cu 15–20% sub media Timișoara. Case și vile între 180.000 și 380.000 €.' },
@@ -1277,14 +1300,18 @@ function buildStaticRoutes(): PrerenderRoute[] {
 
 
 
-  // /oaspeti & /cazare — premium stays for guests
+  // /cazare is the canonical stays hub. /oaspeti is the older address for the
+  // same page: it still ships HTML, but it self-declares /cazare as canonical
+  // and is kept out of the index so the two don't compete.
   for (const path of ['/oaspeti', '/cazare']) {
+    const isLegacy = path === '/oaspeti';
     routes.push({
       path,
+      noindex: isLegacy,
       title: 'Cazare Premium Timișoara — Apartamente Regim Hotelier | RealTrust',
       description: 'Apartamente premium pentru cazare în Timișoara: check-in flexibil, rezervare directă, locații lângă Iulius Town, Centru, Spitalul Județean și Aeroport.',
       h1: 'Cazare Premium pentru Oaspeți în Timișoara',
-      canonical: `${BASE_URL}${path}`,
+      canonical: `${BASE_URL}/cazare`,
       seoBody: `
         <h2>Apartamente premium pentru oaspeți în Timișoara</h2>
         <p>Listăm apartamentele disponibile pentru cazare în <strong>regim hotelier Timișoara</strong>, cu check-in flexibil, rezervare directă și filtrare după locație, preț, rating și capacitate.</p>
@@ -1295,7 +1322,7 @@ function buildStaticRoutes(): PrerenderRoute[] {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
         name: 'Cazare Premium Timișoara',
-        url: `${BASE_URL}${path}`,
+        url: `${BASE_URL}/cazare`,
       },
     });
   }
@@ -1723,6 +1750,15 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   setMeta('name', 'twitter:url', route.canonical);
   setMeta('name', 'twitter:image', socialImage);
 
+  // Gated content (members-only articles) must never be presented to crawlers
+  // as an indexable public document.
+  const robotsValue = route.noindex ? 'noindex, follow' : 'index, follow';
+  const robotsRe = /<meta name="robots" content="[^"]*"\s*\/?>/;
+  const robotsTag = `<meta name="robots" content="${robotsValue}" />`;
+  html = robotsRe.test(html)
+    ? html.replace(robotsRe, robotsTag)
+    : html.replace('</head>', `  ${robotsTag}\n</head>`);
+
   // Every page ships BreadcrumbList markup; routes that already declare their
   // own trail keep it (no duplicates).
   const baseSchemas = Array.isArray(route.jsonLd) ? [...route.jsonLd] : [route.jsonLd];
@@ -1741,12 +1777,19 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   // Inject H1 for routes that don't reliably render one in the static shell
   // (homepage + neighborhood landing pages). React hydration replaces #root
   // content but the inert SEO div outside #root remains for crawlers.
+  // Every prerendered document must ship exactly one H1. The static app shell
+  // paints a homepage hero H1; on every other route that heading is not the
+  // page's own title, so it is demoted to a <p> (same class → identical
+  // styling) and the route's real H1 is injected instead. The client removes
+  // #seo-prerender on mount (src/main.tsx), so the live DOM keeps only the
+  // React heading.
   const isHomepage = route.path === '/' || route.path === '';
-  const isNeighborhood = route.path.startsWith('/imobiliare-timisoara/');
-  // The homepage static shell already renders a visible <h1class="ash-h1">, so
-  // emitting another one here would give crawlers two H1s on the same document.
-  const shellHasH1 = isHomepage && /<h1[^>]*class="[^"]*ash-h1/.test(html);
-  const headingTag = ((isHomepage && !shellHasH1) || isNeighborhood) ? 'h1' : 'h2';
+  const shellH1Re = /<h1(\s[^>]*class="[^"]*ash-h1[^"]*"[^>]*)>([\s\S]*?)<\/h1>/;
+  const shellHasH1 = shellH1Re.test(html);
+  if (shellHasH1 && !isHomepage) {
+    html = html.replace(shellH1Re, (_m, attrs: string, inner: string) => `<p${attrs}>${inner}</p>`);
+  }
+  const headingTag = shellHasH1 && isHomepage ? 'h2' : 'h1';
 
   const seoBlock = `
     <!-- Prerendered SEO content for crawlers -->
@@ -1778,6 +1821,71 @@ function generateHtml(template: string, route: PrerenderRoute, protectedHeadNode
   }
 
   return ensureProtectedHeadNodes(html, protectedHeadNodes);
+}
+
+/**
+ * Search-result titles are truncated past ~60 characters, so trim the least
+ * important pipe-separated segments (price, secondary claims) until the title
+ * fits, always keeping the leading subject and — when possible — the brand.
+ */
+function fitTitle(title: string): string {
+  const clean = title.replace(/\s+/g, ' ').trim();
+  if (clean.length <= 60) return clean;
+
+  const parts = clean.split(/\s*\|\s*/).filter(Boolean);
+  if (parts.length > 1) {
+    const [subject, ...rest] = parts;
+    const brand = rest[rest.length - 1];
+    const candidates: string[] = [];
+    for (let k = rest.length - 1; k >= 0; k--) {
+      candidates.push([subject, ...rest.slice(0, k)].join(' | '));
+      if (brand && k < rest.length - 1) candidates.push([subject, ...rest.slice(0, k), brand].join(' | '));
+    }
+    const fitted = candidates.find((c) => c.length <= 60 && c.length > 0);
+    if (fitted) return fitted;
+  }
+
+  const cut = clean.slice(0, 60);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > 36 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.\-–—|]+$/, '');
+}
+
+/**
+ * Duplicate titles compete with each other in search results. Disambiguate by
+ * folding distinctive words from the route's own slug into the title.
+ */
+function dedupeTitles(routes: PrerenderRoute[]): number {
+  const used = new Map<string, string>();
+  let changed = 0;
+  for (const route of routes) {
+    route.title = fitTitle(route.title);
+    // Non-indexable pages don't compete in search, so they never claim a title.
+    if (route.noindex) continue;
+    const existing = used.get(route.title);
+    if (existing === undefined || existing === route.path) {
+      used.set(route.title, route.path);
+      continue;
+    }
+    const words = route.path
+      .split('/')
+      .pop()!
+      .split('-')
+      .filter((w) => w.length > 2 && !route.title.toLowerCase().includes(w.toLowerCase()));
+    for (let take = 1; take <= words.length; take++) {
+      const extra = words.slice(0, take).join(' ');
+      const candidate = fitTitle(`${route.title.split(/\s*\|\s*/)[0]} ${extra} | RealTrust`);
+      if (!used.has(candidate)) {
+        route.title = candidate;
+        break;
+      }
+    }
+    if (used.has(route.title)) {
+      console.warn(`[prerender-seo] duplicate title kept for ${route.path}: ${route.title}`);
+    }
+    used.set(route.title, route.path);
+    changed++;
+  }
+  return changed;
 }
 
 function escapeHtml(str: string): string {
@@ -1824,11 +1932,51 @@ export default function vitePrerenderSeo(): Plugin {
         const guestPaths = new Set(guestRoutes.map((r) => r.path));
         console.log(`[prerender-seo] Found ${guestRoutes.length} static guest apartments`);
 
+        // Remaining public routes that previously shipped without any HTML:
+        // blog articles + hubs, residential complexes, zone landings and the
+        // rest of the commercial/service pages.
+        console.log('[prerender-seo] Fetching public articles and complexes...');
+        const [articles, premiumStubs, complexes] = await Promise.all([
+          fetchPublicArticles(),
+          fetchPremiumArticleStubs(),
+          fetchComplexes(),
+        ]);
+        console.log(
+          `[prerender-seo] Found ${articles.length} public articles, ${premiumStubs.length} premium (noindex), ${complexes.length} complexes`,
+        );
+
+        const complexLandingSlugs = readComplexLandingSlugs(
+          fs.readFileSync(path.resolve(process.cwd(), 'src/pages/ComplexLanding.tsx'), 'utf-8'),
+        );
+
+        const takenPaths = new Set<string>([
+          ...staticPaths,
+          ...guestPaths,
+          ...propertyRoutes.map((r) => r.path),
+        ]);
+
+        const contentRoutes = [
+          ...buildArticleRoutes(articles),
+          ...buildPremiumStubRoutes(premiumStubs),
+          ...buildBlogHubRoutes(articles),
+          ...buildComplexRoutes(complexes, complexLandingSlugs, takenPaths),
+          ...buildRemainingStaticRoutes(),
+        ].filter((r) => {
+          if (takenPaths.has(r.path)) return false;
+          takenPaths.add(r.path);
+          return true;
+        });
+
         const allRoutes = [
           ...staticRoutes,
           ...propertyRoutes.filter((r) => !guestPaths.has(r.path)),
           ...guestRoutes,
+          ...contentRoutes,
         ];
+
+        // One title per page, at most 60 characters, no duplicates.
+        const retitled = dedupeTitles(allRoutes);
+        if (retitled) console.log(`[prerender-seo] ${retitled} duplicate titles disambiguated`);
 
         console.log(`[prerender-seo] Generating ${allRoutes.length} static HTML files...`);
 
@@ -1855,7 +2003,7 @@ export default function vitePrerenderSeo(): Plugin {
           console.log(`  ✓ ${isRoot ? '/' : route.path}/index.html`);
         }
 
-        console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} db properties + ${guestRoutes.length} guest apartments)`);
+        console.log(`[prerender-seo] Done — ${allRoutes.length} pages prerendered (${staticRoutes.length} static + ${propertyRoutes.length} db properties + ${guestRoutes.length} guest apartments + ${contentRoutes.length} content routes)`);
       },
     },
   };
