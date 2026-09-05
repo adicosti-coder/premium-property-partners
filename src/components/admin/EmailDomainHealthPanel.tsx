@@ -39,6 +39,10 @@ interface StatusPayload {
   dns_healthy: boolean;
   delegation_serving: boolean;
   delegation_note: string | null;
+  sender_dns_ready?: boolean;
+  provider_status?: string | null;
+  provider_error?: string | null;
+  sending_active?: boolean;
   records: RecordCheck[];
   pending_emails: number;
   failed_30d: number;
