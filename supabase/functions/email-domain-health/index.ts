@@ -36,6 +36,11 @@ const VERIFY_TXT_VALUE =
   "lovable_email_verify=93b02816026ae3bae71167cef04ff097df93c40a915ffc4284a6525b968f1504";
 const EXPECTED_NS = ["ns3.lovable.cloud", "ns4.lovable.cloud"];
 
+/** Resend (actual transport used by the notification functions) SPF host. */
+const RESEND_SPF_HOST = `send.${ROOT_DOMAIN}`;
+const RESEND_SPF_MX = "feedback-smtp.eu-west-1.amazonses.com";
+const RESEND_SPF_TXT = "v=spf1 include:amazonses.com ~all";
+
 type Verdict = "ok" | "missing" | "drifted" | "indeterminate";
 
 interface RecordCheck {
