@@ -228,8 +228,8 @@ ${hreflang(`/proprietate/${g.slug}`)}
 
   // Complexes with a dedicated landing page are already listed as
   // /complexe/<slug> in the static sitemap — skip them here to avoid a
-  // duplicate entry. Every other complex is listed on the same canonical
-  // /complexe/<slug> form (the legacy /complex/<slug> route only redirects).
+  // duplicate entry. Every other complex is served by the generic detail
+  // route /complex/<slug>, which is its canonical (and prerendered) address.
   const LANDING_SLUGS = new Set([
     "isho", "paltim", "ateneo", "green-forest", "helios", "fructus-plaza",
     "city-of-mara", "vivalia", "nord-one", "xcity-towers", "denya-forest",
@@ -238,7 +238,7 @@ ${hreflang(`/proprietate/${g.slug}`)}
   for (const c of complexes.data ?? []) {
     if (!c.slug || LANDING_SLUGS.has(c.slug)) continue;
     xml += `  <url>
-    <loc>${BASE_URL}/complexe/${c.slug}</loc>
+    <loc>${BASE_URL}/complex/${c.slug}</loc>
     <lastmod>${day(c.updated_at, c.created_at)}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
