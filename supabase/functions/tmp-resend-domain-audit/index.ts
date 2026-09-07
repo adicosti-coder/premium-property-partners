@@ -1,10 +1,10 @@
 // TEMPORARY diagnostic: lists which sender domains are verified in Resend.
-// Requires the internal VOICE_AGENT_SECRET header so it is not publicly usable.
+// Requires the internal TMP_AUDIT_SECRET header so it is not publicly usable.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-  const secret = Deno.env.get('VOICE_AGENT_SECRET')
+  const secret = Deno.env.get('TMP_AUDIT_SECRET')
   if (!secret || req.headers.get('x-internal-secret') !== secret) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), {
       status: 401,
