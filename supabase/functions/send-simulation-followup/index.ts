@@ -559,7 +559,7 @@ serve(async (req) => {
           : getSecondFollowupEmail(firstName, monthlyIncome, yearlyIncome, profile.id, supabaseUrl, customSubject, trackingPixelUrl);
 
         const { error: emailError } = await resend.emails.send({
-          from: "RealTrust <info@notify.realtrust.ro>",
+          from: "RealTrust <info@realtrust.ro>",
           to: [profile.email],
           subject: emailContent.subject,
           html: emailContent.html,

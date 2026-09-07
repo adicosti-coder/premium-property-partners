@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "RealTrust AI <info@notify.realtrust.ro>",
+        from: "RealTrust AI <info@realtrust.ro>",
         to: [recipientEmail],
         cc: ["info@realtrust.ro"],
         subject: `📋 Raport HostScan AI - ${String(report.zona || zone || "").replace(/[\r\n]/g, " ").slice(0, 100)} - Scor ${scoreNum}/${maxScoreNum}`,

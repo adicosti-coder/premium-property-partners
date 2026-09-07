@@ -3,14 +3,14 @@
 // Why: while `realtrust.ro` is not DNS-verified in Resend, sending from
 // noreply@realtrust.ro returns 403. We therefore:
 //   1. try RESEND_FROM (or the Resend test sender by default),
-//   2. on a "domain is not verified" 403, retry once from onboarding@resend.dev,
+//   2. on a "domain is not verified" 403, retry once from noreply@realtrust.ro,
 //   3. if the send still fails, persist the notification in
 //      `public.admin_email_failures` so it shows up in /admin/lead-dashboard.
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { fetchWithRetry } from "./fetchRetry.ts";
 
 /** Verified Resend test sender — always allowed, delivers to the account owner. */
-export const RESEND_TEST_FROM = "RealTrust <onboarding@resend.dev>";
+export const RESEND_TEST_FROM = "RealTrust <noreply@realtrust.ro>";
 
 export interface TeamEmailInput {
   to: string;

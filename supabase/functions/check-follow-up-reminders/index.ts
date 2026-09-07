@@ -193,7 +193,7 @@ async function sendEmailNotification(
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "RealTrust <info@notify.realtrust.ro>",
+      from: "RealTrust <info@realtrust.ro>",
       to: ["contact@realtrust.ro"],
       subject: `📅 Follow-up: ${overdueLeads.length > 0 ? `${overdueLeads.length} întârziate, ` : ''}${todayLeads.length} pentru astăzi`,
       html: emailHtml,

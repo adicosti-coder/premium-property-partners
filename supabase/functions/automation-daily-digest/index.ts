@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
             recipientEmail: to,
             idempotencyKey,
             purpose: "transactional",
-            fromOverride: "RealTrust Sistem <noreply@notify.realtrust.ro>",
+            fromOverride: "RealTrust Sistem <noreply@realtrust.ro>",
             templateData: data,
           }),
 

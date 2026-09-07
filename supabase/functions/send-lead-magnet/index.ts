@@ -133,7 +133,7 @@ serve(async (req) => {
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: "RealTrust <info@notify.realtrust.ro>",
+            from: "RealTrust <info@realtrust.ro>",
             reply_to: "info@realtrust.ro",
             to: ["info@realtrust.ro"],
             subject: `🎯 Lead Magnet: ${name} vrea Ghidul Investitorului 2026`,

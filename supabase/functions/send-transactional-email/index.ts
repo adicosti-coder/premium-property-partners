@@ -18,7 +18,7 @@ const FROM_DOMAIN = "realtrust.ro"
 // Technical sender for system/automation emails (reports, digests, anomaly alerts).
 // Routing system mail through notify.realtrust.ro protects the deliverability
 // reputation of the public "info@realtrust.ro" mailbox used by clients.
-const SYSTEM_FROM = "RealTrust Sistem <noreply@notify.realtrust.ro>"
+const SYSTEM_FROM = "RealTrust Sistem <noreply@realtrust.ro>"
 const SYSTEM_TEMPLATE_PREFIXES = ['automation-', 'system-', 'seo-', 'e2e-']
 const isSystemTemplate = (name: string) =>
   SYSTEM_TEMPLATE_PREFIXES.some((p) => name.startsWith(p))
@@ -372,7 +372,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           from: fromOverride
-            || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <onboarding@resend.dev>`),
+            || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <noreply@realtrust.ro>`),
 
           to: [effectiveRecipient],
           subject: resolvedSubject,
