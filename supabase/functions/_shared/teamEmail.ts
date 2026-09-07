@@ -1,16 +1,33 @@
 // Shared team-email sender with a verified-sender fallback and a DB fallback.
 //
-// Why: while `realtrust.ro` is not DNS-verified in Resend, sending from
-// noreply@realtrust.ro returns 403. We therefore:
-//   1. try RESEND_FROM (or the Resend test sender by default),
+// Why: only `realtrust.ro` is DNS-verified in Resend. Any other sender domain
+// (e.g. the delegated notify.realtrust.ro subdomain, which Resend does not know)
+// is rejected with a 403 "domain is not verified". We therefore:
+//   1. try RESEND_FROM, but only when it uses the verified domain,
 //   2. on a "domain is not verified" 403, retry once from noreply@realtrust.ro,
 //   3. if the send still fails, persist the notification in
 //      `public.admin_email_failures` so it shows up in /admin/lead-dashboard.
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { fetchWithRetry } from "./fetchRetry.ts";
 
-/** Verified Resend test sender — always allowed, delivers to the account owner. */
-export const RESEND_TEST_FROM = "RealTrust <noreply@realtrust.ro>";
+/** The only sender domain verified in Resend. */
+export const VERIFIED_SENDER_DOMAIN = "realtrust.ro";
+
+/** Always-deliverable sender on the verified domain. */
+export const RESEND_TEST_FROM = `RealTrust <noreply@${VERIFIED_SENDER_DOMAIN}>`;
+
+/**
+ * RESEND_FROM is only honoured when it sits on the verified domain; otherwise
+ * every send would 403 before the fallback ever gets a chance.
+ */
+export function resolveSender(raw?: string | null): string {
+  const value = (raw ?? "").trim();
+  const match = value.match(/<?([^\s<>@]+@([^\s<>]+))>?$/);
+  if (!match) return RESEND_TEST_FROM;
+  const domain = match[2].toLowerCase();
+  return domain === VERIFIED_SENDER_DOMAIN ? value : RESEND_TEST_FROM;
+}
+
 
 export interface TeamEmailInput {
   to: string;
