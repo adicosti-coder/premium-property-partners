@@ -55,7 +55,7 @@ export async function sendTeamEmail(
   admin?: SupabaseClient | null,
 ): Promise<TeamEmailResult> {
   const key = Deno.env.get("RESEND_API_KEY");
-  const primaryFrom = Deno.env.get("RESEND_FROM") || RESEND_TEST_FROM;
+  const primaryFrom = resolveSender(Deno.env.get("RESEND_FROM"));
 
   const store = async (error: string, status?: number, sender?: string) => {
     if (!admin) return false;
