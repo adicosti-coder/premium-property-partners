@@ -13,7 +13,7 @@ import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 
 const REPORT_TO = ["contact@realtrust.ro"];
-const FROM = "RealTrust <info@notify.realtrust.ro>";
+const FROM = "RealTrust <info@realtrust.ro>";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {

@@ -162,7 +162,7 @@ serve(async (req) => {
         Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: "RealTrust <info@notify.realtrust.ro>",
+        from: "RealTrust <info@realtrust.ro>",
         to: [normalizedEmail],
         subject,
         html,

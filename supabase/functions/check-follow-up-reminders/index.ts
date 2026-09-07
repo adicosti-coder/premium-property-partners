@@ -193,7 +193,7 @@ async function sendEmailNotification(
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "RealTrust <info@notify.realtrust.ro>",
+      from: "RealTrust <info@realtrust.ro>",
       to: ["contact@realtrust.ro"],
       subject: `📅 Follow-up: ${overdueLeads.length > 0 ? `${overdueLeads.length} întârziate, ` : ''}${todayLeads.length} pentru astăzi`,
       html: emailHtml,
@@ -210,11 +210,11 @@ async function sendEmailNotification(
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders }
+    return new Response(null, { headers: corsHeaders });
+  }
+
   const __auth = await requireAdmin(req, corsHeaders);
   if (!__auth.ok) return __auth.response!;
-);
-  }
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

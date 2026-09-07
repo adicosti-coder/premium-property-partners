@@ -14,7 +14,7 @@ import { Resend } from "npm:resend@4";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 
-const FROM = "RealTrust <info@notify.realtrust.ro>";
+const FROM = "RealTrust <info@realtrust.ro>";
 const ADMIN_URL = "https://realtrust.ro/admin?tab=tracking-alerts";
 
 const json = (body: unknown, status = 200) =>

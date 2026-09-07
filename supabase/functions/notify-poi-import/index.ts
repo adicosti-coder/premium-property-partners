@@ -79,7 +79,7 @@ async function sendEmailNotification(
 
   try {
     const { error } = await resend.emails.send({
-      from: 'RealTrust <info@notify.realtrust.ro>',
+      from: 'RealTrust <info@realtrust.ro>',
       to: [email],
       subject: '🎉 Cineva a importat locațiile tale!',
       html: `

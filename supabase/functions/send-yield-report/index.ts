@@ -133,7 +133,7 @@ serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendApiKey}` },
       body: JSON.stringify({
-        from: "RealTrust <info@notify.realtrust.ro>",
+        from: "RealTrust <info@realtrust.ro>",
         to: [email],
         subject,
         html,
@@ -154,7 +154,7 @@ serve(async (req) => {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendApiKey}` },
         body: JSON.stringify({
-          from: "RealTrust Leads <info@notify.realtrust.ro>",
+          from: "RealTrust Leads <info@realtrust.ro>",
           to: ["info@realtrust.ro"],
           subject: `📊 Raport randament trimis: ${safeName}`,
           html: `<p><strong>Nume:</strong> ${safeName}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${

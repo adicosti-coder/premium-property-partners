@@ -10,7 +10,7 @@ const corsHeaders = {
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const REPORT_EMAIL = Deno.env.get("ADMIN_ALERT_EMAIL") || "adicosti@gmail.com";
-const FROM = "RealTrust SEO <info@notify.realtrust.ro>";
+const FROM = "RealTrust SEO <info@realtrust.ro>";
 const DROP_THRESHOLD = 0.30;
 const MIN_PREV_CLICKS = 10;
 const DEDUP_HOURS = 24;
