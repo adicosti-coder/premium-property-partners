@@ -210,11 +210,11 @@ async function sendEmailNotification(
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders }
+    return new Response(null, { headers: corsHeaders });
+  }
+
   const __auth = await requireAdmin(req, corsHeaders);
   if (!__auth.ok) return __auth.response!;
-);
-  }
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
