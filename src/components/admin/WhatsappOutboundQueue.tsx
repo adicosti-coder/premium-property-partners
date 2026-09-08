@@ -59,7 +59,24 @@ type RateSettings = {
   outbound_max_consecutive_failures: number;
   outbound_paused: boolean;
   outbound_pause_reason: string | null;
+  outbound_send_start_hour: number;
+  outbound_send_end_hour: number;
+  outbound_send_days: number[];
+  outbound_followup_enabled: boolean;
+  outbound_followup_after_hours: number;
+  outbound_followup_template: string;
+  outbound_followup_max_per_run: number;
 };
+
+const DAY_LABELS: { value: number; label: string }[] = [
+  { value: 1, label: "Lu" },
+  { value: 2, label: "Ma" },
+  { value: 3, label: "Mi" },
+  { value: 4, label: "Jo" },
+  { value: 5, label: "Vi" },
+  { value: 6, label: "Sâ" },
+  { value: 0, label: "Du" },
+];
 
 const STATUSES = ["pending", "sending", "sent", "failed", "replied", "cancelled"] as const;
 
