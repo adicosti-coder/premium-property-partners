@@ -10054,6 +10054,10 @@ export type Database = {
           id: number
           office_hours_only: boolean
           outbound_auto_pause_enabled: boolean
+          outbound_followup_after_hours: number
+          outbound_followup_enabled: boolean
+          outbound_followup_max_per_run: number
+          outbound_followup_template: string
           outbound_max_consecutive_failures: number
           outbound_max_delay_seconds: number
           outbound_max_per_day: number
@@ -10063,6 +10067,9 @@ export type Database = {
           outbound_pause_reason: string | null
           outbound_paused: boolean
           outbound_paused_at: string | null
+          outbound_send_days: number[]
+          outbound_send_end_hour: number
+          outbound_send_start_hour: number
           paused_reason: string | null
           system_prompt: string
           updated_at: string
@@ -10073,6 +10080,10 @@ export type Database = {
           id?: number
           office_hours_only?: boolean
           outbound_auto_pause_enabled?: boolean
+          outbound_followup_after_hours?: number
+          outbound_followup_enabled?: boolean
+          outbound_followup_max_per_run?: number
+          outbound_followup_template?: string
           outbound_max_consecutive_failures?: number
           outbound_max_delay_seconds?: number
           outbound_max_per_day?: number
@@ -10082,6 +10093,9 @@ export type Database = {
           outbound_pause_reason?: string | null
           outbound_paused?: boolean
           outbound_paused_at?: string | null
+          outbound_send_days?: number[]
+          outbound_send_end_hour?: number
+          outbound_send_start_hour?: number
           paused_reason?: string | null
           system_prompt?: string
           updated_at?: string
@@ -10092,6 +10106,10 @@ export type Database = {
           id?: number
           office_hours_only?: boolean
           outbound_auto_pause_enabled?: boolean
+          outbound_followup_after_hours?: number
+          outbound_followup_enabled?: boolean
+          outbound_followup_max_per_run?: number
+          outbound_followup_template?: string
           outbound_max_consecutive_failures?: number
           outbound_max_delay_seconds?: number
           outbound_max_per_day?: number
@@ -10101,6 +10119,9 @@ export type Database = {
           outbound_pause_reason?: string | null
           outbound_paused?: boolean
           outbound_paused_at?: string | null
+          outbound_send_days?: number[]
+          outbound_send_end_hour?: number
+          outbound_send_start_hour?: number
           paused_reason?: string | null
           system_prompt?: string
           updated_at?: string
