@@ -82,6 +82,8 @@ const JOB_BODY: Record<string, Record<string, unknown>> = {
   "lead.auto_twilio_lookup": { mode: "batch", limit: 50 },
   // Keep auto-publish below the edge CPU limit: smaller batches per orchestrator tick
   "auto-publish-listings": { batch_size: 3 },
+  // WhatsApp: loturi mici, cu delay uman între mesaje (rămâne sub timeout-ul funcției)
+  "wa.outbound_drain": { batch_size: 5 },
 };
 
 // Event-driven jobs declanșate automat de triggere DB / cod aplicație.
