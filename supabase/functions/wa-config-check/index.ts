@@ -11,11 +11,7 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const checkSecret = Deno.env.get("WA_CONFIG_CHECK_SECRET") || "";
-  const provided = req.headers.get("x-check-secret") || "";
-  const secretOk = !!checkSecret && provided === checkSecret;
-
-  if (!secretOk && !(await isInternalCall(req))) {
+  if (!(await isInternalCall(req))) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
