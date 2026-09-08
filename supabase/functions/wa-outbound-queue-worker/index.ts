@@ -207,7 +207,7 @@ Deno.serve(async (req) => {
   let query = supabase
     .from("wa_outbound_queue")
     .select(
-      "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id",
+      "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id, source",
     );
 
   if (body.queue_id) {
