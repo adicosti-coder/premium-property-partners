@@ -177,7 +177,7 @@ serve(async (req) => {
           method: "POST",
           headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            from: "RealTrust <contact@realtrust.ro>",
+            from: "RealTrust <info@realtrust.ro>",
             to: [email],
             subject,
             html,

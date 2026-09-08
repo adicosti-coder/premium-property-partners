@@ -271,7 +271,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(GREY[0], GREY[1], GREY[2]);
-    doc.text("RealTrust - administrare in regim hotelier, Timisoara | contact@realtrust.ro", margin, pageH - 32);
+    doc.text("RealTrust - administrare in regim hotelier, Timisoara | info@realtrust.ro", margin, pageH - 32);
     doc.text(`${p} / ${pages}`, pageW - margin, pageH - 32, { align: "right" });
   }
 

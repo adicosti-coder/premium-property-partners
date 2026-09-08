@@ -93,7 +93,7 @@ const FollowupStatsManager = () => {
   
   // Weekly report settings
   const [weeklyReportEnabled, setWeeklyReportEnabled] = useState(true);
-  const [weeklyReportRecipients, setWeeklyReportRecipients] = useState<string[]>(["contact@realtrust.ro"]);
+  const [weeklyReportRecipients, setWeeklyReportRecipients] = useState<string[]>(["info@realtrust.ro"]);
   const [newRecipient, setNewRecipient] = useState("");
   const [isSavingReportSettings, setIsSavingReportSettings] = useState(false);
   const [isSendingTestReport, setIsSendingTestReport] = useState(false);
@@ -119,7 +119,7 @@ const FollowupStatsManager = () => {
         setAlertThreshold(settingsRes.data.conversion_rate_threshold ?? 10);
         setAlertEnabled(settingsRes.data.conversion_alert_enabled ?? true);
         setWeeklyReportEnabled(settingsRes.data.weekly_report_enabled ?? true);
-        setWeeklyReportRecipients(settingsRes.data.weekly_report_recipients ?? ["contact@realtrust.ro"]);
+        setWeeklyReportRecipients(settingsRes.data.weekly_report_recipients ?? ["info@realtrust.ro"]);
       }
     } catch (error) {
       console.error("Error fetching followup stats:", error);

@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
   try {
     const { data: cfg } = await supabase
       .from("system_health_thresholds").select("daily_report_email").maybeSingle();
-    const recipients: string[] = String(cfg?.daily_report_email || "contact@realtrust.ro")
+    const recipients: string[] = String(cfg?.daily_report_email || "info@realtrust.ro")
       .split(/[,;]/).map((s) => s.trim()).filter((s) => s.includes("@"));
 
     const top = rows.slice(0, 10).map((r) =>

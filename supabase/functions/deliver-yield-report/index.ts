@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "RealTrust <noreply@realtrust.ro>",
+          from: "RealTrust <info@realtrust.ro>",
           to: [ownerEmail],
           subject: "Raportul tău de randament — RealTrust Timișoara",
           html: `

@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     const minSessions = settings?.min_sessions ?? 20;
     const recipients: string[] = settings?.notify_emails?.length
       ? settings.notify_emails
-      : ["contact@realtrust.ro"];
+      : ["info@realtrust.ro"];
 
     const { data: seriesRaw, error: seriesError } = await supabase.rpc("get_ga4_daily_sessions", {
       p_days: 14,

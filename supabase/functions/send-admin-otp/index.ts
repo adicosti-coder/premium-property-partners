@@ -114,8 +114,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         // Use Resend's universal sandbox sender — works without domain verification.
-        // Once realtrust.ro is verified in Resend, switch back to "noreply@realtrust.ro".
-        from: "RealTrust Admin <noreply@realtrust.ro>",
+        // Once realtrust.ro is verified in Resend, switch back to "info@realtrust.ro".
+        from: "RealTrust Admin <info@realtrust.ro>",
         to: [user.email],
         reply_to: "info@realtrust.ro",
         subject: `Cod admin RealTrust: ${code}`,
