@@ -255,14 +255,19 @@ Deno.serve(async (req) => {
     }
 
     // ── Deduplicare: niciun mesaj activ/trimis către același număr în 72h ─────
+    // Excepție: follow-up-urile sunt intenționat un al doilea mesaj către
+    // același număr, deci nu intră în regula de deduplicare.
+    const isFollowup = item.source === "followup";
     const dedupSince = new Date(Date.now() - 72 * 3_600_000).toISOString();
-    const { count: recentCount } = await supabase
-      .from("wa_outbound_queue")
-      .select("id", { count: "exact", head: true })
-      .eq("phone_normalized", item.phone_normalized)
-      .neq("id", item.id)
-      .in("status", ["sending", "sent", "replied"])
-      .gte("sent_at", dedupSince);
+    const { count: recentCount } = isFollowup
+      ? { count: 0 }
+      : await supabase
+        .from("wa_outbound_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("phone_normalized", item.phone_normalized)
+        .neq("id", item.id)
+        .in("status", ["sending", "sent", "replied"])
+        .gte("sent_at", dedupSince);
 
     if ((recentCount ?? 0) > 0) {
       await supabase
