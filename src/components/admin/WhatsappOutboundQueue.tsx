@@ -132,7 +132,7 @@ export default function WhatsappOutboundQueue() {
   const loadSettings = useCallback(async () => {
     const { data } = await supabase
       .from("wa_agent_settings")
-      .select("outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds, outbound_auto_pause_enabled, outbound_min_delivery_rate, outbound_max_consecutive_failures, outbound_paused, outbound_pause_reason")
+      .select("outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds, outbound_auto_pause_enabled, outbound_min_delivery_rate, outbound_max_consecutive_failures, outbound_paused, outbound_pause_reason, outbound_send_start_hour, outbound_send_end_hour, outbound_send_days, outbound_followup_enabled, outbound_followup_after_hours, outbound_followup_template, outbound_followup_max_per_run")
       .eq("id", 1)
       .maybeSingle();
     if (data) setSettings(data as RateSettings);
