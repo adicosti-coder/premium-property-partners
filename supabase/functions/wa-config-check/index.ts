@@ -5,7 +5,7 @@ import { isInternalCall } from "../_shared/cronAuth.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-webhook-secret, x-cron-secret",
+    "authorization, x-client-info, apikey, content-type, x-webhook-secret, x-cron-secret, x-check-secret",
 };
 
 Deno.serve(async (req) => {
