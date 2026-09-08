@@ -59,7 +59,24 @@ type RateSettings = {
   outbound_max_consecutive_failures: number;
   outbound_paused: boolean;
   outbound_pause_reason: string | null;
+  outbound_send_start_hour: number;
+  outbound_send_end_hour: number;
+  outbound_send_days: number[];
+  outbound_followup_enabled: boolean;
+  outbound_followup_after_hours: number;
+  outbound_followup_template: string;
+  outbound_followup_max_per_run: number;
 };
+
+const DAY_LABELS: { value: number; label: string }[] = [
+  { value: 1, label: "Lu" },
+  { value: 2, label: "Ma" },
+  { value: 3, label: "Mi" },
+  { value: 4, label: "Jo" },
+  { value: 5, label: "Vi" },
+  { value: 6, label: "Sâ" },
+  { value: 0, label: "Du" },
+];
 
 const STATUSES = ["pending", "sending", "sent", "failed", "replied", "cancelled"] as const;
 
@@ -115,7 +132,7 @@ export default function WhatsappOutboundQueue() {
   const loadSettings = useCallback(async () => {
     const { data } = await supabase
       .from("wa_agent_settings")
-      .select("outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds, outbound_auto_pause_enabled, outbound_min_delivery_rate, outbound_max_consecutive_failures, outbound_paused, outbound_pause_reason")
+      .select("outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds, outbound_auto_pause_enabled, outbound_min_delivery_rate, outbound_max_consecutive_failures, outbound_paused, outbound_pause_reason, outbound_send_start_hour, outbound_send_end_hour, outbound_send_days, outbound_followup_enabled, outbound_followup_after_hours, outbound_followup_template, outbound_followup_max_per_run")
       .eq("id", 1)
       .maybeSingle();
     if (data) setSettings(data as RateSettings);
@@ -306,6 +323,18 @@ export default function WhatsappOutboundQueue() {
       toast({ title: "Delay invalid", description: "Minimul trebuie ≤ maximul.", variant: "destructive" });
       return;
     }
+    if (settings.outbound_send_start_hour >= settings.outbound_send_end_hour) {
+      toast({ title: "Orar invalid", description: "Ora de început trebuie să fie mai mică decât ora de final.", variant: "destructive" });
+      return;
+    }
+    if (!settings.outbound_send_days?.length) {
+      toast({ title: "Orar invalid", description: "Alege cel puțin o zi în care se pot trimite mesaje.", variant: "destructive" });
+      return;
+    }
+    if (!settings.outbound_followup_template.trim()) {
+      toast({ title: "Șablon lipsă", description: "Completează numele șablonului de follow-up aprobat în Meta.", variant: "destructive" });
+      return;
+    }
     setSavingSettings(true);
     const { error } = await supabase.from("wa_agent_settings").update(settings).eq("id", 1);
     setSavingSettings(false);
@@ -494,6 +523,90 @@ export default function WhatsappOutboundQueue() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
+            Orar de trimitere & follow-up automat
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {numField("outbound_send_start_hour", "Ora de început", "Mai devreme de această oră nu pleacă nimic (ora României).")}
+            {numField("outbound_send_end_hour", "Ora de final", "După această oră mesajele se amână automat.")}
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Zile permise</Label>
+            <div className="flex flex-wrap gap-2">
+              {DAY_LABELS.map((d) => {
+                const active = settings?.outbound_send_days?.includes(d.value) ?? false;
+                return (
+                  <Button
+                    key={d.value}
+                    type="button"
+                    size="sm"
+                    variant={active ? "default" : "outline"}
+                    aria-pressed={active}
+                    className="min-w-[48px] min-h-[40px]"
+                    onClick={() =>
+                      setSettings((s) =>
+                        s
+                          ? {
+                              ...s,
+                              outbound_send_days: active
+                                ? s.outbound_send_days.filter((v) => v !== d.value)
+                                : [...(s.outbound_send_days ?? []), d.value].sort(),
+                            }
+                          : s,
+                      )
+                    }
+                  >
+                    {d.label}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 pt-2 border-t border-border">
+            <div>
+              <p className="text-sm font-medium text-foreground">Follow-up automat</p>
+              <p className="text-xs text-muted-foreground">
+                Un singur mesaj suplimentar către proprietarii care nu au răspuns la primul mesaj.
+              </p>
+            </div>
+            <Switch
+              checked={settings?.outbound_followup_enabled ?? true}
+              aria-label="Activează follow-up-ul automat"
+              onCheckedChange={(v) =>
+                setSettings((s) => (s ? { ...s, outbound_followup_enabled: v } : s))
+              }
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {numField("outbound_followup_after_hours", "Trimite după (ore)", "Implicit 48h de la primul mesaj.")}
+            {numField("outbound_followup_max_per_run", "Max follow-up / rulare", "Câte follow-up-uri se pun în coadă la fiecare rulare.")}
+            <div className="space-y-1">
+              <Label htmlFor="outbound_followup_template" className="text-xs">Șablon follow-up (Meta)</Label>
+              <Input
+                id="outbound_followup_template"
+                value={settings?.outbound_followup_template ?? ""}
+                onChange={(e) =>
+                  setSettings((s) => (s ? { ...s, outbound_followup_template: e.target.value } : s))
+                }
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Numele exact al șablonului aprobat în WhatsApp Business.
+              </p>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => void saveSettings()} disabled={savingSettings || !settings}>
+            {savingSettings && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Salvează setările
+          </Button>
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader className="pb-3">

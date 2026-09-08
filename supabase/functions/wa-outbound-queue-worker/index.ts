@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
   const { data: settings } = await supabase
     .from("wa_agent_settings")
     .select(
-      "outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds, outbound_auto_pause_enabled, outbound_min_delivery_rate, outbound_max_consecutive_failures, outbound_paused, outbound_pause_reason",
+      "outbound_max_per_hour, outbound_max_per_day, outbound_min_delay_seconds, outbound_max_delay_seconds, outbound_auto_pause_enabled, outbound_min_delivery_rate, outbound_max_consecutive_failures, outbound_paused, outbound_pause_reason, outbound_send_start_hour, outbound_send_end_hour, outbound_send_days",
     )
     .eq("id", 1)
     .maybeSingle();
@@ -68,6 +68,31 @@ Deno.serve(async (req) => {
       processed: 0,
       paused: true,
       pause_reason: settings?.outbound_pause_reason ?? "auto_pause",
+    });
+  }
+
+  // ── Orar de liniște: mesajele pleacă doar în fereastra permisă (Bucharest) ─
+  const startHour = Math.min(23, Math.max(0, Number(settings?.outbound_send_start_hour ?? 9)));
+  const endHour = Math.min(24, Math.max(startHour + 1, Number(settings?.outbound_send_end_hour ?? 20)));
+  const allowedDays: number[] = Array.isArray(settings?.outbound_send_days) && settings!.outbound_send_days.length
+    ? (settings!.outbound_send_days as number[]).map(Number)
+    : [1, 2, 3, 4, 5, 6];
+
+  const roNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Europe/Bucharest" }),
+  );
+  const roHour = roNow.getHours();
+  const roDay = roNow.getDay(); // 0 = duminică
+  const inSendWindow = allowedDays.includes(roDay) && roHour >= startHour && roHour < endHour;
+
+  if (!inSendWindow && !force) {
+    return json({
+      ok: true,
+      processed: 0,
+      outside_send_window: true,
+      local_time: `${String(roHour).padStart(2, "0")}:${String(roNow.getMinutes()).padStart(2, "0")}`,
+      window: `${startHour}:00–${endHour}:00`,
+      allowed_days: allowedDays,
     });
   }
 
@@ -182,7 +207,7 @@ Deno.serve(async (req) => {
   let query = supabase
     .from("wa_outbound_queue")
     .select(
-      "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id",
+      "id, phone_normalized, prospect_listing_id, template_name, template_language, template_params, attempts, conversation_id, source",
     );
 
   if (body.queue_id) {
@@ -230,14 +255,19 @@ Deno.serve(async (req) => {
     }
 
     // ── Deduplicare: niciun mesaj activ/trimis către același număr în 72h ─────
+    // Excepție: follow-up-urile sunt intenționat un al doilea mesaj către
+    // același număr, deci nu intră în regula de deduplicare.
+    const isFollowup = item.source === "followup";
     const dedupSince = new Date(Date.now() - 72 * 3_600_000).toISOString();
-    const { count: recentCount } = await supabase
-      .from("wa_outbound_queue")
-      .select("id", { count: "exact", head: true })
-      .eq("phone_normalized", item.phone_normalized)
-      .neq("id", item.id)
-      .in("status", ["sending", "sent", "replied"])
-      .gte("sent_at", dedupSince);
+    const { count: recentCount } = isFollowup
+      ? { count: 0 }
+      : await supabase
+        .from("wa_outbound_queue")
+        .select("id", { count: "exact", head: true })
+        .eq("phone_normalized", item.phone_normalized)
+        .neq("id", item.id)
+        .in("status", ["sending", "sent", "replied"])
+        .gte("sent_at", dedupSince);
 
     if ((recentCount ?? 0) > 0) {
       await supabase

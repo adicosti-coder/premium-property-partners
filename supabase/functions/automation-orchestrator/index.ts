@@ -63,6 +63,9 @@ const JOB_FN: Record<string, string> = {
   // AI / prospect intelligence
   "ai.bulk_cache_refresh": "bulk-generate-ai-cache",
   "prospect.predictive_rescore": "scraper-lead-predictive",
+  // WhatsApp (Andrei)
+  "wa.outbound_drain": "wa-outbound-queue-worker",
+  "wa.followup_nudge": "wa-followup-nudge",
   // System
   "system.daily_digest": "automation-daily-digest",
   "system.self_healing": "automation-self-healing",
@@ -79,6 +82,8 @@ const JOB_BODY: Record<string, Record<string, unknown>> = {
   "lead.auto_twilio_lookup": { mode: "batch", limit: 50 },
   // Keep auto-publish below the edge CPU limit: smaller batches per orchestrator tick
   "auto-publish-listings": { batch_size: 3 },
+  // WhatsApp: loturi mici, cu delay uman între mesaje (rămâne sub timeout-ul funcției)
+  "wa.outbound_drain": { batch_size: 5 },
 };
 
 // Event-driven jobs declanșate automat de triggere DB / cod aplicație.
