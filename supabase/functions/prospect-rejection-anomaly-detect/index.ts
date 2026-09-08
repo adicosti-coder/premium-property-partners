@@ -297,7 +297,7 @@ async function sendAlertNotification(
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
         body: JSON.stringify({
-          from: "RealTrust Alerts <alerts@realtrust.ro>",
+          from: "RealTrust Alerts <info@realtrust.ro>",
           to: emails,
           subject,
           html,

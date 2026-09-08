@@ -286,7 +286,7 @@ const handler = async (req: Request): Promise<Response> => {
     // still fails, is stored in `admin_email_failures` for retry from /admin.
     const adminEmailResult = await sendTeamEmail(
       {
-        to: "contact@realtrust.ro",
+        to: "info@realtrust.ro",
         subject: `🏠 Cerere Rezervare - ${data.guestName} | ${data.propertyName}`,
         html: buildAdminEmail(data),
         source: "booking-request-admin",

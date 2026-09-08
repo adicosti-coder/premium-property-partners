@@ -989,7 +989,7 @@ async function sendRegressionAlert(sb: any, reverts: any[]) {
       "X-Connection-Api-Key": RESEND,
     },
     body: JSON.stringify({
-      from: "RealTrust SEO <noreply@realtrust.ro>",
+      from: "RealTrust SEO <info@realtrust.ro>",
       to: recipients,
       subject: `⚠️ ${reverts.length} regresii SEO auto-revertite`,
       html,

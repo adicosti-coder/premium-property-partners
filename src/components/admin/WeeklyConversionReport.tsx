@@ -132,7 +132,7 @@ const WeeklyConversionReport = () => {
         title: status === "sent" ? "Raport trimis" : "Raport generat",
         description:
           status === "sent"
-            ? "Digestul a plecat către contact@realtrust.ro."
+            ? "Digestul a plecat către info@realtrust.ro."
             : status === "skipped_no_resend_key"
               ? "Emailul nu a putut fi trimis (serviciul de email nu este configurat)."
               : `Status email: ${status ?? "necunoscut"}`,

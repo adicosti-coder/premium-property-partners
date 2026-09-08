@@ -41,7 +41,7 @@ async function sendPushNotification(
     const webPush = await import("https://esm.sh/web-push@3.6.7");
     
     webPush.setVapidDetails(
-      'mailto:contact@realtrust.ro',
+      'mailto:info@realtrust.ro',
       vapidPublicKey,
       vapidPrivateKey
     );
@@ -194,7 +194,7 @@ async function sendEmailNotification(
 
     const emailResponse = await resend.emails.send({
       from: "RealTrust <info@realtrust.ro>",
-      to: ["contact@realtrust.ro"],
+      to: ["info@realtrust.ro"],
       subject: `📅 Follow-up: ${overdueLeads.length > 0 ? `${overdueLeads.length} întârziate, ` : ''}${todayLeads.length} pentru astăzi`,
       html: emailHtml,
     });

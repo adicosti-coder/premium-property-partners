@@ -41,7 +41,7 @@ async function sendPushNotification(
     const webPush = await import("https://esm.sh/web-push@3.6.7");
     
     webPush.setVapidDetails(
-      'mailto:contact@realtrust.ro',
+      'mailto:info@realtrust.ro',
       vapidPublicKey,
       vapidPrivateKey
     );

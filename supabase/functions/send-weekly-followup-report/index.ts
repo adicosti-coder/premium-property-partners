@@ -164,7 +164,7 @@ serve(async (req) => {
     }
 
     const reportEnabled = settings?.weekly_report_enabled ?? true;
-    const recipients: string[] = settings?.weekly_report_recipients ?? ["contact@realtrust.ro"];
+    const recipients: string[] = settings?.weekly_report_recipients ?? ["info@realtrust.ro"];
 
     if (!reportEnabled) {
       console.log("Weekly reports are disabled");

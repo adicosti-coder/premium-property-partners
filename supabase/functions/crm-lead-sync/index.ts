@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
     }
 
     // ---- 2. Instant team email with the WhatsApp deep link -----------------
-    // Sent through the shared helper: verified-sender fallback (noreply@realtrust.ro
+    // Sent through the shared helper: verified-sender fallback (info@realtrust.ro
     // while realtrust.ro is not DNS-verified) + persistence in
     // `admin_email_failures` when delivery still fails.
     const teamEmail = Deno.env.get("ADMIN_ALERT_EMAIL") || "info@realtrust.ro";

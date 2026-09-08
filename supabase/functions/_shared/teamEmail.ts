@@ -4,7 +4,7 @@
 // (e.g. the delegated notify.realtrust.ro subdomain, which Resend does not know)
 // is rejected with a 403 "domain is not verified". We therefore:
 //   1. try RESEND_FROM, but only when it uses the verified domain,
-//   2. on a "domain is not verified" 403, retry once from noreply@realtrust.ro,
+//   2. on a "domain is not verified" 403, retry once from info@realtrust.ro,
 //   3. if the send still fails, persist the notification in
 //      `public.admin_email_failures` so it shows up in /admin/lead-dashboard.
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
