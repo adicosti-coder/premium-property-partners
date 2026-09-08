@@ -323,6 +323,18 @@ export default function WhatsappOutboundQueue() {
       toast({ title: "Delay invalid", description: "Minimul trebuie ≤ maximul.", variant: "destructive" });
       return;
     }
+    if (settings.outbound_send_start_hour >= settings.outbound_send_end_hour) {
+      toast({ title: "Orar invalid", description: "Ora de început trebuie să fie mai mică decât ora de final.", variant: "destructive" });
+      return;
+    }
+    if (!settings.outbound_send_days?.length) {
+      toast({ title: "Orar invalid", description: "Alege cel puțin o zi în care se pot trimite mesaje.", variant: "destructive" });
+      return;
+    }
+    if (!settings.outbound_followup_template.trim()) {
+      toast({ title: "Șablon lipsă", description: "Completează numele șablonului de follow-up aprobat în Meta.", variant: "destructive" });
+      return;
+    }
     setSavingSettings(true);
     const { error } = await supabase.from("wa_agent_settings").update(settings).eq("id", 1);
     setSavingSettings(false);
