@@ -266,9 +266,16 @@ const PropertyCard = ({
             <BedDouble className="w-4 h-4" />
             {displayBedrooms} {displayBedrooms === 1 ? t.bedroom : t.bedrooms}
           </span>
-          <span className="text-xs text-muted-foreground/70">
-            ({displayReviews} {t.reviews})
-          </span>
+          {displayRating ? (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground/80">
+              <Star className="w-3 h-3 fill-primary text-primary" aria-hidden="true" />
+              <span className="font-semibold text-foreground">{displayRating}</span>
+              <span>({displayReviews} {t.reviews})</span>
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground/70">{t.noReviews}</span>
+          )}
+
         </div>
 
         {/* Features */}
