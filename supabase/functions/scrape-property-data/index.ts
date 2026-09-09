@@ -250,10 +250,13 @@ Deno.serve(async (req) => {
 
     // Optional: scrape only specific property
     let targetSlug: string | null = null;
+    let triggerSource = 'manual';
     try {
       const body = await req.json();
       targetSlug = body?.property_slug || null;
+      if (body?.trigger_source) triggerSource = String(body.trigger_source).slice(0, 40);
     } catch { /* no body */ }
+
 
     // Fetch all properties to scrape
     let query = supabase
