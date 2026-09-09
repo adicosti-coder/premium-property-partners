@@ -140,6 +140,7 @@ export type Database = {
       admin_email_failures: {
         Row: {
           acknowledged_at: string | null
+          alerted_at: string | null
           contract_id: string | null
           created_at: string
           error_message: string | null
@@ -158,6 +159,7 @@ export type Database = {
         }
         Insert: {
           acknowledged_at?: string | null
+          alerted_at?: string | null
           contract_id?: string | null
           created_at?: string
           error_message?: string | null
@@ -176,6 +178,7 @@ export type Database = {
         }
         Update: {
           acknowledged_at?: string | null
+          alerted_at?: string | null
           contract_id?: string | null
           created_at?: string
           error_message?: string | null
@@ -1104,6 +1107,101 @@ export type Database = {
           status?: string
           updated_at?: string
           utm?: Json | null
+        }
+        Relationships: []
+      }
+      booking_scrape_items: {
+        Row: {
+          booking_com_url: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          price_per_night: number | null
+          property_slug: string
+          rating: number | null
+          reviews_count: number | null
+          run_id: string
+          status: string
+        }
+        Insert: {
+          booking_com_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          price_per_night?: number | null
+          property_slug: string
+          rating?: number | null
+          reviews_count?: number | null
+          run_id: string
+          status?: string
+        }
+        Update: {
+          booking_com_url?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          price_per_night?: number | null
+          property_slug?: string
+          rating?: number | null
+          reviews_count?: number | null
+          run_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_scrape_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "booking_scrape_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_scrape_runs: {
+        Row: {
+          created_at: string
+          error_count: number
+          finished_at: string | null
+          id: string
+          last_error: string | null
+          price_updated_count: number
+          processed_count: number
+          rating_updated_count: number
+          started_at: string
+          status: string
+          total_properties: number
+          trigger_source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_count?: number
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          price_updated_count?: number
+          processed_count?: number
+          rating_updated_count?: number
+          started_at?: string
+          status?: string
+          total_properties?: number
+          trigger_source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_count?: number
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          price_updated_count?: number
+          processed_count?: number
+          rating_updated_count?: number
+          started_at?: string
+          status?: string
+          total_properties?: number
+          trigger_source?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -10308,6 +10406,7 @@ export type Database = {
       }
       wa_outbound_queue: {
         Row: {
+          alerted_at: string | null
           attempts: number
           conversation_id: string | null
           created_at: string
@@ -10331,6 +10430,7 @@ export type Database = {
           wa_message_id: string | null
         }
         Insert: {
+          alerted_at?: string | null
           attempts?: number
           conversation_id?: string | null
           created_at?: string
@@ -10354,6 +10454,7 @@ export type Database = {
           wa_message_id?: string | null
         }
         Update: {
+          alerted_at?: string | null
           attempts?: number
           conversation_id?: string | null
           created_at?: string

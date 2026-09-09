@@ -81,6 +81,15 @@ function parseRatingFromMarkdown(md: string): { rating: number | null; reviews: 
 /** RON to EUR conversion rate */
 const RON_TO_EUR = 0.2; // ~5 RON = 1 EUR
 
+/** Last Firecrawl-level failure (HTTP status / payload), surfaced in the run log. */
+let lastFirecrawlError: string | null = null;
+
+function noteFirecrawlIssue(status: number, payload: unknown) {
+  const raw = typeof payload === "string" ? payload : JSON.stringify(payload ?? {});
+  lastFirecrawlError = `Firecrawl ${status}: ${raw.slice(0, 300)}`;
+  console.log(lastFirecrawlError);
+}
+
 /**
  * Scrape price from Pynbooking page using markdown + regex.
  * Detects currency (RON/lei vs EUR) and converts to EUR if needed.
@@ -103,6 +112,7 @@ async function scrapePrice(url: string, firecrawlKey: string): Promise<number | 
 
     const data = await response.json();
     const markdown = data?.data?.markdown || data?.markdown || '';
+    if (!response.ok || !markdown) noteFirecrawlIssue(response.status, data);
 
     // Try to match price WITH currency indicator
     // Pattern 1: number followed by currency symbol/name
@@ -171,9 +181,7 @@ async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{
 
     const data = await response.json();
     const markdown = data?.data?.markdown || data?.markdown || '';
-    if (!response.ok || !markdown) {
-      console.log(`Firecrawl status ${response.status}, payload: ${JSON.stringify(data).substring(0, 400)}`);
-    }
+    if (!response.ok || !markdown) noteFirecrawlIssue(response.status, data);
     console.log(`Markdown length: ${markdown.length}, first 800 chars:`, markdown.substring(0, 800));
 
 
@@ -221,14 +229,18 @@ async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{
 }
 
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  // Scheduled runs authenticate with the internal cron secret; humans with an admin JWT.
+  if (!(await isInternalCall(req))) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
 
   try {
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
@@ -242,10 +254,13 @@ Deno.serve(async (req) => {
 
     // Optional: scrape only specific property
     let targetSlug: string | null = null;
+    let triggerSource = 'manual';
     try {
       const body = await req.json();
       targetSlug = body?.property_slug || null;
+      if (body?.trigger_source) triggerSource = String(body.trigger_source).slice(0, 40);
     } catch { /* no body */ }
+
 
     // Fetch all properties to scrape
     let query = supabase
@@ -257,11 +272,31 @@ Deno.serve(async (req) => {
     if (fetchError) throw fetchError;
 
     const results: Record<string, any> = {};
+    const list = (properties ?? []) as PropertyLiveData[];
 
-    for (const prop of (properties as PropertyLiveData[])) {
+    // Start a run log so the Admin tab can show progress and errors.
+    const { data: runRow } = await supabase
+      .from('booking_scrape_runs')
+      .insert({
+        status: 'running',
+        trigger_source: triggerSource,
+        total_properties: list.length,
+      })
+      .select('id')
+      .single();
+    const runId: string | null = runRow?.id ?? null;
+
+    let ratingUpdated = 0;
+    let priceUpdated = 0;
+    let errorCount = 0;
+    let lastError: string | null = null;
+
+    for (const prop of list) {
       console.log(`\n--- Processing ${prop.property_slug} ---`);
-      
+      lastFirecrawlError = null;
+
       const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+
 
       // Scrape price from Pynbooking
       if (prop.booking_url && prop.booking_url.includes('pynbooking.direct')) {
@@ -307,6 +342,42 @@ Deno.serve(async (req) => {
         results[prop.property_slug] = updates;
       }
 
+      if (updates.rating) ratingUpdated++;
+      if (updates.price_per_night) priceUpdated++;
+
+      const itemError = updateError?.message
+        || (!updates.rating && prop.booking_com_url
+          ? (lastFirecrawlError || 'Nota nu a putut fi citită de pe Booking')
+          : null);
+      if (itemError) {
+        errorCount++;
+        lastError = itemError;
+      }
+
+      if (runId) {
+        await supabase.from('booking_scrape_items').insert({
+          run_id: runId,
+          property_slug: prop.property_slug,
+          booking_com_url: prop.booking_com_url,
+          rating: updates.rating ?? null,
+          reviews_count: updates.reviews_count ?? null,
+          price_per_night: updates.price_per_night ?? null,
+          status: itemError ? 'error' : 'ok',
+          error_message: itemError ? itemError.slice(0, 500) : null,
+        });
+        await supabase
+          .from('booking_scrape_runs')
+          .update({
+            processed_count: Object.keys(results).length,
+            rating_updated_count: ratingUpdated,
+            price_updated_count: priceUpdated,
+            error_count: errorCount,
+            last_error: lastError ? lastError.slice(0, 500) : null,
+          })
+          .eq('id', runId);
+      }
+
+
       // Also sync to properties table
       if (updates.rating || updates.reviews_count) {
         const propUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
@@ -323,7 +394,29 @@ Deno.serve(async (req) => {
       await new Promise(resolve => setTimeout(resolve, 1500));
     }
 
-    return new Response(JSON.stringify({ success: true, results }), {
+    if (runId) {
+      await supabase
+        .from('booking_scrape_runs')
+        .update({
+          status: errorCount === 0 ? 'success' : (ratingUpdated > 0 ? 'partial' : 'failed'),
+          finished_at: new Date().toISOString(),
+          processed_count: list.length,
+          rating_updated_count: ratingUpdated,
+          price_updated_count: priceUpdated,
+          error_count: errorCount,
+          last_error: lastError ? lastError.slice(0, 500) : null,
+        })
+        .eq('id', runId);
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      run_id: runId,
+      rating_updated: ratingUpdated,
+      price_updated: priceUpdated,
+      errors: errorCount,
+      results,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

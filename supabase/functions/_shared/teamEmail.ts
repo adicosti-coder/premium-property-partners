@@ -14,7 +14,7 @@ import { fetchWithRetry } from "./fetchRetry.ts";
 export const VERIFIED_SENDER_DOMAIN = "realtrust.ro";
 
 /** Always-deliverable sender on the verified domain. */
-export const RESEND_TEST_FROM = `RealTrust <noreply@${VERIFIED_SENDER_DOMAIN}>`;
+export const RESEND_TEST_FROM = `RealTrust <info@${VERIFIED_SENDER_DOMAIN}>`;
 
 /**
  * RESEND_FROM is only honoured when it sits on the verified domain; otherwise
