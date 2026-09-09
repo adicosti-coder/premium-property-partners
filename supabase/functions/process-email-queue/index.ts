@@ -347,6 +347,19 @@ Deno.serve(async (req) => {
           )
         }
 
+        // A payload without the required unsubscribe token can never succeed:
+        // retrying only burns the retry budget. DLQ it immediately with a clear
+        // reason so it shows up in the failure list instead of looping silently.
+        if (errorMsg.includes('missing_unsubscribe')) {
+          await moveToDlq(
+            supabase,
+            queue,
+            msg,
+            'missing_unsubscribe: payload has no unsubscribe_token (permanent, not retried)'
+          )
+          continue
+        }
+
         // Log non-429 failures to track real retry attempts.
         await supabase.from('email_send_log').insert({
           message_id: payload.message_id,
