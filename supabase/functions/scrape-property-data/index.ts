@@ -229,14 +229,18 @@ async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{
 }
 
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  // Scheduled runs authenticate with the internal cron secret; humans with an admin JWT.
+  if (!(await isInternalCall(req))) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
 
   try {
     const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
