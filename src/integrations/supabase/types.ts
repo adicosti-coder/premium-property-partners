@@ -140,6 +140,7 @@ export type Database = {
       admin_email_failures: {
         Row: {
           acknowledged_at: string | null
+          alerted_at: string | null
           contract_id: string | null
           created_at: string
           error_message: string | null
@@ -158,6 +159,7 @@ export type Database = {
         }
         Insert: {
           acknowledged_at?: string | null
+          alerted_at?: string | null
           contract_id?: string | null
           created_at?: string
           error_message?: string | null
@@ -176,6 +178,7 @@ export type Database = {
         }
         Update: {
           acknowledged_at?: string | null
+          alerted_at?: string | null
           contract_id?: string | null
           created_at?: string
           error_message?: string | null
@@ -10403,6 +10406,7 @@ export type Database = {
       }
       wa_outbound_queue: {
         Row: {
+          alerted_at: string | null
           attempts: number
           conversation_id: string | null
           created_at: string
@@ -10426,6 +10430,7 @@ export type Database = {
           wa_message_id: string | null
         }
         Insert: {
+          alerted_at?: string | null
           attempts?: number
           conversation_id?: string | null
           created_at?: string
@@ -10449,6 +10454,7 @@ export type Database = {
           wa_message_id?: string | null
         }
         Update: {
+          alerted_at?: string | null
           attempts?: number
           conversation_id?: string | null
           created_at?: string
