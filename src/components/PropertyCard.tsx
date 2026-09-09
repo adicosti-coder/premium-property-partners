@@ -40,8 +40,28 @@ const PropertyCard = ({
   const { data: viewersMap } = useRealtimeViewers();
   const liveData = liveDataMap?.[property.slug];
   const viewerCount = viewersMap?.[String(property.id)] || 0;
-  const displayRating = liveData?.rating ?? property.rating;
-  const displayReviews = liveData?.reviews_count ?? property.reviews;
+  // Nota și numărul de recenzii se iau ca PERECHE din aceeași sursă,
+  // ca să nu combinăm o notă live cu un număr de recenzii vechi (sau invers).
+  const hasLiveReviews =
+    typeof liveData?.rating === "number" &&
+    liveData.rating > 0 &&
+    typeof liveData?.reviews_count === "number" &&
+    liveData.reviews_count > 0;
+  const rawRating = hasLiveReviews ? liveData!.rating! : property.rating;
+  const rawReviews = hasLiveReviews ? liveData!.reviews_count! : property.reviews;
+  // Normalizare: unele surse pot livra nota pe scala 1-5
+  const normalizedRating =
+    typeof rawRating === "number" && rawRating > 0 && rawRating <= 5
+      ? rawRating * 2
+      : rawRating;
+  const hasRating =
+    typeof normalizedRating === "number" &&
+    normalizedRating > 0 &&
+    typeof rawReviews === "number" &&
+    rawReviews > 0;
+  const displayRating = hasRating ? Math.min(10, normalizedRating).toFixed(1) : null;
+  const displayReviews = hasRating ? rawReviews : 0;
+
   // Sanity guard: ignore implausible live prices (scraper poate prinde total sejur / RON)
   const livePrice = liveData?.price_per_night;
   const isPlausiblePrice =
@@ -55,6 +75,7 @@ const PropertyCard = ({
     bedroom: language === "ro" ? "dormitor" : "bedroom",
     bedrooms: language === "ro" ? "dormitoare" : "bedrooms",
     reviews: language === "ro" ? "recenzii" : "reviews",
+    noReviews: language === "ro" ? "Fără recenzii încă" : "No reviews yet",
     bookDirect: language === "ro" ? "Rezervă Direct" : "Book Direct",
     viewDetails: language === "ro" ? "Vezi Detalii" : "View Details",
     perNight: language === "ro" ? "/noapte" : "/night",
@@ -146,10 +167,21 @@ const PropertyCard = ({
         )}
 
         {/* Rating badge */}
-        <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
-          <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
-          <span className="text-xs font-bold text-primary-foreground">{displayRating}</span>
-        </div>
+        {displayRating && (
+          <div
+            className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1"
+            aria-label={
+              language === "ro"
+                ? `Notă ${displayRating} din 10 din ${displayReviews} recenzii`
+                : `Rated ${displayRating} out of 10 from ${displayReviews} reviews`
+            }
+          >
+            <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" aria-hidden="true" />
+            <span className="text-xs font-bold text-primary-foreground">{displayRating}</span>
+            <span className="text-[10px] text-primary-foreground/80">/10</span>
+          </div>
+        )}
+
 
         {/* Favorite button */}
         {!minimal && onToggleFavorite && (
@@ -235,9 +267,16 @@ const PropertyCard = ({
             <BedDouble className="w-4 h-4" />
             {displayBedrooms} {displayBedrooms === 1 ? t.bedroom : t.bedrooms}
           </span>
-          <span className="text-xs text-muted-foreground/70">
-            ({displayReviews} {t.reviews})
-          </span>
+          {displayRating ? (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground/80">
+              <Star className="w-3 h-3 fill-primary text-primary" aria-hidden="true" />
+              <span className="font-semibold text-foreground">{displayRating}</span>
+              <span>({displayReviews} {t.reviews})</span>
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground/70">{t.noReviews}</span>
+          )}
+
         </div>
 
         {/* Features */}
