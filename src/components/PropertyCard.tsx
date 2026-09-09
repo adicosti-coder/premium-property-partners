@@ -75,6 +75,7 @@ const PropertyCard = ({
     bedroom: language === "ro" ? "dormitor" : "bedroom",
     bedrooms: language === "ro" ? "dormitoare" : "bedrooms",
     reviews: language === "ro" ? "recenzii" : "reviews",
+    noReviews: language === "ro" ? "Fără recenzii încă" : "No reviews yet",
     bookDirect: language === "ro" ? "Rezervă Direct" : "Book Direct",
     viewDetails: language === "ro" ? "Vezi Detalii" : "View Details",
     perNight: language === "ro" ? "/noapte" : "/night",
