@@ -338,6 +338,42 @@ Deno.serve(async (req) => {
         results[prop.property_slug] = updates;
       }
 
+      if (updates.rating) ratingUpdated++;
+      if (updates.price_per_night) priceUpdated++;
+
+      const itemError = updateError?.message
+        || (!updates.rating && prop.booking_com_url
+          ? (lastFirecrawlError || 'Nota nu a putut fi citită de pe Booking')
+          : null);
+      if (itemError) {
+        errorCount++;
+        lastError = itemError;
+      }
+
+      if (runId) {
+        await supabase.from('booking_scrape_items').insert({
+          run_id: runId,
+          property_slug: prop.property_slug,
+          booking_com_url: prop.booking_com_url,
+          rating: updates.rating ?? null,
+          reviews_count: updates.reviews_count ?? null,
+          price_per_night: updates.price_per_night ?? null,
+          status: itemError ? 'error' : 'ok',
+          error_message: itemError ? itemError.slice(0, 500) : null,
+        });
+        await supabase
+          .from('booking_scrape_runs')
+          .update({
+            processed_count: Object.keys(results).length,
+            rating_updated_count: ratingUpdated,
+            price_updated_count: priceUpdated,
+            error_count: errorCount,
+            last_error: lastError ? lastError.slice(0, 500) : null,
+          })
+          .eq('id', runId);
+      }
+
+
       // Also sync to properties table
       if (updates.rating || updates.reviews_count) {
         const propUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
