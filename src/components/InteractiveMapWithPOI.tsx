@@ -55,7 +55,6 @@ const apartmentCoordinates: { name: string; slug: string; coords: [number, numbe
   { name: 'Helios ApArt Hotel', slug: 'helios-apart-hotel', coords: [21.2280, 45.7490] },
   { name: 'Apicultorilor House by RealTrust', slug: 'ateneo-trevi-2-apart-hotel', coords: [21.236043, 45.721480] },
   { name: 'Sunset Da Ra Studio Deluxe', slug: 'sunset-da-ra-studio-deluxe', coords: [21.2180, 45.7495] },
-  { name: 'Mara Luxury Golden ApArt Hotel', slug: 'mara-luxury-golden-apart-hotel', coords: [21.2240, 45.7555] },
   { name: 'Ateneo ApArt Hotel Studio Deluxe', slug: 'ateneo-apart-hotel-studio-deluxe', coords: [21.2055, 45.7785] },
   { name: 'Modern Studio ApArt Hotel', slug: 'modern-studio-apart-hotel', coords: [21.2100, 45.7350] },
   { name: 'Moonlight Emerald Suite by RealTrust', slug: 'moonlight-emerald-suite', coords: [21.2390186, 45.731261] },
