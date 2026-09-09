@@ -81,6 +81,15 @@ function parseRatingFromMarkdown(md: string): { rating: number | null; reviews: 
 /** RON to EUR conversion rate */
 const RON_TO_EUR = 0.2; // ~5 RON = 1 EUR
 
+/** Last Firecrawl-level failure (HTTP status / payload), surfaced in the run log. */
+let lastFirecrawlError: string | null = null;
+
+function noteFirecrawlIssue(status: number, payload: unknown) {
+  const raw = typeof payload === "string" ? payload : JSON.stringify(payload ?? {});
+  lastFirecrawlError = `Firecrawl ${status}: ${raw.slice(0, 300)}`;
+  console.log(lastFirecrawlError);
+}
+
 /**
  * Scrape price from Pynbooking page using markdown + regex.
  * Detects currency (RON/lei vs EUR) and converts to EUR if needed.
