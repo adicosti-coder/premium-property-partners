@@ -268,11 +268,31 @@ Deno.serve(async (req) => {
     if (fetchError) throw fetchError;
 
     const results: Record<string, any> = {};
+    const list = (properties ?? []) as PropertyLiveData[];
 
-    for (const prop of (properties as PropertyLiveData[])) {
+    // Start a run log so the Admin tab can show progress and errors.
+    const { data: runRow } = await supabase
+      .from('booking_scrape_runs')
+      .insert({
+        status: 'running',
+        trigger_source: triggerSource,
+        total_properties: list.length,
+      })
+      .select('id')
+      .single();
+    const runId: string | null = runRow?.id ?? null;
+
+    let ratingUpdated = 0;
+    let priceUpdated = 0;
+    let errorCount = 0;
+    let lastError: string | null = null;
+
+    for (const prop of list) {
       console.log(`\n--- Processing ${prop.property_slug} ---`);
-      
+      lastFirecrawlError = null;
+
       const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+
 
       // Scrape price from Pynbooking
       if (prop.booking_url && prop.booking_url.includes('pynbooking.direct')) {
