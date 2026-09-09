@@ -249,6 +249,18 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Each retry must carry a fresh idempotency key: the send API rejects a
+      // replayed key from a failed run with 409 run_failed, which would make
+      // every retry fail regardless of the original cause.
+      const baseIdempotencyKey =
+        (typeof payload.idempotency_key === 'string' && payload.idempotency_key) ||
+        (typeof payload.message_id === 'string' ? payload.message_id : null)
+      const attemptIdempotencyKey = baseIdempotencyKey
+        ? failedAttempts > 0
+          ? `${baseIdempotencyKey}:retry-${failedAttempts}`
+          : baseIdempotencyKey
+        : undefined
+
       try {
         await sendLovableEmail(
           {
@@ -261,7 +273,7 @@ Deno.serve(async (req) => {
             text: payload.text,
             purpose: payload.purpose,
             label: payload.label,
-            idempotency_key: payload.idempotency_key,
+            idempotency_key: attemptIdempotencyKey,
             unsubscribe_token: payload.unsubscribe_token,
             message_id: payload.message_id,
           },
@@ -333,6 +345,19 @@ Deno.serve(async (req) => {
             JSON.stringify({ processed: totalProcessed, stopped: 'forbidden' }),
             { headers: { 'Content-Type': 'application/json' } }
           )
+        }
+
+        // A payload without the required unsubscribe token can never succeed:
+        // retrying only burns the retry budget. DLQ it immediately with a clear
+        // reason so it shows up in the failure list instead of looping silently.
+        if (errorMsg.includes('missing_unsubscribe')) {
+          await moveToDlq(
+            supabase,
+            queue,
+            msg,
+            'missing_unsubscribe: payload has no unsubscribe_token (permanent, not retried)'
+          )
+          continue
         }
 
         // Log non-429 failures to track real retry attempts.
