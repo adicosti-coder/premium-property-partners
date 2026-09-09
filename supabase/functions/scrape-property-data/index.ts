@@ -112,6 +112,7 @@ async function scrapePrice(url: string, firecrawlKey: string): Promise<number | 
 
     const data = await response.json();
     const markdown = data?.data?.markdown || data?.markdown || '';
+    if (!response.ok || !markdown) noteFirecrawlIssue(response.status, data);
 
     // Try to match price WITH currency indicator
     // Pattern 1: number followed by currency symbol/name
@@ -180,9 +181,7 @@ async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{
 
     const data = await response.json();
     const markdown = data?.data?.markdown || data?.markdown || '';
-    if (!response.ok || !markdown) {
-      console.log(`Firecrawl status ${response.status}, payload: ${JSON.stringify(data).substring(0, 400)}`);
-    }
+    if (!response.ok || !markdown) noteFirecrawlIssue(response.status, data);
     console.log(`Markdown length: ${markdown.length}, first 800 chars:`, markdown.substring(0, 800));
 
 
