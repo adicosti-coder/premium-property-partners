@@ -249,6 +249,18 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Each retry must carry a fresh idempotency key: the send API rejects a
+      // replayed key from a failed run with 409 run_failed, which would make
+      // every retry fail regardless of the original cause.
+      const baseIdempotencyKey =
+        (typeof payload.idempotency_key === 'string' && payload.idempotency_key) ||
+        (typeof payload.message_id === 'string' ? payload.message_id : null)
+      const attemptIdempotencyKey = baseIdempotencyKey
+        ? failedAttempts > 0
+          ? `${baseIdempotencyKey}:retry-${failedAttempts}`
+          : baseIdempotencyKey
+        : undefined
+
       try {
         await sendLovableEmail(
           {
