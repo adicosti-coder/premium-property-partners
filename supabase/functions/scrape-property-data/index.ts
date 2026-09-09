@@ -390,7 +390,29 @@ Deno.serve(async (req) => {
       await new Promise(resolve => setTimeout(resolve, 1500));
     }
 
-    return new Response(JSON.stringify({ success: true, results }), {
+    if (runId) {
+      await supabase
+        .from('booking_scrape_runs')
+        .update({
+          status: errorCount === 0 ? 'success' : (ratingUpdated > 0 ? 'partial' : 'failed'),
+          finished_at: new Date().toISOString(),
+          processed_count: list.length,
+          rating_updated_count: ratingUpdated,
+          price_updated_count: priceUpdated,
+          error_count: errorCount,
+          last_error: lastError ? lastError.slice(0, 500) : null,
+        })
+        .eq('id', runId);
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      run_id: runId,
+      rating_updated: ratingUpdated,
+      price_updated: priceUpdated,
+      errors: errorCount,
+      results,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
