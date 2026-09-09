@@ -136,7 +136,7 @@ const PentruOaspeti = () => {
       ],
       propertiesTitle: "Apartamente",
       propertiesTitleHighlight: "disponibile",
-      propertiesSubtitle: "ATENEO, GREEN FOREST, Cross Square House și HELIOS — fiecare pregătit pentru confortul tău, cu parcare subterană și bucătărie complet echipată.",
+      propertiesSubtitle: "NordOne, ATENEO, GREEN FOREST, Cross Square House și HELIOS — fiecare pregătit pentru confortul tău, cu parcare subterană și bucătărie complet echipată.",
       viewAll: "Vezi toate apartamentele",
       viewDetails: "Vezi detalii",
       perNight: "/noapte",
