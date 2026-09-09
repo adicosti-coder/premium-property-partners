@@ -166,10 +166,21 @@ const PropertyCard = ({
         )}
 
         {/* Rating badge */}
-        <div className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1">
-          <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" />
-          <span className="text-xs font-bold text-primary-foreground">{displayRating}</span>
-        </div>
+        {displayRating && (
+          <div
+            className="absolute top-4 right-12 px-2 py-1 rounded-lg bg-primary/90 backdrop-blur-sm flex items-center gap-1"
+            aria-label={
+              language === "ro"
+                ? `Notă ${displayRating} din 10 din ${displayReviews} recenzii`
+                : `Rated ${displayRating} out of 10 from ${displayReviews} reviews`
+            }
+          >
+            <Star className="w-3 h-3 fill-primary-foreground text-primary-foreground" aria-hidden="true" />
+            <span className="text-xs font-bold text-primary-foreground">{displayRating}</span>
+            <span className="text-[10px] text-primary-foreground/80">/10</span>
+          </div>
+        )}
+
 
         {/* Favorite button */}
         {!minimal && onToggleFavorite && (
