@@ -54,7 +54,6 @@ const exactCoordinatesBySlug: Record<string, [number, number]> = {
   'helios-apart-hotel': [21.2344862, 45.7432988],
   'ateneo-trevi-2-apart-hotel': [21.236043, 45.721480],
   'sunset-da-ra-studio-deluxe': [21.2148126, 45.753754],
-  'mara-luxury-golden-apart-hotel': [21.2148126, 45.753754],
   'ateneo-apart-hotel-studio-deluxe': [21.2098, 45.779],
   'modern-studio-apart-hotel': [21.2602816, 45.7656277],
   'moonlight-emerald-suite': [21.2390186, 45.731261],
@@ -76,7 +75,7 @@ const exactCoordinatesBySlug: Record<string, [number, number]> = {
 const profiles: GeoProfile[] = [
   {
     key: 'city_of_mara',
-    aliases: ['city of mara', 'circumvalatiunii 1', 'circumvalatiunii', 'sinaia 2b', 'mara luxury', 'fullview', 'avenue of mara', 'sunset da ra', 'apartament premium 2 camere'],
+    aliases: ['city of mara', 'circumvalatiunii 1', 'circumvalatiunii', 'sinaia 2b', 'fullview', 'avenue of mara', 'sunset da ra', 'apartament premium 2 camere'],
     center: { lng: 21.2148126, lat: 45.753754 },
     scores: { transport: 9.4, education: 9.1, lifestyle: 9.6, overallLabelRo: 'Excelent', overallLabelEn: 'Excellent' },
     pois: [

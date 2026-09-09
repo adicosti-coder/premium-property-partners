@@ -30,7 +30,7 @@ RealTrust este o companie imobiliară din Timișoara specializată în investiț
 
 ## Portofoliu (14 unități în Timișoara)
 
-NordOne, GREEN FOREST (Denya Forest 5), Fructus Plaza ULTRACENTRAL, Cross Square House, AVENUE of MARA, HELIOS, Apicultorilor House, Sunset Da-Ra, MARA Luxury Golden, ATENEO, MODERN Studio, Moonlight Emerald Suite, XCity 3, Ring Residence. Zone reprezentative: ISHO, Ring, Paltim, Fructus, centru istoric.
+NordOne, GREEN FOREST (Denya Forest 5), Fructus Plaza ULTRACENTRAL, Cross Square House, AVENUE of MARA, HELIOS, Apicultorilor House, Sunset Da-Ra, ATENEO, MODERN Studio, Moonlight Emerald Suite, XCity 3, Ring Residence. Zone reprezentative: ISHO, Ring, Paltim, Fructus, centru istoric.
 
 Lista completă cu specificații, facilități și linkuri de rezervare: [/llms-full.txt](/llms-full.txt)
 

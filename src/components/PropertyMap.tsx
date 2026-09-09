@@ -27,7 +27,6 @@ const propertyCoordinates: Record<string, [number, number]> = {
   // Calea Circumvalațiunii nr.1, City of Mara, M11
   'sunset-da-ra-studio-deluxe': [21.2150, 45.7540],
   // Strada Sinaia nr.2B - City of Mara M2-M7
-  'mara-luxury-golden-apart-hotel': [21.2115, 45.7535],
   // Calea Torontalului nr.104K, Trevi 2, Ansamblul Ateneo
   'ateneo-apart-hotel-studio-deluxe': [21.2130, 45.7780],
   // Bd. Simion Bărnuțiu nr.79 (zona Dorobanților)

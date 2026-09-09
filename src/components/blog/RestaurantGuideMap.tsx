@@ -46,7 +46,6 @@ const APART_PROPERTIES: { name: string; coords: [number, number] }[] = [
   { name: 'Avenue of Mara ApArt Hotel', coords: [21.2165, 45.75] },
   { name: 'Helios ApArt Hotel', coords: [21.228, 45.749] },
   { name: 'Ateneo Trevi 2 ApArt Hotel', coords: [21.205, 45.778] },
-  { name: 'Mara Luxury Golden ApArt Hotel', coords: [21.224, 45.7555] },
 ];
 
 const MAP_CENTER: [number, number] = [21.227, 45.754] as [number, number];
