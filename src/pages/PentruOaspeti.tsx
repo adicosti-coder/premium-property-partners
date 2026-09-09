@@ -260,7 +260,7 @@ const PentruOaspeti = () => {
       ],
       propertiesTitle: "Premium",
       propertiesTitleHighlight: "Apartments",
-      propertiesSubtitle: "ATENEO, GREEN FOREST, Cross Square House, HELIOS — each prepared for your comfort, with underground parking & fully equipped kitchen",
+      propertiesSubtitle: "NordOne, ATENEO, GREEN FOREST, Cross Square House, HELIOS — each prepared for your comfort, with underground parking & fully equipped kitchen",
       viewAll: "View All Apartments",
       viewDetails: "View Details",
       perNight: "/night",
