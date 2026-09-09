@@ -171,7 +171,11 @@ async function scrapeBookingRating(url: string, firecrawlKey: string): Promise<{
 
     const data = await response.json();
     const markdown = data?.data?.markdown || data?.markdown || '';
+    if (!response.ok || !markdown) {
+      console.log(`Firecrawl status ${response.status}, payload: ${JSON.stringify(data).substring(0, 400)}`);
+    }
     console.log(`Markdown length: ${markdown.length}, first 800 chars:`, markdown.substring(0, 800));
+
 
     const result = parseRatingFromMarkdown(markdown);
     console.log(`Parsed rating: ${result.rating}, reviews: ${result.reviews}`);
