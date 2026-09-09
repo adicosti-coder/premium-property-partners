@@ -63,6 +63,7 @@ const loaders: Record<string, Loader> = {
   "whatsapp-andrei": () => import("@/components/admin/WhatsappAgentInbox"),
   "whatsapp-queue": () => import("@/components/admin/WhatsappOutboundQueue"),
   "whatsapp-history": () => import("@/components/admin/WhatsappMessageHistory"),
+  "booking-scrape": () => import("@/components/admin/BookingScrapeHistory"),
 
   "agency-ai": () => import("@/components/admin/AgencyDetectionSettings").then((m) => ({ default: m.AgencyDetectionSettings })),
   "system-health": () => import("@/components/admin/SystemHealthDashboard"),

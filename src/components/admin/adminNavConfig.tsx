@@ -74,6 +74,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "whatsapp-andrei", label: "Andrei WhatsApp", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "wa", "andrei", "chat"] },
       { value: "whatsapp-queue", label: "Coadă WhatsApp", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "coada", "queue", "outbound", "template", "rate limit"] },
       { value: "whatsapp-history", label: "Istoric WhatsApp", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "istoric", "mesaje", "trimise", "erori", "meta", "log"] },
+      { value: "booking-scrape", label: "Note Booking", icon: Sparkles, subgroup: "AI Tools", keywords: ["booking", "note", "recenzii", "rating", "preluare", "scrape", "istoric"] },
 
       { value: "photo-studio", label: "Studio Foto AI", icon: Sparkles, subgroup: "AI Tools", keywords: ["foto", "image"] },
       { value: "seo-optimizer", label: "SEO AI", icon: Sparkles, subgroup: "AI Tools", keywords: ["seo"] },
