@@ -40,8 +40,28 @@ const PropertyCard = ({
   const { data: viewersMap } = useRealtimeViewers();
   const liveData = liveDataMap?.[property.slug];
   const viewerCount = viewersMap?.[String(property.id)] || 0;
-  const displayRating = liveData?.rating ?? property.rating;
-  const displayReviews = liveData?.reviews_count ?? property.reviews;
+  // Nota și numărul de recenzii se iau ca PERECHE din aceeași sursă,
+  // ca să nu combinăm o notă live cu un număr de recenzii vechi (sau invers).
+  const hasLiveReviews =
+    typeof liveData?.rating === "number" &&
+    liveData.rating > 0 &&
+    typeof liveData?.reviews_count === "number" &&
+    liveData.reviews_count > 0;
+  const rawRating = hasLiveReviews ? liveData!.rating! : property.rating;
+  const rawReviews = hasLiveReviews ? liveData!.reviews_count! : property.reviews;
+  // Normalizare: unele surse pot livra nota pe scala 1-5
+  const normalizedRating =
+    typeof rawRating === "number" && rawRating > 0 && rawRating <= 5
+      ? rawRating * 2
+      : rawRating;
+  const hasRating =
+    typeof normalizedRating === "number" &&
+    normalizedRating > 0 &&
+    typeof rawReviews === "number" &&
+    rawReviews > 0;
+  const displayRating = hasRating ? Math.min(10, normalizedRating).toFixed(1) : null;
+  const displayReviews = hasRating ? rawReviews : 0;
+
   // Sanity guard: ignore implausible live prices (scraper poate prinde total sejur / RON)
   const livePrice = liveData?.price_per_night;
   const isPlausiblePrice =
