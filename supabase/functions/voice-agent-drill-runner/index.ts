@@ -1,6 +1,7 @@
 // Drill runner: executes one or more training scenarios against Andrei's prompt
 // using Lovable AI Gateway, then judges the response with Gemini.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +38,9 @@ function checkKeywords(reply: string, expected: string[], forbidden: string[]) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

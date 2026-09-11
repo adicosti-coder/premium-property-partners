@@ -1,6 +1,7 @@
 // Cron edge function: aggregates scraper_leads + properties into voice_agent_knowledge_chunks
 // Computes per-zone, per-listing-type market insights for Andrei.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +17,9 @@ function median(nums: number[]): number {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

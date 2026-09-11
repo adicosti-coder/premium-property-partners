@@ -15,6 +15,7 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -104,6 +105,10 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
+
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -149,16 +154,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Normalizează pe host-ul canonic (acceptă și path-uri relative, și URL-uri www).
+    // Normalizează pe host-ul canonic (acceptă și path-uri relative, și URL-uri www)
+    // și respinge orice URL care nu aparține domeniului nostru.
     const urlList = [
       ...new Set(
         urls
           .filter((u) => typeof u === "string" && u.length > 0)
           .slice(0, 10_000)
           .map((u) => (u.startsWith("http") ? u : `${ORIGIN}${u.startsWith("/") ? u : `/${u}`}`))
-          .map((u) => u.replace("https://www.realtrust.ro", ORIGIN)),
+          .map((u) => u.replace("https://www.realtrust.ro", ORIGIN))
+          .filter((u) => {
+            try {
+              const parsed = new URL(u);
+              return parsed.protocol === "https:" && parsed.hostname.toLowerCase() === HOST;
+            } catch {
+              return false;
+            }
+          }),
       ),
     ];
+
+    if (urlList.length === 0) {
+      return new Response(
+        JSON.stringify({ error: `no valid ${HOST} urls provided` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const response = await fetch("https://api.indexnow.org/indexnow", {
       method: "POST",
