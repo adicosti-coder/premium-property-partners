@@ -1159,6 +1159,7 @@ export type Database = {
       }
       booking_scrape_runs: {
         Row: {
+          alerted_at: string | null
           created_at: string
           error_count: number
           finished_at: string | null
@@ -1174,6 +1175,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          alerted_at?: string | null
           created_at?: string
           error_count?: number
           finished_at?: string | null
@@ -1189,6 +1191,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          alerted_at?: string | null
           created_at?: string
           error_count?: number
           finished_at?: string | null

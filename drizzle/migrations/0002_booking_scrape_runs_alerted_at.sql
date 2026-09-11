@@ -1,0 +1,1 @@
+ALTER TABLE public.booking_scrape_runs ADD COLUMN IF NOT EXISTS alerted_at timestamptz;
