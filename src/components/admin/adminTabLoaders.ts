@@ -64,6 +64,8 @@ const loaders: Record<string, Loader> = {
   "whatsapp-queue": () => import("@/components/admin/WhatsappOutboundQueue"),
   "whatsapp-history": () => import("@/components/admin/WhatsappMessageHistory"),
   "booking-scrape": () => import("@/components/admin/BookingScrapeHistory"),
+  "booking-reviews": () => import("@/components/admin/BookingReviewsPanel"),
+
 
   "agency-ai": () => import("@/components/admin/AgencyDetectionSettings").then((m) => ({ default: m.AgencyDetectionSettings })),
   "system-health": () => import("@/components/admin/SystemHealthDashboard"),
