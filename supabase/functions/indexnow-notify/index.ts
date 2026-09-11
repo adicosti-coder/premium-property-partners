@@ -150,16 +150,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Normalizează pe host-ul canonic (acceptă și path-uri relative, și URL-uri www).
+    // Normalizează pe host-ul canonic (acceptă și path-uri relative, și URL-uri www)
+    // și respinge orice URL care nu aparține domeniului nostru.
     const urlList = [
       ...new Set(
         urls
           .filter((u) => typeof u === "string" && u.length > 0)
           .slice(0, 10_000)
           .map((u) => (u.startsWith("http") ? u : `${ORIGIN}${u.startsWith("/") ? u : `/${u}`}`))
-          .map((u) => u.replace("https://www.realtrust.ro", ORIGIN)),
+          .map((u) => u.replace("https://www.realtrust.ro", ORIGIN))
+          .filter((u) => {
+            try {
+              const parsed = new URL(u);
+              return parsed.protocol === "https:" && parsed.hostname.toLowerCase() === HOST;
+            } catch {
+              return false;
+            }
+          }),
       ),
     ];
+
+    if (urlList.length === 0) {
+      return new Response(
+        JSON.stringify({ error: `no valid ${HOST} urls provided` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const response = await fetch("https://api.indexnow.org/indexnow", {
       method: "POST",
