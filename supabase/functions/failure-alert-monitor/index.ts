@@ -91,13 +91,22 @@ Deno.serve(async (req) => {
            ${rows(mailFails.map((f) => `<tr><td>${esc(f.recipient)}</td><td>${esc(f.subject)}</td><td>${esc(f.source)}</td><td>${esc(f.http_status)}</td><td>${esc(f.error_message)}</td></tr>`))}
          </table>`
       : ""}
-    <p style="color:#666;font-size:12px">Detalii complete în Admin → Istoric WhatsApp / Lead Dashboard.</p>
+    ${scrapeFails.length
+      ? `<h3>Preluare Booking eșuată (${scrapeFails.length})</h3>
+         <table cellpadding="6" border="1" style="border-collapse:collapse;font-family:sans-serif;font-size:13px">
+           <tr><th>Declanșator</th><th>Procesate</th><th>Erori</th><th>Ultima eroare</th></tr>
+           ${rows(scrapeFails.map((f) => `<tr><td>${esc(f.trigger_source)}</td><td>${esc(f.processed_count)}/${esc(f.total_properties)}</td><td>${esc(f.error_count)}</td><td>${esc(f.last_error)}</td></tr>`))}
+         </table>`
+      : ""}
+    <p style="color:#666;font-size:12px">Detalii complete în Admin → Istoric WhatsApp / Istoric Booking / Lead Dashboard.</p>
   `;
+
+  const totalAlerts = waFails.length + mailFails.length + scrapeFails.length;
 
   const result = await sendTeamEmail(
     {
       to: ALERT_TO,
-      subject: `⚠️ ${waFails.length + mailFails.length} erori de livrare (WhatsApp / e-mail)`,
+      subject: `⚠️ ${totalAlerts} erori (WhatsApp / e-mail / preluare Booking)`,
       html,
       source: "failure-alert-monitor",
     },
@@ -118,17 +127,25 @@ Deno.serve(async (req) => {
         .update({ alerted_at: nowIso })
         .in("id", mailFails.map((f) => f.id));
     }
+    if (scrapeFails.length) {
+      await supabase
+        .from("booking_scrape_runs")
+        .update({ alerted_at: nowIso })
+        .in("id", scrapeFails.map((f) => f.id));
+    }
   }
 
   return new Response(
     JSON.stringify({
       ok: true,
-      alerts: waFails.length + mailFails.length,
+      alerts: totalAlerts,
       whatsapp_failures: waFails.length,
       email_failures: mailFails.length,
+      booking_scrape_failures: scrapeFails.length,
       email_sent: result.sent,
       email_error: result.error ?? null,
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
+
 });
