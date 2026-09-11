@@ -55,7 +55,18 @@ Deno.serve(async (req) => {
   const waFails = waRes.data ?? [];
   const mailFails = mailRes.data ?? [];
 
-  if (waFails.length === 0 && mailFails.length === 0) {
+  // Rulări eșuate ale preluării de note/recenzii din Booking
+  const scrapeRes = await supabase
+    .from("booking_scrape_runs")
+    .select("id, trigger_source, processed_count, total_properties, error_count, last_error, finished_at, status")
+    .eq("status", "failed")
+    .is("alerted_at", null)
+    .gte("created_at", since)
+    .limit(20);
+  const scrapeFails = scrapeRes.data ?? [];
+
+  if (waFails.length === 0 && mailFails.length === 0 && scrapeFails.length === 0) {
+
     return new Response(JSON.stringify({ ok: true, alerts: 0 }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
