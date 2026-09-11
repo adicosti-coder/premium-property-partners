@@ -2,6 +2,7 @@
 // upserts into seo_opportunities. Runs daily via cron.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +23,9 @@ const expectedCtrAt = (pos: number) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

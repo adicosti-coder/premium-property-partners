@@ -4,11 +4,15 @@
 // Also flags sudden traffic anomalies if seo_ga4_metrics is available.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const DROP_THRESHOLD = 15; // percent
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
 
   const reqBody = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = reqBody?.dry_run === true;

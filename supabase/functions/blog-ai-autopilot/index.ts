@@ -3,6 +3,7 @@
 // Confidence >= 0.85 => aplică automat + snapshot rollback.
 // Confidence <  0.85 => salvează în automation_approvals.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -99,6 +100,9 @@ Omite câmpurile pe care nu le modifici. Nu inventa cifre absente.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
 
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const dryRun = body?.dry_run === true;

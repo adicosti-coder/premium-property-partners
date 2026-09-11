@@ -4,6 +4,7 @@
 //   action=enqueue_missing-> insert any URL with status='missing' or stale into the queue
 // Invoked by admin button (verify) and by pg_cron weekly (reindex_queue + enqueue_missing).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +44,9 @@ async function probeIndexed(url: string): Promise<"indexed" | "missing" | "pendi
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
