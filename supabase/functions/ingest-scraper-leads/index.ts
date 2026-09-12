@@ -122,13 +122,14 @@ Deno.serve(async (req) => {
   const urls = leads.map((l: any) => l.url).filter((u: any) => typeof u === "string" && u.length > 0);
   let archivedUrls = new Set<string>();
   if (urls.length > 0) {
-    const { data: archivedData } = await supabase
-      .from("scraper_leads")
-      .select("url")
+    const { data: archivedData, error: archivedError } = await supabase
+      .from("prospect_listings")
+      .select("source_url")
       .eq("status", "archived")
       .gt("updated_at", cooldownCutoff)
-      .in("url", urls);
-    if (archivedData) archivedUrls = new Set(archivedData.map((d: any) => d.url));
+      .in("source_url", urls);
+    if (archivedError) console.error("[ingest-scraper-leads] archive check failed:", archivedError.message);
+    if (archivedData) archivedUrls = new Set(archivedData.map((d: any) => d.source_url));
   }
   const nonArchivedLeads = leads.filter((l: any) => !archivedUrls.has(l.url));
 
