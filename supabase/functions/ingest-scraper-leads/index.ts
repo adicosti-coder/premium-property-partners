@@ -122,13 +122,14 @@ Deno.serve(async (req) => {
   const urls = leads.map((l: any) => l.url).filter((u: any) => typeof u === "string" && u.length > 0);
   let archivedUrls = new Set<string>();
   if (urls.length > 0) {
-    const { data: archivedData } = await supabase
-      .from("scraper_leads")
-      .select("url")
+    const { data: archivedData, error: archivedError } = await supabase
+      .from("prospect_listings")
+      .select("source_url")
       .eq("status", "archived")
       .gt("updated_at", cooldownCutoff)
-      .in("url", urls);
-    if (archivedData) archivedUrls = new Set(archivedData.map((d: any) => d.url));
+      .in("source_url", urls);
+    if (archivedError) console.error("[ingest-scraper-leads] archive check failed:", archivedError.message);
+    if (archivedData) archivedUrls = new Set(archivedData.map((d: any) => d.source_url));
   }
   const nonArchivedLeads = leads.filter((l: any) => !archivedUrls.has(l.url));
 
@@ -302,30 +303,40 @@ Deno.serve(async (req) => {
 
     const finalStatus = phoneStatus ?? (isPriority ? "priority" : String(l.status ?? "new"));
 
+    if (estimatedRoi) notes.push(`[Auto] Randament estimat: ${estimatedRoi}%`);
+    if (seoDescription) notes.push(`[Auto] ${seoDescription}`);
+
+    // `prospect_listings` is the live prospect pipeline table (scoring, calls,
+    // WhatsApp). The legacy `scraper_leads` table no longer exists.
+    const lifecycleStatus =
+      phoneStatus === "phone_invalid" ? "failed" : phoneStatus === "dnc_blocked" ? "rejected" : "new";
+    const nowIso = new Date().toISOString();
+
     return {
+      source_platform: l.source ? String(l.source) : "OLX",
+      source_url: String(l.url ?? ""),
       title: String(l.title ?? ""),
-      original_price: price,
-      extra_profit_3y: Number(l.extra_profit_3y ?? (Number(l.monthly_extra ?? 0) * 36)),
-      monthly_extra: Number(l.monthly_extra ?? 0),
+      description: l.description ? String(l.description) : null,
+      price: price || null,
+      size: size || null,
+      rooms: l.rooms != null ? Number(l.rooms) : null,
+      location: l.location ? String(l.location) : null,
+      zone: matchedSlug,
+      contact_phone: l.phone ? String(l.phone) : null,
+      contact_name: l.contact_name ? String(l.contact_name) : null,
+      phone_normalized: lookup?.e164 || null,
       lead_score: Number(l.lead_score ?? 0),
-      whatsapp_message: l.whatsapp_message ? String(l.whatsapp_message) : null,
-      url: String(l.url ?? ""),
       status: finalStatus,
-      listing_type: String(l.listing_type ?? "vanzare"),
-      source: l.source ? String(l.source) : "OLX",
-      phone: l.phone ? String(l.phone) : null,
-      prospect_category: phoneInfo?.category || null,
+      lifecycle_status: lifecycleStatus,
+      do_not_call: phoneStatus === "dnc_blocked",
+      do_not_call_at: phoneStatus === "dnc_blocked" ? nowIso : null,
+      do_not_call_reason: phoneStatus === "dnc_blocked" ? `twilio_${lookup?.line_type ?? "non_mobile"}` : null,
+      marked_invalid_at: phoneStatus === "phone_invalid" ? nowIso : null,
+      invalid_reason: phoneStatus === "phone_invalid" ? "twilio_unreachable" : null,
       admin_notes: notes.length > 0 ? notes.join(" | ") : null,
-      neighborhood_slug: matchedSlug,
-      estimated_roi: estimatedRoi,
-      seo_description: seoDescription,
-      is_priority: isPriority,
-      // Twilio pre-validation fields
-      is_phone_verified: isPhoneVerified,
-      phone_e164: lookup?.e164 || null,
-      phone_verified_at: isPhoneVerified ? new Date().toISOString() : null,
-      phone_line_type: lookup?.line_type || null,
-      created_at: new Date().toISOString(),
+      scraped_at: nowIso,
+      last_seen_at: nowIso,
+      is_active: true,
     };
   });
 
@@ -334,14 +345,17 @@ Deno.serve(async (req) => {
     .filter((l: any) => l.phone && !phoneMap[l.phone] && !lookupResults[l.phone])
     .map((l: any) => ({ phone_number: String(l.phone), category: null, is_blacklisted: false, last_seen: new Date().toISOString() }));
   if (newPhones.length > 0) {
-    await supabase.from("phone_intelligence").upsert(newPhones, { onConflict: "phone_number" });
+    const { error: phoneErr } = await supabase
+      .from("phone_intelligence")
+      .upsert(newPhones, { onConflict: "phone_number" });
+    if (phoneErr) console.error("[ingest-scraper-leads] phone cache upsert failed:", phoneErr.message);
   }
 
-  // ── Upsert leads ──
+  // ── Upsert prospects ──
   const { data, error } = await supabase
-    .from("scraper_leads")
-    .upsert(rows, { onConflict: "url", ignoreDuplicates: false })
-    .select("id, title, source, url, phone, neighborhood_slug, is_priority, is_phone_verified, status");
+    .from("prospect_listings")
+    .upsert(rows, { onConflict: "source_url", ignoreDuplicates: false })
+    .select("id, title, source_platform, source_url, contact_phone, zone, status, lifecycle_status");
 
   if (error) {
     console.error("Supabase Upsert Error:", error.message);
