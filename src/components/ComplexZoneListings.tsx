@@ -40,13 +40,20 @@ export default function ComplexZoneListings({ complexName, zoneMatchers, isRo }:
       const orClause = zoneMatchers
         .map((m) => `location.ilike.%${m}%`)
         .join(",");
-      const { data } = await supabase
+      // NOTE: order by a publicly-readable column only. Internal bookkeeping
+      // columns (e.g. imported_at) are revoked for anonymous visitors, and
+      // PostgreSQL requires SELECT privilege on any ORDER BY column.
+      const { data, error } = await supabase
         .from("properties")
         .select("id,name,slug,location,listing_type,base_price_per_night,size,rooms,images")
         .eq("is_active", true)
         .or(orClause)
-        .order("imported_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false, nullsFirst: false })
         .limit(6);
+      if (error) {
+        const { reportError } = await import("@/lib/errorReporting");
+        reportError(error, { scope: "listings:complex-zone", meta: { complexName } });
+      }
       if (!cancelled) {
         setListings((data as Listing[]) || []);
         setLoading(false);
