@@ -345,14 +345,17 @@ Deno.serve(async (req) => {
     .filter((l: any) => l.phone && !phoneMap[l.phone] && !lookupResults[l.phone])
     .map((l: any) => ({ phone_number: String(l.phone), category: null, is_blacklisted: false, last_seen: new Date().toISOString() }));
   if (newPhones.length > 0) {
-    await supabase.from("phone_intelligence").upsert(newPhones, { onConflict: "phone_number" });
+    const { error: phoneErr } = await supabase
+      .from("phone_intelligence")
+      .upsert(newPhones, { onConflict: "phone_number" });
+    if (phoneErr) console.error("[ingest-scraper-leads] phone cache upsert failed:", phoneErr.message);
   }
 
-  // ── Upsert leads ──
+  // ── Upsert prospects ──
   const { data, error } = await supabase
-    .from("scraper_leads")
-    .upsert(rows, { onConflict: "url", ignoreDuplicates: false })
-    .select("id, title, source, url, phone, neighborhood_slug, is_priority, is_phone_verified, status");
+    .from("prospect_listings")
+    .upsert(rows, { onConflict: "source_url", ignoreDuplicates: false })
+    .select("id, title, source_platform, source_url, contact_phone, zone, status, lifecycle_status");
 
   if (error) {
     console.error("Supabase Upsert Error:", error.message);
