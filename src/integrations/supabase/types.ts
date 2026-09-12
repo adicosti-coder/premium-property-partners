@@ -10900,6 +10900,17 @@ export type Database = {
           rejection_reason: string
         }[]
       }
+      get_public_poi_reviews: {
+        Args: { _poi_ids: string[] }
+        Returns: {
+          comment: string
+          created_at: string
+          guest_name: string
+          id: string
+          poi_id: string
+          rating: number
+        }[]
+      }
       get_public_profile: {
         Args: { p_user_id: string }
         Returns: {
