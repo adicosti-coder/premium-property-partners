@@ -27,17 +27,19 @@ export const usePoiReviews = (poiIds: string[]) => {
     queryKey: ['poi-reviews', key],
     queryFn: async () => {
       if (poiIds.length === 0) return [] as PoiReview[];
-      const { data, error } = await supabase
-        .from('poi_reviews')
-        .select('id,poi_id,user_id,rating,comment,guest_name,created_at,status')
-        .in('poi_id', poiIds)
-        .order('created_at', { ascending: false });
+      // Public reads go through a masked RPC (no user_id, shortened guest name).
+      const { data, error } = await supabase.rpc('get_public_poi_reviews', { _poi_ids: poiIds });
       if (error) throw error;
-      return (data ?? []) as PoiReview[];
+      return ((data ?? []) as Array<Omit<PoiReview, 'user_id' | 'status'>>).map((r) => ({
+        ...r,
+        user_id: '',
+        status: 'approved' as const,
+      })) as PoiReview[];
     },
     enabled: poiIds.length > 0,
     staleTime: 2 * 60 * 1000,
   });
+
 
   /** Only moderated (approved) reviews are shown publicly / used in averages. */
   const approved = reviews.filter((r) => !r.status || r.status === 'approved');
