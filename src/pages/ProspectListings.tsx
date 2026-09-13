@@ -640,6 +640,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     try { localStorage.setItem(PROSPECT_TYPE_LS_KEY, prospectTypeFilter); } catch { /* ignore */ }
   }, [prospectTypeFilter]);
   const [callingId, setCallingId] = useState<string | null>(null);
+  const [waSendingId, setWaSendingId] = useState<string | null>(null);
   const [scoringId, setScoringId] = useState<string | null>(null);
   const [recoveringPhoneId, setRecoveringPhoneId] = useState<string | null>(null);
 
