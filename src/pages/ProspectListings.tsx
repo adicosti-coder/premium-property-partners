@@ -1588,6 +1588,46 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
     }
   };
 
+  /**
+   * Trimite mesajul WhatsApp în locul apelului. Prospecții cu blocaj strict tehnic
+   * (număr fix/VoIP/invalid) pot fi contactați pe WhatsApp; cei care au cerut expres
+   * să nu fie contactați rămân blocați pe toate canalele (validat și pe server).
+   */
+  const handleWhatsappMessage = async (p: Prospect) => {
+    if (p.do_not_call && isExpressOptOut(p.do_not_call_reason)) {
+      toast({
+        title: "Contact blocat",
+        description: "Această persoană a cerut expres să nu fie contactată — nici pe WhatsApp.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!getProspectPhone(p)) {
+      toast({ title: "Lipsește telefon", description: "Acest prospect nu are număr de telefon.", variant: "destructive" });
+      return;
+    }
+    setWaSendingId(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("wa-outbound-enqueue", {
+        body: { prospect_ids: [p.id] },
+      });
+      if (error) throw error;
+      if ((data?.enqueued ?? 0) === 0) {
+        const reason = data?.skipped?.[0]?.reason || "necunoscut";
+        toast({ title: "Mesaj neprogramat", description: `Motiv: ${reason}`, variant: "destructive" });
+        return;
+      }
+      toast({
+        title: "💬 Mesaj WhatsApp programat",
+        description: "Apare în „Coadă WhatsApp” și se trimite în fereastra 09:00–20:00, luni–sâmbătă.",
+      });
+    } catch (e: any) {
+      toast({ title: "Trimitere eșuată", description: e.message, variant: "destructive" });
+    } finally {
+      setWaSendingId(null);
+    }
+  };
+
   const isCallLocked = (p: Prospect) => {
     if (p.lifecycle_status !== "calling") return false;
     if (p.voice_call_session_id) return true;
@@ -2532,6 +2572,43 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                             </Badge>
                           )}
                           {p.followup_sent_at && <div className="text-[10px] text-green-600 mt-1">WA ✓</div>}
+                         </TableCell>
+                        <TableCell className="px-1 md:px-4 align-top">
+                          {(() => {
+                            const blocked = !!p.do_not_call;
+                            const expressOptOut = blocked && isExpressOptOut(p.do_not_call_reason);
+                            if (expressOptOut) {
+                              return (
+                                <div className="flex items-center gap-1 text-[11px] text-muted-foreground" title={p.do_not_call_reason || "Cerere expresă de a nu fi contactat"}>
+                                  <PhoneOff className="h-3.5 w-3.5" />
+                                  <span>Blocat (cerere expresă)</span>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div className="flex flex-col gap-1 items-start">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleWhatsappMessage(p)}
+                                  disabled={!getProspectPhone(p) || waSendingId === p.id}
+                                  className="min-h-[36px] px-2 text-[11px] w-full"
+                                  title={blocked
+                                    ? "Apelul e blocat tehnic (fix/VoIP/invalid) — trimite mesaj pe WhatsApp"
+                                    : "Trimite mesaj pe WhatsApp"}
+                                >
+                                  {waSendingId === p.id
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    : <><MessageSquare className="h-3.5 w-3.5 mr-1" /><span>Trimite WhatsApp</span></>}
+                                </Button>
+                                {blocked && (
+                                  <span className="text-[10px] text-amber-600 dark:text-amber-500">
+                                    Apel blocat tehnic → mesaj WhatsApp
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell className="text-right px-2 md:px-4">
                           <div className="flex flex-col gap-1.5 items-end">
