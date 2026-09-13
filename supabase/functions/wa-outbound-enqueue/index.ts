@@ -81,6 +81,12 @@ Deno.serve(async (req) => {
   const skipped: { id: string; reason: string }[] = [];
 
   for (const p of prospects ?? []) {
+    // "Nu contacta" se aplică pe toate canalele, inclusiv WhatsApp.
+    if (p.do_not_call) {
+      skipped.push({ id: p.id, reason: "do_not_contact" });
+      continue;
+    }
+
     const phone = normalizePhone(p.phone_normalized || p.contact_phone);
     if (!phone) {
       skipped.push({ id: p.id, reason: "invalid_phone" });
