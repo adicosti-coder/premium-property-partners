@@ -76,6 +76,18 @@ Deno.serve(async (req) => {
 
   const entries = payload?.entry || [];
   const conversationsToReply = new Set<string>();
+  const intakeConversations = new Set<string>();
+
+  const INTAKE_MESSAGE = [
+    "Bună ziua! Ați scris pe WhatsApp-ul ApArt Hotel by RealTrust (Timișoara).",
+    "",
+    "Ca să vă putem ajuta rapid, spuneți-mi cu ce vă putem fi de folos:",
+    "1️⃣ Imobiliare — vânzare, achiziție sau închiriere",
+    "2️⃣ Administrare — regim hotelier sau termen mediu/lung",
+    "3️⃣ Rezervare regim hotelier — https://realtrust.ro/rezervare",
+    "",
+    "Răspundeți cu 1, 2 sau 3 (sau descrieți în câteva cuvinte) și continuăm.",
+  ].join("\n");
 
   for (const entry of entries) {
     for (const change of entry?.changes || []) {
@@ -159,7 +171,20 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        conversationsToReply.add(convId);
+        // Prima interacțiune → mesaj standard de calificare (imobiliare / administrare / rezervare),
+        // ca nicio conversație să nu rămână fără răspuns. Apoi preia agentul AI.
+        const { count: outboundCount } = await supabase
+          .from("wa_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("conversation_id", convId)
+          .eq("direction", "outbound");
+
+        if (!outboundCount) {
+          intakeConversations.add(convId);
+        } else {
+          conversationsToReply.add(convId);
+        }
+
 
         // Marchează în coada outbound primul răspuns primit de la acest număr
         try {
@@ -211,6 +236,19 @@ Deno.serve(async (req) => {
   }
 
 
+  // Auto-reply de calificare la prima interacțiune (fire-and-forget)
+  for (const convId of intakeConversations) {
+    fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serviceKey}`,
+        "x-internal-secret": internalSecret,
+      },
+      body: JSON.stringify({ conversation_id: convId, text: INTAKE_MESSAGE }),
+    }).catch((e) => console.error("[wa-webhook] intake send failed:", e));
+  }
+
   // Fire-and-forget replies (must return 200 to Meta < 20s)
   for (const convId of conversationsToReply) {
     fetch(`${supabaseUrl}/functions/v1/wa-andrei-reply`, {
@@ -223,6 +261,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ conversation_id: convId }),
     }).catch((e) => console.error("[wa-webhook] reply invoke failed:", e));
   }
+
 
   return new Response("EVENT_RECEIVED", { status: 200 });
 });
