@@ -21,7 +21,7 @@ import { toast as sonnerToast } from "sonner";
 import {
   Phone, Sparkles, ArrowLeft, Loader2, ExternalLink, RefreshCw, Clock,
   TrendingUp, MapPin, Euro, Building2, Home, Hotel, Download, AlertTriangle, PlayCircle, Rocket, StopCircle, History, Bot, Zap, Trash2, ShieldAlert, MoreVertical,
-  RotateCcw, CheckSquare, Send,
+  RotateCcw, CheckSquare, Send, MessageSquare, PhoneOff,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -2270,6 +2270,7 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
                     <TableHead className="hidden sm:table-cell">Categorie</TableHead>
                     <TableHead className="min-w-[124px] px-1 md:px-4">Telefon Contact</TableHead>
                     <TableHead className="hidden md:table-cell">Status</TableHead>
+                    <TableHead className="min-w-[120px] px-1 md:px-4">Mesaj WhatsApp</TableHead>
                     <TableHead className="text-right min-w-[82px] px-1 md:min-w-[118px] md:px-4">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
