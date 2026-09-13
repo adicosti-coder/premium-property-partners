@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
   // Candidați: prospecți cu telefon valid, care nu sunt agenții și nu sunt deja contactați.
   let query = supabase
     .from("prospect_listings")
-    .select("id, title, zone, rooms, phone_normalized, contact_phone, lifecycle_status")
+    .select("id, title, zone, rooms, phone_normalized, contact_phone, lifecycle_status, do_not_call")
     .limit(limit);
 
   if (body.prospect_ids?.length) {
