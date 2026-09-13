@@ -120,6 +120,19 @@ interface Prospect {
   auto_blacklist_reason: string | null;
   persona_snapshot: any;
   persona_generated_at: string | null;
+  do_not_call: boolean | null;
+  do_not_call_reason: string | null;
+}
+
+/** Motive care indică o CERERE EXPRESĂ de a nu fi contactat → blocaj pe toate canalele. */
+const EXPRESS_OPT_OUT_RE =
+  /(nu\s*(mai\s*)?(m[ăa]\s*)?(sun|suna|apela|contacta)|nu\s*(mai\s*)?doresc|nu\s*(sunt\s*)?interesat|refuz|opt[\s_-]?out|unsubscribe|stop|gdpr|cerere|solicitare|reclama[țt]ie|manual|admin|blacklist)/i;
+
+/** true dacă persoana a cerut expres să nu fie contactată (sau motivul e necunoscut). */
+function isExpressOptOut(reason?: string | null): boolean {
+  const r = (reason || "").trim();
+  if (!r) return true;
+  return EXPRESS_OPT_OUT_RE.test(r);
 }
 
 const PHONE_PATTERN = /(?:(?:\+|00)\s*40|0)\s*[237](?:[\s().\/-]*\d){8}\b/g;
