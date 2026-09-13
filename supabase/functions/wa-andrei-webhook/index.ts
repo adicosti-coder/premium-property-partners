@@ -236,6 +236,19 @@ Deno.serve(async (req) => {
   }
 
 
+  // Auto-reply de calificare la prima interacțiune (fire-and-forget)
+  for (const convId of intakeConversations) {
+    fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serviceKey}`,
+        "x-internal-secret": internalSecret,
+      },
+      body: JSON.stringify({ conversation_id: convId, text: INTAKE_MESSAGE }),
+    }).catch((e) => console.error("[wa-webhook] intake send failed:", e));
+  }
+
   // Fire-and-forget replies (must return 200 to Meta < 20s)
   for (const convId of conversationsToReply) {
     fetch(`${supabaseUrl}/functions/v1/wa-andrei-reply`, {
@@ -248,6 +261,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ conversation_id: convId }),
     }).catch((e) => console.error("[wa-webhook] reply invoke failed:", e));
   }
+
 
   return new Response("EVENT_RECEIVED", { status: 200 });
 });
