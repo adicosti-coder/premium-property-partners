@@ -438,6 +438,6 @@ Deno.serve(async (req) => {
     twilio_configured: twilioConfigured,
     archived_skipped: archivedCount,
     blacklisted_skipped: blacklistedCount,
-    message: `Ingestie reușită: ${data?.length ?? 0} lead-uri (${priorityMapped} prioritare · ${phoneVerifiedCount} ✓ mobil · ${phoneInvalidCount} invalid · ${dncBlockedCount} DNC).`,
+    message: `Ingestie reușită: ${data?.length ?? 0} lead-uri noi · ${refreshedCount} actualizate (${priorityMapped} prioritare · ${phoneVerifiedCount} ✓ mobil · ${phoneInvalidCount} invalid · ${dncBlockedCount} DNC).`,
   }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
