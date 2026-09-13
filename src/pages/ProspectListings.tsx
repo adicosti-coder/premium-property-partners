@@ -2294,6 +2294,18 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            {/* Notă de politică: apelul este înlocuit de mesajul WhatsApp când blocajul e tehnic. */}
+            <div className="mx-4 mt-4 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-900 dark:text-amber-200">
+              <div className="flex items-start gap-2">
+                <MessageSquare className="h-4 w-4 mt-0.5 shrink-0" />
+                <p>
+                  <strong>Contactul se face pe WhatsApp, nu prin apel.</strong> Când marcajul „nu contacta”
+                  vine dintr-un blocaj tehnic (număr fix, VoIP, număr invalid, robot), apelul e blocat, dar
+                  poți trimite un mesaj WhatsApp din coloana „Mesaj WhatsApp”. Dacă persoana a cerut
+                  expres să nu fie contactată, rămâne blocată pe toate canalele, inclusiv WhatsApp.
+                </p>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
