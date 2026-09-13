@@ -76,6 +76,18 @@ Deno.serve(async (req) => {
 
   const entries = payload?.entry || [];
   const conversationsToReply = new Set<string>();
+  const intakeConversations = new Set<string>();
+
+  const INTAKE_MESSAGE = [
+    "Bună ziua! Ați scris pe WhatsApp-ul ApArt Hotel by RealTrust (Timișoara).",
+    "",
+    "Ca să vă putem ajuta rapid, spuneți-mi cu ce vă putem fi de folos:",
+    "1️⃣ Imobiliare — vânzare, achiziție sau închiriere",
+    "2️⃣ Administrare — regim hotelier sau termen mediu/lung",
+    "3️⃣ Rezervare regim hotelier — https://realtrust.ro/rezervare",
+    "",
+    "Răspundeți cu 1, 2 sau 3 (sau descrieți în câteva cuvinte) și continuăm.",
+  ].join("\n");
 
   for (const entry of entries) {
     for (const change of entry?.changes || []) {
@@ -159,7 +171,20 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        conversationsToReply.add(convId);
+        // Prima interacțiune → mesaj standard de calificare (imobiliare / administrare / rezervare),
+        // ca nicio conversație să nu rămână fără răspuns. Apoi preia agentul AI.
+        const { count: outboundCount } = await supabase
+          .from("wa_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("conversation_id", convId)
+          .eq("direction", "outbound");
+
+        if (!outboundCount) {
+          intakeConversations.add(convId);
+        } else {
+          conversationsToReply.add(convId);
+        }
+
 
         // Marchează în coada outbound primul răspuns primit de la acest număr
         try {
