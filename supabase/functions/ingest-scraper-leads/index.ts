@@ -430,6 +430,7 @@ Deno.serve(async (req) => {
   return new Response(JSON.stringify({
     success: true,
     count: data?.length ?? 0,
+    refreshed: refreshedCount,
     priority_mapped: priorityMapped,
     phone_verified: phoneVerifiedCount,
     phone_invalid: phoneInvalidCount,
