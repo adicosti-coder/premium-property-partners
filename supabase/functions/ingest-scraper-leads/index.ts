@@ -351,17 +351,78 @@ Deno.serve(async (req) => {
     if (phoneErr) console.error("[ingest-scraper-leads] phone cache upsert failed:", phoneErr.message);
   }
 
-  // ── Upsert prospects ──
-  const { data, error } = await supabase
-    .from("prospect_listings")
-    .upsert(rows, { onConflict: "source_url", ignoreDuplicates: false })
-    .select("id, title, source_platform, source_url, contact_phone, zone, status, lifecycle_status");
+  // ── Insert new prospects / refresh existing ones without destroying pipeline state ──
+  // Existing rows keep status, lifecycle_status, do_not_call*, invalid flags and
+  // admin_notes — only listing content + freshness fields are refreshed.
+  const rowUrls = rows.map((r) => r.source_url).filter((u) => u.length > 0);
+  const existing = new Map<string, { id: string; do_not_call: boolean | null }>();
+  if (rowUrls.length > 0) {
+    const { data: existingRows, error: existingErr } = await supabase
+      .from("prospect_listings")
+      .select("id, source_url, do_not_call")
+      .in("source_url", rowUrls);
+    if (existingErr) {
+      console.error("[ingest-scraper-leads] existing lookup failed:", existingErr.message);
+      return new Response(JSON.stringify({ error: existingErr.message }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    for (const r of existingRows ?? []) existing.set((r as any).source_url, { id: (r as any).id, do_not_call: (r as any).do_not_call });
+  }
 
-  if (error) {
-    console.error("Supabase Upsert Error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  const newRows = rows.filter((r) => !existing.has(r.source_url));
+  const updateRows = rows.filter((r) => existing.has(r.source_url));
+
+  const selectCols = "id, title, source_platform, source_url, contact_phone, zone, status, lifecycle_status";
+  let data: any[] = [];
+
+  if (newRows.length > 0) {
+    const { data: inserted, error } = await supabase
+      .from("prospect_listings")
+      .upsert(newRows, { onConflict: "source_url", ignoreDuplicates: false })
+      .select(selectCols);
+    if (error) {
+      console.error("Supabase Upsert Error:", error.message);
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    data = data.concat(inserted ?? []);
+  }
+
+  let refreshedCount = 0;
+  for (const row of updateRows) {
+    const prev = existing.get(row.source_url)!;
+    const patch: Record<string, any> = {
+      title: row.title,
+      description: row.description,
+      price: row.price,
+      size: row.size,
+      rooms: row.rooms,
+      location: row.location,
+      zone: row.zone,
+      contact_phone: row.contact_phone,
+      contact_name: row.contact_name,
+      phone_normalized: row.phone_normalized,
+      last_seen_at: row.last_seen_at,
+      is_active: true,
+    };
+    // Escalate DNC only — never clear a flag set previously.
+    if (row.do_not_call && !prev.do_not_call) {
+      patch.do_not_call = true;
+      patch.do_not_call_at = row.do_not_call_at;
+      patch.do_not_call_reason = row.do_not_call_reason;
+      patch.lifecycle_status = "rejected";
+    }
+    const { error: updErr } = await supabase
+      .from("prospect_listings")
+      .update(patch)
+      .eq("id", prev.id);
+    if (updErr) {
+      console.error(`[ingest-scraper-leads] refresh failed for ${row.source_url}:`, updErr.message);
+      continue;
+    }
+    refreshedCount++;
   }
 
   const archivedCount = leads.length - nonArchivedLeads.length;
@@ -369,6 +430,7 @@ Deno.serve(async (req) => {
   return new Response(JSON.stringify({
     success: true,
     count: data?.length ?? 0,
+    refreshed: refreshedCount,
     priority_mapped: priorityMapped,
     phone_verified: phoneVerifiedCount,
     phone_invalid: phoneInvalidCount,
@@ -376,6 +438,6 @@ Deno.serve(async (req) => {
     twilio_configured: twilioConfigured,
     archived_skipped: archivedCount,
     blacklisted_skipped: blacklistedCount,
-    message: `Ingestie reușită: ${data?.length ?? 0} lead-uri (${priorityMapped} prioritare · ${phoneVerifiedCount} ✓ mobil · ${phoneInvalidCount} invalid · ${dncBlockedCount} DNC).`,
+    message: `Ingestie reușită: ${data?.length ?? 0} lead-uri noi · ${refreshedCount} actualizate (${priorityMapped} prioritare · ${phoneVerifiedCount} ✓ mobil · ${phoneInvalidCount} invalid · ${dncBlockedCount} DNC).`,
   }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 });
