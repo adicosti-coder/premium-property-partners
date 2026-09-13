@@ -3,6 +3,7 @@
 // Admin-only (sau apel intern din automatizări cu service role / x-webhook-secret).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isExpressOptOut } from "../_shared/dncPolicy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,7 +64,7 @@ Deno.serve(async (req) => {
   // Candidați: prospecți cu telefon valid, care nu sunt agenții și nu sunt deja contactați.
   let query = supabase
     .from("prospect_listings")
-    .select("id, title, zone, rooms, phone_normalized, contact_phone, lifecycle_status, do_not_call")
+    .select("id, title, zone, rooms, phone_normalized, contact_phone, lifecycle_status, do_not_call, do_not_call_reason")
     .limit(limit);
 
   if (body.prospect_ids?.length) {
@@ -81,11 +82,13 @@ Deno.serve(async (req) => {
   const skipped: { id: string; reason: string }[] = [];
 
   for (const p of prospects ?? []) {
-    // "Nu contacta" se aplică pe toate canalele, inclusiv WhatsApp.
-    if (p.do_not_call) {
-      skipped.push({ id: p.id, reason: "do_not_contact" });
+    // Cerere expresă de a nu fi contactat → blocăm TOATE canalele, inclusiv WhatsApp.
+    // Blocaj strict tehnic (fix/VoIP/invalid/AMD) → apelul e blocat, WhatsApp rămâne permis.
+    if (p.do_not_call && isExpressOptOut(p.do_not_call_reason)) {
+      skipped.push({ id: p.id, reason: "express_opt_out" });
       continue;
     }
+
 
     const phone = normalizePhone(p.phone_normalized || p.contact_phone);
     if (!phone) {
