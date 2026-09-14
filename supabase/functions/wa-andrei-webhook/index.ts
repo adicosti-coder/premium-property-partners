@@ -222,12 +222,12 @@ Deno.serve(async (req) => {
               if (pendingReply.prospect_listing_id) {
                 const { data: pl } = await supabase
                   .from("prospect_listings")
-                  .select("size_sqm, rooms, listing_type, contact_name")
+                  .select("size, rooms, prospect_type, contact_name")
                   .eq("id", pendingReply.prospect_listing_id)
                   .maybeSingle();
-                area = Number(pl?.size_sqm ?? 0) || 0;
-                propType = pl?.listing_type
-                  ? String(pl.listing_type)
+                area = Number(pl?.size ?? 0) || 0;
+                propType = pl?.prospect_type
+                  ? String(pl.prospect_type)
                   : (pl?.rooms ? `${pl.rooms} camere` : "necunoscut");
               }
               const { data: newLead, error: leadErr } = await supabase
@@ -262,7 +262,7 @@ Deno.serve(async (req) => {
               if (plErr) console.error("[wa-webhook] prospect status update failed:", plErr);
             }
 
-            await relayToMake("wa_inbound_lead", {
+            const relay = await relayToMake("wa_inbound_lead", {
               lead_id: leadId,
               queue_id: pendingReply.id,
               template_name: pendingReply.template_name,
@@ -273,7 +273,27 @@ Deno.serve(async (req) => {
               reply_text: text,
               replied_at: nowIso,
             });
+
+            // Jurnal pentru tabul „Lead-uri Make” din Admin.
+            await supabase.from("make_lead_events").insert({
+              direction: "outbound",
+              event: "wa_inbound_lead",
+              lead_id: leadId,
+              prospect_listing_id: pendingReply.prospect_listing_id,
+              conversation_id: convId,
+              phone_normalized: from,
+              message: text,
+              status: relay.ok ? "sent" : (relay.skipped ? "make_not_configured" : "failed"),
+              error: relay.ok ? null : (relay.error || relay.skipped || "make_failed"),
+              payload: {
+                queue_id: pendingReply.id,
+                template_name: pendingReply.template_name,
+                profile_name: profileName,
+                relay,
+              },
+            });
           }
+
         } catch (e) {
           console.error("[wa-webhook] queue reply mark failed:", e);
         }
