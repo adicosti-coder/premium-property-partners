@@ -5,7 +5,7 @@
 // Mesajul și răspunsul Meta se salvează în wa_conversations / wa_messages,
 // deci apar imediat în Admin → Istoric WhatsApp.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { isInternalCall } from "../_shared/cronAuth.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +32,8 @@ function normalizeRo(raw: string): string | null {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  if (!(await isInternalCall(req))) return json({ error: "Unauthorized" }, 401);
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
 
   const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
   const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "1357718887419757";
