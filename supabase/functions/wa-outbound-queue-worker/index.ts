@@ -5,6 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
+import { relayToMake } from "../_shared/makeRelay.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -376,6 +377,18 @@ Deno.serve(async (req) => {
           metadata: { template: item.template_name, attempts },
         });
 
+        // Notifică scenariul Make.com (dacă e configurat webhook-ul)
+        await relayToMake("wa_outbound_sent", {
+          queue_id: item.id,
+          phone: item.phone_normalized,
+          prospect_listing_id: item.prospect_listing_id,
+          conversation_id: conversationId,
+          template_name: item.template_name,
+          template_language: item.template_language || "ro",
+          wa_message_id: waMessageId,
+          queue_source: item.source,
+        });
+
         consecutiveFailures = 0;
         results.push({ id: item.id, status: "sent" });
       } else {
@@ -396,7 +409,17 @@ Deno.serve(async (req) => {
           .eq("id", item.id);
 
         results.push({ id: item.id, status: exhausted ? "failed" : "retry", error: err });
-        if (exhausted) consecutiveFailures += 1;
+        if (exhausted) {
+          consecutiveFailures += 1;
+          await relayToMake("wa_outbound_failed", {
+            queue_id: item.id,
+            phone: item.phone_normalized,
+            prospect_listing_id: item.prospect_listing_id,
+            template_name: item.template_name,
+            meta_error: err,
+            attempts,
+          });
+        }
         if (autoPauseEnabled && consecutiveFailures >= maxConsecutiveFailures) {
           await autoPause("consecutive_meta_failures", {
             consecutive_failures: consecutiveFailures,
