@@ -18,7 +18,7 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const DEFAULT_TEMPLATE = Deno.env.get("WA_OUTBOUND_TEMPLATE") || "realtrust_owner_intro";
+const DEFAULT_TEMPLATE = Deno.env.get("WA_OUTBOUND_TEMPLATE") || "intake_prospect_apartments";
 
 /** RO phone → +40XXXXXXXXX, or null when unusable. */
 function normalizePhone(raw?: string | null): string | null {

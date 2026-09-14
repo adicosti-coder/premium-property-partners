@@ -2303,10 +2303,13 @@ const ProspectListings = ({ embedded = false }: { embedded?: boolean } = {}) => 
               <div className="flex items-start gap-2">
                 <MessageSquare className="h-4 w-4 mt-0.5 shrink-0" />
                 <p>
-                  <strong>Contactul se face pe WhatsApp, nu prin apel.</strong> Când marcajul „nu contacta”
-                  vine dintr-un blocaj tehnic (număr fix, VoIP, număr invalid, robot), apelul e blocat, dar
-                  poți trimite un mesaj WhatsApp din coloana „Mesaj WhatsApp”. Dacă persoana a cerut
-                  expres să nu fie contactată, rămâne blocată pe toate canalele, inclusiv WhatsApp.
+                  <strong>Contactul se face automat pe WhatsApp, nu prin apel.</strong> Mesajul aprobat
+                  („intake_prospect_apartments”) pleacă singur: la fiecare prospect nou din re-import, la
+                  prospecții activi încă necontactați și când marcajul „nu contacta” vine dintr-un blocaj
+                  tehnic (număr fix, VoIP, număr invalid, robot). Trimiterea respectă programul 09:00–20:00,
+                  luni–sâmbătă. Butonul din coloana „Mesaj WhatsApp” rămâne doar pentru trimitere imediată,
+                  la nevoie. Dacă persoana a cerut expres să nu fie contactată, rămâne blocată pe toate
+                  canalele, inclusiv WhatsApp.
                 </p>
               </div>
             </div>
