@@ -409,7 +409,17 @@ Deno.serve(async (req) => {
           .eq("id", item.id);
 
         results.push({ id: item.id, status: exhausted ? "failed" : "retry", error: err });
-        if (exhausted) consecutiveFailures += 1;
+        if (exhausted) {
+          consecutiveFailures += 1;
+          await relayToMake("wa_outbound_failed", {
+            queue_id: item.id,
+            phone: item.phone_normalized,
+            prospect_listing_id: item.prospect_listing_id,
+            template_name: item.template_name,
+            meta_error: err,
+            attempts,
+          });
+        }
         if (autoPauseEnabled && consecutiveFailures >= maxConsecutiveFailures) {
           await autoPause("consecutive_meta_failures", {
             consecutive_failures: consecutiveFailures,
