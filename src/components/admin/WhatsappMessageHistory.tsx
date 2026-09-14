@@ -180,18 +180,37 @@ const WhatsappMessageHistory = () => {
               de la Meta atunci când o trimitere eșuează.
             </CardDescription>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="min-h-12 shrink-0"
-            aria-label="Reîmprospătează istoricul mesajelor WhatsApp"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
-            Reîmprospătează
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+            <Button
+              onClick={runRegister}
+              disabled={registering}
+              className="min-h-12"
+              aria-label="Înregistrează numărul în Meta și trimite mesajul de test"
+            >
+              <MessageSquare className={`w-4 h-4 mr-2 ${registering ? "animate-pulse" : ""}`} aria-hidden="true" />
+              Înregistrează și Testează WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="min-h-12"
+              aria-label="Reîmprospătează istoricul mesajelor WhatsApp"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
+              Reîmprospătează
+            </Button>
+          </div>
         </div>
       </CardHeader>
+
+      {registerResult && (
+        <CardContent className="pt-0">
+          <pre className="text-[11px] bg-muted/40 p-3 rounded-lg overflow-x-auto max-h-72 font-mono whitespace-pre-wrap">
+            {registerResult}
+          </pre>
+        </CardContent>
+      )}
 
       <CardContent className="space-y-4">
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
