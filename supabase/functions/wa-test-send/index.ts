@@ -5,6 +5,7 @@
 // Mesajul și răspunsul Meta se salvează în wa_conversations / wa_messages,
 // deci apar imediat în Admin → Istoric WhatsApp.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
@@ -36,7 +37,7 @@ Deno.serve(async (req) => {
   if (gate) return gate;
 
   const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
-  const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "1357718887419757";
+  const phoneId = WA_PHONE_NUMBER_ID;
   if (!token || !phoneId) return json({ error: "missing_credentials" }, 500);
 
   let body: {

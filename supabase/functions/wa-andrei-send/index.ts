@@ -1,6 +1,7 @@
 // wa-andrei-send — trimite mesaje WhatsApp via Meta Cloud API.
 // Internal-only: cere header x-internal-secret === WA_ANDREI_INTERNAL_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 
 const corsHeaders = {
@@ -29,7 +30,7 @@ Deno.serve(async (req) => {
   }
 
   const accessToken = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "1357718887419757";
+  const phoneNumberId = WA_PHONE_NUMBER_ID;
   if (!accessToken || !phoneNumberId) {
     return new Response(JSON.stringify({ error: "WhatsApp credentials not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
