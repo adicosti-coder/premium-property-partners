@@ -62,18 +62,25 @@ Deno.serve(async (req) => {
     );
   }
 
-  // Pas 2 — mesaj de test (template hello_world / en_US)
-  const msgRes = await fetch(`${base}/${PHONE_NUMBER_ID}/messages`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: TEST_RECIPIENT.replace(/^\+/, ""),
-      type: "template",
-      template: { name: "hello_world", language: { code: "en_US" } },
-    }),
-  });
-  const msgBody = await msgRes.json().catch(() => ({}));
+  // Pas 2 — mesaj de test: template hello_world / en_US, cu fallback pe text
+  // simplu (multe conturi noi nu au template-ul hello_world aprobat).
+  const send = (payload: Record<string, unknown>) =>
+    fetch(`${base}/${PHONE_NUMBER_ID}/messages`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ messaging_product: "whatsapp", to: TEST_RECIPIENT.replace(/^\+/, ""), ...payload }),
+    });
+
+  let msgRes = await send({ type: "template", template: { name: "hello_world", language: { code: "en_US" } } });
+  let msgBody = await msgRes.json().catch(() => ({}));
+
+  if (!msgRes.ok && (msgBody as any)?.error?.code === 132001) {
+    msgRes = await send({
+      type: "text",
+      text: { preview_url: false, body: "Test RealTrust: numărul WhatsApp este înregistrat și activ." },
+    });
+    msgBody = await msgRes.json().catch(() => ({}));
+  }
 
   if (!msgRes.ok) {
     console.error(`[register-whatsapp] test message ${msgRes.status}:`, JSON.stringify(msgBody));
