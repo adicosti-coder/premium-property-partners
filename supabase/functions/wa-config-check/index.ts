@@ -1,6 +1,7 @@
 // wa-config-check — diagnostic intern: verifică dacă tokenul Meta și Phone Number ID
 // sunt valide. Internal-only (service role / cron secret). Nu returnează secrete.
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
