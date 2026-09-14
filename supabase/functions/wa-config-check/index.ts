@@ -2,6 +2,7 @@
 // sunt valide. Internal-only (service role / cron secret). Nu returnează secrete.
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
+import { makeWebhookUrl, relayToMake } from "../_shared/makeRelay.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
