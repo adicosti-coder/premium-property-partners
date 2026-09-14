@@ -28,8 +28,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  const accessToken = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-  const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+  const accessToken = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN");
+  const phoneNumberId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "1357718887419757";
   if (!accessToken || !phoneNumberId) {
     return new Response(JSON.stringify({ error: "WhatsApp credentials not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
