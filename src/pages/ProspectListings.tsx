@@ -124,15 +124,19 @@ interface Prospect {
   do_not_call_reason: string | null;
 }
 
-/** Motive care indică o CERERE EXPRESĂ de a nu fi contactat → blocaj pe toate canalele. */
-const EXPRESS_OPT_OUT_RE =
-  /(nu\s*(mai\s*)?(m[ăa]\s*)?(sun|suna|apela|contacta)|nu\s*(mai\s*)?doresc|nu\s*(sunt\s*)?interesat|refuz|opt[\s_-]?out|unsubscribe|stop|gdpr|cerere|solicitare|reclama[țt]ie|manual|admin|blacklist)/i;
+/**
+ * Allowlist de motive STRICT TEHNICE (număr fix/VoIP, invalid, robot/AMD, apel eșuat).
+ * Doar acestea permit contactul pe WhatsApp; orice alt motiv (cerere expresă,
+ * sentiment negativ în apel, marcaj manual, motiv necunoscut) blochează toate canalele.
+ */
+const TECHNICAL_BLOCK_RE =
+  /(landline|num[ăa]r\s*fix|voip|invalid|inexistent|nealocat|unallocated|unreachable|not\s*in\s*service|lookup|twilio|\bamd\b|answering\s*machine|robot|mesagerie|voicemail|\bfax\b|num[ăa]r\s*(gre[șs]it|incomplet|duplicat)|f[ăa]r[ăa]\s*num[ăa]r|no\s*answer|busy|call\s*failed|apel\s*e[șs]uat)/i;
 
-/** true dacă persoana a cerut expres să nu fie contactată (sau motivul e necunoscut). */
+/** true dacă marcajul „nu contacta” trebuie respectat pe toate canalele. */
 function isExpressOptOut(reason?: string | null): boolean {
   const r = (reason || "").trim();
   if (!r) return true;
-  return EXPRESS_OPT_OUT_RE.test(r);
+  return !TECHNICAL_BLOCK_RE.test(r);
 }
 
 const PHONE_PATTERN = /(?:(?:\+|00)\s*40|0)\s*[237](?:[\s().\/-]*\d){8}\b/g;
