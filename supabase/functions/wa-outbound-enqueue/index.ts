@@ -113,7 +113,8 @@ Deno.serve(async (req) => {
       prospect_listing_id: p.id,
       template_name: templateName,
       template_language: templateLanguage,
-      template_params: [p.zone || "Timișoara", p.rooms ? `${p.rooms} camere` : "proprietatea"],
+      // Șablonul aprobat `intake_prospect_apartments` nu are variabile → fără parametri.
+      template_params: [],
       status: "pending",
       priority,
       source: "scraper",
