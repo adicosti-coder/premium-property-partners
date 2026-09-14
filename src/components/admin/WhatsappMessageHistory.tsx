@@ -73,6 +73,35 @@ const STATUS_META: Record<
 const WhatsappMessageHistory = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
+  const [registering, setRegistering] = useState(false);
+  const [registerResult, setRegisterResult] = useState<string | null>(null);
+
+  const runRegister = async () => {
+    setRegistering(true);
+    setRegisterResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("register-whatsapp", { body: {} });
+      if (error) {
+        setRegisterResult(error.message || String(error));
+        toast({ title: "Înregistrare eșuată", description: (error.message || "").slice(0, 200), variant: "destructive" });
+      } else {
+        setRegisterResult(JSON.stringify(data, null, 2));
+        const ok = (data as { ok?: boolean } | null)?.ok === true;
+        toast({
+          title: ok ? "Număr înregistrat, mesaj de test trimis" : "Meta a răspuns cu o eroare",
+          description: ok ? "Vezi răspunsul complet mai jos." : "Detaliile răspunsului Meta apar mai jos.",
+          variant: ok ? "default" : "destructive",
+        });
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setRegisterResult(msg);
+      toast({ title: "Eroare execuție", description: msg.slice(0, 200), variant: "destructive" });
+    } finally {
+      setRegistering(false);
+      refetch();
+    }
+  };
 
   const { data, isLoading, isFetching, refetch, error } = useQuery({
     queryKey: ["admin", "whatsapp-history"],
