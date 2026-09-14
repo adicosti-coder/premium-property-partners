@@ -172,6 +172,38 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // Fiecare mesaj primit (nu doar primul răspuns) merge în Make, ca agentul
+        // să vadă conversația completă. Mesajul e deja salvat în Admin (wa_messages).
+        const inboundRelay = await relayToMake("wa_inbound_message", {
+          conversation_id: convId,
+          phone: from,
+          profile_name: profileName,
+          wa_message_id: waId,
+          message_type: type,
+          message: text,
+          media_url: mediaUrl,
+          received_at: new Date().toISOString(),
+        });
+        try {
+          await supabase.from("make_lead_events").insert({
+            direction: "inbound",
+            event: "wa_inbound_message",
+            conversation_id: convId,
+            phone_normalized: from,
+            message: text,
+            wa_message_id: waId,
+            status: inboundRelay.ok
+              ? "sent"
+              : (inboundRelay.skipped ? "make_not_configured" : "failed"),
+            error: inboundRelay.ok
+              ? null
+              : (inboundRelay.error || String(inboundRelay.skipped ?? "make_failed")),
+            payload: { profile_name: profileName, message_type: type, relay: inboundRelay },
+          });
+        } catch (e) {
+          console.error("[wa-webhook] make_lead_events insert failed:", e);
+        }
+
         // Prima interacțiune → mesaj standard de calificare (imobiliare / administrare / rezervare),
         // ca nicio conversație să nu rămână fără răspuns. Apoi preia agentul AI.
         const { count: outboundCount } = await supabase
