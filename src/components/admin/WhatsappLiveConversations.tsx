@@ -108,18 +108,16 @@ export default function WhatsappLiveConversations() {
   useRealtimeChannel("wa-live-conversations", [
     {
       event: "*",
-      schema: "public",
       table: "wa_messages",
-      callback: () => {
+      handler: () => {
         void loadConversations();
         if (selectedId) void loadThread(selectedId);
       },
     },
     {
       event: "*",
-      schema: "public",
       table: "wa_conversations",
-      callback: () => void loadConversations(),
+      handler: () => { void loadConversations(); },
     },
   ]);
 
