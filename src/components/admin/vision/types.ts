@@ -55,7 +55,7 @@ export const VISION_SETTINGS_DEFAULTS: PropertyVisionSettings = {
   max_images: 5,
   auto_outbound_enabled: false,
   outbound_threshold: 70,
-  outbound_template: "realtrust_owner_intro",
+  outbound_template: "intake_prospect_apartments",
 };
 
 
