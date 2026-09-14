@@ -257,6 +257,19 @@ const WhatsappMessageHistory = () => {
               Înregistrează și Testează WhatsApp
             </Button>
             <Button
+              variant="secondary"
+              onClick={submitTemplate}
+              disabled={submittingTemplate}
+              className="min-h-12"
+              aria-label="Trimite șablonul de mesaje către Meta pentru aprobare"
+            >
+              <MessageSquare
+                className={`w-4 h-4 mr-2 ${submittingTemplate ? "animate-pulse" : ""}`}
+                aria-hidden="true"
+              />
+              Trimite Șablonul pentru Aprobare
+            </Button>
+            <Button
               variant="outline"
               onClick={() => refetch()}
               disabled={isFetching}
