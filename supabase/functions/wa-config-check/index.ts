@@ -20,6 +20,16 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Test opțional al webhook-ului Make.com: ?test_make=1
+  const reqUrl = new URL(req.url);
+  if (reqUrl.searchParams.get("test_make") === "1") {
+    const relay = await relayToMake("wa_relay_test", { note: "test din Admin" });
+    return new Response(
+      JSON.stringify({ make_configured: !!makeWebhookUrl(), relay }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
   const phoneId = WA_PHONE_NUMBER_ID;
 
