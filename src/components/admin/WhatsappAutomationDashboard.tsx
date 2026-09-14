@@ -76,7 +76,7 @@ export default function WhatsappAutomationDashboard() {
   useEffect(() => { void load(); }, [load]);
 
   useRealtimeChannel("wa-automation-dashboard", [
-    { event: "*", schema: "public", table: "wa_outbound_queue", callback: () => void load() },
+    { event: "*", table: "wa_outbound_queue", handler: () => { void load(); } },
   ]);
 
   const stats = useMemo(() => {
