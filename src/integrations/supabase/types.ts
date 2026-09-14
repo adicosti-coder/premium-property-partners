@@ -3577,6 +3577,54 @@ export type Database = {
           },
         ]
       }
+      make_lead_events: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          direction: string
+          error: string | null
+          event: string
+          id: string
+          lead_id: string | null
+          message: string | null
+          payload: Json
+          phone_normalized: string | null
+          prospect_listing_id: string | null
+          status: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          direction: string
+          error?: string | null
+          event: string
+          id?: string
+          lead_id?: string | null
+          message?: string | null
+          payload?: Json
+          phone_normalized?: string | null
+          prospect_listing_id?: string | null
+          status?: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          direction?: string
+          error?: string | null
+          event?: string
+          id?: string
+          lead_id?: string | null
+          message?: string | null
+          payload?: Json
+          phone_normalized?: string | null
+          prospect_listing_id?: string | null
+          status?: string
+          wa_message_id?: string | null
+        }
+        Relationships: []
+      }
       marketing_snapshot: {
         Row: {
           ad_spend_eur: number
