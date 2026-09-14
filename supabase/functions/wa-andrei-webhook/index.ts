@@ -226,7 +226,9 @@ Deno.serve(async (req) => {
                   .eq("id", pendingReply.prospect_listing_id)
                   .maybeSingle();
                 area = Number(pl?.size_sqm ?? 0) || 0;
-                propType = String(pl?.listing_type ?? pl?.rooms ? `${pl?.rooms} camere` : "necunoscut");
+                propType = pl?.listing_type
+                  ? String(pl.listing_type)
+                  : (pl?.rooms ? `${pl.rooms} camere` : "necunoscut");
               }
               const { data: newLead, error: leadErr } = await supabase
                 .from("leads")
