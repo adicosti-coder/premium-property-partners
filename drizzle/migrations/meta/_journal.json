@@ -36,6 +36,20 @@
       "when": 1789234270891,
       "tag": "0004_harden_pii_rls_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789411935268,
+      "tag": "0005_wa_auto_first_contact",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789412025718,
+      "tag": "0006_wa_auto_mobile_only",
+      "breakpoints": true
     }
   ]
 }

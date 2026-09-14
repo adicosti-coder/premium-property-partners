@@ -18,7 +18,7 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const DEFAULT_TEMPLATE = Deno.env.get("WA_OUTBOUND_TEMPLATE") || "realtrust_owner_intro";
+const DEFAULT_TEMPLATE = Deno.env.get("WA_OUTBOUND_TEMPLATE") || "intake_prospect_apartments";
 
 /** RO phone → +40XXXXXXXXX, or null when unusable. */
 function normalizePhone(raw?: string | null): string | null {
@@ -27,7 +27,8 @@ function normalizePhone(raw?: string | null): string | null {
   if (d.startsWith("00")) d = d.slice(2);
   if (d.startsWith("0")) d = "40" + d.slice(1);
   if (d.startsWith("7") && d.length === 9) d = "40" + d;
-  return /^40[237]\d{8}$/.test(d) ? `+${d}` : null;
+  // WhatsApp există doar pe mobil (+407...), nu pe numere fixe.
+  return /^407\d{8}$/.test(d) ? `+${d}` : null;
 }
 
 Deno.serve(async (req) => {
@@ -113,7 +114,8 @@ Deno.serve(async (req) => {
       prospect_listing_id: p.id,
       template_name: templateName,
       template_language: templateLanguage,
-      template_params: [p.zone || "Timișoara", p.rooms ? `${p.rooms} camere` : "proprietatea"],
+      // Șablonul aprobat `intake_prospect_apartments` nu are variabile → fără parametri.
+      template_params: [],
       status: "pending",
       priority,
       source: "scraper",
