@@ -1,6 +1,7 @@
 // wa-andrei-webhook — Meta WhatsApp Cloud API webhook (verify + inbound).
 // Public endpoint (verify_jwt = false). Validates signature via WHATSAPP_APP_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { relayToMake } from "../_shared/makeRelay.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
