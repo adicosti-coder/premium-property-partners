@@ -187,10 +187,11 @@ Deno.serve(async (req) => {
 
 
         // Marchează în coada outbound primul răspuns primit de la acest număr
+        // și transformă răspunsul în lead (salvat în Admin + trimis în Make.com).
         try {
           const { data: pendingReply } = await supabase
             .from("wa_outbound_queue")
-            .select("id")
+            .select("id, template_name, prospect_listing_id, source")
             .eq("phone_normalized", from)
             .in("status", ["sent"])
             .is("replied_at", null)
@@ -202,6 +203,63 @@ Deno.serve(async (req) => {
               .from("wa_outbound_queue")
               .update({ status: "replied", replied_at: nowIso })
               .eq("id", pendingReply.id);
+
+            // Lead din răspunsul la șablonul de prim contact
+            const { data: existingLead } = await supabase
+              .from("leads")
+              .select("id")
+              .eq("whatsapp_number", from)
+              .eq("source", "whatsapp_reply")
+              .limit(1)
+              .maybeSingle();
+
+            let leadId: string | null = existingLead?.id ?? null;
+
+            if (!leadId) {
+              let area = 0;
+              let propType = "necunoscut";
+              if (pendingReply.prospect_listing_id) {
+                const { data: pl } = await supabase
+                  .from("prospect_listings")
+                  .select("size_sqm, rooms, listing_type, contact_name")
+                  .eq("id", pendingReply.prospect_listing_id)
+                  .maybeSingle();
+                area = Number(pl?.size_sqm ?? 0) || 0;
+                propType = String(pl?.listing_type ?? pl?.rooms ? `${pl?.rooms} camere` : "necunoscut");
+              }
+              const { data: newLead, error: leadErr } = await supabase
+                .from("leads")
+                .insert({
+                  name: profileName || `Client WhatsApp ${from}`,
+                  whatsapp_number: from,
+                  source: "whatsapp_reply",
+                  message: text,
+                  property_area: area,
+                  property_type: propType,
+                })
+                .select("id")
+                .maybeSingle();
+              if (leadErr) console.error("[wa-webhook] lead insert failed:", leadErr);
+              leadId = newLead?.id ?? null;
+            }
+
+            if (leadId) {
+              await supabase.from("wa_outbound_queue")
+                .update({ lead_id: leadId })
+                .eq("id", pendingReply.id);
+            }
+
+            await relayToMake("wa_inbound_lead", {
+              lead_id: leadId,
+              queue_id: pendingReply.id,
+              template_name: pendingReply.template_name,
+              prospect_listing_id: pendingReply.prospect_listing_id,
+              phone: from,
+              profile_name: profileName,
+              conversation_id: convId,
+              reply_text: text,
+              replied_at: nowIso,
+            });
           }
         } catch (e) {
           console.error("[wa-webhook] queue reply mark failed:", e);
