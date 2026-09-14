@@ -252,6 +252,16 @@ Deno.serve(async (req) => {
                 .eq("id", pendingReply.id);
             }
 
+            // Actualizează starea prospectului în Admin: a răspuns → interesat
+            if (pendingReply.prospect_listing_id) {
+              const { error: plErr } = await supabase
+                .from("prospect_listings")
+                .update({ lifecycle_status: "interested" })
+                .eq("id", pendingReply.prospect_listing_id)
+                .in("lifecycle_status", ["new", "scoring", "calling", "callback", "to_review"]);
+              if (plErr) console.error("[wa-webhook] prospect status update failed:", plErr);
+            }
+
             await relayToMake("wa_inbound_lead", {
               lead_id: leadId,
               queue_id: pendingReply.id,
