@@ -34,8 +34,8 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   if (!(await isInternalCall(req))) return json({ error: "Unauthorized" }, 401);
 
-  const token = Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
-  const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "";
+  const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
+  const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "1357718887419757";
   if (!token || !phoneId) return json({ error: "missing_credentials" }, 500);
 
   let body: {

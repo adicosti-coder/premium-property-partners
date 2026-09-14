@@ -18,8 +18,8 @@ Deno.serve(async (req) => {
     });
   }
 
-  const token = Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
-  const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "";
+  const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
+  const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "1357718887419757";
 
   if (!token || !phoneId) {
     return new Response(
