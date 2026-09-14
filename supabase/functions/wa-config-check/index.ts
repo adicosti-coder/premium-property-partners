@@ -1,6 +1,7 @@
 // wa-config-check — diagnostic intern: verifică dacă tokenul Meta și Phone Number ID
 // sunt valide. Internal-only (service role / cron secret). Nu returnează secrete.
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,8 +19,8 @@ Deno.serve(async (req) => {
     });
   }
 
-  const token = Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
-  const phoneId = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") || "";
+  const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
+  const phoneId = WA_PHONE_NUMBER_ID;
 
   if (!token || !phoneId) {
     return new Response(
