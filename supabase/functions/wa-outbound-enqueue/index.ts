@@ -27,7 +27,8 @@ function normalizePhone(raw?: string | null): string | null {
   if (d.startsWith("00")) d = d.slice(2);
   if (d.startsWith("0")) d = "40" + d.slice(1);
   if (d.startsWith("7") && d.length === 9) d = "40" + d;
-  return /^40[237]\d{8}$/.test(d) ? `+${d}` : null;
+  // WhatsApp există doar pe mobil (+407...), nu pe numere fixe.
+  return /^407\d{8}$/.test(d) ? `+${d}` : null;
 }
 
 Deno.serve(async (req) => {
