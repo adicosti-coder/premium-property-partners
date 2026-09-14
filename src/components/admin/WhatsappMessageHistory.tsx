@@ -76,6 +76,42 @@ const WhatsappMessageHistory = () => {
   const [search, setSearch] = useState("");
   const [registering, setRegistering] = useState(false);
   const [registerResult, setRegisterResult] = useState<string | null>(null);
+  const [submittingTemplate, setSubmittingTemplate] = useState(false);
+  const [templateResult, setTemplateResult] = useState<string | null>(null);
+
+  const submitTemplate = async () => {
+    setSubmittingTemplate(true);
+    setTemplateResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-whatsapp-template", {
+        body: { category: "UTILITY" },
+      });
+      if (error) {
+        setTemplateResult(error.message || String(error));
+        toast({
+          title: "Trimiterea șablonului a eșuat",
+          description: (error.message || "").slice(0, 200),
+          variant: "destructive",
+        });
+      } else {
+        setTemplateResult(JSON.stringify(data, null, 2));
+        const res = data as { ok?: boolean; status?: string } | null;
+        toast({
+          title: res?.ok ? `Status Meta: ${res?.status ?? "PENDING"}` : "Meta a răspuns cu o eroare",
+          description: res?.ok
+            ? "Șablonul a fost trimis pentru aprobare. Detalii mai jos."
+            : "Detaliile răspunsului Meta apar mai jos.",
+          variant: res?.ok ? "default" : "destructive",
+        });
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setTemplateResult(msg);
+      toast({ title: "Eroare execuție", description: msg.slice(0, 200), variant: "destructive" });
+    } finally {
+      setSubmittingTemplate(false);
+    }
+  };
 
   const runRegister = async () => {
     setRegistering(true);
@@ -221,6 +257,19 @@ const WhatsappMessageHistory = () => {
               Înregistrează și Testează WhatsApp
             </Button>
             <Button
+              variant="secondary"
+              onClick={submitTemplate}
+              disabled={submittingTemplate}
+              className="min-h-12"
+              aria-label="Trimite șablonul de mesaje către Meta pentru aprobare"
+            >
+              <MessageSquare
+                className={`w-4 h-4 mr-2 ${submittingTemplate ? "animate-pulse" : ""}`}
+                aria-hidden="true"
+              />
+              Trimite Șablonul pentru Aprobare
+            </Button>
+            <Button
               variant="outline"
               onClick={() => refetch()}
               disabled={isFetching}
@@ -238,6 +287,14 @@ const WhatsappMessageHistory = () => {
         <CardContent className="pt-0">
           <pre className="text-[11px] bg-muted/40 p-3 rounded-lg overflow-x-auto max-h-72 font-mono whitespace-pre-wrap">
             {registerResult}
+          </pre>
+        </CardContent>
+      )}
+
+      {templateResult && (
+        <CardContent className="pt-0">
+          <pre className="text-[11px] bg-muted/40 p-3 rounded-lg overflow-x-auto max-h-72 font-mono whitespace-pre-wrap">
+            {templateResult}
           </pre>
         </CardContent>
       )}
