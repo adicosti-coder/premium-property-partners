@@ -291,6 +291,14 @@ const WhatsappMessageHistory = () => {
         </CardContent>
       )}
 
+      {templateResult && (
+        <CardContent className="pt-0">
+          <pre className="text-[11px] bg-muted/40 p-3 rounded-lg overflow-x-auto max-h-72 font-mono whitespace-pre-wrap">
+            {templateResult}
+          </pre>
+        </CardContent>
+      )}
+
       <CardContent className="space-y-4">
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
