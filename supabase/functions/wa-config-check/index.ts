@@ -2,6 +2,7 @@
 // sunt valide. Internal-only (service role / cron secret). Nu returnează secrete.
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
+import { makeWebhookUrl, relayToMake } from "../_shared/makeRelay.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +18,16 @@ Deno.serve(async (req) => {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+
+  // Test opțional al webhook-ului Make.com: ?test_make=1
+  const reqUrl = new URL(req.url);
+  if (reqUrl.searchParams.get("test_make") === "1") {
+    const relay = await relayToMake("wa_relay_test", { note: "test din Admin" });
+    return new Response(
+      JSON.stringify({ make_configured: !!makeWebhookUrl(), relay }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 
   const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
