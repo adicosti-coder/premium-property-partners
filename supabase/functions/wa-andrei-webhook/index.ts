@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
           let prospectId: string | null = null;
           try {
             const { data: prospect } = await supabase.from("prospect_listings")
-              .select("id").eq("phone", from).limit(1).maybeSingle();
+              .select("id").eq("phone_normalized", from).limit(1).maybeSingle();
             prospectId = prospect?.id || null;
           } catch {}
 
