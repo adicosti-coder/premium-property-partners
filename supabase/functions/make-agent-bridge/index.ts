@@ -285,8 +285,18 @@ Deno.serve(async (req) => {
       .select("id, name, slug")
       .eq("id", propertyId)
       .maybeSingle();
+    // Agentul alocat discuției, ca raportul pe agent din dashboard să fie corect.
+    let openedAgentId: string | null = null;
+    if (body.conversation_id || phone) {
+      const q = supabase.from("wa_conversations").select("assigned_agent_id").limit(1);
+      const { data: convRow } = body.conversation_id
+        ? await q.eq("id", body.conversation_id).maybeSingle()
+        : await q.eq("phone_normalized", phone).order("updated_at", { ascending: false }).maybeSingle();
+      openedAgentId = (convRow?.assigned_agent_id as string) ?? null;
+    }
     await supabase.from("wa_transaction_events").insert({
       conversation_id: body.conversation_id ?? null,
+      agent_id: openedAgentId,
       phone_normalized: phone,
       property_id: propertyId,
       property_name: (prop?.name as string) ?? null,
