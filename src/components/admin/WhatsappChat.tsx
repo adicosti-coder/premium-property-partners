@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
-import { Handshake, Loader2, MessageSquare, RefreshCw, Search, Send } from "lucide-react";
+import { Handshake, Loader2, MessageSquare, RefreshCw, Search, Send, Tag } from "lucide-react";
 
 /**
  * Tab „Chat WhatsApp" — agenții scriu direct clientului, în chatul real de
@@ -177,7 +177,9 @@ export default function WhatsappChat() {
     void loadThread(selected.id);
   };
 
-  const runStep = async (action: "offer_meeting" | "offer_direct_chat") => {
+  const runStep = async (
+    action: "offer_meeting" | "offer_direct_chat" | "offer_followup" | "offer_confirm",
+  ) => {
     if (!selected) return;
     setBusyStep(action);
     const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
@@ -190,7 +192,13 @@ export default function WhatsappChat() {
     setBusyStep(null);
     const res = (data ?? {}) as Record<string, unknown>;
     const label =
-      action === "offer_meeting" ? "Propunerea de întâlnire" : "Mesajul cu chatul direct";
+      action === "offer_meeting"
+        ? "Propunerea de întâlnire"
+        : action === "offer_direct_chat"
+        ? "Mesajul cu chatul direct"
+        : action === "offer_followup"
+        ? "Oferta cu prețul din anunț"
+        : "Confirmarea ofertei";
     if (fnErr || res.delivered === false) {
       toast({
         title: `${label} nu a plecat`,
@@ -374,6 +382,21 @@ export default function WhatsappChat() {
                     <Send className="h-4 w-4 mr-2" />
                   )}
                   Trimite pe WhatsApp
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-h-[44px]"
+                  disabled={!selected || busyStep === "offer_followup"}
+                  onClick={() => void runStep("offer_followup")}
+                  aria-label="Trimite oferta automată cu prețul exact din anunț"
+                >
+                  {busyStep === "offer_followup" ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Tag className="h-4 w-4 mr-2" />
+                  )}
+                  Ofertă automată
                 </Button>
                 <Button
                   size="sm"

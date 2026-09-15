@@ -14,6 +14,27 @@ import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
 
+/**
+ * Apartamentul discutat cu clientul, dacă nu e trimis explicit `property_id`:
+ * îl luăm din ultimul pas de tranzacție al conversației, ca prețul din mesajele
+ * automate să fie exact prețul din anunț, nu o valoare fixă.
+ */
+async function lastConversationPropertyId(
+  supabase: any,
+  conversationId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("wa_transaction_events")
+    .select("property_id")
+    .eq("conversation_id", conversationId)
+    .not("property_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data?.property_id as string) ?? null;
+}
+
+
 // Răspunsuri la butoanele rapide din primul mesaj (șablonul premium):
 // „Vanzare asistata”, „Administrare hoteliera”, „Nu, mulțumesc”.
 const stripDiacritics = (t: string) =>
@@ -402,7 +423,8 @@ Deno.serve(async (req) => {
 
     // Apartamentul din discuție (dacă a fost deja ales) — pentru context în mesaj.
     let stepProp: { id: string; name: string; slug: string | null; url: string | null; price: number | null } | null = null;
-    const stepPropertyId = (body.property_id || "").trim();
+    const stepPropertyId = (body.property_id || "").trim() ||
+      (await lastConversationPropertyId(supabase, conv.id as string)) || "";
     if (stepPropertyId) {
       const { data: prop } = await supabase
         .from("properties")
@@ -544,7 +566,8 @@ Deno.serve(async (req) => {
     if (!conv?.id) return json({ error: "conversation_not_found" }, 404);
     const convAgentId = (conv.assigned_agent_id as string) ?? null;
 
-    const propertyId = (body.property_id || "").trim();
+    const propertyId = (body.property_id || "").trim() ||
+      (await lastConversationPropertyId(supabase, conv.id as string)) || "";
     if (propertyId) {
       const { data: prop } = await supabase
         .from("properties")
