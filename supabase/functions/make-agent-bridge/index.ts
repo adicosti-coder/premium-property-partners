@@ -13,6 +13,45 @@ import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
+
+// Răspunsuri la butoanele rapide din primul mesaj (șablonul premium):
+// „Vanzare asistata”, „Administrare hoteliera”, „Nu, mulțumesc”.
+const stripDiacritics = (t: string) =>
+  t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+function quickReplyText(raw: string): { kind: string; text: string } | null {
+  const t = stripDiacritics(raw);
+  if (/^nu[, ]|^nu$|multumesc/.test(t) && t.length <= 40) {
+    return {
+      kind: "quick_no",
+      text:
+        "Am inteles, va mulțumim pentru raspuns! Nu va mai contactam pe aceasta tema. " +
+        "Daca pe viitor doriti o estimare de preț sau de venit pentru apartament, ne scrieti oricand aici.",
+    };
+  }
+  if (/vanzare/.test(t)) {
+    return {
+      kind: "quick_sale",
+      text:
+        "Perfect, ne ocupam de vanzare asistata. Pasii sunt simpli: evaluare gratuita a apartamentului, " +
+        "sedinta foto profesionala si promovare, apoi aducem doar clienti verificati la vizionari si " +
+        "pregatim dosarul pana la notar.\n\nCa sa va trimit estimarea de preț, imi confirmati zona, " +
+        "numarul de camere si suprafata? Va raspundem intre 09:00 si 20:00.",
+    };
+  }
+  if (/administrare|hotel/.test(t)) {
+    return {
+      kind: "quick_management",
+      text:
+        "Excelent, administrarea in regim hotelier inseamna randament net de circa 9,4% pe an: ne ocupam " +
+        "de anunturi pe Booking si Airbnb, prețuri dinamice, curatenie, check-in si raportare lunara, " +
+        "iar dvs. primiti venitul net.\n\nImi spuneti zona, numarul de camere si suprafata, ca sa va " +
+        "trimit estimarea de venit lunar? Va raspundem intre 09:00 si 20:00.",
+    };
+  }
+  return null;
+}
+
 import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
 
 const corsHeaders = {
@@ -930,9 +969,15 @@ Deno.serve(async (req) => {
       .eq("conversation_id", convId)
       .eq("direction", "outbound");
 
-    let replyKind: "intake" | "ack" | "skipped_recent_ack" = "intake";
+    let replyKind: "intake" | "ack" | "skipped_recent_ack" | "quick_reply" = "intake";
     let replyText = "";
-    if (outboundCount) {
+    // Răspuns la butoanele rapide din primul mesaj — are prioritate și nu e
+    // blocat de regula de 3 ore, ca discuția să nu rămână neterminată.
+    const quick = quickReplyText(text);
+    if (quick && outboundCount) {
+      replyKind = "quick_reply";
+      replyText = quick.text;
+    } else if (outboundCount) {
       const threeHoursAgo = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
       const { count: recentAck } = await supabase
         .from("wa_messages")
@@ -957,6 +1002,8 @@ Deno.serve(async (req) => {
       first: !outboundCount,
       auto_reply: replyKind === "intake"
         ? "mesaj de calificare"
+        : replyKind === "quick_reply"
+        ? `răspuns la butonul rapid (${quick?.kind})`
         : (replyKind === "ack" ? "confirmare (regula de 3 ore)" : "fără răspuns automat (mesaj recent)"),
       meta_response: body.wa_message_id ? `mesaj Meta ${body.wa_message_id}` : null,
     });
@@ -997,7 +1044,11 @@ Deno.serve(async (req) => {
 
     await supabase.from("make_lead_events").insert({
       direction: "outbound",
-      event: replyKind === "intake" ? "wa_auto_intake" : "wa_auto_ack",
+      event: replyKind === "intake"
+        ? "wa_auto_intake"
+        : replyKind === "quick_reply"
+        ? "wa_auto_quick_reply"
+        : "wa_auto_ack",
       conversation_id: convId,
       phone_normalized: phone,
       message: replyText,
