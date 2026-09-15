@@ -50,7 +50,7 @@ const WhatsappConversationsAnalytics = () => {
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["wa-conversations-analytics", since],
     queryFn: async () => {
-      const [msgRes, convRes, agentRes] = await Promise.all([
+      const [msgRes, convRes, agentRes, replyRes] = await Promise.all([
         supabase
           .from("wa_messages")
           .select("id, conversation_id, direction, error, created_at")
@@ -65,6 +65,12 @@ const WhatsappConversationsAnalytics = () => {
           .order("updated_at", { ascending: false })
           .limit(500),
         supabase.from("wa_agents").select("id, name, email"),
+        supabase
+          .from("make_lead_events")
+          .select("id, conversation_id, event, created_at")
+          .eq("event", "wa_agent_reply")
+          .gte("created_at", since)
+          .limit(3000),
       ]);
       if (msgRes.error) throw msgRes.error;
       if (convRes.error) throw convRes.error;
@@ -72,6 +78,7 @@ const WhatsappConversationsAnalytics = () => {
         messages: (msgRes.data ?? []) as Msg[],
         conversations: (convRes.data ?? []) as Conv[],
         agents: (agentRes.data ?? []) as Agent[],
+        agentReplies: (replyRes.data ?? []) as { id: string; conversation_id: string | null }[],
       };
     },
     staleTime: 60_000,
@@ -180,12 +187,18 @@ const WhatsappConversationsAnalytics = () => {
     const convById = new Map(conversations.map((c) => [c.id, c]));
     const perAgent = new Map<
       string,
-      { agent: string; conversatii: number; primite: number; livrate: number; esuate: number; abandonate: number }
+      {
+        agent: string; conversatii: number; primite: number; trimise: number;
+        raspunsuri: number; livrate: number; esuate: number; abandonate: number;
+      }
     >();
     const rowFor = (name: string) => {
       const existing = perAgent.get(name);
       if (existing) return existing;
-      const fresh = { agent: name, conversatii: 0, primite: 0, livrate: 0, esuate: 0, abandonate: 0 };
+      const fresh = {
+        agent: name, conversatii: 0, primite: 0, trimise: 0,
+        raspunsuri: 0, livrate: 0, esuate: 0, abandonate: 0,
+      };
       perAgent.set(name, fresh);
       return fresh;
     };
@@ -194,10 +207,18 @@ const WhatsappConversationsAnalytics = () => {
       const c = convById.get(m.conversation_id);
       const row = rowFor(agentName(c?.assigned_agent_id ?? null));
       if (m.direction === "inbound") row.primite++;
-      else if (m.error) row.esuate++;
-      else row.livrate++;
+      else {
+        row.trimise++;
+        if (m.error) row.esuate++;
+        else row.livrate++;
+      }
+    }
+    for (const r of data?.agentReplies ?? []) {
+      const c = r.conversation_id ? convById.get(r.conversation_id) : undefined;
+      rowFor(agentName(c?.assigned_agent_id ?? null)).raspunsuri++;
     }
     for (const c of abandonedList) rowFor(agentName(c.assigned_agent_id)).abandonate++;
+
 
     return {
       activeCount: active.length,
@@ -282,7 +303,9 @@ const WhatsappConversationsAnalytics = () => {
                 <tr className="text-left text-xs text-muted-foreground">
                   <th className="py-2 pr-4">Agent</th>
                   <th className="py-2 pr-4">Conversații</th>
-                  <th className="py-2 pr-4">De la clienți</th>
+                  <th className="py-2 pr-4">Mesaje primite</th>
+                  <th className="py-2 pr-4">Mesaje trimise</th>
+                  <th className="py-2 pr-4">Răspunsuri agent</th>
                   <th className="py-2 pr-4">Livrate</th>
                   <th className="py-2 pr-4">Eșuate</th>
                   <th className="py-2">Abandonate</th>
@@ -294,6 +317,8 @@ const WhatsappConversationsAnalytics = () => {
                     <td className="py-2 pr-4 font-medium text-foreground">{r.agent}</td>
                     <td className="py-2 pr-4">{r.conversatii}</td>
                     <td className="py-2 pr-4">{r.primite}</td>
+                    <td className="py-2 pr-4">{r.trimise}</td>
+                    <td className="py-2 pr-4">{r.raspunsuri}</td>
                     <td className="py-2 pr-4">{r.livrate}</td>
                     <td className={`py-2 pr-4 ${r.esuate ? "text-destructive font-medium" : ""}`}>
                       {r.esuate}
