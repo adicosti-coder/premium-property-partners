@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
     if (!offerProp) return null;
     const text = [
       `Pașii următori pentru ${offerProp.name}:`,
-      "1) Ofertă — vă trimitem prețul final, comisionul și costurile de achiziție.",
+      "1) Ofertă — vă trimitem prețul final, Property Management-ul și costurile de achiziție.",
       "2) Vizionare — stabilim ziua și ora care vă convine.",
       "3) Negociere — transmitem oferta dvs. proprietarului și revenim cu decizia.",
       "4) Acte — antecontract, plată și programare la notar.",
