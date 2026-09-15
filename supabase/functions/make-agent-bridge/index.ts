@@ -13,6 +13,7 @@ import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
+import { notifyAgentFirstMessage } from "../_shared/waAgentNotify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -362,6 +363,15 @@ Deno.serve(async (req) => {
     } else {
       const ctx = await loadProspectContext(supabase, phone);
       replyText = buildIntakeMessage(ctx);
+      // Primul mesaj al clientului → backup pe e-mail către agent.
+      await notifyAgentFirstMessage(supabase, {
+        phone,
+        profile_name: body.profile_name ?? null,
+        message: text,
+        conversation_id: convId,
+        prospect: ctx,
+        auto_reply: "mesaj de calificare",
+      });
     }
 
     if (replyKind === "skipped_recent_ack") {
