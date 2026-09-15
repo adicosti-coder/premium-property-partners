@@ -237,6 +237,63 @@ export default function WhatsappLiveConversations() {
   const agentName = (id: string | null) =>
     agents.find((a) => a.id === id)?.name ?? "nealocat";
 
+  /** Pașii de tranzacție intercalați cronologic în firul de discuție. */
+  const stepTimeline = useMemo(() => {
+    const map = new Map<string, TxEventRow[]>();
+    const trailing: TxEventRow[] = [];
+    let idx = 0;
+    for (const ev of txEvents) {
+      const t = new Date(ev.created_at).getTime();
+      while (idx < messages.length && new Date(messages[idx].created_at).getTime() < t) idx++;
+      if (idx < messages.length) {
+        const key = messages[idx].id;
+        map.set(key, [...(map.get(key) ?? []), ev]);
+      } else {
+        trailing.push(ev);
+      }
+    }
+    return { map, trailing };
+  }, [txEvents, messages]);
+
+  /** Starea pasului de tranzacție, pentru bara de progres a discuției. */
+  const stages = useMemo(() => {
+    const has = (e: string) => txEvents.some((t) => t.event === e && t.status !== "failed");
+    return [
+      { label: "Apartament ales", done: has("offer_sent") },
+      { label: "Ofertă trimisă", done: has("offer_followup") },
+      { label: "Anunț deschis", done: has("listing_opened") },
+      {
+        label: "Negociere",
+        done: has("negotiation") ||
+          (has("offer_followup") && messages.some((m) => m.direction === "inbound" &&
+            new Date(m.created_at).getTime() >
+              Math.max(
+                0,
+                ...txEvents
+                  .filter((t) => t.event === "offer_followup")
+                  .map((t) => new Date(t.created_at).getTime()),
+              ))),
+      },
+    ];
+  }, [txEvents, messages]);
+
+  const renderStep = (ev: TxEventRow) => (
+    <div key={ev.id} className="my-2 flex justify-center">
+      <div className="max-w-[90%] rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-center">
+        <p className="text-[11px] font-medium">
+          {TX_LABELS[ev.event] ?? ev.event}
+          {ev.property_name ? ` · ${ev.property_name}` : ""}
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          {fmt(ev.created_at)}
+          {ev.price ? ` · ${Number(ev.price).toLocaleString("ro-RO")} €` : ""}
+        </p>
+        {ev.error && <p className="text-[11px] text-destructive">{ev.error}</p>}
+      </div>
+    </div>
+  );
+
+
   const QUALIFY_MESSAGE = [
     "Bună ziua! Vă mulțumim pentru mesaj.",
     "Ca să vă ajutăm rapid, spuneți-ne cu ce vă putem fi de folos:",
