@@ -120,6 +120,13 @@
       "when": 1789487236229,
       "tag": "0016_wa_auto_offer_cron",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789487839439,
+      "tag": "0017_wa_offer_intro_confirm_and_daily_digests",
+      "breakpoints": true
     }
   ]
 }

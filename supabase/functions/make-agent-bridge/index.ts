@@ -337,6 +337,132 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
+  // -------------------------------------------- offer_intro / offer_confirm
+  // `offer_intro`  → mesaj înainte de ofertă: clientul află că ofertele vin
+  //                  direct pe WhatsApp, nu doar în discuția din Admin.
+  // `offer_confirm`→ mesaj după ofertă: confirmă livrarea și cheamă la
+  //                  vizionare și negociere, ca discuția să nu se oprească.
+  if (action === "offer_intro" || action === "offer_confirm") {
+    const phone = normalizeRoMobile(body.phone || "") || (body.phone || "").trim();
+    if (!phone) return json({ error: "phone_invalid" }, 400);
+
+    const { data: conv } = await (body.conversation_id
+      ? supabase.from("wa_conversations")
+          .select("id, assigned_agent_id").eq("id", body.conversation_id).maybeSingle()
+      : supabase.from("wa_conversations")
+          .select("id, assigned_agent_id").eq("phone_normalized", phone)
+          .order("updated_at", { ascending: false }).limit(1).maybeSingle());
+    if (!conv?.id) return json({ error: "conversation_not_found" }, 404);
+    const stepAgentId = (conv.assigned_agent_id as string) ?? null;
+
+    // Apartamentul din discuție (dacă a fost deja ales) — pentru context în mesaj.
+    let stepProp: { id: string; name: string; slug: string | null; url: string | null; price: number | null } | null = null;
+    const stepPropertyId = (body.property_id || "").trim();
+    if (stepPropertyId) {
+      const { data: prop } = await supabase
+        .from("properties")
+        .select("id, name, slug, size, capital_necesar, price_per_sqm")
+        .eq("id", stepPropertyId)
+        .maybeSingle();
+      if (prop) {
+        const price = Number(prop.capital_necesar) ||
+          (prop.price_per_sqm && prop.size
+            ? Math.round(Number(prop.price_per_sqm) * Number(prop.size))
+            : 0);
+        stepProp = {
+          id: prop.id as string,
+          name: prop.name as string,
+          slug: (prop.slug as string) ?? null,
+          url: prop.slug ? `https://realtrust.ro/proprietate/${prop.slug}` : null,
+          price: price || null,
+        };
+      }
+    }
+
+    const autoStepText = action === "offer_intro"
+      ? [
+        `Pregătim oferta${stepProp ? ` pentru ${stepProp.name}` : ""} și o primiți direct aici, pe WhatsApp.`,
+        "Veți primi prețul final, comisionul și costurile de achiziție, plus linkul anunțului complet.",
+        "Dacă aveți o preferință de buget sau de dată pentru vizionare, scrieți-mi acum și o includem în ofertă.",
+      ].join("\n")
+      : [
+        `Oferta${stepProp ? ` pentru ${stepProp.name}` : ""} a fost livrată aici, în discuție.`,
+        stepProp?.price
+          ? `Preț de pornire: ${stepProp.price.toLocaleString("ro-RO")} €.`
+          : "",
+        "Următorii pași: stabilim vizionarea (astăzi sau mâine) și transmitem oferta dvs. proprietarului.",
+        "Spuneți-mi ziua potrivită pentru vizionare și suma cu care intrăm în negociere.",
+        stepProp?.url ? `Anunțul complet: ${stepProp.url}` : "",
+      ].filter(Boolean).join("\n");
+
+    const stepText = (body.message || "").trim() || autoStepText;
+    const sentStep = await sendToMeta({
+      messaging_product: "whatsapp",
+      to: phone.replace(/^\+/, ""),
+      type: "text",
+      text: { preview_url: false, body: stepText },
+    });
+    const stepMsgId = sentStep.body?.messages?.[0]?.id ?? null;
+
+    await supabase.from("wa_messages").insert({
+      conversation_id: conv.id,
+      wa_message_id: stepMsgId,
+      direction: "outbound",
+      role: "assistant",
+      content: stepText,
+      error: sentStep.ok ? null : String(sentStep.error).slice(0, 500),
+    });
+
+    await supabase.from("wa_transaction_events").insert({
+      conversation_id: conv.id,
+      agent_id: stepAgentId,
+      phone_normalized: phone,
+      property_id: stepProp?.id ?? null,
+      property_name: stepProp?.name ?? null,
+      property_slug: stepProp?.slug ?? null,
+      property_url: stepProp?.url ?? null,
+      price: stepProp?.price ?? null,
+      event: action,
+      status: sentStep.ok ? "sent" : "failed",
+      wa_message_id: stepMsgId,
+      error: sentStep.ok ? null : String(sentStep.error).slice(0, 500),
+      source: fromMake ? "make" : "admin",
+      payload: { step: action === "offer_intro" ? "anunt_oferta" : "confirmare_oferta" },
+    });
+
+    await relayToMake(action === "offer_intro" ? "wa_offer_intro" : "wa_offer_confirm", {
+      phone,
+      conversation_id: conv.id,
+      agent_id: stepAgentId,
+      property: stepProp,
+      message: stepText,
+      delivered: sentStep.ok,
+      wa_message_id: stepMsgId,
+      error: sentStep.ok ? null : String(sentStep.error),
+    });
+
+    await notifyAgentOffer(supabase, {
+      conversation_id: conv.id as string,
+      phone,
+      step: action,
+      property_name: stepProp?.name ?? null,
+      property_url: stepProp?.url ?? null,
+      price: stepProp?.price ?? null,
+      message: stepText,
+      delivered: sentStep.ok,
+      error: sentStep.ok ? null : String(sentStep.error),
+    });
+
+    return json({
+      ok: sentStep.ok,
+      delivered: sentStep.ok,
+      wa_message_id: stepMsgId,
+      conversation_id: conv.id,
+      error: sentStep.ok ? null : sentStep.error,
+    });
+  }
+
+
   // ------------------------------------------- offer_followup / negotiation
   // Dashboardul de tranzacții: discuția nu se oprește la alegerea apartamentului.
   // `offer_followup` trimite automat mesajul cu oferta și pașii următori,

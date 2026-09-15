@@ -61,7 +61,9 @@ type TxEventRow = {
 const TX_LABELS: Record<string, string> = {
   offer_sent: "Apartament ales — anunț trimis clientului",
   offer_failed: "Apartament ales — anunțul nu a ajuns la client",
+  offer_intro: "Anunț înainte de ofertă — ofertele merg direct pe WhatsApp",
   offer_followup: "Ofertă și negociere — pașii următori trimiși",
+  offer_confirm: "Ofertă livrată — invitație la vizionare și negociere",
   listing_opened: "Anunț deschis",
   negotiation: "Negociere",
 };
@@ -379,9 +381,19 @@ export default function WhatsappLiveConversations() {
 
   /**
    * Mesajele automate care duc discuția mai departe când agentul nu răspunde:
-   * oferta cu pașii următori și deschiderea negocierii.
+   * anunțul dinaintea ofertei, oferta cu pașii următori, confirmarea ofertei
+   * (vizionare + negociere) și deschiderea negocierii.
    */
-  const runStep = async (action: "offer_followup" | "negotiation") => {
+  const STEP_TITLES: Record<string, { ok: string; fail: string }> = {
+    offer_intro: { ok: "Anunț trimis", fail: "Anunțul nu a plecat" },
+    offer_followup: { ok: "Ofertă trimisă", fail: "Oferta nu a plecat" },
+    offer_confirm: { ok: "Confirmare trimisă", fail: "Confirmarea nu a plecat" },
+    negotiation: { ok: "Negociere pornită", fail: "Negocierea nu a plecat" },
+  };
+
+  const runStep = async (
+    action: "offer_intro" | "offer_followup" | "offer_confirm" | "negotiation",
+  ) => {
     if (!selected) return;
     const prop = saleProperties.find((p) => p.id === pickedProperty);
     setBusyStep(action);
@@ -395,9 +407,10 @@ export default function WhatsappLiveConversations() {
     });
     setBusyStep(null);
     const res = (data ?? {}) as Record<string, unknown>;
+    const titles = STEP_TITLES[action];
     if (fnErr || res.delivered === false) {
       toast({
-        title: action === "offer_followup" ? "Oferta nu a plecat" : "Negocierea nu a plecat",
+        title: titles.fail,
         description:
           fnErr?.message ||
           String(res.error ?? "Fereastra de 24h poate fi închisă — clientul trebuie să scrie din nou."),
@@ -405,13 +418,14 @@ export default function WhatsappLiveConversations() {
       });
     } else {
       toast({
-        title: action === "offer_followup" ? "Ofertă trimisă" : "Negociere pornită",
+        title: titles.ok,
         description: "Mesajul a plecat automat în aceeași discuție pe WhatsApp.",
       });
     }
     void loadConversations();
     if (selectedId) void loadThread(selectedId);
   };
+
 
   /** Alocare manuală: discuțiile nealocate automat pot fi mutate pe un agent. */
   const assignAgent = async () => {
@@ -737,10 +751,26 @@ export default function WhatsappLiveConversations() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground pt-1">
-                  Dacă agentul nu răspunde, trimite automat oferta cu pașii următori sau deschide
-                  negocierea — discuția continuă în același fir.
+                  Anunțul dinaintea ofertei îi spune clientului că ofertele vin direct pe WhatsApp,
+                  iar confirmarea de după ofertă îl cheamă la vizionare și negociere — discuția
+                  continuă în același fir chiar dacă agentul nu răspunde.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="min-h-[44px]"
+                    disabled={busyStep === "offer_intro"}
+                    onClick={() => void runStep("offer_intro")}
+                    aria-label="Anunță clientul că ofertele vin direct pe WhatsApp"
+                  >
+                    {busyStep === "offer_intro" ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Anunț înainte de ofertă
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -760,6 +790,21 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     variant="outline"
                     className="min-h-[44px]"
+                    disabled={busyStep === "offer_confirm"}
+                    onClick={() => void runStep("offer_confirm")}
+                    aria-label="Confirmă livrarea ofertei și invită la vizionare și negociere"
+                  >
+                    {busyStep === "offer_confirm" ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Handshake className="h-4 w-4 mr-2" />
+                    )}
+                    Ofertă livrată — vizionare
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="min-h-[44px]"
                     disabled={busyStep === "negotiation"}
                     onClick={() => void runStep("negotiation")}
                     aria-label="Trimite mesajul automat de negociere"
@@ -772,6 +817,7 @@ export default function WhatsappLiveConversations() {
                     Mesaj de negociere
                   </Button>
                 </div>
+
               </div>
             </CardContent>
           )}

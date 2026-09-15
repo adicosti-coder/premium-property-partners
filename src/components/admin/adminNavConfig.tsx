@@ -78,6 +78,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "make-leads", label: "Lead-uri Make", icon: MessageSquare, subgroup: "AI Tools", keywords: ["make", "lead", "agent", "automatizare", "webhook", "raspunsuri", "transfer"] },
       { value: "whatsapp-live", label: "Conversații live", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "conversatii", "live", "discutii", "chat", "client", "agent", "fir"] },
       { value: "whatsapp-live-dashboard", label: "Dashboard conversații live", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "dashboard", "live", "primite", "raspunsuri", "abandonate", "blocaj", "agent"] },
+      { value: "whatsapp-daily-emails", label: "E-mailuri zilnice", icon: MessageSquare, subgroup: "AI Tools", keywords: ["email", "emailuri", "zilnice", "digest", "rezumat", "backup", "fir", "conversatii", "whatsapp"] },
       { value: "make-status", label: "Stare Make", icon: MessageSquare, subgroup: "AI Tools", keywords: ["make", "scenariu", "stare", "status", "ultima rulare", "livrate", "esuate", "re-run", "webhook"] },
       { value: "whatsapp-analytics", label: "Analiză conversații", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "conversatii", "analiza", "grafic", "livrate", "esuate", "abandonate", "zile", "dashboard"] },
       { value: "whatsapp-sources", label: "Surse & durată discuții", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "sursa", "surse", "durata", "anunt", "contact", "recontactare", "agent", "discutii"] },
