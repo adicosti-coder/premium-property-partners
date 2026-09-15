@@ -61,7 +61,9 @@ type TxEventRow = {
 const TX_LABELS: Record<string, string> = {
   offer_sent: "Apartament ales — anunț trimis clientului",
   offer_failed: "Apartament ales — anunțul nu a ajuns la client",
+  offer_intro: "Anunț înainte de ofertă — ofertele merg direct pe WhatsApp",
   offer_followup: "Ofertă și negociere — pașii următori trimiși",
+  offer_confirm: "Ofertă livrată — invitație la vizionare și negociere",
   listing_opened: "Anunț deschis",
   negotiation: "Negociere",
 };
