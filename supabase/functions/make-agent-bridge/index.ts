@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
         : "Cu ce sumă doriți să intrăm în negociere?",
       `Anunțul complet: ${offerProp.url}`,
       "",
-      FINANCE_BLOCK,
+      propertyFinanceBlock(offerProp),
     ].join("\n");
 
     const sent = await sendToMeta({
