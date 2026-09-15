@@ -503,6 +503,7 @@ export default function WhatsappLiveConversations() {
                         {dayLabel(m.created_at)}
                       </p>
                     )}
+                    {(stepTimeline.map.get(m.id) ?? []).map(renderStep)}
                     <div className={`flex ${outbound ? "justify-end" : "justify-start"}`}>
                       <div
                         className={`max-w-[85%] px-3 py-2 shadow-sm ${
