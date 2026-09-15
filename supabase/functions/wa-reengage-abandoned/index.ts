@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
 
     // Ultima activitate a noastră mai nouă decât ultimul mesaj al clientului
     // și tot fără răspuns → tot abandonată, dar nu insistăm dacă e recentă.
-    if (c.last_outbound_at && c.last_outbound_at > cutoff) { skipped++; continue; }
+    if (!onlyConversation && c.last_outbound_at && c.last_outbound_at > cutoff) { skipped++; continue; }
 
     // O singură recontactare la 7 zile
     const { count: recent } = await supabase
