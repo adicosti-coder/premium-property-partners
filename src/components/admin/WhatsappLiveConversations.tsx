@@ -113,6 +113,7 @@ const lastActivity = (c: ConversationRow) => {
 export default function WhatsappLiveConversations() {
   const [conversations, setConversations] = useState<ConversationRow[]>([]);
   const [messages, setMessages] = useState<MessageRow[]>([]);
+  const [txEvents, setTxEvents] = useState<TxEventRow[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingThread, setLoadingThread] = useState(false);
