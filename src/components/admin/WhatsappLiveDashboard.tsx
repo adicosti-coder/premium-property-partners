@@ -53,7 +53,7 @@ const WhatsappLiveDashboard = () => {
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["wa-live-dashboard", since],
     queryFn: async () => {
-      const [msgRes, convRes, agentRes] = await Promise.all([
+      const [msgRes, convRes, agentRes, replyRes] = await Promise.all([
         supabase
           .from("wa_messages")
           .select("id, conversation_id, direction, role, content, error, created_at")
@@ -68,6 +68,12 @@ const WhatsappLiveDashboard = () => {
           .order("updated_at", { ascending: false })
           .limit(300),
         supabase.from("wa_agents").select("id, name"),
+        supabase
+          .from("make_lead_events")
+          .select("id, conversation_id, created_at")
+          .eq("event", "wa_agent_reply")
+          .gte("created_at", since)
+          .limit(2000),
       ]);
       if (msgRes.error) throw msgRes.error;
       if (convRes.error) throw convRes.error;
@@ -75,6 +81,7 @@ const WhatsappLiveDashboard = () => {
         messages: (msgRes.data ?? []) as Msg[],
         conversations: (convRes.data ?? []) as Conv[],
         agents: (agentRes.data ?? []) as Agent[],
+        replies: (replyRes.data ?? []) as { conversation_id: string | null }[],
       };
     },
     staleTime: 30_000,
@@ -84,6 +91,7 @@ const WhatsappLiveDashboard = () => {
   const { connected } = useRealtimeChannel("wa-live-dashboard", [
     { event: "*", table: "wa_messages", handler: () => void refetch() },
     { event: "*", table: "wa_conversations", handler: () => void refetch() },
+    { event: "*", table: "make_lead_events", handler: () => void refetch() },
   ]);
 
   const rows = useMemo(() => {
@@ -108,6 +116,13 @@ const WhatsappLiveDashboard = () => {
       byConv.set(m.conversation_id, r);
     }
 
+    // Răspunsurile date de agenți (evenimente wa_agent_reply).
+    const repliesByConv = new Map<string, number>();
+    for (const r of data?.replies ?? []) {
+      if (!r.conversation_id) continue;
+      repliesByConv.set(r.conversation_id, (repliesByConv.get(r.conversation_id) ?? 0) + 1);
+    }
+
     const list = convs
       .map((c) => {
         const s = byConv.get(c.id) ?? { inbound: 0, outbound: 0, failed: 0, lastText: "" };
@@ -120,6 +135,8 @@ const WhatsappLiveDashboard = () => {
           ...c,
           ...s,
           agent: agentName(c.assigned_agent_id),
+          agentReplies: repliesByConv.get(c.id) ?? 0,
+          closed,
           lastActivity: Math.max(inTime, outTime),
           abandoned,
           awaitingReply,
@@ -128,8 +145,30 @@ const WhatsappLiveDashboard = () => {
       .filter((r) => r.inbound + r.outbound > 0)
       .sort((a, b) => b.lastActivity - a.lastActivity);
 
+    // Discuții deschise, grupate pe agent, ca fiecare să vadă ce are în lucru.
+    const open = list.filter((r) => !r.closed);
+    const byAgent = Array.from(
+      open.reduce((acc, r) => {
+        const cur = acc.get(r.agent) ?? { agent: r.agent, convs: [] as typeof open };
+        cur.convs.push(r);
+        acc.set(r.agent, cur);
+        return acc;
+      }, new Map<string, { agent: string; convs: typeof open }>()).values(),
+    )
+      .map((g) => ({
+        agent: g.agent,
+        conversations: g.convs.length,
+        inbound: g.convs.reduce((s, r) => s + r.inbound, 0),
+        replies: g.convs.reduce((s, r) => s + r.agentReplies, 0),
+        awaiting: g.convs.filter((r) => r.awaitingReply && !r.abandoned).length,
+        abandoned: g.convs.filter((r) => r.abandoned).length,
+        convs: g.convs.slice(0, 6),
+      }))
+      .sort((a, b) => b.conversations - a.conversations);
+
     return {
       list,
+      byAgent,
       totals: {
         primite: list.reduce((s, r) => s + r.inbound, 0),
         trimise: list.reduce((s, r) => s + r.outbound - r.failed, 0),
@@ -225,6 +264,44 @@ const WhatsappLiveDashboard = () => {
           </Card>
         ))}
       </div>
+
+      {/* Discuțiile deschise ale fiecărui agent, actualizate în timp real. */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Discuții deschise pe agent</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {rows.byAgent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nicio discuție deschisă acum.</p>
+          ) : (
+            rows.byAgent.map((a) => (
+              <div key={a.agent} className="rounded-lg border border-border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium text-foreground">{a.agent}</p>
+                  <div className="flex flex-wrap gap-1.5 text-xs">
+                    <Badge variant="secondary">{a.conversations} discuții</Badge>
+                    <Badge variant="outline">{a.inbound} mesaje primite</Badge>
+                    <Badge variant="outline">{a.replies} răspunsuri date</Badge>
+                    {a.awaiting > 0 && <Badge variant="outline">{a.awaiting} așteaptă răspuns</Badge>}
+                    {a.abandoned > 0 && <Badge variant="destructive">{a.abandoned} abandonate</Badge>}
+                  </div>
+                </div>
+                <ul className="mt-2 space-y-1">
+                  {a.convs.map((c) => (
+                    <li key={c.id} className="text-xs text-muted-foreground flex flex-wrap gap-x-2">
+                      <span className="text-foreground">
+                        {c.wa_profile_name || c.phone_normalized}
+                      </span>
+                      <span>{c.inbound} primite · {c.agentReplies} răspunsuri</span>
+                      <span>· {fmt(c.last_inbound_at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

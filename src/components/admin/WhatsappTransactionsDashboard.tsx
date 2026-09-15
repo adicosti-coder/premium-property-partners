@@ -39,6 +39,9 @@ type AgentRow = { id: string; name: string };
 
 type InboundRow = { id: string; conversation_id: string | null; created_at: string };
 
+/** Răspunsurile agenților, salvate ca evenimente `wa_agent_reply`. */
+type AgentReplyRow = { id: string; conversation_id: string | null; created_at: string };
+
 const DAYS = 14;
 
 const fmt = (iso: string) =>
@@ -61,6 +64,7 @@ export default function WhatsappTransactionsDashboard() {
   const [rows, setRows] = useState<TxRow[]>([]);
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [inbound, setInbound] = useState<InboundRow[]>([]);
+  const [agentReplies, setAgentReplies] = useState<AgentReplyRow[]>([]);
   const [pickedProperty, setPickedProperty] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +74,7 @@ export default function WhatsappTransactionsDashboard() {
   const load = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - DAYS * 24 * 3600 * 1000).toISOString();
-    const [txRes, agentRes, inRes] = await Promise.all([
+    const [txRes, agentRes, inRes, replyRes] = await Promise.all([
       supabase
         .from("wa_transaction_events")
         .select(
@@ -87,6 +91,13 @@ export default function WhatsappTransactionsDashboard() {
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(1000),
+      supabase
+        .from("make_lead_events")
+        .select("id, conversation_id, created_at")
+        .eq("event", "wa_agent_reply")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1000),
     ]);
     if (txRes.error) setError(txRes.error.message);
     else {
@@ -95,6 +106,7 @@ export default function WhatsappTransactionsDashboard() {
     }
     setAgents((agentRes.data ?? []) as AgentRow[]);
     setInbound((inRes.data ?? []) as InboundRow[]);
+    setAgentReplies((replyRes.data ?? []) as AgentReplyRow[]);
     setLoading(false);
   }, []);
 
@@ -118,13 +130,16 @@ export default function WhatsappTransactionsDashboard() {
     const events = rows.filter((r) => r.property_id === pickedProperty);
     const convIds = new Set(events.map((e) => e.conversation_id).filter(Boolean) as string[]);
     const msgs = inbound.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
+    const replies = agentReplies.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
     const buckets = new Map<
       string,
-      { day: string; alegeri: number; mesaje: number; deschise: number; discutii: number }
+      { day: string; alegeri: number; mesaje: number; deschise: number; discutii: number; raspunsuri: number }
     >();
     for (let i = DAYS - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 3600 * 1000).toISOString();
-      buckets.set(dayKey(d), { day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0, discutii: 0 });
+      buckets.set(dayKey(d), {
+        day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0, discutii: 0, raspunsuri: 0,
+      });
     }
     for (const e of events) {
       const b = buckets.get(dayKey(e.created_at));
@@ -146,16 +161,22 @@ export default function WhatsappTransactionsDashboard() {
       const b = buckets.get(day);
       if (b) b.discutii += 1;
     }
+    // Răspunsurile agenților pe zi, lângă mesajele clienților.
+    for (const r of replies) {
+      const b = buckets.get(dayKey(r.created_at));
+      if (b) b.raspunsuri += 1;
+    }
     return {
       name: events[0]?.property_name ?? "—",
       url: events.find((e) => e.property_url)?.property_url ?? null,
       conversations: convIds.size,
       clientMessages: msgs.length,
+      agentReplies: replies.length,
       choices: events.filter((e) => e.event === "offer_sent").length,
       opened: events.filter((e) => e.event === "listing_opened").length,
       chart: Array.from(buckets.values()),
     };
-  }, [rows, inbound, pickedProperty]);
+  }, [rows, inbound, agentReplies, pickedProperty]);
 
   /** Raport pe agent: discuții în tranzacție, apartamente alese, anunțuri deschise, eșuate. */
   const byAgent = useMemo(() => {
@@ -479,10 +500,11 @@ export default function WhatsappTransactionsDashboard() {
                   </a>
                 )}
               </div>
-              <div className="grid gap-3 sm:grid-cols-4 mb-4">
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-5 mb-4">
                 {[
                   { label: "Conversații", value: propertyReport.conversations },
                   { label: "Mesaje de la clienți", value: propertyReport.clientMessages },
+                  { label: "Răspunsuri agent", value: propertyReport.agentReplies },
                   { label: "Alegeri de apartament", value: propertyReport.choices },
                   { label: "Anunțuri deschise", value: propertyReport.opened },
                 ].map((s) => (
@@ -502,6 +524,7 @@ export default function WhatsappTransactionsDashboard() {
                     <Legend />
                     <Bar dataKey="alegeri" name="Alegeri de apartament" fill="hsl(var(--primary))" />
                     <Bar dataKey="mesaje" name="Mesaje de la clienți" fill="hsl(var(--muted-foreground))" />
+                    <Bar dataKey="raspunsuri" name="Răspunsuri agent" fill="hsl(var(--secondary-foreground))" />
                     <Bar dataKey="discutii" name="Discuții deschise" fill="hsl(var(--accent))" />
                     <Bar dataKey="deschise" name="Anunțuri deschise" fill="hsl(var(--accent-foreground))" />
                   </BarChart>
