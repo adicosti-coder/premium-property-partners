@@ -293,6 +293,20 @@ export function autoReplyText(raw: string): { kind: string; text: string } | nul
     };
   }
 
+  if (/dupa oferta|ce urmeaza|urmeaza dupa|pasii urmatori|ce se intampla|cum continua|dupa ce accept/.test(t)) {
+    return {
+      kind: "auto_after_offer",
+      text:
+        "Dupa ofertă pașii sunt clari:\n" +
+        "1) Vizionare — direct la apartament, in intervalul 09:00–20:00, luni–sambata.\n" +
+        "2) Negociere — transmitem oferta dvs. proprietarului si revenim cu decizia.\n" +
+        "3) Antecontract — stabilim avansul si termenele, cu toate actele verificate.\n" +
+        "4) Notar — semnare, plata finala si predarea cheilor.\n" +
+        "5) Dupa achizitie, daca doriti, preluam administrarea in regim hotelier.\n\n" +
+        "Nu aveti nicio obligatie pana la antecontract. Imi spuneti ziua potrivita pentru vizionare?",
+    };
+  }
+
   if (/pret|preț|cat cost|cat face|valoare|estimare|oferta/.test(t)) {
     return {
       kind: "auto_price",
