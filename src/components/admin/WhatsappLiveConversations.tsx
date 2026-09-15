@@ -9,7 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
-import { Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Home, Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
 
 /**
  * Conversații live WhatsApp — firul complet al discuției (mesaje trimise de agent
