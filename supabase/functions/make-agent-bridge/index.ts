@@ -84,6 +84,11 @@ Deno.serve(async (req) => {
     lead_id?: string;
     prospect_listing_id?: string;
     also_whatsapp?: boolean;
+    // Fereastra de 24h închisă: Make poate cere explicit trimiterea șablonului
+    // aprobat, ca prospectul să primească totuși un mesaj (niciodată implicit).
+    allow_template?: boolean;
+    template_name?: string;
+    template_language?: string;
   } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
