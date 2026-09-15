@@ -374,11 +374,6 @@ Deno.serve(async (req) => {
     .maybeSingle();
   const agentEnabled = !!agentSettings?.enabled;
 
-  const ACK_MESSAGE = [
-    "Am primit mesajul dvs., vă mulțumim!",
-    "Un coleg RealTrust vă răspunde în cel mai scurt timp, în intervalul 09:00–20:00 (luni–sâmbătă).",
-    "Dacă e vorba de o rezervare, puteți verifica disponibilitatea aici: https://realtrust.ro/rezervare",
-  ].join("\n");
 
   for (const convId of conversationsToReply) {
     if (agentEnabled) {
