@@ -3,7 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
-import { notifyAgentFirstMessage } from "../_shared/waAgentNotify.ts";
+import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -196,6 +196,27 @@ Deno.serve(async (req) => {
           console.error("[wa-webhook] make_lead_events insert failed:", e);
         }
 
+        // Backup în timp real pe e-mail, către agentul alocat conversației.
+        try {
+          const { count: inboundCount } = await supabase
+            .from("wa_messages")
+            .select("id", { count: "exact", head: true })
+            .eq("conversation_id", convId)
+            .eq("direction", "inbound");
+          const ctxForEmail = await loadProspectContext(supabase, from);
+          await notifyAgentInbound(supabase, {
+            phone: from,
+            profile_name: profileName,
+            message: text,
+            conversation_id: convId,
+            prospect: ctxForEmail,
+            first: (inboundCount ?? 1) <= 1,
+            meta_response: waId ? `mesaj Meta ${waId}` : null,
+          });
+        } catch (e) {
+          console.error("[wa-webhook] agent email backup failed:", e);
+        }
+
         // Prima interacțiune → mesaj standard de calificare (imobiliare / administrare / rezervare),
         // ca nicio conversație să nu rămână fără răspuns. Apoi preia agentul AI.
         const { count: outboundCount } = await supabase
@@ -298,18 +319,8 @@ Deno.serve(async (req) => {
               replied_at: nowIso,
             });
 
-            // Backup pe e-mail către agent, la primul mesaj al clientului.
-            if (!existingLead) {
-              const ctxForEmail = await loadProspectContext(supabase, from);
-              await notifyAgentFirstMessage(supabase, {
-                phone: from,
-                profile_name: profileName,
-                message: text,
-                conversation_id: convId,
-                lead_id: leadId,
-                prospect: ctxForEmail,
-              });
-            }
+            // Backupul pe e-mail către agent a plecat deja la primirea mesajului.
+
 
             // Jurnal pentru tabul „Lead-uri Make” din Admin.
             await supabase.from("make_lead_events").insert({

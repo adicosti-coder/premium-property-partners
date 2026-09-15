@@ -10277,8 +10277,40 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_agents: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          name: string
+          phone_normalized: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone_normalized?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone_normalized?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       wa_conversations: {
         Row: {
+          assigned_agent_id: string | null
+          assigned_at: string | null
           assigned_channel: string
           created_at: string
           handoff_reason: string | null
@@ -10296,6 +10328,8 @@ export type Database = {
           window_expires_at: string | null
         }
         Insert: {
+          assigned_agent_id?: string | null
+          assigned_at?: string | null
           assigned_channel?: string
           created_at?: string
           handoff_reason?: string | null
@@ -10313,6 +10347,8 @@ export type Database = {
           window_expires_at?: string | null
         }
         Update: {
+          assigned_agent_id?: string | null
+          assigned_at?: string | null
           assigned_channel?: string
           created_at?: string
           handoff_reason?: string | null
@@ -10329,7 +10365,15 @@ export type Database = {
           wa_profile_name?: string | null
           window_expires_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "wa_conversations_assigned_agent_id_fkey"
+            columns: ["assigned_agent_id"]
+            isOneToOne: false
+            referencedRelation: "wa_agents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wa_dnc_list: {
         Row: {
@@ -11254,6 +11298,7 @@ export type Database = {
         Returns: boolean
       }
       voice_caller_archive_stale: { Args: never; Returns: number }
+      wa_assign_agent: { Args: { _conversation_id: string }; Returns: string }
       wa_is_technical_block_only: {
         Args: { _reason: string }
         Returns: boolean
