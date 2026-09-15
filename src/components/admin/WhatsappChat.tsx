@@ -447,6 +447,33 @@ export default function WhatsappChat() {
                   Link chat direct
                 </Button>
               </div>
+
+              {/* Confirmarea vizionării: clientul primește data, ora și linkul chatului */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  value={meetingAt}
+                  onChange={(e) => setMeetingAt(e.target.value)}
+                  placeholder="Data și ora vizionării (ex.: joi, ora 18:00)"
+                  aria-label="Data și ora vizionării confirmate"
+                  className="min-h-[44px] sm:max-w-xs"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-h-[44px]"
+                  disabled={!selected || busyStep === "meeting_confirmed"}
+                  onClick={() => void runStep("meeting_confirmed")}
+                  aria-label="Confirmă vizionarea și trimite clientului data, ora și linkul chatului"
+                >
+                  {busyStep === "meeting_confirmed" ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <CalendarCheck className="h-4 w-4 mr-2" />
+                  )}
+                  Confirmă vizionarea
+                </Button>
+              </div>
+
               <p className="text-xs text-muted-foreground">
                 Mesajele clienților intră prin conexiunea securizată cu WhatsApp, deci se salvează
                 și se văd aici chiar dacă browserul tău a fost închis.
