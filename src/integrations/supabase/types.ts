@@ -10644,6 +10644,7 @@ export type Database = {
       }
       wa_transaction_events: {
         Row: {
+          agent_id: string | null
           conversation_id: string | null
           created_at: string
           error: string | null
@@ -10661,6 +10662,7 @@ export type Database = {
           wa_message_id: string | null
         }
         Insert: {
+          agent_id?: string | null
           conversation_id?: string | null
           created_at?: string
           error?: string | null
@@ -10678,6 +10680,7 @@ export type Database = {
           wa_message_id?: string | null
         }
         Update: {
+          agent_id?: string | null
           conversation_id?: string | null
           created_at?: string
           error?: string | null
@@ -10695,6 +10698,13 @@ export type Database = {
           wa_message_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "wa_transaction_events_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "wa_agents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "wa_transaction_events_conversation_id_fkey"
             columns: ["conversation_id"]
