@@ -7,7 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, RefreshCw, MessageSquare, CheckCircle2, XCircle, Clock, UserPlus } from "lucide-react";
+import { Loader2, RefreshCw, MessageSquare, CheckCircle2, XCircle, Clock, UserPlus, Send } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
@@ -411,6 +411,21 @@ const WhatsappConversationsAnalytics = () => {
                         <UserPlus className="w-4 h-4 mr-2" />
                       )}
                       Alocă agent
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="min-h-[36px]"
+                      disabled={reengaging === c.id}
+                      onClick={() => void reengage(c.id)}
+                      aria-label={`Trimite mesajul de recontactare către ${c.wa_profile_name || c.phone_normalized}`}
+                    >
+                      {reengaging === c.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 mr-2" />
+                      )}
+                      Trimite recontactarea
                     </Button>
                   </div>
                 </div>
