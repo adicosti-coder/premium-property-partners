@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
         ok: sent.ok,
         conversation_id: conversationId,
         wa_message_id: waMsgId,
-        used_template: !windowOpen,
+        delivered: sent.ok,
         meta_error: sent.ok ? undefined : sent.error,
       },
       sent.ok ? 200 : 502,
