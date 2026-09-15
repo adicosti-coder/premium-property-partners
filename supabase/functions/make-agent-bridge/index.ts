@@ -95,6 +95,8 @@ Deno.serve(async (req) => {
     wa_message_id?: string;
     property_id?: string;
     conversation_id?: string;
+    // Pasul de tranzacție trimite implicit și mesajul cu pașii următori.
+    skip_followup?: boolean;
   } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
