@@ -95,3 +95,65 @@ export async function notifyAgentInbound(
 /** Compatibilitate cu apelurile anterioare. */
 export const notifyAgentFirstMessage = (supabase: any, input: Parameters<typeof notifyAgentInbound>[1]) =>
   notifyAgentInbound(supabase, { ...input, first: true });
+
+/**
+ * Backup pe e-mail în momentul ofertei: agentul alocat primește imediat
+ * apartamentul propus și pașii trimiși clientului, nu doar în rezumatul de 20:15.
+ */
+export async function notifyAgentOffer(
+  supabase: any,
+  input: {
+    conversation_id: string | null;
+    phone: string;
+    step: "offer_sent" | "offer_followup" | "negotiation";
+    property_name?: string | null;
+    property_url?: string | null;
+    price?: number | null;
+    message?: string | null;
+    delivered: boolean;
+    error?: string | null;
+  },
+) {
+  const agent = await resolveAgent(supabase, input.conversation_id);
+  const when = new Date().toLocaleString("ro-RO", { timeZone: "Europe/Bucharest" });
+  const label = input.step === "offer_sent"
+    ? "Apartament propus clientului"
+    : input.step === "offer_followup"
+    ? "Ofertă și pași următori trimiși"
+    : "Negociere pornită";
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#111;max-width:620px">
+      <h2 style="margin:0 0 6px">${esc(label)}</h2>
+      <p style="color:#555;font-size:13px;margin:0 0 16px">
+        ${esc(when)} (ora României) · agent alocat: <strong>${esc(agent.name)}</strong>
+      </p>
+      <table style="border-collapse:collapse;font-size:14px">
+        <tr><td style="padding:4px 12px 4px 0">Client</td><td><strong>${esc(input.phone)}</strong></td></tr>
+        ${input.property_name ? `<tr><td style="padding:4px 12px 4px 0">Apartament</td><td><strong>${esc(input.property_name)}</strong></td></tr>` : ""}
+        ${input.price ? `<tr><td style="padding:4px 12px 4px 0">Preț</td><td>${esc(Number(input.price).toLocaleString("ro-RO"))} €</td></tr>` : ""}
+        ${input.property_url ? `<tr><td style="padding:4px 12px 4px 0">Anunț</td><td><a href="${esc(input.property_url)}">${esc(input.property_url)}</a></td></tr>` : ""}
+        <tr><td style="padding:4px 12px 4px 0">Livrare WhatsApp</td><td>${input.delivered ? "livrat" : `eșuat${input.error ? ` — ${esc(input.error)}` : ""}`}</td></tr>
+      </table>
+      ${input.message ? `<div style="margin:16px 0;padding:12px;border-left:3px solid #D4AF37;background:#faf8f2">
+        <div style="font-size:12px;color:#666;margin-bottom:4px">Mesajul trimis clientului</div>
+        <div style="font-size:14px;white-space:pre-wrap">${esc(input.message).slice(0, 2000)}</div>
+      </div>` : ""}
+      <p style="font-size:13px;color:#555">
+        Continuă discuția: <a href="https://realtrust.ro/admin?tab=whatsapp-live">Admin → Conversații live</a>
+      </p>
+    </div>`;
+
+  try {
+    const res = await sendTeamEmail({
+      to: agent.email,
+      subject: `WhatsApp — ${label.toLowerCase()} · ${input.property_name || input.phone}`,
+      html,
+      source: `wa-offer-${input.step}`,
+    }, supabase);
+    return { ...res, agent };
+  } catch (e) {
+    console.error("[wa-agent-notify] offer backup failed:", e);
+    return { sent: false, error: String(e).slice(0, 300), agent };
+  }
+}

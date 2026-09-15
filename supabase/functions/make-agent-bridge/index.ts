@@ -13,7 +13,7 @@ import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
-import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
+import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -202,6 +202,17 @@ Deno.serve(async (req) => {
       wa_message_id: opts.waMsgId ?? null,
       error: opts.error ?? null,
     });
+    await notifyAgentOffer(supabase, {
+      conversation_id: opts.conversationId ?? null,
+      phone,
+      step: "offer_sent",
+      property_name: offerProp.name,
+      property_url: offerProp.url,
+      price: offerProp.price,
+      message: body.message ?? null,
+      delivered: opts.ok,
+      error: opts.error ?? null,
+    });
   };
 
   /**
@@ -271,6 +282,18 @@ Deno.serve(async (req) => {
       wa_message_id: msgId,
       error: sent.ok ? null : String(sent.error),
       message: text,
+    });
+
+    await notifyAgentOffer(supabase, {
+      conversation_id: conversationId,
+      phone,
+      step: "offer_followup",
+      property_name: offerProp.name,
+      property_url: offerProp.url,
+      price: offerProp.price,
+      message: text,
+      delivered: sent.ok,
+      error: sent.ok ? null : String(sent.error),
     });
 
     return { ok: sent.ok, wa_message_id: msgId };
@@ -407,6 +430,17 @@ Deno.serve(async (req) => {
       message: text,
       delivered: sent.ok,
       wa_message_id: negMsgId,
+      error: sent.ok ? null : String(sent.error),
+    });
+    await notifyAgentOffer(supabase, {
+      conversation_id: conv.id as string,
+      phone,
+      step: "negotiation",
+      property_name: offerProp?.name ?? null,
+      property_url: offerProp?.url ?? null,
+      price: offerProp?.price ?? null,
+      message: text,
+      delivered: sent.ok,
       error: sent.ok ? null : String(sent.error),
     });
     return json({
