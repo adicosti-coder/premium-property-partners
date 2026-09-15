@@ -202,6 +202,17 @@ Deno.serve(async (req) => {
       wa_message_id: opts.waMsgId ?? null,
       error: opts.error ?? null,
     });
+    await notifyAgentOffer(supabase, {
+      conversation_id: opts.conversationId ?? null,
+      phone,
+      step: "offer_sent",
+      property_name: offerProp.name,
+      property_url: offerProp.url,
+      price: offerProp.price,
+      message: body.message ?? null,
+      delivered: opts.ok,
+      error: opts.error ?? null,
+    });
   };
 
   /**
