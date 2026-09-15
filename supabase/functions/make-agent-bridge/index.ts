@@ -44,6 +44,8 @@ const stripDiacritics = (t: string) =>
 import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
 import { quickReplyText } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
+import { notifyClientOfferEmail } from "../_shared/waClientOfferEmail.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -245,7 +247,16 @@ Deno.serve(async (req) => {
       delivered: opts.ok,
       error: opts.error ?? null,
     });
+    if (opts.ok && opts.conversationId) {
+      await notifyClientOfferEmail(supabase, {
+        phone,
+        conversation_id: opts.conversationId,
+        property: offerProp,
+        step: "offer_sent",
+      });
+    }
   };
+
 
   /**
    * După apartamentul ales, discuția continuă singură: trimitem imediat pașii
@@ -328,8 +339,18 @@ Deno.serve(async (req) => {
       error: sent.ok ? null : String(sent.error),
     });
 
+    if (sent.ok) {
+      await notifyClientOfferEmail(supabase, {
+        phone,
+        conversation_id: conversationId,
+        property: offerProp,
+        step: "offer_followup",
+      });
+    }
+
     return { ok: sent.ok, wa_message_id: msgId };
   };
+
 
   // ---------------------------------------------------------- listing_opened
   // Admin / site: clientul a deschis anunțul ales (pentru dashboardul de tranzacții).
@@ -508,6 +529,19 @@ Deno.serve(async (req) => {
       delivered: sentStep.ok,
       error: sentStep.ok ? null : String(sentStep.error),
     });
+
+    // „Ofertă livrată” → clientul primește și pe e-mail oferta cu prețul real
+    // din anunț și linkul chatului, ca să nu mai întrebe unde ne găsește.
+    if (sentStep.ok && stepProp && action === "offer_confirm") {
+      await notifyClientOfferEmail(supabase, {
+        phone,
+        conversation_id: conv.id as string,
+        property: stepProp,
+        step: "offer_confirm",
+      });
+    }
+
+
 
     return json({
       ok: sentStep.ok,
