@@ -257,9 +257,13 @@ const Anunturi = () => {
                         decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      {l.listing_type && (
+                      {l.listing_type && l.listing_type !== "toate" && (
                         <Badge className="absolute top-3 left-3">
-                          {copy.filters[(l.listing_type as FilterKey) in copy.filters ? (l.listing_type as FilterKey) : "toate"]}
+                          {l.listing_type === "vanzare" || l.listing_type === "inchiriere" || l.listing_type === "cazare"
+                            ? copy.filters[l.listing_type]
+                            : ro
+                              ? "Investiție"
+                              : "Investment"}
                         </Badge>
                       )}
                     </Link>
