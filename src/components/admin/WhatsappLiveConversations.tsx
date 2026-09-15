@@ -462,8 +462,8 @@ export default function WhatsappLiveConversations() {
         <p className="mb-4 text-sm text-destructive">Nu am putut încărca discuțiile: {error}</p>
       )}
 
-      <div className="grid gap-3 sm:gap-4 lg:grid-cols-[320px_1fr]">
-        <Card>
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-[320px_1fr]">
+        <Card className="min-w-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
@@ -517,10 +517,10 @@ export default function WhatsappLiveConversations() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-4 w-4" />
+            <CardTitle className="text-base flex items-center gap-2 min-w-0">
+              <User className="h-4 w-4 shrink-0" />
               {selected
                 ? `${selected.wa_profile_name || "Client"} · ${selected.phone_normalized}`
                 : "Selectează o discuție"}
