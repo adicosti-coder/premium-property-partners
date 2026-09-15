@@ -153,8 +153,8 @@ const stripDiacritics = (t: string) =>
 export const FINANCE_BLOCK = [
   "Cum se calculeaza venitul dvs.:",
   "• Venituri brute: tariful pe noapte x ocupare medie de 75% pe luna.",
-  "• Cheltuieli: curatenie, utilitati, comisioane Booking/Airbnb, administrare si taxe — circa 27% din incasari.",
-  "• Profit net: ce rezulta, adica aproximativ 73% din incasari, echivalentul unui randament net de circa 9,4% pe an din valoarea apartamentului.",
+  "• Comisionul nostru de administrare: 15-20% din incasari, si acopera anunturile, prețurile dinamice, comunicarea cu oaspetii, curatenia si mentenanta.",
+  "• Profit net estimat: circa 9,4% pe an din valoarea apartamentului — este o estimare medie, care depinde de gradul real de ocupare si de costurile reale de administrare.",
   "Primiti si un raport lunar cu incasarile, cheltuielile si profitul net, ca sa vedeti exact cifrele.",
 ].join("\n");
 

@@ -61,8 +61,8 @@ export function buildClientOfferEmail(
       <p style="margin:0 0 8px;font-size:15px;font-weight:bold">Cum se calculează venitul dvs.</p>
       <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#374151">
         <li><strong>Venituri brute:</strong> tariful pe noapte × ocupare medie de 75% pe lună.</li>
-        <li><strong>Cheltuieli:</strong> curățenie, utilități, comisioane Booking/Airbnb, administrare și taxe — circa 27% din încasări.</li>
-        <li><strong>Profit net:</strong> aproximativ 73% din încasări, adică un randament net de circa 9,4% pe an din valoarea apartamentului.</li>
+        <li><strong>Comisionul nostru de administrare:</strong> 15-20% din încasări, incluzând anunțurile, prețurile dinamice, comunicarea cu oaspeții, curățenia și mentenanța.</li>
+        <li><strong>Profit net estimat:</strong> circa 9,4% pe an din valoarea apartamentului — estimare medie, în funcție de gradul real de ocupare și de costurile reale de administrare.</li>
       </ul>
       <p style="margin:8px 0 0;font-size:13px;color:#6b7280">Primiți lunar un raport cu încasările, cheltuielile și profitul net.</p>
     </td></tr>
