@@ -120,11 +120,11 @@ export default function WhatsappTransactionsDashboard() {
     const msgs = inbound.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
     const buckets = new Map<
       string,
-      { day: string; alegeri: number; mesaje: number; deschise: number }
+      { day: string; alegeri: number; mesaje: number; deschise: number; discutii: number }
     >();
     for (let i = DAYS - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 3600 * 1000).toISOString();
-      buckets.set(dayKey(d), { day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0 });
+      buckets.set(dayKey(d), { day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0, discutii: 0 });
     }
     for (const e of events) {
       const b = buckets.get(dayKey(e.created_at));
@@ -132,9 +132,19 @@ export default function WhatsappTransactionsDashboard() {
       if (e.event === "offer_sent") b.alegeri += 1;
       else if (e.event === "listing_opened") b.deschise += 1;
     }
-    for (const m of msgs) {
+    // Mesajele clienților pe zi + discuțiile deschise (prima zi în care clientul a scris).
+    const firstDay = new Map<string, string>();
+    for (const m of [...msgs].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    )) {
       const b = buckets.get(dayKey(m.created_at));
       if (b) b.mesaje += 1;
+      const conv = m.conversation_id as string;
+      if (!firstDay.has(conv)) firstDay.set(conv, dayKey(m.created_at));
+    }
+    for (const day of firstDay.values()) {
+      const b = buckets.get(day);
+      if (b) b.discutii += 1;
     }
     return {
       name: events[0]?.property_name ?? "—",
@@ -492,6 +502,7 @@ export default function WhatsappTransactionsDashboard() {
                     <Legend />
                     <Bar dataKey="alegeri" name="Alegeri de apartament" fill="hsl(var(--primary))" />
                     <Bar dataKey="mesaje" name="Mesaje de la clienți" fill="hsl(var(--muted-foreground))" />
+                    <Bar dataKey="discutii" name="Discuții deschise" fill="hsl(var(--accent))" />
                     <Bar dataKey="deschise" name="Anunțuri deschise" fill="hsl(var(--accent-foreground))" />
                   </BarChart>
                 </ResponsiveContainer>
