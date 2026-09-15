@@ -97,6 +97,9 @@ export default function WhatsappLiveConversations() {
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [agents, setAgents] = useState<AgentRow[]>([]);
+  const [saleProperties, setSaleProperties] = useState<SaleProperty[]>([]);
+  const [pickedProperty, setPickedProperty] = useState<string>("");
+  const [sendingOffer, setSendingOffer] = useState(false);
   const { toast } = useToast();
 
   const loadConversations = useCallback(async () => {
