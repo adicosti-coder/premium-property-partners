@@ -490,13 +490,22 @@ Deno.serve(async (req) => {
       payload: { source: fromMake ? "make" : "internal", window_open: windowOpen },
     });
 
+    const convAgentId = (conv?.assigned_agent_id as string) ?? null;
+
     await logOffer({
       conversationId,
       waMsgId,
       ok: sent.ok,
       status: sent.ok ? "sent" : "failed",
       error: sent.ok ? null : String(sent.error),
+      agentId: convAgentId,
     });
+
+    // Apartamentul ales → discuția continuă singură cu pașii următori.
+    let followup: { ok: boolean; wa_message_id: string | null } | null = null;
+    if (offerProp && sent.ok && body.skip_followup !== true) {
+      followup = await sendOfferFollowup(conversationId, phone, convAgentId);
+    }
 
     return json(
       {
@@ -504,6 +513,7 @@ Deno.serve(async (req) => {
         conversation_id: conversationId,
         wa_message_id: waMsgId,
         delivered: sent.ok,
+        followup_sent: followup?.ok ?? false,
         meta_error: sent.ok ? undefined : sent.error,
       },
       sent.ok ? 200 : 502,
