@@ -141,6 +141,9 @@ export async function loadProspectContext(
  * mesajele scrise care spun același lucru. Folosit atât de webhook-ul Meta,
  * cât și de puntea Make.com, ca textul să fie identic.
  */
+const stripDiacritics = (t: string) =>
+  t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
 export function quickReplyText(raw: string): { kind: string; text: string } | null {
  kind: string; text: string } | null {
   const t = stripDiacritics(raw);
