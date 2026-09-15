@@ -273,8 +273,128 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Pașii 3 și 4: după confirmarea ofertei propune un punct de întâlnire pentru
+  // vizionare și negociere, apoi anunță clientul că poate scrie oricând direct
+  // pe WhatsApp (cu linkul chatului) — doar dacă agentul nu a mai scris.
+  // ---------------------------------------------------------------------------
+  const followStages: { after: string; next: string; delayMs: number }[] = [
+    { after: "offer_confirm", next: "offer_meeting", delayMs: 2 * 3_600_000 },
+    { after: "offer_meeting", next: "offer_direct_chat", delayMs: 3 * 3_600_000 },
+  ];
+  const followCounts: Record<string, number> = {};
+
+  for (const stage of followStages) {
+    const stageCutoff = new Date(Date.now() - stage.delayMs).toISOString();
+    let done = 0;
+
+    let sq = supabase
+      .from("wa_transaction_events")
+      .select("id, conversation_id, phone_normalized, property_id, created_at")
+      .eq("event", stage.after)
+      .neq("status", "failed")
+      .gte("created_at", floor)
+      .lte("created_at", stageCutoff)
+      .order("created_at", { ascending: false })
+      .limit(limit * 6);
+    if (body.conversation_id) sq = sq.eq("conversation_id", body.conversation_id);
+
+    const { data: prev } = await sq;
+    const seenStage = new Set<string>();
+
+    for (const ev of prev ?? []) {
+      if (done >= limit) break;
+      const conversationId = ev.conversation_id as string | null;
+      const phone = ev.phone_normalized as string | null;
+      if (!conversationId || !phone || seenStage.has(conversationId)) continue;
+      seenStage.add(conversationId);
+
+      const { data: dnc } = await supabase
+        .from("wa_dnc_list")
+        .select("id")
+        .eq("phone_normalized", phone)
+        .maybeSingle();
+      if (dnc) {
+        results.push({ conversationId, step: stage.next, skipped: "dnc" });
+        continue;
+      }
+
+      const { count: already } = await supabase
+        .from("wa_transaction_events")
+        .select("id", { count: "exact", head: true })
+        .eq("conversation_id", conversationId)
+        .eq("event", stage.next);
+      if ((already ?? 0) > 0) {
+        results.push({ conversationId, step: stage.next, skipped: "already_sent" });
+        continue;
+      }
+
+      const { data: conv } = await supabase
+        .from("wa_conversations")
+        .select("id, status")
+        .eq("id", conversationId)
+        .maybeSingle();
+      if (conv?.status && ["closed", "opted_out"].includes(String(conv.status))) {
+        results.push({ conversationId, step: stage.next, skipped: `conversation_${conv.status}` });
+        continue;
+      }
+
+      const { data: outAfter } = await supabase
+        .from("wa_messages")
+        .select("id")
+        .eq("conversation_id", conversationId)
+        .eq("direction", "outbound")
+        .gt("created_at", ev.created_at as string)
+        .limit(1);
+      if (outAfter?.length) {
+        results.push({ conversationId, step: stage.next, skipped: "agent_active" });
+        continue;
+      }
+
+      if (dryRun) {
+        done += 1;
+        results.push({ conversationId, step: stage.next, would_send: true });
+        continue;
+      }
+
+      try {
+        const res = await fetch(
+          `${Deno.env.get("SUPABASE_URL")}/functions/v1/make-agent-bridge`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
+            },
+            body: JSON.stringify({
+              action: stage.next,
+              conversation_id: conversationId,
+              phone,
+              property_id: ev.property_id,
+            }),
+          },
+        );
+        const payload = await res.json().catch(() => ({}));
+        if (res.ok && payload?.ok !== false) {
+          done += 1;
+          results.push({ conversationId, step: stage.next, sent: true });
+        } else {
+          results.push({
+            conversationId,
+            step: stage.next,
+            error: payload?.error || `http_${res.status}`,
+          });
+        }
+      } catch (e) {
+        results.push({ conversationId, step: stage.next, error: String(e) });
+      }
+    }
+
+    followCounts[stage.next] = done;
+  }
+
   console.log(
-    `[wa-auto-offer] checked=${chosen.length} sent=${sent} confirmed=${confirmed} after_hours=${afterHours}`,
+    `[wa-auto-offer] checked=${chosen.length} sent=${sent} confirmed=${confirmed} meeting=${followCounts.offer_meeting ?? 0} direct_chat=${followCounts.offer_direct_chat ?? 0} after_hours=${afterHours}`,
   );
 
   return json({
@@ -282,8 +402,11 @@ Deno.serve(async (req) => {
     checked: chosen.length,
     sent,
     confirmed,
+    meeting: followCounts.offer_meeting ?? 0,
+    direct_chat: followCounts.offer_direct_chat ?? 0,
     dry_run: dryRun,
     after_hours: afterHours,
-    results: results.slice(0, 80),
+    results: results.slice(0, 120),
   });
 });
+

@@ -49,6 +49,8 @@ const OFFER_EVENTS = [
   "offer_followup",
   "offer_confirm",
   "offer_sent",
+  "offer_meeting",
+  "offer_direct_chat",
   "negotiation",
   "property_offer",
 ] as const;
@@ -58,6 +60,8 @@ const EVENT_LABELS: Record<string, string> = {
   offer_followup: "Ofertă cu pașii",
   offer_confirm: "Ofertă livrată — vizionare",
   offer_sent: "Ofertă trimisă",
+  offer_meeting: "Propunere punct de întâlnire",
+  offer_direct_chat: "Chat direct pe WhatsApp",
   negotiation: "Negociere",
   property_offer: "Apartament propus",
 };
