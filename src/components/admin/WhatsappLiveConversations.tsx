@@ -68,6 +68,22 @@ const TX_LABELS: Record<string, string> = {
   negotiation: "Negociere",
 };
 
+/** Evenimentele care înseamnă „ofertă livrată clientului". */
+const OFFER_EVENTS = ["offer_intro", "offer_followup", "offer_confirm", "negotiation"];
+
+/** Vizualizare rapidă a ofertelor livrate, fără a deschide tabul dedicat. */
+type OfferPeek = {
+  id: string;
+  conversation_id: string | null;
+  phone_normalized: string | null;
+  property_name: string | null;
+  price: number | null;
+  event: string;
+  status: string | null;
+  error: string | null;
+  created_at: string;
+};
+
 type SaleProperty = {
   id: string;
   name: string;
@@ -130,6 +146,8 @@ export default function WhatsappLiveConversations() {
   const [agentPick, setAgentPick] = useState<string>("");
   const [assigning, setAssigning] = useState(false);
   const [busyStep, setBusyStep] = useState<string | null>(null);
+  const [showOffers, setShowOffers] = useState(false);
+  const [recentOffers, setRecentOffers] = useState<OfferPeek[]>([]);
   const { toast } = useToast();
 
   const loadConversations = useCallback(async () => {
