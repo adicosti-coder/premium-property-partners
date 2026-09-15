@@ -502,6 +502,7 @@ export default function WhatsappTransactionsDashboard() {
                     <Legend />
                     <Bar dataKey="alegeri" name="Alegeri de apartament" fill="hsl(var(--primary))" />
                     <Bar dataKey="mesaje" name="Mesaje de la clienți" fill="hsl(var(--muted-foreground))" />
+                    <Bar dataKey="discutii" name="Discuții deschise" fill="hsl(var(--accent))" />
                     <Bar dataKey="deschise" name="Anunțuri deschise" fill="hsl(var(--accent-foreground))" />
                   </BarChart>
                 </ResponsiveContainer>
