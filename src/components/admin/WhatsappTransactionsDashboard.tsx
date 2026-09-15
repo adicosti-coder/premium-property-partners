@@ -36,6 +36,8 @@ type TxRow = {
 
 type AgentRow = { id: string; name: string };
 
+type InboundRow = { id: string; conversation_id: string | null; created_at: string };
+
 const DAYS = 14;
 
 const fmt = (iso: string) =>
