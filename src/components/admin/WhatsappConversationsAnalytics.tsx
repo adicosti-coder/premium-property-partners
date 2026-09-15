@@ -77,6 +77,30 @@ const WhatsappConversationsAnalytics = () => {
     staleTime: 60_000,
   });
 
+  const { toast } = useToast();
+  const [pickedAgent, setPickedAgent] = useState<Record<string, string>>({});
+  const [assigning, setAssigning] = useState<string | null>(null);
+
+  /** Alocă manual o discuție abandonată unui agent real, ca să nu rămână neterminată. */
+  const assignAgent = async (conversationId: string) => {
+    const agentId = pickedAgent[conversationId];
+    if (!agentId) return;
+    setAssigning(conversationId);
+    const { error: updErr } = await supabase
+      .from("wa_conversations")
+      .update({ assigned_agent_id: agentId, assigned_at: new Date().toISOString() })
+      .eq("id", conversationId);
+    setAssigning(null);
+    if (updErr) {
+      toast({ title: "Nu am putut aloca agentul", description: updErr.message, variant: "destructive" });
+      return;
+    }
+    const name = (data?.agents ?? []).find((a) => a.id === agentId)?.name ?? "agent";
+    toast({ title: "Discuție alocată", description: `Preluată de ${name}.` });
+    void refetch();
+  };
+
+
   const stats = useMemo(() => {
     const messages = data?.messages ?? [];
     const conversations = data?.conversations ?? [];
