@@ -12,7 +12,7 @@ import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ExternalLink, Handshake, Home, Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
+import { ExternalLink, Handshake, Home, Loader2, MessageSquare, RefreshCw, Search, Send, Tag, User } from "lucide-react";
 
 /**
  * Conversații live WhatsApp — firul complet al discuției (mesaje trimise de agent
