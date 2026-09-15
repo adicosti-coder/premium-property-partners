@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ExternalLink, Home, MessageSquare, RefreshCw, TrendingUp } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { ExternalLink, Handshake, Home, Loader2, MessageSquare, RefreshCw, Send, TrendingUp } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
@@ -63,6 +64,8 @@ export default function WhatsappTransactionsDashboard() {
   const [pickedProperty, setPickedProperty] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [busyStep, setBusyStep] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
