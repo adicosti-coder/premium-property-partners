@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
-import { Handshake, Loader2, MessageSquare, RefreshCw, Search, Send, Tag } from "lucide-react";
+import { CalendarCheck, Handshake, Loader2, MessageSquare, RefreshCw, Search, Send, Tag } from "lucide-react";
 
 /**
  * Tab „Chat WhatsApp" — agenții scriu direct clientului, în chatul real de
