@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
+import { offerStatus } from "@/lib/waOfferStatus";
 import { MessageSquare, RefreshCw, Search } from "lucide-react";
 
 /**
