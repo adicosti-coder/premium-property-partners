@@ -339,8 +339,18 @@ Deno.serve(async (req) => {
       error: sent.ok ? null : String(sent.error),
     });
 
+    if (sent.ok) {
+      await notifyClientOfferEmail(supabase, {
+        phone,
+        conversation_id: conversationId,
+        property: offerProp,
+        step: "offer_followup",
+      });
+    }
+
     return { ok: sent.ok, wa_message_id: msgId };
   };
+
 
   // ---------------------------------------------------------- listing_opened
   // Admin / site: clientul a deschis anunțul ales (pentru dashboardul de tranzacții).
