@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
-import { Handshake, Loader2, MessageSquare, RefreshCw, Search, Send, Tag } from "lucide-react";
+import { CalendarCheck, Handshake, Loader2, MessageSquare, RefreshCw, Search, Send, Tag } from "lucide-react";
 
 /**
  * Tab „Chat WhatsApp" — agenții scriu direct clientului, în chatul real de
@@ -71,6 +71,8 @@ export default function WhatsappChat() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [busyStep, setBusyStep] = useState<string | null>(null);
+  // Data și ora vizionării confirmate de agent (text liber, ex. „joi, ora 18:00").
+  const [meetingAt, setMeetingAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -178,15 +180,29 @@ export default function WhatsappChat() {
   };
 
   const runStep = async (
-    action: "offer_meeting" | "offer_direct_chat" | "offer_followup" | "offer_confirm",
+    action:
+      | "offer_meeting"
+      | "offer_direct_chat"
+      | "offer_followup"
+      | "offer_confirm"
+      | "meeting_confirmed",
   ) => {
     if (!selected) return;
+    if (action === "meeting_confirmed" && !meetingAt.trim()) {
+      toast({
+        title: "Scrie data și ora",
+        description: "Ex.: joi, 17 septembrie, ora 18:00.",
+        variant: "destructive",
+      });
+      return;
+    }
     setBusyStep(action);
     const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
       body: {
         action,
         phone: selected.phone_normalized,
         conversation_id: selected.id,
+        ...(action === "meeting_confirmed" ? { meeting_at: meetingAt.trim() } : {}),
       },
     });
     setBusyStep(null);
@@ -198,6 +214,8 @@ export default function WhatsappChat() {
         ? "Mesajul cu chatul direct"
         : action === "offer_followup"
         ? "Oferta cu prețul din anunț"
+        : action === "meeting_confirmed"
+        ? "Confirmarea vizionării"
         : "Confirmarea ofertei";
     if (fnErr || res.delivered === false) {
       toast({
@@ -429,6 +447,33 @@ export default function WhatsappChat() {
                   Link chat direct
                 </Button>
               </div>
+
+              {/* Confirmarea vizionării: clientul primește data, ora și linkul chatului */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  value={meetingAt}
+                  onChange={(e) => setMeetingAt(e.target.value)}
+                  placeholder="Data și ora vizionării (ex.: joi, ora 18:00)"
+                  aria-label="Data și ora vizionării confirmate"
+                  className="min-h-[44px] sm:max-w-xs"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-h-[44px]"
+                  disabled={!selected || busyStep === "meeting_confirmed"}
+                  onClick={() => void runStep("meeting_confirmed")}
+                  aria-label="Confirmă vizionarea și trimite clientului data, ora și linkul chatului"
+                >
+                  {busyStep === "meeting_confirmed" ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <CalendarCheck className="h-4 w-4 mr-2" />
+                  )}
+                  Confirmă vizionarea
+                </Button>
+              </div>
+
               <p className="text-xs text-muted-foreground">
                 Mesajele clienților intră prin conexiunea securizată cu WhatsApp, deci se salvează
                 și se văd aici chiar dacă browserul tău a fost închis.

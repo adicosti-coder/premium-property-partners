@@ -42,7 +42,7 @@ const stripDiacritics = (t: string) =>
 
 
 import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
-import { autoReplyText, FINANCE_BLOCK } from "../_shared/waAutoReply.ts";
+import { autoReplyText, propertyFinanceBlock } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyClientOfferEmail } from "../_shared/waClientOfferEmail.ts";
 
@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
         : "Cu ce sumă doriți să intrăm în negociere?",
       `Anunțul complet: ${offerProp.url}`,
       "",
-      FINANCE_BLOCK,
+      propertyFinanceBlock(offerProp),
     ].join("\n");
 
     const sent = await sendToMeta({
@@ -399,7 +399,9 @@ Deno.serve(async (req) => {
   //                      și negociere, după ofertă.
   // `offer_direct_chat`→ îi spune clientului că poate scrie oricând direct pe
   //                      WhatsApp și îi dă linkul chatului.
-  const OFFER_STEP_ACTIONS = ["offer_intro", "offer_confirm", "offer_meeting", "offer_direct_chat"];
+  // `meeting_confirmed`→ agentul a confirmat vizionarea: clientul primește data,
+  //                      ora, locul (la apartament) și linkul chatului direct.
+  const OFFER_STEP_ACTIONS = ["offer_intro", "offer_confirm", "offer_meeting", "offer_direct_chat", "meeting_confirmed"];
   if (OFFER_STEP_ACTIONS.includes(action)) {
 
     const phone = normalizeRoMobile(body.phone || "") || (body.phone || "").trim();
@@ -441,7 +443,18 @@ Deno.serve(async (req) => {
 
     const WA_CHAT_LINK = "https://wa.me/40733783540";
 
-    const autoStepText = action === "offer_intro"
+    const meetingWhen = String(body.meeting_at ?? body.when ?? "").trim();
+
+    const autoStepText = action === "meeting_confirmed"
+      ? [
+        `Vizionare confirmată${stepProp ? ` pentru ${stepProp.name}` : ""}.`,
+        meetingWhen ? `Data și ora: ${meetingWhen}.` : "Vă confirmăm ziua și ora imediat ce le stabilim.",
+        `Locul: direct la apartament${stepProp?.name ? ` (${stepProp.name})` : ""}.`,
+        "Vă rugăm să confirmați cu DA ca să blocăm intervalul.",
+        `Dacă vreți să mutați ora, scrieți-mi aici: ${WA_CHAT_LINK}`,
+        stepProp?.url ? `Anunțul complet: ${stepProp.url}` : "",
+      ].filter(Boolean).join("\n")
+      : action === "offer_intro"
       ? [
         `Pregătim oferta${stepProp ? ` pentru ${stepProp.name}` : ""} și o primiți direct aici, pe WhatsApp.`,
         "Veți primi prețul final, comisionul și costurile de achiziție, plus linkul anunțului complet.",

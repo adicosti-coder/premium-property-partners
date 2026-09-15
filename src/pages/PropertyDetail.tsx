@@ -34,6 +34,7 @@ const GuestReviewForm = lazy(() => import("@/components/GuestReviewForm"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const PropertyFAQ = lazy(() => import("@/components/PropertyFAQ"));
 import PropertyQuickFacts from "@/components/PropertyQuickFacts";
+import PropertyOfferBox from "@/components/PropertyOfferBox";
 const PropertyProximity = lazy(() => import("@/components/PropertyProximity"));
 const PropertyNeighborhoodMap = lazy(() => import("@/components/PropertyNeighborhoodMap"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
@@ -980,6 +981,19 @@ const PropertyDetail = () => {
                 capacity={property.capacity}
                 language={language}
               />
+
+              {/* Oferta reală: preț anunț, comision RealTrust, profit net estimat */}
+              <PropertyOfferBox
+                name={property.name}
+                price={
+                  (dbProperty?.capital_necesar ??
+                    (dbProperty?.price_per_sqm && dbProperty?.size
+                      ? Math.round(Number(dbProperty.price_per_sqm) * Number(dbProperty.size))
+                      : null)) as number | null
+                }
+                language={language}
+              />
+
 
 
               {/* ═══════════════════════════════════════════════════════
