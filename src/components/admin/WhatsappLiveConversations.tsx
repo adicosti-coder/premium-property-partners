@@ -521,9 +521,11 @@ export default function WhatsappLiveConversations() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2 min-w-0">
               <User className="h-4 w-4 shrink-0" />
-              {selected
-                ? `${selected.wa_profile_name || "Client"} · ${selected.phone_normalized}`
-                : "Selectează o discuție"}
+              <span className="truncate">
+                {selected
+                  ? `${selected.wa_profile_name || "Client"} · ${selected.phone_normalized}`
+                  : "Selectează o discuție"}
+              </span>
             </CardTitle>
             {selected && (
               <p className="text-xs text-muted-foreground">
