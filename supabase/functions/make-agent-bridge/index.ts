@@ -321,7 +321,7 @@ Deno.serve(async (req) => {
     // Conversația existentă sau una nouă, ca să rămână un thread complet.
     const { data: conv } = await supabase
       .from("wa_conversations")
-      .select("id, window_expires_at, prospect_id")
+      .select("id, window_expires_at, prospect_id, assigned_agent_id")
       .eq("phone_normalized", phone)
       .order("updated_at", { ascending: false })
       .limit(1)
