@@ -337,12 +337,18 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
-  // -------------------------------------------- offer_intro / offer_confirm
-  // `offer_intro`  → mesaj înainte de ofertă: clientul află că ofertele vin
-  //                  direct pe WhatsApp, nu doar în discuția din Admin.
-  // `offer_confirm`→ mesaj după ofertă: confirmă livrarea și cheamă la
-  //                  vizionare și negociere, ca discuția să nu se oprească.
-  if (action === "offer_intro" || action === "offer_confirm") {
+  // ------------------- offer_intro / offer_confirm / offer_meeting / offer_direct_chat
+  // `offer_intro`      → mesaj înainte de ofertă: clientul află că ofertele vin
+  //                      direct pe WhatsApp, nu doar în discuția din Admin.
+  // `offer_confirm`    → mesaj după ofertă: confirmă livrarea și cheamă la
+  //                      vizionare și negociere, ca discuția să nu se oprească.
+  // `offer_meeting`    → propune un punct de întâlnire concret pentru vizionare
+  //                      și negociere, după ofertă.
+  // `offer_direct_chat`→ îi spune clientului că poate scrie oricând direct pe
+  //                      WhatsApp și îi dă linkul chatului.
+  const OFFER_STEP_ACTIONS = ["offer_intro", "offer_confirm", "offer_meeting", "offer_direct_chat"];
+  if (OFFER_STEP_ACTIONS.includes(action)) {
+
     const phone = normalizeRoMobile(body.phone || "") || (body.phone || "").trim();
     if (!phone) return json({ error: "phone_invalid" }, 400);
 
