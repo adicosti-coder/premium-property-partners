@@ -284,6 +284,18 @@ Deno.serve(async (req) => {
       message: text,
     });
 
+    await notifyAgentOffer(supabase, {
+      conversation_id: conversationId,
+      phone,
+      step: "offer_followup",
+      property_name: offerProp.name,
+      property_url: offerProp.url,
+      price: offerProp.price,
+      message: text,
+      delivered: sent.ok,
+      error: sent.ok ? null : String(sent.error),
+    });
+
     return { ok: sent.ok, wa_message_id: msgId };
   };
 
