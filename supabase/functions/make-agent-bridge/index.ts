@@ -42,7 +42,7 @@ const stripDiacritics = (t: string) =>
 
 
 import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
-import { quickReplyText } from "../_shared/waAutoReply.ts";
+import { autoReplyText } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyClientOfferEmail } from "../_shared/waClientOfferEmail.ts";
 
@@ -1000,7 +1000,7 @@ Deno.serve(async (req) => {
     let replyText = "";
     // Răspuns la butoanele rapide din primul mesaj — are prioritate și nu e
     // blocat de regula de 3 ore, ca discuția să nu rămână neterminată.
-    const quick = quickReplyText(text);
+    const quick = autoReplyText(text);
     if (quick && outboundCount) {
       replyKind = "quick_reply";
       replyText = quick.text;

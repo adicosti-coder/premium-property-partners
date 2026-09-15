@@ -176,3 +176,77 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
   }
   return null;
 }
+
+/**
+ * Răspunsul automat pentru ORICE mesaj primit de la client, ca discuțiile să nu
+ * rămână neterminate nici când nu răspunde nimeni. Acoperă butoanele din primul
+ * mesaj, cifrele 1/2/3, întrebările de preț, rezervările, vizionările și STOP.
+ * Rulează pe server (webhook Meta), deci funcționează cu site-ul închis.
+ */
+export function autoReplyText(raw: string): { kind: string; text: string } | null {
+  const quick = quickReplyText(raw);
+  if (quick) return quick;
+
+  const t = stripDiacritics(raw);
+  if (!t) return null;
+
+  if (/^stop\b|nu mai (vreau|doresc)|dezabon/.test(t)) {
+    return {
+      kind: "quick_stop",
+      text:
+        "Am inteles, nu va mai trimitem mesaje. Va mulțumim pentru timpul acordat! " +
+        "Daca aveti nevoie de noi pe viitor, ne scrieti oricand aici.",
+    };
+  }
+
+  if (/^1\b|imobiliar|vand|cumpar|achizi|inchiri/.test(t)) {
+    return {
+      kind: "auto_real_estate",
+      text:
+        "Perfect, ne ocupam de partea imobiliara: vanzare asistata, achizitie sau inchiriere in Timisoara.\n\n" +
+        "Ca sa va trimit o estimare corecta, imi spuneti zona, numarul de camere si suprafata? " +
+        "Va raspundem intre 09:00 si 20:00, luni–sambata.",
+    };
+  }
+
+  if (/^2\b|regim hotelier|management|randament|venit/.test(t)) {
+    return {
+      kind: "auto_management",
+      text:
+        "Excelent. In administrare regim hotelier randamentul net este de circa 9,4% pe an: anunturi pe " +
+        "Booking si Airbnb, prețuri dinamice, curatenie, check-in si raportare lunara.\n\n" +
+        "Imi confirmati zona, numarul de camere si suprafata, ca sa va trimit estimarea de venit lunar?",
+    };
+  }
+
+  if (/^3\b|rezerv|cazare|noapte|nopti|check.?in|disponibil/.test(t)) {
+    return {
+      kind: "auto_booking",
+      text:
+        "Cu placere! Pentru cazare in regim hotelier verificati disponibilitatea si prețurile aici: " +
+        "https://realtrust.ro/rezervare\n\n" +
+        "Daca imi spuneti perioada si numarul de persoane, va confirmam noi un apartament potrivit.",
+    };
+  }
+
+  if (/pret|preț|cat cost|cat face|valoare|estimare|oferta/.test(t)) {
+    return {
+      kind: "auto_price",
+      text:
+        "Va trimitem imediat cifrele reale. Imi spuneti, va rog, zona, numarul de camere si suprafata " +
+        "apartamentului?\n\nPrimiti estimarea de preț de vanzare si estimarea de venit in regim hotelier, " +
+        "fara nicio obligatie.",
+    };
+  }
+
+  if (/vizionare|sa vad|vedem|intalni|vizita|cand pot veni/.test(t)) {
+    return {
+      kind: "auto_meeting",
+      text:
+        "Sigur, organizam o vizionare direct la apartament, in intervalul 09:00–20:00, luni–sambata.\n\n" +
+        "Imi spuneti ziua si ora care va sunt comode si confirmam adresa exacta?",
+    };
+  }
+
+  return null;
+}

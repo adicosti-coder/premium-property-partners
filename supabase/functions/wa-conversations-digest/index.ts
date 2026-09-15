@@ -86,6 +86,18 @@ Deno.serve(async (req) => {
     .lt("last_inbound_at", cutoff)
     .not("status", "in", '("closed","opted_out")');
 
+  // Pașii de tranzacție din ultimele `hours` ore: oferte livrate și întâlniri propuse.
+  const { data: txEvents } = await supabase
+    .from("wa_transaction_events")
+    .select("event, conversation_id, created_at")
+    .gte("created_at", since)
+    .limit(2000);
+  const txCount = (names: string[]) =>
+    (txEvents ?? []).filter((e) => names.includes(String(e.event))).length;
+  const offersDelivered = txCount(["offer_sent", "offer_followup", "offer_confirm", "offer_intro"]);
+  const meetingsProposed = txCount(["offer_meeting"]);
+  const negotiations = txCount(["negotiation"]);
+
   const threads = convIds.map((cid) => {
     const c = convById.get(cid);
     const rows = (messages ?? []).filter((m) => m.conversation_id === cid);
@@ -156,6 +168,9 @@ Deno.serve(async (req) => {
         <tr><td style="padding:4px 12px 4px 0">Mesaje trimise (livrate)</td><td><strong>${delivered}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0">Mesaje eșuate</td><td><strong style="color:#b91c1c">${failed.length}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0">Conversații abandonate (&gt;24h)</td><td><strong>${abandoned ?? 0}</strong></td></tr>
+        <tr><td style="padding:4px 12px 4px 0">Oferte livrate</td><td><strong>${offersDelivered}</strong></td></tr>
+        <tr><td style="padding:4px 12px 4px 0">Întâlniri propuse la apartament</td><td><strong>${meetingsProposed}</strong></td></tr>
+        <tr><td style="padding:4px 12px 4px 0">Runde de negociere</td><td><strong>${negotiations}</strong></td></tr>
       </table>
       <h3 style="margin:20px 0 6px;font-size:15px">Pe agent</h3>
       <table style="border-collapse:collapse">
@@ -174,6 +189,9 @@ Deno.serve(async (req) => {
     delivered,
     failed: failed.length,
     abandoned: abandoned ?? 0,
+    offers_delivered: offersDelivered,
+    meetings_proposed: meetingsProposed,
+    negotiations,
   };
 
   if (dryRun) return json({ ok: true, dry_run: true, stats });
@@ -183,7 +201,7 @@ Deno.serve(async (req) => {
     : "info@realtrust.ro";
 
   const subject =
-    `WhatsApp — backup conversații ${today} (${stats.inbound} de la clienți, ${stats.failed} eșuate)`;
+    `WhatsApp ${today} — ${stats.inbound} mesaje clienți, ${stats.offers_delivered} oferte, ${stats.meetings_proposed} întâlniri`;
 
   const result = await sendTeamEmail({
     to: recipient,

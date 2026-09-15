@@ -143,6 +143,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "captcha", label: "Captcha", icon: Shield },
       { value: "email-health", label: "Stare E-mail", icon: MailCheck, keywords: ["email", "notify", "dns", "domeniu", "resend", "livrare", "retry", "verificare"] },
 
+      { value: "team-access", label: "Echipă & acces Admin", icon: Users, keywords: ["echipa", "colegi", "conturi", "acces", "admin", "parola", "rol", "utilizatori", "team"] },
       { value: "security", label: "Securitate", icon: ShieldCheck },
       { value: "ai-security", label: "Securitate AI", icon: ShieldCheck, keywords: ["ai", "openrouter", "scan", "tokens", "permissions"] },
       { value: "system-health", label: "System Health", icon: Activity, keywords: ["audit", "cron", "monitor", "health", "alerts"] },
