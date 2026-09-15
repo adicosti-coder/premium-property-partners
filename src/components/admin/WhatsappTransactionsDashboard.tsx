@@ -130,13 +130,16 @@ export default function WhatsappTransactionsDashboard() {
     const events = rows.filter((r) => r.property_id === pickedProperty);
     const convIds = new Set(events.map((e) => e.conversation_id).filter(Boolean) as string[]);
     const msgs = inbound.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
+    const replies = agentReplies.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
     const buckets = new Map<
       string,
-      { day: string; alegeri: number; mesaje: number; deschise: number; discutii: number }
+      { day: string; alegeri: number; mesaje: number; deschise: number; discutii: number; raspunsuri: number }
     >();
     for (let i = DAYS - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 3600 * 1000).toISOString();
-      buckets.set(dayKey(d), { day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0, discutii: 0 });
+      buckets.set(dayKey(d), {
+        day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0, discutii: 0, raspunsuri: 0,
+      });
     }
     for (const e of events) {
       const b = buckets.get(dayKey(e.created_at));
