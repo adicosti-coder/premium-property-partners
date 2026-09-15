@@ -3,6 +3,8 @@
 // automatic retry after 10 minutes; only after the retry also fails do we
 // notify admins with severity 'critical'.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isInternalCall } from "../_shared/cronAuth.ts";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
