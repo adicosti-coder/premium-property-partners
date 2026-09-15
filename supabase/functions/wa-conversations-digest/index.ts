@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
 
   const { data: messages, error: msgErr } = await supabase
     .from("wa_messages")
-    .select("id, conversation_id, direction, content, template_name, error, wa_message_id, delivered_at, read_at, created_at")
+    .select("id, conversation_id, direction, content, template_name, error, wa_message_id, created_at")
     .gte("created_at", since)
     .order("created_at", { ascending: true })
     .limit(2000);
@@ -88,8 +88,6 @@ Deno.serve(async (req) => {
       const metaBits: string[] = [];
       if (m.direction === "outbound") {
         if (m.error) metaBits.push(`respins: ${esc(m.error)}`);
-        else if (m.read_at) metaBits.push(`citit ${esc(roTime(m.read_at))}`);
-        else if (m.delivered_at) metaBits.push(`livrat ${esc(roTime(m.delivered_at))}`);
         else if (m.wa_message_id) metaBits.push("acceptat de Meta");
         else metaBits.push("fără confirmare de la Meta");
         if (m.wa_message_id) metaBits.push(`ID ${esc(m.wa_message_id)}`);
