@@ -153,7 +153,7 @@ const stripDiacritics = (t: string) =>
 export const FINANCE_BLOCK = [
   "Cum se calculeaza venitul dvs.:",
   "• Venituri brute: tariful pe noapte x ocupare medie de 75% pe luna.",
-  "• Comisionul nostru de administrare: 15-20% din incasari, si acopera anunturile, prețurile dinamice, comunicarea cu oaspetii, curatenia si mentenanta.",
+  "• Property Management RealTrust: 15-20% din incasari, si acopera anunturile, prețurile dinamice, comunicarea cu oaspetii, curatenia si mentenanta.",
   "• Profit net estimat: circa 9,4% pe an din valoarea apartamentului — este o estimare medie, care depinde de gradul real de ocupare si de costurile reale de administrare.",
   "Primiti si un raport lunar cu incasarile, cheltuielile si profitul net, ca sa vedeti exact cifrele.",
 ].join("\n");
