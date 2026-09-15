@@ -50,7 +50,7 @@ const WhatsappConversationsAnalytics = () => {
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["wa-conversations-analytics", since],
     queryFn: async () => {
-      const [msgRes, convRes, agentRes] = await Promise.all([
+      const [msgRes, convRes, agentRes, replyRes] = await Promise.all([
         supabase
           .from("wa_messages")
           .select("id, conversation_id, direction, error, created_at")
@@ -65,6 +65,12 @@ const WhatsappConversationsAnalytics = () => {
           .order("updated_at", { ascending: false })
           .limit(500),
         supabase.from("wa_agents").select("id, name, email"),
+        supabase
+          .from("make_lead_events")
+          .select("id, conversation_id, event, created_at")
+          .eq("event", "wa_agent_reply")
+          .gte("created_at", since)
+          .limit(3000),
       ]);
       if (msgRes.error) throw msgRes.error;
       if (convRes.error) throw convRes.error;
@@ -72,6 +78,7 @@ const WhatsappConversationsAnalytics = () => {
         messages: (msgRes.data ?? []) as Msg[],
         conversations: (convRes.data ?? []) as Conv[],
         agents: (agentRes.data ?? []) as Agent[],
+        agentReplies: (replyRes.data ?? []) as { id: string; conversation_id: string | null }[],
       };
     },
     staleTime: 60_000,
