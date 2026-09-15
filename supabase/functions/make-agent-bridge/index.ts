@@ -44,6 +44,8 @@ const stripDiacritics = (t: string) =>
 import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
 import { quickReplyText } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
+import { notifyClientOfferEmail } from "../_shared/waClientOfferEmail.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
