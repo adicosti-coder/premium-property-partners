@@ -64,6 +64,9 @@ export default function WhatsappLiveConversations() {
   const [loadingThread, setLoadingThread] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
+  const { toast } = useToast();
 
   const loadConversations = useCallback(async () => {
     setLoading(true);
