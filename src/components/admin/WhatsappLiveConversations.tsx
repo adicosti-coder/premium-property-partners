@@ -164,14 +164,23 @@ export default function WhatsappLiveConversations() {
 
   const loadThread = useCallback(async (conversationId: string) => {
     setLoadingThread(true);
-    const { data, error: msgErr } = await supabase
-      .from("wa_messages")
-      .select("id, conversation_id, direction, role, content, template_name, error, wa_message_id, created_at")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true })
-      .limit(500);
-    if (msgErr) setError(msgErr.message);
-    setMessages((data ?? []) as MessageRow[]);
+    const [msgRes, txRes] = await Promise.all([
+      supabase
+        .from("wa_messages")
+        .select("id, conversation_id, direction, role, content, template_name, error, wa_message_id, created_at")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true })
+        .limit(500),
+      supabase
+        .from("wa_transaction_events")
+        .select("id, event, status, property_name, property_url, price, error, agent_id, created_at")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true })
+        .limit(200),
+    ]);
+    if (msgRes.error) setError(msgRes.error.message);
+    setMessages((msgRes.data ?? []) as MessageRow[]);
+    setTxEvents((txRes.data ?? []) as TxEventRow[]);
     setLoadingThread(false);
   }, []);
 
@@ -183,7 +192,10 @@ export default function WhatsappLiveConversations() {
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
-    else setMessages([]);
+    else {
+      setMessages([]);
+      setTxEvents([]);
+    }
   }, [selectedId, loadThread]);
 
   useRealtimeChannel("wa-live-conversations", [
@@ -194,6 +206,11 @@ export default function WhatsappLiveConversations() {
         void loadConversations();
         if (selectedId) void loadThread(selectedId);
       },
+    },
+    {
+      event: "*",
+      table: "wa_transaction_events",
+      handler: () => { if (selectedId) void loadThread(selectedId); },
     },
     {
       event: "*",
