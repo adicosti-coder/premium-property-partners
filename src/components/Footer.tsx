@@ -74,6 +74,7 @@ const Footer = () => {
   };
 
   const serviceLinks = [
+    { href: "/anunturi", label: language === "ro" ? "Anunțuri Apartamente" : "Apartment Listings" },
     { href: "/servicii-imobiliare", label: language === "ro" ? "Servicii Imobiliare Timișoara" : "Real Estate Services Timișoara" },
     { href: "/pentru-proprietari", label: language === "ro" ? "Pentru Proprietari" : "For Owners" },
     { href: "/cazare", label: language === "ro" ? "Cazare Regim Hotelier" : "Hotel Accommodation" },

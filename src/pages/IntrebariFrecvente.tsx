@@ -31,11 +31,23 @@ const EXTRA_FAQ = {
     },
     {
       q: "Cât randament (ROI) pot obține realist în Timișoara?",
-      a: "Referința noastră este 9,4% net pe an, calculată la o ocupare medie de 75% și după deducerea a aproximativ 27% (comisioane platforme, impozit efectiv, consumabile, utilități, lenjerie) plus comisionul de administrare. Un apartament de 2 camere bine poziționat în Cetate, Iosefin sau lângă Iulius Town se apropie de această cifră; poți verifica scenariul tău în calculatorul de randament.",
+      a: "Referința noastră este 9,4% net pe an, ca estimare medie, calculată la o ocupare de aproximativ 75% și după Property Management RealTrust (15-20% din încasări) și costurile reale de operare. Un apartament de 2 camere bine poziționat în Cetate, Iosefin sau lângă Iulius Town se apropie de această cifră; poți verifica scenariul tău în calculatorul de randament.",
     },
     {
-      q: "Ce include comisionul de administrare RealTrust?",
-      a: "Listare multi-channel (Booking, Airbnb, Expedia), pricing dinamic, comunicare cu oaspeții 24/7, check-in automatizat cu smart lock, curățenie și lenjerie, mentenanță, declarații lunare pentru taxa hotelieră și raport financiar detaliat. Comisionul se aplică doar pe venitul realizat — dacă apartamentul nu produce, nu plătești administrare.",
+      q: "Ce este Property Management RealTrust și ce include?",
+      a: "Property Management RealTrust înseamnă că ne ocupăm noi de tot: listare multi-channel (Booking, Airbnb, Expedia), pricing dinamic, comunicare cu oaspeții 24/7, check-in automatizat cu smart lock, curățenie și lenjerie, mentenanță, declarații lunare pentru taxa hotelieră și raport financiar detaliat. Tu primești venitul net și raportul, nu telefoanele.",
+    },
+    {
+      q: "Cât este comisionul de administrare?",
+      a: "Property Management RealTrust: 15-20% din încasări, în funcție de tipul apartamentului și de volumul de muncă. Nu există abonament fix — se aplică doar pe venitul realizat, deci dacă apartamentul nu produce, nu plătești administrare. Restul costurilor reale le discutăm deschis, cu cifre pe apartamentul tău.",
+    },
+    {
+      q: "Care este profitul net pe lună pentru apartamentul meu?",
+      a: "Profitul net se calculează simplu: venit brut (tariful pe noapte × ocupare medie de 75%), minus Property Management RealTrust 15-20% din încasări și costurile reale de operare. Rezultatul se apropie de 9,4% net pe an din valoarea apartamentului, ca estimare medie. Îți trimitem calculul exact pentru apartamentul tău, cu preț, venit brut și profit net lunar, fără nicio obligație.",
+    },
+    {
+      q: "Cum se desfășoară o vizită la apartament?",
+      a: "Vizionările se fac direct la apartament (nu avem birou pentru clienți), în intervalul 09:00–20:00, de luni până sâmbătă. O vizită durează în jur de 30 de minute, poți veni însoțit de cine dorești și nu implică nicio obligație. Îți confirmăm pe WhatsApp data, ora și adresa exactă, iar după vizionare primești cifrele complete în scris.",
     },
     {
       q: "Cine se ocupă de curățenie, lenjerie și mentenanță?",
@@ -57,11 +69,23 @@ const EXTRA_FAQ = {
     },
     {
       q: "What ROI can I realistically expect in Timișoara?",
-      a: "Our benchmark is 9.4% net per year, based on 75% average occupancy and after deducting about 27% (platform fees, effective tax, consumables, utilities, linen) plus our management fee. A well-located 2-room apartment in Cetate, Iosefin or near Iulius Town approaches that figure; check your own scenario in the yield calculator.",
+      a: "Our benchmark is 9.4% net per year, as an average estimate, based on roughly 75% occupancy and after RealTrust Property Management (15-20% of revenue) and real operating costs. A well-located 2-room apartment in Cetate, Iosefin or near Iulius Town approaches that figure; check your own scenario in the yield calculator.",
     },
     {
-      q: "What does the RealTrust management fee include?",
-      a: "Multi-channel listing (Booking, Airbnb, Expedia), dynamic pricing, 24/7 guest communication, smart-lock self check-in, cleaning and linen, maintenance, monthly hotel-tax filings and a detailed financial report. The fee applies only to realised revenue — no revenue, no management fee.",
+      q: "What is RealTrust Property Management and what does it include?",
+      a: "We handle everything: multi-channel listing (Booking, Airbnb, Expedia), dynamic pricing, 24/7 guest communication, smart-lock self check-in, cleaning and linen, maintenance, monthly hotel-tax filings and a detailed financial report. You get the net income and the report, not the phone calls.",
+    },
+    {
+      q: "How much is the management fee?",
+      a: "RealTrust Property Management: 15-20% of revenue, depending on the apartment and the workload. There is no fixed subscription — it applies only to realised revenue, so no revenue means no management fee. Other real costs we discuss openly, with figures for your apartment.",
+    },
+    {
+      q: "What is the monthly net profit for my apartment?",
+      a: "Net profit is simple: gross revenue (nightly rate × 75% average occupancy) minus RealTrust Property Management 15-20% of revenue and real operating costs. The result approaches 9.4% net per year of the apartment's value, as an average estimate. We send the exact calculation for your apartment — price, gross revenue and monthly net profit — with no obligation.",
+    },
+    {
+      q: "How does a viewing work?",
+      a: "Viewings take place at the apartment itself (we have no client office), between 09:00 and 20:00, Monday to Saturday. A visit takes about 30 minutes, you may bring anyone you like and there is no obligation. We confirm the date, time and exact address on WhatsApp, and you receive the full figures in writing afterwards.",
     },
     {
       q: "Who handles cleaning, linen and maintenance?",

@@ -262,6 +262,46 @@ export function autoReplyText(raw: string): { kind: string; text: string } | nul
     };
   }
 
+  if (/property management|ce include administrarea|ce faceti pentru|ce servicii|cu ce va ocupati|ce intra in administrare/.test(t)) {
+    return {
+      kind: "auto_property_management",
+      text:
+        "Property Management RealTrust inseamna ca ne ocupam noi de tot:\n" +
+        "• Anunturi si sincronizare pe Booking, Airbnb si Expedia.\n" +
+        "• Prețuri dinamice, ca apartamentul sa fie ocupat la tariful cel mai bun.\n" +
+        "• Comunicare cu oaspetii, check-in automatizat si asistenta pe toata durata sederii.\n" +
+        "• Curatenie profesionala, lenjerie si consumabile intre oaspeti.\n" +
+        "• Mentenanta, declaratii lunare si raport financiar detaliat.\n\n" +
+        "Property Management RealTrust: 15-20% din incasari, aplicat doar pe venitul realizat — daca " +
+        "apartamentul nu produce, nu plătiti administrare.\n\n" +
+        "Imi spuneti zona, numarul de camere si suprafata, ca sa va trimit estimarea de venit?",
+    };
+  }
+
+  if (/comision|cat luati|cat retineti|ce procent|procentul|taxa voastra|cat costa administrarea/.test(t)) {
+    return {
+      kind: "auto_fee",
+      text:
+        "Property Management RealTrust: 15-20% din incasari, in functie de tipul apartamentului si de " +
+        "volumul de munca. Se aplica doar pe venitul realizat, nu exista abonament fix.\n\n" +
+        "In acest procent intra anunturile pe Booking si Airbnb, prețurile dinamice, comunicarea cu " +
+        "oaspetii, check-in-ul, curatenia, lenjeria, mentenanta si raportul lunar.\n\n" +
+        "Restul costurilor reale le discutam deschis la telefon sau la vizionare, ca sa vedeti cifrele exacte " +
+        "pentru apartamentul dvs.",
+    };
+  }
+
+  if (/profit|cat imi ramane|cat castig|cat scot|randament net|venit net|net pe luna/.test(t)) {
+    return {
+      kind: "auto_profit",
+      text:
+        "Profitul net estimat este de circa 9,4% pe an din valoarea apartamentului — o estimare medie, care " +
+        "depinde de gradul real de ocupare si de costurile reale.\n\n" + FINANCE_BLOCK + "\n\n" +
+        "Imi spuneti zona, numarul de camere si suprafata, ca sa va calculam profitul net exact pentru " +
+        "apartamentul dvs.?",
+    };
+  }
+
   if (/^1\b|imobiliar|vand|cumpar|achizi|inchiri/.test(t)) {
     return {
       kind: "auto_real_estate",
@@ -317,12 +357,14 @@ export function autoReplyText(raw: string): { kind: string; text: string } | nul
     };
   }
 
-  if (/vizionare|sa vad|vedem|intalni|vizita|cand pot veni/.test(t)) {
+  if (/vizionare|vizite|vizit[ăa]|sa vad|vedem|intalni|cand pot veni|programare|programam/.test(t)) {
     return {
       kind: "auto_meeting",
       text:
-        "Sigur, organizam o vizionare direct la apartament, in intervalul 09:00–20:00, luni–sambata.\n\n" +
-        "Imi spuneti ziua si ora care va sunt comode si confirmam adresa exacta?",
+        "Sigur, organizam vizionarea direct la apartament, in intervalul 09:00–20:00, luni–sambata. " +
+        "Vizita dureaza circa 30 de minute, veniti insotit de cine doriti si nu implica nicio obligatie.\n\n" +
+        "Imi spuneti ziua si ora care va sunt comode? Confirmam adresa exacta si va trimitem un mesaj " +
+        "cu data si ora blocate.",
     };
   }
 
