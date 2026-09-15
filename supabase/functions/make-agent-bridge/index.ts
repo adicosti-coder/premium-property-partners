@@ -399,7 +399,9 @@ Deno.serve(async (req) => {
   //                      și negociere, după ofertă.
   // `offer_direct_chat`→ îi spune clientului că poate scrie oricând direct pe
   //                      WhatsApp și îi dă linkul chatului.
-  const OFFER_STEP_ACTIONS = ["offer_intro", "offer_confirm", "offer_meeting", "offer_direct_chat"];
+  // `meeting_confirmed`→ agentul a confirmat vizionarea: clientul primește data,
+  //                      ora, locul (la apartament) și linkul chatului direct.
+  const OFFER_STEP_ACTIONS = ["offer_intro", "offer_confirm", "offer_meeting", "offer_direct_chat", "meeting_confirmed"];
   if (OFFER_STEP_ACTIONS.includes(action)) {
 
     const phone = normalizeRoMobile(body.phone || "") || (body.phone || "").trim();
