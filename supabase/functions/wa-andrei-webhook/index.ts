@@ -372,17 +372,58 @@ Deno.serve(async (req) => {
     }).catch((e) => console.error("[wa-webhook] intake send failed:", e));
   }
 
-  // Fire-and-forget replies (must return 200 to Meta < 20s)
+  // Mesajele următoare: dacă agentul AI e activ, răspunde el. Dacă e oprit,
+  // trimitem o confirmare automată, ca niciun client să nu rămână fără răspuns
+  // până intervine un coleg (o singură confirmare la 3 ore per conversație).
+  const { data: agentSettings } = await supabase
+    .from("wa_agent_settings")
+    .select("enabled")
+    .eq("id", 1)
+    .maybeSingle();
+  const agentEnabled = !!agentSettings?.enabled;
+
+  const ACK_MESSAGE = [
+    "Am primit mesajul dvs., vă mulțumim!",
+    "Un coleg RealTrust vă răspunde în cel mai scurt timp, în intervalul 09:00–20:00 (luni–sâmbătă).",
+    "Dacă e vorba de o rezervare, puteți verifica disponibilitatea aici: https://realtrust.ro/rezervare",
+  ].join("\n");
+
   for (const convId of conversationsToReply) {
-    fetch(`${supabaseUrl}/functions/v1/wa-andrei-reply`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${serviceKey}`,
-        "x-internal-secret": internalSecret,
-      },
-      body: JSON.stringify({ conversation_id: convId }),
-    }).catch((e) => console.error("[wa-webhook] reply invoke failed:", e));
+    if (agentEnabled) {
+      fetch(`${supabaseUrl}/functions/v1/wa-andrei-reply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serviceKey}`,
+          "x-internal-secret": internalSecret,
+        },
+        body: JSON.stringify({ conversation_id: convId }),
+      }).catch((e) => console.error("[wa-webhook] reply invoke failed:", e));
+      continue;
+    }
+
+    try {
+      const threeHoursAgo = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
+      const { count: recentAck } = await supabase
+        .from("wa_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("conversation_id", convId)
+        .eq("direction", "outbound")
+        .gte("created_at", threeHoursAgo);
+      if (recentAck) continue;
+
+      fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${serviceKey}`,
+          "x-internal-secret": internalSecret,
+        },
+        body: JSON.stringify({ conversation_id: convId, text: ACK_MESSAGE }),
+      }).catch((e) => console.error("[wa-webhook] ack send failed:", e));
+    } catch (e) {
+      console.error("[wa-webhook] ack check failed:", e);
+    }
   }
 
 
