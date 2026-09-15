@@ -530,6 +530,19 @@ Deno.serve(async (req) => {
       error: sentStep.ok ? null : String(sentStep.error),
     });
 
+    // „Ofertă livrată” → clientul primește și pe e-mail oferta cu prețul real
+    // din anunț și linkul chatului, ca să nu mai întrebe unde ne găsește.
+    if (sentStep.ok && stepProp && action === "offer_confirm") {
+      await notifyClientOfferEmail(supabase, {
+        phone,
+        conversation_id: conv.id as string,
+        property: stepProp,
+        step: "offer_confirm",
+      });
+    }
+
+
+
     return json({
       ok: sentStep.ok,
       delivered: sentStep.ok,
