@@ -91,6 +91,7 @@ const WhatsappLiveDashboard = () => {
   const { connected } = useRealtimeChannel("wa-live-dashboard", [
     { event: "*", table: "wa_messages", handler: () => void refetch() },
     { event: "*", table: "wa_conversations", handler: () => void refetch() },
+    { event: "*", table: "make_lead_events", handler: () => void refetch() },
   ]);
 
   const rows = useMemo(() => {
@@ -113,6 +114,13 @@ const WhatsappLiveDashboard = () => {
       }
       r.lastText = (m.content ?? "").slice(0, 90);
       byConv.set(m.conversation_id, r);
+    }
+
+    // Răspunsurile date de agenți (evenimente wa_agent_reply).
+    const repliesByConv = new Map<string, number>();
+    for (const r of data?.replies ?? []) {
+      if (!r.conversation_id) continue;
+      repliesByConv.set(r.conversation_id, (repliesByConv.get(r.conversation_id) ?? 0) + 1);
     }
 
     const list = convs
