@@ -113,6 +113,13 @@
       "when": 1789483843507,
       "tag": "0015_chat_messages_client_user_role_only",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1789487236229,
+      "tag": "0016_wa_auto_offer_cron",
+      "breakpoints": true
     }
   ]
 }
