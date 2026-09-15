@@ -161,16 +161,22 @@ export default function WhatsappTransactionsDashboard() {
       const b = buckets.get(day);
       if (b) b.discutii += 1;
     }
+    // Răspunsurile agenților pe zi, lângă mesajele clienților.
+    for (const r of replies) {
+      const b = buckets.get(dayKey(r.created_at));
+      if (b) b.raspunsuri += 1;
+    }
     return {
       name: events[0]?.property_name ?? "—",
       url: events.find((e) => e.property_url)?.property_url ?? null,
       conversations: convIds.size,
       clientMessages: msgs.length,
+      agentReplies: replies.length,
       choices: events.filter((e) => e.event === "offer_sent").length,
       opened: events.filter((e) => e.event === "listing_opened").length,
       chart: Array.from(buckets.values()),
     };
-  }, [rows, inbound, pickedProperty]);
+  }, [rows, inbound, agentReplies, pickedProperty]);
 
   /** Raport pe agent: discuții în tranzacție, apartamente alese, anunțuri deschise, eșuate. */
   const byAgent = useMemo(() => {
