@@ -510,11 +510,12 @@ export default function WhatsappTransactionsDashboard() {
                   </a>
                 )}
               </div>
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-5 mb-4">
+              <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-4">
                 {[
                   { label: "Conversații", value: propertyReport.conversations },
                   { label: "Mesaje de la clienți", value: propertyReport.clientMessages },
                   { label: "Răspunsuri agent", value: propertyReport.agentReplies },
+                  { label: "Oferte livrate", value: propertyReport.offers },
                   { label: "Alegeri de apartament", value: propertyReport.choices },
                   { label: "Anunțuri deschise", value: propertyReport.opened },
                 ].map((s) => (
@@ -532,7 +533,8 @@ export default function WhatsappTransactionsDashboard() {
                     <YAxis allowDecimals={false} fontSize={11} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="alegeri" name="Alegeri de apartament" fill="hsl(var(--primary))" />
+                    <Bar dataKey="oferte" name="Oferte livrate" fill="hsl(var(--primary))" />
+                    <Bar dataKey="alegeri" name="Alegeri de apartament" fill="hsl(var(--chart-2, var(--primary)))" />
                     <Bar dataKey="mesaje" name="Mesaje de la clienți" fill="hsl(var(--muted-foreground))" />
                     <Bar dataKey="raspunsuri" name="Răspunsuri agent" fill="hsl(var(--secondary-foreground))" />
                     <Bar dataKey="discutii" name="Discuții deschise" fill="hsl(var(--accent))" />
