@@ -296,6 +296,49 @@ export default function WhatsappLiveConversations() {
               })
             )}
           </CardContent>
+          {selected && (
+            <CardContent className="border-t pt-4 space-y-2">
+              <label htmlFor="wa-reply" className="text-sm font-medium">
+                Răspuns către client (backup, dacă Make nu răspunde)
+              </label>
+              <Textarea
+                id="wa-reply"
+                rows={3}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Scrie mesajul pentru client…"
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => void sendReply()}
+                  disabled={sending || !replyText.trim()}
+                  aria-label="Trimite mesajul pe WhatsApp"
+                >
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">Trimite pe WhatsApp</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReplyText(QUALIFY_MESSAGE)}
+                  aria-label="Completează mesajul standard de calificare"
+                >
+                  Mesajul standard de calificare
+                </Button>
+              </div>
+              {!windowOpen && (
+                <p className="text-xs text-muted-foreground">
+                  Fereastra de 24h e închisă: mesajul liber nu poate fi livrat până când clientul
+                  scrie din nou.
+                </p>
+              )}
+            </CardContent>
+          )}
         </Card>
       </div>
     </AdminPageShell>
