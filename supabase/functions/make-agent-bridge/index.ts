@@ -387,10 +387,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    // negotiation: mesaj opțional către client + pasul salvat în dashboard.
-    const text = (body.message || "").trim() || (offerProp
-      ? `Am transmis oferta dvs. proprietarului pentru ${offerProp.name}. Revenim cu răspunsul și, dacă acceptă, programăm actele.`
-      : "Am intrat în negociere cu proprietarul. Revenim cu răspunsul în cel mai scurt timp.");
+    // negotiation: negociere pe runde, cu oferte tot mai jos, până la încheiere.
+    // Make poate trimite `round` explicit; altfel îl deducem din pașii deja salvați.
+    const { count: negCount } = await supabase
+      .from("wa_transaction_events")
+      .select("id", { count: "exact", head: true })
+      .eq("conversation_id", conv.id)
+      .eq("event", "negotiation");
+    const round = Math.max(1, Math.min(4, Number(body.round) || (negCount ?? 0) + 1));
+    const basePrice = offerProp?.price ?? null;
+    // Runda 1 = prețul cerut, apoi -3%, -5%, iar runda 4 închide tranzacția.
+    const stepDiscount = [0, 0.03, 0.05, 0.05][round - 1];
+    const offerPrice = basePrice ? Math.round(basePrice * (1 - stepDiscount)) : null;
+    const priceTxt = offerPrice ? `${offerPrice.toLocaleString("ro-RO")} EUR` : null;
+    const closing = round >= 4;
+    const autoText = closing
+      ? `Am ajuns la un acord${priceTxt ? ` la ${priceTxt}` : ""}${offerProp ? ` pentru ${offerProp.name}` : ""}. Următorii pași: rezervarea, antecontractul la notar și programarea semnării. Vă trimit lista de documente și două variante de dată.`
+      : round === 1
+        ? `Am transmis oferta dvs. proprietarului${offerProp ? ` pentru ${offerProp.name}` : ""}. Revenim cu răspunsul și, dacă acceptă, programăm actele.`
+        : `Am renegociat${offerProp ? ` pentru ${offerProp.name}` : ""}: proprietarul poate coborî la ${priceTxt ?? "un preț mai bun"}${round >= 3 ? ", cu plata rapidă și mobilierul incluse" : ""}. Confirmați și trecem la rezervare?`;
+    const text = (body.message || "").trim() || autoText;
     const sent = await sendToMeta({
       messaging_product: "whatsapp",
       to: phone.replace(/^\+/, ""),
