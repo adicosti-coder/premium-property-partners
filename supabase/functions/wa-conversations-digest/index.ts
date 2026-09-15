@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
 
   const { data: messages, error: msgErr } = await supabase
     .from("wa_messages")
-    .select("id, conversation_id, direction, content, template_name, error, created_at")
+    .select("id, conversation_id, direction, content, template_name, error, wa_message_id, created_at")
     .gte("created_at", since)
     .order("created_at", { ascending: true })
     .limit(2000);
@@ -83,14 +83,27 @@ Deno.serve(async (req) => {
   const threads = convIds.map((cid) => {
     const c = convById.get(cid);
     const rows = (messages ?? []).filter((m) => m.conversation_id === cid);
-    const items = rows.map((m) => `
+    const items = rows.map((m) => {
+      // Răspunsul exact de la Meta pentru fiecare mesaj trimis de noi.
+      const metaBits: string[] = [];
+      if (m.direction === "outbound") {
+        if (m.error) metaBits.push(`respins: ${esc(m.error)}`);
+        else if (m.wa_message_id) metaBits.push("acceptat de Meta");
+        else metaBits.push("fără confirmare de la Meta");
+        if (m.wa_message_id) metaBits.push(`ID ${esc(m.wa_message_id)}`);
+      }
+      const metaLine = metaBits.length
+        ? `<div style="font-size:11px;color:${m.error ? "#b91c1c" : "#4b5563"};margin-top:2px">Meta: ${metaBits.join(" · ")}</div>`
+        : "";
+      return `
       <tr>
-        <td style="padding:4px 8px;font-size:12px;color:#666;white-space:nowrap">${esc(roTime(m.created_at))}</td>
-        <td style="padding:4px 8px;font-size:12px;font-weight:600">${m.direction === "inbound" ? "Client" : "Noi"}</td>
-        <td style="padding:4px 8px;font-size:13px">${esc(m.content).slice(0, 800)}${
-      m.template_name ? ` <em style="color:#888">(șablon ${esc(m.template_name)})</em>` : ""
-    }${m.error ? `<div style="color:#b91c1c;font-size:12px">Eroare: ${esc(m.error)}</div>` : ""}</td>
-      </tr>`).join("");
+        <td style="padding:4px 8px;font-size:12px;color:#666;white-space:nowrap;vertical-align:top">${esc(roTime(m.created_at))}</td>
+        <td style="padding:4px 8px;font-size:12px;font-weight:600;vertical-align:top">${m.direction === "inbound" ? "Client" : "Noi"}</td>
+        <td style="padding:4px 8px;font-size:13px">${esc(m.content).slice(0, 2000)}${
+        m.template_name ? ` <em style="color:#888">(șablon ${esc(m.template_name)})</em>` : ""
+      }${metaLine}</td>
+      </tr>`;
+    }).join("");
     return `
       <div style="margin:18px 0;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
         <div style="background:#f9fafb;padding:8px 12px;font-size:13px">
