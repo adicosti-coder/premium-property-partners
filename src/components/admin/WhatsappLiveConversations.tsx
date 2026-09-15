@@ -461,6 +461,15 @@ export default function WhatsappLiveConversations() {
                   : "Fereastra de 24h e închisă — se poate trimite doar un mesaj-șablon aprobat."}
               </p>
             )}
+            {selected && (
+              <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Pașii de tranzacție">
+                {stages.map((s) => (
+                  <Badge key={s.label} variant={s.done ? "default" : "outline"}>
+                    {s.label}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </CardHeader>
           {/* Firul de discuție ca într-o aplicație de chat: clientul în stânga, noi în dreapta. */}
           <CardContent className="max-h-[560px] overflow-y-auto bg-muted/20 rounded-md mx-4 p-3 space-y-2">
