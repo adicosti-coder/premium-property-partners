@@ -128,24 +128,46 @@ Deno.serve(async (req) => {
     const windowOpen = !!conv?.window_expires_at &&
       new Date(conv.window_expires_at).getTime() > Date.now();
 
-    const sent = await sendToMeta(
-      windowOpen
-        ? {
-            messaging_product: "whatsapp",
-            to: phone.replace(/^\+/, ""),
-            type: "text",
-            text: { preview_url: false, body: text },
-          }
-        : {
-            messaging_product: "whatsapp",
-            to: phone.replace(/^\+/, ""),
-            type: "template",
-            template: {
-              name: Deno.env.get("WA_DEFAULT_TEMPLATE") || "intake_prospect_apartments",
-              language: { code: "ro" },
-            },
-          },
-    );
+    // Fereastra de 24h închisă → NU înlocuim răspunsul agentului cu un șablon
+    // generic (clientul ar primi alt mesaj, iar în Admin ar apărea ca livrat).
+    // Marcăm explicit mesajul ca nelivrat, ca să se vadă în Conversații live.
+    if (!windowOpen) {
+      await supabase.from("wa_messages").insert({
+        conversation_id: conversationId,
+        direction: "outbound",
+        role: "assistant",
+        content: text,
+        error: "outside_24h_window_not_delivered",
+      });
+      await supabase.from("make_lead_events").insert({
+        direction: "inbound",
+        event: "agent_reply",
+        lead_id: body.lead_id ?? null,
+        prospect_listing_id: body.prospect_listing_id ?? null,
+        conversation_id: conversationId,
+        phone_normalized: phone,
+        message: text,
+        status: "failed",
+        error: "outside_24h_window_not_delivered",
+        payload: { source: fromMake ? "make" : "internal", window_open: false },
+      });
+      return json(
+        {
+          ok: false,
+          delivered: false,
+          conversation_id: conversationId,
+          error: "outside_24h_window_not_delivered",
+        },
+        409,
+      );
+    }
+
+    const sent = await sendToMeta({
+      messaging_product: "whatsapp",
+      to: phone.replace(/^\+/, ""),
+      type: "text",
+      text: { preview_url: false, body: text },
+    });
 
     const waMsgId = sent.body?.messages?.[0]?.id ?? null;
 
@@ -154,8 +176,7 @@ Deno.serve(async (req) => {
       wa_message_id: waMsgId,
       direction: "outbound",
       role: "assistant",
-      content: windowOpen ? text : `[template fallback] ${text}`,
-      template_name: windowOpen ? null : "intake_prospect_apartments",
+      content: text,
       error: sent.ok ? null : String(sent.error).slice(0, 500),
     });
 
