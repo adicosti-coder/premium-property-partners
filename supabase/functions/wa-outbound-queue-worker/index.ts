@@ -6,6 +6,7 @@ import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { preferredIntroTemplate } from "../_shared/waPreferredTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -338,9 +339,9 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             conversation_id: conversationId,
-            template_name: item.template_name,
+            template_name: await preferredIntroTemplate(),
             template_language: item.template_language || "ro",
-            template_params: Array.isArray(item.template_params) ? item.template_params : [],
+            template_params: [],
           }),
         },
         { label: "wa-outbound-worker", maxAttempts: 3, timeoutMs: 20_000 },
