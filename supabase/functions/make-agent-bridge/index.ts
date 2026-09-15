@@ -93,6 +93,8 @@ Deno.serve(async (req) => {
     template_language?: string;
     profile_name?: string;
     wa_message_id?: string;
+    property_id?: string;
+    conversation_id?: string;
   } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
@@ -305,6 +307,14 @@ Deno.serve(async (req) => {
         },
       });
 
+      await logOffer({
+        conversationId,
+        waMsgId: tplMsgId,
+        ok: sentTpl.ok,
+        status: sentTpl.ok ? "sent_template" : "failed",
+        error: sentTpl.ok ? null : String(sentTpl.error),
+      });
+
       return json(
         {
           ok: sentTpl.ok,
@@ -339,6 +349,12 @@ Deno.serve(async (req) => {
         status: "failed",
         error: "outside_24h_window_not_delivered",
         payload: { source: fromMake ? "make" : "internal", window_open: false },
+      });
+      await logOffer({
+        conversationId,
+        ok: false,
+        status: "failed",
+        error: "outside_24h_window_not_delivered",
       });
       return json(
         {
@@ -387,6 +403,14 @@ Deno.serve(async (req) => {
       wa_message_id: waMsgId,
       error: sent.ok ? null : String(sent.error).slice(0, 500),
       payload: { source: fromMake ? "make" : "internal", window_open: windowOpen },
+    });
+
+    await logOffer({
+      conversationId,
+      waMsgId,
+      ok: sent.ok,
+      status: sent.ok ? "sent" : "failed",
+      error: sent.ok ? null : String(sent.error),
     });
 
     return json(
