@@ -10642,6 +10642,68 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_transaction_events: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          error: string | null
+          event: string
+          id: string
+          payload: Json | null
+          phone_normalized: string
+          price: number | null
+          property_id: string | null
+          property_name: string | null
+          property_slug: string | null
+          property_url: string | null
+          source: string
+          status: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          event: string
+          id?: string
+          payload?: Json | null
+          phone_normalized: string
+          price?: number | null
+          property_id?: string | null
+          property_name?: string | null
+          property_slug?: string | null
+          property_url?: string | null
+          source?: string
+          status?: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          event?: string
+          id?: string
+          payload?: Json | null
+          phone_normalized?: string
+          price?: number | null
+          property_id?: string | null
+          property_name?: string | null
+          property_slug?: string | null
+          property_url?: string | null
+          source?: string
+          status?: string
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_transaction_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "wa_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       booking_availability: {

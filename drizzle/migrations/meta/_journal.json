@@ -64,6 +64,13 @@
       "when": 1789462948337,
       "tag": "0008_wa_agents_assignment",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789465863478,
+      "tag": "0009_wa_transaction_events",
+      "breakpoints": true
     }
   ]
 }
