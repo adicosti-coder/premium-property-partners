@@ -10375,6 +10375,42 @@ export type Database = {
           },
         ]
       }
+      wa_daily_digests: {
+        Row: {
+          email_sent: boolean
+          error: string | null
+          hours: number
+          html: string
+          id: string
+          recipient: string
+          sent_at: string
+          stats: Json
+          subject: string
+        }
+        Insert: {
+          email_sent?: boolean
+          error?: string | null
+          hours?: number
+          html: string
+          id?: string
+          recipient: string
+          sent_at?: string
+          stats?: Json
+          subject: string
+        }
+        Update: {
+          email_sent?: boolean
+          error?: string | null
+          hours?: number
+          html?: string
+          id?: string
+          recipient?: string
+          sent_at?: string
+          stats?: Json
+          subject?: string
+        }
+        Relationships: []
+      }
       wa_dnc_list: {
         Row: {
           added_by: string | null
