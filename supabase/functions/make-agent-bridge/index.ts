@@ -97,6 +97,8 @@ Deno.serve(async (req) => {
     conversation_id?: string;
     // Pasul de tranzacție trimite implicit și mesajul cu pașii următori.
     skip_followup?: boolean;
+    // Runda de negociere (1 = oferta inițială, 4 = încheierea tranzacției).
+    round?: number;
   } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
