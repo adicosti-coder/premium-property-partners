@@ -348,6 +348,42 @@ const WhatsappConversationsAnalytics = () => {
                     {c.last_inbound_at
                       ? new Date(c.last_inbound_at).toLocaleString("ro-RO")
                       : "—"}
+                    {" · Agent: "}
+                    <span className="font-medium">{stats.agentNameFor(c.assigned_agent_id)}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Select
+                      value={pickedAgent[c.id] ?? c.assigned_agent_id ?? ""}
+                      onValueChange={(v) => setPickedAgent((p) => ({ ...p, [c.id]: v }))}
+                    >
+                      <SelectTrigger className="h-9 w-[180px]" aria-label="Alege agentul">
+                        <SelectValue placeholder="Alege agentul" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(data?.agents ?? []).map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      className="min-h-[36px]"
+                      disabled={
+                        assigning === c.id ||
+                        !(pickedAgent[c.id] ?? c.assigned_agent_id)
+                      }
+                      onClick={() => void assignAgent(c.id)}
+                      aria-label={`Alocă agent pentru discuția cu ${c.wa_profile_name || c.phone_normalized}`}
+                    >
+                      {assigning === c.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <UserPlus className="w-4 h-4 mr-2" />
+                      )}
+                      Alocă agent
+                    </Button>
                   </div>
                 </div>
               ))
