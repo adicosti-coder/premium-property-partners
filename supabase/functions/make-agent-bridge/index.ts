@@ -992,6 +992,15 @@ Deno.serve(async (req) => {
     const ctx = await loadProspectContext(supabase, phone);
     if (replyKind === "intake") replyText = buildIntakeMessage(ctx);
 
+    // Refuz expres la butonul „Nu, mulțumesc” → oprim orice contactare ulterioară.
+    if (quick?.kind === "quick_no") {
+      await supabase.from("wa_dnc_list").upsert({
+        phone_normalized: phone,
+        label: "refuz expres",
+        reason: "clientul a apăsat „Nu, mulțumesc” în primul mesaj WhatsApp",
+      }, { onConflict: "phone_normalized" });
+    }
+
     // Backup pe e-mail către agentul alocat, în momentul primirii mesajului.
     const notified = await notifyAgentInbound(supabase, {
       phone,
