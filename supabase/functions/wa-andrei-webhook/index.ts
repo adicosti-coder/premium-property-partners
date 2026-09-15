@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
           .eq("direction", "outbound");
 
         if (!outboundCount) {
-          intakeConversations.add(convId);
+          intakeConversations.set(convId, from);
         } else {
           conversationsToReply.add(convId);
         }
