@@ -71,6 +71,8 @@ export default function WhatsappChat() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [busyStep, setBusyStep] = useState<string | null>(null);
+  // Data și ora vizionării confirmate de agent (text liber, ex. „joi, ora 18:00").
+  const [meetingAt, setMeetingAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
 
