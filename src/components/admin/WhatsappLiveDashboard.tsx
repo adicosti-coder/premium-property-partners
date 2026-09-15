@@ -53,7 +53,7 @@ const WhatsappLiveDashboard = () => {
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["wa-live-dashboard", since],
     queryFn: async () => {
-      const [msgRes, convRes, agentRes] = await Promise.all([
+      const [msgRes, convRes, agentRes, replyRes] = await Promise.all([
         supabase
           .from("wa_messages")
           .select("id, conversation_id, direction, role, content, error, created_at")
@@ -68,6 +68,12 @@ const WhatsappLiveDashboard = () => {
           .order("updated_at", { ascending: false })
           .limit(300),
         supabase.from("wa_agents").select("id, name"),
+        supabase
+          .from("make_lead_events")
+          .select("id, conversation_id, created_at")
+          .eq("event", "wa_agent_reply")
+          .gte("created_at", since)
+          .limit(2000),
       ]);
       if (msgRes.error) throw msgRes.error;
       if (convRes.error) throw convRes.error;
@@ -75,6 +81,7 @@ const WhatsappLiveDashboard = () => {
         messages: (msgRes.data ?? []) as Msg[],
         conversations: (convRes.data ?? []) as Conv[],
         agents: (agentRes.data ?? []) as Agent[],
+        replies: (replyRes.data ?? []) as { conversation_id: string | null }[],
       };
     },
     staleTime: 30_000,
