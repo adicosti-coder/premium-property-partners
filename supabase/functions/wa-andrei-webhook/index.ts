@@ -2,6 +2,7 @@
 // Public endpoint (verify_jwt = false). Validates signature via WHATSAPP_APP_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,18 +78,8 @@ Deno.serve(async (req) => {
 
   const entries = payload?.entry || [];
   const conversationsToReply = new Set<string>();
-  const intakeConversations = new Set<string>();
-
-  const INTAKE_MESSAGE = [
-    "Bună ziua! Ați scris pe WhatsApp-ul ApArt Hotel by RealTrust (Timișoara).",
-    "",
-    "Ca să vă putem ajuta rapid, spuneți-mi cu ce vă putem fi de folos:",
-    "1️⃣ Imobiliare — vânzare, achiziție sau închiriere",
-    "2️⃣ Administrare — regim hotelier sau termen mediu/lung",
-    "3️⃣ Rezervare regim hotelier — https://realtrust.ro/rezervare",
-    "",
-    "Răspundeți cu 1, 2 sau 3 (sau descrieți în câteva cuvinte) și continuăm.",
-  ].join("\n");
+  // convId → telefon, ca mesajul de calificare să fie personalizat cu datele anunțului.
+  const intakeConversations = new Map<string, string>();
 
   for (const entry of entries) {
     for (const change of entry?.changes || []) {
@@ -136,7 +127,7 @@ Deno.serve(async (req) => {
           let prospectId: string | null = null;
           try {
             const { data: prospect } = await supabase.from("prospect_listings")
-              .select("id").eq("phone", from).limit(1).maybeSingle();
+              .select("id").eq("phone_normalized", from).limit(1).maybeSingle();
             prospectId = prospect?.id || null;
           } catch {}
 
@@ -213,7 +204,7 @@ Deno.serve(async (req) => {
           .eq("direction", "outbound");
 
         if (!outboundCount) {
-          intakeConversations.add(convId);
+          intakeConversations.set(convId, from);
         } else {
           conversationsToReply.add(convId);
         }
@@ -360,7 +351,8 @@ Deno.serve(async (req) => {
 
 
   // Auto-reply de calificare la prima interacțiune (fire-and-forget)
-  for (const convId of intakeConversations) {
+  for (const [convId, convPhone] of intakeConversations) {
+    const ctx = await loadProspectContext(supabase, convPhone);
     fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
       method: "POST",
       headers: {
@@ -368,7 +360,7 @@ Deno.serve(async (req) => {
         "Authorization": `Bearer ${serviceKey}`,
         "x-internal-secret": internalSecret,
       },
-      body: JSON.stringify({ conversation_id: convId, text: INTAKE_MESSAGE }),
+      body: JSON.stringify({ conversation_id: convId, text: buildIntakeMessage(ctx) }),
     }).catch((e) => console.error("[wa-webhook] intake send failed:", e));
   }
 
@@ -382,11 +374,6 @@ Deno.serve(async (req) => {
     .maybeSingle();
   const agentEnabled = !!agentSettings?.enabled;
 
-  const ACK_MESSAGE = [
-    "Am primit mesajul dvs., vă mulțumim!",
-    "Un coleg RealTrust vă răspunde în cel mai scurt timp, în intervalul 09:00–20:00 (luni–sâmbătă).",
-    "Dacă e vorba de o rezervare, puteți verifica disponibilitatea aici: https://realtrust.ro/rezervare",
-  ].join("\n");
 
   for (const convId of conversationsToReply) {
     if (agentEnabled) {
