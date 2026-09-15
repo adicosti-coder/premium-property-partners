@@ -2,7 +2,7 @@
 // Public endpoint (verify_jwt = false). Validates signature via WHATSAPP_APP_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
-import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext, quickReplyText } from "../_shared/waAutoReply.ts";
+import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext, autoReplyText } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
 
@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
           .eq("conversation_id", convId)
           .eq("direction", "outbound");
 
-        const quick = outboundCount ? quickReplyText(text) : null;
+        const quick = outboundCount ? autoReplyText(text) : null;
         if (quick) {
           // Răspuns la butoanele din primul mesaj → trimitem imediat răspunsul
           // potrivit, independent de regula de 3 ore, ca discuția să continue.
@@ -393,12 +393,12 @@ Deno.serve(async (req) => {
 
   // Răspuns automat la butoanele din primul mesaj (vânzare / administrare / refuz).
   for (const [convId, quick] of quickReplyConversations) {
-    if (quick.kind === "quick_no") {
+    if (quick.kind === "quick_no" || quick.kind === "quick_stop") {
       try {
         await supabase.from("wa_dnc_list").upsert({
           phone_normalized: quick.phone,
           label: "refuz expres",
-          reason: "clientul a apăsat „Nu, mulțumesc” în primul mesaj WhatsApp",
+          reason: "clientul a refuzat expres pe WhatsApp (buton „Nu, mulțumesc” sau STOP)",
         }, { onConflict: "phone_normalized" });
       } catch (e) {
         console.error("[wa-webhook] dnc upsert failed:", e);
