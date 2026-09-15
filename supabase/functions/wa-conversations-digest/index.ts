@@ -182,12 +182,27 @@ Deno.serve(async (req) => {
     ? body.recipient_override.trim()
     : "info@realtrust.ro";
 
+  const subject =
+    `WhatsApp — backup conversații ${today} (${stats.inbound} de la clienți, ${stats.failed} eșuate)`;
+
   const result = await sendTeamEmail({
     to: recipient,
-    subject: `WhatsApp — backup conversații ${today} (${stats.inbound} de la clienți, ${stats.failed} eșuate)`,
+    subject,
     html,
     source: "wa-conversations-digest",
   }, supabase);
+
+  // Istoric pentru tabul „E-mailuri zilnice" din Admin: firul complet rămâne
+  // disponibil chiar dacă e-mailul nu ajunge sau este șters din inbox.
+  await supabase.from("wa_daily_digests").insert({
+    hours,
+    recipient,
+    subject,
+    stats,
+    html,
+    email_sent: result.sent,
+    error: result.sent ? null : String((result as { error?: unknown }).error ?? "").slice(0, 500),
+  });
 
   return json({ ok: result.sent, stats, email: result }, result.sent ? 200 : 502);
 });
