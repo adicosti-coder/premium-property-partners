@@ -477,6 +477,10 @@ Deno.serve(async (req) => {
       delivered: sent.ok,
       wa_message_id: negMsgId,
       conversation_id: conv.id,
+      round,
+      offer_price: offerPrice,
+      closing,
+      next_round: closing ? null : round + 1,
       error: sent.ok ? null : sent.error,
     });
   }
