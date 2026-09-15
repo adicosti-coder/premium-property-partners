@@ -127,6 +127,13 @@
       "when": 1789487839439,
       "tag": "0017_wa_offer_intro_confirm_and_daily_digests",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789491537494,
+      "tag": "0018_chat_anon_injection_lockdown",
+      "breakpoints": true
     }
   ]
 }
