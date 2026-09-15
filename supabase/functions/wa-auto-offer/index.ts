@@ -163,14 +163,127 @@ Deno.serve(async (req) => {
     }
   }
 
-  console.log(`[wa-auto-offer] checked=${chosen.length} sent=${sent} after_hours=${afterHours}`);
+  // ---------------------------------------------------------------------------
+  // Pasul 2: după ofertă, confirmă livrarea și cheamă clientul la vizionare și
+  // negociere, dacă agentul nu a mai scris nimic între timp.
+  // ---------------------------------------------------------------------------
+  const confirmCutoff = new Date(Date.now() - 3_600_000).toISOString();
+  let confirmed = 0;
+
+  let cq = supabase
+    .from("wa_transaction_events")
+    .select("id, conversation_id, phone_normalized, property_id, created_at")
+    .eq("event", "offer_followup")
+    .neq("status", "failed")
+    .gte("created_at", floor)
+    .lte("created_at", confirmCutoff)
+    .order("created_at", { ascending: false })
+    .limit(limit * 6);
+  if (body.conversation_id) cq = cq.eq("conversation_id", body.conversation_id);
+
+  const { data: offered } = await cq;
+  const seenConfirm = new Set<string>();
+
+  for (const ev of offered ?? []) {
+    if (confirmed >= limit) break;
+    const conversationId = ev.conversation_id as string | null;
+    const phone = ev.phone_normalized as string | null;
+    if (!conversationId || !phone || seenConfirm.has(conversationId)) continue;
+    seenConfirm.add(conversationId);
+
+    const { data: dnc } = await supabase
+      .from("wa_dnc_list")
+      .select("id")
+      .eq("phone_normalized", phone)
+      .maybeSingle();
+    if (dnc) {
+      results.push({ conversationId, step: "offer_confirm", skipped: "dnc" });
+      continue;
+    }
+
+    const { count: alreadyConfirmed } = await supabase
+      .from("wa_transaction_events")
+      .select("id", { count: "exact", head: true })
+      .eq("conversation_id", conversationId)
+      .eq("event", "offer_confirm");
+    if ((alreadyConfirmed ?? 0) > 0) {
+      results.push({ conversationId, step: "offer_confirm", skipped: "already_confirmed" });
+      continue;
+    }
+
+    const { data: conv } = await supabase
+      .from("wa_conversations")
+      .select("id, status")
+      .eq("id", conversationId)
+      .maybeSingle();
+    if (conv?.status && ["closed", "opted_out"].includes(String(conv.status))) {
+      results.push({ conversationId, step: "offer_confirm", skipped: `conversation_${conv.status}` });
+      continue;
+    }
+
+    // Agentul a scris după ofertă? Îl lăsăm pe el să continue.
+    const { data: outAfter } = await supabase
+      .from("wa_messages")
+      .select("id")
+      .eq("conversation_id", conversationId)
+      .eq("direction", "outbound")
+      .gt("created_at", ev.created_at as string)
+      .limit(1);
+    if (outAfter?.length) {
+      results.push({ conversationId, step: "offer_confirm", skipped: "agent_active" });
+      continue;
+    }
+
+    if (dryRun) {
+      confirmed += 1;
+      results.push({ conversationId, step: "offer_confirm", would_send: true });
+      continue;
+    }
+
+    try {
+      const res = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/make-agent-bridge`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
+          },
+          body: JSON.stringify({
+            action: "offer_confirm",
+            conversation_id: conversationId,
+            phone,
+            property_id: ev.property_id,
+          }),
+        },
+      );
+      const payload = await res.json().catch(() => ({}));
+      if (res.ok && payload?.ok !== false) {
+        confirmed += 1;
+        results.push({ conversationId, step: "offer_confirm", sent: true });
+      } else {
+        results.push({
+          conversationId,
+          step: "offer_confirm",
+          error: payload?.error || `http_${res.status}`,
+        });
+      }
+    } catch (e) {
+      results.push({ conversationId, step: "offer_confirm", error: String(e) });
+    }
+  }
+
+  console.log(
+    `[wa-auto-offer] checked=${chosen.length} sent=${sent} confirmed=${confirmed} after_hours=${afterHours}`,
+  );
 
   return json({
     ok: true,
     checked: chosen.length,
     sent,
+    confirmed,
     dry_run: dryRun,
     after_hours: afterHours,
-    results: results.slice(0, 50),
+    results: results.slice(0, 80),
   });
 });
