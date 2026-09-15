@@ -145,7 +145,6 @@ const stripDiacritics = (t: string) =>
   t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
 export function quickReplyText(raw: string): { kind: string; text: string } | null {
- kind: string; text: string } | null {
   const t = stripDiacritics(raw);
   if (/^nu[, ]|^nu$|multumesc/.test(t) && t.length <= 40) {
     return {
