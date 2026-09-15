@@ -77,6 +77,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "whatsapp-dashboard", label: "Dashboard WhatsApp", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "dashboard", "coada", "trimise", "esuate", "meta", "statistici", "make"] },
       { value: "make-leads", label: "Lead-uri Make", icon: MessageSquare, subgroup: "AI Tools", keywords: ["make", "lead", "agent", "automatizare", "webhook", "raspunsuri", "transfer"] },
       { value: "whatsapp-live", label: "Conversații live", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "conversatii", "live", "discutii", "chat", "client", "agent", "fir"] },
+      { value: "whatsapp-threads", label: "Discuții", icon: MessageSquare, subgroup: "AI Tools", keywords: ["discutii", "fir", "thread", "chat", "whatsapp", "client", "agent", "istoric", "oferta"] },
       { value: "whatsapp-live-dashboard", label: "Dashboard conversații live", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "dashboard", "live", "primite", "raspunsuri", "abandonate", "blocaj", "agent"] },
       { value: "whatsapp-daily-emails", label: "E-mailuri zilnice", icon: MessageSquare, subgroup: "AI Tools", keywords: ["email", "emailuri", "zilnice", "digest", "rezumat", "backup", "fir", "conversatii", "whatsapp"] },
       { value: "make-status", label: "Stare Make", icon: MessageSquare, subgroup: "AI Tools", keywords: ["make", "scenariu", "stare", "status", "ultima rulare", "livrate", "esuate", "re-run", "webhook"] },
