@@ -177,7 +177,9 @@ export default function WhatsappChat() {
     void loadThread(selected.id);
   };
 
-  const runStep = async (action: "offer_meeting" | "offer_direct_chat") => {
+  const runStep = async (
+    action: "offer_meeting" | "offer_direct_chat" | "offer_followup" | "offer_confirm",
+  ) => {
     if (!selected) return;
     setBusyStep(action);
     const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
@@ -190,7 +192,13 @@ export default function WhatsappChat() {
     setBusyStep(null);
     const res = (data ?? {}) as Record<string, unknown>;
     const label =
-      action === "offer_meeting" ? "Propunerea de întâlnire" : "Mesajul cu chatul direct";
+      action === "offer_meeting"
+        ? "Propunerea de întâlnire"
+        : action === "offer_direct_chat"
+        ? "Mesajul cu chatul direct"
+        : action === "offer_followup"
+        ? "Oferta cu prețul din anunț"
+        : "Confirmarea ofertei";
     if (fnErr || res.delivered === false) {
       toast({
         title: `${label} nu a plecat`,
