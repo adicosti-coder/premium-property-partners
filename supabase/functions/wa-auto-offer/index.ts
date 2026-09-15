@@ -57,8 +57,9 @@ Deno.serve(async (req) => {
   // Apartamente alese, cele mai recente primele.
   let q = supabase
     .from("wa_transaction_events")
-    .select("id, conversation_id, phone_normalized, agent_id, created_at, event")
-    .eq("event", "property_offer")
+    .select("id, conversation_id, phone_normalized, agent_id, property_id, created_at, event")
+    .eq("event", "offer_sent")
+    .not("property_id", "is", null)
     .gte("created_at", floor)
     .lte("created_at", cutoff)
     .order("created_at", { ascending: false })
