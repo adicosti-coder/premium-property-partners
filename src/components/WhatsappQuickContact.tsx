@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Home, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useCtaAnalytics } from "@/hooks/useCtaAnalytics";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { fetchPublicListings } from "@/lib/listingQueries";
 
 /** Numărul înregistrat pentru automatizarea WhatsApp (răspuns automat de calificare). */
 const WA_AUTOMATION_NUMBER = "40733783540";
@@ -29,6 +33,12 @@ const COPY = {
     intro: "Bună ziua! Vă scriu de pe realtrust.ro.",
     options:
       "Mă interesează: 1) imobiliare (vânzare/achiziție/închiriere), 2) administrare regim hotelier, 3) rezervare cazare.",
+    txTitle: "Sau discută direct despre un apartament",
+    txPick: "Alege apartamentul",
+    txSend: "Deschide discuția despre apartament",
+    txMissing: "Alege mai întâi apartamentul.",
+    txIntro: "Bună ziua! Sunt interesat(ă) de acest apartament de pe realtrust.ro:",
+    txAsk: "Îmi puteți trimite detaliile, prețul final și o vizionare?",
   },
   en: {
     label: "Quick contact",
@@ -47,7 +57,23 @@ const COPY = {
     intro: "Hello! I'm writing from realtrust.ro.",
     options:
       "I'm interested in: 1) real estate (buy/sell/rent), 2) hotel-regime management, 3) accommodation booking.",
+    txTitle: "Or talk directly about an apartment",
+    txPick: "Choose the apartment",
+    txSend: "Open the chat about this apartment",
+    txMissing: "Please choose an apartment first.",
+    txIntro: "Hello! I'm interested in this apartment from realtrust.ro:",
+    txAsk: "Could you send me the details, the final price and a viewing?",
   },
+};
+
+type SaleListing = {
+  id: string;
+  name: string;
+  slug: string | null;
+  location: string | null;
+  size: number | null;
+  bedrooms: number | null;
+  capital_necesar: number | null;
 };
 
 const WhatsappQuickContact = () => {
@@ -58,6 +84,53 @@ const WhatsappQuickContact = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [listings, setListings] = useState<SaleListing[]>([]);
+  const [pickedListing, setPickedListing] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const { data } = await fetchPublicListings<SaleListing>({
+        columns: ["id", "name", "slug", "location", "size", "bedrooms", "capital_necesar"],
+        listingTypes: ["vanzare", "investitie"],
+        orderBy: { column: "name", ascending: true },
+      });
+      if (active) setListings((data ?? []).filter((l) => !!l.slug));
+    })();
+    return () => { active = false; };
+  }, []);
+
+  /** Butonul de tranzacție: deschide discuția live cu anunțul ales. */
+  const handleTransaction = () => {
+    const listing = listings.find((l) => l.id === pickedListing);
+    if (!listing) {
+      toast.error(c.txMissing);
+      return;
+    }
+    const details = [
+      listing.bedrooms ? `${listing.bedrooms} camere` : null,
+      listing.size ? `${listing.size} m²` : null,
+      listing.location || null,
+      listing.capital_necesar ? `${listing.capital_necesar.toLocaleString("ro-RO")} €` : null,
+    ].filter(Boolean).join(" · ");
+    const text = [
+      c.txIntro,
+      "",
+      listing.name,
+      details || null,
+      `https://realtrust.ro/proprietate/${listing.slug}`,
+      "",
+      c.txAsk,
+    ].filter((l) => l !== null).join("\n");
+
+    trackWhatsApp();
+    toast.success(c.opened);
+    window.open(
+      `https://wa.me/${WA_AUTOMATION_NUMBER}?text=${encodeURIComponent(text)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  };
 
   const handleSend = () => {
     if (!name.trim() || !phone.trim() || !message.trim()) {
@@ -134,6 +207,35 @@ const WhatsappQuickContact = () => {
               {c.send}
             </Button>
           </div>
+
+          {listings.length > 0 && (
+            <div className="mt-8 border-t border-border pt-6">
+              <p className="text-sm font-medium text-foreground mb-3">{c.txTitle}</p>
+              <div className="space-y-3">
+                <Select value={pickedListing} onValueChange={setPickedListing}>
+                  <SelectTrigger aria-label={c.txPick} className="min-h-[48px]">
+                    <SelectValue placeholder={c.txPick} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {listings.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  onClick={handleTransaction}
+                  className="w-full min-h-[48px]"
+                  aria-label={c.txSend}
+                >
+                  <Home className="w-5 h-5 mr-2" />
+                  {c.txSend}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>

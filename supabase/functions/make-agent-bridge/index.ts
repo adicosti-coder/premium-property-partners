@@ -93,14 +93,138 @@ Deno.serve(async (req) => {
     template_language?: string;
     profile_name?: string;
     wa_message_id?: string;
+    property_id?: string;
+    conversation_id?: string;
   } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
-  const action = (body.action || "agent_reply").trim();
+  let action = (body.action || "agent_reply").trim();
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  // ------------------------------------------------------------- property_offer
+  // Pasul de tranzacție: apartamentul ales de client. Construim mesajul cu
+  // anunțul din baza de date, îl trimitem pe WhatsApp prin fluxul agent_reply
+  // și înregistrăm tranzacția (dashboard + Make).
+  type OfferProp = {
+    id: string;
+    name: string;
+    slug: string | null;
+    rooms: number | null;
+    size: number | null;
+    location: string | null;
+    price: number | null;
+    url: string;
+  };
+  let offerProp: OfferProp | null = null;
+
+  if (action === "property_offer") {
+    const propertyId = (body.property_id || "").trim();
+    if (!propertyId) return json({ error: "property_id_required" }, 400);
+    const { data: prop, error: propErr } = await supabase
+      .from("properties")
+      .select("id, name, slug, rooms, size, location, capital_necesar, price_per_sqm")
+      .eq("id", propertyId)
+      .maybeSingle();
+    if (propErr) return json({ error: "property_lookup_failed", details: propErr.message }, 500);
+    if (!prop) return json({ error: "property_not_found" }, 404);
+
+    const price = Number(prop.capital_necesar) ||
+      (prop.price_per_sqm && prop.size ? Math.round(Number(prop.price_per_sqm) * Number(prop.size)) : 0);
+    const url = `https://realtrust.ro/proprietate/${prop.slug}`;
+    offerProp = {
+      id: prop.id as string,
+      name: prop.name as string,
+      slug: (prop.slug as string) ?? null,
+      rooms: (prop.rooms as number) ?? null,
+      size: (prop.size as number) ?? null,
+      location: (prop.location as string) ?? null,
+      price: price || null,
+      url,
+    };
+
+    const details = [
+      prop.rooms ? `${prop.rooms} camere` : null,
+      prop.size ? `${prop.size} m²` : null,
+      prop.location || null,
+    ].filter(Boolean).join(" · ");
+
+    body.message = (body.message || "").trim() || [
+      `Apartamentul ales: ${prop.name}`,
+      details || null,
+      price ? `Preț: ${price.toLocaleString("ro-RO")} €` : null,
+      "",
+      `Detalii complete și poze: ${url}`,
+      "Dacă doriți, vă pregătim actele și programăm vizionarea.",
+    ].filter((l) => l !== null).join("\n");
+
+    action = "agent_reply";
+  }
+
+  /** Înregistrează pasul de tranzacție și îl anunță în Make. */
+  const logOffer = async (opts: {
+    conversationId?: string;
+    waMsgId?: string | null;
+    ok: boolean;
+    status: string;
+    error?: string | null;
+  }) => {
+    if (!offerProp) return;
+    const phone = normalizeRoMobile(body.phone || "") || (body.phone || "");
+    await supabase.from("wa_transaction_events").insert({
+      conversation_id: opts.conversationId ?? null,
+      phone_normalized: phone,
+      property_id: offerProp.id,
+      property_name: offerProp.name,
+      property_slug: offerProp.slug,
+      property_url: offerProp.url,
+      price: offerProp.price,
+      event: opts.ok ? "offer_sent" : "offer_failed",
+      status: opts.status,
+      wa_message_id: opts.waMsgId ?? null,
+      error: opts.error ? String(opts.error).slice(0, 500) : null,
+      source: fromMake ? "make" : "admin",
+      payload: { rooms: offerProp.rooms, size: offerProp.size, location: offerProp.location },
+    });
+    await relayToMake("wa_property_offer", {
+      phone,
+      property: offerProp,
+      status: opts.status,
+      delivered: opts.ok,
+      conversation_id: opts.conversationId ?? null,
+      wa_message_id: opts.waMsgId ?? null,
+      error: opts.error ?? null,
+    });
+  };
+
+  // ---------------------------------------------------------- listing_opened
+  // Admin / site: clientul a deschis anunțul ales (pentru dashboardul de tranzacții).
+  if (action === "listing_opened") {
+    const phone = normalizeRoMobile(body.phone || "") || (body.phone || "").trim();
+    const propertyId = (body.property_id || "").trim();
+    if (!propertyId) return json({ error: "property_id_required" }, 400);
+    const { data: prop } = await supabase
+      .from("properties")
+      .select("id, name, slug")
+      .eq("id", propertyId)
+      .maybeSingle();
+    await supabase.from("wa_transaction_events").insert({
+      conversation_id: body.conversation_id ?? null,
+      phone_normalized: phone,
+      property_id: propertyId,
+      property_name: (prop?.name as string) ?? null,
+      property_slug: (prop?.slug as string) ?? null,
+      property_url: prop?.slug ? `https://realtrust.ro/proprietate/${prop.slug}` : null,
+      event: "listing_opened",
+      status: "opened",
+      source: fromMake ? "make" : "admin",
+    });
+    await relayToMake("wa_listing_opened", { phone, property_id: propertyId });
+    return json({ ok: true });
+  }
+
 
   // ---------------------------------------------------------------- agent_reply
   if (action === "agent_reply") {
@@ -183,6 +307,14 @@ Deno.serve(async (req) => {
         },
       });
 
+      await logOffer({
+        conversationId,
+        waMsgId: tplMsgId,
+        ok: sentTpl.ok,
+        status: sentTpl.ok ? "sent_template" : "failed",
+        error: sentTpl.ok ? null : String(sentTpl.error),
+      });
+
       return json(
         {
           ok: sentTpl.ok,
@@ -217,6 +349,12 @@ Deno.serve(async (req) => {
         status: "failed",
         error: "outside_24h_window_not_delivered",
         payload: { source: fromMake ? "make" : "internal", window_open: false },
+      });
+      await logOffer({
+        conversationId,
+        ok: false,
+        status: "failed",
+        error: "outside_24h_window_not_delivered",
       });
       return json(
         {
@@ -265,6 +403,14 @@ Deno.serve(async (req) => {
       wa_message_id: waMsgId,
       error: sent.ok ? null : String(sent.error).slice(0, 500),
       payload: { source: fromMake ? "make" : "internal", window_open: windowOpen },
+    });
+
+    await logOffer({
+      conversationId,
+      waMsgId,
+      ok: sent.ok,
+      status: sent.ok ? "sent" : "failed",
+      error: sent.ok ? null : String(sent.error),
     });
 
     return json(
