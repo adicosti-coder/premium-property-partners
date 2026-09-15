@@ -280,6 +280,8 @@ Deno.serve(async (req) => {
         ? `Preț de pornire: ${Number(offerProp.price).toLocaleString("ro-RO")} €. Cu ce sumă doriți să intrăm în negociere?`
         : "Cu ce sumă doriți să intrăm în negociere?",
       `Anunțul complet: ${offerProp.url}`,
+      "",
+      FINANCE_BLOCK,
     ].join("\n");
 
     const sent = await sendToMeta({

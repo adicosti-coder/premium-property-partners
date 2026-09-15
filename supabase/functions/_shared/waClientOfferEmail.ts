@@ -56,6 +56,17 @@ export function buildClientOfferEmail(
     <li>Negociere — transmitem oferta dvs. proprietarului.</li>
     <li>Acte — antecontract, plată și programare la notar.</li>
   </ol>
+  <table role="presentation" style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;margin:0 0 18px;background:#f9fafb">
+    <tr><td style="padding:14px 16px">
+      <p style="margin:0 0 8px;font-size:15px;font-weight:bold">Cum se calculează venitul dvs.</p>
+      <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#374151">
+        <li><strong>Venituri brute:</strong> tariful pe noapte × ocupare medie de 75% pe lună.</li>
+        <li><strong>Cheltuieli:</strong> curățenie, utilități, comisioane Booking/Airbnb, administrare și taxe — circa 27% din încasări.</li>
+        <li><strong>Profit net:</strong> aproximativ 73% din încasări, adică un randament net de circa 9,4% pe an din valoarea apartamentului.</li>
+      </ul>
+      <p style="margin:8px 0 0;font-size:13px;color:#6b7280">Primiți lunar un raport cu încasările, cheltuielile și profitul net.</p>
+    </td></tr>
+  </table>
   ${prop.url ? `<p style="margin:0 0 18px;font-size:14px"><a href="${prop.url}">Vedeți anunțul complet și pozele</a></p>` : ""}
   <p style="margin:20px 0">
     <a href="${PUBLIC_WA_LINK}" style="background:#D4AF37;color:#111827;text-decoration:none;padding:13px 22px;border-radius:8px;font-weight:bold;display:inline-block">
