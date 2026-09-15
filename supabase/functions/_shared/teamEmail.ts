@@ -20,12 +20,20 @@ export const RESEND_TEST_FROM = `RealTrust <info@${VERIFIED_SENDER_DOMAIN}>`;
  * RESEND_FROM is only honoured when it sits on the verified domain; otherwise
  * every send would 403 before the fallback ever gets a chance.
  */
+/** Adresa oficială e info@realtrust.ro — orice alt local-part e normalizat. */
+const DISALLOWED_LOCAL_PARTS = new Set([
+  "noreply", "no-reply", "alerts", "contact", "office", "hello",
+]);
+
 export function resolveSender(raw?: string | null): string {
   const value = (raw ?? "").trim();
-  const match = value.match(/<?([^\s<>@]+@([^\s<>]+))>?$/);
+  const match = value.match(/<?(([^\s<>@]+)@([^\s<>]+))>?$/);
   if (!match) return RESEND_TEST_FROM;
-  const domain = match[2].toLowerCase();
-  return domain === VERIFIED_SENDER_DOMAIN ? value : RESEND_TEST_FROM;
+  const localPart = match[2].toLowerCase();
+  const domain = match[3].toLowerCase();
+  if (domain !== VERIFIED_SENDER_DOMAIN) return RESEND_TEST_FROM;
+  if (DISALLOWED_LOCAL_PARTS.has(localPart)) return RESEND_TEST_FROM;
+  return value;
 }
 
 
