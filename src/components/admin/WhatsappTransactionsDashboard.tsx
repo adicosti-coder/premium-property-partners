@@ -229,6 +229,62 @@ export default function WhatsappTransactionsDashboard() {
     return Array.from(map.values()).sort((a, b) => b.count - a.count).slice(0, 8);
   }, [rows]);
 
+  /**
+   * Pasul de negociere: discuțiile în care clientul a ales apartamentul, dar
+   * încă nu a primit oferta cu pașii următori sau nu a intrat în negociere.
+   */
+  const pendingSteps = useMemo(() => {
+    const latestOffer = new Map<string, TxRow>();
+    for (const r of rows) {
+      if (r.event !== "offer_sent" || !r.conversation_id) continue;
+      if (!latestOffer.has(r.conversation_id)) latestOffer.set(r.conversation_id, r);
+    }
+    return Array.from(latestOffer.values()).map((r) => {
+      const after = rows.filter(
+        (x) =>
+          x.conversation_id === r.conversation_id &&
+          new Date(x.created_at).getTime() >= new Date(r.created_at).getTime(),
+      );
+      return {
+        row: r,
+        hasFollowup: after.some((x) => x.event === "offer_followup" && x.status !== "failed"),
+        hasNegotiation: after.some((x) => x.event === "negotiation" && x.status !== "failed"),
+      };
+    });
+  }, [rows]);
+
+  const runStep = async (
+    action: "offer_followup" | "negotiation",
+    row: TxRow,
+  ) => {
+    setBusyStep(`${action}:${row.id}`);
+    const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
+      body: {
+        action,
+        phone: row.phone_normalized,
+        conversation_id: row.conversation_id,
+        property_id: row.property_id,
+      },
+    });
+    setBusyStep(null);
+    const res = (data ?? {}) as Record<string, unknown>;
+    if (fnErr || res.delivered === false) {
+      toast({
+        title: action === "offer_followup" ? "Oferta nu a plecat" : "Mesajul de negociere nu a plecat",
+        description:
+          fnErr?.message ||
+          String(res.error ?? "Fereastra de 24h poate fi închisă — clientul trebuie să scrie din nou."),
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: action === "offer_followup" ? "Ofertă trimisă" : "Negociere pornită",
+        description: "Mesajul a plecat în aceeași discuție pe WhatsApp.",
+      });
+    }
+    void load();
+  };
+
   const cards = [
     { label: "Conversații în tranzacție", value: stats.conversations, icon: MessageSquare },
     { label: "Apartamente alese", value: stats.properties, icon: Home },
