@@ -59,6 +59,10 @@ serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { headers: corsHeaders });
 
+  // Public endpoint that spends AI credits → per-IP limit like the other public AI endpoints.
+  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 15, windowMs: 60_000 });
+  if (limited) return limited;
+
   try {
     const { query, language = "ro" } = await req.json();
     if (!query || typeof query !== "string" || query.trim().length < 3) {
