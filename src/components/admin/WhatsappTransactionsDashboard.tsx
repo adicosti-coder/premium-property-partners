@@ -183,6 +183,7 @@ export default function WhatsappTransactionsDashboard() {
       agentReplies: replies.length,
       choices: events.filter((e) => e.event === "offer_sent").length,
       opened: events.filter((e) => e.event === "listing_opened").length,
+      offers: events.filter(isDeliveredOffer).length,
       chart: Array.from(buckets.values()),
     };
   }, [rows, inbound, agentReplies, pickedProperty]);
