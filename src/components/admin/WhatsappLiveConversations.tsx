@@ -12,7 +12,7 @@ import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Home, Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
+import { ExternalLink, Home, Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
 
 /**
  * Conversații live WhatsApp — firul complet al discuției (mesaje trimise de agent
@@ -237,25 +237,17 @@ export default function WhatsappLiveConversations() {
   const sendOffer = async () => {
     const prop = saleProperties.find((p) => p.id === pickedProperty);
     if (!selected || !prop) return;
-    const price = propertyPrice(prop);
     const url = propertyUrl(prop);
-    const details = [
-      prop.rooms ? `${prop.rooms} camere` : null,
-      prop.size ? `${prop.size} m²` : null,
-      prop.location || null,
-    ].filter(Boolean).join(" · ");
-    const text = [
-      `Apartamentul ales: ${prop.name}`,
-      details || null,
-      price ? `Preț: ${price.toLocaleString("ro-RO")} €` : null,
-      "",
-      `Detalii complete și poze: ${url}`,
-      "Dacă doriți, vă pregătim actele și programăm vizionarea.",
-    ].filter((l) => l !== null).join("\n");
 
     setSendingOffer(true);
+    // Pasul de tranzacție trece prin punte: mesajul pleacă pe WhatsApp, se
+    // înregistrează în dashboardul de tranzacții și se anunță în Make.
     const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
-      body: { action: "agent_reply", phone: selected.phone_normalized, message: text },
+      body: {
+        action: "property_offer",
+        phone: selected.phone_normalized,
+        property_id: prop.id,
+      },
     });
     setSendingOffer(false);
     const res = (data ?? {}) as Record<string, unknown>;
@@ -270,7 +262,15 @@ export default function WhatsappLiveConversations() {
     } else {
       toast({
         title: "Anunț trimis clientului",
-        description: `${prop.name} — deschid pagina anunțului.`,
+        description: `${prop.name} — apare în discuție și deschid pagina anunțului.`,
+      });
+      void supabase.functions.invoke("make-agent-bridge", {
+        body: {
+          action: "listing_opened",
+          phone: selected.phone_normalized,
+          property_id: prop.id,
+          conversation_id: selected.id,
+        },
       });
       window.open(url, "_blank", "noopener,noreferrer");
     }
@@ -413,6 +413,43 @@ export default function WhatsappLiveConversations() {
                           {m.template_name && <Badge variant="outline">{m.template_name}</Badge>}
                         </div>
                         <p className="text-sm whitespace-pre-wrap break-words">{m.content || "—"}</p>
+                        {(() => {
+                          const link = (m.content || "").match(
+                            /https:\/\/realtrust\.ro\/proprietate\/[a-z0-9-]+/i,
+                          )?.[0];
+                          if (!link) return null;
+                          const slug = link.split("/").pop() ?? "";
+                          const prop = saleProperties.find((p) => p.slug === slug);
+                          return (
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 flex items-center gap-2 rounded-lg border border-border bg-background/70 p-2 hover:bg-background"
+                              aria-label={`Deschide anunțul ${prop?.name ?? slug}`}
+                            >
+                              <Home className="h-4 w-4 text-primary shrink-0" />
+                              <span className="min-w-0">
+                                <span className="block text-xs font-medium truncate">
+                                  {prop?.name ?? "Anunț apartament"}
+                                </span>
+                                <span className="block text-[11px] text-muted-foreground truncate">
+                                  {prop
+                                    ? [
+                                        prop.rooms ? `${prop.rooms} camere` : null,
+                                        prop.size ? `${prop.size} m²` : null,
+                                        prop.location,
+                                        propertyPrice(prop)
+                                          ? `${propertyPrice(prop).toLocaleString("ro-RO")} €`
+                                          : null,
+                                      ].filter(Boolean).join(" · ")
+                                    : "Vezi anunțul de vânzare"}
+                                </span>
+                              </span>
+                              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-auto" />
+                            </a>
+                          );
+                        })()}
                         <div className="flex items-center justify-end gap-2 mt-1 text-[11px]">
                           <span className="text-muted-foreground">{fmt(m.created_at)}</span>
                           {metaStatus && (
