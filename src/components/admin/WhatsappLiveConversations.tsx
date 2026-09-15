@@ -12,7 +12,7 @@ import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ExternalLink, Handshake, Home, Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
+import { ExternalLink, Handshake, Home, Loader2, MessageSquare, RefreshCw, Search, Send, Tag, User } from "lucide-react";
 
 /**
  * Conversații live WhatsApp — firul complet al discuției (mesaje trimise de agent
@@ -66,6 +66,22 @@ const TX_LABELS: Record<string, string> = {
   offer_confirm: "Ofertă livrată — invitație la vizionare și negociere",
   listing_opened: "Anunț deschis",
   negotiation: "Negociere",
+};
+
+/** Evenimentele care înseamnă „ofertă livrată clientului". */
+const OFFER_EVENTS = ["offer_intro", "offer_followup", "offer_confirm", "negotiation"];
+
+/** Vizualizare rapidă a ofertelor livrate, fără a deschide tabul dedicat. */
+type OfferPeek = {
+  id: string;
+  conversation_id: string | null;
+  phone_normalized: string | null;
+  property_name: string | null;
+  price: number | null;
+  event: string;
+  status: string | null;
+  error: string | null;
+  created_at: string;
 };
 
 type SaleProperty = {
@@ -130,6 +146,8 @@ export default function WhatsappLiveConversations() {
   const [agentPick, setAgentPick] = useState<string>("");
   const [assigning, setAssigning] = useState(false);
   const [busyStep, setBusyStep] = useState<string | null>(null);
+  const [showOffers, setShowOffers] = useState(false);
+  const [recentOffers, setRecentOffers] = useState<OfferPeek[]>([]);
   const { toast } = useToast();
 
   const loadConversations = useCallback(async () => {
@@ -168,6 +186,19 @@ export default function WhatsappLiveConversations() {
     setSaleProperties((data ?? []) as SaleProperty[]);
   }, []);
 
+  /** Ultimele oferte livrate, pentru vizualizarea rapidă din această pagină. */
+  const loadRecentOffers = useCallback(async () => {
+    const { data } = await supabase
+      .from("wa_transaction_events")
+      .select(
+        "id, conversation_id, phone_normalized, property_name, price, event, status, error, created_at",
+      )
+      .in("event", OFFER_EVENTS)
+      .order("created_at", { ascending: false })
+      .limit(25);
+    setRecentOffers((data ?? []) as OfferPeek[]);
+  }, []);
+
   const loadThread = useCallback(async (conversationId: string) => {
     setLoadingThread(true);
     const [msgRes, txRes] = await Promise.all([
@@ -194,7 +225,8 @@ export default function WhatsappLiveConversations() {
     void loadConversations();
     void loadAgents();
     void loadSaleProperties();
-  }, [loadConversations, loadAgents, loadSaleProperties]);
+    void loadRecentOffers();
+  }, [loadConversations, loadAgents, loadSaleProperties, loadRecentOffers]);
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
@@ -216,7 +248,10 @@ export default function WhatsappLiveConversations() {
     {
       event: "*",
       table: "wa_transaction_events",
-      handler: () => { if (selectedId) void loadThread(selectedId); },
+      handler: () => {
+        if (selectedId) void loadThread(selectedId);
+        void loadRecentOffers();
+      },
     },
     {
       event: "*",
@@ -452,15 +487,76 @@ export default function WhatsappLiveConversations() {
       title="Conversații live WhatsApp"
       description="Firul complet al discuțiilor: mesajele trimise de agent și răspunsurile clienților, în timp real."
       actions={
-        <Button variant="outline" size="sm" onClick={() => void loadConversations()}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Reîmprospătează
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={showOffers ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setShowOffers((v) => !v);
+              void loadRecentOffers();
+            }}
+            aria-label="Vizualizare rapidă a ofertelor livrate"
+          >
+            <Tag className="h-4 w-4 mr-2" />
+            Oferte livrate ({recentOffers.filter((o) => o.status !== "failed" && !o.error).length})
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => void loadConversations()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Reîmprospătează
+          </Button>
+        </div>
       }
     >
       {error && (
         <p className="mb-4 text-sm text-destructive">Nu am putut încărca discuțiile: {error}</p>
       )}
+
+      {showOffers && (
+        <Card className="mb-4 min-w-0">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Tag className="h-4 w-4" />
+              Ultimele oferte livrate
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-[260px] overflow-y-auto">
+            {recentOffers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nicio ofertă trimisă încă.</p>
+            ) : (
+              recentOffers.map((o) => {
+                const failed = o.status === "failed" || !!o.error;
+                return (
+                  <button
+                    key={o.id}
+                    type="button"
+                    className="w-full text-left rounded-lg border p-2.5 min-h-[48px] hover:bg-muted/50"
+                    onClick={() => {
+                      if (o.conversation_id) setSelectedId(o.conversation_id);
+                      setShowOffers(false);
+                    }}
+                    aria-label={`Deschide discuția ofertei din ${fmt(o.created_at)}`}
+                  >
+                    <div className="flex flex-wrap items-center gap-2 justify-between">
+                      <span className="text-sm font-medium truncate">
+                        {o.property_name || "Apartament nespecificat"}
+                        {o.price ? ` · ${Number(o.price).toLocaleString("ro-RO")} €` : ""}
+                      </span>
+                      <Badge variant={failed ? "destructive" : "secondary"}>
+                        {failed ? "eșuată" : "livrată"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
+                      {fmt(o.created_at)} · {o.phone_normalized || "—"} ·{" "}
+                      {TX_LABELS[o.event] ?? o.event}
+                    </p>
+                  </button>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+      )}
+
 
       <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-[320px_1fr]">
         <Card className="min-w-0">
