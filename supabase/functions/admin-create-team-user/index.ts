@@ -112,11 +112,11 @@ Deno.serve(async (req) => {
 
     try {
       await admin.from("admin_audit_log").insert({
-        admin_user_id: auth.userId,
+        actor_user_id: auth.userId,
         action: created ? "team_member_created" : "team_member_role_granted",
-        table_name: "user_roles",
-        record_id: userId,
-        new_values: { email, name: name || null, role: "admin" },
+        entity_type: "user_roles",
+        entity_id: userId,
+        details: { email, name: name || null, role: "admin" },
       });
     } catch { /* audit best-effort */ }
 
@@ -140,10 +140,10 @@ Deno.serve(async (req) => {
 
     try {
       await admin.from("admin_audit_log").insert({
-        admin_user_id: auth.userId,
+        actor_user_id: auth.userId,
         action: "team_member_revoked",
-        table_name: "user_roles",
-        record_id: userId,
+        entity_type: "user_roles",
+        entity_id: userId,
       });
     } catch { /* audit best-effort */ }
 
