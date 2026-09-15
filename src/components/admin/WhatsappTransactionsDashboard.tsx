@@ -74,7 +74,7 @@ export default function WhatsappTransactionsDashboard() {
   const load = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - DAYS * 24 * 3600 * 1000).toISOString();
-    const [txRes, agentRes, inRes] = await Promise.all([
+    const [txRes, agentRes, inRes, replyRes] = await Promise.all([
       supabase
         .from("wa_transaction_events")
         .select(
@@ -91,6 +91,13 @@ export default function WhatsappTransactionsDashboard() {
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(1000),
+      supabase
+        .from("make_lead_events")
+        .select("id, conversation_id, created_at")
+        .eq("event", "wa_agent_reply")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1000),
     ]);
     if (txRes.error) setError(txRes.error.message);
     else {
@@ -99,6 +106,7 @@ export default function WhatsappTransactionsDashboard() {
     }
     setAgents((agentRes.data ?? []) as AgentRow[]);
     setInbound((inRes.data ?? []) as InboundRow[]);
+    setAgentReplies((replyRes.data ?? []) as AgentReplyRow[]);
     setLoading(false);
   }, []);
 
