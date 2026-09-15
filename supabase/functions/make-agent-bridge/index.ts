@@ -385,7 +385,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    const OFFICE_ADDRESS = "Strada Samuil Micu nr. 14, ap. 4, Timișoara";
     const WA_CHAT_LINK = "https://wa.me/40733783540";
 
     const autoStepText = action === "offer_intro"
@@ -397,9 +396,9 @@ Deno.serve(async (req) => {
       : action === "offer_meeting"
       ? [
         `Pentru vizionare și negociere${stepProp ? ` la ${stepProp.name}` : ""} vă propun o întâlnire.`,
-        `Varianta 1: la apartament${stepProp?.name ? ` (${stepProp.name})` : ""}, ca să vedeți totul la fața locului.`,
-        `Varianta 2: la biroul nostru, ${OFFICE_ADDRESS}, program luni–vineri 10:00–18:00.`,
-        "Spuneți-mi varianta și intervalul care vă convine (astăzi sau mâine) și confirm întâlnirea.",
+        `Ne întâlnim direct la apartament${stepProp?.name ? ` (${stepProp.name})` : ""}, ca să vedeți totul la fața locului.`,
+        "Program de vizionări: 09:00–20:00, luni–sâmbătă.",
+        "Spuneți-mi ziua și intervalul care vă convin (astăzi sau mâine) și confirm întâlnirea.",
         stepProp?.url ? `Anunțul complet: ${stepProp.url}` : "",
       ].filter(Boolean).join("\n")
       : action === "offer_direct_chat"
