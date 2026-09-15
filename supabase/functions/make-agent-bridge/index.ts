@@ -43,6 +43,7 @@ const stripDiacritics = (t: string) =>
 
 import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
 import { quickReplyText } from "../_shared/waAutoReply.ts";
+import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -983,6 +984,13 @@ Deno.serve(async (req) => {
 
     const ctx = await loadProspectContext(supabase, phone);
     if (replyKind === "intake") replyText = buildIntakeMessage(ctx);
+
+    // Linkul chatului pe e-mail, o singură dată per discuție (dacă știm adresa).
+    try {
+      await notifyClientChatLink(supabase, { phone, conversation_id: convId });
+    } catch (e) {
+      console.error("[bridge] client chat link email failed:", (e as Error)?.message);
+    }
 
     // Refuz expres la butonul „Nu, mulțumesc” → oprim orice contactare ulterioară.
     if (quick?.kind === "quick_no") {
