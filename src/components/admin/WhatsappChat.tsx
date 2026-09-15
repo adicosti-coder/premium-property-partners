@@ -387,6 +387,21 @@ export default function WhatsappChat() {
                   size="sm"
                   variant="outline"
                   className="min-h-[44px]"
+                  disabled={!selected || busyStep === "offer_followup"}
+                  onClick={() => void runStep("offer_followup")}
+                  aria-label="Trimite oferta automată cu prețul exact din anunț"
+                >
+                  {busyStep === "offer_followup" ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Tag className="h-4 w-4 mr-2" />
+                  )}
+                  Ofertă automată
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-h-[44px]"
                   disabled={!selected || busyStep === "offer_meeting"}
                   onClick={() => void runStep("offer_meeting")}
                   aria-label="Propune un punct de întâlnire pentru vizionare și negociere"
