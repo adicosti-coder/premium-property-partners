@@ -329,8 +329,9 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-            {isAuthenticated === true && (
-              <Link to={isAdmin ? "/admin" : "/auth"} aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
+            {isAuthenticated === true && isAdmin && (
+              <Link to="/admin" aria-label={language === 'ro' ? 'Panou administrare' : 'Admin panel'}>
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -448,7 +449,7 @@ const Header = () => {
                   <>
                     <div className="h-px bg-border/50 my-1" />
                     <Link
-                      to="/auth"
+                      to="/admin"
                       className="flex items-center gap-3 text-sm font-medium py-2.5 px-3 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all duration-200"
                       onClick={() => setMobileMenuOpen(false)}
                     >
