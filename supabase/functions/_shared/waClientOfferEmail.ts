@@ -62,7 +62,7 @@ export function buildClientOfferEmail(
   </table>
   <p style="font-size:15px;line-height:1.6;margin:0 0 12px">Pașii următori:</p>
   <ol style="font-size:14px;line-height:1.7;margin:0 0 18px;padding-left:20px">
-    <li>Ofertă — prețul, comisionul și costurile de achiziție.</li>
+    <li>Ofertă — prețul, Property Management-ul și costurile de achiziție.</li>
     <li>Vizionare — direct la apartament, 09:00–20:00 (luni–sâmbătă).</li>
     <li>Negociere — transmitem oferta dvs. proprietarului.</li>
     <li>Acte — antecontract, plată și programare la notar.</li>
