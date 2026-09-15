@@ -570,6 +570,7 @@ export default function WhatsappLiveConversations() {
                 );
               })
             )}
+            {!loadingThread && stepTimeline.trailing.map(renderStep)}
           </CardContent>
           {selected && (
             <CardContent className="border-t pt-4 space-y-2">
