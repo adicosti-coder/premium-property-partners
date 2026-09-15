@@ -452,10 +452,11 @@ Deno.serve(async (req) => {
       wa_message_id: stepMsgId,
       error: sentStep.ok ? null : String(sentStep.error).slice(0, 500),
       source: fromMake ? "make" : "admin",
-      payload: { step: action === "offer_intro" ? "anunt_oferta" : "confirmare_oferta" },
+      payload: { step: action },
     });
 
-    await relayToMake(action === "offer_intro" ? "wa_offer_intro" : "wa_offer_confirm", {
+    await relayToMake(`wa_${action}`, {
+
       phone,
       conversation_id: conv.id,
       agent_id: stepAgentId,
