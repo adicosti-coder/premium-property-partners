@@ -147,8 +147,7 @@ Deno.serve(async (req) => {
             action: "offer_followup",
             conversation_id: conversationId,
             phone,
-            agent_id: ev.agent_id ?? conv?.assigned_agent_id ?? null,
-            source: "auto_offer",
+            property_id: ev.property_id,
           }),
         },
       );
