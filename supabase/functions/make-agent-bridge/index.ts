@@ -136,6 +136,64 @@ Deno.serve(async (req) => {
     // Fereastra de 24h închisă → NU înlocuim răspunsul agentului cu un șablon
     // generic (clientul ar primi alt mesaj, iar în Admin ar apărea ca livrat).
     // Marcăm explicit mesajul ca nelivrat, ca să se vadă în Conversații live.
+    if (!windowOpen && body.allow_template) {
+      // Cerere explicită din Make: trimitem șablonul aprobat, marcat clar ca
+      // șablon (nu pretindem că textul agentului a ajuns la client).
+      const tplName = body.template_name ||
+        Deno.env.get("WA_DEFAULT_TEMPLATE") || "intake_prospect_apartments";
+      const tplLang = body.template_language || "ro";
+      const sentTpl = await sendToMeta({
+        messaging_product: "whatsapp",
+        to: phone.replace(/^\+/, ""),
+        type: "template",
+        template: { name: tplName, language: { code: tplLang } },
+      });
+      const tplMsgId = sentTpl.body?.messages?.[0]?.id ?? null;
+
+      await supabase.from("wa_messages").insert({
+        conversation_id: conversationId,
+        wa_message_id: tplMsgId,
+        direction: "outbound",
+        role: "assistant",
+        content: `[șablon ${tplName}] (textul agentului nu poate fi livrat în afara ferestrei de 24h: ${text})`,
+        template_name: tplName,
+        error: sentTpl.ok ? null : String(sentTpl.error).slice(0, 500),
+      });
+
+      await supabase.from("make_lead_events").insert({
+        direction: "inbound",
+        event: "agent_reply",
+        lead_id: body.lead_id ?? null,
+        prospect_listing_id: body.prospect_listing_id ?? null,
+        conversation_id: conversationId,
+        phone_normalized: phone,
+        message: text,
+        status: sentTpl.ok ? "sent_template" : "failed",
+        wa_message_id: tplMsgId,
+        error: sentTpl.ok ? null : String(sentTpl.error).slice(0, 500),
+        payload: {
+          source: fromMake ? "make" : "internal",
+          window_open: false,
+          template_name: tplName,
+          agent_text_delivered: false,
+        },
+      });
+
+      return json(
+        {
+          ok: sentTpl.ok,
+          delivered: false,
+          template_sent: sentTpl.ok,
+          template_name: tplName,
+          conversation_id: conversationId,
+          wa_message_id: tplMsgId,
+          note: "agent_text_not_delivered_outside_24h_window",
+          meta_error: sentTpl.ok ? undefined : sentTpl.error,
+        },
+        sentTpl.ok ? 200 : 502,
+      );
+    }
+
     if (!windowOpen) {
       await supabase.from("wa_messages").insert({
         conversation_id: conversationId,
