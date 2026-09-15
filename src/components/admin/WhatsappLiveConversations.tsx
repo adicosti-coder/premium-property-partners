@@ -12,7 +12,7 @@ import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ExternalLink, Home, Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
+import { ExternalLink, Handshake, Home, Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
 
 /**
  * Conversații live WhatsApp — firul complet al discuției (mesaje trimise de agent
@@ -734,6 +734,42 @@ export default function WhatsappLiveConversations() {
                       <Home className="h-4 w-4" />
                     )}
                     <span className="ml-2">Trimite anunțul și deschide-l</span>
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  Dacă agentul nu răspunde, trimite automat oferta cu pașii următori sau deschide
+                  negocierea — discuția continuă în același fir.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="min-h-[44px]"
+                    disabled={busyStep === "offer_followup"}
+                    onClick={() => void runStep("offer_followup")}
+                    aria-label="Trimite oferta automată cu pașii următori"
+                  >
+                    {busyStep === "offer_followup" ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Trimite oferta cu pașii
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="min-h-[44px]"
+                    disabled={busyStep === "negotiation"}
+                    onClick={() => void runStep("negotiation")}
+                    aria-label="Trimite mesajul automat de negociere"
+                  >
+                    {busyStep === "negotiation" ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Handshake className="h-4 w-4 mr-2" />
+                    )}
+                    Mesaj de negociere
                   </Button>
                 </div>
               </div>
