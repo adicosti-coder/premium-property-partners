@@ -124,6 +124,17 @@ export default function WhatsappLiveConversations() {
     setAgents((data ?? []) as AgentRow[]);
   }, []);
 
+  const loadSaleProperties = useCallback(async () => {
+    const { data } = await supabase
+      .from("properties")
+      .select("id, name, slug, listing_type, rooms, size, location, capital_necesar, price_per_sqm")
+      .eq("is_active", true)
+      .in("listing_type", ["vanzare", "investitie"])
+      .not("slug", "is", null)
+      .order("name");
+    setSaleProperties((data ?? []) as SaleProperty[]);
+  }, []);
+
   const loadThread = useCallback(async (conversationId: string) => {
     setLoadingThread(true);
     const { data, error: msgErr } = await supabase
