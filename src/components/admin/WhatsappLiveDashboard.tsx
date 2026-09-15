@@ -135,6 +135,8 @@ const WhatsappLiveDashboard = () => {
           ...c,
           ...s,
           agent: agentName(c.assigned_agent_id),
+          agentReplies: repliesByConv.get(c.id) ?? 0,
+          closed,
           lastActivity: Math.max(inTime, outTime),
           abandoned,
           awaitingReply,
