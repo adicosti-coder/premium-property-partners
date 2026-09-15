@@ -294,42 +294,72 @@ const WhatsappConversationsAnalytics = () => {
         <CardHeader>
           <CardTitle className="text-base">Pe agent</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent>
           {stats.perAgent.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nicio conversație alocată încă.</p>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-muted-foreground">
-                  <th className="py-2 pr-4">Agent</th>
-                  <th className="py-2 pr-4">Conversații</th>
-                  <th className="py-2 pr-4">Mesaje primite</th>
-                  <th className="py-2 pr-4">Mesaje trimise</th>
-                  <th className="py-2 pr-4">Răspunsuri agent</th>
-                  <th className="py-2 pr-4">Livrate</th>
-                  <th className="py-2 pr-4">Eșuate</th>
-                  <th className="py-2">Abandonate</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Telefon: fiecare agent într-un card, ca cifrele să rămână citibile */}
+              <div className="space-y-2 md:hidden">
                 {stats.perAgent.map((r) => (
-                  <tr key={r.agent} className="border-t border-border">
-                    <td className="py-2 pr-4 font-medium text-foreground">{r.agent}</td>
-                    <td className="py-2 pr-4">{r.conversatii}</td>
-                    <td className="py-2 pr-4">{r.primite}</td>
-                    <td className="py-2 pr-4">{r.trimise}</td>
-                    <td className="py-2 pr-4">{r.raspunsuri}</td>
-                    <td className="py-2 pr-4">{r.livrate}</td>
-                    <td className={`py-2 pr-4 ${r.esuate ? "text-destructive font-medium" : ""}`}>
-                      {r.esuate}
-                    </td>
-                    <td className={`py-2 ${r.abandonate ? "text-destructive font-medium" : ""}`}>
-                      {r.abandonate}
-                    </td>
-                  </tr>
+                  <div key={r.agent} className="rounded border border-border p-3 text-sm">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="font-medium text-foreground">{r.agent}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {r.conversatii} {r.conversatii === 1 ? "conversație" : "conversații"}
+                      </span>
+                    </div>
+                    <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>Mesaje primite: <span className="text-foreground">{r.primite}</span></span>
+                      <span>Mesaje trimise: <span className="text-foreground">{r.trimise}</span></span>
+                      <span>Răspunsuri agent: <span className="text-foreground">{r.raspunsuri}</span></span>
+                      <span>Livrate: <span className="text-foreground">{r.livrate}</span></span>
+                      <span className={r.esuate ? "text-destructive" : ""}>
+                        Eșuate: <span className="font-medium">{r.esuate}</span>
+                      </span>
+                      <span className={r.abandonate ? "text-destructive" : ""}>
+                        Abandonate: <span className="font-medium">{r.abandonate}</span>
+                      </span>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-muted-foreground">
+                      <th className="py-2 pr-4">Agent</th>
+                      <th className="py-2 pr-4">Conversații</th>
+                      <th className="py-2 pr-4">Mesaje primite</th>
+                      <th className="py-2 pr-4">Mesaje trimise</th>
+                      <th className="py-2 pr-4">Răspunsuri agent</th>
+                      <th className="py-2 pr-4">Livrate</th>
+                      <th className="py-2 pr-4">Eșuate</th>
+                      <th className="py-2">Abandonate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.perAgent.map((r) => (
+                      <tr key={r.agent} className="border-t border-border">
+                        <td className="py-2 pr-4 font-medium text-foreground">{r.agent}</td>
+                        <td className="py-2 pr-4">{r.conversatii}</td>
+                        <td className="py-2 pr-4">{r.primite}</td>
+                        <td className="py-2 pr-4">{r.trimise}</td>
+                        <td className="py-2 pr-4">{r.raspunsuri}</td>
+                        <td className="py-2 pr-4">{r.livrate}</td>
+                        <td className={`py-2 pr-4 ${r.esuate ? "text-destructive font-medium" : ""}`}>
+                          {r.esuate}
+                        </td>
+                        <td className={`py-2 ${r.abandonate ? "text-destructive font-medium" : ""}`}>
+                          {r.abandonate}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

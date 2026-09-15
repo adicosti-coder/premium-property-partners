@@ -69,6 +69,7 @@ const loaders: Record<string, Loader> = {
   "whatsapp-live-dashboard": () => import("@/components/admin/WhatsappLiveDashboard"),
   "make-status": () => import("@/components/admin/MakeScenarioStatus"),
   "whatsapp-analytics": () => import("@/components/admin/WhatsappConversationsAnalytics"),
+  "whatsapp-sources": () => import("@/components/admin/WhatsappConversationSources"),
   "whatsapp-transactions": () => import("@/components/admin/WhatsappTransactionsDashboard"),
   "booking-scrape": () => import("@/components/admin/BookingScrapeHistory"),
   "booking-reviews": () => import("@/components/admin/BookingReviewsPanel"),
