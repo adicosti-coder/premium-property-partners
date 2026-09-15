@@ -48,11 +48,18 @@ Deno.serve(async (req) => {
   const denied = await requireInternalOrAdmin(req, corsHeaders);
   if (denied) return denied;
 
-  let body: { min_hours?: number; limit?: number; dry_run?: boolean } = {};
+  let body: {
+    min_hours?: number;
+    limit?: number;
+    dry_run?: boolean;
+    // Admin poate recontacta o singură discuție abandonată, din Analiză conversații.
+    conversation_id?: string;
+  } = {};
   try { body = await req.json(); } catch { /* default */ }
   const minHours = Math.max(2, Number(body.min_hours ?? 24));
   const limit = Math.min(25, Math.max(1, Number(body.limit ?? 10)));
   const dryRun = !!body.dry_run;
+  const onlyConversation = (body.conversation_id || "").trim();
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -62,13 +69,16 @@ Deno.serve(async (req) => {
   const cutoff = new Date(Date.now() - minHours * 3600 * 1000).toISOString();
   const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
 
-  const { data: convs, error: convErr } = await supabase
+  const baseQuery = supabase
     .from("wa_conversations")
-    .select("id, phone_normalized, wa_profile_name, last_inbound_at, last_outbound_at, status")
-    .not("last_inbound_at", "is", null)
-    .lt("last_inbound_at", cutoff)
-    .order("last_inbound_at", { ascending: true })
-    .limit(200);
+    .select("id, phone_normalized, wa_profile_name, last_inbound_at, last_outbound_at, status");
+  const { data: convs, error: convErr } = await (onlyConversation
+    ? baseQuery.eq("id", onlyConversation).limit(1)
+    : baseQuery
+        .not("last_inbound_at", "is", null)
+        .lt("last_inbound_at", cutoff)
+        .order("last_inbound_at", { ascending: true })
+        .limit(200));
   if (convErr) return json({ error: "query_failed", details: convErr.message }, 500);
 
   const results: Record<string, unknown>[] = [];
@@ -81,7 +91,7 @@ Deno.serve(async (req) => {
 
     // Ultima activitate a noastră mai nouă decât ultimul mesaj al clientului
     // și tot fără răspuns → tot abandonată, dar nu insistăm dacă e recentă.
-    if (c.last_outbound_at && c.last_outbound_at > cutoff) { skipped++; continue; }
+    if (!onlyConversation && c.last_outbound_at && c.last_outbound_at > cutoff) { skipped++; continue; }
 
     // O singură recontactare la 7 zile
     const { count: recent } = await supabase

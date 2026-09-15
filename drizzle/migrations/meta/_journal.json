@@ -78,6 +78,13 @@
       "when": 1789468783976,
       "tag": "0010_wa_transaction_agent_and_steps",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789470631795,
+      "tag": "0011_wa_realtime_tx_events",
+      "breakpoints": true
     }
   ]
 }

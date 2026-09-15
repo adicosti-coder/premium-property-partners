@@ -312,6 +312,112 @@ Deno.serve(async (req) => {
     return json({ ok: true });
   }
 
+  // ------------------------------------------- offer_followup / negotiation
+  // Dashboardul de tranzacții: discuția nu se oprește la alegerea apartamentului.
+  // `offer_followup` trimite automat mesajul cu oferta și pașii următori,
+  // `negotiation` marchează intrarea în negociere (opțional cu mesaj text).
+  if (action === "offer_followup" || action === "negotiation") {
+    const phone = normalizeRoMobile(body.phone || "") || (body.phone || "").trim();
+    if (!phone) return json({ error: "phone_invalid" }, 400);
+
+    const { data: conv } = await (body.conversation_id
+      ? supabase.from("wa_conversations")
+          .select("id, assigned_agent_id").eq("id", body.conversation_id).maybeSingle()
+      : supabase.from("wa_conversations")
+          .select("id, assigned_agent_id").eq("phone_normalized", phone)
+          .order("updated_at", { ascending: false }).limit(1).maybeSingle());
+    if (!conv?.id) return json({ error: "conversation_not_found" }, 404);
+    const convAgentId = (conv.assigned_agent_id as string) ?? null;
+
+    const propertyId = (body.property_id || "").trim();
+    if (propertyId) {
+      const { data: prop } = await supabase
+        .from("properties")
+        .select("id, name, slug, rooms, size, location, capital_necesar, price_per_sqm")
+        .eq("id", propertyId)
+        .maybeSingle();
+      if (!prop) return json({ error: "property_not_found" }, 404);
+      const price = Number(prop.capital_necesar) ||
+        (prop.price_per_sqm && prop.size
+          ? Math.round(Number(prop.price_per_sqm) * Number(prop.size))
+          : 0);
+      offerProp = {
+        id: prop.id as string,
+        name: prop.name as string,
+        slug: (prop.slug as string) ?? null,
+        rooms: (prop.rooms as number) ?? null,
+        size: (prop.size as number) ?? null,
+        location: (prop.location as string) ?? null,
+        price: price || null,
+        url: `https://realtrust.ro/proprietate/${prop.slug}`,
+      };
+    }
+
+    if (action === "offer_followup") {
+      if (!offerProp) return json({ error: "property_id_required" }, 400);
+      const res = await sendOfferFollowup(conv.id as string, phone, convAgentId);
+      return json({
+        ok: !!res?.ok,
+        delivered: !!res?.ok,
+        wa_message_id: res?.wa_message_id ?? null,
+        conversation_id: conv.id,
+      });
+    }
+
+    // negotiation: mesaj opțional către client + pasul salvat în dashboard.
+    const text = (body.message || "").trim() || (offerProp
+      ? `Am transmis oferta dvs. proprietarului pentru ${offerProp.name}. Revenim cu răspunsul și, dacă acceptă, programăm actele.`
+      : "Am intrat în negociere cu proprietarul. Revenim cu răspunsul în cel mai scurt timp.");
+    const sent = await sendToMeta({
+      messaging_product: "whatsapp",
+      to: phone.replace(/^\+/, ""),
+      type: "text",
+      text: { preview_url: false, body: text },
+    });
+    const negMsgId = sent.body?.messages?.[0]?.id ?? null;
+    await supabase.from("wa_messages").insert({
+      conversation_id: conv.id,
+      wa_message_id: negMsgId,
+      direction: "outbound",
+      role: "assistant",
+      content: text,
+      error: sent.ok ? null : String(sent.error).slice(0, 500),
+    });
+    await supabase.from("wa_transaction_events").insert({
+      conversation_id: conv.id,
+      agent_id: convAgentId,
+      phone_normalized: phone,
+      property_id: offerProp?.id ?? null,
+      property_name: offerProp?.name ?? null,
+      property_slug: offerProp?.slug ?? null,
+      property_url: offerProp?.url ?? null,
+      price: offerProp?.price ?? null,
+      event: "negotiation",
+      status: sent.ok ? "sent" : "failed",
+      wa_message_id: negMsgId,
+      error: sent.ok ? null : String(sent.error).slice(0, 500),
+      source: fromMake ? "make" : "admin",
+      payload: { step: "negociere" },
+    });
+    await relayToMake("wa_negotiation", {
+      phone,
+      conversation_id: conv.id,
+      agent_id: convAgentId,
+      property: offerProp,
+      message: text,
+      delivered: sent.ok,
+      wa_message_id: negMsgId,
+      error: sent.ok ? null : String(sent.error),
+    });
+    return json({
+      ok: sent.ok,
+      delivered: sent.ok,
+      wa_message_id: negMsgId,
+      conversation_id: conv.id,
+      error: sent.ok ? null : sent.error,
+    });
+  }
+
 
   // ---------------------------------------------------------------- agent_reply
   if (action === "agent_reply") {
