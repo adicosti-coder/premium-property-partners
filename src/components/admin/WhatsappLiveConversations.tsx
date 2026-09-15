@@ -24,6 +24,7 @@ type ConversationRow = {
   last_inbound_at: string | null;
   last_outbound_at: string | null;
   window_expires_at: string | null;
+  assigned_agent_id: string | null;
   created_at: string;
 };
 
@@ -35,8 +36,19 @@ type MessageRow = {
   content: string | null;
   template_name: string | null;
   error: string | null;
+  wa_message_id: string | null;
   created_at: string;
 };
+
+type AgentRow = { id: string; name: string; email: string };
+
+const dayLabel = (iso: string) =>
+  new Date(iso).toLocaleDateString("ro-RO", {
+    timeZone: "Europe/Bucharest",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 
 const fmt = (iso: string | null) =>
   iso
@@ -66,6 +78,7 @@ export default function WhatsappLiveConversations() {
   const [search, setSearch] = useState("");
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
+  const [agents, setAgents] = useState<AgentRow[]>([]);
   const { toast } = useToast();
 
   const loadConversations = useCallback(async () => {
@@ -73,7 +86,7 @@ export default function WhatsappLiveConversations() {
     const { data, error: convErr } = await supabase
       .from("wa_conversations")
       .select(
-        "id, phone_normalized, wa_profile_name, status, last_inbound_at, last_outbound_at, window_expires_at, created_at",
+        "id, phone_normalized, wa_profile_name, status, last_inbound_at, last_outbound_at, window_expires_at, assigned_agent_id, created_at",
       )
       .order("updated_at", { ascending: false })
       .limit(200);
@@ -88,11 +101,16 @@ export default function WhatsappLiveConversations() {
     setLoading(false);
   }, []);
 
+  const loadAgents = useCallback(async () => {
+    const { data } = await supabase.from("wa_agents").select("id, name, email");
+    setAgents((data ?? []) as AgentRow[]);
+  }, []);
+
   const loadThread = useCallback(async (conversationId: string) => {
     setLoadingThread(true);
     const { data, error: msgErr } = await supabase
       .from("wa_messages")
-      .select("id, conversation_id, direction, role, content, template_name, error, created_at")
+      .select("id, conversation_id, direction, role, content, template_name, error, wa_message_id, created_at")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true })
       .limit(500);
@@ -103,7 +121,8 @@ export default function WhatsappLiveConversations() {
 
   useEffect(() => {
     void loadConversations();
-  }, [loadConversations]);
+    void loadAgents();
+  }, [loadConversations, loadAgents]);
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
@@ -140,6 +159,8 @@ export default function WhatsappLiveConversations() {
   const windowOpen = selected?.window_expires_at
     ? new Date(selected.window_expires_at).getTime() > Date.now()
     : false;
+  const agentName = (id: string | null) =>
+    agents.find((a) => a.id === id)?.name ?? "nealocat";
 
   const QUALIFY_MESSAGE = [
     "Bună ziua! Vă mulțumim pentru mesaj.",
@@ -253,13 +274,16 @@ export default function WhatsappLiveConversations() {
             </CardTitle>
             {selected && (
               <p className="text-xs text-muted-foreground">
+                Agent alocat: <span className="font-medium">{agentName(selected.assigned_agent_id)}</span>
+                {" · "}
                 {windowOpen
                   ? `Poți răspunde liber până la ${fmt(selected.window_expires_at)}`
                   : "Fereastra de 24h e închisă — se poate trimite doar un mesaj-șablon aprobat."}
               </p>
             )}
           </CardHeader>
-          <CardContent className="space-y-3 max-h-[560px] overflow-y-auto">
+          {/* Firul de discuție ca într-o aplicație de chat: clientul în stânga, noi în dreapta. */}
+          <CardContent className="max-h-[560px] overflow-y-auto bg-muted/20 rounded-md mx-4 p-3 space-y-2">
             {loadingThread ? (
               <>
                 <Skeleton className="h-12 w-2/3" />
@@ -270,27 +294,51 @@ export default function WhatsappLiveConversations() {
                 Nicio replică salvată pentru această discuție.
               </p>
             ) : (
-              messages.map((m) => {
+              messages.map((m, i) => {
                 const outbound = m.direction === "outbound";
+                const prev = messages[i - 1];
+                const newDay =
+                  !prev ||
+                  new Date(prev.created_at).toDateString() !== new Date(m.created_at).toDateString();
+                const metaStatus = !outbound
+                  ? null
+                  : m.error
+                    ? `Meta a respins: ${m.error}`
+                    : m.wa_message_id
+                      ? "Acceptat de Meta"
+                      : "Fără confirmare de la Meta";
                 return (
-                  <div
-                    key={m.id}
-                    className={`max-w-[85%] rounded-lg border px-3 py-2 ${
-                      outbound ? "ml-auto bg-primary/10 border-primary/30" : "bg-muted/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-1">
-                      <span>{outbound ? "Agent" : "Client"}</span>
-                      <span>·</span>
-                      <span>{fmt(m.created_at)}</span>
-                      {m.template_name && <Badge variant="outline">{m.template_name}</Badge>}
-                    </div>
-                    <p className="text-sm whitespace-pre-wrap break-words">
-                      {m.content || "—"}
-                    </p>
-                    {m.error && (
-                      <p className="text-xs text-destructive mt-1">Eroare Meta: {m.error}</p>
+                  <div key={m.id}>
+                    {newDay && (
+                      <p className="text-center text-[11px] text-muted-foreground my-3">
+                        {dayLabel(m.created_at)}
+                      </p>
                     )}
+                    <div className={`flex ${outbound ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[85%] px-3 py-2 shadow-sm ${
+                          outbound
+                            ? "bg-primary/15 rounded-2xl rounded-br-sm"
+                            : "bg-card border border-border rounded-2xl rounded-bl-sm"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-1">
+                          <span className="font-medium">
+                            {outbound ? agentName(selected?.assigned_agent_id ?? null) : "Client"}
+                          </span>
+                          {m.template_name && <Badge variant="outline">{m.template_name}</Badge>}
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap break-words">{m.content || "—"}</p>
+                        <div className="flex items-center justify-end gap-2 mt-1 text-[11px]">
+                          <span className="text-muted-foreground">{fmt(m.created_at)}</span>
+                          {metaStatus && (
+                            <span className={m.error ? "text-destructive" : "text-muted-foreground"}>
+                              · {metaStatus}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 );
               })

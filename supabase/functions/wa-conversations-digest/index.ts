@@ -60,11 +60,17 @@ Deno.serve(async (req) => {
   const { data: convs } = convIds.length
     ? await supabase
       .from("wa_conversations")
-      .select("id, phone_normalized, wa_profile_name, status, last_inbound_at, last_outbound_at")
+      .select("id, phone_normalized, wa_profile_name, status, last_inbound_at, last_outbound_at, assigned_agent_id")
       .in("id", convIds)
     : { data: [] as any[] };
 
   const convById = new Map((convs ?? []).map((c) => [c.id, c]));
+
+  // Agentul alocat fiecărei conversații, ca discuțiile să nu rămână abandonate.
+  const { data: agents } = await supabase.from("wa_agents").select("id, name, email");
+  const agentById = new Map((agents ?? []).map((a: any) => [a.id, a]));
+  const agentName = (id: string | null | undefined) =>
+    (id && agentById.get(id)?.name) || "nealocat";
 
   const inbound = (messages ?? []).filter((m) => m.direction === "inbound");
   const outbound = (messages ?? []).filter((m) => m.direction === "outbound");
@@ -110,10 +116,34 @@ Deno.serve(async (req) => {
           <strong>${esc(c?.wa_profile_name || c?.phone_normalized || "Conversație")}</strong>
           &nbsp;·&nbsp;${esc(c?.phone_normalized ?? "")}
           &nbsp;·&nbsp;ultim mesaj client: ${esc(roTime(c?.last_inbound_at))}
+          &nbsp;·&nbsp;agent: <strong>${esc(agentName(c?.assigned_agent_id))}</strong>
         </div>
         <table style="width:100%;border-collapse:collapse">${items}</table>
       </div>`;
   }).join("");
+
+  // Sumar pe agent, ca să se vadă cine are conversații în lucru.
+  const perAgent = new Map<string, { conv: number; inbound: number; delivered: number; failed: number }>();
+  for (const cid of convIds) {
+    const c = convById.get(cid);
+    const key = agentName(c?.assigned_agent_id);
+    const row = perAgent.get(key) ?? { conv: 0, inbound: 0, delivered: 0, failed: 0 };
+    row.conv += 1;
+    for (const m of (messages ?? []).filter((x) => x.conversation_id === cid)) {
+      if (m.direction === "inbound") row.inbound += 1;
+      else if (m.error) row.failed += 1;
+      else row.delivered += 1;
+    }
+    perAgent.set(key, row);
+  }
+  const agentRows = [...perAgent.entries()].map(([name, r]) => `
+    <tr>
+      <td style="padding:4px 10px 4px 0;font-size:13px">${esc(name)}</td>
+      <td style="padding:4px 10px;font-size:13px">${r.conv}</td>
+      <td style="padding:4px 10px;font-size:13px">${r.inbound}</td>
+      <td style="padding:4px 10px;font-size:13px">${r.delivered}</td>
+      <td style="padding:4px 10px;font-size:13px;color:${r.failed ? "#b91c1c" : "#111"}">${r.failed}</td>
+    </tr>`).join("");
 
   const today = new Date().toLocaleDateString("ro-RO", { timeZone: "Europe/Bucharest" });
   const html = `
@@ -126,6 +156,14 @@ Deno.serve(async (req) => {
         <tr><td style="padding:4px 12px 4px 0">Mesaje trimise (livrate)</td><td><strong>${delivered}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0">Mesaje eșuate</td><td><strong style="color:#b91c1c">${failed.length}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0">Conversații abandonate (&gt;24h)</td><td><strong>${abandoned ?? 0}</strong></td></tr>
+      </table>
+      <h3 style="margin:20px 0 6px;font-size:15px">Pe agent</h3>
+      <table style="border-collapse:collapse">
+        <tr style="font-size:12px;color:#666">
+          <td style="padding:2px 10px 2px 0">Agent</td><td style="padding:2px 10px">Conversații</td>
+          <td style="padding:2px 10px">De la clienți</td><td style="padding:2px 10px">Livrate</td><td style="padding:2px 10px">Eșuate</td>
+        </tr>
+        ${agentRows || '<tr><td style="font-size:13px;color:#666">—</td></tr>'}
       </table>
       ${threads || '<p style="color:#666">Nicio conversație în acest interval.</p>'}
     </div>`;

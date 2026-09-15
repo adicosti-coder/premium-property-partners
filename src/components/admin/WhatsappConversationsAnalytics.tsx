@@ -23,7 +23,10 @@ type Conv = {
   status: string | null;
   last_inbound_at: string | null;
   last_outbound_at: string | null;
+  assigned_agent_id: string | null;
 };
+
+type Agent = { id: string; name: string; email: string };
 
 const DAYS = 14;
 
@@ -43,7 +46,7 @@ const WhatsappConversationsAnalytics = () => {
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["wa-conversations-analytics", since],
     queryFn: async () => {
-      const [msgRes, convRes] = await Promise.all([
+      const [msgRes, convRes, agentRes] = await Promise.all([
         supabase
           .from("wa_messages")
           .select("id, conversation_id, direction, error, created_at")
@@ -52,15 +55,19 @@ const WhatsappConversationsAnalytics = () => {
           .limit(5000),
         supabase
           .from("wa_conversations")
-          .select("id, phone_normalized, wa_profile_name, status, last_inbound_at, last_outbound_at")
+          .select(
+            "id, phone_normalized, wa_profile_name, status, last_inbound_at, last_outbound_at, assigned_agent_id",
+          )
           .order("updated_at", { ascending: false })
           .limit(500),
+        supabase.from("wa_agents").select("id, name, email"),
       ]);
       if (msgRes.error) throw msgRes.error;
       if (convRes.error) throw convRes.error;
       return {
         messages: (msgRes.data ?? []) as Msg[],
         conversations: (convRes.data ?? []) as Conv[],
+        agents: (agentRes.data ?? []) as Agent[],
       };
     },
     staleTime: 60_000,
@@ -110,6 +117,32 @@ const WhatsappConversationsAnalytics = () => {
       else b.livrate++;
     }
 
+    // Pe agent: unde se blochează fiecare echipă.
+    const agents = data?.agents ?? [];
+    const agentName = (id: string | null) =>
+      agents.find((a) => a.id === id)?.name ?? "Nealocat";
+    const convById = new Map(conversations.map((c) => [c.id, c]));
+    const perAgent = new Map<
+      string,
+      { agent: string; conversatii: number; primite: number; livrate: number; esuate: number; abandonate: number }
+    >();
+    const rowFor = (name: string) => {
+      const existing = perAgent.get(name);
+      if (existing) return existing;
+      const fresh = { agent: name, conversatii: 0, primite: 0, livrate: 0, esuate: 0, abandonate: 0 };
+      perAgent.set(name, fresh);
+      return fresh;
+    };
+    for (const c of conversations) rowFor(agentName(c.assigned_agent_id)).conversatii++;
+    for (const m of messages) {
+      const c = convById.get(m.conversation_id);
+      const row = rowFor(agentName(c?.assigned_agent_id ?? null));
+      if (m.direction === "inbound") row.primite++;
+      else if (m.error) row.esuate++;
+      else row.livrate++;
+    }
+    for (const c of abandonedList) rowFor(agentName(c.assigned_agent_id)).abandonate++;
+
     return {
       activeCount: active.length,
       delivered: outbound.length - failed.length,
@@ -119,7 +152,9 @@ const WhatsappConversationsAnalytics = () => {
       abandonedList: abandonedList.slice(0, 10),
       failedRecent: failed.slice(-10).reverse(),
       series: [...buckets.values()],
-      convById: new Map(conversations.map((c) => [c.id, c])),
+      convById,
+      perAgent: [...perAgent.values()].sort((a, b) => b.conversatii - a.conversatii),
+      agentNameFor: agentName,
     };
   }, [data]);
 
@@ -177,6 +212,46 @@ const WhatsappConversationsAnalytics = () => {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Pe agent</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          {stats.perAgent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nicio conversație alocată încă.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground">
+                  <th className="py-2 pr-4">Agent</th>
+                  <th className="py-2 pr-4">Conversații</th>
+                  <th className="py-2 pr-4">De la clienți</th>
+                  <th className="py-2 pr-4">Livrate</th>
+                  <th className="py-2 pr-4">Eșuate</th>
+                  <th className="py-2">Abandonate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.perAgent.map((r) => (
+                  <tr key={r.agent} className="border-t border-border">
+                    <td className="py-2 pr-4 font-medium text-foreground">{r.agent}</td>
+                    <td className="py-2 pr-4">{r.conversatii}</td>
+                    <td className="py-2 pr-4">{r.primite}</td>
+                    <td className="py-2 pr-4">{r.livrate}</td>
+                    <td className={`py-2 pr-4 ${r.esuate ? "text-destructive font-medium" : ""}`}>
+                      {r.esuate}
+                    </td>
+                    <td className={`py-2 ${r.abandonate ? "text-destructive font-medium" : ""}`}>
+                      {r.abandonate}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

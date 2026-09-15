@@ -13,7 +13,7 @@ import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
-import { notifyAgentFirstMessage } from "../_shared/waAgentNotify.ts";
+import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -360,28 +360,35 @@ Deno.serve(async (req) => {
         .gte("created_at", threeHoursAgo);
       if (recentAck) replyKind = "skipped_recent_ack";
       else { replyKind = "ack"; replyText = ACK_MESSAGE; }
-    } else {
-      const ctx = await loadProspectContext(supabase, phone);
-      replyText = buildIntakeMessage(ctx);
-      // Primul mesaj al clientului → backup pe e-mail către agent.
-      await notifyAgentFirstMessage(supabase, {
-        phone,
-        profile_name: body.profile_name ?? null,
-        message: text,
-        conversation_id: convId,
-        prospect: ctx,
-        auto_reply: "mesaj de calificare",
-      });
     }
+
+    const ctx = await loadProspectContext(supabase, phone);
+    if (replyKind === "intake") replyText = buildIntakeMessage(ctx);
+
+    // Backup pe e-mail către agentul alocat, în momentul primirii mesajului.
+    const notified = await notifyAgentInbound(supabase, {
+      phone,
+      profile_name: body.profile_name ?? null,
+      message: text,
+      conversation_id: convId,
+      prospect: ctx,
+      first: !outboundCount,
+      auto_reply: replyKind === "intake"
+        ? "mesaj de calificare"
+        : (replyKind === "ack" ? "confirmare (regula de 3 ore)" : "fără răspuns automat (mesaj recent)"),
+      meta_response: body.wa_message_id ? `mesaj Meta ${body.wa_message_id}` : null,
+    });
 
     if (replyKind === "skipped_recent_ack") {
       return json({
         ok: true,
         conversation_id: convId,
         auto_reply: "skipped_recent_ack",
+        agent: notified.agent,
         note: "clientul a primit deja un mesaj în ultimele 3 ore",
       });
     }
+
 
     const autoSent = await sendToMeta({
       messaging_product: "whatsapp",
