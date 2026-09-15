@@ -12,6 +12,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { WA_PHONE_NUMBER_ID, WA_API_VERSION, waToken } from "../_shared/waConfig.ts";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { relayToMake } from "../_shared/makeRelay.ts";
+import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,6 +90,8 @@ Deno.serve(async (req) => {
     allow_template?: boolean;
     template_name?: string;
     template_language?: string;
+    profile_name?: string;
+    wa_message_id?: string;
   } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
