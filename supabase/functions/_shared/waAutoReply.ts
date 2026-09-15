@@ -3,11 +3,20 @@
 
 export type ProspectContext = {
   prospect_type?: string | null;
+  category?: string | null;
+  title?: string | null;
   zone?: string | null;
   location?: string | null;
   rooms?: number | null;
   size?: number | null;
 } | null;
+
+// `prospect_type` din scraper descrie CINE publică anunțul (proprietar/agenție),
+// nu tipul de imobil — nu îl folosim niciodată ca tip de imobil în mesaj.
+const PERSON_TYPES = new Set([
+  "proprietar", "proprietara", "agentie", "agenție", "agent", "dezvoltator",
+  "agency", "owner",
+]);
 
 const TYPE_LABELS: Record<string, string> = {
   apartament: "apartament",
@@ -19,24 +28,52 @@ const TYPE_LABELS: Record<string, string> = {
   studio: "studio",
 };
 
-function typeLabel(raw?: string | null): string | null {
-  if (!raw) return null;
-  const key = String(raw).trim().toLowerCase();
-  return TYPE_LABELS[key] ?? key.replace(/_/g, " ");
+const TITLE_TYPE_PATTERNS: [RegExp, string][] = [
+  [/garsonier/i, "garsonieră"],
+  [/apartament/i, "apartament"],
+  [/\bvil[ăa]\b/i, "vilă"],
+  [/\bcas[ăa]\b/i, "casă"],
+  [/\bstudio\b/i, "studio"],
+  [/\bspa[țt]iu\b/i, "spațiu"],
+  [/\bteren\b/i, "teren"],
+];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  vanzare: "de vânzare",
+  inchiriere: "de închiriat",
+  hotelier: "în regim hotelier",
+};
+
+/** Tipul de imobil: din tipul explicit, altfel dedus din titlul anunțului. */
+function typeLabel(p: ProspectContext): string | null {
+  const raw = String(p?.prospect_type ?? "").trim().toLowerCase();
+  if (raw && !PERSON_TYPES.has(raw)) {
+    if (TYPE_LABELS[raw]) return TYPE_LABELS[raw];
+    if (/apartament|garsonier|cas[ăa]|studio|vil[ăa]/i.test(raw)) {
+      return raw.replace(/_/g, " ");
+    }
+  }
+  const title = String(p?.title ?? "");
+  for (const [re, label] of TITLE_TYPE_PATTERNS) {
+    if (re.test(title)) return label;
+  }
+  return null;
 }
 
 /** Rândul personalizat: tip de imobil, zonă, camere, suprafață (doar ce există). */
 export function prospectSummary(p: ProspectContext): string | null {
   if (!p) return null;
   const parts: string[] = [];
-  const t = typeLabel(p.prospect_type);
+  const t = typeLabel(p);
   if (t) parts.push(t);
   if (p.rooms && !String(t ?? "").includes("camer")) {
     parts.push(`${p.rooms} ${p.rooms === 1 ? "cameră" : "camere"}`);
   }
   if (p.size) parts.push(`${Math.round(Number(p.size))} m²`);
+  const cat = CATEGORY_LABELS[String(p.category ?? "").trim().toLowerCase()];
   const where = p.zone || p.location;
-  const head = parts.join(", ");
+  let head = parts.join(", ");
+  if (head && cat) head = `${head} ${cat}`;
   if (!head && !where) return null;
   if (head && where) return `Despre ${head} în ${where}:`;
   if (head) return `Despre ${head}:`;
@@ -87,7 +124,7 @@ export async function loadProspectContext(
   try {
     const { data } = await supabase
       .from("prospect_listings")
-      .select("prospect_type, zone, location, rooms, size")
+      .select("prospect_type, category, title, zone, location, rooms, size")
       .eq("phone_normalized", phone)
       .order("created_at", { ascending: false })
       .limit(1)
