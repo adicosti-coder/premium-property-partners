@@ -925,6 +925,37 @@ export default function WhatsappLiveConversations() {
                     size="sm"
                     variant="outline"
                     className="min-h-[44px]"
+                    disabled={busyStep === "offer_meeting"}
+                    onClick={() => void runStep("offer_meeting")}
+                    aria-label="Propune un punct de întâlnire pentru vizionare și negociere"
+                  >
+                    {busyStep === "offer_meeting" ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Handshake className="h-4 w-4 mr-2" />
+                    )}
+                    Propune punct de întâlnire
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="min-h-[44px]"
+                    disabled={busyStep === "offer_direct_chat"}
+                    onClick={() => void runStep("offer_direct_chat")}
+                    aria-label="Anunță clientul că poate scrie direct pe WhatsApp"
+                  >
+                    {busyStep === "offer_direct_chat" ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Chat direct pe WhatsApp
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="min-h-[44px]"
                     disabled={busyStep === "negotiation"}
                     onClick={() => void runStep("negotiation")}
                     aria-label="Trimite mesajul automat de negociere"
