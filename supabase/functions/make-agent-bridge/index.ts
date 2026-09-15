@@ -95,6 +95,8 @@ Deno.serve(async (req) => {
     wa_message_id?: string;
     property_id?: string;
     conversation_id?: string;
+    // Pasul de tranzacție trimite implicit și mesajul cu pașii următori.
+    skip_followup?: boolean;
   } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
@@ -170,11 +172,13 @@ Deno.serve(async (req) => {
     ok: boolean;
     status: string;
     error?: string | null;
+    agentId?: string | null;
   }) => {
     if (!offerProp) return;
     const phone = normalizeRoMobile(body.phone || "") || (body.phone || "");
     await supabase.from("wa_transaction_events").insert({
       conversation_id: opts.conversationId ?? null,
+      agent_id: opts.agentId ?? null,
       phone_normalized: phone,
       property_id: offerProp.id,
       property_name: offerProp.name,
@@ -194,9 +198,82 @@ Deno.serve(async (req) => {
       status: opts.status,
       delivered: opts.ok,
       conversation_id: opts.conversationId ?? null,
+      agent_id: opts.agentId ?? null,
       wa_message_id: opts.waMsgId ?? null,
       error: opts.error ?? null,
     });
+  };
+
+  /**
+   * După apartamentul ales, discuția continuă singură: trimitem imediat pașii
+   * următori (ofertă, vizionare, negociere, acte) ca mesaj separat în același
+   * thread, îl salvăm ca pas de tranzacție și îl anunțăm în Make.
+   */
+  const sendOfferFollowup = async (
+    conversationId: string,
+    phone: string,
+    agentId: string | null,
+  ) => {
+    if (!offerProp) return null;
+    const text = [
+      `Pașii următori pentru ${offerProp.name}:`,
+      "1) Ofertă — vă trimitem prețul final, comisionul și costurile de achiziție.",
+      "2) Vizionare — stabilim ziua și ora care vă convine.",
+      "3) Negociere — transmitem oferta dvs. proprietarului și revenim cu decizia.",
+      "4) Acte — antecontract, plată și programare la notar.",
+      "",
+      offerProp.price
+        ? `Preț de pornire: ${Number(offerProp.price).toLocaleString("ro-RO")} €. Cu ce sumă doriți să intrăm în negociere?`
+        : "Cu ce sumă doriți să intrăm în negociere?",
+      `Anunțul complet: ${offerProp.url}`,
+    ].join("\n");
+
+    const sent = await sendToMeta({
+      messaging_product: "whatsapp",
+      to: phone.replace(/^\+/, ""),
+      type: "text",
+      text: { preview_url: false, body: text },
+    });
+    const msgId = sent.body?.messages?.[0]?.id ?? null;
+
+    await supabase.from("wa_messages").insert({
+      conversation_id: conversationId,
+      wa_message_id: msgId,
+      direction: "outbound",
+      role: "assistant",
+      content: text,
+      error: sent.ok ? null : String(sent.error).slice(0, 500),
+    });
+
+    await supabase.from("wa_transaction_events").insert({
+      conversation_id: conversationId,
+      agent_id: agentId,
+      phone_normalized: phone,
+      property_id: offerProp.id,
+      property_name: offerProp.name,
+      property_slug: offerProp.slug,
+      property_url: offerProp.url,
+      price: offerProp.price,
+      event: "offer_followup",
+      status: sent.ok ? "sent" : "failed",
+      wa_message_id: msgId,
+      error: sent.ok ? null : String(sent.error).slice(0, 500),
+      source: fromMake ? "make" : "admin",
+      payload: { step: "oferta_negociere" },
+    });
+
+    await relayToMake("wa_offer_followup", {
+      phone,
+      property: offerProp,
+      conversation_id: conversationId,
+      agent_id: agentId,
+      delivered: sent.ok,
+      wa_message_id: msgId,
+      error: sent.ok ? null : String(sent.error),
+      message: text,
+    });
+
+    return { ok: sent.ok, wa_message_id: msgId };
   };
 
   // ---------------------------------------------------------- listing_opened
@@ -210,8 +287,18 @@ Deno.serve(async (req) => {
       .select("id, name, slug")
       .eq("id", propertyId)
       .maybeSingle();
+    // Agentul alocat discuției, ca raportul pe agent din dashboard să fie corect.
+    let openedAgentId: string | null = null;
+    if (body.conversation_id || phone) {
+      const q = supabase.from("wa_conversations").select("assigned_agent_id").limit(1);
+      const { data: convRow } = body.conversation_id
+        ? await q.eq("id", body.conversation_id).maybeSingle()
+        : await q.eq("phone_normalized", phone).order("updated_at", { ascending: false }).maybeSingle();
+      openedAgentId = (convRow?.assigned_agent_id as string) ?? null;
+    }
     await supabase.from("wa_transaction_events").insert({
       conversation_id: body.conversation_id ?? null,
+      agent_id: openedAgentId,
       phone_normalized: phone,
       property_id: propertyId,
       property_name: (prop?.name as string) ?? null,
@@ -236,7 +323,7 @@ Deno.serve(async (req) => {
     // Conversația existentă sau una nouă, ca să rămână un thread complet.
     const { data: conv } = await supabase
       .from("wa_conversations")
-      .select("id, window_expires_at, prospect_id")
+      .select("id, window_expires_at, prospect_id, assigned_agent_id")
       .eq("phone_normalized", phone)
       .order("updated_at", { ascending: false })
       .limit(1)
@@ -405,13 +492,22 @@ Deno.serve(async (req) => {
       payload: { source: fromMake ? "make" : "internal", window_open: windowOpen },
     });
 
+    const convAgentId = (conv?.assigned_agent_id as string) ?? null;
+
     await logOffer({
       conversationId,
       waMsgId,
       ok: sent.ok,
       status: sent.ok ? "sent" : "failed",
       error: sent.ok ? null : String(sent.error),
+      agentId: convAgentId,
     });
+
+    // Apartamentul ales → discuția continuă singură cu pașii următori.
+    let followup: { ok: boolean; wa_message_id: string | null } | null = null;
+    if (offerProp && sent.ok && body.skip_followup !== true) {
+      followup = await sendOfferFollowup(conversationId, phone, convAgentId);
+    }
 
     return json(
       {
@@ -419,6 +515,7 @@ Deno.serve(async (req) => {
         conversation_id: conversationId,
         wa_message_id: waMsgId,
         delivered: sent.ok,
+        followup_sent: followup?.ok ?? false,
         meta_error: sent.ok ? undefined : sent.error,
       },
       sent.ok ? 200 : 502,

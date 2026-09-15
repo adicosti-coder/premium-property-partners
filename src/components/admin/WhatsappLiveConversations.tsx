@@ -45,6 +45,27 @@ type MessageRow = {
 
 type AgentRow = { id: string; name: string; email: string };
 
+type TxEventRow = {
+  id: string;
+  event: string;
+  status: string | null;
+  property_name: string | null;
+  property_url: string | null;
+  price: number | null;
+  error: string | null;
+  agent_id: string | null;
+  created_at: string;
+};
+
+/** Eticheta pasului de tranzacție afișat în discuție. */
+const TX_LABELS: Record<string, string> = {
+  offer_sent: "Apartament ales — anunț trimis clientului",
+  offer_failed: "Apartament ales — anunțul nu a ajuns la client",
+  offer_followup: "Ofertă și negociere — pașii următori trimiși",
+  listing_opened: "Anunț deschis",
+  negotiation: "Negociere",
+};
+
 type SaleProperty = {
   id: string;
   name: string;
@@ -92,6 +113,7 @@ const lastActivity = (c: ConversationRow) => {
 export default function WhatsappLiveConversations() {
   const [conversations, setConversations] = useState<ConversationRow[]>([]);
   const [messages, setMessages] = useState<MessageRow[]>([]);
+  const [txEvents, setTxEvents] = useState<TxEventRow[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingThread, setLoadingThread] = useState(false);
@@ -143,14 +165,23 @@ export default function WhatsappLiveConversations() {
 
   const loadThread = useCallback(async (conversationId: string) => {
     setLoadingThread(true);
-    const { data, error: msgErr } = await supabase
-      .from("wa_messages")
-      .select("id, conversation_id, direction, role, content, template_name, error, wa_message_id, created_at")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true })
-      .limit(500);
-    if (msgErr) setError(msgErr.message);
-    setMessages((data ?? []) as MessageRow[]);
+    const [msgRes, txRes] = await Promise.all([
+      supabase
+        .from("wa_messages")
+        .select("id, conversation_id, direction, role, content, template_name, error, wa_message_id, created_at")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true })
+        .limit(500),
+      supabase
+        .from("wa_transaction_events")
+        .select("id, event, status, property_name, property_url, price, error, agent_id, created_at")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true })
+        .limit(200),
+    ]);
+    if (msgRes.error) setError(msgRes.error.message);
+    setMessages((msgRes.data ?? []) as MessageRow[]);
+    setTxEvents((txRes.data ?? []) as TxEventRow[]);
     setLoadingThread(false);
   }, []);
 
@@ -162,7 +193,10 @@ export default function WhatsappLiveConversations() {
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
-    else setMessages([]);
+    else {
+      setMessages([]);
+      setTxEvents([]);
+    }
   }, [selectedId, loadThread]);
 
   useRealtimeChannel("wa-live-conversations", [
@@ -173,6 +207,11 @@ export default function WhatsappLiveConversations() {
         void loadConversations();
         if (selectedId) void loadThread(selectedId);
       },
+    },
+    {
+      event: "*",
+      table: "wa_transaction_events",
+      handler: () => { if (selectedId) void loadThread(selectedId); },
     },
     {
       event: "*",
@@ -197,6 +236,63 @@ export default function WhatsappLiveConversations() {
     : false;
   const agentName = (id: string | null) =>
     agents.find((a) => a.id === id)?.name ?? "nealocat";
+
+  /** Pașii de tranzacție intercalați cronologic în firul de discuție. */
+  const stepTimeline = useMemo(() => {
+    const map = new Map<string, TxEventRow[]>();
+    const trailing: TxEventRow[] = [];
+    let idx = 0;
+    for (const ev of txEvents) {
+      const t = new Date(ev.created_at).getTime();
+      while (idx < messages.length && new Date(messages[idx].created_at).getTime() < t) idx++;
+      if (idx < messages.length) {
+        const key = messages[idx].id;
+        map.set(key, [...(map.get(key) ?? []), ev]);
+      } else {
+        trailing.push(ev);
+      }
+    }
+    return { map, trailing };
+  }, [txEvents, messages]);
+
+  /** Starea pasului de tranzacție, pentru bara de progres a discuției. */
+  const stages = useMemo(() => {
+    const has = (e: string) => txEvents.some((t) => t.event === e && t.status !== "failed");
+    return [
+      { label: "Apartament ales", done: has("offer_sent") },
+      { label: "Ofertă trimisă", done: has("offer_followup") },
+      { label: "Anunț deschis", done: has("listing_opened") },
+      {
+        label: "Negociere",
+        done: has("negotiation") ||
+          (has("offer_followup") && messages.some((m) => m.direction === "inbound" &&
+            new Date(m.created_at).getTime() >
+              Math.max(
+                0,
+                ...txEvents
+                  .filter((t) => t.event === "offer_followup")
+                  .map((t) => new Date(t.created_at).getTime()),
+              ))),
+      },
+    ];
+  }, [txEvents, messages]);
+
+  const renderStep = (ev: TxEventRow) => (
+    <div key={ev.id} className="my-2 flex justify-center">
+      <div className="max-w-[90%] rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-center">
+        <p className="text-[11px] font-medium">
+          {TX_LABELS[ev.event] ?? ev.event}
+          {ev.property_name ? ` · ${ev.property_name}` : ""}
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          {fmt(ev.created_at)}
+          {ev.price ? ` · ${Number(ev.price).toLocaleString("ro-RO")} €` : ""}
+        </p>
+        {ev.error && <p className="text-[11px] text-destructive">{ev.error}</p>}
+      </div>
+    </div>
+  );
+
 
   const QUALIFY_MESSAGE = [
     "Bună ziua! Vă mulțumim pentru mesaj.",
@@ -365,6 +461,15 @@ export default function WhatsappLiveConversations() {
                   : "Fereastra de 24h e închisă — se poate trimite doar un mesaj-șablon aprobat."}
               </p>
             )}
+            {selected && (
+              <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Pașii de tranzacție">
+                {stages.map((s) => (
+                  <Badge key={s.label} variant={s.done ? "default" : "outline"}>
+                    {s.label}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </CardHeader>
           {/* Firul de discuție ca într-o aplicație de chat: clientul în stânga, noi în dreapta. */}
           <CardContent className="max-h-[560px] overflow-y-auto bg-muted/20 rounded-md mx-4 p-3 space-y-2">
@@ -398,6 +503,7 @@ export default function WhatsappLiveConversations() {
                         {dayLabel(m.created_at)}
                       </p>
                     )}
+                    {(stepTimeline.map.get(m.id) ?? []).map(renderStep)}
                     <div className={`flex ${outbound ? "justify-end" : "justify-start"}`}>
                       <div
                         className={`max-w-[85%] px-3 py-2 shadow-sm ${
@@ -464,6 +570,7 @@ export default function WhatsappLiveConversations() {
                 );
               })
             )}
+            {!loadingThread && stepTimeline.trailing.map(renderStep)}
           </CardContent>
           {selected && (
             <CardContent className="border-t pt-4 space-y-2">

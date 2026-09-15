@@ -27,8 +27,11 @@ type TxRow = {
   status: string;
   error: string | null;
   source: string;
+  agent_id: string | null;
   created_at: string;
 };
+
+type AgentRow = { id: string; name: string };
 
 const DAYS = 14;
 
@@ -50,29 +53,73 @@ const dayKey = (iso: string) =>
 
 export default function WhatsappTransactionsDashboard() {
   const [rows, setRows] = useState<TxRow[]>([]);
+  const [agents, setAgents] = useState<AgentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - DAYS * 24 * 3600 * 1000).toISOString();
-    const { data, error: err } = await supabase
-      .from("wa_transaction_events")
-      .select(
-        "id, conversation_id, phone_normalized, property_id, property_name, property_url, price, event, status, error, source, created_at",
-      )
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(1000);
-    if (err) setError(err.message);
+    const [txRes, agentRes] = await Promise.all([
+      supabase
+        .from("wa_transaction_events")
+        .select(
+          "id, conversation_id, phone_normalized, property_id, property_name, property_url, price, event, status, error, source, agent_id, created_at",
+        )
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1000),
+      supabase.from("wa_agents").select("id, name"),
+    ]);
+    if (txRes.error) setError(txRes.error.message);
     else {
       setError(null);
-      setRows((data ?? []) as TxRow[]);
+      setRows((txRes.data ?? []) as TxRow[]);
     }
+    setAgents((agentRes.data ?? []) as AgentRow[]);
     setLoading(false);
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  /** Raport pe agent: discuții în tranzacție, apartamente alese, anunțuri deschise, eșuate. */
+  const byAgent = useMemo(() => {
+    const map = new Map<
+      string,
+      { name: string; conversations: Set<string>; properties: Set<string>; sent: number; opened: number; failed: number }
+    >();
+    for (const r of rows) {
+      const key = r.agent_id ?? "none";
+      const name = r.agent_id
+        ? agents.find((a) => a.id === r.agent_id)?.name ?? "Agent"
+        : "Nealocat";
+      const cur = map.get(key) ?? {
+        name,
+        conversations: new Set<string>(),
+        properties: new Set<string>(),
+        sent: 0,
+        opened: 0,
+        failed: 0,
+      };
+      if (r.conversation_id) cur.conversations.add(r.conversation_id);
+      if (r.event === "offer_sent") {
+        cur.sent += 1;
+        if (r.property_id) cur.properties.add(r.property_id);
+      } else if (r.event === "listing_opened") cur.opened += 1;
+      else if (r.event === "offer_failed") cur.failed += 1;
+      map.set(key, cur);
+    }
+    return Array.from(map.values())
+      .map((a) => ({
+        name: a.name,
+        conversations: a.conversations.size,
+        properties: a.properties.size,
+        sent: a.sent,
+        opened: a.opened,
+        failed: a.failed,
+      }))
+      .sort((a, b) => b.conversations - a.conversations || b.sent - a.sent);
+  }, [rows, agents]);
 
   const stats = useMemo(() => {
     const conversations = new Set(
@@ -180,6 +227,48 @@ export default function WhatsappTransactionsDashboard() {
                 <Bar dataKey="esuate" name="Eșuate" fill="hsl(var(--destructive))" />
               </BarChart>
             </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Raport pe agent</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : byAgent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nicio tranzacție în ultimele {DAYS} zile.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th className="py-2 pr-4 font-medium">Agent</th>
+                    <th className="py-2 pr-4 font-medium">Conversații</th>
+                    <th className="py-2 pr-4 font-medium">Apartamente alese</th>
+                    <th className="py-2 pr-4 font-medium">Anunțuri trimise</th>
+                    <th className="py-2 pr-4 font-medium">Anunțuri deschise</th>
+                    <th className="py-2 font-medium">Eșuate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {byAgent.map((a) => (
+                    <tr key={a.name} className="border-t">
+                      <td className="py-2 pr-4">{a.name}</td>
+                      <td className="py-2 pr-4">{a.conversations}</td>
+                      <td className="py-2 pr-4">{a.properties}</td>
+                      <td className="py-2 pr-4">{a.sent}</td>
+                      <td className="py-2 pr-4">{a.opened}</td>
+                      <td className="py-2">
+                        {a.failed > 0 ? <Badge variant="destructive">{a.failed}</Badge> : "0"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>
