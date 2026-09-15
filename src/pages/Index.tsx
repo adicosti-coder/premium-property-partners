@@ -38,6 +38,7 @@ const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FAQ = lazy(() => import("@/components/FAQ"));
 const OwnerFearsFAQ = lazy(() => import("@/components/OwnerFearsFAQ"));
 const ContactSection = lazy(() => import("@/components/ContactSection"));
+const WhatsappQuickContact = lazy(() => import("@/components/WhatsappQuickContact"));
 const CTA = lazy(() => import("@/components/CTA"));
 const Footer = lazy(() => import("@/components/Footer"));
 const BlogPreview = lazy(() => import("@/components/BlogPreview"));
@@ -193,6 +194,7 @@ const BottomFoldPrimarySection = () => (
       <OwnerFearsFAQ />
       <FAQ />
       <ContactSection />
+      <WhatsappQuickContact />
       <CTA />
     </Suspense>
   </div>
