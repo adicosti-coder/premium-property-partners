@@ -125,6 +125,10 @@ const WhatsappQuickContact = () => {
 
     trackWhatsApp();
     toast.success(c.opened);
+    // Înregistrăm apartamentul ales pentru dashboardul de tranzacții din Admin.
+    void supabase.functions.invoke("wa-listing-opened", {
+      body: { property_id: listing.id, phone: phone.trim() || undefined },
+    });
     window.open(
       `https://wa.me/${WA_AUTOMATION_NUMBER}?text=${encodeURIComponent(text)}`,
       "_blank",
