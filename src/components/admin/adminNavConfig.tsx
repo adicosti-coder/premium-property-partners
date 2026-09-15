@@ -80,6 +80,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "whatsapp-live-dashboard", label: "Dashboard conversații live", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "dashboard", "live", "primite", "raspunsuri", "abandonate", "blocaj", "agent"] },
       { value: "make-status", label: "Stare Make", icon: MessageSquare, subgroup: "AI Tools", keywords: ["make", "scenariu", "stare", "status", "ultima rulare", "livrate", "esuate", "re-run", "webhook"] },
       { value: "whatsapp-analytics", label: "Analiză conversații", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "conversatii", "analiza", "grafic", "livrate", "esuate", "abandonate", "zile", "dashboard"] },
+      { value: "whatsapp-sources", label: "Surse & durată discuții", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "sursa", "surse", "durata", "anunt", "contact", "recontactare", "agent", "discutii"] },
       { value: "whatsapp-transactions", label: "Tranzacții WhatsApp", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "tranzactii", "apartament", "anunt", "vanzare", "dashboard", "grafic"] },
       { value: "booking-scrape", label: "Note Booking", icon: Sparkles, subgroup: "AI Tools", keywords: ["booking", "note", "recenzii", "rating", "preluare", "scrape", "istoric"] },
       { value: "booking-reviews", label: "Recenzii Booking", icon: Star, subgroup: "AI Tools", keywords: ["booking", "recenzii", "note", "rating", "review", "oaspeti"] },

@@ -97,6 +97,8 @@ Deno.serve(async (req) => {
     conversation_id?: string;
     // Pasul de tranzacție trimite implicit și mesajul cu pașii următori.
     skip_followup?: boolean;
+    // Runda de negociere (1 = oferta inițială, 4 = încheierea tranzacției).
+    round?: number;
   } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
@@ -387,10 +389,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    // negotiation: mesaj opțional către client + pasul salvat în dashboard.
-    const text = (body.message || "").trim() || (offerProp
-      ? `Am transmis oferta dvs. proprietarului pentru ${offerProp.name}. Revenim cu răspunsul și, dacă acceptă, programăm actele.`
-      : "Am intrat în negociere cu proprietarul. Revenim cu răspunsul în cel mai scurt timp.");
+    // negotiation: negociere pe runde, cu oferte tot mai jos, până la încheiere.
+    // Make poate trimite `round` explicit; altfel îl deducem din pașii deja salvați.
+    const { count: negCount } = await supabase
+      .from("wa_transaction_events")
+      .select("id", { count: "exact", head: true })
+      .eq("conversation_id", conv.id)
+      .eq("event", "negotiation");
+    const round = Math.max(1, Math.min(4, Number(body.round) || (negCount ?? 0) + 1));
+    const basePrice = offerProp?.price ?? null;
+    // Runda 1 = prețul cerut, apoi -3%, -5%, iar runda 4 închide tranzacția.
+    const stepDiscount = [0, 0.03, 0.05, 0.05][round - 1];
+    const offerPrice = basePrice ? Math.round(basePrice * (1 - stepDiscount)) : null;
+    const priceTxt = offerPrice ? `${offerPrice.toLocaleString("ro-RO")} EUR` : null;
+    const closing = round >= 4;
+    const autoText = closing
+      ? `Am ajuns la un acord${priceTxt ? ` la ${priceTxt}` : ""}${offerProp ? ` pentru ${offerProp.name}` : ""}. Următorii pași: rezervarea, antecontractul la notar și programarea semnării. Vă trimit lista de documente și două variante de dată.`
+      : round === 1
+        ? `Am transmis oferta dvs. proprietarului${offerProp ? ` pentru ${offerProp.name}` : ""}. Revenim cu răspunsul și, dacă acceptă, programăm actele.`
+        : `Am renegociat${offerProp ? ` pentru ${offerProp.name}` : ""}: proprietarul poate coborî la ${priceTxt ?? "un preț mai bun"}${round >= 3 ? ", cu plata rapidă și mobilierul incluse" : ""}. Confirmați și trecem la rezervare?`;
+    const text = (body.message || "").trim() || autoText;
     const sent = await sendToMeta({
       messaging_product: "whatsapp",
       to: phone.replace(/^\+/, ""),
@@ -414,13 +432,19 @@ Deno.serve(async (req) => {
       property_name: offerProp?.name ?? null,
       property_slug: offerProp?.slug ?? null,
       property_url: offerProp?.url ?? null,
-      price: offerProp?.price ?? null,
+      price: offerPrice ?? offerProp?.price ?? null,
       event: "negotiation",
       status: sent.ok ? "sent" : "failed",
       wa_message_id: negMsgId,
       error: sent.ok ? null : String(sent.error).slice(0, 500),
       source: fromMake ? "make" : "admin",
-      payload: { step: "negociere" },
+      payload: {
+        step: closing ? "incheiere" : "negociere",
+        round,
+        offer_price: offerPrice,
+        list_price: basePrice,
+        closing,
+      },
     });
     await relayToMake("wa_negotiation", {
       phone,
@@ -428,6 +452,11 @@ Deno.serve(async (req) => {
       agent_id: convAgentId,
       property: offerProp,
       message: text,
+      round,
+      offer_price: offerPrice,
+      list_price: basePrice,
+      closing,
+      next_round: closing ? null : round + 1,
       delivered: sent.ok,
       wa_message_id: negMsgId,
       error: sent.ok ? null : String(sent.error),
@@ -448,6 +477,10 @@ Deno.serve(async (req) => {
       delivered: sent.ok,
       wa_message_id: negMsgId,
       conversation_id: conv.id,
+      round,
+      offer_price: offerPrice,
+      closing,
+      next_round: closing ? null : round + 1,
       error: sent.ok ? null : sent.error,
     });
   }
