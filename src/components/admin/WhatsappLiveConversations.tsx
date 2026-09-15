@@ -154,7 +154,8 @@ export default function WhatsappLiveConversations() {
   useEffect(() => {
     void loadConversations();
     void loadAgents();
-  }, [loadConversations, loadAgents]);
+    void loadSaleProperties();
+  }, [loadConversations, loadAgents, loadSaleProperties]);
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
