@@ -432,6 +432,17 @@ Deno.serve(async (req) => {
       wa_message_id: negMsgId,
       error: sent.ok ? null : String(sent.error),
     });
+    await notifyAgentOffer(supabase, {
+      conversation_id: conv.id as string,
+      phone,
+      step: "negotiation",
+      property_name: offerProp?.name ?? null,
+      property_url: offerProp?.url ?? null,
+      price: offerProp?.price ?? null,
+      message: text,
+      delivered: sent.ok,
+      error: sent.ok ? null : String(sent.error),
+    });
     return json({
       ok: sent.ok,
       delivered: sent.ok,
