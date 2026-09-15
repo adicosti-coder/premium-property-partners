@@ -351,7 +351,8 @@ Deno.serve(async (req) => {
 
 
   // Auto-reply de calificare la prima interacțiune (fire-and-forget)
-  for (const convId of intakeConversations) {
+  for (const [convId, convPhone] of intakeConversations) {
+    const ctx = await loadProspectContext(supabase, convPhone);
     fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
       method: "POST",
       headers: {
@@ -359,7 +360,7 @@ Deno.serve(async (req) => {
         "Authorization": `Bearer ${serviceKey}`,
         "x-internal-secret": internalSecret,
       },
-      body: JSON.stringify({ conversation_id: convId, text: INTAKE_MESSAGE }),
+      body: JSON.stringify({ conversation_id: convId, text: buildIntakeMessage(ctx) }),
     }).catch((e) => console.error("[wa-webhook] intake send failed:", e));
   }
 
