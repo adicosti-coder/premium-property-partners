@@ -42,7 +42,7 @@ const stripDiacritics = (t: string) =>
 
 
 import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
-import { autoReplyText } from "../_shared/waAutoReply.ts";
+import { autoReplyText, FINANCE_BLOCK } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyClientOfferEmail } from "../_shared/waClientOfferEmail.ts";
 
@@ -280,6 +280,8 @@ Deno.serve(async (req) => {
         ? `Preț de pornire: ${Number(offerProp.price).toLocaleString("ro-RO")} €. Cu ce sumă doriți să intrăm în negociere?`
         : "Cu ce sumă doriți să intrăm în negociere?",
       `Anunțul complet: ${offerProp.url}`,
+      "",
+      FINANCE_BLOCK,
     ].join("\n");
 
     const sent = await sendToMeta({
