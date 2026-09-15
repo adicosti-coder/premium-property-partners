@@ -466,6 +466,42 @@ export default function WhatsappLiveConversations() {
                   scrie din nou.
                 </p>
               )}
+
+              <div className="border-t pt-4 space-y-2">
+                <p className="text-sm font-medium">Pasul următor: apartamentul ales de client</p>
+                <p className="text-xs text-muted-foreground">
+                  Alege apartamentul discutat, trimite-i clientului anunțul de vânzare pe WhatsApp
+                  și deschide pagina anunțului.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Select value={pickedProperty} onValueChange={setPickedProperty}>
+                    <SelectTrigger className="w-full sm:w-[320px]" aria-label="Alege apartamentul">
+                      <SelectValue placeholder="Alege apartamentul" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {saleProperties.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    className="min-h-[40px]"
+                    onClick={() => void sendOffer()}
+                    disabled={sendingOffer || !pickedProperty}
+                    aria-label="Trimite anunțul de vânzare și deschide-l"
+                  >
+                    {sendingOffer ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Home className="h-4 w-4" />
+                    )}
+                    <span className="ml-2">Trimite anunțul și deschide-l</span>
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           )}
         </Card>
