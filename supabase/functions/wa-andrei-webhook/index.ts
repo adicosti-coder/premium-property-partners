@@ -2,7 +2,8 @@
 // Public endpoint (verify_jwt = false). Validates signature via WHATSAPP_APP_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
-import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
+import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext, quickReplyText } from "../_shared/waAutoReply.ts";
+import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
 
 const corsHeaders = {
@@ -83,6 +84,7 @@ Deno.serve(async (req) => {
   const conversationsToReply = new Set<string>();
   // convId → telefon, ca mesajul de calificare să fie personalizat cu datele anunțului.
   const intakeConversations = new Map<string, string>();
+  const quickReplyConversations = new Map<string, { phone: string; kind: string; text: string }>();
 
   for (const entry of entries) {
     for (const change of entry?.changes || []) {
@@ -227,10 +229,22 @@ Deno.serve(async (req) => {
           .eq("conversation_id", convId)
           .eq("direction", "outbound");
 
-        if (!outboundCount) {
+        const quick = outboundCount ? quickReplyText(text) : null;
+        if (quick) {
+          // Răspuns la butoanele din primul mesaj → trimitem imediat răspunsul
+          // potrivit, independent de regula de 3 ore, ca discuția să continue.
+          quickReplyConversations.set(convId, { phone: from, ...quick });
+        } else if (!outboundCount) {
           intakeConversations.set(convId, from);
         } else {
           conversationsToReply.add(convId);
+        }
+
+        // Linkul chatului, o singură dată, către clientul cu e-mail cunoscut.
+        try {
+          await notifyClientChatLink(supabase, { phone: from, conversation_id: convId });
+        } catch (e) {
+          console.error("[wa-webhook] client chat link email failed:", e);
         }
 
 
@@ -376,6 +390,30 @@ Deno.serve(async (req) => {
     }
   }
 
+
+  // Răspuns automat la butoanele din primul mesaj (vânzare / administrare / refuz).
+  for (const [convId, quick] of quickReplyConversations) {
+    if (quick.kind === "quick_no") {
+      try {
+        await supabase.from("wa_dnc_list").upsert({
+          phone_normalized: quick.phone,
+          label: "refuz expres",
+          reason: "clientul a apăsat „Nu, mulțumesc” în primul mesaj WhatsApp",
+        }, { onConflict: "phone_normalized" });
+      } catch (e) {
+        console.error("[wa-webhook] dnc upsert failed:", e);
+      }
+    }
+    fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serviceKey}`,
+        "x-internal-secret": internalSecret,
+      },
+      body: JSON.stringify({ conversation_id: convId, text: quick.text }),
+    }).catch((e) => console.error("[wa-webhook] quick reply send failed:", e));
+  }
 
   // Auto-reply de calificare la prima interacțiune (fire-and-forget)
   for (const [convId, convPhone] of intakeConversations) {

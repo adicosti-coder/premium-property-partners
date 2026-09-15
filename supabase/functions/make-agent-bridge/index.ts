@@ -40,40 +40,10 @@ async function lastConversationPropertyId(
 const stripDiacritics = (t: string) =>
   t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-function quickReplyText(raw: string): { kind: string; text: string } | null {
-  const t = stripDiacritics(raw);
-  if (/^nu[, ]|^nu$|multumesc/.test(t) && t.length <= 40) {
-    return {
-      kind: "quick_no",
-      text:
-        "Am inteles, va mulțumim pentru raspuns! Nu va mai contactam pe aceasta tema. " +
-        "Daca pe viitor doriti o estimare de preț sau de venit pentru apartament, ne scrieti oricand aici.",
-    };
-  }
-  if (/vanzare/.test(t)) {
-    return {
-      kind: "quick_sale",
-      text:
-        "Perfect, ne ocupam de vanzare asistata. Pasii sunt simpli: evaluare gratuita a apartamentului, " +
-        "sedinta foto profesionala si promovare, apoi aducem doar clienti verificati la vizionari si " +
-        "pregatim dosarul pana la notar.\n\nCa sa va trimit estimarea de preț, imi confirmati zona, " +
-        "numarul de camere si suprafata? Va raspundem intre 09:00 si 20:00.",
-    };
-  }
-  if (/administrare|hotel/.test(t)) {
-    return {
-      kind: "quick_management",
-      text:
-        "Excelent, administrarea in regim hotelier inseamna randament net de circa 9,4% pe an: ne ocupam " +
-        "de anunturi pe Booking si Airbnb, prețuri dinamice, curatenie, check-in si raportare lunara, " +
-        "iar dvs. primiti venitul net.\n\nImi spuneti zona, numarul de camere si suprafata, ca sa va " +
-        "trimit estimarea de venit lunar? Va raspundem intre 09:00 si 20:00.",
-    };
-  }
-  return null;
-}
 
 import { notifyAgentInbound, notifyAgentOffer } from "../_shared/waAgentNotify.ts";
+import { quickReplyText } from "../_shared/waAutoReply.ts";
+import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1014,6 +984,13 @@ Deno.serve(async (req) => {
 
     const ctx = await loadProspectContext(supabase, phone);
     if (replyKind === "intake") replyText = buildIntakeMessage(ctx);
+
+    // Linkul chatului pe e-mail, o singură dată per discuție (dacă știm adresa).
+    try {
+      await notifyClientChatLink(supabase, { phone, conversation_id: convId });
+    } catch (e) {
+      console.error("[bridge] client chat link email failed:", (e as Error)?.message);
+    }
 
     // Refuz expres la butonul „Nu, mulțumesc” → oprim orice contactare ulterioară.
     if (quick?.kind === "quick_no") {
