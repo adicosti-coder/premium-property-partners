@@ -265,6 +265,44 @@ const WhatsappLiveDashboard = () => {
         ))}
       </div>
 
+      {/* Discuțiile deschise ale fiecărui agent, actualizate în timp real. */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Discuții deschise pe agent</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {rows.byAgent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nicio discuție deschisă acum.</p>
+          ) : (
+            rows.byAgent.map((a) => (
+              <div key={a.agent} className="rounded-lg border border-border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium text-foreground">{a.agent}</p>
+                  <div className="flex flex-wrap gap-1.5 text-xs">
+                    <Badge variant="secondary">{a.conversations} discuții</Badge>
+                    <Badge variant="outline">{a.inbound} mesaje primite</Badge>
+                    <Badge variant="outline">{a.replies} răspunsuri date</Badge>
+                    {a.awaiting > 0 && <Badge variant="outline">{a.awaiting} așteaptă răspuns</Badge>}
+                    {a.abandoned > 0 && <Badge variant="destructive">{a.abandoned} abandonate</Badge>}
+                  </div>
+                </div>
+                <ul className="mt-2 space-y-1">
+                  {a.convs.map((c) => (
+                    <li key={c.id} className="text-xs text-muted-foreground flex flex-wrap gap-x-2">
+                      <span className="text-foreground">
+                        {c.wa_profile_name || c.phone_normalized}
+                      </span>
+                      <span>{c.inbound} primite · {c.agentReplies} răspunsuri</span>
+                      <span>· {fmt(c.last_inbound_at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Discuții live</CardTitle>
