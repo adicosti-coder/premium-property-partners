@@ -178,15 +178,29 @@ export default function WhatsappChat() {
   };
 
   const runStep = async (
-    action: "offer_meeting" | "offer_direct_chat" | "offer_followup" | "offer_confirm",
+    action:
+      | "offer_meeting"
+      | "offer_direct_chat"
+      | "offer_followup"
+      | "offer_confirm"
+      | "meeting_confirmed",
   ) => {
     if (!selected) return;
+    if (action === "meeting_confirmed" && !meetingAt.trim()) {
+      toast({
+        title: "Scrie data și ora",
+        description: "Ex.: joi, 17 septembrie, ora 18:00.",
+        variant: "destructive",
+      });
+      return;
+    }
     setBusyStep(action);
     const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
       body: {
         action,
         phone: selected.phone_normalized,
         conversation_id: selected.id,
+        ...(action === "meeting_confirmed" ? { meeting_at: meetingAt.trim() } : {}),
       },
     });
     setBusyStep(null);
