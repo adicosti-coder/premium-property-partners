@@ -144,6 +144,20 @@ export async function loadProspectContext(
 const stripDiacritics = (t: string) =>
   t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
+/**
+ * Explicația cifrelor (venituri, cheltuieli, profit net) trimisă în mesajele
+ * despre administrare și preț, ca proprietarul să înțeleagă oferta.
+ * Regulile sunt cele standard RealTrust: ocupare medie 75%, cheltuieli ~27%
+ * din încasări, randament net ~9,4% pe an.
+ */
+export const FINANCE_BLOCK = [
+  "Cum se calculeaza venitul dvs.:",
+  "• Venituri brute: tariful pe noapte x ocupare medie de 75% pe luna.",
+  "• Cheltuieli: curatenie, utilitati, comisioane Booking/Airbnb, administrare si taxe — circa 27% din incasari.",
+  "• Profit net: ce rezulta, adica aproximativ 73% din incasari, echivalentul unui randament net de circa 9,4% pe an din valoarea apartamentului.",
+  "Primiti si un raport lunar cu incasarile, cheltuielile si profitul net, ca sa vedeti exact cifrele.",
+].join("\n");
+
 export function quickReplyText(raw: string): { kind: string; text: string } | null {
   const t = stripDiacritics(raw);
   if (/^nu[, ]|^nu$|multumesc/.test(t) && t.length <= 40) {
@@ -171,7 +185,7 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
         "Excelent, administrarea in regim hotelier inseamna randament net de circa 9,4% pe an: ne ocupam " +
         "de anunturi pe Booking si Airbnb, prețuri dinamice, curatenie, check-in si raportare lunara, " +
         "iar dvs. primiti venitul net.\n\nImi spuneti zona, numarul de camere si suprafata, ca sa va " +
-        "trimit estimarea de venit lunar? Va raspundem intre 09:00 si 20:00.",
+        "trimit estimarea de venit lunar? Va raspundem intre 09:00 si 20:00.\n\n" + FINANCE_BLOCK,
     };
   }
   return null;
@@ -215,7 +229,8 @@ export function autoReplyText(raw: string): { kind: string; text: string } | nul
       text:
         "Excelent. In administrare regim hotelier randamentul net este de circa 9,4% pe an: anunturi pe " +
         "Booking si Airbnb, prețuri dinamice, curatenie, check-in si raportare lunara.\n\n" +
-        "Imi confirmati zona, numarul de camere si suprafata, ca sa va trimit estimarea de venit lunar?",
+        "Imi confirmati zona, numarul de camere si suprafata, ca sa va trimit estimarea de venit lunar?\n\n" +
+        FINANCE_BLOCK,
     };
   }
 
@@ -235,7 +250,7 @@ export function autoReplyText(raw: string): { kind: string; text: string } | nul
       text:
         "Va trimitem imediat cifrele reale. Imi spuneti, va rog, zona, numarul de camere si suprafata " +
         "apartamentului?\n\nPrimiti estimarea de preț de vanzare si estimarea de venit in regim hotelier, " +
-        "fara nicio obligatie.",
+        "fara nicio obligatie.\n\n" + FINANCE_BLOCK,
     };
   }
 

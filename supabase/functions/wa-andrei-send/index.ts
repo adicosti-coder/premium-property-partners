@@ -41,6 +41,8 @@ Deno.serve(async (req) => {
     template_name?: string;
     template_params?: string[];
     template_language?: string;
+    /** Marcaj opțional: mesajul a plecat automat (răspuns automat), nu de la agent. */
+    auto_kind?: string;
   } = {};
   try { body = await req.json(); } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -160,6 +162,7 @@ Deno.serve(async (req) => {
     role: "assistant",
     content: body.text || `[template:${body.template_name}]`,
     template_name: body.template_name || null,
+    tool_call: body.auto_kind ? { auto_reply: body.auto_kind } : null,
   });
 
   await supabase.from("wa_conversations")

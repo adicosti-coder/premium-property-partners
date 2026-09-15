@@ -1076,6 +1076,8 @@ Deno.serve(async (req) => {
       direction: "outbound",
       role: "assistant",
       content: replyText,
+      // Marcaj pentru raportul din Admin: mesajul a plecat automat, nu de la agent.
+      tool_call: { auto_reply: replyKind === "quick_reply" ? (quick?.kind ?? "quick_reply") : replyKind },
       error: autoSent.ok ? null : String(autoSent.error).slice(0, 500),
     });
 

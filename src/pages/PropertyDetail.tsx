@@ -33,6 +33,7 @@ const PropertyReviews = lazy(() => import("@/components/PropertyReviews"));
 const GuestReviewForm = lazy(() => import("@/components/GuestReviewForm"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const PropertyFAQ = lazy(() => import("@/components/PropertyFAQ"));
+import PropertyQuickFacts from "@/components/PropertyQuickFacts";
 const PropertyProximity = lazy(() => import("@/components/PropertyProximity"));
 const PropertyNeighborhoodMap = lazy(() => import("@/components/PropertyNeighborhoodMap"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
@@ -968,6 +969,18 @@ const PropertyDetail = () => {
         <div className="container mx-auto px-4 sm:px-6 pb-24 overflow-hidden">
           <div className="grid lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2 space-y-8 min-w-0">
+
+              {/* Apartamentul pe scurt: metri, etaj, camere, vecinătate + WhatsApp */}
+              <PropertyQuickFacts
+                name={property.name}
+                location={displayLocation}
+                size={(dbProperty?.size ?? (property as any).size) as number | null}
+                floor={dbProperty?.floor ?? null}
+                bedrooms={property.bedrooms}
+                capacity={property.capacity}
+                language={language}
+              />
+
 
               {/* ═══════════════════════════════════════════════════════
                   1. SCOR CARTIER — Validare vizuală rapidă

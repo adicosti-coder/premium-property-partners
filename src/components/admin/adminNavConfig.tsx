@@ -87,6 +87,7 @@ export const ADMIN_GROUPS: AdminGroup[] = [
       { value: "whatsapp-transactions", label: "Tranzacții WhatsApp", icon: MessageSquare, subgroup: "AI Tools", keywords: ["whatsapp", "tranzactii", "apartament", "anunt", "vanzare", "dashboard", "grafic"] },
       { value: "whatsapp-offers", label: "Oferte livrate", icon: MessageSquare, subgroup: "AI Tools", keywords: ["oferte", "livrate", "ofertă", "apartament", "agent", "data", "fir", "whatsapp"] },
       { value: "whatsapp-daily-report", label: "Raport zilnic discuții", icon: MessageSquare, subgroup: "AI Tools", keywords: ["raport", "zilnic", "discutii", "mesaje", "clienti", "agent", "oferte", "intalniri", "activitate", "whatsapp"] },
+      { value: "whatsapp-activity-report", label: "Raport WhatsApp", icon: MessageSquare, subgroup: "AI Tools", keywords: ["raport", "whatsapp", "mesaje", "trimise", "primite", "automate", "activitate", "trimite pe whatsapp"] },
       { value: "booking-scrape", label: "Note Booking", icon: Sparkles, subgroup: "AI Tools", keywords: ["booking", "note", "recenzii", "rating", "preluare", "scrape", "istoric"] },
       { value: "booking-reviews", label: "Recenzii Booking", icon: Star, subgroup: "AI Tools", keywords: ["booking", "recenzii", "note", "rating", "review", "oaspeti"] },
 

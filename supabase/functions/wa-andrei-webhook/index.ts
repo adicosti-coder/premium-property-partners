@@ -411,7 +411,7 @@ Deno.serve(async (req) => {
         "Authorization": `Bearer ${serviceKey}`,
         "x-internal-secret": internalSecret,
       },
-      body: JSON.stringify({ conversation_id: convId, text: quick.text }),
+      body: JSON.stringify({ conversation_id: convId, text: quick.text, auto_kind: quick.kind }),
     }).catch((e) => console.error("[wa-webhook] quick reply send failed:", e));
   }
 
@@ -425,7 +425,7 @@ Deno.serve(async (req) => {
         "Authorization": `Bearer ${serviceKey}`,
         "x-internal-secret": internalSecret,
       },
-      body: JSON.stringify({ conversation_id: convId, text: buildIntakeMessage(ctx) }),
+      body: JSON.stringify({ conversation_id: convId, text: buildIntakeMessage(ctx), auto_kind: "intake" }),
     }).catch((e) => console.error("[wa-webhook] intake send failed:", e));
   }
 
