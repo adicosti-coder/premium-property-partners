@@ -64,6 +64,7 @@ export default function WhatsappTransactionsDashboard() {
   const [rows, setRows] = useState<TxRow[]>([]);
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [inbound, setInbound] = useState<InboundRow[]>([]);
+  const [agentReplies, setAgentReplies] = useState<AgentReplyRow[]>([]);
   const [pickedProperty, setPickedProperty] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
