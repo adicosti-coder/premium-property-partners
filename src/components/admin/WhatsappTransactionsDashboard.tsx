@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { ExternalLink, Home, MessageSquare, RefreshCw, TrendingUp } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -33,6 +36,8 @@ type TxRow = {
 
 type AgentRow = { id: string; name: string };
 
+type InboundRow = { id: string; conversation_id: string | null; created_at: string };
+
 const DAYS = 14;
 
 const fmt = (iso: string) =>
@@ -54,13 +59,15 @@ const dayKey = (iso: string) =>
 export default function WhatsappTransactionsDashboard() {
   const [rows, setRows] = useState<TxRow[]>([]);
   const [agents, setAgents] = useState<AgentRow[]>([]);
+  const [inbound, setInbound] = useState<InboundRow[]>([]);
+  const [pickedProperty, setPickedProperty] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - DAYS * 24 * 3600 * 1000).toISOString();
-    const [txRes, agentRes] = await Promise.all([
+    const [txRes, agentRes, inRes] = await Promise.all([
       supabase
         .from("wa_transaction_events")
         .select(
@@ -70,6 +77,13 @@ export default function WhatsappTransactionsDashboard() {
         .order("created_at", { ascending: false })
         .limit(1000),
       supabase.from("wa_agents").select("id, name"),
+      supabase
+        .from("wa_messages")
+        .select("id, conversation_id, created_at")
+        .eq("direction", "inbound")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1000),
     ]);
     if (txRes.error) setError(txRes.error.message);
     else {
@@ -77,10 +91,58 @@ export default function WhatsappTransactionsDashboard() {
       setRows((txRes.data ?? []) as TxRow[]);
     }
     setAgents((agentRes.data ?? []) as AgentRow[]);
+    setInbound((inRes.data ?? []) as InboundRow[]);
     setLoading(false);
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  /** Anunțurile apărute în tranzacții, pentru selectorul dashboardului pe anunț. */
+  const propertyOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of rows) {
+      if (r.property_id) map.set(r.property_id, r.property_name || "Apartament");
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [rows]);
+
+  useEffect(() => {
+    if (!pickedProperty && propertyOptions.length > 0) setPickedProperty(propertyOptions[0].id);
+  }, [propertyOptions, pickedProperty]);
+
+  /** Dashboard pe anunț: conversații, mesaje de la clienți, alegeri de apartament. */
+  const propertyReport = useMemo(() => {
+    const events = rows.filter((r) => r.property_id === pickedProperty);
+    const convIds = new Set(events.map((e) => e.conversation_id).filter(Boolean) as string[]);
+    const msgs = inbound.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
+    const buckets = new Map<
+      string,
+      { day: string; alegeri: number; mesaje: number; deschise: number }
+    >();
+    for (let i = DAYS - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 3600 * 1000).toISOString();
+      buckets.set(dayKey(d), { day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0 });
+    }
+    for (const e of events) {
+      const b = buckets.get(dayKey(e.created_at));
+      if (!b) continue;
+      if (e.event === "offer_sent") b.alegeri += 1;
+      else if (e.event === "listing_opened") b.deschise += 1;
+    }
+    for (const m of msgs) {
+      const b = buckets.get(dayKey(m.created_at));
+      if (b) b.mesaje += 1;
+    }
+    return {
+      name: events[0]?.property_name ?? "—",
+      url: events.find((e) => e.property_url)?.property_url ?? null,
+      conversations: convIds.size,
+      clientMessages: msgs.length,
+      choices: events.filter((e) => e.event === "offer_sent").length,
+      opened: events.filter((e) => e.event === "listing_opened").length,
+      chart: Array.from(buckets.values()),
+    };
+  }, [rows, inbound, pickedProperty]);
 
   /** Raport pe agent: discuții în tranzacție, apartamente alese, anunțuri deschise, eșuate. */
   const byAgent = useMemo(() => {
@@ -230,6 +292,79 @@ export default function WhatsappTransactionsDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <Card className="mb-6">
+        <CardHeader className="pb-2 flex-row items-center justify-between gap-3 flex-wrap">
+          <CardTitle className="text-base">Dashboard pe anunț</CardTitle>
+          {propertyOptions.length > 0 && (
+            <Select value={pickedProperty} onValueChange={setPickedProperty}>
+              <SelectTrigger className="w-[260px]" aria-label="Alege anunțul">
+                <SelectValue placeholder="Alege anunțul" />
+              </SelectTrigger>
+              <SelectContent>
+                {propertyOptions.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : propertyOptions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Niciun anunț ales de clienți în ultimele {DAYS} zile.
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-3 text-sm">
+                <Home className="h-4 w-4 text-primary" />
+                <span className="font-medium truncate">{propertyReport.name}</span>
+                {propertyReport.url && (
+                  <a
+                    href={propertyReport.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Deschide anunțul ${propertyReport.name}`}
+                    className="text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-4 mb-4">
+                {[
+                  { label: "Conversații", value: propertyReport.conversations },
+                  { label: "Mesaje de la clienți", value: propertyReport.clientMessages },
+                  { label: "Alegeri de apartament", value: propertyReport.choices },
+                  { label: "Anunțuri deschise", value: propertyReport.opened },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="text-2xl font-semibold">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={propertyReport.chart}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis dataKey="day" fontSize={11} />
+                    <YAxis allowDecimals={false} fontSize={11} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="alegeri" name="Alegeri de apartament" fill="hsl(var(--primary))" />
+                    <Bar dataKey="mesaje" name="Mesaje de la clienți" fill="hsl(var(--muted-foreground))" />
+                    <Bar dataKey="deschise" name="Anunțuri deschise" fill="hsl(var(--accent-foreground))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
 
       <Card className="mb-6">
         <CardHeader className="pb-2">

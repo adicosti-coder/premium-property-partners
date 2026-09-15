@@ -503,6 +503,21 @@ Deno.serve(async (req) => {
       agentId: convAgentId,
     });
 
+    // Mesajul agentului merge și în Make, ca să apară în discuția live acolo.
+    if (!fromMake) {
+      await relayToMake("wa_agent_reply", {
+        phone,
+        conversation_id: conversationId,
+        agent_id: convAgentId,
+        message: text,
+        status: sent.ok ? "sent" : "failed",
+        wa_message_id: waMsgId,
+        window_open: windowOpen,
+        property: offerProp,
+      });
+    }
+
+
     // Apartamentul ales → discuția continuă singură cu pașii următori.
     let followup: { ok: boolean; wa_message_id: string | null } | null = null;
     if (offerProp && sent.ok && body.skip_followup !== true) {
