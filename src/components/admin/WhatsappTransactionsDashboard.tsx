@@ -231,6 +231,48 @@ export default function WhatsappTransactionsDashboard() {
         </CardContent>
       </Card>
 
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Raport pe agent</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : byAgent.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nicio tranzacție în ultimele {DAYS} zile.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground">
+                    <th className="py-2 pr-4 font-medium">Agent</th>
+                    <th className="py-2 pr-4 font-medium">Conversații</th>
+                    <th className="py-2 pr-4 font-medium">Apartamente alese</th>
+                    <th className="py-2 pr-4 font-medium">Anunțuri trimise</th>
+                    <th className="py-2 pr-4 font-medium">Anunțuri deschise</th>
+                    <th className="py-2 font-medium">Eșuate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {byAgent.map((a) => (
+                    <tr key={a.name} className="border-t">
+                      <td className="py-2 pr-4">{a.name}</td>
+                      <td className="py-2 pr-4">{a.conversations}</td>
+                      <td className="py-2 pr-4">{a.properties}</td>
+                      <td className="py-2 pr-4">{a.sent}</td>
+                      <td className="py-2 pr-4">{a.opened}</td>
+                      <td className="py-2">
+                        {a.failed > 0 ? <Badge variant="destructive">{a.failed}</Badge> : "0"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
