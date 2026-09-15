@@ -170,11 +170,13 @@ Deno.serve(async (req) => {
     ok: boolean;
     status: string;
     error?: string | null;
+    agentId?: string | null;
   }) => {
     if (!offerProp) return;
     const phone = normalizeRoMobile(body.phone || "") || (body.phone || "");
     await supabase.from("wa_transaction_events").insert({
       conversation_id: opts.conversationId ?? null,
+      agent_id: opts.agentId ?? null,
       phone_normalized: phone,
       property_id: offerProp.id,
       property_name: offerProp.name,
@@ -194,9 +196,82 @@ Deno.serve(async (req) => {
       status: opts.status,
       delivered: opts.ok,
       conversation_id: opts.conversationId ?? null,
+      agent_id: opts.agentId ?? null,
       wa_message_id: opts.waMsgId ?? null,
       error: opts.error ?? null,
     });
+  };
+
+  /**
+   * După apartamentul ales, discuția continuă singură: trimitem imediat pașii
+   * următori (ofertă, vizionare, negociere, acte) ca mesaj separat în același
+   * thread, îl salvăm ca pas de tranzacție și îl anunțăm în Make.
+   */
+  const sendOfferFollowup = async (
+    conversationId: string,
+    phone: string,
+    agentId: string | null,
+  ) => {
+    if (!offerProp) return null;
+    const text = [
+      `Pașii următori pentru ${offerProp.name}:`,
+      "1) Ofertă — vă trimitem prețul final, comisionul și costurile de achiziție.",
+      "2) Vizionare — stabilim ziua și ora care vă convine.",
+      "3) Negociere — transmitem oferta dvs. proprietarului și revenim cu decizia.",
+      "4) Acte — antecontract, plată și programare la notar.",
+      "",
+      offerProp.price
+        ? `Preț de pornire: ${Number(offerProp.price).toLocaleString("ro-RO")} €. Cu ce sumă doriți să intrăm în negociere?`
+        : "Cu ce sumă doriți să intrăm în negociere?",
+      `Anunțul complet: ${offerProp.url}`,
+    ].join("\n");
+
+    const sent = await sendToMeta({
+      messaging_product: "whatsapp",
+      to: phone.replace(/^\+/, ""),
+      type: "text",
+      text: { preview_url: false, body: text },
+    });
+    const msgId = sent.body?.messages?.[0]?.id ?? null;
+
+    await supabase.from("wa_messages").insert({
+      conversation_id: conversationId,
+      wa_message_id: msgId,
+      direction: "outbound",
+      role: "assistant",
+      content: text,
+      error: sent.ok ? null : String(sent.error).slice(0, 500),
+    });
+
+    await supabase.from("wa_transaction_events").insert({
+      conversation_id: conversationId,
+      agent_id: agentId,
+      phone_normalized: phone,
+      property_id: offerProp.id,
+      property_name: offerProp.name,
+      property_slug: offerProp.slug,
+      property_url: offerProp.url,
+      price: offerProp.price,
+      event: "offer_followup",
+      status: sent.ok ? "sent" : "failed",
+      wa_message_id: msgId,
+      error: sent.ok ? null : String(sent.error).slice(0, 500),
+      source: fromMake ? "make" : "admin",
+      payload: { step: "oferta_negociere" },
+    });
+
+    await relayToMake("wa_offer_followup", {
+      phone,
+      property: offerProp,
+      conversation_id: conversationId,
+      agent_id: agentId,
+      delivered: sent.ok,
+      wa_message_id: msgId,
+      error: sent.ok ? null : String(sent.error),
+      message: text,
+    });
+
+    return { ok: sent.ok, wa_message_id: msgId };
   };
 
   // ---------------------------------------------------------- listing_opened
