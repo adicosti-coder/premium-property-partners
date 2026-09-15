@@ -145,8 +145,30 @@ const WhatsappLiveDashboard = () => {
       .filter((r) => r.inbound + r.outbound > 0)
       .sort((a, b) => b.lastActivity - a.lastActivity);
 
+    // Discuții deschise, grupate pe agent, ca fiecare să vadă ce are în lucru.
+    const open = list.filter((r) => !r.closed);
+    const byAgent = Array.from(
+      open.reduce((acc, r) => {
+        const cur = acc.get(r.agent) ?? { agent: r.agent, convs: [] as typeof open };
+        cur.convs.push(r);
+        acc.set(r.agent, cur);
+        return acc;
+      }, new Map<string, { agent: string; convs: typeof open }>()).values(),
+    )
+      .map((g) => ({
+        agent: g.agent,
+        conversations: g.convs.length,
+        inbound: g.convs.reduce((s, r) => s + r.inbound, 0),
+        replies: g.convs.reduce((s, r) => s + r.agentReplies, 0),
+        awaiting: g.convs.filter((r) => r.awaitingReply && !r.abandoned).length,
+        abandoned: g.convs.filter((r) => r.abandoned).length,
+        convs: g.convs.slice(0, 6),
+      }))
+      .sort((a, b) => b.conversations - a.conversations);
+
     return {
       list,
+      byAgent,
       totals: {
         primite: list.reduce((s, r) => s + r.inbound, 0),
         trimise: list.reduce((s, r) => s + r.outbound - r.failed, 0),
