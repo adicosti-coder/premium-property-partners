@@ -275,6 +275,146 @@ Deno.serve(async (req) => {
     );
   }
 
+  // -------------------------------------------------------------- client_inbound
+  // Make trimite mesajul primit de la client; noi îl salvăm în Admin și
+  // răspundem automat (calificare la prima interacțiune, confirmare la 3 ore),
+  // fără să fie nevoie ca agentul să răspundă manual.
+  if (action === "client_inbound") {
+    const phone = normalizeRoMobile(body.phone || "");
+    const text = (body.message || "").trim();
+    if (!phone) return json({ error: "phone_invalid" }, 400);
+    if (!text) return json({ error: "message_required" }, 400);
+
+    const nowIso = new Date().toISOString();
+    const windowExp = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+
+    const { data: existingConv } = await supabase
+      .from("wa_conversations")
+      .select("id")
+      .eq("phone_normalized", phone)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let convId = existingConv?.id as string | undefined;
+    if (convId) {
+      await supabase.from("wa_conversations").update({
+        last_inbound_at: nowIso,
+        window_expires_at: windowExp,
+        ...(body.profile_name ? { wa_profile_name: body.profile_name } : {}),
+      }).eq("id", convId);
+    } else {
+      const { data: createdConv, error: convErr } = await supabase
+        .from("wa_conversations")
+        .insert({
+          phone_normalized: phone,
+          status: "active",
+          wa_profile_name: body.profile_name ?? null,
+          last_inbound_at: nowIso,
+          window_expires_at: windowExp,
+        })
+        .select("id")
+        .single();
+      if (convErr) return json({ error: "conversation_create_failed", details: convErr.message }, 500);
+      convId = createdConv.id;
+    }
+
+    await supabase.from("wa_messages").insert({
+      conversation_id: convId,
+      wa_message_id: body.wa_message_id ?? null,
+      direction: "inbound",
+      role: "user",
+      content: text,
+    });
+
+    await supabase.from("make_lead_events").insert({
+      direction: "inbound",
+      event: "wa_inbound_message",
+      conversation_id: convId,
+      phone_normalized: phone,
+      message: text,
+      status: "received",
+      payload: { source: fromMake ? "make" : "internal", profile_name: body.profile_name ?? null },
+    });
+
+    // Ce răspuns automat se cuvine?
+    const { count: outboundCount } = await supabase
+      .from("wa_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("conversation_id", convId)
+      .eq("direction", "outbound");
+
+    let replyKind: "intake" | "ack" | "skipped_recent_ack" = "intake";
+    let replyText = "";
+    if (outboundCount) {
+      const threeHoursAgo = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
+      const { count: recentAck } = await supabase
+        .from("wa_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("conversation_id", convId)
+        .eq("direction", "outbound")
+        .gte("created_at", threeHoursAgo);
+      if (recentAck) replyKind = "skipped_recent_ack";
+      else { replyKind = "ack"; replyText = ACK_MESSAGE; }
+    } else {
+      const ctx = await loadProspectContext(supabase, phone);
+      replyText = buildIntakeMessage(ctx);
+    }
+
+    if (replyKind === "skipped_recent_ack") {
+      return json({
+        ok: true,
+        conversation_id: convId,
+        auto_reply: "skipped_recent_ack",
+        note: "clientul a primit deja un mesaj în ultimele 3 ore",
+      });
+    }
+
+    const autoSent = await sendToMeta({
+      messaging_product: "whatsapp",
+      to: phone.replace(/^\+/, ""),
+      type: "text",
+      text: { preview_url: false, body: replyText },
+    });
+    const autoMsgId = autoSent.body?.messages?.[0]?.id ?? null;
+
+    await supabase.from("wa_messages").insert({
+      conversation_id: convId,
+      wa_message_id: autoMsgId,
+      direction: "outbound",
+      role: "assistant",
+      content: replyText,
+      error: autoSent.ok ? null : String(autoSent.error).slice(0, 500),
+    });
+
+    if (autoSent.ok) {
+      await supabase.from("wa_conversations")
+        .update({ last_outbound_at: new Date().toISOString() })
+        .eq("id", convId);
+    }
+
+    await supabase.from("make_lead_events").insert({
+      direction: "outbound",
+      event: replyKind === "intake" ? "wa_auto_intake" : "wa_auto_ack",
+      conversation_id: convId,
+      phone_normalized: phone,
+      message: replyText,
+      status: autoSent.ok ? "sent" : "failed",
+      wa_message_id: autoMsgId,
+      error: autoSent.ok ? null : String(autoSent.error).slice(0, 500),
+      payload: { source: fromMake ? "make" : "internal", auto_reply: replyKind },
+    });
+
+    return json({
+      ok: autoSent.ok,
+      conversation_id: convId,
+      auto_reply: replyKind,
+      delivered: autoSent.ok,
+      wa_message_id: autoMsgId,
+      meta_error: autoSent.ok ? undefined : autoSent.error,
+    }, autoSent.ok ? 200 : 502);
+  }
+
   // ---------------------------------------------------------------- relay_lead
   if (action === "relay_lead") {
     const leadId = (body.lead_id || "").trim();
