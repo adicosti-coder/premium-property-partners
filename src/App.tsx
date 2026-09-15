@@ -66,6 +66,7 @@ const Favorites = lazyWithRetry(() => import("./pages/Favorites"));
 const PentruOaspeti = lazyWithRetry(() => import("./pages/PentruOaspeti"));
 const Guests = lazyWithRetry(() => import("./pages/Guests"));
 const Imobiliare = lazyWithRetry(() => import("./pages/Imobiliare"));
+const Anunturi = lazyWithRetry(() => import("./pages/Anunturi"));
 const Blog = lazyWithRetry(() => import("./pages/Blog"));
 const BlogCategory = lazyWithRetry(() => import("./pages/BlogCategory"));
 const BlogLocation = lazyWithRetry(() => import("./pages/BlogLocation"));
