@@ -328,6 +328,83 @@ export default function WhatsappTransactionsDashboard() {
         ))}
       </div>
 
+      {/* Pasul de negociere: discuția nu se oprește la alegerea apartamentului. */}
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Handshake className="h-4 w-4" />
+            Pasul de negociere
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Clienții care au ales un apartament. Trimite oferta cu pașii următori sau intră în
+            negociere, ca discuția să nu se oprească.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {loading ? (
+            <Skeleton className="h-16 w-full" />
+          ) : pendingSteps.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nicio discuție ajunsă la alegerea apartamentului.
+            </p>
+          ) : (
+            pendingSteps.map(({ row, hasFollowup, hasNegotiation }) => (
+              <div
+                key={row.id}
+                className="rounded-lg border border-border p-3 flex flex-wrap items-center gap-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">
+                    {row.property_name || "Apartament"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {row.phone_normalized} · {fmt(row.created_at)}
+                    {" · Agent: "}
+                    {agents.find((a) => a.id === row.agent_id)?.name ?? "nealocat"}
+                  </p>
+                  <div className="mt-1 flex gap-1.5">
+                    <Badge variant={hasFollowup ? "default" : "outline"}>Ofertă</Badge>
+                    <Badge variant={hasNegotiation ? "default" : "outline"}>Negociere</Badge>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={hasFollowup ? "outline" : "default"}
+                    className="min-h-[40px]"
+                    disabled={busyStep === `offer_followup:${row.id}`}
+                    onClick={() => void runStep("offer_followup", row)}
+                    aria-label={`Trimite oferta automată pentru ${row.property_name ?? "apartament"}`}
+                  >
+                    {busyStep === `offer_followup:${row.id}` ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    Trimite oferta
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="min-h-[40px]"
+                    disabled={busyStep === `negotiation:${row.id}`}
+                    onClick={() => void runStep("negotiation", row)}
+                    aria-label={`Pornește negocierea pentru ${row.property_name ?? "apartament"}`}
+                  >
+                    {busyStep === `negotiation:${row.id}` ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Handshake className="h-4 w-4 mr-2" />
+                    )}
+                    Intră în negociere
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
       <Card className="mb-6">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Evoluție pe zile</CardTitle>
