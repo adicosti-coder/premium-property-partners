@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
-import { MessageSquare, RefreshCw, Search, User } from "lucide-react";
+import { Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
 
 /**
  * Conversații live WhatsApp — firul complet al discuției (mesaje trimise de agent
