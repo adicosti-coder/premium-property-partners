@@ -297,6 +297,16 @@ export default function WhatsappTransactionsDashboard() {
     });
   }, [rows]);
 
+  /** Clienții acestui anunț care încă nu au primit oferta pe WhatsApp. */
+  const propertyPending = useMemo(
+    () =>
+      pendingSteps.filter(
+        (p) => p.row.property_id === pickedProperty && !p.hasFollowup && !p.hasNegotiation,
+      ),
+    [pendingSteps, pickedProperty],
+  );
+
+
   const runStep = async (
     action: "offer_followup" | "negotiation",
     row: TxRow,
