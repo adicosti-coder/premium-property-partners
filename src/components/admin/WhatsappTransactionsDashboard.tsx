@@ -552,7 +552,43 @@ export default function WhatsappTransactionsDashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+
+              {/* Trimiterea ofertei direct pe WhatsApp, din dashboardul pe anunț. */}
+              <div className="mt-4 border-t pt-3 space-y-2">
+                <p className="text-sm font-medium">Trimite oferta pe WhatsApp</p>
+                {propertyPending.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Toți clienții care au ales acest apartament au primit deja oferta pe WhatsApp.
+                  </p>
+                ) : (
+                  propertyPending.map((p) => (
+                    <div
+                      key={p.row.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-2.5"
+                    >
+                      <span className="text-sm truncate">
+                        {p.row.phone_normalized} · a ales pe {fmt(p.row.created_at)}
+                      </span>
+                      <Button
+                        size="sm"
+                        className="min-h-[40px]"
+                        disabled={busyStep === `offer_followup:${p.row.id}`}
+                        onClick={() => void runStep("offer_followup", p.row)}
+                        aria-label={`Trimite oferta pe WhatsApp către ${p.row.phone_normalized}`}
+                      >
+                        {busyStep === `offer_followup:${p.row.id}` ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4 mr-2" />
+                        )}
+                        Trimite oferta
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
             </>
+
           )}
         </CardContent>
       </Card>
