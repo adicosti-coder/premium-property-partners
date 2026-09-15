@@ -186,6 +186,19 @@ export default function WhatsappLiveConversations() {
     setSaleProperties((data ?? []) as SaleProperty[]);
   }, []);
 
+  /** Ultimele oferte livrate, pentru vizualizarea rapidă din această pagină. */
+  const loadRecentOffers = useCallback(async () => {
+    const { data } = await supabase
+      .from("wa_transaction_events")
+      .select(
+        "id, conversation_id, phone_normalized, property_name, price, event, status, error, created_at",
+      )
+      .in("event", OFFER_EVENTS)
+      .order("created_at", { ascending: false })
+      .limit(25);
+    setRecentOffers((data ?? []) as OfferPeek[]);
+  }, []);
+
   const loadThread = useCallback(async (conversationId: string) => {
     setLoadingThread(true);
     const [msgRes, txRes] = await Promise.all([
