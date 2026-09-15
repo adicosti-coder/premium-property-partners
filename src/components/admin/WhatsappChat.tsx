@@ -214,6 +214,8 @@ export default function WhatsappChat() {
         ? "Mesajul cu chatul direct"
         : action === "offer_followup"
         ? "Oferta cu prețul din anunț"
+        : action === "meeting_confirmed"
+        ? "Confirmarea vizionării"
         : "Confirmarea ofertei";
     if (fnErr || res.delivered === false) {
       toast({
