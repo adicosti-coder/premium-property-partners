@@ -72,7 +72,7 @@ export function buildClientOfferEmail(
       <p style="margin:0 0 8px;font-size:15px;font-weight:bold">Cifrele pentru acest apartament</p>
       <ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7;color:#374151">
         <li><strong>Venit brut estimat:</strong> ${money(grossMonth) ?? "tariful pe noapte × ocupare medie de 75%"} pe lună, la o ocupare medie de 75%.</li>
-        <li><strong>Comisionul nostru de administrare:</strong> 15-20% din încasări${feeMin && feeMax ? `, adică ${feeMin}–${feeMax} pe lună` : ""} — anunțuri, prețuri dinamice, comunicarea cu oaspeții, curățenie și mentenanță.</li>
+        <li><strong>Property Management RealTrust:</strong> 15-20% din încasări${feeMin && feeMax ? `, adică ${feeMin}–${feeMax} pe lună` : ""} — anunțuri, prețuri dinamice, comunicarea cu oaspeții, curățenie și mentenanță.</li>
         <li><strong>Profit net estimat:</strong> ${money(netMonth) ? `${money(netMonth)} pe lună (${money(netYear)} pe an), ` : ""}circa 9,4% pe an din valoarea apartamentului — estimare medie, în funcție de gradul real de ocupare și de costurile reale de administrare.</li>
       </ul>
       <p style="margin:8px 0 0;font-size:13px;color:#6b7280">Primiți lunar un raport cu încasările, cheltuielile și profitul net.</p>
