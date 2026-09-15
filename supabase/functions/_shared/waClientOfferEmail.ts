@@ -34,6 +34,17 @@ export function buildClientOfferEmail(
     prop.location ? escapeHtml(String(prop.location)) : null,
   ].filter(Boolean).join(" · ");
 
+  // Cifrele pe acest apartament: comisionul RealTrust (15-20% din încasări) și
+  // profitul net estimat (circa 9,4% pe an din valoarea apartamentului).
+  const price = Number(prop.price) || 0;
+  const money = (v: number | null) =>
+    v && v > 0 ? `${Math.round(v).toLocaleString("ro-RO")} €` : null;
+  const netYear = price ? price * 0.094 : null;
+  const netMonth = netYear ? netYear / 12 : null;
+  const grossMonth = netMonth ? netMonth / 0.73 : null;
+  const feeMin = grossMonth ? money(grossMonth * 0.15) : null;
+  const feeMax = grossMonth ? money(grossMonth * 0.20) : null;
+
   return {
     subject: `Oferta RealTrust pentru ${prop.name ?? "apartamentul discutat"}${priceTxt ? ` — ${priceTxt}` : ""}`,
     html: `<!doctype html><html><body style="margin:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
