@@ -44,6 +44,9 @@ type AgentReplyRow = { id: string; conversation_id: string | null; created_at: s
 
 const DAYS = 14;
 
+/** Evenimentele care înseamnă „ofertă livrată clientului pe WhatsApp". */
+const OFFER_EVENTS = ["offer_intro", "offer_followup", "offer_confirm", "negotiation"];
+
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString("ro-RO", {
     timeZone: "Europe/Bucharest",
@@ -131,14 +134,19 @@ export default function WhatsappTransactionsDashboard() {
     const convIds = new Set(events.map((e) => e.conversation_id).filter(Boolean) as string[]);
     const msgs = inbound.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
     const replies = agentReplies.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
+    const isDeliveredOffer = (e: TxRow) =>
+      OFFER_EVENTS.includes(e.event) && e.status !== "failed" && !e.error;
     const buckets = new Map<
       string,
-      { day: string; alegeri: number; mesaje: number; deschise: number; discutii: number; raspunsuri: number }
+      {
+        day: string; alegeri: number; mesaje: number; deschise: number;
+        discutii: number; raspunsuri: number; oferte: number;
+      }
     >();
     for (let i = DAYS - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 3600 * 1000).toISOString();
       buckets.set(dayKey(d), {
-        day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0, discutii: 0, raspunsuri: 0,
+        day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0, discutii: 0, raspunsuri: 0, oferte: 0,
       });
     }
     for (const e of events) {
@@ -146,6 +154,7 @@ export default function WhatsappTransactionsDashboard() {
       if (!b) continue;
       if (e.event === "offer_sent") b.alegeri += 1;
       else if (e.event === "listing_opened") b.deschise += 1;
+      if (isDeliveredOffer(e)) b.oferte += 1;
     }
     // Mesajele clienților pe zi + discuțiile deschise (prima zi în care clientul a scris).
     const firstDay = new Map<string, string>();
