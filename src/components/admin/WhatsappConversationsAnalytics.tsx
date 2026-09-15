@@ -80,6 +80,7 @@ const WhatsappConversationsAnalytics = () => {
   const { toast } = useToast();
   const [pickedAgent, setPickedAgent] = useState<Record<string, string>>({});
   const [assigning, setAssigning] = useState<string | null>(null);
+  const [reengaging, setReengaging] = useState<string | null>(null);
 
   /** Alocă manual o discuție abandonată unui agent real, ca să nu rămână neterminată. */
   const assignAgent = async (conversationId: string) => {
@@ -97,6 +98,33 @@ const WhatsappConversationsAnalytics = () => {
     }
     const name = (data?.agents ?? []).find((a) => a.id === agentId)?.name ?? "agent";
     toast({ title: "Discuție alocată", description: `Preluată de ${name}.` });
+    void refetch();
+  };
+
+  /** Trimite mesajul automat de recontactare pentru o discuție abandonată. */
+  const reengage = async (conversationId: string) => {
+    setReengaging(conversationId);
+    const { data: res, error: fnErr } = await supabase.functions.invoke("wa-reengage-abandoned", {
+      body: { conversation_id: conversationId, limit: 1 },
+    });
+    setReengaging(null);
+    const payload = (res ?? {}) as { sent?: number; results?: { skipped?: string; meta_error?: string }[] };
+    const first = payload.results?.[0];
+    if (fnErr) {
+      toast({ title: "Recontactarea nu a plecat", description: fnErr.message, variant: "destructive" });
+    } else if (payload.sent) {
+      toast({ title: "Recontactare trimisă", description: "Clientul a primit mesajul pe WhatsApp." });
+    } else {
+      toast({
+        title: "Recontactarea nu a fost trimisă",
+        description:
+          first?.skipped === "do_not_contact"
+            ? "Clientul a cerut să nu fie contactat."
+            : first?.meta_error ||
+              "Discuția a fost deja recontactată în ultimele 7 zile sau are activitate recentă.",
+        variant: "destructive",
+      });
+    }
     void refetch();
   };
 
