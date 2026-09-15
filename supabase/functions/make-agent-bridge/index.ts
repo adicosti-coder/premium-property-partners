@@ -247,7 +247,16 @@ Deno.serve(async (req) => {
       delivered: opts.ok,
       error: opts.error ?? null,
     });
+    if (opts.ok && opts.conversationId) {
+      await notifyClientOfferEmail(supabase, {
+        phone,
+        conversation_id: opts.conversationId,
+        property: offerProp,
+        step: "offer_sent",
+      });
+    }
   };
+
 
   /**
    * După apartamentul ales, discuția continuă singură: trimitem imediat pașii
