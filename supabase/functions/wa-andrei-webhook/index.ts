@@ -56,14 +56,16 @@ Deno.serve(async (req) => {
   const appSecret = Deno.env.get("WHATSAPP_APP_SECRET") || "";
   const sigHeader = req.headers.get("x-hub-signature-256") || "";
 
-  if (appSecret) {
-    const ok = await verifySignature(rawBody, sigHeader, appSecret);
-    if (!ok) {
-      console.warn("[wa-webhook] invalid signature");
-      return new Response("Forbidden", { status: 403 });
-    }
-  } else {
-    console.warn("[wa-webhook] WHATSAPP_APP_SECRET missing — skipping signature check (INSECURE)");
+  // Fail closed: without the signing secret we cannot prove the payload came
+  // from Meta, so we reject instead of processing forged messages/leads.
+  if (!appSecret) {
+    console.error("[wa-webhook] WHATSAPP_APP_SECRET missing — rejecting request (fail-closed)");
+    return new Response("Webhook not configured", { status: 503 });
+  }
+  const ok = await verifySignature(rawBody, sigHeader, appSecret);
+  if (!ok) {
+    console.warn("[wa-webhook] invalid signature");
+    return new Response("Forbidden", { status: 403 });
   }
 
   let payload: any;
