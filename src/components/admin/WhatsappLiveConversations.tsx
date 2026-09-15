@@ -125,6 +125,9 @@ export default function WhatsappLiveConversations() {
   const [saleProperties, setSaleProperties] = useState<SaleProperty[]>([]);
   const [pickedProperty, setPickedProperty] = useState<string>("");
   const [sendingOffer, setSendingOffer] = useState(false);
+  const [agentPick, setAgentPick] = useState<string>("");
+  const [assigning, setAssigning] = useState(false);
+  const [busyStep, setBusyStep] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadConversations = useCallback(async () => {
@@ -374,6 +377,62 @@ export default function WhatsappLiveConversations() {
     if (selectedId) void loadThread(selectedId);
   };
 
+  /**
+   * Mesajele automate care duc discuția mai departe când agentul nu răspunde:
+   * oferta cu pașii următori și deschiderea negocierii.
+   */
+  const runStep = async (action: "offer_followup" | "negotiation") => {
+    if (!selected) return;
+    const prop = saleProperties.find((p) => p.id === pickedProperty);
+    setBusyStep(action);
+    const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
+      body: {
+        action,
+        phone: selected.phone_normalized,
+        conversation_id: selected.id,
+        ...(prop ? { property_id: prop.id } : {}),
+      },
+    });
+    setBusyStep(null);
+    const res = (data ?? {}) as Record<string, unknown>;
+    if (fnErr || res.delivered === false) {
+      toast({
+        title: action === "offer_followup" ? "Oferta nu a plecat" : "Negocierea nu a plecat",
+        description:
+          fnErr?.message ||
+          String(res.error ?? "Fereastra de 24h poate fi închisă — clientul trebuie să scrie din nou."),
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: action === "offer_followup" ? "Ofertă trimisă" : "Negociere pornită",
+        description: "Mesajul a plecat automat în aceeași discuție pe WhatsApp.",
+      });
+    }
+    void loadConversations();
+    if (selectedId) void loadThread(selectedId);
+  };
+
+  /** Alocare manuală: discuțiile nealocate automat pot fi mutate pe un agent. */
+  const assignAgent = async () => {
+    if (!selected || !agentPick) return;
+    setAssigning(true);
+    const { error: upErr } = await supabase
+      .from("wa_conversations")
+      .update({ assigned_agent_id: agentPick, assigned_at: new Date().toISOString() })
+      .eq("id", selected.id);
+    setAssigning(false);
+    if (upErr) {
+      toast({ title: "Alocarea nu a reușit", description: upErr.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: "Discuție alocată",
+      description: `Preluată de ${agents.find((a) => a.id === agentPick)?.name ?? "agent"}.`,
+    });
+    void loadConversations();
+  };
+
   return (
     <AdminPageShell
       title="Conversații live WhatsApp"
@@ -389,7 +448,7 @@ export default function WhatsappLiveConversations() {
         <p className="mb-4 text-sm text-destructive">Nu am putut încărca discuțiile: {error}</p>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-[320px_1fr]">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -406,7 +465,7 @@ export default function WhatsappLiveConversations() {
               />
             </div>
           </CardHeader>
-          <CardContent className="space-y-2 max-h-[560px] overflow-y-auto">
+          <CardContent className="space-y-2 max-h-[240px] lg:max-h-[560px] overflow-y-auto">
             {loading ? (
               <>
                 <Skeleton className="h-14 w-full" />
@@ -464,15 +523,44 @@ export default function WhatsappLiveConversations() {
             {selected && (
               <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Pașii de tranzacție">
                 {stages.map((s) => (
-                  <Badge key={s.label} variant={s.done ? "default" : "outline"}>
+                  <Badge key={s.label} variant={s.done ? "default" : "outline"} className="text-[11px]">
                     {s.label}
                   </Badge>
                 ))}
               </div>
             )}
+            {selected && (
+              <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                <Select value={agentPick} onValueChange={setAgentPick}>
+                  <SelectTrigger className="w-full sm:w-[220px]" aria-label="Alege agentul">
+                    <SelectValue placeholder="Alocă manual unui agent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {agents.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="min-h-[40px]"
+                  disabled={assigning || !agentPick || agentPick === selected.assigned_agent_id}
+                  onClick={() => void assignAgent()}
+                  aria-label="Alocă discuția agentului selectat"
+                >
+                  {assigning ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <User className="h-4 w-4 mr-2" />
+                  )}
+                  Alocă agent
+                </Button>
+              </div>
+            )}
           </CardHeader>
           {/* Firul de discuție ca într-o aplicație de chat: clientul în stânga, noi în dreapta. */}
-          <CardContent className="max-h-[560px] overflow-y-auto bg-muted/20 rounded-md mx-4 p-3 space-y-2">
+          <CardContent className="max-h-[52vh] lg:max-h-[560px] overflow-y-auto bg-muted/20 rounded-md mx-2 sm:mx-4 p-2 sm:p-3 space-y-1.5 sm:space-y-2">
             {loadingThread ? (
               <>
                 <Skeleton className="h-12 w-2/3" />
