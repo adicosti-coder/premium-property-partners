@@ -134,6 +134,13 @@
       "when": 1789491537494,
       "tag": "0018_chat_anon_injection_lockdown",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1789496542287,
+      "tag": "0019_wa_tx_events_meeting_direct_chat",
+      "breakpoints": true
     }
   ]
 }
