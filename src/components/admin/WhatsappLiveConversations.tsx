@@ -45,6 +45,27 @@ type MessageRow = {
 
 type AgentRow = { id: string; name: string; email: string };
 
+type TxEventRow = {
+  id: string;
+  event: string;
+  status: string | null;
+  property_name: string | null;
+  property_url: string | null;
+  price: number | null;
+  error: string | null;
+  agent_id: string | null;
+  created_at: string;
+};
+
+/** Eticheta pasului de tranzacție afișat în discuție. */
+const TX_LABELS: Record<string, string> = {
+  offer_sent: "Apartament ales — anunț trimis clientului",
+  offer_failed: "Apartament ales — anunțul nu a ajuns la client",
+  offer_followup: "Ofertă și negociere — pașii următori trimiși",
+  listing_opened: "Anunț deschis",
+  negotiation: "Negociere",
+};
+
 type SaleProperty = {
   id: string;
   name: string;
