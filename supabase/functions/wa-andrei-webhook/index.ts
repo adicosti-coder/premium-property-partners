@@ -3,6 +3,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
 import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext } from "../_shared/waAutoReply.ts";
+import { notifyAgentFirstMessage } from "../_shared/waAgentNotify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -296,6 +297,19 @@ Deno.serve(async (req) => {
               reply_text: text,
               replied_at: nowIso,
             });
+
+            // Backup pe e-mail către agent, la primul mesaj al clientului.
+            if (!existingLead) {
+              const ctxForEmail = await loadProspectContext(supabase, from);
+              await notifyAgentFirstMessage(supabase, {
+                phone: from,
+                profile_name: profileName,
+                message: text,
+                conversation_id: convId,
+                lead_id: leadId,
+                prospect: ctxForEmail,
+              });
+            }
 
             // Jurnal pentru tabul „Lead-uri Make” din Admin.
             await supabase.from("make_lead_events").insert({
