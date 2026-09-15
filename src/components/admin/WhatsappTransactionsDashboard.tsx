@@ -57,13 +57,15 @@ const dayKey = (iso: string) =>
 export default function WhatsappTransactionsDashboard() {
   const [rows, setRows] = useState<TxRow[]>([]);
   const [agents, setAgents] = useState<AgentRow[]>([]);
+  const [inbound, setInbound] = useState<InboundRow[]>([]);
+  const [pickedProperty, setPickedProperty] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - DAYS * 24 * 3600 * 1000).toISOString();
-    const [txRes, agentRes] = await Promise.all([
+    const [txRes, agentRes, inRes] = await Promise.all([
       supabase
         .from("wa_transaction_events")
         .select(
@@ -73,6 +75,13 @@ export default function WhatsappTransactionsDashboard() {
         .order("created_at", { ascending: false })
         .limit(1000),
       supabase.from("wa_agents").select("id, name"),
+      supabase
+        .from("wa_messages")
+        .select("id, conversation_id, created_at")
+        .eq("direction", "inbound")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1000),
     ]);
     if (txRes.error) setError(txRes.error.message);
     else {
@@ -80,10 +89,58 @@ export default function WhatsappTransactionsDashboard() {
       setRows((txRes.data ?? []) as TxRow[]);
     }
     setAgents((agentRes.data ?? []) as AgentRow[]);
+    setInbound((inRes.data ?? []) as InboundRow[]);
     setLoading(false);
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  /** Anunțurile apărute în tranzacții, pentru selectorul dashboardului pe anunț. */
+  const propertyOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of rows) {
+      if (r.property_id) map.set(r.property_id, r.property_name || "Apartament");
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [rows]);
+
+  useEffect(() => {
+    if (!pickedProperty && propertyOptions.length > 0) setPickedProperty(propertyOptions[0].id);
+  }, [propertyOptions, pickedProperty]);
+
+  /** Dashboard pe anunț: conversații, mesaje de la clienți, alegeri de apartament. */
+  const propertyReport = useMemo(() => {
+    const events = rows.filter((r) => r.property_id === pickedProperty);
+    const convIds = new Set(events.map((e) => e.conversation_id).filter(Boolean) as string[]);
+    const msgs = inbound.filter((m) => m.conversation_id && convIds.has(m.conversation_id));
+    const buckets = new Map<
+      string,
+      { day: string; alegeri: number; mesaje: number; deschise: number }
+    >();
+    for (let i = DAYS - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 3600 * 1000).toISOString();
+      buckets.set(dayKey(d), { day: dayKey(d), alegeri: 0, mesaje: 0, deschise: 0 });
+    }
+    for (const e of events) {
+      const b = buckets.get(dayKey(e.created_at));
+      if (!b) continue;
+      if (e.event === "offer_sent") b.alegeri += 1;
+      else if (e.event === "listing_opened") b.deschise += 1;
+    }
+    for (const m of msgs) {
+      const b = buckets.get(dayKey(m.created_at));
+      if (b) b.mesaje += 1;
+    }
+    return {
+      name: events[0]?.property_name ?? "—",
+      url: events.find((e) => e.property_url)?.property_url ?? null,
+      conversations: convIds.size,
+      clientMessages: msgs.length,
+      choices: events.filter((e) => e.event === "offer_sent").length,
+      opened: events.filter((e) => e.event === "listing_opened").length,
+      chart: Array.from(buckets.values()),
+    };
+  }, [rows, inbound, pickedProperty]);
 
   /** Raport pe agent: discuții în tranzacție, apartamente alese, anunțuri deschise, eșuate. */
   const byAgent = useMemo(() => {
