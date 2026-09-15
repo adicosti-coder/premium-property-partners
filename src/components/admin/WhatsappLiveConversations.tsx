@@ -141,6 +141,38 @@ export default function WhatsappLiveConversations() {
     ? new Date(selected.window_expires_at).getTime() > Date.now()
     : false;
 
+  const QUALIFY_MESSAGE = [
+    "Bună ziua! Vă mulțumim pentru mesaj.",
+    "Ca să vă ajutăm rapid, spuneți-ne cu ce vă putem fi de folos:",
+    "1) Imobiliare (vânzare / achiziție / închiriere)",
+    "2) Administrare apartament (regim hotelier sau termen mediu-lung)",
+    "3) Rezervare regim hotelier: https://realtrust.ro/rezervare",
+  ].join("\n");
+
+  const sendReply = async () => {
+    if (!selected || !replyText.trim()) return;
+    setSending(true);
+    const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
+      body: { action: "agent_reply", phone: selected.phone_normalized, message: replyText.trim() },
+    });
+    setSending(false);
+    const res = (data ?? {}) as Record<string, unknown>;
+    if (fnErr || res.delivered === false) {
+      toast({
+        title: "Mesajul nu a fost livrat",
+        description: windowOpen
+          ? (fnErr?.message || String(res.error ?? "Eroare la trimitere"))
+          : "Fereastra de 24h este închisă — clientul trebuie să scrie din nou înainte de un mesaj liber.",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Mesaj trimis", description: "Clientul a primit mesajul pe WhatsApp." });
+      setReplyText("");
+    }
+    void loadConversations();
+    if (selectedId) void loadThread(selectedId);
+  };
+
   return (
     <AdminPageShell
       title="Conversații live WhatsApp"
