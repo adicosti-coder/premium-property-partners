@@ -155,6 +155,14 @@ async function generateMp3WithRetry(
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Paid TTS: only internal automation (voice pipeline / cron) or admin users may spend quota.
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
+
+  // Defence in depth against a leaked admin token scripting the paid API.
+  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 60, windowMs: 60_000 });
+  if (limited) return limited;
+
   try {
     const { text, voice, mode } = await req.json();
 
