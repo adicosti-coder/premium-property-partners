@@ -27,8 +27,11 @@ type TxRow = {
   status: string;
   error: string | null;
   source: string;
+  agent_id: string | null;
   created_at: string;
 };
+
+type AgentRow = { id: string; name: string };
 
 const DAYS = 14;
 
