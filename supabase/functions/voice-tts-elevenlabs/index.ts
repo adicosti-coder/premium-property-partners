@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { applyLexiconToText } from "../_shared/voiceLexicon.ts";
 import { humanizeForTTS } from "../_shared/voiceProsody.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { applyRateLimit } from "../_shared/rateLimiter.ts";
 
 /* ──────────────────────────────────────────────────────────────
    ElevenLabs TTS for Voice Agent
@@ -154,6 +156,14 @@ async function generateMp3WithRetry(
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Paid TTS: only internal automation (voice pipeline / cron) or admin users may spend quota.
+  const gate = await requireInternalOrAdmin(req, corsHeaders);
+  if (gate) return gate;
+
+  // Defence in depth against a leaked admin token scripting the paid API.
+  const limited = applyRateLimit(req, corsHeaders, { maxRequests: 60, windowMs: 60_000 });
+  if (limited) return limited;
 
   try {
     const { text, voice, mode } = await req.json();
