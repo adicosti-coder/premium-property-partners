@@ -294,6 +294,79 @@ export default function WhatsappTransactionsDashboard() {
       </Card>
 
       <Card className="mb-6">
+        <CardHeader className="pb-2 flex-row items-center justify-between gap-3 flex-wrap">
+          <CardTitle className="text-base">Dashboard pe anunț</CardTitle>
+          {propertyOptions.length > 0 && (
+            <Select value={pickedProperty} onValueChange={setPickedProperty}>
+              <SelectTrigger className="w-[260px]" aria-label="Alege anunțul">
+                <SelectValue placeholder="Alege anunțul" />
+              </SelectTrigger>
+              <SelectContent>
+                {propertyOptions.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <Skeleton className="h-40 w-full" />
+          ) : propertyOptions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Niciun anunț ales de clienți în ultimele {DAYS} zile.
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-3 text-sm">
+                <Home className="h-4 w-4 text-primary" />
+                <span className="font-medium truncate">{propertyReport.name}</span>
+                {propertyReport.url && (
+                  <a
+                    href={propertyReport.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Deschide anunțul ${propertyReport.name}`}
+                    className="text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-4 mb-4">
+                {[
+                  { label: "Conversații", value: propertyReport.conversations },
+                  { label: "Mesaje de la clienți", value: propertyReport.clientMessages },
+                  { label: "Alegeri de apartament", value: propertyReport.choices },
+                  { label: "Anunțuri deschise", value: propertyReport.opened },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="text-2xl font-semibold">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="h-[260px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={propertyReport.chart}>
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis dataKey="day" fontSize={11} />
+                    <YAxis allowDecimals={false} fontSize={11} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="alegeri" name="Alegeri de apartament" fill="hsl(var(--primary))" />
+                    <Bar dataKey="mesaje" name="Mesaje de la clienți" fill="hsl(var(--muted-foreground))" />
+                    <Bar dataKey="deschise" name="Anunțuri deschise" fill="hsl(var(--accent-foreground))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+
+      <Card className="mb-6">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Raport pe agent</CardTitle>
         </CardHeader>
