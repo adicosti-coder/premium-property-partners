@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
-import { MessageSquare, RefreshCw, Search, User } from "lucide-react";
+import { Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
 
 /**
  * Conversații live WhatsApp — firul complet al discuției (mesaje trimise de agent
@@ -62,6 +64,9 @@ export default function WhatsappLiveConversations() {
   const [loadingThread, setLoadingThread] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
+  const { toast } = useToast();
 
   const loadConversations = useCallback(async () => {
     setLoading(true);
@@ -135,6 +140,38 @@ export default function WhatsappLiveConversations() {
   const windowOpen = selected?.window_expires_at
     ? new Date(selected.window_expires_at).getTime() > Date.now()
     : false;
+
+  const QUALIFY_MESSAGE = [
+    "Bună ziua! Vă mulțumim pentru mesaj.",
+    "Ca să vă ajutăm rapid, spuneți-ne cu ce vă putem fi de folos:",
+    "1) Imobiliare (vânzare / achiziție / închiriere)",
+    "2) Administrare apartament (regim hotelier sau termen mediu-lung)",
+    "3) Rezervare regim hotelier: https://realtrust.ro/rezervare",
+  ].join("\n");
+
+  const sendReply = async () => {
+    if (!selected || !replyText.trim()) return;
+    setSending(true);
+    const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
+      body: { action: "agent_reply", phone: selected.phone_normalized, message: replyText.trim() },
+    });
+    setSending(false);
+    const res = (data ?? {}) as Record<string, unknown>;
+    if (fnErr || res.delivered === false) {
+      toast({
+        title: "Mesajul nu a fost livrat",
+        description: windowOpen
+          ? (fnErr?.message || String(res.error ?? "Eroare la trimitere"))
+          : "Fereastra de 24h este închisă — clientul trebuie să scrie din nou înainte de un mesaj liber.",
+        variant: "destructive",
+      });
+    } else {
+      toast({ title: "Mesaj trimis", description: "Clientul a primit mesajul pe WhatsApp." });
+      setReplyText("");
+    }
+    void loadConversations();
+    if (selectedId) void loadThread(selectedId);
+  };
 
   return (
     <AdminPageShell
@@ -259,6 +296,49 @@ export default function WhatsappLiveConversations() {
               })
             )}
           </CardContent>
+          {selected && (
+            <CardContent className="border-t pt-4 space-y-2">
+              <label htmlFor="wa-reply" className="text-sm font-medium">
+                Răspuns către client (backup, dacă Make nu răspunde)
+              </label>
+              <Textarea
+                id="wa-reply"
+                rows={3}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Scrie mesajul pentru client…"
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => void sendReply()}
+                  disabled={sending || !replyText.trim()}
+                  aria-label="Trimite mesajul pe WhatsApp"
+                >
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  <span className="ml-2">Trimite pe WhatsApp</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReplyText(QUALIFY_MESSAGE)}
+                  aria-label="Completează mesajul standard de calificare"
+                >
+                  Mesajul standard de calificare
+                </Button>
+              </div>
+              {!windowOpen && (
+                <p className="text-xs text-muted-foreground">
+                  Fereastra de 24h e închisă: mesajul liber nu poate fi livrat până când clientul
+                  scrie din nou.
+                </p>
+              )}
+            </CardContent>
+          )}
         </Card>
       </div>
     </AdminPageShell>
