@@ -85,6 +85,13 @@
       "when": 1789470631795,
       "tag": "0011_wa_realtime_tx_events",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789476109954,
+      "tag": "0012_lock_down_ai_caches_analyses_and_wa_realtime",
+      "breakpoints": true
     }
   ]
 }
