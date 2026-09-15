@@ -225,7 +225,8 @@ export default function WhatsappLiveConversations() {
     void loadConversations();
     void loadAgents();
     void loadSaleProperties();
-  }, [loadConversations, loadAgents, loadSaleProperties]);
+    void loadRecentOffers();
+  }, [loadConversations, loadAgents, loadSaleProperties, loadRecentOffers]);
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
@@ -247,7 +248,10 @@ export default function WhatsappLiveConversations() {
     {
       event: "*",
       table: "wa_transaction_events",
-      handler: () => { if (selectedId) void loadThread(selectedId); },
+      handler: () => {
+        if (selectedId) void loadThread(selectedId);
+        void loadRecentOffers();
+      },
     },
     {
       event: "*",
