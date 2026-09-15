@@ -65,12 +65,21 @@ const TX_LABELS: Record<string, string> = {
   offer_intro: "Anunț înainte de ofertă — ofertele merg direct pe WhatsApp",
   offer_followup: "Ofertă și negociere — pașii următori trimiși",
   offer_confirm: "Ofertă livrată — invitație la vizionare și negociere",
+  offer_meeting: "Propunere punct de întâlnire — vizionare și negociere",
+  offer_direct_chat: "Chat direct pe WhatsApp — ofertele merg direct",
   listing_opened: "Anunț deschis",
   negotiation: "Negociere",
 };
 
 /** Evenimentele care înseamnă „ofertă livrată clientului". */
-const OFFER_EVENTS = ["offer_intro", "offer_followup", "offer_confirm", "negotiation"];
+const OFFER_EVENTS = [
+  "offer_intro",
+  "offer_followup",
+  "offer_confirm",
+  "offer_meeting",
+  "offer_direct_chat",
+  "negotiation",
+];
 
 /** Vizualizare rapidă a ofertelor livrate, fără a deschide tabul dedicat. */
 type OfferPeek = {
@@ -428,11 +437,19 @@ export default function WhatsappLiveConversations() {
     offer_intro: { ok: "Anunț trimis", fail: "Anunțul nu a plecat" },
     offer_followup: { ok: "Ofertă trimisă", fail: "Oferta nu a plecat" },
     offer_confirm: { ok: "Confirmare trimisă", fail: "Confirmarea nu a plecat" },
+    offer_meeting: { ok: "Propunerea de întâlnire a plecat", fail: "Propunerea nu a plecat" },
+    offer_direct_chat: { ok: "Mesajul cu chatul direct a plecat", fail: "Mesajul nu a plecat" },
     negotiation: { ok: "Negociere pornită", fail: "Negocierea nu a plecat" },
   };
 
   const runStep = async (
-    action: "offer_intro" | "offer_followup" | "offer_confirm" | "negotiation",
+    action:
+      | "offer_intro"
+      | "offer_followup"
+      | "offer_confirm"
+      | "offer_meeting"
+      | "offer_direct_chat"
+      | "negotiation",
   ) => {
     if (!selected) return;
     const prop = saleProperties.find((p) => p.id === pickedProperty);

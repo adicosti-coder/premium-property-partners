@@ -56,6 +56,8 @@ const TX_LABELS: Record<string, string> = {
   offer_intro: "Anunț înainte de ofertă",
   offer_followup: "Ofertă cu pașii următori",
   offer_confirm: "Ofertă livrată — vizionare",
+  offer_meeting: "Propunere punct de întâlnire",
+  offer_direct_chat: "Chat direct pe WhatsApp",
   listing_opened: "Anunț deschis",
   negotiation: "Negociere",
 };
