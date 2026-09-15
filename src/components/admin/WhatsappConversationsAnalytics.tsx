@@ -1,9 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, MessageSquare, CheckCircle2, XCircle, Clock } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, RefreshCw, MessageSquare, CheckCircle2, XCircle, Clock, UserPlus } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
@@ -72,6 +76,30 @@ const WhatsappConversationsAnalytics = () => {
     },
     staleTime: 60_000,
   });
+
+  const { toast } = useToast();
+  const [pickedAgent, setPickedAgent] = useState<Record<string, string>>({});
+  const [assigning, setAssigning] = useState<string | null>(null);
+
+  /** Alocă manual o discuție abandonată unui agent real, ca să nu rămână neterminată. */
+  const assignAgent = async (conversationId: string) => {
+    const agentId = pickedAgent[conversationId];
+    if (!agentId) return;
+    setAssigning(conversationId);
+    const { error: updErr } = await supabase
+      .from("wa_conversations")
+      .update({ assigned_agent_id: agentId, assigned_at: new Date().toISOString() })
+      .eq("id", conversationId);
+    setAssigning(null);
+    if (updErr) {
+      toast({ title: "Nu am putut aloca agentul", description: updErr.message, variant: "destructive" });
+      return;
+    }
+    const name = (data?.agents ?? []).find((a) => a.id === agentId)?.name ?? "agent";
+    toast({ title: "Discuție alocată", description: `Preluată de ${name}.` });
+    void refetch();
+  };
+
 
   const stats = useMemo(() => {
     const messages = data?.messages ?? [];
@@ -320,6 +348,42 @@ const WhatsappConversationsAnalytics = () => {
                     {c.last_inbound_at
                       ? new Date(c.last_inbound_at).toLocaleString("ro-RO")
                       : "—"}
+                    {" · Agent: "}
+                    <span className="font-medium">{stats.agentNameFor(c.assigned_agent_id)}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Select
+                      value={pickedAgent[c.id] ?? c.assigned_agent_id ?? ""}
+                      onValueChange={(v) => setPickedAgent((p) => ({ ...p, [c.id]: v }))}
+                    >
+                      <SelectTrigger className="h-9 w-[180px]" aria-label="Alege agentul">
+                        <SelectValue placeholder="Alege agentul" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(data?.agents ?? []).map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      className="min-h-[36px]"
+                      disabled={
+                        assigning === c.id ||
+                        !(pickedAgent[c.id] ?? c.assigned_agent_id)
+                      }
+                      onClick={() => void assignAgent(c.id)}
+                      aria-label={`Alocă agent pentru discuția cu ${c.wa_profile_name || c.phone_normalized}`}
+                    >
+                      {assigning === c.id ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <UserPlus className="w-4 h-4 mr-2" />
+                      )}
+                      Alocă agent
+                    </Button>
                   </div>
                 </div>
               ))

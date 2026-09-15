@@ -9,7 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useRealtimeChannel } from "@/hooks/admin/useRealtimeChannel";
-import { Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Home, Loader2, MessageSquare, RefreshCw, Search, Send, User } from "lucide-react";
 
 /**
  * Conversații live WhatsApp — firul complet al discuției (mesaje trimise de agent
@@ -41,6 +44,24 @@ type MessageRow = {
 };
 
 type AgentRow = { id: string; name: string; email: string };
+
+type SaleProperty = {
+  id: string;
+  name: string;
+  slug: string | null;
+  listing_type: string | null;
+  rooms: number | null;
+  size: number | null;
+  location: string | null;
+  capital_necesar: number | null;
+  price_per_sqm: number | null;
+};
+
+const propertyPrice = (p: SaleProperty) =>
+  p.capital_necesar ||
+  (p.price_per_sqm && p.size ? Math.round(p.price_per_sqm * p.size) : 0);
+
+const propertyUrl = (p: SaleProperty) => `https://realtrust.ro/proprietate/${p.slug}`;
 
 const dayLabel = (iso: string) =>
   new Date(iso).toLocaleDateString("ro-RO", {
@@ -79,6 +100,9 @@ export default function WhatsappLiveConversations() {
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [agents, setAgents] = useState<AgentRow[]>([]);
+  const [saleProperties, setSaleProperties] = useState<SaleProperty[]>([]);
+  const [pickedProperty, setPickedProperty] = useState<string>("");
+  const [sendingOffer, setSendingOffer] = useState(false);
   const { toast } = useToast();
 
   const loadConversations = useCallback(async () => {
@@ -106,6 +130,17 @@ export default function WhatsappLiveConversations() {
     setAgents((data ?? []) as AgentRow[]);
   }, []);
 
+  const loadSaleProperties = useCallback(async () => {
+    const { data } = await supabase
+      .from("properties")
+      .select("id, name, slug, listing_type, rooms, size, location, capital_necesar, price_per_sqm")
+      .eq("is_active", true)
+      .in("listing_type", ["vanzare", "investitie"])
+      .not("slug", "is", null)
+      .order("name");
+    setSaleProperties((data ?? []) as SaleProperty[]);
+  }, []);
+
   const loadThread = useCallback(async (conversationId: string) => {
     setLoadingThread(true);
     const { data, error: msgErr } = await supabase
@@ -122,7 +157,8 @@ export default function WhatsappLiveConversations() {
   useEffect(() => {
     void loadConversations();
     void loadAgents();
-  }, [loadConversations, loadAgents]);
+    void loadSaleProperties();
+  }, [loadConversations, loadAgents, loadSaleProperties]);
 
   useEffect(() => {
     if (selectedId) void loadThread(selectedId);
@@ -189,6 +225,54 @@ export default function WhatsappLiveConversations() {
     } else {
       toast({ title: "Mesaj trimis", description: "Clientul a primit mesajul pe WhatsApp." });
       setReplyText("");
+    }
+    void loadConversations();
+    if (selectedId) void loadThread(selectedId);
+  };
+
+  /**
+   * Pasul de tranzacție: după discuție, agentul marchează apartamentul ales de client,
+   * îi trimite anunțul de vânzare pe WhatsApp și deschide pagina anunțului.
+   */
+  const sendOffer = async () => {
+    const prop = saleProperties.find((p) => p.id === pickedProperty);
+    if (!selected || !prop) return;
+    const price = propertyPrice(prop);
+    const url = propertyUrl(prop);
+    const details = [
+      prop.rooms ? `${prop.rooms} camere` : null,
+      prop.size ? `${prop.size} m²` : null,
+      prop.location || null,
+    ].filter(Boolean).join(" · ");
+    const text = [
+      `Apartamentul ales: ${prop.name}`,
+      details || null,
+      price ? `Preț: ${price.toLocaleString("ro-RO")} €` : null,
+      "",
+      `Detalii complete și poze: ${url}`,
+      "Dacă doriți, vă pregătim actele și programăm vizionarea.",
+    ].filter((l) => l !== null).join("\n");
+
+    setSendingOffer(true);
+    const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
+      body: { action: "agent_reply", phone: selected.phone_normalized, message: text },
+    });
+    setSendingOffer(false);
+    const res = (data ?? {}) as Record<string, unknown>;
+    if (fnErr || res.delivered === false) {
+      toast({
+        title: "Anunțul nu a fost trimis",
+        description: windowOpen
+          ? (fnErr?.message || String(res.error ?? "Eroare la trimitere"))
+          : "Fereastra de 24h este închisă — clientul trebuie să scrie din nou.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Anunț trimis clientului",
+        description: `${prop.name} — deschid pagina anunțului.`,
+      });
+      window.open(url, "_blank", "noopener,noreferrer");
     }
     void loadConversations();
     if (selectedId) void loadThread(selectedId);
@@ -385,6 +469,42 @@ export default function WhatsappLiveConversations() {
                   scrie din nou.
                 </p>
               )}
+
+              <div className="border-t pt-4 space-y-2">
+                <p className="text-sm font-medium">Pasul următor: apartamentul ales de client</p>
+                <p className="text-xs text-muted-foreground">
+                  Alege apartamentul discutat, trimite-i clientului anunțul de vânzare pe WhatsApp
+                  și deschide pagina anunțului.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Select value={pickedProperty} onValueChange={setPickedProperty}>
+                    <SelectTrigger className="w-full sm:w-[320px]" aria-label="Alege apartamentul">
+                      <SelectValue placeholder="Alege apartamentul" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {saleProperties.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    className="min-h-[40px]"
+                    onClick={() => void sendOffer()}
+                    disabled={sendingOffer || !pickedProperty}
+                    aria-label="Trimite anunțul de vânzare și deschide-l"
+                  >
+                    {sendingOffer ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Home className="h-4 w-4" />
+                    )}
+                    <span className="ml-2">Trimite anunțul și deschide-l</span>
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           )}
         </Card>
