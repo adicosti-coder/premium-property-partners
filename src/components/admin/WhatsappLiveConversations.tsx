@@ -227,6 +227,54 @@ export default function WhatsappLiveConversations() {
     if (selectedId) void loadThread(selectedId);
   };
 
+  /**
+   * Pasul de tranzacție: după discuție, agentul marchează apartamentul ales de client,
+   * îi trimite anunțul de vânzare pe WhatsApp și deschide pagina anunțului.
+   */
+  const sendOffer = async () => {
+    const prop = saleProperties.find((p) => p.id === pickedProperty);
+    if (!selected || !prop) return;
+    const price = propertyPrice(prop);
+    const url = propertyUrl(prop);
+    const details = [
+      prop.rooms ? `${prop.rooms} camere` : null,
+      prop.size ? `${prop.size} m²` : null,
+      prop.location || null,
+    ].filter(Boolean).join(" · ");
+    const text = [
+      `Apartamentul ales: ${prop.name}`,
+      details || null,
+      price ? `Preț: ${price.toLocaleString("ro-RO")} €` : null,
+      "",
+      `Detalii complete și poze: ${url}`,
+      "Dacă doriți, vă pregătim actele și programăm vizionarea.",
+    ].filter((l) => l !== null).join("\n");
+
+    setSendingOffer(true);
+    const { data, error: fnErr } = await supabase.functions.invoke("make-agent-bridge", {
+      body: { action: "agent_reply", phone: selected.phone_normalized, message: text },
+    });
+    setSendingOffer(false);
+    const res = (data ?? {}) as Record<string, unknown>;
+    if (fnErr || res.delivered === false) {
+      toast({
+        title: "Anunțul nu a fost trimis",
+        description: windowOpen
+          ? (fnErr?.message || String(res.error ?? "Eroare la trimitere"))
+          : "Fereastra de 24h este închisă — clientul trebuie să scrie din nou.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Anunț trimis clientului",
+        description: `${prop.name} — deschid pagina anunțului.`,
+      });
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+    void loadConversations();
+    if (selectedId) void loadThread(selectedId);
+  };
+
   return (
     <AdminPageShell
       title="Conversații live WhatsApp"
