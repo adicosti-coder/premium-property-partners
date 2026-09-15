@@ -37,7 +37,7 @@ const PropertyOfferBox = ({ name, price, language = "ro" }: Props) => {
     },
     {
       icon: Percent,
-      label: ro ? "Comision RealTrust administrare" : "RealTrust management fee",
+      label: ro ? "Property Management RealTrust" : "RealTrust Property Management",
       value: `15–20% · ${eur(grossMonth * FEE_MIN)}–${eur(grossMonth * FEE_MAX)}/${ro ? "lună" : "mo"}`,
       hint: ro
         ? "Anunțuri, prețuri dinamice, comunicare cu oaspeții, curățenie, mentenanță"
