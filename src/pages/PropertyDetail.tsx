@@ -34,6 +34,7 @@ const GuestReviewForm = lazy(() => import("@/components/GuestReviewForm"));
 const InvestorGuideButton = lazy(() => import("@/components/InvestorGuideButton"));
 const PropertyFAQ = lazy(() => import("@/components/PropertyFAQ"));
 import PropertyQuickFacts from "@/components/PropertyQuickFacts";
+import PropertyOfferBox from "@/components/PropertyOfferBox";
 const PropertyProximity = lazy(() => import("@/components/PropertyProximity"));
 const PropertyNeighborhoodMap = lazy(() => import("@/components/PropertyNeighborhoodMap"));
 const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
