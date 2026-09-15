@@ -42,6 +42,24 @@ type MessageRow = {
 
 type AgentRow = { id: string; name: string; email: string };
 
+type SaleProperty = {
+  id: string;
+  name: string;
+  slug: string | null;
+  listing_type: string | null;
+  rooms: number | null;
+  size: number | null;
+  location: string | null;
+  capital_necesar: number | null;
+  price_per_sqm: number | null;
+};
+
+const propertyPrice = (p: SaleProperty) =>
+  p.capital_necesar ||
+  (p.price_per_sqm && p.size ? Math.round(p.price_per_sqm * p.size) : 0);
+
+const propertyUrl = (p: SaleProperty) => `https://realtrust.ro/proprietate/${p.slug}`;
+
 const dayLabel = (iso: string) =>
   new Date(iso).toLocaleDateString("ro-RO", {
     timeZone: "Europe/Bucharest",
