@@ -317,21 +317,25 @@ export default function WhatsappLiveConversations() {
     ];
   }, [txEvents, messages]);
 
-  const renderStep = (ev: TxEventRow) => (
-    <div key={ev.id} className="my-2 flex justify-center">
-      <div className="max-w-[90%] rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-center">
-        <p className="text-[11px] font-medium">
-          {TX_LABELS[ev.event] ?? ev.event}
-          {ev.property_name ? ` · ${ev.property_name}` : ""}
-        </p>
-        <p className="text-[11px] text-muted-foreground">
-          {fmt(ev.created_at)}
-          {ev.price ? ` · ${Number(ev.price).toLocaleString("ro-RO")} €` : ""}
-        </p>
-        {ev.error && <p className="text-[11px] text-destructive">{ev.error}</p>}
+  const renderStep = (ev: TxEventRow) => {
+    const st = offerStatus(ev);
+    return (
+      <div key={ev.id} className="my-2 flex justify-center">
+        <div className="max-w-[90%] rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-center">
+          <p className="text-[11px] font-medium">
+            {TX_LABELS[ev.event] ?? ev.event}
+            {ev.property_name ? ` · ${ev.property_name}` : ""}
+          </p>
+          <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+            <Badge variant={st.variant}>{st.label}</Badge>
+            <span>{fmt(ev.created_at)}</span>
+            {ev.price ? <span>· {Number(ev.price).toLocaleString("ro-RO")} €</span> : null}
+          </div>
+          {ev.error && <p className="text-[11px] text-destructive">{ev.error}</p>}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
 
   const QUALIFY_MESSAGE = [
