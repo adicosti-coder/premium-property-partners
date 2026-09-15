@@ -78,18 +78,8 @@ Deno.serve(async (req) => {
 
   const entries = payload?.entry || [];
   const conversationsToReply = new Set<string>();
-  const intakeConversations = new Set<string>();
-
-  const INTAKE_MESSAGE = [
-    "Bună ziua! Ați scris pe WhatsApp-ul ApArt Hotel by RealTrust (Timișoara).",
-    "",
-    "Ca să vă putem ajuta rapid, spuneți-mi cu ce vă putem fi de folos:",
-    "1️⃣ Imobiliare — vânzare, achiziție sau închiriere",
-    "2️⃣ Administrare — regim hotelier sau termen mediu/lung",
-    "3️⃣ Rezervare regim hotelier — https://realtrust.ro/rezervare",
-    "",
-    "Răspundeți cu 1, 2 sau 3 (sau descrieți în câteva cuvinte) și continuăm.",
-  ].join("\n");
+  // convId → telefon, ca mesajul de calificare să fie personalizat cu datele anunțului.
+  const intakeConversations = new Map<string, string>();
 
   for (const entry of entries) {
     for (const change of entry?.changes || []) {
