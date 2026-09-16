@@ -46,6 +46,23 @@ Deno.serve(async (req) => {
   const internalSecret = Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "";
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
+  // ── Deblocare: mesaje rămase „în trimitere” după un timeout de funcție ─────
+  // Fără asta, rândul rămâne blocat pentru totdeauna și proprietarul nu e contactat.
+  try {
+    const staleBefore = new Date(Date.now() - 15 * 60_000).toISOString();
+    const { data: unstuck } = await supabase
+      .from("wa_outbound_queue")
+      .update({ status: "pending", last_error: "reluat: trimitere întreruptă" })
+      .eq("status", "sending")
+      .lt("updated_at", staleBefore)
+      .select("id");
+    if (unstuck?.length) {
+      console.warn(`[wa-outbound-worker] reset ${unstuck.length} stuck 'sending' rows`);
+    }
+  } catch (e) {
+    console.error("[wa-outbound-worker] stuck reset failed:", e);
+  }
+
   // ── Anti-spam / Meta rate limit guard ──────────────────────────────────────
   const { data: settings } = await supabase
     .from("wa_agent_settings")
