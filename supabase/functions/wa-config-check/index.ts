@@ -50,11 +50,36 @@ Deno.serve(async (req) => {
   const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   const body = await resp.json().catch(() => ({}));
 
+  // Câmpurile la care aplicația e abonată pe contul WhatsApp Business.
+  // Fără „messages” nu primim nici mesajele clienților, nici confirmările
+  // de livrare/citire — de aceea le raportăm explicit aici.
+  let subscribedFields: string[] | undefined;
+  let subsError: string | undefined;
+  try {
+    const subsResp = await fetch(
+      `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/subscribed_apps`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const subsBody = await subsResp.json().catch(() => ({}));
+    if (subsResp.ok) {
+      subscribedFields = (subsBody?.data ?? []).flatMap(
+        (a: { whatsapp_business_api_data?: { subscribed_fields?: string[] } }) =>
+          a?.whatsapp_business_api_data?.subscribed_fields ?? [],
+      );
+    } else {
+      subsError = subsBody?.error?.message ?? `http_${subsResp.status}`;
+    }
+  } catch (e) {
+    subsError = e instanceof Error ? e.message : String(e);
+  }
+
   return new Response(
     JSON.stringify({
       ok: resp.ok,
       status: resp.status,
       phone: resp.ok ? body : undefined,
+      subscribed_fields: subscribedFields,
+      subscribed_fields_error: subsError,
       error: resp.ok ? undefined : body?.error?.message ?? "unknown_error",
     }),
     { status: resp.ok ? 200 : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
