@@ -7,6 +7,7 @@ import { Copy, Check, Phone, Wifi, Key, MapPin, Clock, Video, MessageCircle, Shi
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import SEOHead from "@/components/SEOHead";
 
 const t = {
   ro: {
@@ -134,6 +135,7 @@ const GuestGuide = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      <SEOHead title="Ghidul oaspetelui | ApArt Hotel by RealTrust" description="Ghid digital pentru oaspeții ApArt Hotel: acces, cod de intrare, WiFi și recomandări în Timișoara." noIndex />
       {/* Header */}
       <div className="bg-primary text-primary-foreground px-4 py-6 text-center">
         <p className="text-xs uppercase tracking-widest opacity-80 mb-1">RealTrust & ApArt Hotel</p>

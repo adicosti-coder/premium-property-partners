@@ -12,6 +12,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 
 const MAX_IMAGES = 15;
 
@@ -376,6 +377,7 @@ const AdaugaAnunt = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Adaugă anunț apartament Timișoara | RealTrust" description="Publică gratuit anunțul apartamentului tău din Timișoara. Analiză AI a pozelor, estimare de preț și vizibilitate pe realtrust.ro." url="https://realtrust.ro/adauga-anunt" />
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-8 pt-24">
         {/* Header */}

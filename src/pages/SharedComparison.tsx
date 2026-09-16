@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, ArrowLeft, GitCompareArrows } from "lucide-react";
 import {
+import SEOHead from "@/components/SEOHead";
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -135,6 +136,7 @@ const SharedComparison = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Comparație apartamente | RealTrust Timișoara" description="Comparație personalizată de apartamente din portofoliul RealTrust Timișoara." noIndex />
       <Header />
       <div className="container mx-auto px-4 py-8 pt-24">
         <div className="flex items-center gap-3 mb-6">
