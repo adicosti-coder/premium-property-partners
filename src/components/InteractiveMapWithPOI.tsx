@@ -47,7 +47,7 @@ const MAP_BOUNDS = new mapboxgl.LngLatBounds(
 
 // All apartment coordinates – same as PropertyMap
 const apartmentCoordinates: { name: string; slug: string; coords: [number, number] }[] = [
-  { name: 'NordOne ApArt Hotel – Premium 60 mp', slug: 'ring-apart-hotel-spacious-deluxe', coords: [21.217955, 45.756134] },
+  { name: 'NordOne ApArt Hotel – Premium 60 mp', slug: 'nordone-apart-hotel-premium', coords: [21.217955, 45.756134] },
   { name: 'Green Forest ApArt Hotel', slug: 'green-forest-apart-hotel', coords: [21.1950, 45.7750] },
   { name: 'Fructus Plaza Ultracentral', slug: 'fructus-plaza-ultracentral-apart-hotel', coords: [21.2260, 45.7565] },
   { name: 'Cross Square House by RealTrust', slug: 'fullview-studio-deluxe', coords: [21.232860, 45.741866] },

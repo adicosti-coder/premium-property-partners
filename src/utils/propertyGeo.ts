@@ -46,7 +46,7 @@ const hasFiniteCoordinates = (latitude?: number | null, longitude?: number | nul
   Number.isFinite(latitude) && Number.isFinite(longitude);
 
 const exactCoordinatesBySlug: Record<string, [number, number]> = {
-  'ring-apart-hotel-spacious-deluxe': [21.217955, 45.756134],
+  'nordone-apart-hotel-premium': [21.217955, 45.756134],
   'green-forest-apart-hotel': [21.248071, 45.7791585],
   'fructus-plaza-ultracentral-apart-hotel': [21.220902, 45.7595474],
   'fullview-studio-deluxe': [21.232860, 45.741866],

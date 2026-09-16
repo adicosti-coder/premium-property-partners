@@ -61,7 +61,7 @@ export const getImageAlt = (property: Property, index: number, lang: 'ro' | 'en'
 export const properties: Property[] = [
   {
     id: 1,
-    slug: "ring-apart-hotel-spacious-deluxe",
+    slug: "nordone-apart-hotel-premium",
     name: "NordOne ApArt Hotel - Premium 60 mp",
     location: "Calea Circumvalațiunii 4, Timișoara",
     images: [pyn(27,7804,73035), pyn(27,7804,73036), pyn(27,7804,73037), pyn(27,7804,73038), pyn(27,7804,73040), pyn(27,7804,73041), pyn(27,7804,73042), pyn(27,7804,73043)],

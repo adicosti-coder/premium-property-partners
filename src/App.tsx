@@ -243,7 +243,8 @@ const App = () => (
                     <Route path="/blog/locatie/:location" element={<BlogLocation />} />
                     <Route path="/blog/:slug" element={<BlogArticlePage />} />
                     <Route path="/proprietate/:slug" element={<PropertyDetail />} />
-                    <Route path="/ring-apart-hotel-spacious-deluxe" element={<PropertyDetail />} />
+                    <Route path="/nordone-apart-hotel-premium" element={<PropertyDetail />} />
+                    <Route path="/ring-apart-hotel-spacious-deluxe" element={<Navigate to="/nordone-apart-hotel-premium" replace />} />
                     <Route path="/green-forest-apart-hotel" element={<PropertyDetail />} />
                     <Route path="/fructus-plaza-ultracentral-apart-hotel" element={<PropertyDetail />} />
                     <Route path="/fullview-studio-deluxe" element={<PropertyDetail />} />

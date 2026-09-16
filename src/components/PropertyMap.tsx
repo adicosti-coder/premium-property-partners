@@ -11,7 +11,7 @@ import { resolvePropertyCoordinates } from '@/utils/propertyGeo';
 // Property coordinates in Timișoara - matched to actual locations
 const propertyCoordinates: Record<string, [number, number]> = {
   // Calea Circumvalațiunii 4, Ansamblul NordOne (Timișoara)
-  'ring-apart-hotel-spacious-deluxe': [21.217955, 45.756134],
+  'nordone-apart-hotel-premium': [21.217955, 45.756134],
   // Strada Constructorilor 52, Denya Forest 5 (zona Lipovei)
   'green-forest-apart-hotel': [21.2490, 45.7785],
   // Str. Gheorghe Lazăr nr.24, clădirea Fructus Plaza
