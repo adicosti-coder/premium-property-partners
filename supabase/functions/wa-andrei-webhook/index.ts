@@ -501,6 +501,7 @@ Deno.serve(async (req) => {
         .eq("direction", "outbound")
         .gte("created_at", threeHoursAgo);
       if (recentAck) continue;
+      if (await isBlockedConv(convId)) continue;
 
       fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
         method: "POST",
@@ -509,7 +510,7 @@ Deno.serve(async (req) => {
           "Authorization": `Bearer ${serviceKey}`,
           "x-internal-secret": internalSecret,
         },
-        body: JSON.stringify({ conversation_id: convId, text: ACK_MESSAGE }),
+        body: JSON.stringify({ conversation_id: convId, text: ACK_MESSAGE, auto_kind: "ack" }),
       }).catch((e) => console.error("[wa-webhook] ack send failed:", e));
     } catch (e) {
       console.error("[wa-webhook] ack check failed:", e);
