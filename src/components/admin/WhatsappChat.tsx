@@ -104,7 +104,7 @@ export default function WhatsappChat() {
     setLoadingThread(true);
     const { data } = await supabase
       .from("wa_messages")
-      .select("id, direction, content, template_name, error, wa_message_id, created_at")
+      .select("id, direction, content, template_name, error, wa_message_id, delivered_at, read_at, created_at")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true })
       .limit(400);
