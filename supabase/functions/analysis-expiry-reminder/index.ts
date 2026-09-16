@@ -37,15 +37,15 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SB_URL, SB_SERVICE_KEY, { auth: { persistSession: false } });
 
-  const now = Date.now();
-  const windowEnd = new Date(now + 3 * 24 * 60 * 60 * 1000).toISOString();
+  const now = Date.now;
+  const windowEnd = new Date(now + 3 * 24 * 60 * 60 * 1000).toISOString;
 
   const { data: rows, error } = await admin
     .from("property_analyses")
     .select("id, share_token, analysis, recipient_email, expires_at")
     .not("recipient_email", "is", null)
     .is("expiry_notified_at", null)
-    .gt("expires_at", new Date(now).toISOString())
+    .gt("expires_at", new Date(now).toISOString)
     .lte("expires_at", windowEnd)
     .limit(50);
 
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
 
     await admin
       .from("property_analyses")
-      .update({ expiry_notified_at: new Date().toISOString() })
+      .update({ expiry_notified_at: new Date.toISOString })
       .eq("id", row.id);
   }
 

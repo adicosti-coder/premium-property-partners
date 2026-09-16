@@ -24,10 +24,10 @@ import { exportOwnersLegalGuidePdf } from "@/utils/exportOwnersLegalGuidePdf";
  * randament, fiscalitate (normă de venit vs. 7% pe venit net efectiv) și riscuri.
  * Include lead magnet: PDF descărcabil după nume + email (edge function `send-lead-magnet`).
  */
-const OwnerLegalTaxGuide = () => {
-  const { language } = useLanguage();
+const OwnerLegalTaxGuide =  => {
+  const { language } = useLanguage;
   const isRo = language === "ro";
-  const { toast } = useToast();
+  const { toast } = useToast;
 
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -156,8 +156,8 @@ const OwnerLegalTaxGuide = () => {
       };
 
   const handleDownload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (name.trim().length < 2 || !email.includes("@")) {
+    e.preventDefault;
+    if (name.trim.length < 2 || !email.includes("@")) {
       toast({ title: t.needFields, variant: "destructive" });
       return;
     }
@@ -165,9 +165,9 @@ const OwnerLegalTaxGuide = () => {
     try {
       await supabase.functions.invoke("send-lead-magnet", {
         body: {
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim() || undefined,
+          name: name.trim,
+          email: email.trim,
+          phone: phone.trim || undefined,
           source: "owners_legal_tax_guide",
           language,
         },
@@ -181,9 +181,9 @@ const OwnerLegalTaxGuide = () => {
       trackConversion({
         event: "generate_lead",
         source: "owners_legal_tax_guide",
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim() || undefined,
+        name: name.trim,
+        email: email.trim,
+        phone: phone.trim || undefined,
       });
       toast({ title: t.okTitle, description: t.okDesc });
       setOpen(false);
@@ -297,7 +297,7 @@ const OwnerLegalTaxGuide = () => {
               <h3 className="font-semibold mb-1">{t.magnetTitle}</h3>
               <p className="text-sm text-muted-foreground">{t.magnetBody}</p>
             </div>
-            <Button size="lg" className="mt-4 md:mt-0 min-h-12 w-full md:w-auto" onClick={() => setOpen(true)}>
+            <Button size="lg" className="mt-4 md:mt-0 min-h-12 w-full md:w-auto" onClick={ => setOpen(true)}>
               <Download className="w-4 h-4 mr-2" aria-hidden="true" />
               {t.magnetCta}
             </Button>

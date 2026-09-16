@@ -7,7 +7,7 @@ import { Tooltip as ShadTooltip, TooltipTrigger, TooltipContent, TooltipProvider
 import LeadCaptureForm from "./LeadCaptureForm";
 import YieldTransparencyNote from "./YieldTransparencyNote";
 import YieldReportDialog from "./YieldReportDialog";
-const FastTrackScoring = lazy(() => import("./FastTrackScoring"));
+const FastTrackScoring = lazy(=> import("./FastTrackScoring"));
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useParallax } from "@/hooks/useParallax";
@@ -17,8 +17,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ProfitCalculator = () => {
-  const { t, language } = useLanguage();
+const ProfitCalculator =  => {
+  const { t, language } = useLanguage;
   const [adr, setAdr] = useState(80);
   const [occupancy, setOccupancy] = useState(75);
   const [cleaningCost, setCleaningCost] = useState(25);
@@ -31,11 +31,11 @@ const ProfitCalculator = () => {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [simulationSaved, setSimulationSaved] = useState(false);
 
-  const { user, isAuthenticated, simulations, saveSimulation, deleteSimulation } = useSimulations();
+  const { user, isAuthenticated, simulations, saveSimulation, deleteSimulation } = useSimulations;
   
 
   // Scroll animations
-  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
+  const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation;
   const { ref: slidersRef, isVisible: slidersVisible } = useScrollAnimation({ threshold: 0.05 });
   const { ref: resultsRef, isVisible: resultsVisible } = useScrollAnimation({ threshold: 0.05 });
   
@@ -43,7 +43,7 @@ const ProfitCalculator = () => {
   const { offset: parallaxOffset1 } = useParallax({ speed: 0.15, direction: 'up' });
   const { offset: parallaxOffset2 } = useParallax({ speed: 0.1, direction: 'down' });
 
-  const calculations = useMemo(() => {
+  const calculations = useMemo(=> {
     const daysPerMonth = 30;
     const occupiedDays = Math.round((occupancy / 100) * daysPerMonth);
     const numberOfStays = Math.round(occupiedDays / avgStayDuration);
@@ -75,7 +75,7 @@ const ProfitCalculator = () => {
   }, [adr, occupancy, cleaningCost, managementFee, platformFee, avgStayDuration]);
 
   // Track when user interacts with sliders
-  const handleSliderInteraction = () => {
+  const handleSliderInteraction =  => {
     if (!hasInteracted) {
       setHasInteracted(true);
       setSimulationSaved(false);
@@ -83,9 +83,9 @@ const ProfitCalculator = () => {
   };
 
   // Auto-save simulation when authenticated user interacts
-  useEffect(() => {
+  useEffect(=> {
     if (isAuthenticated && hasInteracted && !simulationSaved) {
-      const saveTimeout = setTimeout(async () => {
+      const saveTimeout = setTimeout(async  => {
         const { error } = await saveSimulation({
           city: "Timișoara",
           rooms: "2 Camere",
@@ -106,7 +106,7 @@ const ProfitCalculator = () => {
         }
       }, 2000); // Save after 2 seconds of inactivity
 
-      return () => clearTimeout(saveTimeout);
+      return  => clearTimeout(saveTimeout);
     }
   }, [isAuthenticated, hasInteracted, calculations, simulationSaved]);
 
@@ -203,7 +203,7 @@ const ProfitCalculator = () => {
                       value={[adr]}
                       onValueChange={(value) => {
                         setAdr(value[0]);
-                        handleSliderInteraction();
+                        handleSliderInteraction;
                       }}
                       min={30}
                       max={200}
@@ -233,7 +233,7 @@ const ProfitCalculator = () => {
                       value={[occupancy]}
                       onValueChange={(value) => {
                         setOccupancy(value[0]);
-                        handleSliderInteraction();
+                        handleSliderInteraction;
                       }}
                       min={30}
                       max={100}
@@ -263,7 +263,7 @@ const ProfitCalculator = () => {
                       value={[avgStayDuration]}
                       onValueChange={(value) => {
                         setAvgStayDuration(value[0]);
-                        handleSliderInteraction();
+                        handleSliderInteraction;
                       }}
                       min={1}
                       max={14}
@@ -295,7 +295,7 @@ const ProfitCalculator = () => {
                   value={[cleaningCost]}
                   onValueChange={(value) => {
                     setCleaningCost(value[0]);
-                    handleSliderInteraction();
+                    handleSliderInteraction;
                   }}
                   min={10}
                   max={60}
@@ -315,7 +315,7 @@ const ProfitCalculator = () => {
                   value={[managementFee]}
                   onValueChange={(value) => {
                     setManagementFee(value[0]);
-                    handleSliderInteraction();
+                    handleSliderInteraction;
                   }}
                   min={10}
                   max={30}
@@ -335,7 +335,7 @@ const ProfitCalculator = () => {
                   value={[platformFee]}
                   onValueChange={(value) => {
                     setPlatformFee(value[0]);
-                    handleSliderInteraction();
+                    handleSliderInteraction;
                   }}
                   min={10}
                   max={25}
@@ -365,7 +365,7 @@ const ProfitCalculator = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowSimulationHistory(!showSimulationHistory)}
+                    onClick={ => setShowSimulationHistory(!showSimulationHistory)}
                     className="mb-2"
                   >
                     <History className="w-4 h-4 mr-2" />
@@ -391,7 +391,7 @@ const ProfitCalculator = () => {
                           >
                             <div>
                               <p className="font-medium text-foreground">
-                                {sim.realtrurst_income.toLocaleString()} €{lt.monthly}
+                                {sim.realtrurst_income.toLocaleString} €{lt.monthly}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {new Date(sim.created_at).toLocaleDateString(language === 'ro' ? 'ro-RO' : 'en-US')}
@@ -400,7 +400,7 @@ const ProfitCalculator = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteSimulation(sim.id)}
+                              onClick={ => handleDeleteSimulation(sim.id)}
                               className="text-destructive hover:text-destructive"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -425,12 +425,12 @@ const ProfitCalculator = () => {
                     </div>
                     <div className="flex items-baseline gap-2 mb-2">
                       <span className="text-5xl md:text-6xl font-serif font-bold text-foreground">
-                        {calculations.netProfit.toLocaleString()}
+                        {calculations.netProfit.toLocaleString}
                       </span>
                       <span className="text-2xl text-foreground/70">€{t.calculator.perMonth}</span>
                     </div>
                     <p className="text-muted-foreground">
-                      {t.calculator.approximately} <span className="text-primary font-semibold">{calculations.yearlyNet.toLocaleString()} €</span> {t.calculator.perYear}
+                      {t.calculator.approximately} <span className="text-primary font-semibold">{calculations.yearlyNet.toLocaleString} €</span> {t.calculator.perYear}
                     </p>
                   </div>
                 </div>
@@ -443,7 +443,7 @@ const ProfitCalculator = () => {
                       <span className="text-sm text-muted-foreground">{t.calculator.grossRevenue}</span>
                     </div>
                     <p className="text-2xl font-serif font-bold text-foreground">
-                      {calculations.grossRevenue.toLocaleString()} €
+                      {calculations.grossRevenue.toLocaleString} €
                     </p>
                     <p className="text-sm text-muted-foreground">{t.calculator.perMonth}</p>
                   </div>
@@ -454,7 +454,7 @@ const ProfitCalculator = () => {
                       <span className="text-sm text-muted-foreground">{t.calculator.totalCosts}</span>
                     </div>
                     <p className="text-2xl font-serif font-bold text-foreground">
-                      {calculations.totalCosts.toLocaleString()} €
+                      {calculations.totalCosts.toLocaleString} €
                     </p>
                     <p className="text-sm text-muted-foreground">{t.calculator.perMonth}</p>
                   </div>
@@ -609,7 +609,7 @@ const ProfitCalculator = () => {
                 {/* Lead Capture CTA — clarify what happens next */}
                 <div className="space-y-2">
                   <Button 
-                    onClick={() => setIsLeadFormOpen(true)}
+                    onClick={ => setIsLeadFormOpen(true)}
                     className="w-full py-6 text-lg"
                     size="lg"
                   >
@@ -617,7 +617,7 @@ const ProfitCalculator = () => {
                     {t.calculator.getAnalysis}
                   </Button>
                   <Button
-                    onClick={() => setIsYieldReportOpen(true)}
+                    onClick={ => setIsYieldReportOpen(true)}
                     variant="outline"
                     className="w-full"
                     size="lg"
@@ -653,7 +653,7 @@ const ProfitCalculator = () => {
 
       <YieldReportDialog
         isOpen={isYieldReportOpen}
-        onClose={() => setIsYieldReportOpen(false)}
+        onClose={ => setIsYieldReportOpen(false)}
         report={{
           adr,
           occupancy,
@@ -676,7 +676,7 @@ const ProfitCalculator = () => {
 
       <LeadCaptureForm
         isOpen={isLeadFormOpen}
-        onClose={() => setIsLeadFormOpen(false)}
+        onClose={ => setIsLeadFormOpen(false)}
         calculatedNetProfit={calculations.netProfit}
         calculatedYearlyProfit={calculations.yearlyNet}
         simulationData={{

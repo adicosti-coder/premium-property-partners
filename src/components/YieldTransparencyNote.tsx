@@ -13,7 +13,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
  *    so the 9.4% figure is genuinely net.
  */
 const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
-  const { language } = useLanguage();
+  const { language } = useLanguage;
   const ro = language !== "en";
 
   const rows = ro
@@ -31,7 +31,7 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
         {
           title: "Utilități & comision de administrare — scăzute ulterior",
           body:
-            "Cheltuielile fixe (utilități, internet, întreținere) și comisionul de administrare se scad după deducerea de 27%, astfel încât 9,4% rămâne venit curat (net), nu brut.",
+            "Cheltuielile fixe (utilități, internet, întreținere) și comisionul de administrare se scad, astfel încât 9,4% rămâne venit curat (net), nu brut.",
         },
       ]
     : [
@@ -73,8 +73,8 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
       </ul>
       <p className="mt-3 text-[11px] text-muted-foreground">
         {ro
-          ? "Ipoteze publice folosite în simulare: ocupare 75%, deducere operațională 27%. Cifra finală pentru apartamentul tău se stabilește după evaluare."
-          : "Public assumptions used in the simulation: 75% occupancy, 27% operational deduction. Your final figure is set after the valuation."}
+          ? "Ipoteze publice folosite în simulare: ocupare 75%. Cifra finală pentru apartamentul tău se stabilește după evaluare."
+          : "Public assumptions used in the simulation: 75% occupancy. Your final figure is set after the valuation."}
       </p>
     </aside>
   );

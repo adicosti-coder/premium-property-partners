@@ -78,7 +78,7 @@ const ChartCard = ({
   </figure>
 );
 
-export const RoiByNeighborhoodChart = () => (
+export const RoiByNeighborhoodChart =  => (
   <ChartCard
     title="ROI net anual: Regim Hotelier vs Chirie Clasică (2026)"
     subtitle="Date agregate din portofoliul RealTrust — randament % după management 27% și taxe"
@@ -98,7 +98,7 @@ export const RoiByNeighborhoodChart = () => (
   </ChartCard>
 );
 
-export const MonthlyYieldChart = () => (
+export const MonthlyYieldChart =  => (
   <ChartCard
     title="Yield lunar pe tip de apartament (€)"
     subtitle="Venit brut, costuri operaționale și venit net lunar — regim hotelier Timișoara"
@@ -109,7 +109,7 @@ export const MonthlyYieldChart = () => (
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis dataKey="tip" tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }} />
         <YAxis unit="€" tick={{ fill: "hsl(var(--foreground))", fontSize: 11 }} />
-        <Tooltip contentStyle={tooltipStyle} labelStyle={labelStyle} itemStyle={itemStyle} formatter={(v: number) => `€${v.toLocaleString()}`} />
+        <Tooltip contentStyle={tooltipStyle} labelStyle={labelStyle} itemStyle={itemStyle} formatter={(v: number) => `€${v.toLocaleString}`} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         <Bar dataKey="venit" name="Venit brut" fill={BLUE} radius={[6, 6, 0, 0]} />
         <Bar dataKey="costuri" name="Costuri" fill={SLATE} radius={[6, 6, 0, 0]} />
@@ -119,7 +119,7 @@ export const MonthlyYieldChart = () => (
   </ChartCard>
 );
 
-export const PriceAppreciationChart = () => (
+export const PriceAppreciationChart =  => (
   <ChartCard
     title="Apreciere preț €/mp pe cartiere (2020 → 2026)"
     subtitle="Evoluție preț mediu pe metru pătrat — surse: tranzacții reale + portofoliu RealTrust"

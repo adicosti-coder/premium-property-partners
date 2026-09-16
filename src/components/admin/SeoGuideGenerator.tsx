@@ -59,7 +59,7 @@ Context piață imobiliară Timișoara (2024-2026, agregat RealTrust):
 - Migrație interregională (București → Timișoara) pentru raport preț/calitate viață.
 - Regim hotelier: cerere B2B (companii ABB, Continental, Flex) și turism cultural post-Capitală Culturală 2023.
 - Ocupare medie regim hotelier zone centrale: 72-82%.
-`.trim();
+`.trim;
 
 const SYSTEM_PROMPT = `Ești un expert SEO și copywriter imobiliar pentru piața din Timișoara.
 Scrii articole complete, optimizate pentru SEO, în limba română, folosind Markdown curat.
@@ -112,7 +112,7 @@ interface GuideGroup {
 
 // ---------- Helpers pentru parsare Markdown -> meta SEO ----------
 function slugify(s: string): string {
-  return s.toLowerCase()
+  return s.toLowerCase
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
     .slice(0, 80);
@@ -132,7 +132,7 @@ function diffWords(a: string, b: string): DiffOp[] {
   if (n * m > 400_000) {
     return [{ type: "del", text: a }, { type: "add", text: b }];
   }
-  const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  const dp: number[][] = Array.from({ length: n + 1 },  => new Array(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--) {
     for (let j = m - 1; j >= 0; j--) {
       dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
@@ -165,8 +165,8 @@ interface Validation {
 function validateGuide(md: string, keyword: string, slug: string): Validation {
   const title = extractTitle(md);
   const meta = extractMetaDescription(md);
-  const kwNorm = keyword.trim().toLowerCase();
-  const bodyNorm = md.toLowerCase();
+  const kwNorm = keyword.trim.toLowerCase;
+  const bodyNorm = md.toLowerCase;
   const hasKeyword = kwNorm.length > 0 && bodyNorm.includes(kwNorm);
   const issues: string[] = [];
   if (!title) issues.push("Lipsește titlul (H1) — adaugă o linie `# Titlu...`.");
@@ -183,19 +183,19 @@ function validateGuide(md: string, keyword: string, slug: string): Validation {
 
 function countWords(text: string): number {
   if (!text) return 0;
-  return text.trim().split(/\s+/).filter(Boolean).length;
+  return text.trim.split(/\s+/).filter(Boolean).length;
 }
 
 function extractTitle(md: string): string {
   const m = md.match(/^\s*#\s+(.+)$/m);
-  return m ? m[1].trim().replace(/[*_`]/g, "") : "";
+  return m ? m[1].trim.replace(/[*_`]/g, "") : "";
 }
 
 function extractMetaDescription(md: string): string {
   const m = md.match(/>\s*\*\*Meta descriere:\*\*\s*(.+?)(?:\n\n|\n>|$)/is);
-  if (m) return m[1].replace(/\n>?\s*/g, " ").trim();
+  if (m) return m[1].replace(/\n>?\s*/g, " ").trim;
   const afterH1 = md.split(/^#\s+.+$/m)[1] || "";
-  const firstPara = afterH1.split(/\n\s*\n/).map(s => s.trim()).find(Boolean) || "";
+  const firstPara = afterH1.split(/\n\s*\n/).map(s => s.trim).find(Boolean) || "";
   return firstPara.replace(/[#*_>`]/g, "").slice(0, 160);
 }
 
@@ -247,8 +247,8 @@ function GoogleSnippetPreview({
   );
 }
 
-export default function SeoGuideGenerator() {
-  const { run, cancel, loading, streaming, streamingText, error, data, reset } = useAiEngine();
+export default function SeoGuideGenerator {
+  const { run, cancel, loading, streaming, streamingText, error, data, reset } = useAiEngine;
 
   const [selected, setSelected] = useState<string>("");
   const [poiInput, setPoiInput] = useState<string>("");
@@ -283,40 +283,40 @@ export default function SeoGuideGenerator() {
   const isBusy = loading || streaming;
 
   // Sync streaming text into the editable textarea while generating.
-  useEffect(() => {
+  useEffect(=> {
     if (streaming && streamingText) setEditedMarkdown(streamingText);
   }, [streaming, streamingText]);
-  useEffect(() => {
+  useEffect(=> {
     if (data?.text) setEditedMarkdown(data.text);
   }, [data]);
 
   const pois = useMemo(
-    () => poiInput.split(/[,\n]/).map(s => s.trim()).filter(Boolean),
+     => poiInput.split(/[,\n]/).map(s => s.trim).filter(Boolean),
     [poiInput],
   );
 
-  const wordCount = useMemo(() => countWords(editedMarkdown), [editedMarkdown]);
+  const wordCount = useMemo(=> countWords(editedMarkdown), [editedMarkdown]);
   const progressPct = Math.min(100, Math.round((wordCount / TARGET_WORDS) * 100));
 
-  const parsedTitle = useMemo(() => extractTitle(editedMarkdown), [editedMarkdown]);
-  const parsedMeta = useMemo(() => extractMetaDescription(editedMarkdown), [editedMarkdown]);
+  const parsedTitle = useMemo(=> extractTitle(editedMarkdown), [editedMarkdown]);
+  const parsedMeta = useMemo(=> extractMetaDescription(editedMarkdown), [editedMarkdown]);
 
   // Auto-derive slug from title unless user manually edited it
-  useEffect(() => {
+  useEffect(=> {
     if (slugTouched) return;
     const auto = slugify(parsedTitle || selected || "ghid-timisoara");
     setSlug(auto);
   }, [parsedTitle, selected, slugTouched]);
 
-  const previewUrl = useMemo(() => {
+  const previewUrl = useMemo(=> {
     const base = "https://realtrust.ro/ghid/";
     return `${base}${slug || "ghid-timisoara"}`;
   }, [slug]);
 
 
   // ---------- History (grupat pe rădăcină + versiuni) ----------
-  const grouped: GuideGroup[] = useMemo(() => {
-    const map = new Map<string, SavedGuide[]>();
+  const grouped: GuideGroup[] = useMemo(=> {
+    const map = new Map<string, SavedGuide[]>;
     for (const g of history) {
       const root = g.parent_id ?? g.id;
       const arr = map.get(root) ?? [];
@@ -324,15 +324,15 @@ export default function SeoGuideGenerator() {
       map.set(root, arr);
     }
     const groups: GuideGroup[] = [];
-    for (const [rootId, arr] of map.entries()) {
+    for (const [rootId, arr] of map.entries) {
       arr.sort((a, b) => b.version - a.version);
       groups.push({ rootId, latest: arr[0], versions: arr });
     }
-    groups.sort((a, b) => new Date(b.latest.created_at).getTime() - new Date(a.latest.created_at).getTime());
+    groups.sort((a, b) => new Date(b.latest.created_at).getTime - new Date(a.latest.created_at).getTime);
     return groups;
   }, [history]);
 
-  const loadHistory = useCallback(async () => {
+  const loadHistory = useCallback(async  => {
     setHistoryLoading(true);
     const { data: rows, error: err } = await supabase
       .from("seo_guides")
@@ -347,21 +347,21 @@ export default function SeoGuideGenerator() {
     setHistoryLoading(false);
   }, []);
 
-  useEffect(() => { loadHistory(); }, [loadHistory]);
+  useEffect(=> { loadHistory; }, [loadHistory]);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async  => {
     if (!selected) {
       toast.error("Alege o zonă sau un complex din listă.");
       return;
     }
-    reset();
+    reset;
     setEditedMarkdown("");
     setLoadedRootId(null);
     setLoadedVersion(null);
     setSlugTouched(false);
 
 
-    const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
+    const keyword = primaryKeyword.trim || `apartamente ${selected} Timișoara`;
     const prompt = `
 Generează un ghid SEO complet, în Markdown, pentru:
 
@@ -371,7 +371,7 @@ Generează un ghid SEO complet, în Markdown, pentru:
 
 Respectă strict structura definită în system prompt. Folosește cifrele din contextul de piață livrat.
 Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
-    `.trim();
+    `.trim;
 
     try {
       await run({
@@ -388,11 +388,11 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     }
   };
 
-  const handleRegenerateMeta = async () => {
+  const handleRegenerateMeta = async  => {
     if (!editedMarkdown) return;
     setRegenMetaLoading(true);
     try {
-      const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
+      const keyword = primaryKeyword.trim || `apartamente ${selected} Timișoara`;
       const res = await callAiEngine<{ title: string; meta: string; slug: string }>({
         model: "z-ai/glm-5.2",
         jsonMode: true,
@@ -406,9 +406,9 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
         prompt: `Cuvânt cheie principal: "${keyword}"\nZonă/Complex: "${selected || "Timișoara"}"\n\nGenerează un NOU titlu SEO, o NOUĂ meta descriere și un slug URL optimizat pentru articolul de mai jos. Nu repeta varianta actuală.\n\n--- ARTICOL ACTUAL (extras) ---\n${editedMarkdown.slice(0, 1500)}\n--- SFÂRȘIT ---`,
       });
       const parsed = res.json as { title?: string; meta?: string; slug?: string } | null;
-      const newTitle = (parsed?.title || "").trim();
-      const newMeta = (parsed?.meta || "").trim();
-      const newSlug = slugify((parsed?.slug || "").trim());
+      const newTitle = (parsed?.title || "").trim;
+      const newMeta = (parsed?.meta || "").trim;
+      const newSlug = slugify((parsed?.slug || "").trim);
       if (!newTitle || !newMeta) {
         toast.error("AI-ul nu a returnat un titlu / meta valid. Reîncearcă.");
         return;
@@ -427,11 +427,11 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     }
   };
 
-  const handleRegenerateSlug = async () => {
+  const handleRegenerateSlug = async  => {
     if (!editedMarkdown && !parsedTitle) return;
     setRegenSlugLoading(true);
     try {
-      const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
+      const keyword = primaryKeyword.trim || `apartamente ${selected} Timișoara`;
       const res = await callAiEngine<{ slug: string }>({
         model: "z-ai/glm-5.2",
         jsonMode: true,
@@ -444,7 +444,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
         prompt: `Titlu: "${parsedTitle}"\nCuvânt cheie: "${keyword}"\nZonă: "${selected || "Timișoara"}"\n\nGenerează un slug URL optim pentru acest ghid.`,
       });
       const parsed = res.json as { slug?: string } | null;
-      const newSlug = slugify((parsed?.slug || "").trim());
+      const newSlug = slugify((parsed?.slug || "").trim);
       if (!newSlug) {
         toast.error("AI-ul nu a returnat un slug valid.");
         return;
@@ -462,21 +462,21 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
 
 
   const currentValidation = useMemo<Validation>(
-    () => validateGuide(editedMarkdown, primaryKeyword.trim() || `apartamente ${selected} Timișoara`, slug),
+     => validateGuide(editedMarkdown, primaryKeyword.trim || `apartamente ${selected} Timișoara`, slug),
     [editedMarkdown, primaryKeyword, selected, slug],
   );
 
-  const persistGuide = async () => {
+  const persistGuide = async  => {
     if (!editedMarkdown || isBusy) return;
     setSaving(true);
     try {
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: userRes } = await supabase.auth.getUser;
       const uid = userRes.user?.id;
       if (!uid) {
         toast.error("Trebuie să fii autentificat pentru a salva ghidul.");
         return;
       }
-      const keyword = primaryKeyword.trim() || `apartamente ${selected} Timișoara`;
+      const keyword = primaryKeyword.trim || `apartamente ${selected} Timișoara`;
 
       // Versionare: dacă am încărcat un ghid existent, salvăm o versiune nouă cu parent_id = root
       let parentId: string | null = null;
@@ -503,7 +503,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
         .from("seo_guides")
         .insert(payload)
         .select("id,parent_id,version")
-        .single();
+        .single;
       if (err) throw err;
 
       // După salvare, ghidul curent devine ultima versiune a rădăcinii
@@ -511,7 +511,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
       setLoadedRootId(newRoot);
       setLoadedVersion(inserted.version);
       toast.success(parentId ? `Versiune v${nextVersion} salvată.` : "Ghid salvat în istoric.");
-      loadHistory();
+      loadHistory;
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "Nu am putut salva ghidul.");
@@ -521,17 +521,17 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     }
   };
 
-  const handleSave = () => {
+  const handleSave =  => {
     if (!editedMarkdown || isBusy) return;
     if (currentValidation.issues.length > 0) {
       setPendingValidation(currentValidation);
       return;
     }
-    persistGuide();
+    persistGuide;
   };
 
   const handleLoadVersion = (g: SavedGuide) => {
-    reset();
+    reset;
     setEditedMarkdown(g.markdown);
     setSelected(g.neighborhood);
     setPrimaryKeyword(g.primary_keyword || "");
@@ -546,8 +546,8 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
   const handleDeleteGroup = async (rootId: string, title: string) => {
     if (!confirm(`Ștergi definitiv "${title}" și toate versiunile sale?`)) return;
     // Ștergem întâi versiunile derivate (parent_id = root), apoi rădăcina
-    const { error: e1 } = await supabase.from("seo_guides").delete().eq("parent_id", rootId);
-    const { error: e2 } = await supabase.from("seo_guides").delete().eq("id", rootId);
+    const { error: e1 } = await supabase.from("seo_guides").delete.eq("parent_id", rootId);
+    const { error: e2 } = await supabase.from("seo_guides").delete.eq("id", rootId);
     if (e1 || e2) {
       toast.error("Nu am putut șterge ghidul complet.");
     } else {
@@ -556,11 +556,11 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
         setLoadedRootId(null);
         setLoadedVersion(null);
       }
-      loadHistory();
+      loadHistory;
     }
   };
 
-  const handleCopy = async () => {
+  const handleCopy = async  => {
     if (!editedMarkdown) return;
     try {
       await navigator.clipboard.writeText(editedMarkdown);
@@ -570,7 +570,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload =  => {
     if (!editedMarkdown) return;
     try {
       const fileSlug = slug || slugify(selected || "timisoara");
@@ -580,7 +580,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
       a.href = url;
       a.download = `ghid-seo-${fileSlug}.md`;
       document.body.appendChild(a);
-      a.click();
+      a.click;
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success("Ghid descărcat ca fișier Markdown.");
@@ -692,7 +692,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => { setSlugTouched(false); }}
+                  onClick={ => { setSlugTouched(false); }}
                   aria-label="Regenerează slug-ul din titlu"
                 >
                   <RefreshCcw className="w-3.5 h-3.5 mr-1" aria-hidden /> Auto
@@ -846,7 +846,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
               <Button
                 size="sm"
                 variant={editMode === "edit" ? "default" : "outline"}
-                onClick={() => setEditMode("edit")}
+                onClick={ => setEditMode("edit")}
                 role="tab"
                 aria-selected={editMode === "edit"}
                 aria-label="Mod editare"
@@ -856,7 +856,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
               <Button
                 size="sm"
                 variant={editMode === "preview" ? "default" : "outline"}
-                onClick={() => setEditMode("preview")}
+                onClick={ => setEditMode("preview")}
                 role="tab"
                 aria-selected={editMode === "preview"}
                 aria-label="Mod previzualizare"
@@ -945,7 +945,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDeleteGroup(group.rootId, group.latest.title)}
+                        onClick={ => handleDeleteGroup(group.rootId, group.latest.title)}
                         aria-label={`Șterge ghidul ${group.latest.title} și toate versiunile`}
                         className="text-destructive hover:text-destructive shrink-0"
                       >
@@ -960,7 +960,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
                             key={v.id}
                             size="sm"
                             variant={active ? "default" : "outline"}
-                            onClick={() => handleLoadVersion(v)}
+                            onClick={ => handleLoadVersion(v)}
                             className="h-7 text-xs"
                             aria-label={`Încarcă versiunea ${v.version} din ${v.word_count} cuvinte`}
                             aria-pressed={active}
@@ -1013,7 +1013,7 @@ Articolul trebuie să fie complet, gata de publicat pe blogul RealTrust.
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Corectez înainte</AlertDialogCancel>
-            <AlertDialogAction onClick={() => persistGuide()}>
+            <AlertDialogAction onClick={ => persistGuide}>
               Salvează oricum
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1043,15 +1043,15 @@ function VersionDiffCard({
   const versionA = activeGroup?.versions.find(v => v.id === compareA) ?? null;
   const versionB = activeGroup?.versions.find(v => v.id === compareB) ?? null;
 
-  const diff = useMemo(() => {
+  const diff = useMemo(=> {
     if (!versionA || !versionB) return [];
     return diffWords(versionA.markdown, versionB.markdown);
   }, [versionA, versionB]);
 
-  const stats = useMemo(() => {
+  const stats = useMemo(=> {
     let added = 0, removed = 0;
     for (const op of diff) {
-      const words = op.text.trim().split(/\s+/).filter(Boolean).length;
+      const words = op.text.trim.split(/\s+/).filter(Boolean).length;
       if (op.type === "add") added += words;
       else if (op.type === "del") removed += words;
     }

@@ -27,7 +27,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 
-/** Randament net de referință RealTrust (ocupare 75%, deducere 27%). */
+/** Randament net de referință RealTrust (ocupare 75%). */
 const TARGET_NET_YIELD = 0.094;
 
 const TIERS = [
@@ -37,7 +37,7 @@ const TIERS = [
   { value: 25, label: "25%" },
 ];
 
-const ROICalculatorWidget = () => {
+const ROICalculatorWidget =  => {
   const [propertyValue, setPropertyValue] = useState(120000);
   const [surface, setSurface] = useState(55);
   const [selectedTier, setSelectedTier] = useState(20);
@@ -46,7 +46,7 @@ const ROICalculatorWidget = () => {
   const [formData, setFormData] = useState({ name: "", phone: "", email: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  const calculations = useMemo(() => {
+  const calculations = useMemo(=> {
     // Chirie clasică: valoare × 0.004 / lună
     const classicRent = propertyValue * 0.004;
     // Venit RealTrust: chirie clasică × 1.6 × (1 - tier%)
@@ -76,7 +76,7 @@ const ROICalculatorWidget = () => {
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault;
     if (submitting) return;
     if (!formData.name || !formData.phone || !formData.email) {
       toast.error("Completează toate câmpurile");
@@ -216,7 +216,7 @@ const ROICalculatorWidget = () => {
                   key={tier.value}
                   type="button"
                   aria-pressed={selectedTier === tier.value}
-                  onClick={() => setSelectedTier(tier.value)}
+                  onClick={ => setSelectedTier(tier.value)}
                   className={`flex-1 min-h-12 py-2.5 text-sm font-semibold transition-colors ${
                     selectedTier === tier.value
                       ? "bg-primary text-primary-foreground"
@@ -264,7 +264,7 @@ const ROICalculatorWidget = () => {
               <span className="text-sm font-normal text-muted-foreground">/an net</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, deducere 27% (management, costuri, taxe)
+              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri, taxe)
             </p>
           </div>
 

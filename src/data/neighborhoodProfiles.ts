@@ -17,7 +17,7 @@
  *    an internal estimate ("estimare internă RealTrust"), including the price
  *    index which comes from src/data/neighborhoods.ts.
  *  - Published RealTrust assumptions that may be repeated: 9,4% randament net
- *    de referință, ocupare 75%, deducere operațională 27%, 15 apartamente
+ *    de referință, ocupare 75%, 15 apartamente
  *    administrate.
  *  - Structure and wording must differ between zones — no template paragraphs.
  */
@@ -108,7 +108,7 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
     ],
     investment: [
       "Argumentul investițional al zonei este cererea dublă: chiriași pe termen lung cu venituri peste medie și oaspeți de business care vor să fie aproape de birouri și de centru. Acest mix reduce dependența de sezon, o problemă reală pentru unitățile poziționate exclusiv turistic.",
-      "Contraargumentul este prețul de intrare. La un preț pe metru pătrat mai mare, randamentul net depinde de capacitatea de a susține un tarif mediu pe noapte peste media orașului. În analizele noastre pornim de la ipoteze publice — ocupare 75% și o deducere operațională de 27% — și verificăm dacă tariful realizabil susține pragul de referință de 9,4% net; la ISHO acest prag se atinge mai des cu unități mici, bine amenajate, decât cu apartamente mari.",
+      "Contraargumentul este prețul de intrare. La un preț pe metru pătrat mai mare, randamentul net depinde de capacitatea de a susține un tarif mediu pe noapte peste media orașului. În analizele noastre pornim de la ipoteze publice — ocupare 75%,4% net; la ISHO acest prag se atinge mai des cu unități mici, bine amenajate, decât cu apartamente mari.",
     ],
     risks: [
       "Concentrare mare de unități similare în același perimetru: presiune pe tarif în lunile slabe.",
@@ -180,7 +180,7 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
     ],
     investment: [
       "Zona este atractivă pentru investiție prin combinația dintre preț de intrare moderat și cerere constantă. Un apartament de 2 camere aici are, în practica noastră, cel mai scurt interval între listare și primul chiriaș sau prima rezervare, tocmai pentru că adresează mai multe categorii simultan.",
-      "Pentru regim hotelier, argumentul este proximitatea de Iulius Town, de zona universitară și de arterele de acces — util pentru șederi de 1–3 nopți. Calculele pornesc de la ipotezele publice de ocupare 75% și deducere de 27%; pragul de referință de 9,4% net este realist pentru unități mici, complet mobilate, cu check-in independent.",
+      "Pentru regim hotelier, argumentul este proximitatea de Iulius Town, de zona universitară și de arterele de acces — util pentru șederi de 1–3 nopți. Calculele pornesc de la ipotezele publice de ocupare 75%; pragul de referință de 9,4% net este realist pentru unități mici, complet mobilate, cu check-in independent.",
     ],
     risks: [
       "Fond locativ vechi: costuri neprevăzute la instalații și fațadă.",
@@ -252,7 +252,7 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
     ],
     investment: [
       "Investițional, zona este apreciată pentru stabilitatea cererii, nu pentru randamente spectaculoase. Fluxul de studenți asigură ocupare în perioada universitară, iar birourile și aeroportul acoperă parțial lunile de vacanță — motivul pentru care sezonalitatea este mai puțin brutală decât în zonele exclusiv turistice.",
-      "În simulările pe care le facem pentru proprietari folosim aceleași ipoteze publice (ocupare 75%, deducere operațională 27%) și un prag de referință de 9,4% net. Pe Calea Aradului, unitățile care ating acest prag sunt de regulă studiourile și apartamentele de 2 camere aflate la mai puțin de 10 minute pe jos de un campus sau de Iulius Town.",
+      "În simulările pe care le facem pentru proprietari folosim aceleași ipoteze publice (ocupare 75%) și un prag de referință de 9,4% net. Pe Calea Aradului, unitățile care ating acest prag sunt de regulă studiourile și apartamentele de 2 camere aflate la mai puțin de 10 minute pe jos de un campus sau de Iulius Town.",
     ],
     risks: [
       "Ofertă nouă abundentă: risc de suprasaturare pe anumite tronsoane.",
@@ -324,7 +324,7 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
     ],
     investment: [
       "Aici logica investițională este inversă celei din centru: nu tarif mare pe noapte, ci preț de achiziție mic și chiriaș stabil pe termen lung. Un apartament de 2 camere cumpărat sub media orașului și închiriat unui angajat din zonă produce un flux previzibil, cu cheltuieli de operare reduse.",
-      "Pentru regim hotelier, zona funcționează selectiv — doar acolo unde există un angajator mare în apropiere care generează vizite de lucru. Pragul nostru de referință de 9,4% net (la ocupare 75% și deducere operațională 27%) este mai greu de atins aici prin cazare pe termen scurt decât prin chirie clasică bine negociată.",
+      "Pentru regim hotelier, zona funcționează selectiv — doar acolo unde există un angajator mare în apropiere care generează vizite de lucru. Pragul nostru de referință de 9,4% net (la ocupare 75%) este mai greu de atins aici prin cazare pe termen scurt decât prin chirie clasică bine negociată.",
     ],
     risks: [
       "Dependență de câțiva angajatori mari din vecinătate.",
@@ -469,7 +469,7 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
     ],
     investment: [
       "Modelul dominant este chiria pe camere în perioada universitară, cu venit brut ridicat raportat la prețul de achiziție. Riscul principal nu este ocuparea, ci uzura și costul de repunere în stare la fiecare doi-trei ani.",
-      "Pentru regim hotelier, zona funcționează ca strategie mixtă: cazare pe termen scurt în lunile de vară, când studenții plecă, și închiriere clasică în timpul anului universitar. În simulările noastre, ipotezele publice rămân aceleași (ocupare 75%, deducere operațională 27%), dar aici distribuția ocupării pe luni este mult mai neuniformă decât media orașului — un detaliu care schimbă fluxul de numerar, nu neapărat randamentul anual.",
+      "Pentru regim hotelier, zona funcționează ca strategie mixtă: cazare pe termen scurt în lunile de vară, când studenții plecă, și închiriere clasică în timpul anului universitar. În simulările noastre, ipotezele publice rămân aceleași (ocupare 75%), dar aici distribuția ocupării pe luni este mult mai neuniformă decât media orașului — un detaliu care schimbă fluxul de numerar, nu neapărat randamentul anual.",
     ],
     risks: [
       "Golul de vară pentru unitățile dependente exclusiv de studenți.",
@@ -615,7 +615,7 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
     ],
     investment: [
       "Elisabetin este una dintre puținele zone din Timișoara unde diferențierea prin amenajare are efect direct pe tarif: un apartament restaurat cu grijă, la pas de centru, se poziționează într-un segment cu mai puțină concurență decât studiourile din ansamblurile noi.",
-      "În schimb, bugetul de intrare trebuie să includă renovarea, nu doar prețul de achiziție. Verificăm dacă tariful realizabil susține pragul nostru de referință de 9,4% net în ipotezele publice (ocupare 75%, deducere operațională 27%) după ce adăugăm costul lucrărilor la prețul de cumpărare — altfel randamentul afișat inițial devine nerealist.",
+      "În schimb, bugetul de intrare trebuie să includă renovarea, nu doar prețul de achiziție. Verificăm dacă tariful realizabil susține pragul nostru de referință de 9,4% net în ipotezele publice (ocupare 75%) după ce adăugăm costul lucrărilor la prețul de cumpărare — altfel randamentul afișat inițial devine nerealist.",
     ],
     risks: [
       "Surprize tehnice la imobile vechi: costuri suplimentare după achiziție.",

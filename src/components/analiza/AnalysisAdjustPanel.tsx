@@ -55,22 +55,22 @@ export function recalcAnalysis(base: ListingAnalysis, p: AdjustParams): ListingA
 
 const AnalysisAdjustPanel = ({ analysis, onRecalculated }: Props) => {
   const initial = useMemo<AdjustParams>(
-    () => ({
+     => ({
       tarifNoapte: Math.round(analysis.tarif_noapte || 300),
       ocupare: 75,
       zona: analysis.zona || ZONES[0],
-      tipProprietate: (analysis.tip_proprietate || "apartament").toLowerCase(),
+      tipProprietate: (analysis.tip_proprietate || "apartament").toLowerCase,
       pretListare: Math.round(analysis.pret_listare || 0),
     }),
     [analysis],
   );
 
   const [params, setParams] = useState<AdjustParams>(initial);
-  useEffect(() => setParams(initial), [initial]);
+  useEffect(=> setParams(initial), [initial]);
 
-  const preview = useMemo(() => recalcAnalysis(analysis, params), [analysis, params]);
+  const preview = useMemo(=> recalcAnalysis(analysis, params), [analysis, params]);
 
-  const apply = () => {
+  const apply =  => {
     onRecalculated(preview, params);
     toast.success("Calculele au fost actualizate local, fără consum de credite AI.");
   };
@@ -188,7 +188,7 @@ const AnalysisAdjustPanel = ({ analysis, onRecalculated }: Props) => {
         </Button>
         <Button
           variant="outline"
-          onClick={() => setParams(initial)}
+          onClick={ => setParams(initial)}
           className="min-h-12"
           aria-label="Revino la valorile estimate de AI"
         >

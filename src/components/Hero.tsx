@@ -24,9 +24,9 @@ interface HeroSettings {
   customCtaSecondary: string | null;
 }
 
-const Hero = () => {
-  const { t, language } = useLanguage();
-  const isMobile = useIsMobile();
+const Hero =  => {
+  const { t, language } = useLanguage;
+  const isMobile = useIsMobile;
   const [videoError, setVideoError] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [isSlowConnection, setIsSlowConnection] = useState(false);
@@ -44,23 +44,23 @@ const Hero = () => {
   });
 
   // Defer video loading for better LCP - DESKTOP ONLY
-  useEffect(() => {
+  useEffect(=> {
     if (isMobile || isSlowConnection) {
       setShouldLoadVideo(false);
       return;
     }
-    const timer = setTimeout(() => setShouldLoadVideo(true), 2500);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(=> setShouldLoadVideo(true), 2500);
+    return  => clearTimeout(timer);
   }, [isMobile, isSlowConnection]);
 
   // Fetch hero settings from database only after real interaction.
   // No timer fallback here: Lighthouse would otherwise include it in the critical path.
-  useEffect(() => {
+  useEffect(=> {
     let cancelled = false;
     let triggered = false;
     const events = ["scroll", "click", "touchstart"] as const;
 
-    const load = async () => {
+    const load = async  => {
       if (triggered || cancelled) return;
       triggered = true;
       try {
@@ -68,7 +68,7 @@ const Hero = () => {
         const { data, error } = await (supabase
           .from("public_site_settings" as any)
           .select("hero_video_url, hero_image_url, hero_title_ro, hero_title_en, hero_highlight_ro, hero_highlight_en, hero_subtitle_ro, hero_subtitle_en, hero_badge_ro, hero_badge_en, hero_tags_ro, hero_tags_en, hero_cta_primary_ro, hero_cta_primary_en, hero_cta_secondary_ro, hero_cta_secondary_en")
-          .single() as any);
+          .single as any);
         if (cancelled || error || !data) return;
         setHeroSettings({
           videoUrl: data.hero_video_url || "/hero-video.mp4",
@@ -86,14 +86,14 @@ const Hero = () => {
       }
     };
 
-    const trigger = () => {
+    const trigger =  => {
       events.forEach(e => document.removeEventListener(e, trigger as EventListener));
-      window.requestIdleCallback?.(() => load()) ?? window.setTimeout(load, 1);
+      window.requestIdleCallback?.(=> load) ?? window.setTimeout(load, 1);
     };
 
     events.forEach(e => document.addEventListener(e, trigger as EventListener, { once: true, passive: true }));
 
-    return () => {
+    return  => {
       cancelled = true;
       events.forEach(e => document.removeEventListener(e, trigger as EventListener));
     };
@@ -102,7 +102,7 @@ const Hero = () => {
   // No skeleton delay — React Hero renders directly as LCP element
 
   // Check connection speed
-  useEffect(() => {
+  useEffect(=> {
     const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
     if (connection) {
       const slowTypes = ['slow-2g', '2g', '3g'];
@@ -158,9 +158,9 @@ const Hero = () => {
             disablePictureInPicture
             disableRemotePlayback
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onError={() => setVideoError(true)}
-            onLoadedData={() => setVideoLoaded(true)}
-            onAbort={() => setVideoError(true)}
+            onError={ => setVideoError(true)}
+            onLoadedData={ => setVideoLoaded(true)}
+            onAbort={ => setVideoError(true)}
           >
             <source src={heroSettings.videoUrl} type="video/mp4" />
           </video>
@@ -206,7 +206,7 @@ const Hero = () => {
         <div className="absolute bottom-44 right-6 lg:right-12 z-20 flex flex-col gap-3">
           <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-primary/50 shadow-lg">
             <span className="text-primary font-bold text-xl">{language === 'ro' ? 'Randament net 9,4%' : '9.4% net yield'}</span>
-            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Ipoteze transparente: ocupare 75%, deducere 27%' : 'Transparent assumptions: 75% occupancy, 27% costs'}</span>
+            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Ipoteze transparente: ocupare 75%, 27% costs'}</span>
           </div>
           <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
             <span className="font-bold text-foreground text-lg">{language === 'ro' ? 'Tu încasezi, noi operăm' : 'You earn, we operate'}</span>
@@ -219,7 +219,7 @@ const Hero = () => {
       {!isMobile && (
         <button 
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer bg-transparent border-0 min-w-[48px] min-h-[48px] p-2"
-          onClick={() => {
+          onClick={ => {
             const nextSection = document.getElementById('calculator') || document.getElementById('benefits');
             nextSection?.scrollIntoView({ behavior: 'smooth' });
           }}
@@ -271,9 +271,9 @@ const HeroContent = ({
   isMobile: boolean;
   language: string;
 }) => {
-  const trackManagement = () => fireHeroAnalyticsEvent("lead_administrare", { page_path: "/" });
+  const trackManagement =  => fireHeroAnalyticsEvent("lead_administrare", { page_path: "/" });
 
-  const trackInvestment = () =>
+  const trackInvestment =  =>
     fireHeroAnalyticsEvent("interes_imobiliar", {
       interes_imobil: "investitie",
       buget_client: "estimat",
@@ -295,13 +295,13 @@ const HeroContent = ({
           variant="hero" 
           size="xl" 
           className="relative animate-glow-pulse btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3"
-          onClick={() => { trackManagement(); window.dispatchEvent(new Event("force-show-calculator")); }}
+          onClick={ => { trackManagement; window.dispatchEvent(new Event("force-show-calculator")); }}
         >
           {ctaPrimary}
         </Button>
          <a
            href="/investitii"
-           onClick={() => trackInvestment()}
+           onClick={ => trackInvestment}
            className="btn-shine w-full sm:w-auto whitespace-normal text-center leading-snug min-h-[56px] h-auto py-3 px-10 text-base rounded-xl inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 bg-foreground text-background border border-foreground"
          >
            {ctaSecondary}

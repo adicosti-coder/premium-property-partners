@@ -40,7 +40,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Este regimul hotelier o sursă reală de venit pasiv?",
-          a: "Da. RealTrust preia integral operarea — listare și prețuri dinamice, comunicarea cu oaspeții, check-in/check-out, curățenie, lenjerie, mentenanță și declarațiile lunare. Proprietarul primește încasările nete și un raport lunar transparent, fără implicare zilnică. Randamentul net mediu este de 9,4% pe an, la o ocupare estimată de 75% și o deducere operațională de 27%.",
+          a: "Da. RealTrust preia integral operarea — listare și prețuri dinamice, comunicarea cu oaspeții, check-in/check-out, curățenie, lenjerie, mentenanță și declarațiile lunare. Proprietarul primește încasările nete și un raport lunar transparent, fără implicare zilnică. Randamentul net mediu este de 9,4% pe an, la o ocupare estimată de 75%.",
         },
         {
           q: "Cum se calculează comisionul de administrare RealTrust?",
@@ -91,7 +91,7 @@ export const OWNERS_FAQ_DATA = {
         },
         {
           q: "Is short-term rental management really passive income?",
-          a: "Yes. RealTrust handles the entire operation — listings and dynamic pricing, guest communication, check-in/check-out, cleaning, linens, maintenance and monthly tax filings. Owners receive net payouts and a transparent monthly report with no daily involvement. The average net yield is 9.4% per year, at an estimated 75% occupancy and a 27% operating deduction.",
+          a: "Yes. RealTrust handles the entire operation — listings and dynamic pricing, guest communication, check-in/check-out, cleaning, linens, maintenance and monthly tax filings. Owners receive net payouts and a transparent monthly report with no daily involvement. The average net yield is 9.4% per year, at an estimated 75% occupancy.",
         },
         {
           q: "How is the RealTrust management fee calculated?",

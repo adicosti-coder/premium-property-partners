@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
 
   const ip =
     req.headers.get("cf-connecting-ip") ||
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim ||
     "unknown";
 
   const limit = checkRateLimit(`send-analysis-email:${ip}`, {
@@ -50,14 +50,14 @@ Deno.serve(async (req) => {
 
   let payload: { token?: string; email?: string; name?: string };
   try {
-    payload = await req.json();
+    payload = await req.json;
   } catch {
     return json({ error: "invalid_body" }, 400);
   }
 
-  const token = typeof payload.token === "string" ? payload.token.trim() : "";
-  const email = typeof payload.email === "string" ? payload.email.trim().slice(0, 160) : "";
-  const name = typeof payload.name === "string" ? payload.name.trim().slice(0, 80) : "";
+  const token = typeof payload.token === "string" ? payload.token.trim : "";
+  const email = typeof payload.email === "string" ? payload.email.trim.slice(0, 160) : "";
+  const name = typeof payload.name === "string" ? payload.name.trim.slice(0, 80) : "";
 
   if (!/^[a-f0-9]{16,64}$/i.test(token)) return json({ error: "invalid_token" }, 400);
   if (!EMAIL_RE.test(email)) return json({ error: "invalid_email", message: "Adresa de e-mail nu este validă." }, 400);
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     .from("property_analyses")
     .select("share_token, analysis, zone, source_url, expires_at, email_sent_at")
     .eq("share_token", token)
-    .gt("expires_at", new Date().toISOString())
+    .gt("expires_at", new Date.toISOString)
     .limit(1);
 
   if (error) return json({ error: "db_error" }, 500);
@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
 
   await admin
     .from("property_analyses")
-    .update({ recipient_email: email, email_sent_at: result.sent ? new Date().toISOString() : null })
+    .update({ recipient_email: email, email_sent_at: result.sent ? new Date.toISOString : null })
     .eq("share_token", token);
 
   if (!result.sent) {

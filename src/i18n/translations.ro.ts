@@ -21,7 +21,7 @@ export const ro = {
     title: "RealTrust Timișoara —",
     titleMid: "Imobiliare, Investiții",
     titleHighlight: "și Property Management",
-    subtitle: "Vânzări, cumpărări, închirieri pe termen lung și administrare apartamente în regim hotelier.\nSoluții complete pentru proprietari și investitori imobiliari.\nRandament net 9,4% — ocupare 75%, deducere 27%.",
+    subtitle: "Vânzări, cumpărări, închirieri pe termen lung și administrare apartamente în regim hotelier.\nSoluții complete pentru proprietari și investitori imobiliari.\nRandament net 9,4% — ocupare 75%.",
     cta: "Vezi cât produce apartamentul tău",
     ctaSecondary: "Vezi oportunitățile de investiție",
     ctaGuests: "Pentru oaspeți",
@@ -70,7 +70,7 @@ export const ro = {
     items: [
       {
         title: "Venit net pe care îl poți verifica",
-        description: "• 9,4% net, cu ipotezele afișate public\n• Ocupare 75%, deducere 27% — fără cifre umflate\n• Pricing ajustat săptămânal la cererea reală",
+        description: "• 9,4% net, cu ipotezele afișate public\n• Ocupare 75%",
       },
       {
         title: "Tu nu faci nimic. Chiar nimic.",
@@ -93,7 +93,7 @@ export const ro = {
     commissionValue: "15-25%",
     commissionSuffix: "din încasările nete — fără taxe ascunse, fără costuri surpriză",
     items: [
-      { title: "9,4% net, cu ipotezele pe masă", description: "• Ocupare 75%, deducere 27%\n• Pricing dinamic săptămânal\n• Ajustare sezonieră a tarifelor" },
+      { title: "9,4% net, cu ipotezele pe masă", description: "• Ocupare 75%" },
       { title: "Zero muncă operațională pentru tine", description: "• Comunicarea cu oaspeții — la noi\n• Coordonarea echipelor — la noi\n• Tu primești doar raportul" },
       { title: "Transparență totală pe bani", description: "• Dashboard deschis oricând\n• RevPAR, ADR, ocupare\n• P&L lunar, linie cu linie" },
       { title: "Standard hotelier, nu improvizație", description: "• Echipă proprie, dedicată\n• Curățenie verificată după fiecare plecare\n• Mentenanță preventivă inclusă" },
@@ -260,7 +260,7 @@ export const ro = {
       // Profit & ROI
       { 
         question: "Ce randament pot estima realist din apartamentul meu în Timișoara?", 
-        answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, Cross Square House, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
+        answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, Cross Square House, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
       },
       // Transparență calcul randament
       {

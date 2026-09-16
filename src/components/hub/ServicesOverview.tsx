@@ -10,8 +10,8 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
-const ServicesOverview = () => {
-  const { language } = useLanguage();
+const ServicesOverview =  => {
+  const { language } = useLanguage;
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
 
@@ -25,7 +25,7 @@ const ServicesOverview = () => {
         {
           icon: Building2,
           title: "Administrare regim hotelier",
-          description: "Listare, check-in, curățenie, întreținere și raportare lunară. Randament net țintă 9,4%, calculat la ocupare 75% și 27% costuri/taxe.",
+          description: "Listare, check-in, curățenie, întreținere și raportare lunară. Randament net țintă 9,4%, calculat la ocupare 75%.",
           link: "#calculator",
           cta: "Estimează venitul",
           color: "from-amber-500/20 to-amber-600/10",
@@ -185,7 +185,7 @@ const ServicesOverview = () => {
             ) : (
               <button
                 key={index}
-                onClick={() => handleClick(service.link)}
+                onClick={ => handleClick(service.link)}
                 className="block h-full text-left w-full"
               >
                 {CardContent}

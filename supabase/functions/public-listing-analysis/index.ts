@@ -34,7 +34,7 @@ function isAllowedListingUrl(raw: string): { ok: boolean; parsed?: URL } {
     return { ok: false };
   }
   if (parsed.protocol !== "https:") return { ok: false };
-  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  const host = parsed.hostname.toLowerCase.replace(/^www\./, "");
   if (!ALLOWED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) return { ok: false };
   return { ok: true, parsed };
 }
@@ -49,7 +49,7 @@ function htmlToText(html: string): string {
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/\s+/g, " ")
-    .trim();
+    .trim;
 }
 
 async function fetchListingText(url: string): Promise<string> {
@@ -65,11 +65,11 @@ async function fetchListingText(url: string): Promise<string> {
         customWait: "3000",
         timeout: "45000",
       });
-      const res = await fetch(`https://api.scrape.do/?${params.toString()}`, {
+      const res = await fetch(`https://api.scrape.do/?${params.toString}`, {
         signal: AbortSignal.timeout(50000),
       });
       if (res.ok) {
-        const html = await res.text();
+        const html = await res.text;
         const text = htmlToText(html);
         if (text.length > 400) return text;
       }
@@ -88,7 +88,7 @@ async function fetchListingText(url: string): Promise<string> {
     signal: AbortSignal.timeout(20000),
   });
   if (!res.ok) throw new Error(`fetch_failed_${res.status}`);
-  return htmlToText(await res.text());
+  return htmlToText(await res.text);
 }
 
 const SYSTEM_PROMPT = `Ești consultant senior RealTrust Timișoara, specializat în administrare de apartamente în REGIM HOTELIER (short-stay) în Timișoara, județul Timiș.
@@ -127,7 +127,7 @@ Răspunde EXCLUSIV cu JSON valid, în limba română, cu această structură exa
 Valorile numerice sunt în RON pentru tarif/venit și în moneda listării pentru preț. Dacă un câmp nu poate fi determinat, folosește null.`;
 
 function parseJsonLoose(raw: string) {
-  const cleaned = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+  const cleaned = raw.replace(/```json/gi, "").replace(/```/g, "").trim;
   try {
     return JSON.parse(cleaned);
   } catch {
@@ -148,7 +148,7 @@ const SB_URL = Deno.env.get("SUPABASE_URL") || "";
 const SB_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 async function hashInput(parts: string[]): Promise<string> {
-  const buf = new TextEncoder().encode(parts.join("|"));
+  const buf = new TextEncoder.encode(parts.join("|"));
   const digest = await crypto.subtle.digest("SHA-256", buf);
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -163,10 +163,10 @@ async function cacheGet(hash: string): Promise<Record<string, unknown> | null> {
       { headers: { apikey: SB_SERVICE_KEY, Authorization: `Bearer ${SB_SERVICE_KEY}` } },
     );
     if (!res.ok) return null;
-    const rows = await res.json();
+    const rows = await res.json;
     const row = Array.isArray(rows) ? rows[0] : null;
     if (!row?.rewritten_full) return null;
-    if (row.updated_at && Date.now() - new Date(row.updated_at).getTime() > CACHE_TTL_MS) return null;
+    if (row.updated_at && Date.now - new Date(row.updated_at).getTime > CACHE_TTL_MS) return null;
     return JSON.parse(row.rewritten_full);
   } catch {
     return null;
@@ -197,7 +197,7 @@ async function cacheSet(hash: string, analysis: unknown, model: string | null) {
         language: "ro",
         rewritten_title: model || "ai",
         rewritten_full: JSON.stringify(analysis),
-        updated_at: new Date().toISOString(),
+        updated_at: new Date.toISOString,
       }),
     });
   } catch (e) {
@@ -229,7 +229,7 @@ async function saveAnalysis(input: {
         { headers },
       );
       if (existing.ok) {
-        const rows = await existing.json();
+        const rows = await existing.json;
         const token = Array.isArray(rows) ? rows[0]?.share_token : null;
         if (token) return token as string;
       }
@@ -256,7 +256,7 @@ async function saveAnalysis(input: {
       console.warn("analysis history insert failed", res.status);
       return null;
     }
-    const rows = await res.json();
+    const rows = await res.json;
     return (Array.isArray(rows) ? rows[0]?.share_token : null) ?? null;
   } catch (e) {
     console.warn("analysis history failed", (e as Error).message);
@@ -271,7 +271,7 @@ Deno.serve(async (req) => {
 
   const ip =
     req.headers.get("cf-connecting-ip") ||
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim ||
     "unknown";
 
   const limit = checkRateLimit(`public-listing-analysis:${ip}`, {
@@ -290,7 +290,7 @@ Deno.serve(async (req) => {
 
   let payload: { mode?: string; url?: string; images?: unknown; context?: string };
   try {
-    payload = await req.json();
+    payload = await req.json;
   } catch {
     return json({ error: "invalid_body" }, 400);
   }
@@ -304,7 +304,7 @@ Deno.serve(async (req) => {
   let photoCount = 0;
 
   if (mode === "url") {
-    const rawUrl = typeof payload.url === "string" ? payload.url.trim() : "";
+    const rawUrl = typeof payload.url === "string" ? payload.url.trim : "";
     const guard = isAllowedListingUrl(rawUrl);
     if (!guard.ok) {
       return json(
@@ -316,7 +316,7 @@ Deno.serve(async (req) => {
         400,
       );
     }
-    sourceUrl = guard.parsed!.toString();
+    sourceUrl = guard.parsed!.toString;
 
     cacheKey = await hashInput(["url", sourceUrl, context]);
     const cached = await cacheGet(cacheKey);
@@ -425,12 +425,12 @@ Deno.serve(async (req) => {
 
       lastStatus = aiRes.status;
       if (!aiRes.ok) {
-        console.warn("ai model failed", model, aiRes.status, (await aiRes.text()).slice(0, 300));
+        console.warn("ai model failed", model, aiRes.status, (await aiRes.text).slice(0, 300));
         continue;
       }
 
-      const data = await aiRes.json();
-      const raw = data.choices?.[0]?.message?.content?.trim() || "";
+      const data = await aiRes.json;
+      const raw = data.choices?.[0]?.message?.content?.trim || "";
       const candidate = parseJsonLoose(raw);
       if (candidate) {
         parsed = candidate;

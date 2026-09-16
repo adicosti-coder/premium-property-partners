@@ -34,14 +34,14 @@ const fmt = (n: number | null | undefined, suffix = "") =>
     ? `${Math.round(n).toLocaleString("ro-RO")}${suffix}`
     : "—";
 
-const AnalizaPartajata = () => {
-  const { token } = useParams<{ token: string }>();
+const AnalizaPartajata =  => {
+  const { token } = useParams<{ token: string }>;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SharedAnalysis | null>(null);
 
-  useEffect(() => {
+  useEffect(=> {
     let active = true;
-    const load = async () => {
+    const load = async  => {
       if (!token) {
         setLoading(false);
         return;
@@ -63,13 +63,13 @@ const AnalizaPartajata = () => {
       }
       setLoading(false);
     };
-    load();
-    return () => {
+    load;
+    return  => {
       active = false;
     };
   }, [token]);
 
-  const downloadPdf = async () => {
+  const downloadPdf = async  => {
     if (!data) return;
     try {
       const { downloadAnalysisPdf } = await import("@/lib/analysisPdf");
@@ -88,7 +88,7 @@ const AnalizaPartajata = () => {
     }
   };
 
-  const copyLink = async () => {
+  const copyLink = async  => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       toast.success("Link copiat.");
@@ -283,7 +283,7 @@ const AnalizaPartajata = () => {
         <Button
           asChild
           className="w-full min-h-12"
-          onClick={() =>
+          onClick={ =>
             trackConversion({ event: "schedule_call", source: "analiza_partajata_consultanta" })
           }
         >

@@ -15,10 +15,10 @@ const corsHeaders = {
 /** Simple in-memory rate limit: 10 requests / minute / IP. */
 const RATE_MAX = 10;
 const RATE_WINDOW = 60_000;
-const buckets = new Map<string, { count: number; resetAt: number }>();
+const buckets = new Map<string, { count: number; resetAt: number }>;
 
 function rateLimited(ip: string): boolean {
-  const now = Date.now();
+  const now = Date.now;
   const b = buckets.get(ip);
   if (!b || b.resetAt < now) {
     buckets.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
@@ -36,7 +36,7 @@ function esc(v: unknown): string {
 }
 
 function str(v: unknown, max: number): string {
-  return typeof v === "string" ? v.trim().slice(0, max) : "";
+  return typeof v === "string" ? v.trim.slice(0, max) : "";
 }
 
 function num(v: unknown, max: number): number {
@@ -48,7 +48,7 @@ function num(v: unknown, max: number): number {
 const isEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) && e.length <= 255;
 const ro = (n: number) => n.toLocaleString("ro-RO");
 
-const adminClient = () => {
+const adminClient =  => {
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) return null;
@@ -56,7 +56,7 @@ const adminClient = () => {
 };
 
 async function sendEmail(to: string, subject: string, html: string, source: string) {
-  return await sendTeamEmail({ to, subject, html, source }, adminClient());
+  return await sendTeamEmail({ to, subject, html, source }, adminClient);
 }
 
 
@@ -84,7 +84,7 @@ serve(async (req) => {
   }
 
   const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim ||
     req.headers.get("cf-connecting-ip") ||
     "unknown";
   if (rateLimited(ip)) {
@@ -100,11 +100,11 @@ serve(async (req) => {
 
 
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json.catch(=> ({}));
 
     const name = str(body.name, 120);
     const email = str(body.email, 255);
-    const phone = str(body.phone, 30).replace(/[^\d+\s()-]/g, "");
+    const phone = str(body.phone, 30).replace(/[^\d+\s-]/g, "");
     const propertyValue = num(body.propertyValue, 10_000_000);
     const surface = num(body.surface, 10_000);
     const managementTier = num(body.managementTier, 100);
@@ -132,7 +132,7 @@ serve(async (req) => {
         <tr><td style="padding:0;color:#4a5568">≈ pe lună</td><td style="padding:0;text-align:right;font-weight:700">${ro(targetNetMonthly)} €</td></tr>
       </table>
       <p style="font-size:12px;color:#718096;margin-top:12px">
-        Ipoteze afișate transparent: randament net de referință 9,4%/an, grad de ocupare 75%, deducere 27% (management, costuri operaționale și taxe).
+        Ipoteze afișate transparent: randament net de referință 9,4%/an, grad de ocupare 75%, costuri operaționale și taxe).
         Estimarea este orientativă și se confirmă după evaluarea concretă a apartamentului.
       </p>`;
 

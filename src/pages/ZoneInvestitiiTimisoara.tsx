@@ -12,7 +12,7 @@ import DataProvenance from "@/components/seo/DataProvenance";
 import { CLUSTER_LINKS } from "@/lib/internalLinking";
 import { neighborhoods } from "@/data/neighborhoods";
 
-const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
 
 const BASE_URL = "https://realtrust.ro";
 const URL = `${BASE_URL}/zone-investitii-timisoara`;
@@ -219,7 +219,7 @@ const priceOf = (slug?: string) => {
   return neighborhoods.find((n) => n.slug === slug)?.avgPricePerSqm;
 };
 
-const ZoneInvestitiiTimisoara = () => {
+const ZoneInvestitiiTimisoara =  => {
   // NOTE: FAQPage structured data for this page is emitted by the central
   // FAQSchemaProvider from the visible <GeoAnswers group="zone" /> block below.
   // Do not add an inline FAQPage here — it would duplicate the schema.
@@ -282,7 +282,7 @@ const ZoneInvestitiiTimisoara = () => {
               le intermediem. Nu sunt statistici publicate și se pot schimba odată cu piața. Zonele
               Centru/Cetate și Fabric nu au încă un indice de preț propriu, așa că am lăsat coloana
               necompletată în loc să estimăm. Randamentele folosite în simulări pornesc de la
-              ipotezele publice: ocupare 75%, deducere operațională 27%, randament net de referință
+              ipotezele publice: ocupare 75%, randament net de referință
               9,4%.
             </p>
           </aside>
@@ -372,7 +372,7 @@ const ZoneInvestitiiTimisoara = () => {
               pasiv cu implicare minimă și risc mic, ne uităm la zonele cu cerere stabilă de chirie
               clasică. Dacă obiectivul este randament net cât mai aproape de pragul nostru de
               referință de 9,4%, ne uităm la zonele unde tariful pe noapte susține ipoteza de ocupare
-              de 75% după deducerea operațională de 27%.
+              de 75%.
             </p>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
               Pasul următor este întotdeauna o verificare pe o adresă concretă: aceeași zonă poate
@@ -398,7 +398,7 @@ const ZoneInvestitiiTimisoara = () => {
             ]}
             assumptions={[
               "Coloanele calitative (chirie, potențial de regim hotelier, cerere, lichiditate, risc) sunt evaluări interne RealTrust, marcate ca estimări.",
-              "Ocupare 75%, deducere operațională 27%, randament net de referință 9,4% pe an.",
+              "Ocupare 75%, randament net de referință 9,4% pe an.",
               "Zonele fără indice de preț propriu (Centru/Cetate, Fabric, Torontalului, Moșnița Nouă) rămân necompletate, în loc să fie estimate.",
             ]}
             calculations={[

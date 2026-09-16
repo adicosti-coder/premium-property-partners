@@ -43,9 +43,9 @@ import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { Download, HelpCircle } from "lucide-react";
 import { storageImage, storageImageSrcSet } from "@/utils/supabaseImage";
 
-const ROICaseStudy = lazy(() => import("@/components/ROICaseStudy"));
-const InvestmentEngineV34 = lazy(() => import("@/components/InvestmentEngineV34"));
-const InvestmentYieldCalculator = lazy(() => import("@/components/InvestmentYieldCalculator"));
+const ROICaseStudy = lazy(=> import("@/components/ROICaseStudy"));
+const InvestmentEngineV34 = lazy(=> import("@/components/InvestmentEngineV34"));
+const InvestmentYieldCalculator = lazy(=> import("@/components/InvestmentYieldCalculator"));
 
 interface PropertyImage {
   image_path: string;
@@ -69,9 +69,9 @@ interface InvestmentProperty {
   property_images: PropertyImage[];
 }
 
-const Investitii = () => {
-  const { language } = useLanguage();
-  const navigate = useNavigate();
+const Investitii =  => {
+  const { language } = useLanguage;
+  const navigate = useNavigate;
   const [analysisModal, setAnalysisModal] = useState<{ open: boolean; propertyId: string; propertyName: string }>({
     open: false,
     propertyId: "",
@@ -80,7 +80,7 @@ const Investitii = () => {
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ["investment-properties"],
-    queryFn: async () => {
+    queryFn: async  => {
       const { data, error } = await supabase
         .from("properties")
         .select("id, slug, name, location, roi_percentage, estimated_revenue, capital_necesar, image_path, tag, description_ro, description_en, property_code, property_images(image_path, is_primary, display_order)")
@@ -153,7 +153,7 @@ const Investitii = () => {
   const faqItems = language === "ro" ? [
     {
       question: "Care este randamentul mediu pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru regim hotelier administrat de noi, randamentul net țintă este de 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, deducere 27% pentru management, costuri și taxe). În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
+      answer: "Pentru regim hotelier administrat de noi, randamentul net țintă este de 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, costuri și taxe). În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
     },
     {
       question: "Care sunt zonele cu cel mai bun potențial pentru investiții?",
@@ -178,7 +178,7 @@ const Investitii = () => {
   ] : [
     {
       question: "What is the average yield for a real estate investment in Timișoara?",
-      answer: "For hotel-style management by our team, the target net yield is 9.4% per year, calculated on public assumptions (75% occupancy, 27% deduction for management, costs and taxes). Classic long-term rentals in Timișoara typically yield 4-5% net.",
+      answer: "For hotel-style management by our team, the target net yield is 9.4% per year, calculated on public assumptions (75% occupancy, costs and taxes). Classic long-term rentals in Timișoara typically yield 4-5% net.",
     },
     {
       question: "What are the best areas for real estate investment in Timișoara?",
@@ -239,8 +239,8 @@ const Investitii = () => {
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net țintă de 9,4% calculat pe ipoteze publice (ocupare 75%, deducere 27%). Due diligence complet, administrare profesională inclusă, raportare lunară."
-          summaryEn="Real estate investment opportunities in Timișoara with a 9.4% target net yield calculated on public assumptions (75% occupancy, 27% deduction). Full due diligence, professional management included, monthly reporting."
+          summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net țintă de 9,4% calculat pe ipoteze publice (ocupare 75%). Due diligence complet, administrare profesională inclusă, raportare lunară."
+          summaryEn="Real estate investment opportunities in Timișoara with a 9.4% target net yield calculated on public assumptions (75% occupancy). Full due diligence, professional management included, monthly reporting."
         />
       </div>
       
@@ -287,7 +287,7 @@ const Investitii = () => {
               <Button 
                 variant="hero" 
                 size="lg"
-                onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(language === "ro" ? "Bună ziua, sunt interesat de o oportunitate de investiție." : "Hello, I'm interested in an investment opportunity.")}`, '_blank', 'noopener,noreferrer')}
+                onClick={ => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(language === "ro" ? "Bună ziua, sunt interesat de o oportunitate de investiție." : "Hello, I'm interested in an investment opportunity.")}`, '_blank', 'noopener,noreferrer')}
                 className="group"
               >
                 <Phone className="w-5 h-5 mr-2" />
@@ -379,19 +379,19 @@ const Investitii = () => {
                   <div
                     key={property.id}
                     className="group bg-slate-900 rounded-2xl sm:rounded-3xl border border-amber-500/20 hover:border-amber-400/50 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/10 overflow-hidden cursor-pointer"
-                    onClick={() => navigate(propertyPath)}
+                    onClick={ => navigate(propertyPath)}
                     role="link"
                     tabIndex={0}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
+                        e.preventDefault;
                         navigate(propertyPath);
                       }
                     }}
                   >
                     {/* Image with ROI Overlay */}
                     <div className="relative h-56 overflow-hidden">
-                      {(() => {
+                      {(=> {
                         const imgPath = property.image_path ||
                           (property.property_images?.find(i => i.is_primary)?.image_path) ||
                           (property.property_images?.[0]?.image_path);
@@ -416,7 +416,7 @@ const Investitii = () => {
                             <Building2 className="w-16 h-16 text-slate-600" />
                           </div>
                         );
-                      })()}
+                      })}
                       {/* Dark gradient overlay bottom */}
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
 
@@ -450,7 +450,7 @@ const Investitii = () => {
                             .replace(/[,|·\-–—]\s*(Randament|Yield|ROI)\s*\+?\d+[\.,]?\d*%?\s*(Net)?\s*/gi, '')
                             .replace(/\s*(Randament|Yield|ROI)\s*\+?\d+[\.,]?\d*%?\s*(Net)?\s*/gi, '')
                             .replace(/\s*[|·\-–—]\s*$/, '')
-                            .trim()}
+                            .trim}
                         </h3>
                         <div className="flex items-center gap-1 text-sm text-slate-300 mt-1">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
@@ -516,7 +516,7 @@ const Investitii = () => {
                           size="sm"
                           className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-xs"
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.stopPropagation;
                             navigate(propertyPath);
                           }}
                         >
@@ -527,7 +527,7 @@ const Investitii = () => {
                           size="sm"
                           className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold text-xs"
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.stopPropagation;
                             setAnalysisModal({
                               open: true,
                               propertyId: property.id,
@@ -551,7 +551,7 @@ const Investitii = () => {
               <p className="text-muted-foreground mb-6">{t.noPropertiesDesc}</p>
               <Button 
                 variant="hero"
-                onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să fiu notificat despre noi oportunități de investiție." : "Hello, I want to be notified about new investment opportunities.")}`, '_blank', 'noopener,noreferrer')}
+                onClick={ => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să fiu notificat despre noi oportunități de investiție." : "Hello, I want to be notified about new investment opportunities.")}`, '_blank', 'noopener,noreferrer')}
               >
                 <Phone className="w-5 h-5 mr-2" />
                 {t.ctaContact}
@@ -680,7 +680,7 @@ const Investitii = () => {
               variant="hero"
               size="lg"
               className="group px-8"
-              onClick={() => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să discutăm despre o oportunitate de investiție imobiliară în Timișoara." : "Hello, I'd like to discuss a real estate investment opportunity in Timișoara.")}`, '_blank', 'noopener,noreferrer')}
+              onClick={ => window.open(`https://wa.me/40799069256?text=${encodeURIComponent(language === "ro" ? "Bună ziua, vreau să discutăm despre o oportunitate de investiție imobiliară în Timișoara." : "Hello, I'd like to discuss a real estate investment opportunity in Timișoara.")}`, '_blank', 'noopener,noreferrer')}
             >
               <Phone className="w-5 h-5 mr-2" />
               {language === "ro" ? "Discută pe WhatsApp" : "Chat on WhatsApp"}

@@ -11,9 +11,9 @@ import { Link } from "react-router-dom";
 import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle } from "lucide-react";
 import { lazy, Suspense } from "react";
 
-const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
 
-const CalculatorROI = () => {
+const CalculatorROI =  => {
   const breadcrumbItems = [
     { label: "Acasă", href: "/" },
     { label: "Calculator ROI" },
@@ -34,7 +34,7 @@ const CalculatorROI = () => {
   const faqItems = [
     {
       question: "Ce randament (ROI) este considerat bun pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru chirie clasică în Timișoara, un ROI net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, ținta este 9,4% net, calculat pe ipoteze publice (ocupare 75%, deducere 27% pentru management, costuri și taxe).",
+      answer: "Pentru chirie clasică în Timișoara, un ROI net de 6-8% este considerat solid. În regim hotelier administrat de RealTrust, ținta este 9,4% net, calculat pe ipoteze publice (ocupare 75%, costuri și taxe).",
     },
     {
       question: "Cum afectează impozitul pe proprietate ROI-ul?",
@@ -90,7 +90,7 @@ const CalculatorROI = () => {
               Calculator ROI imobiliare Timișoara: regim hotelier vs. chirie clasică
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Estimează în câteva secunde ce poate produce apartamentul tău: <strong>venit lunar, cash flow și perioada de amortizare</strong>, calculate pe date din piața Timișoara și pe ipoteze publice (ocupare 75%, deducere 27%).
+              Estimează în câteva secunde ce poate produce apartamentul tău: <strong>venit lunar, cash flow și perioada de amortizare</strong>, calculate pe date din piața Timișoara și pe ipoteze publice (ocupare 75%).
             </p>
           </div>
 

@@ -9,9 +9,9 @@ import { getSessionStorage, setSessionStorage, isBrowser } from "@/utils/browser
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 
-const ExitIntentPopup = () => {
-  const { language } = useLanguage();
-  const location = useLocation();
+const ExitIntentPopup =  => {
+  const { language } = useLanguage;
+  const location = useLocation;
   const [isVisible, setIsVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +29,7 @@ const ExitIntentPopup = () => {
       guestBadge: "Beneficiu rezervare directă",
       ownerTitle: "Ghid pentru proprietari",
       ownerSubtitle: "Cum estimăm randamentul net de 9,4%",
-      ownerDescription: "Primești pe email metodologia noastră: ipoteze de ocupare 75%, deducere 27% costuri și taxe, plus exemple reale din portofoliu.",
+      ownerDescription: "Primești pe email metodologia noastră: ipoteze de ocupare 75%, plus exemple reale din portofoliu.",
       ownerBadge: "Ghid proprietari 2026",
       buyerTitle: "Catalog de investiții",
       buyerSubtitle: "Apartamente analizate pentru regim hotelier",
@@ -54,7 +54,7 @@ const ExitIntentPopup = () => {
       guestBadge: "Direct booking benefit",
       ownerTitle: "Owners' guide",
       ownerSubtitle: "How we estimate the 9.4% net yield",
-      ownerDescription: "We'll email you our methodology: 75% occupancy assumption, 27% costs and taxes deduction, plus real examples from our portfolio.",
+      ownerDescription: "We'll email you our methodology: 75% occupancy assumption, plus real examples from our portfolio.",
       ownerBadge: "Owners guide 2026",
       buyerTitle: "Investment catalog",
       buyerSubtitle: "Apartments analysed for short-term rental",
@@ -81,7 +81,7 @@ const ExitIntentPopup = () => {
   const badge = isBuyerPath ? text.buyerBadge : isOwnerPath ? text.ownerBadge : text.guestBadge;
 
   const handleMouseLeave = useCallback((e: MouseEvent) => {
-    if (!isBrowser()) return;
+    if (!isBrowser) return;
     if (e.clientY <= 5 && !hasShown) {
       const dismissed = getSessionStorage("exitPopupDismissed");
       if (!dismissed) {
@@ -92,8 +92,8 @@ const ExitIntentPopup = () => {
   }, [hasShown]);
 
   // Listen for FAB menu trigger instead of auto exit-intent
-  useEffect(() => {
-    const handleOpen = () => {
+  useEffect(=> {
+    const handleOpen =  => {
       const dismissed = getSessionStorage("exitPopupDismissed");
       if (!dismissed && !hasShown) {
         setIsVisible(true);
@@ -101,16 +101,16 @@ const ExitIntentPopup = () => {
       }
     };
     window.addEventListener('open-exit-intent', handleOpen);
-    return () => window.removeEventListener('open-exit-intent', handleOpen);
+    return  => window.removeEventListener('open-exit-intent', handleOpen);
   }, [hasShown]);
 
-  const handleClose = () => {
+  const handleClose =  => {
     setIsVisible(false);
     setSessionStorage("exitPopupDismissed", "true");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault;
     if (!email || !email.includes("@")) {
       toast.error(text.invalidEmail);
       return;
@@ -134,7 +134,7 @@ const ExitIntentPopup = () => {
       }
       
       setEmail("");
-      handleClose();
+      handleClose;
     } catch (error) {
       console.error("Error submitting exit popup:", error);
       toast.error(text.errorMessage);

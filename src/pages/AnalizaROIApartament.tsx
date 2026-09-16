@@ -28,8 +28,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 
-const Footer = lazy(() => import("@/components/Footer"));
-const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const Footer = lazy(=> import("@/components/Footer"));
+const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
 
 const marketEvolution = [
   { year: "2021", premium: 1600, central: 1450, metro: 1180 },
@@ -98,7 +98,7 @@ const riskSignals = [
 ];
 
 const faqItems = [
-  { question: "Cum se calculează randamentul unei investiții imobiliare?", answer: "Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției. În analiza RealTrust includem ocuparea, tariful mediu, costurile operaționale și o deducere standard de 27%." },
+  { question: "Cum se calculează randamentul unei investiții imobiliare?", answer: "Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției. În analiza RealTrust includem ocuparea, tariful mediu, costurile operaționale." },
   { question: "Ce înseamnă analiză profit apartament în România?", answer: "Este o estimare completă a profitului lunar și anual pentru un apartament, comparând chiria clasică, regimul hotelier, aprecierea prețului și lichiditatea zonei." },
   { question: "De ce sunt importante complexele rezidențiale în analiza ROI?", answer: "Complexele noi au de obicei cerere mai bună, costuri de mentenanță mai previzibile și poziționare mai ușor de promovat către oaspeți sau chiriași premium." },
   { question: "Pot folosi calculatorul pentru orice oraș din România?", answer: "Da, modelul funcționează pentru orice oraș dacă ajustezi prețul de achiziție, chiria, tariful pe noapte și ocuparea. Pentru Timișoara folosim repere operaționale verificate RealTrust." },
@@ -106,7 +106,7 @@ const faqItems = [
   { question: "Ce documente sunt utile pentru o analiză ROI completă?", answer: "Sunt utile prețul final de achiziție, suprafața, planul apartamentului, costurile de mobilare, istoricul zonei, taxele lunare și obiectivul investitorului: cashflow, apreciere sau revânzare." },
 ];
 
-const AnalizaROIApartament = () => {
+const AnalizaROIApartament =  => {
   const [purchasePrice, setPurchasePrice] = useState(125000);
   const [monthlyRent, setMonthlyRent] = useState(620);
   const [nightlyRate, setNightlyRate] = useState(72);
@@ -115,7 +115,7 @@ const AnalizaROIApartament = () => {
 
   useRegisterFAQs("analiza-roi-apartament", faqItems);
 
-  const calculations = useMemo(() => {
+  const calculations = useMemo(=> {
     const classicAnnual = monthlyRent * 12;
     const hotelGross = nightlyRate * 365 * (occupancy / 100);
     const hotelNet = hotelGross * 0.73;

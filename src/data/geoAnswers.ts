@@ -7,7 +7,7 @@
  *
  *  1. it answers the question in the FIRST sentence (extractable as a snippet);
  *  2. it contains no invented figures — only the published RealTrust
- *     assumptions (75% occupancy, 27% operational deduction, 9.4% net
+ *     assumptions (75% occupancy, 9.4% net
  *     reference yield, management packages 15% / 18% / 20% / 25%, 15 managed
  *     units) or facts stated elsewhere on the site;
  *  3. it points to the page that owns the topic, so the answer is linked back
@@ -128,7 +128,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "investitii",
     question: "Cât este randamentul unei investiții imobiliare în Timișoara?",
     answer:
-      "Randamentul depinde de strategie: chiria clasică pe termen lung produce un venit stabil, dar mai mic, în timp ce regimul hotelier bine operat are ca reper 9,4% net pe an în ipotezele noastre publice (ocupare 75%, deducere operațională 27%). Orice cifră trebuie recalculată pe adresa concretă, pentru că prețul de achiziție și tariful realizabil pe noapte diferă puternic de la o zonă la alta.",
+      "Randamentul depinde de strategie: chiria clasică pe termen lung produce un venit stabil, dar mai mic, în timp ce regimul hotelier bine operat are ca reper 9,4% net pe an în ipotezele noastre publice (ocupare 75%). Orice cifră trebuie recalculată pe adresa concretă, pentru că prețul de achiziție și tariful realizabil pe noapte diferă puternic de la o zonă la alta.",
     source: { href: "/investitii", label: "investiții imobiliare în Timișoara" },
   },
   {

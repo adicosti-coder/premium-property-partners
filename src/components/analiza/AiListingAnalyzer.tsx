@@ -84,8 +84,8 @@ const TYPE_MAP: Record<string, string> = {
 
 function compressImage(base64: string, maxWidth = 900, quality = 0.7): Promise<string> {
   return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
+    const img = new Image;
+    img.onload =  => {
       const scale = Math.min(1, maxWidth / img.width);
       const canvas = document.createElement("canvas");
       canvas.width = Math.round(img.width * scale);
@@ -95,7 +95,7 @@ function compressImage(base64: string, maxWidth = 900, quality = 0.7): Promise<s
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       resolve(canvas.toDataURL("image/jpeg", quality));
     };
-    img.onerror = () => resolve(base64);
+    img.onerror =  => resolve(base64);
     img.src = base64;
   });
 }
@@ -119,20 +119,20 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
   const [result, setResult] = useState<AnalyzerResult | null>(null);
   const [step, setStep] = useState(0);
 
-  useEffect(() => {
+  useEffect(=> {
     if (!loading) return;
     setStep(0);
     const timers = [
-      window.setTimeout(() => setStep(1), 1200),
-      window.setTimeout(() => setStep(2), 5000),
-      window.setTimeout(() => setStep(3), 11000),
+      window.setTimeout(=> setStep(1), 1200),
+      window.setTimeout(=> setStep(2), 5000),
+      window.setTimeout(=> setStep(3), 11000),
     ];
-    return () => timers.forEach(window.clearTimeout);
+    return  => timers.forEach(window.clearTimeout);
   }, [loading]);
 
-  const run = async () => {
+  const run = async  => {
     if (loading) return;
-    if (tab === "url" && !/^https:\/\/.+\..+/.test(url.trim())) {
+    if (tab === "url" && !/^https:\/\/.+\..+/.test(url.trim)) {
       toast.error("Lipește un link complet (https://...) de pe OLX, Storia, Imobiliare.ro, Publi24, Booking sau Airbnb.");
       return;
     }
@@ -144,9 +144,9 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
     setLoading(true);
     setResult(null);
     try {
-      const body: Record<string, unknown> = { mode: tab, context: context.trim() };
+      const body: Record<string, unknown> = { mode: tab, context: context.trim };
       if (tab === "url") {
-        body.url = url.trim();
+        body.url = url.trim;
       } else {
         body.images = await Promise.all(photos.slice(0, 8).map((p) => compressImage(p.dataUrl)));
       }
@@ -155,12 +155,12 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          apikey: getSupabasePublishableKey(),
-          Authorization: `Bearer ${getSupabasePublishableKey()}`,
+          apikey: getSupabasePublishableKey,
+          Authorization: `Bearer ${getSupabasePublishableKey}`,
         },
         body: JSON.stringify(body),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json.catch(=> ({}));
 
       if (!res.ok || !data?.analysis) {
         toast.error(
@@ -191,10 +191,10 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
     }
   };
 
-  const applyToForm = () => {
+  const applyToForm =  => {
     if (!result) return;
     const a = result.analysis;
-    const typeKey = (a.tip_proprietate || "").toLowerCase().trim();
+    const typeKey = (a.tip_proprietate || "").toLowerCase.trim;
     const details = [
       a.titlu ? `Anunț: ${a.titlu}` : null,
       a.zona ? `Zonă estimată: ${a.zona}` : null,
@@ -221,7 +221,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
     ? `${window.location.origin}/analiza/${result.shareToken}`
     : null;
 
-  const downloadPdf = async () => {
+  const downloadPdf = async  => {
     if (!result) return;
     try {
       const { downloadAnalysisPdf } = await import("@/lib/analysisPdf");
@@ -240,7 +240,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
     }
   };
 
-  const shareAnalysis = async () => {
+  const shareAnalysis = async  => {
     if (!shareUrl) {
       toast.error("Linkul de partajare nu este disponibil pentru această analiză.");
       return;
@@ -382,7 +382,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
                   {[
                     { label: "Tarif/noapte", value: fmt(result.analysis.tarif_noapte, " RON") },
                     { label: "ROI estimat", value: result.analysis.roi_estimat || "—" },
-                    { label: "Preț listare", value: `${fmt(result.analysis.pret_listare)} ${result.analysis.moneda || ""}`.trim() },
+                    { label: "Preț listare", value: `${fmt(result.analysis.pret_listare)} ${result.analysis.moneda || ""}`.trim },
                   ].map((m) => (
                     <div key={m.label} className="rounded-lg border border-border p-3">
                       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{m.label}</p>

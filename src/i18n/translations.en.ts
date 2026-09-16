@@ -23,7 +23,7 @@ export const en: Translations = {
     title: "RealTrust Timișoara —",
     titleMid: "Real Estate, Investments",
     titleHighlight: "and Property Management",
-    subtitle: "Sales, purchases, long-term rentals and short-term rental (hotel-regime) apartment management.\nComplete solutions for property owners and real estate investors.\n9.4% net yield — 75% occupancy, 27% deduction.",
+    subtitle: "Sales, purchases, long-term rentals and short-term rental (hotel-regime) apartment management.\nComplete solutions for property owners and real estate investors.\n9.4% net yield — 75% occupancy.",
     cta: "See what your apartment can earn",
     ctaSecondary: "I want a high-performing investment in Timișoara",
     ctaGuests: "For Guests",
@@ -71,7 +71,7 @@ export const en: Translations = {
     items: [
       {
         title: "Net returns calculated transparently",
-        description: "• 9.4% net on public assumptions\n• 75% occupancy, 27% deduction\n• Pricing reviewed weekly",
+        description: "• 9.4% net on public assumptions\n• 75% occupancy",
       },
       {
         title: "Operations handled by our team",
@@ -94,7 +94,7 @@ export const en: Translations = {
     commissionValue: "15-25%",
     commissionSuffix: "of net income, no hidden costs",
     items: [
-      { title: "9.4% net return on transparent assumptions", description: "• 75% occupancy, 27% deduction\n• Weekly dynamic pricing\n• Seasonal adjustment" },
+      { title: "9.4% net return on transparent assumptions", description: "• 75% occupancy" },
       { title: "No operational tasks on your side", description: "• Guest communication — on us\n• Team coordination — on us\n• You only receive the report" },
       { title: "Clear financial reporting", description: "• Dashboard available anytime\n• RevPAR, ADR, occupancy\n• Detailed monthly P&L" },
       { title: "End-to-end hotel-grade operations", description: "• Dedicated team\n• Hotel-grade cleaning\n• Maintenance handled" },
@@ -261,7 +261,7 @@ export const en: Translations = {
       // Profit & ROI
       { 
         question: "What net return can I realistically expect from my apartment in Timișoara?", 
-        answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, Cross Square House, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy, 27% deduction). The exact figure for your property comes after the evaluation." 
+        answer: "Estimates start from current market data: average nightly rate (ADR) around €55 and average occupancy 65%. For apartments managed by us (ATENEO, GREEN FOREST, Cross Square House, HELIOS) in areas near Iulius Mall, Amazonia Aquapark or the Old Town, our target net return is 9.4%, calculated on public assumptions (75% occupancy). The exact figure for your property comes after the evaluation." 
       },
       // Yield transparency
       {

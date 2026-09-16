@@ -10,7 +10,7 @@ import ContextualLinks from "@/components/seo/ContextualLinks";
 import ceoImageAsset from "@/assets/adrian-costi-founder.png.asset.json";
 import { BRAND } from "@/lib/orgIdentity";
 
-const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
 
 const BASE_URL = "https://realtrust.ro";
 const URL = `${BASE_URL}/autor/adrian-costi`;
@@ -26,7 +26,7 @@ const AUTHOR_EMAIL = "adrian@realtrust.ro";
  * No diplomas, certifications, awards or client counts may be added here
  * without written confirmation from Adrian Costi.
  */
-const AutorAdrianCosti = () => {
+const AutorAdrianCosti =  => {
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -177,7 +177,7 @@ const AutorAdrianCosti = () => {
                 },
                 {
                   title: "Analiza randamentului",
-                  body: "Comparație între chirie clasică și regim hotelier, la ocupare 75% și deducere operațională 27%.",
+                  body: "Comparație între chirie clasică și regim hotelier, la ocupare 75%.",
                 },
               ].map((e) => (
                 <li key={e.title} className="rounded-xl border border-border bg-card p-5">
