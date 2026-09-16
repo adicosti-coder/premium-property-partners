@@ -90,7 +90,7 @@ const Complexe = () => {
         { question: "Care este stadiul construcției pentru complexele noi (ATENEO, City of Mara)?", answer: "Stadiul exact al construcției — în construcție, în curs de finalizare sau finalizat — este actualizat pe pagina dedicată fiecărui complex. Verificați pagina complexului pentru termenele de livrare și disponibilitatea unităților." },
         { question: "Aveți apartamente cu grădină în Timișoara?", answer: "Da, în mai multe complexe noi (în special Dumbrăvița, Ghiroda și zona Braytim) sunt disponibile apartamente la parter cu grădină privată — ideale pentru familii sau ca investiție diferențiată în regim hotelier." },
         { question: "Ce zone și cartiere acoperiți?", answer: "Acoperim toate cartierele majore din Timișoara: Centru, Iosefin, Fabric, Mehala, Circumvalațiunii, Complex Studențesc, Soarelui, Girocului, Braytim, Calea Aradului, plus zonele metropolitane Dumbrăvița, Ghiroda, Moșnița Nouă, Chișoda și Giroc." },
-        { question: "Ce randament pot obține printr-un complex rezidențial administrat de RealTrust?", answer: "Randamentul mediu net verificat este de 9.4% anual prin regim hotelier, cu o ocupare medie de 95% în complexele administrate. Calculul include toate costurile (administrare, curățenie, comisioane platforme)." },
+        { question: "Ce randament pot obține printr-un complex rezidențial administrat de RealTrust?", answer: "Randamentul net de referință este de circa 9,4% pe an în regim hotelier — o estimare medie, calculată la o ocupare de aproximativ 75% și după costurile reale de administrare (Property Management RealTrust 15-20% din încasări, curățenie, utilități, taxe). Rezultatul efectiv depinde de apartament și de sezon." },
         { question: "Pot obține credit ipotecar pentru un apartament într-un complex nou?", answer: "Da, oferim consultanță pentru credit ipotecar prin partenerii noștri bancari, cu pre-aprobare în 48h pentru apartamentele din complexele listate." },
       ],
     },
@@ -249,8 +249,8 @@ const Complexe = () => {
       <main className="min-h-screen bg-background">
         <div className="container mx-auto px-6 pt-24">
           <PageSummary
-            summaryRo="Complexe rezidențiale din Timișoara administrate de RealTrust. Apartamente moderne în regim hotelier cu facilități premium, locații centrale și randament verificat."
-            summaryEn="Residential complexes in Timișoara managed by RealTrust. Modern short-term rental apartments with premium amenities, central locations and verified yields."
+            summaryRo="Complexe rezidențiale din Timișoara administrate de RealTrust. Apartamente moderne în regim hotelier cu facilități premium, locații centrale și randament net estimat de circa 9,4% pe an."
+            summaryEn="Residential complexes in Timișoara managed by RealTrust. Modern short-term rental apartments with premium amenities, central locations and an estimated net yield of about 9.4% per year."
           />
         </div>
         {/* Hero Section */}
