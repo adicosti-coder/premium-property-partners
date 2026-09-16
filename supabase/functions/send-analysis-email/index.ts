@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
         <p style="margin:0 0 10px;font-size:14px"><strong>Vrei cifrele validate de un consultant?</strong><br/>Programează o consultanță gratuită de 20 de minute.</p>
         <a href="${SITE}/pentru-proprietari#contact" style="display:inline-block;border:1px solid #0f2340;color:#0f2340;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:bold">Programează consultanța</a>
       </div>
-      <p style="margin:20px 0 0;font-size:11px;color:#939aa5">Estimările folosesc 75% ocupare și 27% deducere management/taxe. RealTrust Timișoara.</p>
+      <p style="margin:20px 0 0;font-size:11px;color:#939aa5">Estimările folosesc o ocupare de 75%. RealTrust Timișoara.</p>
     </div>
   </div></body></html>`;
 

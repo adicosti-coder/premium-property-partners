@@ -276,7 +276,7 @@ const AnalizaPartajata =  => {
         <AnalysisComparePanel analysis={a} shareUrl={window.location.href} />
 
         <p className="text-xs text-muted-foreground">
-          Estimările folosesc 75% ocupare și 27% deducere management/taxe. Sunt orientative și nu
+          Estimările folosesc o ocupare de 75%. Sunt orientative și nu
           reprezintă o ofertă contractuală.
         </p>
 

@@ -266,7 +266,7 @@ export const en: Translations = {
       // Yield transparency
       {
         question: "How exactly is the 9.4% net return calculated?",
-        answer: "We start from gross accommodation revenue (nightly rate × occupied nights, at 75% occupancy). From it we subtract a 27% operational deduction covering platform commissions (Booking, Airbnb, Expedia), effective income tax and consumables (toiletries, coffee, salt, oil, linen). The cleaning fee costs you nothing: guests pay it separately at booking time. Only after that do we subtract fixed costs (utilities, internet, maintenance) and our management commission — which is why 9.4% is net income, not gross. Your final figure is set after the free valuation."
+        answer: "We start from gross accommodation revenue (nightly rate × occupied nights, at 75% occupancy). From it we subtract operating costs (consumables, linen) and RealTrust Property Management, 15-20% of revenue. The cleaning fee costs you nothing: guests pay it separately at booking time. Only after that do we subtract fixed costs (utilities, internet, maintenance) and our management commission — which is why 9.4% is net income, not gross. Your final figure is set after the free valuation."
       },
       // Services included
       { 

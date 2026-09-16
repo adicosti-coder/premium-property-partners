@@ -223,7 +223,7 @@ const AnalizaROIApartament =  => {
               <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
                 <Card className="border-primary/20 bg-primary/5"><CardContent className="p-5"><p className="text-sm text-muted-foreground">ROI net estimat</p><p className="mt-1 text-3xl font-bold text-primary">9.4%</p></CardContent></Card>
                 <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Ocupare medie modelată</p><p className="mt-1 text-3xl font-bold text-foreground">75%</p></CardContent></Card>
-                <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Costuri deduse automat</p><p className="mt-1 text-3xl font-bold text-foreground">27%</p></CardContent></Card>
+                <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Property Management RealTrust</p><p className="mt-1 text-3xl font-bold text-foreground">15-20%</p></CardContent></Card>
               </div>
             </div>
           </div>

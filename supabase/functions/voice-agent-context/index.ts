@@ -38,7 +38,7 @@ const ANDREI_ROI_PLAYBOOK =
   "ROI PLAYBOOK (obligatoriu când proprietarul întreabă de randament): " +
   "Modelul nostru HIBRID (regim hotelier gestionat end-to-end de RealTrust + ApArt Hotel) " +
   "generează un venit brut cu aproximativ 70% mai mare decât chiria clasică pe termen lung pe aceeași proprietate, " +
-  "rezultând un ROI NET de 9.4% pe an după deducerea standard de 27% (management + taxe + utilități neacoperite). " +
+  "rezultând un ROI NET de 9.4% pe an după costurile de operare, impozit și Property Management RealTrust (15-20% din încasări). " +
   "Comparativ, chiria clasică în Timișoara aduce 5-7% net. " +
   "Folosește mereu cifre clare: ocupare 75%, ADR mediu pe complex, venit lunar țintă. " +
   "Nu inventa procente. Nu promite ROI > 9.4% pe an decât dacă ai date concrete de la dispatcher.";
@@ -53,7 +53,7 @@ const ANDREI_OBJECTIONS_TIMISOARA =
   "(c) „Fabric/Iosefin nu e sigur” → corectează politicos: ambele cartiere s-au revitalizat puternic, " +
   "Iosefin = ISHO + Sinagoga, Fabric = Piața Traian + Millennium, cerere mare din partea Capitalei Culturale. " +
   "(d) „Vreau să administrez singur” → arată costul real al timpului: check-in, curățenie, plângeri, reglementări ANAF; " +
-  "noi preluăm tot pentru cei 27%. " +
+  "noi preluăm tot pentru Property Management RealTrust, 15-20% din încasări. " +
   "(e) „De ce 9.4% și nu 12-15%?” → randamentele de peste 10% nete sunt marketing; noi publicăm cifre auditate.";
 
 const UNKNOWN_CONTEXT =

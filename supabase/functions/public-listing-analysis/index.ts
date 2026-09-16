@@ -95,7 +95,7 @@ const SYSTEM_PROMPT = `Ești consultant senior RealTrust Timișoara, specializat
 
 Reguli de calcul (obligatorii):
 - Ocupare medie folosită: 75%.
-- Din venitul brut se scade 27% (management + taxe) pentru a obține venitul net.
+- Din venitul brut se scad costurile de operare, impozitul și Property Management RealTrust (15-20% din încasări) pentru a obține venitul net.
 - Randamentul net standard de referință al portofoliului este ~9,4%/an.
 - Zone valide: Cetate/Centru, Iosefin, Fabric, Dumbrăvița, Aradului. Dacă zona nu e clară, scrie "Timișoara".
 - Nu inventa date pe care nu le poți susține; când estimezi, marchează clar că este estimare.

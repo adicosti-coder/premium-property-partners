@@ -50,7 +50,7 @@ const CalculatorROI =  => {
     },
     {
       question: "Ce costuri operaționale sunt incluse în calcul?",
-      answer: "Calculatorul deduce automat 27% din venitul brut pentru: management (15-20%), curățenie, consumabile, mentenanță, utilități parțial neacoperite și taxe locale. Rezultatul afișat este ROI net, după aceste costuri.",
+      answer: "Calculatorul deduce automat din venitul brut Property Management RealTrust (15-20% din încasări), curățenia, consumabilele, mentenanța, utilitățile parțial neacoperite și taxele locale. Rezultatul afișat este ROI net, după aceste costuri.",
     },
   ];
 

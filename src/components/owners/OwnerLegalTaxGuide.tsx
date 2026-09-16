@@ -40,7 +40,7 @@ const OwnerLegalTaxGuide =  => {
         badge: "Ghid legal & fiscal",
         title: "Regim hotelier vs. chirie clasică — cifrele și taxele, fără perdea",
         subtitle:
-          "Aceleași ipoteze pentru ambele variante: apartament 2 camere, zonă centrală Timișoara, ocupare de calcul 75%, costuri operaționale 27%.",
+          "Aceleași ipoteze pentru ambele variante: apartament 2 camere, zonă centrală Timișoara, ocupare de calcul 75%.",
         tabs: { yield: "Randament", tax: "Fiscalitate", risk: "Riscuri" },
         colA: "Regim hotelier",
         colB: "Chirie clasică",
@@ -48,7 +48,7 @@ const OwnerLegalTaxGuide =  => {
         rows: [
           { label: "Venit brut / lună", a: "1.800 €", b: "550 €" },
           { label: "Ocupare de calcul", a: "75%", b: "100%" },
-          { label: "Costuri operaționale", a: "− 27%", b: "− 5%" },
+          { label: "Property Management RealTrust", a: "− 15-20%", b: "− 5%" },
           { label: "Venit net / lună", a: "1.130 €", b: "500 €" },
           { label: "Venit net / an", a: "13.560 €", b: "6.000 €" },
           { label: "ROI net (la 145.000 €)", a: "9,4%", b: "4,1%" },
@@ -105,7 +105,7 @@ const OwnerLegalTaxGuide =  => {
         badge: "Legal & tax guide",
         title: "Short-term vs. long-term rental — the numbers and the taxes, no spin",
         subtitle:
-          "Same assumptions for both: 2-room apartment, central Timișoara, 75% assumed occupancy, 27% operating costs.",
+          "Same assumptions for both: 2-room apartment, central Timișoara, 75% assumed occupancy.",
         tabs: { yield: "Yield", tax: "Taxes", risk: "Risks" },
         colA: "Short-term",
         colB: "Long-term",
@@ -113,7 +113,7 @@ const OwnerLegalTaxGuide =  => {
         rows: [
           { label: "Gross income / month", a: "€1,800", b: "€550" },
           { label: "Assumed occupancy", a: "75%", b: "100%" },
-          { label: "Operating costs", a: "− 27%", b: "− 5%" },
+          { label: "RealTrust Property Management", a: "− 15-20%", b: "− 5%" },
           { label: "Net income / month", a: "€1,130", b: "€500" },
           { label: "Net income / year", a: "€13,560", b: "€6,000" },
           { label: "Net ROI (on €145,000)", a: "9.4%", b: "4.1%" },

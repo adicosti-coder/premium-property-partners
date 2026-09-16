@@ -525,7 +525,7 @@ const AiListingAnalyzer = ({ onResult, onPrefill }: Props) => {
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
-                Estimările folosesc 75% ocupare și 27% deducere management/taxe. Analiza umană detaliată vine în 24h lucrătoare.
+                Estimările folosesc o ocupare de 75%. Analiza umană detaliată vine în 24h lucrătoare.
               </p>
             </motion.div>
           )}

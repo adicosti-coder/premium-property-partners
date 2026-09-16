@@ -265,7 +265,7 @@ export const ro = {
       // Transparență calcul randament
       {
         question: "Cum se calculează concret randamentul net de 9,4%?",
-        answer: "Pornim de la venitul brut din cazare (tarif pe noapte × nopți ocupate, la o ocupare de 75%). Din acesta scădem o deducere operațională de 27%, care include comisioanele platformelor (Booking, Airbnb, Expedia), impozitul efectiv pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie). Taxa de curățenie nu te costă: este achitată separat de oaspeți la momentul rezervării. Abia după aceea se scad cheltuielile fixe (utilități, internet, întreținere) și comisionul nostru de administrare — de aceea 9,4% este venit curat (net), nu brut. Cifra finală pentru apartamentul tău se stabilește după evaluarea gratuită."
+        answer: "Pornim de la venitul brut din cazare (tarif pe noapte × nopți ocupate, la o ocupare de 75%). Din acesta se scad costurile de operare (consumabile, lenjerie) și Property Management RealTrust, 15-20% din încasări. Taxa de curățenie nu te costă: este achitată separat de oaspeți la momentul rezervării. Abia după aceea se scad cheltuielile fixe (utilități, internet, întreținere) și comisionul nostru de administrare — de aceea 9,4% este venit curat (net), nu brut. Cifra finală pentru apartamentul tău se stabilește după evaluarea gratuită."
       },
       // Servicii incluse
       { 

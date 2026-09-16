@@ -711,7 +711,7 @@ const Investitii =  => {
               ]}
               assumptions={[
                 "Ocupare medie 75% pe an pentru regim hotelier.",
-                "Deducere operațională și fiscală de aproximativ 27% din încasări, fără comisionul de administrare.",
+                "Property Management RealTrust: 15-20% din încasări, plus costurile de operare și impozitul aferent.",
                 "Randament net de referință 9,4% pe an, raportat la capitalul total investit.",
                 "Venit brut în regim hotelier de aproximativ 1,6× chiria clasică, pentru apartamente comparabile bine poziționate.",
               ]}

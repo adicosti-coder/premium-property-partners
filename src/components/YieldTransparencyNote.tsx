@@ -19,7 +19,7 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
   const rows = ro
     ? [
         {
-          title: "Deduceri operaționale — 27%",
+          title: "Property Management RealTrust — 15-20%",
           body:
             "Include comisioanele platformelor (Booking, Airbnb, Expedia), impozitul efectiv pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie).",
         },
@@ -36,7 +36,7 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
       ]
     : [
         {
-          title: "Operational deductions — 27%",
+          title: "RealTrust Property Management — 15-20%",
           body:
             "Covers platform commissions (Booking, Airbnb, Expedia), effective income tax and consumables (toiletries, coffee, salt, oil, linen).",
         },
@@ -48,7 +48,7 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
         {
           title: "Utilities & management fee — subtracted afterwards",
           body:
-            "Fixed costs (utilities, internet, maintenance) and the management commission are subtracted after the 27% deduction, so 9.4% is genuinely net income, not gross.",
+            "Fixed costs (utilities, internet, maintenance) and the management commission are subtracted as well, so 9.4% is genuinely net income, not gross.",
         },
       ];
 

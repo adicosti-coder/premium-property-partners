@@ -108,7 +108,7 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
     ],
     investment: [
       "Argumentul investițional al zonei este cererea dublă: chiriași pe termen lung cu venituri peste medie și oaspeți de business care vor să fie aproape de birouri și de centru. Acest mix reduce dependența de sezon, o problemă reală pentru unitățile poziționate exclusiv turistic.",
-      "Contraargumentul este prețul de intrare. La un preț pe metru pătrat mai mare, randamentul net depinde de capacitatea de a susține un tarif mediu pe noapte peste media orașului. În analizele noastre pornim de la ipoteze publice — ocupare 75%,4% net; la ISHO acest prag se atinge mai des cu unități mici, bine amenajate, decât cu apartamente mari.",
+      "Contraargumentul este prețul de intrare. La un preț pe metru pătrat mai mare, randamentul net depinde de capacitatea de a susține un tarif mediu pe noapte peste media orașului. În analizele noastre pornim de la ipoteze publice — ocupare 75% — și verificăm dacă tariful realizabil susține pragul de referință de 9,4% net; la ISHO acest prag se atinge mai des cu unități mici, bine amenajate, decât cu apartamente mari.",
     ],
     risks: [
       "Concentrare mare de unități similare în același perimetru: presiune pe tarif în lunile slabe.",
