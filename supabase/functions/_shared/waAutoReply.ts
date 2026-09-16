@@ -145,10 +145,10 @@ const stripDiacritics = (t: string) =>
   t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
 /**
- * Explicația cifrelor (venituri, cheltuieli, profit net) trimisă în mesajele
- * despre administrare și preț, ca proprietarul să înțeleagă oferta.
- * Regulile sunt cele standard RealTrust: ocupare medie 75%, cheltuieli ~27%
- * din încasări, randament net ~9,4% pe an.
+ * Explicația cifrelor (venit brut, Property Management, profit net) trimisă în
+ * mesajele despre administrare și preț. Regulile RealTrust: ocupare medie 75%,
+ * Property Management 15-20% din încasări, randament net ~9,4% pe an ca estimare
+ * medie. NU se menționează „cheltuieli ≈27%” și nici comisioanele platformelor.
  */
 export const FINANCE_BLOCK = [
   "Cum se calculeaza venitul dvs.:",
