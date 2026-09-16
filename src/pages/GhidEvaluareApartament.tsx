@@ -117,8 +117,8 @@ const GhidEvaluareApartament = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Cum se evaluează un apartament în Timișoara — ghid pas cu pas | RealTrust"
-        description="Ghid de evaluare pentru apartamentele din Timișoara: suprafață, etaj, an de construcție, compartimentare, parcare, finisaje, comparabile, venit potențial și randament net."
+        title="Cum se evaluează un apartament în Timișoara | RealTrust"
+        description="Ghid de evaluare pentru apartamentele din Timișoara: suprafață, etaj, an, compartimentare, parcare, finisaje, comparabile și venit potențial."
         url={URL}
         breadcrumbItems={[
           { name: "Acasă", url: BASE_URL },

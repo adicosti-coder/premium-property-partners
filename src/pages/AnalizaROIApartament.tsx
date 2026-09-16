@@ -162,7 +162,7 @@ const AnalizaROIApartament = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Analiza ROI Apartament | Randament investiții imobiliare"
-        description="Analiză profit apartament România: calculează randament investiții imobiliare, ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe."
+        description="Calculează randamentul unei investiții imobiliare: ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe din Timișoara."
         url="https://realtrust.ro/analiza-roi-apartament"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },

@@ -228,8 +228,8 @@ const ZoneInvestitiiTimisoara = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Cele mai bune zone din Timișoara pentru investiții imobiliare | RealTrust"
-        description="Comparație pe zone din Timișoara: preț, chirie, potențial de regim hotelier, cerere, lichiditate și risc. Analiză internă RealTrust pentru investitori, fără declarații absolute."
+        title="Zone de investiții imobiliare în Timișoara | RealTrust"
+        description="Comparație pe zone din Timișoara: preț, chirie, potențial de regim hotelier, cerere și risc. Analiză RealTrust pentru investitori."
         url={URL}
         breadcrumbItems={[
           { name: "Acasă", url: BASE_URL },
