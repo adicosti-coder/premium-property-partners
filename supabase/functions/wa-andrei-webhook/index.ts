@@ -407,6 +407,21 @@ Deno.serve(async (req) => {
         if (state === "failed") stUpdate = stUpdate.in("status", ["pending", "sending", "sent"]);
         const { error: qErr } = await stUpdate;
         if (qErr) console.error("[wa-webhook] status update failed:", qErr);
+
+        // Aceeași confirmare se salvează și pe mesaj, ca să vedem în Admin
+        // starea reală (trimis / livrat / citit) pentru fiecare mesaj trimis,
+        // nu doar pentru cele plecate din coadă.
+        const msgPatch: Record<string, unknown> = { delivery_status: state };
+        if (state === "delivered") msgPatch.delivered_at = tsIso;
+        if (state === "read") { msgPatch.read_at = tsIso; msgPatch.delivered_at = tsIso; }
+        if (state === "failed") {
+          msgPatch.error = `meta_status_failed: ${JSON.stringify(st?.errors ?? {}).slice(0, 400)}`;
+        }
+        const { error: mErr } = await supabase
+          .from("wa_messages")
+          .update(msgPatch)
+          .eq("wa_message_id", waId);
+        if (mErr) console.error("[wa-webhook] message status update failed:", mErr);
       }
     }
   }
