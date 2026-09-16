@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2, MailX } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 
 type Status = "loading" | "valid" | "already" | "invalid" | "success" | "error";
 
@@ -61,6 +62,7 @@ const Unsubscribe = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <SEOHead title="Dezabonare newsletter | RealTrust Timișoara" description="Gestionează abonarea la newsletterul RealTrust Timișoara." noIndex />
       <Card className="max-w-md w-full">
         <CardContent className="pt-8 pb-8 text-center space-y-4">
           {status === "loading" && (

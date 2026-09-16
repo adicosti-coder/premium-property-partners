@@ -133,8 +133,8 @@ const AnalizaProprietate = () => {
   return (
     <Suspense fallback={null}>
       <SEOHead
-        title="Analiză AI proprietate Timișoara | Link anunț sau poze | RealTrust"
-        description="Încarcă linkul anunțului sau fotografiile proprietății și primești instant analiza AI: tarif pe noapte, venit net lunar în regim hotelier și recomandări. Gratuit, Timișoara."
+        title="Analiză AI proprietate Timișoara | RealTrust"
+        description="Încarcă linkul anunțului sau pozele și primești instant analiza AI: tarif pe noapte, venit net lunar în regim hotelier și recomandări. Gratuit."
         socialDescription="Analiză AI gratuită: tarif pe noapte, venit net lunar și potențial în regim hotelier, în Timișoara."
         url="https://realtrust.ro/hostscan-ai"
         breadcrumbItems={[

@@ -68,8 +68,8 @@ const AutorAdrianCosti = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Adrian Costi — Fondator RealTrust Timișoara | Autor articole imobiliare"
-        description="Adrian Costi, fondator și CEO RealTrust Timișoara, cu peste 25 de ani în tranzacții și administrare de proprietăți. Autorul ghidurilor despre investiții, regim hotelier și evaluare."
+        title="Adrian Costi — fondator RealTrust Timișoara | RealTrust"
+        description="Adrian Costi, fondator RealTrust Timișoara, cu peste 25 de ani în tranzacții și administrare. Autorul ghidurilor despre investiții și regim hotelier."
         url={URL}
         breadcrumbItems={[
           { name: "Acasă", url: BASE_URL },

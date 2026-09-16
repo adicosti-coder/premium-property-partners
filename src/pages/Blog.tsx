@@ -296,7 +296,7 @@ const Blog = () => {
     },
     {
       question: "Care este randamentul chiriei în Timișoara — clasic vs regim hotelier?",
-      answer: "Chirie clasică: 4-6% randament brut. Regim hotelier administrat profesional (RealTrust): 9.4% net verificat, multiplicator 1.6-2.5x. Cele mai performante zone: ISHO, Centru, Complex Studențesc, Iulius Town.",
+      answer: "Chirie clasică: 4-6% randament brut. Regim hotelier administrat profesional (RealTrust): 9,4% net estimat, multiplicator 1.6-2.5x. Cele mai performante zone: ISHO, Centru, Complex Studențesc, Iulius Town.",
     },
     {
       question: "Sunt apartamente disponibile lângă Continental, Hella sau Spitalul Premiere?",

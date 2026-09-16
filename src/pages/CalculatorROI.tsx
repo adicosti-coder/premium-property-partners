@@ -59,7 +59,7 @@ const CalculatorROI = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Calculator ROI: regim hotelier vs. chirie clasică | RealTrust"
+        title="Calculator ROI: hotelier vs. chirie | RealTrust"
         description="Estimează randamentul apartamentului tău în Timișoara: regim hotelier vs. chirie clasică. Venit lunar și ROI anual, calculate pe ipoteze publice."
         url="https://realtrust.ro/calculator-roi"
         breadcrumbItems={[

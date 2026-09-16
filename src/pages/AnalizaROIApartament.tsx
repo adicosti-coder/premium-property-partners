@@ -162,7 +162,7 @@ const AnalizaROIApartament = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Analiza ROI Apartament | Randament investiții imobiliare"
-        description="Analiză profit apartament România: calculează randament investiții imobiliare, ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe."
+        description="Calculează randamentul unei investiții imobiliare: ROI net, evoluția prețurilor și zonele potrivite pentru investiții în complexe din Timișoara."
         url="https://realtrust.ro/analiza-roi-apartament"
         breadcrumbItems={[
           { name: "Acasă", url: "https://realtrust.ro" },
@@ -221,7 +221,7 @@ const AnalizaROIApartament = () => {
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-                <Card className="border-primary/20 bg-primary/5"><CardContent className="p-5"><p className="text-sm text-muted-foreground">ROI net verificat</p><p className="mt-1 text-3xl font-bold text-primary">9.4%</p></CardContent></Card>
+                <Card className="border-primary/20 bg-primary/5"><CardContent className="p-5"><p className="text-sm text-muted-foreground">ROI net estimat</p><p className="mt-1 text-3xl font-bold text-primary">9.4%</p></CardContent></Card>
                 <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Ocupare medie modelată</p><p className="mt-1 text-3xl font-bold text-foreground">75%</p></CardContent></Card>
                 <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Costuri deduse automat</p><p className="mt-1 text-3xl font-bold text-foreground">27%</p></CardContent></Card>
               </div>

@@ -265,7 +265,7 @@ const CatalogInvestitii = () => {
         {
           question: "Care este structura de comision RealTrust?",
           answer:
-            "Pentru tranzacții de vânzare/cumpărare comisionul standard este 2% (negociabil). Pentru administrarea în regim hotelier, Property Management RealTrust este 15-20% din încasări, fără costuri ascunse — totul este transparent în raportul lunar.",
+            "Pentru tranzacții de vânzare/cumpărare comisionul standard este 2% (negociabil). Pentru administrarea în regim hotelier, Property Management RealTrust este 15-25% din încasări, în funcție de pachetul ales, fără costuri ascunse — totul este transparent în raportul lunar.",
         },
         {
           question: "Cum funcționează creditul ipotecar pentru o investiție imobiliară?",
