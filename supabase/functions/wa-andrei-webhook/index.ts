@@ -412,6 +412,20 @@ Deno.serve(async (req) => {
   }
 
 
+  /** Numerele care au cerut să nu mai fie contactate nu primesc mesaje automate. */
+  const isBlockedConv = async (convId: string): Promise<boolean> => {
+    try {
+      const { data: c } = await supabase
+        .from("wa_conversations").select("phone_normalized").eq("id", convId).maybeSingle();
+      if (!c?.phone_normalized) return false;
+      const { data: d } = await supabase
+        .from("wa_dnc_list").select("id").eq("phone_normalized", c.phone_normalized).maybeSingle();
+      return !!d;
+    } catch {
+      return false;
+    }
+  };
+
   // Răspuns automat la butoanele din primul mesaj (vânzare / administrare / refuz).
   for (const [convId, quick] of quickReplyConversations) {
     if (quick.kind === "quick_no" || quick.kind === "quick_stop") {
