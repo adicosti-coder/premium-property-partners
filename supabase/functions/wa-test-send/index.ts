@@ -115,6 +115,8 @@ Deno.serve(async (req) => {
   });
   const metaBody = await resp.json().catch(() => ({}));
 
+  const waMessageId = metaBody?.messages?.[0]?.id ?? null;
+
   await supabase.from("wa_messages").insert({
     conversation_id: conversationId,
     direction: "outbound",
@@ -122,6 +124,8 @@ Deno.serve(async (req) => {
     content: useTemplate
       ? `[template:${body.template_name}] ${(body.template_params ?? []).join(" | ")}`
       : body.text || "Mesaj de test RealTrust.",
+    wa_message_id: waMessageId,
+    delivery_status: resp.ok ? "sent" : null,
     error: resp.ok ? null : metaBody?.error?.message ?? `meta_${resp.status}`,
   });
 
