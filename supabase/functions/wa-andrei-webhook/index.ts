@@ -438,6 +438,8 @@ Deno.serve(async (req) => {
       } catch (e) {
         console.error("[wa-webhook] dnc upsert failed:", e);
       }
+    } else if (await isBlockedConv(convId)) {
+      continue; // număr în lista de excludere → răspunde doar un coleg
     }
     fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
       method: "POST",
@@ -452,6 +454,7 @@ Deno.serve(async (req) => {
 
   // Auto-reply de calificare la prima interacțiune (fire-and-forget)
   for (const [convId, convPhone] of intakeConversations) {
+    if (await isBlockedConv(convId)) continue;
     const ctx = await loadProspectContext(supabase, convPhone);
     fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
       method: "POST",
