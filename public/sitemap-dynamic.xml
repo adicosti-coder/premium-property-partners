@@ -1048,13 +1048,13 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/apartament-1-5-camere-43-5-m2-4-5-m2-ext-vivalia-v6-full-mobilat-la-comanda" />
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe</loc>
+    <loc>https://realtrust.ro/proprietate/nordone-apart-hotel-premium</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ring-apart-hotel-spacious-deluxe" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/nordone-apart-hotel-premium" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/nordone-apart-hotel-premium" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/nordone-apart-hotel-premium" />
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/studio-deluxe-city-of-mara-design-premium-etaj-9-management-realtrust</loc>
@@ -1083,19 +1083,6 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/green-forest-apart-hotel" />
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere</loc>
-    <lastmod>2026-09-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/30eac8d0-97d3-4479-a4d5-73d0a246199d/imported-0.jpg</image:loc>
-      <image:title>City of Mara Apartament cu 2 camere - ApArt Hotel Timișoara</image:title>
-    </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
-  </url>
-<url>
     <loc>https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1109,17 +1096,17 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/fructus-plaza-ultracentral-apart-hotel" />
   </url>
 <url>
-    <loc>https://realtrust.ro/proprietate/fullview-studio-deluxe</loc>
-    <lastmod>2026-09-16</lastmod>
+    <loc>https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere</loc>
+    <lastmod>2026-09-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/fullview-deluxe.jpg?width=800&amp;quality=75</image:loc>
-      <image:title>Cross Square House by RealTrust - ApArt Hotel Timișoara</image:title>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/object/public/property-images/30eac8d0-97d3-4479-a4d5-73d0a246199d/imported-0.jpg</image:loc>
+      <image:title>City of Mara Apartament cu 2 camere - ApArt Hotel Timișoara</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/city-of-mara-apartament-cu-2-camere" />
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie</loc>
@@ -1133,6 +1120,19 @@
     <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie" />
     <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/ultra-central-piata-unirii-ideal-investitie" />
+  </url>
+<url>
+    <loc>https://realtrust.ro/proprietate/fullview-studio-deluxe</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://mvzssjyzbwccioqvhjpo.supabase.co/storage/v1/render/image/public/property-images/static/fullview-deluxe.jpg?width=800&amp;quality=75</image:loc>
+      <image:title>Cross Square House by RealTrust - ApArt Hotel Timișoara</image:title>
+    </image:image>
+    <xhtml:link rel="alternate" hreflang="ro" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://realtrust.ro/proprietate/fullview-studio-deluxe" />
   </url>
 <url>
     <loc>https://realtrust.ro/proprietate/avenue-of-mara-apart-hotel</loc>
