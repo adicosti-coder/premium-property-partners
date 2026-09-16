@@ -151,15 +151,19 @@ Deno.serve(async (req) => {
     const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
     const { data: recent } = await supabase
       .from("wa_outbound_queue")
-      .select("status, delivered_at, sent_at")
+      .select("status, delivered_at, read_at, replied_at, sent_at")
       .gte("sent_at", since)
       .not("sent_at", "is", null)
       .order("sent_at", { ascending: false })
       .limit(200);
 
     const sentRows = recent ?? [];
-    if (sentRows.length >= 10) {
-      const delivered = sentRows.filter((r) => r.delivered_at).length;
+    // Confirmările de livrare vin de la Meta prin webhook. Dacă nu avem NICIO
+    // confirmare, rata calculată ar fi 0% și coada s-ar opri degeaba — deci
+    // aplicăm regula doar când chiar primim confirmări.
+    const hasDeliveryData = sentRows.some((r) => r.delivered_at || r.read_at || r.replied_at);
+    if (sentRows.length >= 10 && hasDeliveryData) {
+      const delivered = sentRows.filter((r) => r.delivered_at || r.read_at || r.replied_at).length;
       const rate = Math.round((delivered / sentRows.length) * 100);
       if (rate < minDeliveryRate) {
         await autoPause("delivery_rate_low", {
