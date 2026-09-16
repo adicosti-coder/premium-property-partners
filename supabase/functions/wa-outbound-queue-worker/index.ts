@@ -339,9 +339,14 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             conversation_id: conversationId,
-            template_name: await preferredIntroTemplate(),
+            // Primul contact folosește șablonul premium aprobat; mesajele de
+            // follow-up (sau alte surse cu șablon propriu) își păstrează șablonul,
+            // altfel proprietarul ar primi de două ori mesajul de prezentare.
+            template_name: item.source === "followup" && item.template_name
+              ? item.template_name
+              : await preferredIntroTemplate(),
             template_language: item.template_language || "ro",
-            template_params: [],
+            template_params: Array.isArray(item.template_params) ? item.template_params : [],
           }),
         },
         { label: "wa-outbound-worker", maxAttempts: 3, timeoutMs: 20_000 },
