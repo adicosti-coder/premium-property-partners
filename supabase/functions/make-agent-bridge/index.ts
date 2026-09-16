@@ -1090,6 +1090,25 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Cine a cerut să nu mai fie contactat nu primește mesaje automate —
+    // doar confirmarea propriului refuz. Preia agentul, dacă e nevoie.
+    if (quick?.kind !== "quick_no" && quick?.kind !== "quick_stop") {
+      const { data: dncRow } = await supabase
+        .from("wa_dnc_list")
+        .select("id")
+        .eq("phone_normalized", phone)
+        .maybeSingle();
+      if (dncRow) {
+        return json({
+          ok: true,
+          conversation_id: convId,
+          auto_reply: "skipped_dnc",
+          agent: notified.agent,
+          note: "numărul este în lista de excludere — răspunde doar un coleg",
+        });
+      }
+    }
+
 
     const autoSent = await sendToMeta({
       messaging_product: "whatsapp",
