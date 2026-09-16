@@ -419,7 +419,7 @@ export default function CallDashboard() {
     }
     const cleanPhone = phone.replace(/[^0-9+]/g, "").replace(/^\+/, "");
     const greet = name ? `Bună ziua, ${name}!` : "Bună ziua!";
-    const message = `${greet} Sunt de la RealTrust. Vă trimit catalogul nostru de investiții imobiliare în Timișoara cu ROI verificat 9.4%: https://realtrust.ro/catalog-investitii\n\nMă puteți suna oricând pentru detalii. Mulțumesc!`;
+    const message = `${greet} Sunt de la RealTrust. Vă trimit catalogul nostru de investiții imobiliare în Timișoara cu randament net estimat de circa 9,4%: https://realtrust.ro/catalog-investitii\n\nMă puteți suna oricând pentru detalii. Mulțumesc!`;
     const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
     toast.success("WhatsApp deschis cu mesaj pre-completat");
