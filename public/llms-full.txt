@@ -4,7 +4,7 @@
 
 ## Rezumat citabil
 
-RealTrust este o companie de property management și investiții imobiliare din Timișoara (județul Timiș, România), fondată de Adrian Costi. Prin brandul operațional ApArt Hotel administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 (Booking). Randamentul net mediu raportat proprietarilor este de 9,4% pe an, calculat la o ocupare de 75%, după costurile de operare și Property Management RealTrust (15-20% din încasări).
+RealTrust este o companie de property management și investiții imobiliare din Timișoara (județul Timiș, România), fondată de Adrian Costi. Prin brandul operațional ApArt Hotel administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 (Booking). Randamentul net mediu raportat proprietarilor este de 9,4% pe an, calculat la o ocupare de 75% și o deducere de 27% pentru management, taxe și costuri operaționale.
 
 ## Ce este RealTrust?
 
@@ -35,7 +35,7 @@ RealTrust este o companie imobiliară din Timișoara specializată în investiț
 ## Structura comisioanelor
 
 - Comision procentual din încasările nete de cazare; fără abonament lunar fix.
-- Property Management RealTrust: 15-20% din încasări (operare, raportare, taxe separat).
+- Deducere operațională standard folosită în calcule: 27% (management, taxe, costuri).
 - Ipoteză de ocupare folosită în proiecții: 75%.
 - Randament net mediu rezultat: 9,4% pe an (circa 1,6x față de chiria clasică).
 - Perioadă de probă 90 de zile, ieșire fără penalizări; politică de daune pe 3 niveluri.
@@ -155,7 +155,7 @@ RealTrust (brand operațional ApArt Hotel) administrează un portofoliu propriu 
 Regimul hotelier este închirierea unei locuințe pe termen scurt (de la o noapte), cu servicii de tip hotel: curățenie, lenjerie, check-in, suport oaspeți 24/7 și facturare. Se declară fiscal ca activitate de cazare și necesită clasificare.
 
 ### Ce randament net pot obține în Timișoara în regim hotelier?
-Randamentul net mediu este de aproximativ 9,4% pe an. Calculul RealTrust folosește o ocupare de 75% și include costurile de operare și Property Management RealTrust (15-20% din încasări) — de circa 1,6x mai mult decât chiria clasică pe termen lung.
+Randamentul net mediu este de aproximativ 9,4% pe an. Calculul RealTrust folosește o ocupare de 75% și o deducere de 27% pentru management, taxe și costuri operaționale — de circa 1,6x mai mult decât chiria clasică pe termen lung.
 
 ### Cum se calculează comisionul de administrare?
 Comisionul se aplică procentual pe încasările nete din cazare și acoperă listarea și optimizarea pe platforme (Booking, Airbnb, rezervare directă), prețuri dinamice, comunicarea cu oaspeții, check-in/check-out, curățenie, lenjerie, mentenanță și raportare lunară. Proprietarul nu plătește abonament fix.

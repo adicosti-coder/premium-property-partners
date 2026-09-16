@@ -12,7 +12,7 @@ import { ArrowRight, Calculator, TrendingUp, Info } from "lucide-react";
 /**
  * OwnerRoiEstimator — estimator interactiv de venit: chirie clasică vs regim hotelier RealTrust.
  * Model: venit brut hotelier = chirie clasică x multiplicator tip proprietate x factor zonă,
- * la ocupare medie ~75%; venitul net aplică deducerea standard de 27% (management + taxe + operare).
+ * la ocupare medie ~75%; venitul net scade Property Management RealTrust (15-20%) plus taxe și operare.
  * Cifrele sunt orientative — evaluarea exactă se face pe proprietate.
  */
 
@@ -95,9 +95,7 @@ const OwnerRoiEstimator = () => {
         uplift: "mai mult venit net",
         cta: "Solicită o evaluare exactă gratuită",
         ctaSecondary: "Vreau această estimare",
-        assumptions: `Ipoteze: ocupare medie ${Math.round(OCCUPANCY * 100)}%, deducere standard ${Math.round(
-          DEDUCTION * 100,
-        )}% (comision de administrare, curățenie, consumabile, taxe). Cifrele sunt orientative; estimarea exactă se face după analiza proprietății.`,
+        assumptions: `Ipoteze: ocupare medie ${Math.round(OCCUPANCY * 100)}%, Property Management RealTrust 15-20% din încasări, plus curățenie, consumabile și taxe. Cifrele sunt orientative; estimarea exactă se face după analiza proprietății.`,
       }
     : {
         badge: "ROI calculator",
@@ -115,9 +113,7 @@ const OwnerRoiEstimator = () => {
         uplift: "more net income",
         cta: "Request a free exact valuation",
         ctaSecondary: "I want this estimate",
-        assumptions: `Assumptions: ~${Math.round(OCCUPANCY * 100)}% average occupancy, standard ${Math.round(
-          DEDUCTION * 100,
-        )}% deduction (management fee, cleaning, consumables, taxes). Figures are indicative; the exact estimate follows a property review.`,
+        assumptions: `Assumptions: ~${Math.round(OCCUPANCY * 100)}% average occupancy, RealTrust Property Management 15-20% of revenue, plus cleaning, consumables and taxes. Figures are indicative; the exact estimate follows a property review.`,
       };
 
   const handlePrefillCta = () => {
