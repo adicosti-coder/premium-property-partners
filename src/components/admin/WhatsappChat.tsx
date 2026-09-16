@@ -329,9 +329,13 @@ export default function WhatsappChat() {
                     ? null
                     : m.error
                       ? `Meta a respins: ${m.error}`
-                      : m.wa_message_id
-                        ? "Livrat în WhatsApp"
-                        : "Fără confirmare de la Meta";
+                      : m.read_at
+                        ? `Citit · ${fmt(m.read_at)}`
+                        : m.delivered_at
+                          ? `Livrat pe telefon · ${fmt(m.delivered_at)}`
+                          : m.wa_message_id
+                            ? "Trimis, așteptăm confirmarea"
+                            : "Fără confirmare de la Meta";
                   return (
                     <div key={m.id}>
                       {newDay && (
