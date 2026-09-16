@@ -65,7 +65,7 @@ const ServicesOverview =  => {
         {
           icon: Building2,
           title: "Short-term rental management",
-          description: "Listing, check-in, cleaning, maintenance and monthly reporting. Target 9.4% net yield, based on 75% occupancy and 27% costs/taxes.",
+          description: "Listing, check-in, cleaning, maintenance and monthly reporting. Target 9.4% net yield, based on 75% occupancy.",
           link: "#calculator",
           cta: "Estimate income",
           color: "from-amber-500/20 to-amber-600/10",
