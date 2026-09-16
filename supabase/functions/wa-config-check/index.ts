@@ -1,6 +1,6 @@
 // wa-config-check — diagnostic intern: verifică dacă tokenul Meta și Phone Number ID
 // sunt valide. Internal-only (service role / cron secret). Nu returnează secrete.
-import { isInternalCall } from "../_shared/cronAuth.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { WA_PHONE_NUMBER_ID, WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION } from "../_shared/waConfig.ts";
 import { makeWebhookUrl, relayToMake } from "../_shared/makeRelay.ts";
 
@@ -13,12 +13,8 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  if (!(await isInternalCall(req))) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   // Test opțional al webhook-ului Make.com: ?test_make=1
   const reqUrl = new URL(req.url);
@@ -86,6 +82,12 @@ Deno.serve(async (req) => {
   } catch (e) {
     subsError = e instanceof Error ? e.message : String(e);
   }
+
+  console.log(
+    `[wa-config-check] ok=${resp.ok} quality=${body?.quality_rating ?? "?"} subscribed_fields=${
+      JSON.stringify(subscribedFields ?? null)
+    } subs_error=${subsError ?? "-"}`,
+  );
 
   return new Response(
     JSON.stringify({
