@@ -35,6 +35,8 @@ type Msg = {
   template_name: string | null;
   error: string | null;
   wa_message_id: string | null;
+  delivered_at: string | null;
+  read_at: string | null;
   created_at: string;
 };
 
