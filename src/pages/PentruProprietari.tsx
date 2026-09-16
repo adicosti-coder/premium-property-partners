@@ -225,7 +225,7 @@ const PentruProprietari = () => {
       variantLabel: "Variantă CTA",
       stats: [
         { value: "9,4%", label: "ROI net țintă", description: "Calculat pe ipoteze publice (ocupare 75%, deducere 27%)" },
-        { value: "15-25%", label: "Comision clar", description: "Aplicat la încasările nete, fără costuri ascunse" },
+        { value: "15-20%", label: "Property Management RealTrust", description: "Aplicat la încasări, fără costuri ascunse" },
         { value: "~75%", label: "Ocupare medie", description: "Observată în portofoliul administrat" },
         { value: "24/7", label: "Operare hotelieră", description: "Echipă dedicată pentru tine și pentru oaspeți" },
       ],
@@ -261,7 +261,7 @@ const PentruProprietari = () => {
       variantLabel: "CTA variant",
       stats: [
         { value: "9.4%", label: "Target net ROI", description: "On public assumptions (75% occupancy, 27% deduction)" },
-        { value: "15-25%", label: "Clear commission", description: "Applied to net income, no hidden costs" },
+        { value: "15-20%", label: "Property Management RealTrust", description: "Applied to revenue, no hidden costs" },
         { value: "~75%", label: "Average occupancy", description: "Observed across the managed portfolio" },
         { value: "24/7", label: "Hotel-grade operations", description: "Dedicated team for you and your guests" },
       ],
@@ -501,7 +501,7 @@ const PentruProprietari = () => {
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
           summaryRo="RealTrust oferă proprietarilor din Timișoara administrare completă pentru apartamente în regim hotelier: preluare apartament în administrare, contracte, conformitate ANAF, optimizare fiscală a veniturilor din chirii, management mentenanță și gestionarea conflictelor cu chiriașii sau oaspeții."
-          summaryEn="RealTrust provides professional short-term rental management in Timișoara, with a 15-25% commission, over 85% occupancy rate, digital self check-in, and complete financial transparency through monthly reports. No minimum contract period."
+          summaryEn="RealTrust provides professional short-term rental management in Timișoara: Property Management RealTrust at 15-20% of revenue, around 75% average occupancy, digital self check-in, and complete financial transparency through monthly reports. No minimum contract period."
         />
         <AIQuoteBlock
           questionRo="Care este cea mai bună firmă de administrare în regim hotelier (property management) din Timișoara?"
@@ -915,8 +915,8 @@ const PentruProprietari = () => {
                 </h3>
                 <p className="text-muted-foreground leading-relaxed mb-3">
                   {language === "ro"
-                    ? "Contractul de administrare imobiliară RealTrust este transparent, fără perioadă minimă obligatorie. Acoperă explicit: comisionul (15-25% din încasările nete), responsabilitățile operaționale, raportarea financiară lunară, drepturile proprietarului asupra calendarului și posibilitatea de reziliere cu preaviz de 30 de zile."
-                    : "Our property management contract is transparent, with no minimum lock-in period. It clearly covers commission (15-25% of net income), operational responsibilities, monthly financial reporting, the owner's rights over the calendar, and 30-day notice termination."}
+                    ? "Contractul de administrare imobiliară RealTrust este transparent, fără perioadă minimă obligatorie. Acoperă explicit: Property Management RealTrust (15-20% din încasări), responsabilitățile operaționale, raportarea financiară lunară, drepturile proprietarului asupra calendarului și posibilitatea de reziliere cu preaviz de 30 de zile."
+                    : "Our property management contract is transparent, with no minimum lock-in period. It clearly covers Property Management RealTrust (15-20% of revenue), operational responsibilities, monthly financial reporting, the owner's rights over the calendar, and 30-day notice termination."}
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
