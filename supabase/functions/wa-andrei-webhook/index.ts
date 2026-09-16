@@ -229,7 +229,24 @@ Deno.serve(async (req) => {
           .eq("conversation_id", convId)
           .eq("direction", "outbound");
 
-        const quick = outboundCount ? autoReplyText(text) : null;
+        let quick = outboundCount ? autoReplyText(text) : null;
+        // Nu repetăm același răspuns automat la fiecare mesaj: dacă exact acest
+        // răspuns a plecat în ultimele 6 ore, lăsăm discuția pe mâna agentului.
+        if (quick && quick.kind !== "quick_no" && quick.kind !== "quick_stop") {
+          try {
+            const sixHoursAgo = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
+            const { count: repeated } = await supabase
+              .from("wa_messages")
+              .select("id", { count: "exact", head: true })
+              .eq("conversation_id", convId)
+              .eq("direction", "outbound")
+              .gte("created_at", sixHoursAgo)
+              .contains("tool_call", { auto_reply: quick.kind });
+            if (repeated) quick = null;
+          } catch (e) {
+            console.error("[wa-webhook] auto-reply dedupe check failed:", e);
+          }
+        }
         if (quick) {
           // Răspuns la butoanele din primul mesaj → trimitem imediat răspunsul
           // potrivit, independent de regula de 3 ore, ca discuția să continue.
@@ -381,10 +398,14 @@ Deno.serve(async (req) => {
         }
         if (!Object.keys(patch).length) continue;
 
-        const { error: qErr } = await supabase
+        // Un eșec raportat de Meta nu trebuie să șteargă starea „replied”
+        // (clientul a răspuns deja) — altfel lead-ul dispare din rapoarte.
+        let stUpdate = supabase
           .from("wa_outbound_queue")
           .update(patch)
           .eq("wa_message_id", waId);
+        if (state === "failed") stUpdate = stUpdate.in("status", ["pending", "sending", "sent"]);
+        const { error: qErr } = await stUpdate;
         if (qErr) console.error("[wa-webhook] status update failed:", qErr);
       }
     }
