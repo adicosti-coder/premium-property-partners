@@ -28,8 +28,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { REAL_ESTATE_AGENT_REF } from "@/lib/orgIdentity";
 
-const Footer = lazy(=> import("@/components/Footer"));
-const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
+const Footer = lazy(() => import("@/components/Footer"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 const marketEvolution = [
   { year: "2021", premium: 1600, central: 1450, metro: 1180 },
@@ -106,7 +106,7 @@ const faqItems = [
   { question: "Ce documente sunt utile pentru o analiză ROI completă?", answer: "Sunt utile prețul final de achiziție, suprafața, planul apartamentului, costurile de mobilare, istoricul zonei, taxele lunare și obiectivul investitorului: cashflow, apreciere sau revânzare." },
 ];
 
-const AnalizaROIApartament =  => {
+const AnalizaROIApartament = () => {
   const [purchasePrice, setPurchasePrice] = useState(125000);
   const [monthlyRent, setMonthlyRent] = useState(620);
   const [nightlyRate, setNightlyRate] = useState(72);
@@ -115,7 +115,7 @@ const AnalizaROIApartament =  => {
 
   useRegisterFAQs("analiza-roi-apartament", faqItems);
 
-  const calculations = useMemo(=> {
+  const calculations = useMemo(() => {
     const classicAnnual = monthlyRent * 12;
     const hotelGross = nightlyRate * 365 * (occupancy / 100);
     const hotelNet = hotelGross * 0.73;

@@ -41,7 +41,7 @@ const isSortMode = (v: string | null): v is SortMode =>
 // ---------- Friendly error mapping ----------
 function friendlyErrorMessage(raw: string | null | undefined): string {
   if (!raw) return "Ceva nu a mers bine. Te rugăm să reîncerci.";
-  const msg = raw.toLowerCase;
+  const msg = raw.toLowerCase();
   if (msg.includes("failed to fetch") || msg.includes("networkerror") || msg.includes("network"))
     return "Conexiune întreruptă. Verifică internetul și reîncearcă.";
   if (msg.includes("aborted") || msg.includes("cancel"))
@@ -60,12 +60,12 @@ function friendlyErrorMessage(raw: string | null | undefined): string {
 
 // ---------- Zod schema ----------
 const analysisSchema = z.object({
-  roi_procentual: z.number,
-  recuperare_investitie_ani: z.number,
-  pret_per_mp: z.number,
-  analiza_piata: z.string,
-  puncte_forte: z.array(z.string),
-  riscuri_potentiale: z.array(z.string),
+  roi_procentual: z.number(),
+  recuperare_investitie_ani: z.number(),
+  pret_per_mp: z.number(),
+  analiza_piata: z.string(),
+  puncte_forte: z.array(z.string()),
+  riscuri_potentiale: z.array(z.string()),
 });
 type Analysis = z.infer<typeof analysisSchema>;
 
@@ -130,7 +130,7 @@ Date proprietate:
 - Costuri amenajare: ${f.amenajari} €
 
 Aplică regula RealTrust: ocupare 75% pentru regim hotelier, Property Management RealTrust 15-20% din încasări. Nu folosi niciodată cifra 27%.
-`.trim;
+`.trim();
 
 /** Build 5-year cashflow projection from AI ROI + form data. */
 function buildCashflow(analysis: Analysis, form: FormState) {
@@ -152,7 +152,7 @@ const fmtEur = (v: number) =>
   `${Math.round(v).toLocaleString("ro-RO")} €`;
 
 // ---------- Component ----------
-export default function InvestmentAnalysisManager {
+export default function InvestmentAnalysisManager() {
   const [form, setForm] = useState<FormState>(DEFAULTS);
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -160,13 +160,13 @@ export default function InvestmentAnalysisManager {
   const [exporting, setExporting] = useState(false);
 
   // ---- Filter/sort state (persisted in URL + localStorage) ----
-  const [searchParams, setSearchParams] = useSearchParams;
-  const [search, setSearch] = useState<string>(=> {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState<string>(() => {
     const fromUrl = searchParams.get("q");
     if (fromUrl !== null) return fromUrl;
     try { return localStorage.getItem(`${FILTER_STORAGE_KEY}.q`) ?? ""; } catch { return ""; }
   });
-  const [sortMode, setSortMode] = useState<SortMode>(=> {
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
     const fromUrl = searchParams.get("sort");
     if (isSortMode(fromUrl)) return fromUrl;
     try {
@@ -175,7 +175,7 @@ export default function InvestmentAnalysisManager {
     } catch { /* ignore */ }
     return "date-desc";
   });
-  const [page, setPage] = useState<number>(=> {
+  const [page, setPage] = useState<number>(() => {
     const p = Number(searchParams.get("page") ?? "1");
     return Number.isFinite(p) && p > 0 ? Math.floor(p) : 1;
   });
@@ -183,14 +183,14 @@ export default function InvestmentAnalysisManager {
   const [pendingDelete, setPendingDelete] = useState<HistoryRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
-  const savedIdsRef = useRef<Set<string>>(new Set);
+  const savedIdsRef = useRef<Set<string>>(new Set());
 
   const { run, cancel, loading, streaming, streamingText, error, data } =
-    useAiEngine<Analysis>;
+    useAiEngine<Analysis>();
   const analysis = data?.json ?? null;
 
   // ---- Persist filters to URL + localStorage ----
-  useEffect(=> {
+  useEffect(() => {
     const next = new URLSearchParams(searchParams);
     if (search) next.set("q", search); else next.delete("q");
     if (sortMode !== "date-desc") next.set("sort", sortMode); else next.delete("sort");
@@ -205,7 +205,7 @@ export default function InvestmentAnalysisManager {
 
   // ---- Toast on AI engine errors (network, 401/403, 429, parse, timeout) ----
   const lastErrorRef = useRef<string | null>(null);
-  useEffect(=> {
+  useEffect(() => {
     if (!error || error === lastErrorRef.current) return;
     lastErrorRef.current = error;
     toast({
@@ -214,20 +214,20 @@ export default function InvestmentAnalysisManager {
       variant: "destructive",
     });
   }, [error]);
-  useEffect(=> { if (!error) lastErrorRef.current = null; }, [error]);
+  useEffect(() => { if (!error) lastErrorRef.current = null; }, [error]);
 
   const setField = (k: keyof FormState) =>
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((s) => ({ ...s, [k]: e.target.value }));
 
   const canSubmit =
-    form.nume.trim.length > 0 &&
+    form.nume.trim().length > 0 &&
     Number(form.pret) > 0 &&
     Number(form.suprafata) > 0 &&
     Number(form.chirie) > 0;
 
   // ---- Load history (strict Zod parse of result JSON) ----
-  const loadHistory = useCallback(async  => {
+  const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
     const { data: rows, error: err } = await supabase
       .from("investment_analyses")
@@ -253,23 +253,23 @@ export default function InvestmentAnalysisManager {
         amenajari: Number(r.amenajari ?? 0),
         model: r.model ?? "z-ai/glm-5.2",
         result: check.data,
-        created_at: r.created_at ?? new Date.toISOString,
+        created_at: r.created_at ?? new Date().toISOString(),
       });
     }
     setHistory(parsed);
   }, []);
 
-  useEffect(=> { loadHistory; }, [loadHistory]);
+  useEffect(() => { loadHistory(); }, [loadHistory]);
 
   // ---- Persist analysis on completion ----
-  useEffect(=> {
+  useEffect(() => {
     if (!analysis || !data) return;
     const key = `${form.nume}|${form.pret}|${form.chirie}|${data.text.length}`;
     if (savedIdsRef.current.has(key)) return;
     savedIdsRef.current.add(key);
 
-    (async  => {
-      const { data: userRes } = await supabase.auth.getUser;
+    (async () => {
+      const { data: userRes } = await supabase.auth.getUser();
       const payload = {
         created_by: userRes?.user?.id ?? null,
         nume: form.nume,
@@ -291,17 +291,17 @@ export default function InvestmentAnalysisManager {
         });
         return;
       }
-      loadHistory;
-    });
+      loadHistory();
+    })();
   }, [analysis, data, form, loadHistory]);
 
   // ---- Delete ----
-  const confirmDelete = async  => {
+  const confirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
     const { error: delErr } = await supabase
       .from("investment_analyses")
-      .delete
+      .delete()
       .eq("id", pendingDelete.id);
     setDeleting(false);
     if (delErr) {
@@ -314,22 +314,22 @@ export default function InvestmentAnalysisManager {
   };
 
   // ---- Filter + sort ----
-  const visibleHistory = useMemo(=> {
-    const q = search.trim.toLowerCase;
+  const visibleHistory = useMemo(() => {
+    const q = search.trim().toLowerCase();
     const filtered = q
-      ? history.filter((r) => r.nume.toLowerCase.includes(q))
-      : history.slice;
+      ? history.filter((r) => r.nume.toLowerCase().includes(q))
+      : history.slice();
     filtered.sort((a, b) => {
       if (sortMode === "roi-desc") return b.result.roi_procentual - a.result.roi_procentual;
-      const at = new Date(a.created_at).getTime;
-      const bt = new Date(b.created_at).getTime;
+      const at = new Date(a.created_at).getTime();
+      const bt = new Date(b.created_at).getTime();
       return sortMode === "date-asc" ? at - bt : bt - at;
     });
     return filtered;
   }, [history, search, sortMode]);
 
   // Reset to page 1 whenever filter/sort/history size changes
-  useEffect(=> { setPage(1); }, [search, sortMode, history.length]);
+  useEffect(() => { setPage(1); }, [search, sortMode, history.length]);
 
   const totalPages = Math.max(1, Math.ceil(visibleHistory.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -339,7 +339,7 @@ export default function InvestmentAnalysisManager {
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault;
+    e.preventDefault();
     if (!canSubmit) return;
     try {
       await run({
@@ -366,7 +366,7 @@ export default function InvestmentAnalysisManager {
   };
 
   // ---- PDF Export ----
-  const exportPdf = async  => {
+  const exportPdf = async () => {
     if (!reportRef.current || !analysis) return;
     setExporting(true);
     try {
@@ -383,8 +383,8 @@ export default function InvestmentAnalysisManager {
       });
 
       const pdf = new jsPDF("p", "mm", "a4");
-      const pageW = pdf.internal.pageSize.getWidth;
-      const pageH = pdf.internal.pageSize.getHeight;
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
 
       // Header (branded)
       pdf.setFillColor(15, 42, 82); // deep blue
@@ -398,7 +398,7 @@ export default function InvestmentAnalysisManager {
       pdf.setFontSize(10);
       pdf.text("Analiză Investiție Imobiliară — Timișoara", 12, 19);
       pdf.setFontSize(9);
-      const dateStr = new Date.toLocaleDateString("ro-RO", {
+      const dateStr = new Date().toLocaleDateString("ro-RO", {
         year: "numeric", month: "long", day: "numeric",
       });
       pdf.text(dateStr, pageW - 12, 19, { align: "right" });
@@ -413,7 +413,7 @@ export default function InvestmentAnalysisManager {
       heightLeft -= pageH - position;
 
       while (heightLeft > 0) {
-        pdf.addPage;
+        pdf.addPage();
         position = 10 - (imgH - heightLeft);
         pdf.addImage(imgData, "PNG", 10, position, imgW, imgH);
         heightLeft -= pageH;
@@ -427,8 +427,8 @@ export default function InvestmentAnalysisManager {
         pageW / 2, pageH - 6, { align: "center" }
       );
 
-      const safeName = form.nume.replace(/[^a-z0-9]+/gi, "_").toLowerCase;
-      pdf.save(`analiza-investitie-${safeName}-${Date.now}.pdf`);
+      const safeName = form.nume.replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+      pdf.save(`analiza-investitie-${safeName}-${Date.now()}.pdf`);
       toast({ title: "PDF generat", description: "Descărcarea a început." });
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e);
@@ -849,7 +849,7 @@ export default function InvestmentAnalysisManager {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={ => loadFromHistory(row)}
+                              onClick={() => loadFromHistory(row)}
                               aria-label={`Reîncarcă analiza pentru ${row.nume} în formular`}
                             >
                               Reîncarcă
@@ -858,7 +858,7 @@ export default function InvestmentAnalysisManager {
                               variant="ghost"
                               size="icon"
                               className="h-9 w-9 min-h-9 min-w-9 text-muted-foreground hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive"
-                              onClick={ => setPendingDelete(row)}
+                              onClick={() => setPendingDelete(row)}
                               aria-label={`Șterge analiza pentru ${row.nume}`}
                               title={`Șterge analiza pentru ${row.nume}`}
                             >
@@ -888,7 +888,7 @@ export default function InvestmentAnalysisManager {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={ => setPage((p) => Math.max(1, p - 1))}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                       aria-label="Pagina anterioară"
                     >
@@ -905,7 +905,7 @@ export default function InvestmentAnalysisManager {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={ => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
                       aria-label="Pagina următoare"
                     >
@@ -935,7 +935,7 @@ export default function InvestmentAnalysisManager {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Anulează</AlertDialogCancel>
             <AlertDialogAction
-              onClick={(e) => { e.preventDefault; confirmDelete; }}
+              onClick={(e) => { e.preventDefault(); confirmDelete(); }}
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

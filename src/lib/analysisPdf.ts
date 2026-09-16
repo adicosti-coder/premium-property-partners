@@ -40,15 +40,15 @@ export interface AnalysisPdfInput {
 export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
   const a = input.analysis;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const pageW = doc.internal.pageSize.getWidth;
-  const pageH = doc.internal.pageSize.getHeight;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const margin = 48;
   const contentW = pageW - margin * 2;
   let y = 0;
 
   const ensure = (needed: number) => {
     if (y + needed > pageH - 70) {
-      doc.addPage;
+      doc.addPage();
       y = margin;
     }
   };
@@ -111,7 +111,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
   doc.text("Analiza potential regim hotelier - Timisoara", margin, 64);
   doc.setFontSize(9);
   doc.setTextColor(255, 255, 255);
-  const dateLabel = new Date(input.createdAt || Date.now).toLocaleDateString("ro-RO", {
+  const dateLabel = new Date(input.createdAt || Date.now()).toLocaleDateString("ro-RO", {
     day: "2-digit",
     month: "long",
     year: "numeric",
@@ -166,7 +166,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(GREY[0], GREY[1], GREY[2]);
-    doc.text(ascii(c.label.toUpperCase), x + 10, y + 18);
+    doc.text(ascii(c.label.toUpperCase()), x + 10, y + 18);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
     doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
@@ -247,7 +247,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(GREY[0], GREY[1], GREY[2]);
-    doc.text(ascii(c.label.toUpperCase), x + 12, y + 18);
+    doc.text(ascii(c.label.toUpperCase()), x + 12, y + 18);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
@@ -262,7 +262,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
   if (input.shareUrl) paragraph(`Link analiza: ${input.shareUrl}`, 8);
 
   // ---- Footer on every page ----
-  const pages = doc.getNumberOfPages;
+  const pages = doc.getNumberOfPages();
   for (let p = 1; p <= pages; p += 1) {
     doc.setPage(p);
     doc.setDrawColor(226, 230, 236);
@@ -281,7 +281,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
 export function downloadAnalysisPdf(input: AnalysisPdfInput) {
   const doc = generateAnalysisPdf(input);
   const slug = (input.analysis.zona || "timisoara")
-    .toLowerCase
+    .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")

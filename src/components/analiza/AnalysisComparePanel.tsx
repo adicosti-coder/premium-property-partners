@@ -27,21 +27,21 @@ const fmt = (n: number | null | undefined, suffix = "") =>
     : "—";
 
 const AnalysisComparePanel = ({ analysis, occupancy = 75, shareUrl = null }: Props) => {
-  const hotelGross = useMemo(=> {
+  const hotelGross = useMemo(() => {
     if (analysis.venit_lunar_brut) return analysis.venit_lunar_brut;
     return Math.round((analysis.tarif_noapte || 0) * DAYS_PER_MONTH * (occupancy / 100));
   }, [analysis.venit_lunar_brut, analysis.tarif_noapte, occupancy]);
 
   const suggestedRent = useMemo(
-     => Math.round(hotelGross / HOTEL_VS_RENT_MULTIPLIER),
+    () => Math.round(hotelGross / HOTEL_VS_RENT_MULTIPLIER),
     [hotelGross],
   );
 
   const [rent, setRent] = useState(suggestedRent);
-  useEffect(=> setRent(suggestedRent), [suggestedRent]);
+  useEffect(() => setRent(suggestedRent), [suggestedRent]);
 
   const priceRon = useMemo(
-     => (analysis.pret_listare || 0) * (analysis.moneda === "RON" ? 1 : EUR_RON),
+    () => (analysis.pret_listare || 0) * (analysis.moneda === "RON" ? 1 : EUR_RON),
     [analysis.pret_listare, analysis.moneda],
   );
 
@@ -82,7 +82,7 @@ const AnalysisComparePanel = ({ analysis, occupancy = 75, shareUrl = null }: Pro
     },
   ];
 
-  const downloadComparison = async  => {
+  const downloadComparison = async () => {
     try {
       const [{ downloadComparePdf }, { trackConversion }] = await Promise.all([
         import("@/lib/analysisComparePdf"),

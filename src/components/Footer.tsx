@@ -12,10 +12,10 @@ import { supabase } from "@/lib/supabaseClient";
 import { neighborhoods } from "@/data/neighborhoods";
 import PropertyRequestModal from "@/components/PropertyRequestModal";
 
-const emailSchema = z.string.trim.email.max(255);
+const emailSchema = z.string().trim().email().max(255);
 
-const Footer =  => {
-  const { t, language } = useLanguage;
+const Footer = () => {
+  const { t, language } = useLanguage();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -51,7 +51,7 @@ const Footer =  => {
   const text = tr[language as keyof typeof tr] || tr.ro;
 
   const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault;
+    e.preventDefault();
     const result = emailSchema.safeParse(email);
     if (!result.success) {
       toast.error(text.invalidEmail);
@@ -136,7 +136,7 @@ const Footer =  => {
             <nav className="flex flex-col gap-2.5">
               {serviceLinks.map((link) => (
                 link.isRequestModal ? (
-                  <button key="request-modal" onClick={ => setRequestOpen(true)} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left inline-flex items-center gap-1.5">
+                  <button key="request-modal" onClick={() => setRequestOpen(true)} className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left inline-flex items-center gap-1.5">
                     <Search className="w-3.5 h-3.5" />
                     {link.label}
                   </button>
@@ -225,7 +225,7 @@ const Footer =  => {
             {/* GDPR: consent must be withdrawable at any time. */}
             <button
               type="button"
-              onClick={ => window.dispatchEvent(new Event(OPEN_COOKIE_PREFERENCES_EVENT))}
+              onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_PREFERENCES_EVENT))}
               className="hover:text-foreground transition-colors underline-offset-2 hover:underline"
             >
               Modifică setările de confidențialitate

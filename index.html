@@ -8,15 +8,15 @@
          Must run BEFORE any tag loads so no cookie/identifier is written first. -->
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag{window.dataLayer.push(arguments);}
+      function gtag(){window.dataLayer.push(arguments);}
       window.gtag = window.gtag || gtag;
-      (function  {
+      (function () {
         var stored = null;
         try { stored = localStorage.getItem('cookie_consent_v2'); } catch (e) {}
         if (stored && stored.charAt(0) === '{') {
           try {
             var obj = JSON.parse(stored);
-            var fresh = !obj.ts || (Date.now - obj.ts) < 365 * 24 * 60 * 60 * 1000;
+            var fresh = !obj.ts || (Date.now() - obj.ts) < 365 * 24 * 60 * 60 * 1000;
             stored = fresh ? obj.choice : null;
           } catch (e) { stored = null; }
         } else if (stored && stored.charAt(0) === '"') { try { stored = JSON.parse(stored); } catch (e) {} }
@@ -33,7 +33,7 @@
         });
         gtag('set', 'url_passthrough', true);
         gtag('set', 'ads_data_redaction', ads !== 'granted');
-      });
+      })();
     </script>
 
     
@@ -198,7 +198,7 @@
     <meta name="ICBM" content="45.7489, 21.2087" />
     
     <script>
-      (function  {
+      (function () {
         try {
           if (typeof window === "undefined" || typeof document === "undefined") return;
           var stored = window.localStorage && window.localStorage.getItem("theme");
@@ -207,7 +207,7 @@
           document.documentElement.setAttribute("lang", "ro");
           document.documentElement.setAttribute("xml:lang", "ro");
         } catch (_) {}
-      });
+      })();
     </script>
 
     <!-- Production CSS is rewritten by vite-async-css: critical CSS is inline above,
@@ -250,9 +250,9 @@
     
     <!-- GA4 deferred — loads on first user interaction to avoid TBT impact -->
     <script>
-      (function {
+      (function() {
         var loaded = false;
-        function loadGA4 {
+        function loadGA4() {
           if (loaded) return;
           loaded = true;
           events.forEach(function(e) { document.removeEventListener(e, loadGA4); });
@@ -262,15 +262,15 @@
           s.async = true;
           document.head.appendChild(s);
           window.dataLayer = window.dataLayer || [];
-          function gtag{window.dataLayer.push(arguments);}
+          function gtag(){window.dataLayer.push(arguments);}
           window.gtag = window.gtag || gtag;
-          gtag('js', new Date);
+          gtag('js', new Date());
           gtag('config', 'G-JXDGWL3G6V');
         }
         var events = ['scroll', 'click', 'touchstart', 'keydown'];
         events.forEach(function(e) { document.addEventListener(e, loadGA4, { once: true, passive: true }); });
         var fallback = setTimeout(loadGA4, 45000);
-      });
+      })();
     </script>
     <script type="module" src="/src/main.tsx" data-cfasync="false"></script>
   </body>

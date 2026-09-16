@@ -13,7 +13,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
  *    so the 9.4% figure is genuinely net.
  */
 const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
-  const { language } = useLanguage;
+  const { language } = useLanguage();
   const ro = language !== "en";
 
   const rows = ro

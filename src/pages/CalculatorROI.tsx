@@ -11,9 +11,9 @@ import { Link } from "react-router-dom";
 import { Coins, Home, Wrench, Receipt, BedDouble, TrendingUp, Wallet, BookOpen, HelpCircle } from "lucide-react";
 import { lazy, Suspense } from "react";
 
-const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
-const CalculatorROI =  => {
+const CalculatorROI = () => {
   const breadcrumbItems = [
     { label: "Acasă", href: "/" },
     { label: "Calculator ROI" },

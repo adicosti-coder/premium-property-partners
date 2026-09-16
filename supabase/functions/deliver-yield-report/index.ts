@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
   if (limited) return limited;
 
   try {
-    const body = await req.json.catch(=> null);
+    const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") return json({ error: "Invalid body" }, 400);
 
     const { pdfBase64, name, email, phone } = body as Record<string, unknown>;
@@ -54,8 +54,8 @@ Deno.serve(async (req) => {
     }
     if (!/^[A-Za-z0-9+/=\s]+$/.test(pdfBase64)) return json({ error: "Invalid PDF encoding" }, 400);
 
-    const safeName = typeof name === "string" ? name.trim.slice(0, 80) : "";
-    const ownerEmail = typeof email === "string" && EMAIL_RE.test(email.trim) ? email.trim : null;
+    const safeName = typeof name === "string" ? name.trim().slice(0, 80) : "";
+    const ownerEmail = typeof email === "string" && EMAIL_RE.test(email.trim()) ? email.trim() : null;
     const ownerPhone = typeof phone === "string" ? phone.replace(/[^\d+]/g, "").slice(0, 20) : "";
 
     const bytes = b64ToBytes(pdfBase64.replace(/\s/g, ""));
@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const tUpload = Date.now;
-    const path = `yield-reports/${new Date.toISOString.slice(0, 10)}/${crypto.randomUUID}.pdf`;
+    const tUpload = Date.now();
+    const path = `yield-reports/${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.pdf`;
 
     const { error: upErr } = await admin.storage
       .from("lead-reports")
@@ -87,14 +87,14 @@ Deno.serve(async (req) => {
       return json({ error: "sign_failed" }, 500);
     }
 
-    const uploadMs = Date.now - tUpload;
+    const uploadMs = Date.now() - tUpload;
 
     // Optional: email the PDF straight to the owner.
     let emailSent = false;
     let ownerEmailMs: number | null = null;
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (ownerEmail && resendKey) {
-      const tMail = Date.now;
+      const tMail = Date.now();
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
         }),
       });
       emailSent = res.ok;
-      ownerEmailMs = Date.now - tMail;
+      ownerEmailMs = Date.now() - tMail;
       if (!res.ok) console.error("deliver-yield-report email failed:", res.status);
     }
 
@@ -125,18 +125,18 @@ Deno.serve(async (req) => {
       let q = admin
         .from("leads")
         .select("id")
-        .gte("created_at", new Date(Date.now - 24 * 60 * 60 * 1000).toISOString)
+        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order("created_at", { ascending: false })
         .limit(1);
       if (digits.length >= 9) q = q.ilike("whatsapp_number", `%${digits}%`);
       else if (ownerEmail) q = q.eq("email", ownerEmail);
       else q = q.eq("id", "00000000-0000-0000-0000-000000000000");
 
-      const { data: leadRow } = await q.maybeSingle;
+      const { data: leadRow } = await q.maybeSingle();
       if (leadRow?.id) {
         await admin
           .from("leads")
-          .update({ report_pdf_path: path, report_delivered_at: new Date.toISOString })
+          .update({ report_pdf_path: path, report_delivered_at: new Date().toISOString() })
           .eq("id", leadRow.id);
 
         await logLeadEvent({

@@ -22,11 +22,11 @@ import {
 import ContextualLinks from "@/components/seo/ContextualLinks";
 import { buildComplexLinks } from "@/lib/internalLinking";
 
-const ProfitCalculator = lazy(=> import("@/components/ProfitCalculator"));
-const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
-const CTA = lazy(=> import("@/components/CTA"));
-const ComplexZoneListings = lazy(=> import("@/components/ComplexZoneListings"));
-const OccupancyUrgencyBadge = lazy(=> import("@/components/complex/OccupancyUrgencyBadge"));
+const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const CTA = lazy(() => import("@/components/CTA"));
+const ComplexZoneListings = lazy(() => import("@/components/ComplexZoneListings"));
+const OccupancyUrgencyBadge = lazy(() => import("@/components/complex/OccupancyUrgencyBadge"));
 
 
 interface ComplexData {
@@ -226,9 +226,9 @@ const complexesData: Record<string, ComplexData> = {
   },
 };
 
-const ComplexLanding =  => {
-  const { slug } = useParams<{ slug: string }>;
-  const { language } = useLanguage;
+const ComplexLanding = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const { language } = useLanguage();
 
   const complex = slug ? complexesData[slug] : null;
 

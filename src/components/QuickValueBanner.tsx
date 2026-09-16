@@ -3,11 +3,11 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 
 interface QuickValueBannerProps {
-  onCtaClick?:  => void;
+  onCtaClick?: () => void;
 }
 
 const QuickValueBanner = ({ onCtaClick }: QuickValueBannerProps) => {
-  const { language } = useLanguage;
+  const { language } = useLanguage();
 
   const content = {
     ro: {

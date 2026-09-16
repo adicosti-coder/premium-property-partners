@@ -12,7 +12,7 @@ import DataProvenance from "@/components/seo/DataProvenance";
 import { CLUSTER_LINKS } from "@/lib/internalLinking";
 import { neighborhoods } from "@/data/neighborhoods";
 
-const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 const BASE_URL = "https://realtrust.ro";
 const URL = `${BASE_URL}/zone-investitii-timisoara`;
@@ -219,7 +219,7 @@ const priceOf = (slug?: string) => {
   return neighborhoods.find((n) => n.slug === slug)?.avgPricePerSqm;
 };
 
-const ZoneInvestitiiTimisoara =  => {
+const ZoneInvestitiiTimisoara = () => {
   // NOTE: FAQPage structured data for this page is emitted by the central
   // FAQSchemaProvider from the visible <GeoAnswers group="zone" /> block below.
   // Do not add an inline FAQPage here — it would duplicate the schema.

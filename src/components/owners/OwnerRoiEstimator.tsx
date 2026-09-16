@@ -48,11 +48,11 @@ const fmt = (value: number, isRo: boolean) =>
     maximumFractionDigits: 0,
   }).format(Math.round(value));
 
-const OwnerRoiEstimator =  => {
-  const { language } = useLanguage;
+const OwnerRoiEstimator = () => {
+  const { language } = useLanguage();
   const isRo = language === "ro";
 
-  const navigate = useNavigate;
+  const navigate = useNavigate();
 
   const [typeKey, setTypeKey] = useState<PropertyTypeKey>("2-camere");
   const [zoneKey, setZoneKey] = useState<string>("circumvalatiunii");
@@ -61,7 +61,7 @@ const OwnerRoiEstimator =  => {
   const selectedType = PROPERTY_TYPES.find((p) => p.key === typeKey)!;
   const selectedZone = ZONES.find((z) => z.key === zoneKey)!;
 
-  const result = useMemo(=> {
+  const result = useMemo(() => {
     const classicAnnualGross = rent * 12;
     const classicAnnualNet = classicAnnualGross * CLASSIC_NET_FACTOR;
     const hotelAnnualGross = rent * 12 * selectedType.mult * selectedZone.factor;
@@ -120,14 +120,14 @@ const OwnerRoiEstimator =  => {
         )}% deduction (management fee, cleaning, consumables, taxes). Figures are indicative; the exact estimate follows a property review.`,
       };
 
-  const handlePrefillCta =  => {
+  const handlePrefillCta = () => {
     emitOwnerRoiPrefill({
       propertyType: typeKey,
       zone: zoneKey,
       monthlyRent: rent,
       netAnnualIncome: Math.round(result.hotelAnnualNet),
     });
-    const scrolled = scrollToOwnerContactForm;
+    const scrolled = scrollToOwnerContactForm();
     if (!scrolled) {
       navigate(`/evaluare-gratuita?tip=${typeKey}&zona=${selectedZone.slug}`);
     }
@@ -163,7 +163,7 @@ const OwnerRoiEstimator =  => {
                         variant={typeKey === p.key ? "default" : "outline"}
                         className="h-auto min-h-[48px] whitespace-normal text-xs md:text-sm"
                         aria-pressed={typeKey === p.key}
-                        onClick={ => setTypeKey(p.key)}
+                        onClick={() => setTypeKey(p.key)}
                       >
                         {isRo ? p.ro : p.en}
                       </Button>
@@ -181,7 +181,7 @@ const OwnerRoiEstimator =  => {
                         variant={zoneKey === z.key ? "default" : "outline"}
                         className="h-auto min-h-[48px] whitespace-normal text-xs md:text-sm"
                         aria-pressed={zoneKey === z.key}
-                        onClick={ => setZoneKey(z.key)}
+                        onClick={() => setZoneKey(z.key)}
                       >
                         {isRo ? z.ro : z.en}
                       </Button>
@@ -216,7 +216,7 @@ const OwnerRoiEstimator =  => {
                         type="button"
                         size="sm"
                         variant="secondary"
-                        onClick={ => setRent(preset)}
+                        onClick={() => setRent(preset)}
                         aria-label={`${t.rentLabel}: ${preset} €`}
                       >
                         {preset} €

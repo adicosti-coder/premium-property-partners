@@ -10,8 +10,8 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
-const ServicesOverview =  => {
-  const { language } = useLanguage;
+const ServicesOverview = () => {
+  const { language } = useLanguage();
   const { ref: sectionRef, isVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
 
@@ -185,7 +185,7 @@ const ServicesOverview =  => {
             ) : (
               <button
                 key={index}
-                onClick={ => handleClick(service.link)}
+                onClick={() => handleClick(service.link)}
                 className="block h-full text-left w-full"
               >
                 {CardContent}

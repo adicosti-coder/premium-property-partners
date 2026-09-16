@@ -49,8 +49,8 @@ export interface ComparePdfInput {
 
 export function generateComparePdf(input: ComparePdfInput): jsPDF {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const pageW = doc.internal.pageSize.getWidth;
-  const pageH = doc.internal.pageSize.getHeight;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const margin = 48;
   const contentW = pageW - margin * 2;
 
@@ -68,7 +68,7 @@ export function generateComparePdf(input: ComparePdfInput): jsPDF {
   doc.setTextColor(255, 255, 255);
   doc.text(
     ascii(
-      new Date(input.createdAt || Date.now).toLocaleDateString("ro-RO", {
+      new Date(input.createdAt || Date.now()).toLocaleDateString("ro-RO", {
         day: "2-digit",
         month: "long",
         year: "numeric",
@@ -250,7 +250,7 @@ export function downloadComparePdf(input: ComparePdfInput) {
   const doc = generateComparePdf(input);
   const slug =
     (input.zone || "timisoara")
-      .toLowerCase
+      .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-")

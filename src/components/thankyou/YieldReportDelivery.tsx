@@ -67,18 +67,18 @@ const buildReportInput = ({ name, rooms, zone }: Props): YieldReportInput => {
  *    an address is known and opens the WhatsApp chat with the link prefilled.
  */
 const YieldReportDelivery = (props: Props) => {
-  const { toast } = useToast;
+  const { toast } = useToast();
   const [busy, setBusy] = useState<"download" | "whatsapp" | null>(null);
 
-  const buildPdf = async  => {
+  const buildPdf = async () => {
     const { generateYieldReportPdf } = await import("@/utils/exportYieldReportPdf");
     return generateYieldReportPdf(buildReportInput(props));
   };
 
-  const handleDownload = async  => {
+  const handleDownload = async () => {
     setBusy("download");
     try {
-      const doc = await buildPdf;
+      const doc = await buildPdf();
       doc.save("Raport-Randament-RealTrust.pdf");
       trackConversion({ event: "download_yield_report", source: "multumire_pdf", page_path: "/multumire" });
     } catch {
@@ -92,10 +92,10 @@ const YieldReportDelivery = (props: Props) => {
     }
   };
 
-  const handleWhatsapp = async  => {
+  const handleWhatsapp = async () => {
     setBusy("whatsapp");
     try {
-      const doc = await buildPdf;
+      const doc = await buildPdf();
       const base64 = doc.output("datauristring").split(",")[1] ?? "";
 
       const { data, error } = await supabase.functions.invoke("deliver-yield-report", {

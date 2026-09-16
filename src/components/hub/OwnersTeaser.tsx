@@ -6,8 +6,8 @@ import TeaserCard from "@/components/TeaserCard";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-const OwnersTeaser =  => {
-  const { language } = useLanguage;
+const OwnersTeaser = () => {
+  const { language } = useLanguage();
   const { ref: gridRef, isVisible: gridVisible } = useScrollAnimation({ threshold: 0.1 });
   const { ref: bannerRef, isVisible: bannerVisible } = useScrollAnimation({ threshold: 0.1 });
 
@@ -93,7 +93,7 @@ const OwnersTeaser =  => {
       ctaLink="/pentru-proprietari"
       secondaryCta={{
         text: language === "ro" ? "Cum Funcționează" : "How It Works",
-        onClick:  => {
+        onClick: () => {
           const section = document.getElementById("cum-functioneaza");
           section?.scrollIntoView({ behavior: "smooth" });
         },
@@ -145,7 +145,7 @@ const OwnersTeaser =  => {
           <Button
             size="lg"
             className="group font-semibold"
-            onClick={ => {
+            onClick={() => {
               document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" });
             }}
           >

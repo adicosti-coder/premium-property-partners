@@ -27,66 +27,66 @@ import { setCtaVariant as recordCtaVariant } from "@/lib/campaignAttribution";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 import { OWNERS_FAQ_DATA } from "@/data/ownersFaq";
 
-const FloatingReferralButton = lazy(=> import("@/components/FloatingReferralButton"));
+const FloatingReferralButton = lazy(() => import("@/components/FloatingReferralButton"));
 
-const OwnerBenefits = lazy(=> import("@/components/OwnerBenefits"));
-const OwnerHowItWorks = lazy(=> import("@/components/OwnerHowItWorks"));
-const OnboardingVideoExplainer = lazy(=> import("@/components/OnboardingVideoExplainer"));
-const TrustBadges = lazy(=> import("@/components/TrustBadges"));
-const FinancialTransparency = lazy(=> import("@/components/FinancialTransparency"));
-const PartnershipTimeline = lazy(=> import("@/components/PartnershipTimeline"));
-const ProfitCalculator = lazy(=> import("@/components/ProfitCalculator"));
-const RentalIncomeCalculator = lazy(=> import("@/components/RentalIncomeCalculator"));
-const AdvancedRentalCalculator = lazy(=> import("@/components/AdvancedRentalCalculator"));
-const HowItWorks = lazy(=> import("@/components/HowItWorks"));
-const WhyUs = lazy(=> import("@/components/WhyUs"));
-const Testimonials = lazy(=> import("@/components/Testimonials"));
-const VideoTestimonials = lazy(=> import("@/components/VideoTestimonials"));
-const FAQ = lazy(=> import("@/components/FAQ"));
-const OwnersFAQ = lazy(=> import("@/components/owners/OwnersFAQ"));
-const OwnerObjectionsFAQ = lazy(=> import("@/components/owners/OwnerObjectionsFAQ"));
-const ReferralBanner = lazy(=> import("@/components/ReferralBanner"));
-const PageSummary = lazy(=> import("@/components/PageSummary"));
-const AIQuoteBlock = lazy(=> import("@/components/AIQuoteBlock"));
-const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
-const ServiceOptionsComparison = lazy(=> import("@/components/ServiceOptionsComparison"));
-const ServiceGuaranteesGrid = lazy(=> import("@/components/ServiceGuaranteesGrid"));
-const ProcessStepsTimeline = lazy(=> import("@/components/ProcessStepsTimeline"));
-const QuickValueBanner = lazy(=> import("@/components/QuickValueBanner"));
-const PropertyTypeSelector = lazy(=> import("@/components/PropertyTypeSelector"));
-const PropertyQualification = lazy(=> import("@/components/PropertyQualification"));
-const ServiceChainAF = lazy(=> import("@/components/ServiceChainAF"));
-const DIYvsProfessional = lazy(=> import("@/components/DIYvsProfessional"));
-const ChannelLogos = lazy(=> import("@/components/ChannelLogos"));
-const LeadMagnetBanner = lazy(=> import("@/components/LeadMagnetBanner"));
+const OwnerBenefits = lazy(() => import("@/components/OwnerBenefits"));
+const OwnerHowItWorks = lazy(() => import("@/components/OwnerHowItWorks"));
+const OnboardingVideoExplainer = lazy(() => import("@/components/OnboardingVideoExplainer"));
+const TrustBadges = lazy(() => import("@/components/TrustBadges"));
+const FinancialTransparency = lazy(() => import("@/components/FinancialTransparency"));
+const PartnershipTimeline = lazy(() => import("@/components/PartnershipTimeline"));
+const ProfitCalculator = lazy(() => import("@/components/ProfitCalculator"));
+const RentalIncomeCalculator = lazy(() => import("@/components/RentalIncomeCalculator"));
+const AdvancedRentalCalculator = lazy(() => import("@/components/AdvancedRentalCalculator"));
+const HowItWorks = lazy(() => import("@/components/HowItWorks"));
+const WhyUs = lazy(() => import("@/components/WhyUs"));
+const Testimonials = lazy(() => import("@/components/Testimonials"));
+const VideoTestimonials = lazy(() => import("@/components/VideoTestimonials"));
+const FAQ = lazy(() => import("@/components/FAQ"));
+const OwnersFAQ = lazy(() => import("@/components/owners/OwnersFAQ"));
+const OwnerObjectionsFAQ = lazy(() => import("@/components/owners/OwnerObjectionsFAQ"));
+const ReferralBanner = lazy(() => import("@/components/ReferralBanner"));
+const PageSummary = lazy(() => import("@/components/PageSummary"));
+const AIQuoteBlock = lazy(() => import("@/components/AIQuoteBlock"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const ServiceOptionsComparison = lazy(() => import("@/components/ServiceOptionsComparison"));
+const ServiceGuaranteesGrid = lazy(() => import("@/components/ServiceGuaranteesGrid"));
+const ProcessStepsTimeline = lazy(() => import("@/components/ProcessStepsTimeline"));
+const QuickValueBanner = lazy(() => import("@/components/QuickValueBanner"));
+const PropertyTypeSelector = lazy(() => import("@/components/PropertyTypeSelector"));
+const PropertyQualification = lazy(() => import("@/components/PropertyQualification"));
+const ServiceChainAF = lazy(() => import("@/components/ServiceChainAF"));
+const DIYvsProfessional = lazy(() => import("@/components/DIYvsProfessional"));
+const ChannelLogos = lazy(() => import("@/components/ChannelLogos"));
+const LeadMagnetBanner = lazy(() => import("@/components/LeadMagnetBanner"));
 import ContextualLinks from "@/components/seo/ContextualLinks";
 import GeoAnswers from "@/components/seo/GeoAnswers";
 import DataProvenance from "@/components/seo/DataProvenance";
 import { CLUSTER_LINKS } from "@/lib/internalLinking";
-const ROICaseStudySection = lazy(=> import("@/components/ROICaseStudySection"));
-const PhotoPropertyAnalysis = lazy(=> import("@/components/PhotoPropertyAnalysis"));
-const PreCalcMiniForm = lazy(=> import("@/components/owners/PreCalcMiniForm"));
-const OwnerMarketingServices = lazy(=> import("@/components/owners/OwnerMarketingServices"));
-const OwnerCoverageMap = lazy(=> import("@/components/owners/OwnerCoverageMap"));
-const OwnerGuideHub = lazy(=> import("@/components/owners/OwnerGuideHub"));
-const OwnerTestimonials = lazy(=> import("@/components/owners/OwnerTestimonials"));
-const TaxOptimizationSection = lazy(=> import("@/components/owners/TaxOptimizationSection"));
-const ContractTransparency = lazy(=> import("@/components/owners/ContractTransparency"));
-const BeforeAfterTransformations = lazy(=> import("@/components/owners/BeforeAfterTransformations"));
-const OwnerPricingPackages = lazy(=> import("@/components/owners/OwnerPricingPackages"));
-const FounderProfile = lazy(=> import("@/components/owners/FounderProfile"));
-const OwnerCaseStudies = lazy(=> import("@/components/owners/OwnerCaseStudies"));
-const OwnerRoiEstimator = lazy(=> import("@/components/owners/OwnerRoiEstimator"));
-const OwnerContactLeadForm = lazy(=> import("@/components/owners/OwnerContactLeadForm"));
-const FounderCallBooking = lazy(=> import("@/components/owners/FounderCallBooking"));
-const OwnerLegalTaxGuide = lazy(=> import("@/components/owners/OwnerLegalTaxGuide"));
-const OwnerRisksLimits = lazy(=> import("@/components/owners/OwnerRisksLimits"));
-const OwnerExitDamagePolicy = lazy(=> import("@/components/owners/OwnerExitDamagePolicy"));
-const OwnerDashboardDemo = lazy(=> import("@/components/owners/OwnerDashboardDemo"));
-const OwnerSeasonalityChart = lazy(=> import("@/components/owners/OwnerSeasonalityChart"));
-const OwnerEligibilityCriteria = lazy(=> import("@/components/owners/OwnerEligibilityCriteria"));
-const OwnerCompetitorComparison = lazy(=> import("@/components/owners/OwnerCompetitorComparison"));
-const OwnerAssociationPermits = lazy(=> import("@/components/owners/OwnerAssociationPermits"));
+const ROICaseStudySection = lazy(() => import("@/components/ROICaseStudySection"));
+const PhotoPropertyAnalysis = lazy(() => import("@/components/PhotoPropertyAnalysis"));
+const PreCalcMiniForm = lazy(() => import("@/components/owners/PreCalcMiniForm"));
+const OwnerMarketingServices = lazy(() => import("@/components/owners/OwnerMarketingServices"));
+const OwnerCoverageMap = lazy(() => import("@/components/owners/OwnerCoverageMap"));
+const OwnerGuideHub = lazy(() => import("@/components/owners/OwnerGuideHub"));
+const OwnerTestimonials = lazy(() => import("@/components/owners/OwnerTestimonials"));
+const TaxOptimizationSection = lazy(() => import("@/components/owners/TaxOptimizationSection"));
+const ContractTransparency = lazy(() => import("@/components/owners/ContractTransparency"));
+const BeforeAfterTransformations = lazy(() => import("@/components/owners/BeforeAfterTransformations"));
+const OwnerPricingPackages = lazy(() => import("@/components/owners/OwnerPricingPackages"));
+const FounderProfile = lazy(() => import("@/components/owners/FounderProfile"));
+const OwnerCaseStudies = lazy(() => import("@/components/owners/OwnerCaseStudies"));
+const OwnerRoiEstimator = lazy(() => import("@/components/owners/OwnerRoiEstimator"));
+const OwnerContactLeadForm = lazy(() => import("@/components/owners/OwnerContactLeadForm"));
+const FounderCallBooking = lazy(() => import("@/components/owners/FounderCallBooking"));
+const OwnerLegalTaxGuide = lazy(() => import("@/components/owners/OwnerLegalTaxGuide"));
+const OwnerRisksLimits = lazy(() => import("@/components/owners/OwnerRisksLimits"));
+const OwnerExitDamagePolicy = lazy(() => import("@/components/owners/OwnerExitDamagePolicy"));
+const OwnerDashboardDemo = lazy(() => import("@/components/owners/OwnerDashboardDemo"));
+const OwnerSeasonalityChart = lazy(() => import("@/components/owners/OwnerSeasonalityChart"));
+const OwnerEligibilityCriteria = lazy(() => import("@/components/owners/OwnerEligibilityCriteria"));
+const OwnerCompetitorComparison = lazy(() => import("@/components/owners/OwnerCompetitorComparison"));
+const OwnerAssociationPermits = lazy(() => import("@/components/owners/OwnerAssociationPermits"));
 
 /**
  * Hook: loads a lazy component only after IntersectionObserver fires.
@@ -96,27 +96,27 @@ function useDeferredLoad(rootMargin = "500px") {
   const ref = useRef<HTMLDivElement>(null);
   const [shouldRender, setShouldRender] = useState(false);
 
-  useEffect(=> {
+  useEffect(() => {
     const el = ref.current;
     if (!el || shouldRender) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setShouldRender(true);
-          observer.disconnect;
+          observer.disconnect();
         }
       },
       { rootMargin }
     );
     observer.observe(el);
-    return  => observer.disconnect;
+    return () => observer.disconnect();
   }, [shouldRender, rootMargin]);
 
   return [ref, shouldRender] as const;
 }
 
-const PentruProprietari =  => {
-  const { language } = useLanguage;
+const PentruProprietari = () => {
+  const { language } = useLanguage();
 
   // Register the owners FAQ schema at page level: the visible OwnersFAQ section
   // is lazy + below the fold, so without this the FAQPage JSON-LD was missing
@@ -137,11 +137,11 @@ const PentruProprietari =  => {
 
   // CTA A/B variant — assigned 50/50 on first visit, then persisted so the
   // visitor always sees the same variant (and leads stay attributable).
-  const [ctaVariant, setCtaVariantState] = useState<"A" | "B">(=> {
+  const [ctaVariant, setCtaVariantState] = useState<"A" | "B">(() => {
     if (typeof window === "undefined") return "A";
     const stored = localStorage.getItem("ownerCtaVariant") as "A" | "B" | null;
     if (stored === "A" || stored === "B") return stored;
-    const assigned = Math.random < 0.5 ? "A" : "B";
+    const assigned = Math.random() < 0.5 ? "A" : "B";
     try {
       localStorage.setItem("ownerCtaVariant", assigned);
     } catch {
@@ -150,7 +150,7 @@ const PentruProprietari =  => {
     return assigned;
   });
   const setCtaVariant = setCtaVariantState;
-  useEffect(=> {
+  useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("ownerCtaVariant", ctaVariant);
       // Attach the variant to session attribution → lands on every new lead.
@@ -160,10 +160,10 @@ const PentruProprietari =  => {
 
 
   // Analytics for CTA A/B test
-  const { trackCta, trackFormSubmit } = useCtaAnalytics;
+  const { trackCta, trackFormSubmit } = useCtaAnalytics();
 
   // Track variant exposure (impression) once per variant per session
-  useEffect(=> {
+  useEffect(() => {
     if (typeof window === "undefined") return;
     const seenKey = `ownerCtaVariant_seen_${ctaVariant}`;
     if (sessionStorage.getItem(seenKey)) return;
@@ -178,16 +178,16 @@ const PentruProprietari =  => {
     });
   }, [ctaVariant, trackCta]);
 
-  const handlePrimaryCtaClick =  => {
+  const handlePrimaryCtaClick = () => {
     trackFormSubmit("owner_cta_primary_click", {
       variant: ctaVariant,
       page: "pentru_proprietari",
       label: ctaVariant === "A" ? "calculate_monthly_income" : "calculate_60s",
     });
-    scrollToCalculator;
+    scrollToCalculator();
   };
 
-  const handleSecondaryCtaClick =  => {
+  const handleSecondaryCtaClick = () => {
     trackCta({
       ctaType: ctaVariant === "A" ? "whatsapp" : "form_submit",
       metadata: {
@@ -198,7 +198,7 @@ const PentruProprietari =  => {
       },
     });
     if (ctaVariant === "A") {
-      handleWhatsApp;
+      handleWhatsApp();
     }
     // Variant B uses <Link asChild> → navigation handled natively
   };
@@ -280,12 +280,12 @@ const PentruProprietari =  => {
 
   const t = content[language as keyof typeof content] || content.ro;
 
-  const scrollToCalculator =  => {
+  const scrollToCalculator = () => {
     const element = document.getElementById("calculator");
     element?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleWhatsApp =  => {
+  const handleWhatsApp = () => {
     const message = encodeURIComponent(
       language === "ro"
         ? "Bună ziua! Sunt interesat de serviciile RealTrust & ApArt Hotel pentru administrarea apartamentului meu."
@@ -310,9 +310,9 @@ const PentruProprietari =  => {
 
   // Service JSON-LD schema - deferred import to reduce TBT
   const [schemas, setSchemas] = useState<any[]>([]);
-  useEffect(=> {
+  useEffect(() => {
     import("@/utils/schemaGenerators").then(({ generatePropertyManagementServiceSchema, generateSpeakableSchema }) => {
-      const serviceSchema = generatePropertyManagementServiceSchema;
+      const serviceSchema = generatePropertyManagementServiceSchema();
       const speakable = generateSpeakableSchema(seo.title, "https://realtrust.ro/pentru-proprietari");
       // Fix 3B - Service schema
       const serviceSchemaFix3B = {
@@ -837,7 +837,7 @@ const PentruProprietari =  => {
                 asChild
                 size="xl"
                 className="group bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-blue-950 font-bold border-0 shadow-lg shadow-amber-500/30"
-                onClick={ => trackFormSubmit("owner_cta_bar_roi", { page: "pentru_proprietari", label: "calc_roi" })}
+                onClick={() => trackFormSubmit("owner_cta_bar_roi", { page: "pentru_proprietari", label: "calc_roi" })}
               >
                 <Link to="/calculator-roi">
                   <TrendingUp className="w-5 h-5 mr-2" />
@@ -850,7 +850,7 @@ const PentruProprietari =  => {
                 variant="heroOutline"
                 size="xl"
                 className="border-amber-500/50 text-amber-300 hover:bg-amber-500/10 hover:border-amber-400"
-                onClick={ => trackFormSubmit("owner_cta_bar_offer", { page: "pentru_proprietari", label: "request_offer" })}
+                onClick={() => trackFormSubmit("owner_cta_bar_offer", { page: "pentru_proprietari", label: "request_offer" })}
               >
                 <Link to="/evaluare-gratuita">
                   <Sparkles className="w-5 h-5 mr-2" />
@@ -1012,7 +1012,7 @@ const PentruProprietari =  => {
 
       {/* Property Type Selector */}
       <PropertyTypeSelector 
-        onContinue={ => scrollToCalculator}
+        onContinue={() => scrollToCalculator()}
       />
 
       {/* Photo Property Analysis - AI Visual */}
@@ -1261,7 +1261,7 @@ const PentruProprietari =  => {
                 variant="outline"
                 size="xl"
                 className="bg-card text-foreground border-border hover:bg-muted font-semibold shadow-md"
-                onClick={ => window.location.href = "tel:+40799069256"}
+                onClick={() => window.location.href = "tel:+40799069256"}
               >
                 <Phone className="w-5 h-5 mr-2" />
                 0799 069 256

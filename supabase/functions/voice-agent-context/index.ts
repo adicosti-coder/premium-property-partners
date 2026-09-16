@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
 
   let body: { phone?: string } = {};
   try {
-    body = await req.json;
+    body = await req.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
       status: 400,
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const rawPhone = (body.phone || "").toString.trim;
+  const rawPhone = (body.phone || "").toString().trim();
   if (!rawPhone) {
     return new Response(JSON.stringify({ error: "Missing 'phone'" }), {
       status: 400,
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
   const e164 = normalizeRoPhone(rawPhone);
   const digits = rawPhone.replace(/\D/g, "");
   // Build candidate variants for matching across columns that may not be normalized
-  const variants = new Set<string>;
+  const variants = new Set<string>();
   if (rawPhone) variants.add(rawPhone);
   if (e164) variants.add(e164);
   if (digits) {
@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
   // Match across phone_normalized / contact_phone / scraper_phone using all variants
   const orParts: string[] = [];
   for (const v of variants) {
-    const esc = v.replace(/[,]/g, "");
+    const esc = v.replace(/[(),]/g, "");
     orParts.push(`phone_normalized.eq.${esc}`);
     orParts.push(`contact_phone.eq.${esc}`);
     orParts.push(`scraper_phone.eq.${esc}`);
@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
     .or(orParts.join(","))
     .order("last_activity_at", { ascending: false, nullsFirst: false })
     .limit(1)
-    .maybeSingle;
+    .maybeSingle();
 
   if (error) {
     console.error("v_prospect_funnel query error:", error.message);

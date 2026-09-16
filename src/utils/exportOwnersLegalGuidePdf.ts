@@ -9,9 +9,9 @@ interface ExportOptions {
  */
 export const exportOwnersLegalGuidePdf = async ({ language = "ro" }: ExportOptions = {}) => {
   const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF;
-  const pageWidth = doc.internal.pageSize.getWidth;
-  const pageHeight = doc.internal.pageSize.getHeight;
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentWidth = pageWidth - 2 * margin;
   let y = 20;
@@ -22,7 +22,7 @@ export const exportOwnersLegalGuidePdf = async ({ language = "ro" }: ExportOptio
 
   const space = (needed: number) => {
     if (y + needed > pageHeight - 20) {
-      doc.addPage;
+      doc.addPage();
       y = 25;
     }
   };
@@ -127,7 +127,7 @@ export const exportOwnersLegalGuidePdf = async ({ language = "ro" }: ExportOptio
   doc.rect(0, pageHeight - 20, pageWidth, 3, "F");
 
   // ===== 01 COMPARISON =====
-  doc.addPage;
+  doc.addPage();
   y = 25;
   header("01", isRo ? "REGIM HOTELIER VS. CHIRIE CLASICĂ" : "SHORT-TERM VS. LONG-TERM RENTAL");
   sub(isRo ? "Apartament 2 camere, zonă centrală Timișoara" : "2-room apartment, central Timișoara");
@@ -180,7 +180,7 @@ export const exportOwnersLegalGuidePdf = async ({ language = "ro" }: ExportOptio
   );
 
   // ===== 03 RISKS =====
-  doc.addPage;
+  doc.addPage();
   y = 25;
   header("03", isRo ? "RISCURI ȘI LIMITE, SPUSE DIRECT" : "RISKS AND LIMITS, STATED PLAINLY");
   bullet(

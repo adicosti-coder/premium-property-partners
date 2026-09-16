@@ -11,7 +11,7 @@ import GeoAnswers from "@/components/seo/GeoAnswers";
 import DataProvenance from "@/components/seo/DataProvenance";
 import { Button } from "@/components/ui/button";
 
-const GlobalConversionWidgets = lazy(=> import("@/components/GlobalConversionWidgets"));
+const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
 
 const BASE_URL = "https://realtrust.ro";
 const URL = `${BASE_URL}/ghid-evaluare-apartament-timisoara`;
@@ -92,7 +92,7 @@ const CRITERIA: Criterion[] = [
   },
 ];
 
-const GhidEvaluareApartament =  => {
+const GhidEvaluareApartament = () => {
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -107,7 +107,7 @@ const GhidEvaluareApartament =  => {
         position: i + 1,
         name: c.name,
         text: c.body,
-        url: `${URL}#${encodeURIComponent(c.name.toLowerCase.replace(/\s+/g, "-"))}`,
+        url: `${URL}#${encodeURIComponent(c.name.toLowerCase().replace(/\s+/g, "-"))}`,
       })),
     },
     // FAQPage structured data for this page comes from the visible
@@ -172,7 +172,7 @@ const GhidEvaluareApartament =  => {
               {CRITERIA.map((c, i) => (
                 <li
                   key={c.name}
-                  id={c.name.toLowerCase.replace(/\s+/g, "-")}
+                  id={c.name.toLowerCase().replace(/\s+/g, "-")}
                   className="rounded-xl border border-border bg-card p-5"
                 >
                   <h3 className="text-base font-semibold text-foreground mb-1">
