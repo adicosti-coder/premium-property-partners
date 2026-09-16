@@ -915,7 +915,7 @@ const PentruProprietari = () => {
                 </h3>
                 <p className="text-muted-foreground leading-relaxed mb-3">
                   {language === "ro"
-                    ? "Contractul de administrare imobiliară RealTrust este transparent, fără perioadă minimă obligatorie. Acoperă explicit: Property Management RealTrust (15-20% din încasări), responsabilitățile operaționale, raportarea financiară lunară, drepturile proprietarului asupra calendarului și posibilitatea de reziliere cu preaviz de 30 de zile."
+                    ? "Contractul de administrare imobiliară RealTrust este transparent, fără perioadă minimă obligatorie. Acoperă explicit: Property Management RealTrust (15-25% din încasări, în funcție de pachet), responsabilitățile operaționale, raportarea financiară lunară, drepturile proprietarului asupra calendarului și posibilitatea de reziliere cu preaviz de 30 de zile."
                     : "Our property management contract is transparent, with no minimum lock-in period. It clearly covers Property Management RealTrust (15-25% of revenue, depending on the package), operational responsibilities, monthly financial reporting, the owner's rights over the calendar, and 30-day notice termination."}
                 </p>
                 <ul className="space-y-2 text-sm text-muted-foreground">

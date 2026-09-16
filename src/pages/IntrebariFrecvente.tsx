@@ -39,7 +39,7 @@ const EXTRA_FAQ = {
     },
     {
       q: "Cât este comisionul de administrare?",
-      a: "Property Management RealTrust: 15-20% din încasări, în funcție de tipul apartamentului și de volumul de muncă. Nu există abonament fix — se aplică doar pe venitul realizat, deci dacă apartamentul nu produce, nu plătești administrare. Restul costurilor reale le discutăm deschis, cu cifre pe apartamentul tău.",
+      a: "Property Management RealTrust: 15-20% din încasări, în funcție de tipul apartamentului și de volumul de muncă (pachetul Premium, cu manager dedicat și revenue management avansat, este 25%). Nu există abonament fix — se aplică doar pe venitul realizat, deci dacă apartamentul nu produce, nu plătești administrare. Restul costurilor reale le discutăm deschis, cu cifre pe apartamentul tău.",
     },
     {
       q: "Care este profitul net pe lună pentru apartamentul meu?",
@@ -77,7 +77,7 @@ const EXTRA_FAQ = {
     },
     {
       q: "How much is the management fee?",
-      a: "RealTrust Property Management: 15-20% of revenue, depending on the apartment and the workload. There is no fixed subscription — it applies only to realised revenue, so no revenue means no management fee. Other real costs we discuss openly, with figures for your apartment.",
+      a: "RealTrust Property Management: 15-20% of revenue, depending on the apartment and the workload (the Premium package, with a dedicated manager and advanced revenue management, is 25%). There is no fixed subscription — it applies only to realised revenue, so no revenue means no management fee. Other real costs we discuss openly, with figures for your apartment.",
     },
     {
       q: "What is the monthly net profit for my apartment?",
