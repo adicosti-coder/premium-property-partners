@@ -207,9 +207,15 @@ export function propertyFinanceBlock(p: {
   return propertyFinanceLines(p).join("\n");
 }
 
+/** Refuz explicit: butonul „Nu, mulțumesc" sau un „nu" clar, fără semnale de interes. */
+const EXPLICIT_NO = /^nu\s*,?\s*(mult?umesc|mersi|nu doresc)?\s*[.!]?$/;
+/** Cuvinte care arată interes — anulează interpretarea de refuz. */
+const INTEREST_HINT =
+  /oferta|pret|estimare|astept|aștept|vreau|doresc|interes|suna|sun[ăa]|vizion|apartament|camere|zona|administrare|hotel|vanzare|rezerv/;
+
 export function quickReplyText(raw: string): { kind: string; text: string } | null {
   const t = stripDiacritics(raw);
-  if (/^nu[, ]|^nu$|multumesc/.test(t) && t.length <= 40) {
+  if (EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) {
     return {
       kind: "quick_no",
       text:
@@ -217,6 +223,7 @@ export function quickReplyText(raw: string): { kind: string; text: string } | nu
         "Daca pe viitor doriti o estimare de preț sau de venit pentru apartament, ne scrieti oricand aici.",
     };
   }
+
   if (/vanzare/.test(t)) {
     return {
       kind: "quick_sale",
