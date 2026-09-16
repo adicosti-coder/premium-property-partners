@@ -83,10 +83,21 @@ Deno.serve(async (req) => {
     subsError = e instanceof Error ? e.message : String(e);
   }
 
+  // Aplicația Meta căreia îi aparține tokenul — ca să știm exact în care
+  // aplicație trebuie bifate câmpurile webhook.
+  let app: { id?: string; name?: string } | undefined;
+  try {
+    const appResp = await fetch(
+      `https://graph.facebook.com/${WA_API_VERSION}/app?fields=id,name&access_token=${encodeURIComponent(token)}`,
+    );
+    const appBody = await appResp.json().catch(() => ({}));
+    if (appResp.ok) app = { id: appBody?.id, name: appBody?.name };
+  } catch { /* diagnostic opțional */ }
+
   console.log(
     `[wa-config-check] ok=${resp.ok} quality=${body?.quality_rating ?? "?"} subscribed_fields=${
       JSON.stringify(subscribedFields ?? null)
-    } subs_error=${subsError ?? "-"}`,
+    } app=${app?.id ?? "?"} subs_error=${subsError ?? "-"}`,
   );
 
   return new Response(
@@ -96,6 +107,7 @@ Deno.serve(async (req) => {
       phone: resp.ok ? body : undefined,
       subscribed_fields: subscribedFields,
       subscribed_fields_error: subsError,
+      meta_app: app,
       error: resp.ok ? undefined : body?.error?.message ?? "unknown_error",
     }),
     { status: resp.ok ? 200 : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
