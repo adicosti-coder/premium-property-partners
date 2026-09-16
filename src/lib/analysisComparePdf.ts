@@ -214,7 +214,7 @@ export function generateComparePdf(input: ComparePdfInput): jsPDF {
   (
     doc.splitTextToSize(
       ascii(
-        "Estimarile folosesc 75% grad de ocupare si 27% deducere management/taxe pentru regim hotelier, respectiv 10% cheltuieli/impozit pentru chirie clasica. Curs orientativ 1 EUR = 5 RON. Nu reprezinta o oferta contractuala.",
+        "Estimarile folosesc 75% grad de ocupare pentru regim hotelier, respectiv 10% cheltuieli/impozit pentru chirie clasica. Curs orientativ 1 EUR = 5 RON. Nu reprezinta o oferta contractuala.",
       ),
       contentW,
     ) as string[]

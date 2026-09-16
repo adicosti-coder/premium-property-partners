@@ -19,7 +19,7 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
   const rows = ro
     ? [
         {
-          title: "Deduceri operaționale — 27%",
+          title: "Property Management RealTrust — 15-20%",
           body:
             "Include comisioanele platformelor (Booking, Airbnb, Expedia), impozitul efectiv pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie).",
         },
@@ -31,12 +31,12 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
         {
           title: "Utilități & comision de administrare — scăzute ulterior",
           body:
-            "Cheltuielile fixe (utilități, internet, întreținere) și comisionul de administrare se scad după deducerea de 27%, astfel încât 9,4% rămâne venit curat (net), nu brut.",
+            "Cheltuielile fixe (utilități, internet, întreținere) și comisionul de administrare se scad, astfel încât 9,4% rămâne venit curat (net), nu brut.",
         },
       ]
     : [
         {
-          title: "Operational deductions — 27%",
+          title: "RealTrust Property Management — 15-20%",
           body:
             "Covers platform commissions (Booking, Airbnb, Expedia), effective income tax and consumables (toiletries, coffee, salt, oil, linen).",
         },
@@ -48,7 +48,7 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
         {
           title: "Utilities & management fee — subtracted afterwards",
           body:
-            "Fixed costs (utilities, internet, maintenance) and the management commission are subtracted after the 27% deduction, so 9.4% is genuinely net income, not gross.",
+            "Fixed costs (utilities, internet, maintenance) and the management commission are subtracted as well, so 9.4% is genuinely net income, not gross.",
         },
       ];
 
@@ -73,8 +73,8 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
       </ul>
       <p className="mt-3 text-[11px] text-muted-foreground">
         {ro
-          ? "Ipoteze publice folosite în simulare: ocupare 75%, deducere operațională 27%. Cifra finală pentru apartamentul tău se stabilește după evaluare."
-          : "Public assumptions used in the simulation: 75% occupancy, 27% operational deduction. Your final figure is set after the valuation."}
+          ? "Ipoteze publice folosite în simulare: ocupare 75%. Cifra finală pentru apartamentul tău se stabilește după evaluare."
+          : "Public assumptions used in the simulation: 75% occupancy. Your final figure is set after the valuation."}
       </p>
     </aside>
   );

@@ -132,7 +132,7 @@ serve(async (req) => {
         <tr><td style="padding:0;color:#4a5568">≈ pe lună</td><td style="padding:0;text-align:right;font-weight:700">${ro(targetNetMonthly)} €</td></tr>
       </table>
       <p style="font-size:12px;color:#718096;margin-top:12px">
-        Ipoteze afișate transparent: randament net de referință 9,4%/an, grad de ocupare 75%, deducere 27% (management, costuri operaționale și taxe).
+        Ipoteze afișate transparent: randament net de referință 9,4%/an, grad de ocupare 75%, Property Management RealTrust 15-20% din încasări.
         Estimarea este orientativă și se confirmă după evaluarea concretă a apartamentului.
       </p>`;
 

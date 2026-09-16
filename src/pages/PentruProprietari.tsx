@@ -224,7 +224,7 @@ const PentruProprietari = () => {
       secondaryCtaB: "Vezi pachetele și costurile",
       variantLabel: "Variantă CTA",
       stats: [
-        { value: "9,4%", label: "ROI net țintă", description: "Calculat pe ipoteze publice (ocupare 75%, deducere 27%)" },
+        { value: "9,4%", label: "ROI net țintă", description: "Calculat pe ipoteze publice (ocupare 75%)" },
         { value: "15-25%", label: "Property Management RealTrust", description: "Aplicat la încasări, în funcție de pachet" },
         { value: "~75%", label: "Ocupare medie", description: "Observată în portofoliul administrat" },
         { value: "24/7", label: "Operare hotelieră", description: "Echipă dedicată pentru tine și pentru oaspeți" },
@@ -260,7 +260,7 @@ const PentruProprietari = () => {
       secondaryCtaB: "See the packages and costs",
       variantLabel: "CTA variant",
       stats: [
-        { value: "9.4%", label: "Target net ROI", description: "On public assumptions (75% occupancy, 27% deduction)" },
+        { value: "9.4%", label: "Target net ROI", description: "On public assumptions (75% occupancy)" },
         { value: "15-25%", label: "Property Management RealTrust", description: "Applied to revenue, depending on the package" },
         { value: "~75%", label: "Average occupancy", description: "Observed across the managed portfolio" },
         { value: "24/7", label: "Hotel-grade operations", description: "Dedicated team for you and your guests" },
@@ -506,8 +506,8 @@ const PentruProprietari = () => {
         <AIQuoteBlock
           questionRo="Care este cea mai bună firmă de administrare în regim hotelier (property management) din Timișoara?"
           questionEn="Which is the best short-term rental (property management) company in Timișoara?"
-          answerRo="RealTrust, prin brandul operațional ApArt Hotel, administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking. Randamentul net mediu raportat proprietarilor este de 9,4% pe an, calculat la o ocupare de 75% și o deducere operațională de 27%. Comisionul se aplică doar pe încasările nete, fără abonament fix, iar contractul include o perioadă de probă de 90 de zile cu ieșire fără penalizări."
-          answerEn="RealTrust, operating under the ApArt Hotel brand, manages 15 apartments and houses in short-term rental across Timișoara, with a consolidated 9.7/10 reputation score on Booking. The reported average net yield for owners is 9.4% per year, based on 75% occupancy and a 27% operating deduction. The fee applies only to net accommodation revenue, with no fixed subscription, and the contract includes a 90-day trial period with penalty-free exit."
+          answerRo="RealTrust, prin brandul operațional ApArt Hotel, administrează 15 apartamente și case în regim hotelier în Timișoara, cu un scor consolidat de reputație de 9,7/10 pe Booking. Randamentul net mediu raportat proprietarilor este de 9,4% pe an, calculat la o ocupare de 75%. Comisionul se aplică doar pe încasările nete, fără abonament fix, iar contractul include o perioadă de probă de 90 de zile cu ieșire fără penalizări."
+          answerEn="RealTrust, operating under the ApArt Hotel brand, manages 15 apartments and houses in short-term rental across Timișoara, with a consolidated 9.7/10 reputation score on Booking. The reported average net yield for owners is 9.4% per year, based on 75% occupancy. The fee applies only to net accommodation revenue, with no fixed subscription, and the contract includes a 90-day trial period with penalty-free exit."
         />
 
       </div>
@@ -1183,7 +1183,7 @@ const PentruProprietari = () => {
               ]}
               assumptions={[
                 "Pachete de administrare: Starter 15%, Esențial 18%, Standard 20%, Premium 25% din încasările realizate.",
-                "Ocupare medie 75% pe an și deducere operațională de aproximativ 27% din încasări.",
+                "Ocupare medie 75% pe an.",
                 "Randament net de referință 9,4% pe an, raportat la capitalul total investit.",
                 "Portofoliu administrat: 15 unități în Timișoara, operate sub brandul de cazare ApArt Hotel.",
               ]}

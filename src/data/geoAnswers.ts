@@ -7,7 +7,7 @@
  *
  *  1. it answers the question in the FIRST sentence (extractable as a snippet);
  *  2. it contains no invented figures — only the published RealTrust
- *     assumptions (75% occupancy, 27% operational deduction, 9.4% net
+ *     assumptions (75% occupancy, 9.4% net
  *     reference yield, management packages 15% / 18% / 20% / 25%, 15 managed
  *     units) or facts stated elsewhere on the site;
  *  3. it points to the page that owns the topic, so the answer is linked back
@@ -86,7 +86,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "pentru-proprietari",
     question: "Ce costuri are un apartament în regim hotelier?",
     answer:
-      "Costurile recurente sunt: comisioanele platformelor de rezervare, curățenia și lenjeria între oaspeți, consumabilele, utilitățile, taxa hotelieră, impozitul pe venit și comisionul de administrare. În ipotezele noastre publice, cheltuielile operaționale și fiscale (fără comisionul de administrare) se estimează la aproximativ 27% din încasări — de aceea calculăm randamentul pe venitul net, nu pe cel brut.",
+      "Costurile recurente sunt: comisioanele platformelor de rezervare, curățenia și lenjeria între oaspeți, consumabilele, utilitățile, taxa hotelieră, impozitul pe venit și comisionul de administrare. Property Management RealTrust este 15-20% din încasări — iar randamentul îl calculăm pe venitul net, nu pe cel brut.",
     source: { href: "/preturi", label: "ce include comisionul de administrare" },
   },
   {
@@ -120,7 +120,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "investitii",
     question: "Cât câștigă un apartament în regim hotelier în Timișoara?",
     answer:
-      "Reperul nostru este un randament net de 9,4% pe an din capitalul total investit, calculat la o ocupare medie de 75% și după deducerea a aproximativ 27% din încasări pentru costuri operaționale și fiscale, plus comisionul de administrare. La un apartament de 120.000 € înseamnă aproximativ 11.280 € net pe an, adică în jur de 940 € pe lună — o estimare, nu un venit garantat: rezultatul depinde de adresă, de standardul amenajării și de sezon.",
+      "Reperul nostru este un randament net de 9,4% pe an din capitalul total investit, calculat la o ocupare medie de 75% și după costurile de operare, impozit și Property Management RealTrust (15-20% din încasări). La un apartament de 120.000 € înseamnă aproximativ 11.280 € net pe an, adică în jur de 940 € pe lună — o estimare, nu un venit garantat: rezultatul depinde de adresă, de standardul amenajării și de sezon.",
     source: { href: "/calculator-roi", label: "calculator de randament" },
   },
   {
@@ -128,7 +128,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "investitii",
     question: "Cât este randamentul unei investiții imobiliare în Timișoara?",
     answer:
-      "Randamentul depinde de strategie: chiria clasică pe termen lung produce un venit stabil, dar mai mic, în timp ce regimul hotelier bine operat are ca reper 9,4% net pe an în ipotezele noastre publice (ocupare 75%, deducere operațională 27%). Orice cifră trebuie recalculată pe adresa concretă, pentru că prețul de achiziție și tariful realizabil pe noapte diferă puternic de la o zonă la alta.",
+      "Randamentul depinde de strategie: chiria clasică pe termen lung produce un venit stabil, dar mai mic, în timp ce regimul hotelier bine operat are ca reper 9,4% net pe an în ipotezele noastre publice (ocupare 75%). Orice cifră trebuie recalculată pe adresa concretă, pentru că prețul de achiziție și tariful realizabil pe noapte diferă puternic de la o zonă la alta.",
     source: { href: "/investitii", label: "investiții imobiliare în Timișoara" },
   },
   {
@@ -136,7 +136,7 @@ export const GEO_ANSWERS: GeoAnswer[] = [
     group: "investitii",
     question: "Cum se calculează ROI-ul unei investiții imobiliare?",
     answer:
-      "ROI net = venitul net anual împărțit la capitalul total investit, înmulțit cu 100. Venitul net anual se obține din încasările brute estimate (tarif mediu pe noapte × nopți ocupate, sau chiria lunară × 12) minus costurile operaționale, impozitul și comisionul de administrare; capitalul total investit include prețul de achiziție, taxele notariale și de intabulare, amenajarea și dotarea. Ipotezele noastre implicite sunt 75% ocupare și 27% deducere operațională.",
+      "ROI net = venitul net anual împărțit la capitalul total investit, înmulțit cu 100. Venitul net anual se obține din încasările brute estimate (tarif mediu pe noapte × nopți ocupate, sau chiria lunară × 12) minus costurile operaționale, impozitul și comisionul de administrare; capitalul total investit include prețul de achiziție, taxele notariale și de intabulare, amenajarea și dotarea. Ipoteza noastră implicită este o ocupare de 75%.",
     source: { href: "/calculator-roi", label: "calculul pas cu pas al randamentului" },
   },
   {

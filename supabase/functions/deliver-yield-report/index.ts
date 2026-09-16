@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
             <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px">
               <h2 style="color:#1a365d;margin:0 0 8px">Raportul tău de randament${safeName ? `, ${escapeHtml(safeName)}` : ""}</h2>
               <p style="color:#3c4250;line-height:1.6">Ai atașat rezumatul PDF cu estimarea de randament net (ținta 9,4% pe an),
-              defalcarea deducerilor de 27% (comisioane platforme, impozit efectiv, consumabile) și planul de colaborare în 3 pași.</p>
+              defalcarea costurilor și Property Management RealTrust 15-20% din încasări și planul de colaborare în 3 pași.</p>
               <p style="margin:20px 0"><a href="${signed.signedUrl}" style="background:#8b6914;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">Deschide raportul</a></p>
               <p style="color:#6e7480;font-size:12px">Linkul este valabil 7 zile. Ai întrebări? Scrie-ne pe WhatsApp la +40 799 069 256.</p>
             </div>`,

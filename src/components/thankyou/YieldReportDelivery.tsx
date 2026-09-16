@@ -150,7 +150,7 @@ const YieldReportDelivery = (props: Props) => {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Estimarea de venit în regim hotelier cu ținta de <strong>9,4% net</strong> pe an,
-            defalcarea deducerilor de <strong>27%</strong> (comisioane platforme, impozit efectiv,
+            defalcarea costurilor și <strong>Property Management RealTrust 15-20%</strong> (operare, impozit efectiv,
             consumabile) și planul de colaborare în 3 pași.
           </p>
         </div>

@@ -27,7 +27,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { withCampaignTracking } from "@/lib/campaignAttribution";
 import { trackConversion, formatPhoneInput } from "@/lib/conversionTracking";
 
-/** Randament net de referință RealTrust (ocupare 75%, deducere 27%). */
+/** Randament net de referință RealTrust (ocupare 75%). */
 const TARGET_NET_YIELD = 0.094;
 
 const TIERS = [
@@ -264,7 +264,7 @@ const ROICalculatorWidget = () => {
               <span className="text-sm font-normal text-muted-foreground">/an net</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, deducere 27% (management, costuri, taxe)
+              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri, taxe)
             </p>
           </div>
 

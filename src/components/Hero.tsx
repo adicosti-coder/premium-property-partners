@@ -206,7 +206,7 @@ const Hero = () => {
         <div className="absolute bottom-44 right-6 lg:right-12 z-20 flex flex-col gap-3">
           <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-primary/50 shadow-lg">
             <span className="text-primary font-bold text-xl">{language === 'ro' ? 'Randament net 9,4%' : '9.4% net yield'}</span>
-            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Ipoteze transparente: ocupare 75%, deducere 27%' : 'Transparent assumptions: 75% occupancy, 27% costs'}</span>
+            <span className="text-xs text-muted-foreground block">{language === 'ro' ? 'Ipoteze transparente: ocupare 75%' : 'Transparent assumptions: 75% occupancy'}</span>
           </div>
           <div className="px-5 py-3 bg-background/90 dark:bg-background/80 backdrop-blur-sm rounded-xl border border-border shadow-lg">
             <span className="font-bold text-foreground text-lg">{language === 'ro' ? 'Tu încasezi, noi operăm' : 'You earn, we operate'}</span>

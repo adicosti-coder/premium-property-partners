@@ -13,7 +13,7 @@ const QuickValueBanner = ({ onCtaClick }: QuickValueBannerProps) => {
     ro: {
       badge: "În 24 de ore lucrătoare primești",
       items: [
-        "Estimare de venit lunar pe baza ipotezelor publice (ocupare 75%, deducere 27%)",
+        "Estimare de venit lunar pe baza ipotezelor publice (ocupare 75%)",
         "Recomandări concrete de optimizare a anunțului",
         "Plan clar de colaborare, fără obligații",
       ],
@@ -22,7 +22,7 @@ const QuickValueBanner = ({ onCtaClick }: QuickValueBannerProps) => {
     en: {
       badge: "Within 24 business hours you receive",
       items: [
-        "Monthly income estimate based on public assumptions (75% occupancy, 27% deduction)",
+        "Monthly income estimate based on public assumptions (75% occupancy)",
         "Concrete listing optimization recommendations",
         "Clear partnership plan, no obligations",
       ],

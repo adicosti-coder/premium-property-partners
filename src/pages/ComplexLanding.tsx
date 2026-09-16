@@ -308,8 +308,8 @@ const ComplexLanding = () => {
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
                 {isRo
-                  ? `ROI net țintă ${complex.roi}, calculat pe ipoteze publice (ocupare 75%, deducere 27%). Venit lunar estimat ${complex.avgIncome}, ocupare observată ${complex.occupancy}. Operațiuni gestionate end-to-end de echipa RealTrust și ApArt Hotel.`
-                  : `Target net ROI ${complex.roi}, calculated on public assumptions (75% occupancy, 27% deduction). Estimated monthly income ${complex.avgIncome}, observed occupancy ${complex.occupancy}. Operations handled end-to-end by the RealTrust and ApArt Hotel team.`}
+                  ? `ROI net țintă ${complex.roi}, calculat pe ipoteze publice (ocupare 75%). Venit lunar estimat ${complex.avgIncome}, ocupare observată ${complex.occupancy}. Operațiuni gestionate end-to-end de echipa RealTrust și ApArt Hotel.`
+                  : `Target net ROI ${complex.roi}, calculated on public assumptions (75% occupancy). Estimated monthly income ${complex.avgIncome}, observed occupancy ${complex.occupancy}. Operations handled end-to-end by the RealTrust and ApArt Hotel team.`}
               </p>
               <Suspense fallback={null}>
                 <OccupancyUrgencyBadge

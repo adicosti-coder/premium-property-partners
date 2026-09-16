@@ -25,7 +25,7 @@ RealTrust este o companie imobiliară din Timișoara specializată în investiț
 ## Servicii de administrare în regim hotelier
 
 - Administrare completă: clasificare/autorizare, listare pe Booking și Airbnb, rezervare directă, prețuri dinamice, comunicare cu oaspeții, check-in/check-out, curățenie și lenjerie, mentenanță, raportare lunară.
-- Randament net mediu 9,4%/an (ocupare 75%, deducere operațională 27%) — circa 1,6x față de chiria clasică.
+- Randament net mediu 9,4%/an (ocupare 75%) — circa 1,6x față de chiria clasică.
 - Consultanță investiții: analiză ROI, due diligence, structurare portofoliu.
 
 ## Portofoliu (14 unități în Timișoara)
@@ -37,7 +37,7 @@ Lista completă cu specificații, facilități și linkuri de rezervare: [/llms-
 ## Structură comisioane
 
 - Comision procentual din încasările nete de cazare; fără abonament lunar fix.
-- Deducere operațională standard folosită în calcule: 27%. Ocupare estimată: 75%.
+- Property Management RealTrust: 15-20% din încasări. Ocupare estimată folosită în calcule: 75%.
 - Perioadă de probă 90 de zile cu ieșire fără penalizări; politică de daune pe 3 niveluri.
 
 ## Contact

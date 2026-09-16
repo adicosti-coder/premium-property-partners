@@ -129,7 +129,7 @@ Date proprietate:
 - Chirie lunară estimată: ${f.chirie} €
 - Costuri amenajare: ${f.amenajari} €
 
-Aplică regula RealTrust: deducere 27% (management + taxe), ocupare 75% pentru regim hotelier.
+Aplică regula RealTrust: ocupare 75% pentru regim hotelier, Property Management RealTrust 15-20% din încasări. Nu folosi niciodată cifra 27%.
 `.trim();
 
 /** Build 5-year cashflow projection from AI ROI + form data. */

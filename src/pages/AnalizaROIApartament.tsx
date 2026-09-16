@@ -98,7 +98,7 @@ const riskSignals = [
 ];
 
 const faqItems = [
-  { question: "Cum se calculează randamentul unei investiții imobiliare?", answer: "Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției. În analiza RealTrust includem ocuparea, tariful mediu, costurile operaționale și o deducere standard de 27%." },
+  { question: "Cum se calculează randamentul unei investiții imobiliare?", answer: "Randamentul net se calculează împărțind venitul anual după costuri la valoarea totală a investiției. În analiza RealTrust includem ocuparea, tariful mediu, costurile operaționale." },
   { question: "Ce înseamnă analiză profit apartament în România?", answer: "Este o estimare completă a profitului lunar și anual pentru un apartament, comparând chiria clasică, regimul hotelier, aprecierea prețului și lichiditatea zonei." },
   { question: "De ce sunt importante complexele rezidențiale în analiza ROI?", answer: "Complexele noi au de obicei cerere mai bună, costuri de mentenanță mai previzibile și poziționare mai ușor de promovat către oaspeți sau chiriași premium." },
   { question: "Pot folosi calculatorul pentru orice oraș din România?", answer: "Da, modelul funcționează pentru orice oraș dacă ajustezi prețul de achiziție, chiria, tariful pe noapte și ocuparea. Pentru Timișoara folosim repere operaționale verificate RealTrust." },
@@ -223,7 +223,7 @@ const AnalizaROIApartament = () => {
               <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
                 <Card className="border-primary/20 bg-primary/5"><CardContent className="p-5"><p className="text-sm text-muted-foreground">ROI net estimat</p><p className="mt-1 text-3xl font-bold text-primary">9.4%</p></CardContent></Card>
                 <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Ocupare medie modelată</p><p className="mt-1 text-3xl font-bold text-foreground">75%</p></CardContent></Card>
-                <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Costuri deduse automat</p><p className="mt-1 text-3xl font-bold text-foreground">27%</p></CardContent></Card>
+                <Card><CardContent className="p-5"><p className="text-sm text-muted-foreground">Property Management RealTrust</p><p className="mt-1 text-3xl font-bold text-foreground">15-20%</p></CardContent></Card>
               </div>
             </div>
           </div>

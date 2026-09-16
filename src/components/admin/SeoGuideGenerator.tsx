@@ -37,7 +37,7 @@ Context piață imobiliară Timișoara (2024-2026, agregat RealTrust):
 - Preț mediu vânzare apartamente noi: 1.850-2.300 EUR/mp util (centru: 2.200-2.800 EUR/mp; nord Dumbrăvița: 1.700-2.100 EUR/mp; Aradului: 1.600-2.000 EUR/mp).
 - Preț mediu vânzare apartamente vechi (bloc comunist renovat): 1.100-1.500 EUR/mp.
 - Chirie medie 2 camere: 450-650 EUR/lună (regim clasic), 90-140 EUR/noapte (regim hotelier).
-- Randament net standardizat regim hotelier RealTrust: 9.4% (după deducere 27% management + taxe, la ocupare 75%).
+- Randament net standardizat regim hotelier RealTrust: 9.4% (la ocupare 75%, după Property Management RealTrust 15-20% din încasări). Nu folosi niciodată cifra 27%.
 - Randament regim clasic închiriere: 4.5-5.5% net.
 
 ## Zone premium și cerere

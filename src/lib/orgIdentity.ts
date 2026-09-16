@@ -215,7 +215,7 @@ export const FINANCIAL_SERVICE_SCHEMA = {
   "@id": FINANCIAL_SERVICE_ID,
   name: "RealTrust — Consultanță Investiții Imobiliare Timișoara",
   description:
-    "Analiză de randament, due diligence și structurare de portofoliu pentru apartamente în regim hotelier în Timișoara. Randament net țintă 9,4% (ocupare 75%, deducere 27%).",
+    "Analiză de randament, due diligence și structurare de portofoliu pentru apartamente în regim hotelier în Timișoara. Randament net țintă 9,4% (ocupare 75%).",
   url: `${SITE_ORIGIN}/investitii`,
   logo: BRAND.logo,
   image: BRAND.image,

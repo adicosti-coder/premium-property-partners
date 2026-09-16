@@ -32,7 +32,7 @@ const Footer = () => {
       invalidEmail: "Adresă de email invalidă.",
       servicesTitle: "Servicii",
       infoTitle: "Resurse",
-      disclaimer: "Estimările de venit se bazează pe date istorice și ipoteze publice (ocupare 75%, deducere 27% pentru management, costuri și taxe). Rezultatele individuale pot varia. Datele personale sunt prelucrate conform GDPR.",
+      disclaimer: "Estimările de venit se bazează pe date istorice și ipoteze publice (ocupare 75%, costuri și taxe). Rezultatele individuale pot varia. Datele personale sunt prelucrate conform GDPR.",
     },
     en: {
       newsletterTitle: "Newsletter",
@@ -44,7 +44,7 @@ const Footer = () => {
       invalidEmail: "Invalid email address.",
       servicesTitle: "Services",
       infoTitle: "Resources",
-      disclaimer: "Income estimates are based on historical data and public assumptions (75% occupancy, 27% deduction for management, costs and taxes). Individual results may vary. Personal data is processed in accordance with GDPR.",
+      disclaimer: "Income estimates are based on historical data and public assumptions (75% occupancy, costs and taxes). Individual results may vary. Personal data is processed in accordance with GDPR.",
     },
   };
 

@@ -177,7 +177,7 @@ const AutorAdrianCosti = () => {
                 },
                 {
                   title: "Analiza randamentului",
-                  body: "Comparație între chirie clasică și regim hotelier, la ocupare 75% și deducere operațională 27%.",
+                  body: "Comparație între chirie clasică și regim hotelier, la ocupare 75%.",
                 },
               ].map((e) => (
                 <li key={e.title} className="rounded-xl border border-border bg-card p-5">

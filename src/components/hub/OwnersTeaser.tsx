@@ -22,7 +22,7 @@ const OwnersTeaser = () => {
         {
           icon: TrendingUp,
           title: "Randament net 9,4%",
-          description: "Calculat pe ipoteze publice (ocupare 75%, deducere 27%)",
+          description: "Calculat pe ipoteze publice (ocupare 75%)",
         },
         {
           icon: Shield,
@@ -55,7 +55,7 @@ const OwnersTeaser = () => {
         {
           icon: TrendingUp,
           title: "9.4% net return",
-          description: "On public assumptions (75% occupancy, 27% deduction)",
+          description: "On public assumptions (75% occupancy)",
         },
         {
           icon: Shield,

@@ -153,7 +153,7 @@ const Investitii = () => {
   const faqItems = language === "ro" ? [
     {
       question: "Care este randamentul mediu pentru o investiție imobiliară în Timișoara?",
-      answer: "Pentru regim hotelier administrat de noi, randamentul net țintă este de 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, deducere 27% pentru management, costuri și taxe). În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
+      answer: "Pentru regim hotelier administrat de noi, randamentul net țintă este de 9,4% pe an, calculat pe ipoteze publice (ocupare 75%, costuri și taxe). În chirie clasică pe termen lung, randamentul tipic în Timișoara este 4-5% net.",
     },
     {
       question: "Care sunt zonele cu cel mai bun potențial pentru investiții?",
@@ -178,7 +178,7 @@ const Investitii = () => {
   ] : [
     {
       question: "What is the average yield for a real estate investment in Timișoara?",
-      answer: "For hotel-style management by our team, the target net yield is 9.4% per year, calculated on public assumptions (75% occupancy, 27% deduction for management, costs and taxes). Classic long-term rentals in Timișoara typically yield 4-5% net.",
+      answer: "For hotel-style management by our team, the target net yield is 9.4% per year, calculated on public assumptions (75% occupancy, costs and taxes). Classic long-term rentals in Timișoara typically yield 4-5% net.",
     },
     {
       question: "What are the best areas for real estate investment in Timișoara?",
@@ -239,8 +239,8 @@ const Investitii = () => {
       <main id="main-content" role="main" aria-label={language === "ro" ? "Conținut principal" : "Main content"}>
       <div className="container mx-auto px-6 pt-24">
         <PageSummary
-          summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net țintă de 9,4% calculat pe ipoteze publice (ocupare 75%, deducere 27%). Due diligence complet, administrare profesională inclusă, raportare lunară."
-          summaryEn="Real estate investment opportunities in Timișoara with a 9.4% target net yield calculated on public assumptions (75% occupancy, 27% deduction). Full due diligence, professional management included, monthly reporting."
+          summaryRo="Oportunități de investiție imobiliară în Timișoara cu randament net țintă de 9,4% calculat pe ipoteze publice (ocupare 75%). Due diligence complet, administrare profesională inclusă, raportare lunară."
+          summaryEn="Real estate investment opportunities in Timișoara with a 9.4% target net yield calculated on public assumptions (75% occupancy). Full due diligence, professional management included, monthly reporting."
         />
       </div>
       
@@ -711,7 +711,7 @@ const Investitii = () => {
               ]}
               assumptions={[
                 "Ocupare medie 75% pe an pentru regim hotelier.",
-                "Deducere operațională și fiscală de aproximativ 27% din încasări, fără comisionul de administrare.",
+                "Property Management RealTrust: 15-20% din încasări, plus costurile de operare și impozitul aferent.",
                 "Randament net de referință 9,4% pe an, raportat la capitalul total investit.",
                 "Venit brut în regim hotelier de aproximativ 1,6× chiria clasică, pentru apartamente comparabile bine poziționate.",
               ]}

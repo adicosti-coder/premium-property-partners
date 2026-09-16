@@ -105,7 +105,7 @@ const NeighborhoodProfileSection = ({ profile }: { profile: NeighborhoodProfile 
         ))}
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
-        Ipoteze publice folosite în analizele noastre: ocupare 75%, deducere operațională 27%,
+        Ipoteze publice folosite în analizele noastre: ocupare 75%,
         randament net de referință 9,4%. Prețul mediu pe metru pătrat afișat pe această pagină este
         un indice intern RealTrust, nu o cotație oficială de piață. Verifică scenariul tău în{" "}
         <Link to="/calculator-roi" className="text-primary underline underline-offset-2">

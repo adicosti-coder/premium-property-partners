@@ -256,7 +256,7 @@ export function generateAnalysisPdf(input: AnalysisPdfInput): jsPDF {
   y += 64;
 
   paragraph(
-    "Estimarile folosesc 75% grad de ocupare si 27% deducere management/taxe. Sunt orientative si nu reprezinta o oferta contractuala. Analiza umana detaliata este livrata in 24h lucratoare.",
+    "Estimarile folosesc 75% grad de ocupare. Sunt orientative si nu reprezinta o oferta contractuala. Analiza umana detaliata este livrata in 24h lucratoare.",
     8,
   );
   if (input.shareUrl) paragraph(`Link analiza: ${input.shareUrl}`, 8);

@@ -26,7 +26,7 @@ interface Criterion {
  *
  * Every criterion describes HOW it moves value, without inventing percentages,
  * market statistics or transaction data. The only figures repeated here are the
- * published RealTrust assumptions (75% occupancy, 27% operational deduction,
+ * published RealTrust assumptions (75% occupancy,
  * 9.4% net reference yield).
  */
 const CRITERIA: Criterion[] = [
@@ -84,7 +84,7 @@ const CRITERIA: Criterion[] = [
   },
   {
     name: "Venitul potențial",
-    body: "Pentru un apartament de investiție, evaluarea nu se opreşte la preț: estimăm chiria clasică realizabilă și, separat, venitul din regim hotelier. La regim hotelier folosim ipoteze publice — ocupare medie 75% și o deducere operațională de aproximativ 27% (comisioane platforme, impozit efectiv, consumabile) — la care se adaugă utilitățile fixe și comisionul de administrare.",
+    body: "Pentru un apartament de investiție, evaluarea nu se opreşte la preț: estimăm chiria clasică realizabilă și, separat, venitul din regim hotelier. La regim hotelier folosim ipoteze publice — ocupare medie 75%, impozit efectiv, consumabile) — la care se adaugă utilitățile fixe și comisionul de administrare.",
   },
   {
     name: "Randamentul investițional",
@@ -233,7 +233,7 @@ const GhidEvaluareApartament = () => {
               <strong className="text-foreground">Limitele acestui ghid.</strong> Este metodologia
               noastră de lucru, nu un raport de evaluare autorizat ANEVAR. Pentru credit ipotecar,
               partaj sau litigiu ai nevoie de un evaluator autorizat. Cifrele de randament folosite
-              aici sunt ipotezele noastre publice (ocupare 75%, deducere operațională 27%, randament
+              aici sunt ipotezele noastre publice (ocupare 75%, randament
               net de referință 9,4%), nu rezultate garantate.
             </p>
           </aside>
@@ -272,7 +272,7 @@ const GhidEvaluareApartament = () => {
               "Certificatul energetic și suprafața utilă se preiau din documentele proprietății (carte funciară, certificat energetic).",
             ]}
             assumptions={[
-              "Ocupare 75% și deducere operațională de aproximativ 27% pentru estimarea venitului în regim hotelier.",
+              "Ocupare 75%.",
               "Randament net de referință 9,4% pe an, folosit ca test de decizie, nu ca promisiune.",
             ]}
             calculations={[
