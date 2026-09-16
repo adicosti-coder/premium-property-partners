@@ -33,6 +33,20 @@ Deno.serve(async (req) => {
   const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
   const phoneId = WA_PHONE_NUMBER_ID;
 
+  // ?subscribe=1 → (re)abonează aplicația la contul WhatsApp Business, ca să
+  // primim mesajele clienților ȘI confirmările de livrare/citire.
+  if (reqUrl.searchParams.get("subscribe") === "1" && token) {
+    const subResp = await fetch(
+      `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/subscribed_apps`,
+      { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+    );
+    const subBody = await subResp.json().catch(() => ({}));
+    return new Response(
+      JSON.stringify({ ok: subResp.ok, status: subResp.status, result: subBody }),
+      { status: subResp.ok ? 200 : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   if (!token || !phoneId) {
     return new Response(
       JSON.stringify({
