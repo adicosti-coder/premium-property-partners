@@ -148,6 +148,13 @@
       "when": 1789505031447,
       "tag": "0020_wa_tx_meeting_confirmed",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1789538340407,
+      "tag": "0021_wa_messages_delivery_status",
+      "breakpoints": true
     }
   ]
 }
