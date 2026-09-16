@@ -1,7 +1,7 @@
 // wa-config-check — diagnostic intern: verifică dacă tokenul Meta și Phone Number ID
 // sunt valide. Internal-only (service role / cron secret). Nu returnează secrete.
 import { isInternalCall } from "../_shared/cronAuth.ts";
-import { WA_PHONE_NUMBER_ID } from "../_shared/waConfig.ts";
+import { WA_PHONE_NUMBER_ID, WA_BUSINESS_ACCOUNT_ID, WA_API_VERSION } from "../_shared/waConfig.ts";
 import { makeWebhookUrl, relayToMake } from "../_shared/makeRelay.ts";
 
 const corsHeaders = {
@@ -33,6 +33,20 @@ Deno.serve(async (req) => {
   const token = Deno.env.get("META_PERMANENT_TOKEN") || Deno.env.get("WHATSAPP_ACCESS_TOKEN") || "";
   const phoneId = WA_PHONE_NUMBER_ID;
 
+  // ?subscribe=1 → (re)abonează aplicația la contul WhatsApp Business, ca să
+  // primim mesajele clienților ȘI confirmările de livrare/citire.
+  if (reqUrl.searchParams.get("subscribe") === "1" && token) {
+    const subResp = await fetch(
+      `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/subscribed_apps`,
+      { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+    );
+    const subBody = await subResp.json().catch(() => ({}));
+    return new Response(
+      JSON.stringify({ ok: subResp.ok, status: subResp.status, result: subBody }),
+      { status: subResp.ok ? 200 : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   if (!token || !phoneId) {
     return new Response(
       JSON.stringify({
@@ -50,11 +64,36 @@ Deno.serve(async (req) => {
   const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   const body = await resp.json().catch(() => ({}));
 
+  // Câmpurile la care aplicația e abonată pe contul WhatsApp Business.
+  // Fără „messages” nu primim nici mesajele clienților, nici confirmările
+  // de livrare/citire — de aceea le raportăm explicit aici.
+  let subscribedFields: string[] | undefined;
+  let subsError: string | undefined;
+  try {
+    const subsResp = await fetch(
+      `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/subscribed_apps`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    const subsBody = await subsResp.json().catch(() => ({}));
+    if (subsResp.ok) {
+      subscribedFields = (subsBody?.data ?? []).flatMap(
+        (a: { whatsapp_business_api_data?: { subscribed_fields?: string[] } }) =>
+          a?.whatsapp_business_api_data?.subscribed_fields ?? [],
+      );
+    } else {
+      subsError = subsBody?.error?.message ?? `http_${subsResp.status}`;
+    }
+  } catch (e) {
+    subsError = e instanceof Error ? e.message : String(e);
+  }
+
   return new Response(
     JSON.stringify({
       ok: resp.ok,
       status: resp.status,
       phone: resp.ok ? body : undefined,
+      subscribed_fields: subscribedFields,
+      subscribed_fields_error: subsError,
       error: resp.ok ? undefined : body?.error?.message ?? "unknown_error",
     }),
     { status: resp.ok ? 200 : 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },

@@ -10452,10 +10452,13 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          delivered_at: string | null
+          delivery_status: string | null
           direction: string
           error: string | null
           id: string
           media_url: string | null
+          read_at: string | null
           role: string
           template_name: string | null
           tool_call: Json | null
@@ -10468,10 +10471,13 @@ export type Database = {
           content?: string
           conversation_id: string
           created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string | null
           direction: string
           error?: string | null
           id?: string
           media_url?: string | null
+          read_at?: string | null
           role: string
           template_name?: string | null
           tool_call?: Json | null
@@ -10484,10 +10490,13 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          delivered_at?: string | null
+          delivery_status?: string | null
           direction?: string
           error?: string | null
           id?: string
           media_url?: string | null
+          read_at?: string | null
           role?: string
           template_name?: string | null
           tool_call?: Json | null

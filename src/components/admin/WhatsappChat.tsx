@@ -35,6 +35,8 @@ type Msg = {
   template_name: string | null;
   error: string | null;
   wa_message_id: string | null;
+  delivered_at: string | null;
+  read_at: string | null;
   created_at: string;
 };
 
@@ -102,7 +104,7 @@ export default function WhatsappChat() {
     setLoadingThread(true);
     const { data } = await supabase
       .from("wa_messages")
-      .select("id, direction, content, template_name, error, wa_message_id, created_at")
+      .select("id, direction, content, template_name, error, wa_message_id, delivered_at, read_at, created_at")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true })
       .limit(400);
@@ -329,9 +331,13 @@ export default function WhatsappChat() {
                     ? null
                     : m.error
                       ? `Meta a respins: ${m.error}`
-                      : m.wa_message_id
-                        ? "Livrat în WhatsApp"
-                        : "Fără confirmare de la Meta";
+                      : m.read_at
+                        ? `Citit · ${fmt(m.read_at)}`
+                        : m.delivered_at
+                          ? `Livrat pe telefon · ${fmt(m.delivered_at)}`
+                          : m.wa_message_id
+                            ? "Trimis, așteptăm confirmarea"
+                            : "Fără confirmare de la Meta";
                   return (
                     <div key={m.id}>
                       {newDay && (
