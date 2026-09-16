@@ -180,7 +180,7 @@ const SharedLinksStats = () => {
       pushDisabledSuccess: "Notificări push dezactivate",
       linkName: "Nume",
       linkDescription: "Descriere",
-      namePlaceholder: "ex: Recomandările mele pentru București",
+      namePlaceholder: "ex: Recomandările mele pentru Timișoara",
       descriptionPlaceholder: "O scurtă descriere a locațiilor...",
       edit: "Editează",
       save: "Salvează",
