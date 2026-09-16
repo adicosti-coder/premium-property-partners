@@ -260,12 +260,12 @@ const CatalogInvestitii = () => {
         {
           question: "Ce ROI pot obține din investiții în regim hotelier vs. chirie clasică?",
           answer:
-            "Apartamentele administrate în regim hotelier de RealTrust generează ROI net verificat de 8–11% (mediu 9.4%), comparativ cu 3–4% pe modelul chirie clasică pe termen lung. Diferența anuală pentru un apartament de 140.000 EUR este de aproximativ +8.340 EUR.",
+            "Apartamentele administrate în regim hotelier de RealTrust au un ROI net estimat de 8–11% (referință medie 9,4%), comparativ cu 3–4% pe modelul chirie clasică pe termen lung. Estimarea depinde de ocupare și de costurile reale; pentru un apartament de 140.000 EUR diferența anuală este de aproximativ +8.340 EUR.",
         },
         {
           question: "Care este structura de comision RealTrust?",
           answer:
-            "Pentru tranzacții de vânzare/cumpărare comisionul standard este 2% (negociabil). Pentru administrarea în regim hotelier reținem 20% din venitul brut, fără costuri ascunse — totul este transparent în raportul lunar.",
+            "Pentru tranzacții de vânzare/cumpărare comisionul standard este 2% (negociabil). Pentru administrarea în regim hotelier, Property Management RealTrust este 15-20% din încasări, fără costuri ascunse — totul este transparent în raportul lunar.",
         },
         {
           question: "Cum funcționează creditul ipotecar pentru o investiție imobiliară?",
