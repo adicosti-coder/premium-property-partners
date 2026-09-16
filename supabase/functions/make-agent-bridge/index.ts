@@ -1015,7 +1015,19 @@ Deno.serve(async (req) => {
     let replyText = "";
     // Răspuns la butoanele rapide din primul mesaj — are prioritate și nu e
     // blocat de regula de 3 ore, ca discuția să nu rămână neterminată.
-    const quick = autoReplyText(text);
+    let quick = autoReplyText(text);
+    // Nu repetăm exact același răspuns automat de mai multe ori în aceeași zi.
+    if (quick && outboundCount && quick.kind !== "quick_no" && quick.kind !== "quick_stop") {
+      const sixHoursAgo = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
+      const { count: repeated } = await supabase
+        .from("wa_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("conversation_id", convId)
+        .eq("direction", "outbound")
+        .gte("created_at", sixHoursAgo)
+        .contains("tool_call", { auto_reply: quick.kind });
+      if (repeated) quick = null;
+    }
     if (quick && outboundCount) {
       replyKind = "quick_reply";
       replyText = quick.text;
@@ -1042,11 +1054,13 @@ Deno.serve(async (req) => {
     }
 
     // Refuz expres la butonul „Nu, mulțumesc” → oprim orice contactare ulterioară.
-    if (quick?.kind === "quick_no") {
+    if (quick?.kind === "quick_no" || quick?.kind === "quick_stop") {
       await supabase.from("wa_dnc_list").upsert({
         phone_normalized: phone,
         label: "refuz expres",
-        reason: "clientul a apăsat „Nu, mulțumesc” în primul mesaj WhatsApp",
+        reason: quick.kind === "quick_stop"
+          ? "clientul a scris STOP pe WhatsApp"
+          : "clientul a apăsat „Nu, mulțumesc” în primul mesaj WhatsApp",
       }, { onConflict: "phone_normalized" });
     }
 
@@ -1074,6 +1088,25 @@ Deno.serve(async (req) => {
         agent: notified.agent,
         note: "clientul a primit deja un mesaj în ultimele 3 ore",
       });
+    }
+
+    // Cine a cerut să nu mai fie contactat nu primește mesaje automate —
+    // doar confirmarea propriului refuz. Preia agentul, dacă e nevoie.
+    if (quick?.kind !== "quick_no" && quick?.kind !== "quick_stop") {
+      const { data: dncRow } = await supabase
+        .from("wa_dnc_list")
+        .select("id")
+        .eq("phone_normalized", phone)
+        .maybeSingle();
+      if (dncRow) {
+        return json({
+          ok: true,
+          conversation_id: convId,
+          auto_reply: "skipped_dnc",
+          agent: notified.agent,
+          note: "numărul este în lista de excludere — răspunde doar un coleg",
+        });
+      }
     }
 
 

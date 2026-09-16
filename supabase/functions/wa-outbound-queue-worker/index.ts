@@ -46,6 +46,23 @@ Deno.serve(async (req) => {
   const internalSecret = Deno.env.get("WA_ANDREI_INTERNAL_SECRET") || "";
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
+  // ── Deblocare: mesaje rămase „în trimitere” după un timeout de funcție ─────
+  // Fără asta, rândul rămâne blocat pentru totdeauna și proprietarul nu e contactat.
+  try {
+    const staleBefore = new Date(Date.now() - 15 * 60_000).toISOString();
+    const { data: unstuck } = await supabase
+      .from("wa_outbound_queue")
+      .update({ status: "pending", last_error: "reluat: trimitere întreruptă" })
+      .eq("status", "sending")
+      .lt("updated_at", staleBefore)
+      .select("id");
+    if (unstuck?.length) {
+      console.warn(`[wa-outbound-worker] reset ${unstuck.length} stuck 'sending' rows`);
+    }
+  } catch (e) {
+    console.error("[wa-outbound-worker] stuck reset failed:", e);
+  }
+
   // ── Anti-spam / Meta rate limit guard ──────────────────────────────────────
   const { data: settings } = await supabase
     .from("wa_agent_settings")
@@ -134,15 +151,19 @@ Deno.serve(async (req) => {
     const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
     const { data: recent } = await supabase
       .from("wa_outbound_queue")
-      .select("status, delivered_at, sent_at")
+      .select("status, delivered_at, read_at, replied_at, sent_at")
       .gte("sent_at", since)
       .not("sent_at", "is", null)
       .order("sent_at", { ascending: false })
       .limit(200);
 
     const sentRows = recent ?? [];
-    if (sentRows.length >= 10) {
-      const delivered = sentRows.filter((r) => r.delivered_at).length;
+    // Confirmările de livrare vin de la Meta prin webhook. Dacă nu avem NICIO
+    // confirmare, rata calculată ar fi 0% și coada s-ar opri degeaba — deci
+    // aplicăm regula doar când chiar primim confirmări.
+    const hasDeliveryData = sentRows.some((r) => r.delivered_at || r.read_at || r.replied_at);
+    if (sentRows.length >= 10 && hasDeliveryData) {
+      const delivered = sentRows.filter((r) => r.delivered_at || r.read_at || r.replied_at).length;
       const rate = Math.round((delivered / sentRows.length) * 100);
       if (rate < minDeliveryRate) {
         await autoPause("delivery_rate_low", {
@@ -339,9 +360,14 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             conversation_id: conversationId,
-            template_name: await preferredIntroTemplate(),
+            // Primul contact folosește șablonul premium aprobat; mesajele de
+            // follow-up (sau alte surse cu șablon propriu) își păstrează șablonul,
+            // altfel proprietarul ar primi de două ori mesajul de prezentare.
+            template_name: item.source === "followup" && item.template_name
+              ? item.template_name
+              : await preferredIntroTemplate(),
             template_language: item.template_language || "ro",
-            template_params: [],
+            template_params: Array.isArray(item.template_params) ? item.template_params : [],
           }),
         },
         { label: "wa-outbound-worker", maxAttempts: 3, timeoutMs: 20_000 },

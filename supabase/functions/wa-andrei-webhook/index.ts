@@ -229,7 +229,24 @@ Deno.serve(async (req) => {
           .eq("conversation_id", convId)
           .eq("direction", "outbound");
 
-        const quick = outboundCount ? autoReplyText(text) : null;
+        let quick = outboundCount ? autoReplyText(text) : null;
+        // Nu repetăm același răspuns automat la fiecare mesaj: dacă exact acest
+        // răspuns a plecat în ultimele 6 ore, lăsăm discuția pe mâna agentului.
+        if (quick && quick.kind !== "quick_no" && quick.kind !== "quick_stop") {
+          try {
+            const sixHoursAgo = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
+            const { count: repeated } = await supabase
+              .from("wa_messages")
+              .select("id", { count: "exact", head: true })
+              .eq("conversation_id", convId)
+              .eq("direction", "outbound")
+              .gte("created_at", sixHoursAgo)
+              .contains("tool_call", { auto_reply: quick.kind });
+            if (repeated) quick = null;
+          } catch (e) {
+            console.error("[wa-webhook] auto-reply dedupe check failed:", e);
+          }
+        }
         if (quick) {
           // Răspuns la butoanele din primul mesaj → trimitem imediat răspunsul
           // potrivit, independent de regula de 3 ore, ca discuția să continue.
@@ -381,15 +398,33 @@ Deno.serve(async (req) => {
         }
         if (!Object.keys(patch).length) continue;
 
-        const { error: qErr } = await supabase
+        // Un eșec raportat de Meta nu trebuie să șteargă starea „replied”
+        // (clientul a răspuns deja) — altfel lead-ul dispare din rapoarte.
+        let stUpdate = supabase
           .from("wa_outbound_queue")
           .update(patch)
           .eq("wa_message_id", waId);
+        if (state === "failed") stUpdate = stUpdate.in("status", ["pending", "sending", "sent"]);
+        const { error: qErr } = await stUpdate;
         if (qErr) console.error("[wa-webhook] status update failed:", qErr);
       }
     }
   }
 
+
+  /** Numerele care au cerut să nu mai fie contactate nu primesc mesaje automate. */
+  const isBlockedConv = async (convId: string): Promise<boolean> => {
+    try {
+      const { data: c } = await supabase
+        .from("wa_conversations").select("phone_normalized").eq("id", convId).maybeSingle();
+      if (!c?.phone_normalized) return false;
+      const { data: d } = await supabase
+        .from("wa_dnc_list").select("id").eq("phone_normalized", c.phone_normalized).maybeSingle();
+      return !!d;
+    } catch {
+      return false;
+    }
+  };
 
   // Răspuns automat la butoanele din primul mesaj (vânzare / administrare / refuz).
   for (const [convId, quick] of quickReplyConversations) {
@@ -403,6 +438,8 @@ Deno.serve(async (req) => {
       } catch (e) {
         console.error("[wa-webhook] dnc upsert failed:", e);
       }
+    } else if (await isBlockedConv(convId)) {
+      continue; // număr în lista de excludere → răspunde doar un coleg
     }
     fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
       method: "POST",
@@ -417,6 +454,7 @@ Deno.serve(async (req) => {
 
   // Auto-reply de calificare la prima interacțiune (fire-and-forget)
   for (const [convId, convPhone] of intakeConversations) {
+    if (await isBlockedConv(convId)) continue;
     const ctx = await loadProspectContext(supabase, convPhone);
     fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
       method: "POST",
@@ -463,6 +501,7 @@ Deno.serve(async (req) => {
         .eq("direction", "outbound")
         .gte("created_at", threeHoursAgo);
       if (recentAck) continue;
+      if (await isBlockedConv(convId)) continue;
 
       fetch(`${supabaseUrl}/functions/v1/wa-andrei-send`, {
         method: "POST",
@@ -471,7 +510,7 @@ Deno.serve(async (req) => {
           "Authorization": `Bearer ${serviceKey}`,
           "x-internal-secret": internalSecret,
         },
-        body: JSON.stringify({ conversation_id: convId, text: ACK_MESSAGE }),
+        body: JSON.stringify({ conversation_id: convId, text: ACK_MESSAGE, auto_kind: "ack" }),
       }).catch((e) => console.error("[wa-webhook] ack send failed:", e));
     } catch (e) {
       console.error("[wa-webhook] ack check failed:", e);
