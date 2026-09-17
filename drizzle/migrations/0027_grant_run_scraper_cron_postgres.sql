@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.run_scraper_cron(text, jsonb) TO postgres;

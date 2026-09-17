@@ -11,7 +11,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-cron-secret, x-webhook-secret",
 };
 
 // Cartiere centrale + clasice (mix nou + bloc vechi)
@@ -120,13 +120,13 @@ function platformsForCategory(category: string): string[] {
 // gate here — matches the pattern of other internal cron functions
 // (e.g. scrape-prospects). All mutations go through service-role.
 
-import { requireAdmin } from "../_shared/adminAuth.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
 
   const supabase = createClient(

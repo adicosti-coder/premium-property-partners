@@ -10,7 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-cron-secret, x-webhook-secret",
 };
 
 // No explicit auth gate — matches scrape-prospects pattern. Service-role
@@ -21,9 +21,23 @@ function platformDomain(p: string): string | null {
     "OLX": "olx.ro",
     "Storia.ro": "storia.ro",
     "imobiliare.ro": "imobiliare.ro",
+    "Publi24": "publi24.ro",
+    "BursaImobiliara.ro": "bursaimobiliara.ro",
+    "Anunturi-Imobiliare.ro": "anunturi-imobiliare.ro",
   };
-  return m[p] || null;
+  if (m[p]) return m[p];
+  const k = (p || "").toLowerCase();
+  if (k.includes("olx")) return "olx.ro";
+  if (k.includes("storia")) return "storia.ro";
+  if (k.includes("publi24")) return "publi24.ro";
+  if (k.includes("bursa")) return "bursaimobiliara.ro";
+  if (k.includes("imobiliare")) return "imobiliare.ro";
+  return null;
 }
+
+// Hard time budget: edge functions are killed around 60s. Stop the keyword loop
+// before that so the run is recorded as `partial` instead of vanishing.
+const MAX_RUNTIME_MS = 45_000;
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
 // never be published on realtrust.ro). Instead they feed `pm_collaboration_leads`
@@ -33,13 +47,13 @@ const PM_LEAD_PLATFORMS: Record<string, "booking" | "airbnb"> = {
   "Airbnb": "airbnb",
 };
 
-import { requireAdmin } from "../_shared/adminAuth.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
 
   const supabase = createClient(
@@ -72,7 +86,7 @@ Deno.serve(async (req) => {
     // Pick keywords: filter by ids if provided, otherwise priority + staleness
     let query = supabase
       .from("keyword_radar_queries")
-      .select("id, keyword, category, platforms, priority_score, last_scanned_at")
+      .select("id, keyword, category, platforms, priority_score, last_scanned_at, total_results_count, scan_count")
       .eq("is_active", true);
 
     if (onlyKeywordIds && onlyKeywordIds.length > 0) {
@@ -93,8 +107,13 @@ Deno.serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     for (const kw of (kws || [])) {
+      if (Date.now() - startedAt > MAX_RUNTIME_MS) {
+        stats.skipped_time_budget = (stats.skipped_time_budget || 0) + 1;
+        continue;
+      }
       stats.keywords_scanned++;
       let kwResults = 0;
+      const kwErrors: string[] = [];
       const kwDetail: any = { id: kw.id, keyword: kw.keyword, platforms: {} };
 
       for (const platform of (kw.platforms as string[])) {
@@ -149,9 +168,13 @@ Deno.serve(async (req) => {
             inserted: cnt,
             route: pmPlatform ? "pm-leads" : "prospects",
           };
-          if (!resp.ok) stats.errors++;
+          if (!resp.ok) {
+            stats.errors++;
+            kwErrors.push(`${platform}: http_${resp.status}${j?.error ? ` ${String(j.error).slice(0, 120)}` : ""}`);
+          }
         } catch (e) {
           stats.errors++;
+          kwErrors.push(`${platform}: ${String(e).slice(0, 140)}`);
           kwDetail.platforms[platform] = { ok: false, error: String(e) };
         }
       }
@@ -159,19 +182,19 @@ Deno.serve(async (req) => {
       stats.total_results += kwResults;
       details.push(kwDetail);
 
-      // Update keyword row
+      // Update keyword row (cumulative counters read from the actual row)
       await supabase.from("keyword_radar_queries").update({
         last_scanned_at: new Date().toISOString(),
         results_count: kwResults,
-        total_results_count: (kw as any).total_results_count
-          ? Number((kw as any).total_results_count) + kwResults
-          : kwResults,
-        scan_count: ((kw as any).scan_count || 0) + 1,
-        last_error: null,
+        total_results_count: Number(kw.total_results_count || 0) + kwResults,
+        scan_count: Number(kw.scan_count || 0) + 1,
+        last_error: kwErrors.length ? kwErrors.join(" | ").slice(0, 500) : null,
       }).eq("id", kw.id);
     }
 
-    const status = stats.errors === 0 ? "success" : stats.total_results > 0 ? "partial" : "failed";
+    const status = stats.errors === 0
+      ? (stats.skipped_time_budget ? "partial" : "success")
+      : stats.total_results > 0 ? "partial" : "failed";
     await supabase.from("keyword_radar_runs").update({
       finished_at: new Date().toISOString(),
       duration_ms: Date.now() - startedAt,
