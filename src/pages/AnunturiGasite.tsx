@@ -96,7 +96,7 @@ export default function AnunturiGasite() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background">
-        <SEOHead title="Acces restrâns" description="Zonă internă RealTrust." noindex />
+        <SEOHead title="Acces restrâns" description="Zonă internă RealTrust." noIndex />
         <Header />
         <main className="container mx-auto px-4 py-24 max-w-lg text-center space-y-4">
           <ShieldAlert className="h-10 w-10 mx-auto text-muted-foreground" />
@@ -113,7 +113,7 @@ export default function AnunturiGasite() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead title="Anunțuri găsite — intern RealTrust" description="Zonă internă RealTrust." noindex />
+      <SEOHead title="Anunțuri găsite — intern RealTrust" description="Zonă internă RealTrust." noIndex />
       <Header />
       <main className="container mx-auto px-4 py-24 space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
