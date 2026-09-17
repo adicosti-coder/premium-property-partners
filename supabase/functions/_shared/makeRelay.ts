@@ -79,11 +79,108 @@ export async function relayToMake(
     if (!resp.ok) {
       const body = (await resp.text().catch(() => "")).slice(0, 300);
       console.error(`[make-relay] ${event} failed http_${resp.status}: ${body}`);
-      return { ok: false, status: resp.status, error: body || `http_${resp.status}` };
+      const error = body || `http_${resp.status}`;
+      if (supabase) await pushToDlq(supabase, event, payload, resp.status, error);
+      return { ok: false, status: resp.status, error };
     }
     return { ok: true, status: resp.status };
   } catch (e) {
     console.error(`[make-relay] ${event} error:`, e);
-    return { ok: false, error: String(e).slice(0, 300) };
+    const error = String(e).slice(0, 300);
+    if (supabase) await pushToDlq(supabase, event, payload, undefined, error);
+    return { ok: false, error };
   }
+}
+
+/**
+ * Retries relay events that Make.com rejected earlier (e.g. "Queue is full").
+ * Called at the start of the WhatsApp outbound worker, so retries piggyback on
+ * the existing */15min cron — no extra function or schedule needed.
+ */
+export async function drainMakeRelayDlq(
+  supabase: DlqClient,
+  limit = 20,
+): Promise<{ retried: number; delivered: number; failed: number }> {
+  const out = { retried: 0, delivered: 0, failed: 0 };
+  const url = makeWebhookUrl();
+  if (!url) return out;
+
+  let rows: Array<{
+    id: string;
+    event: string;
+    payload: Record<string, unknown>;
+    attempts: number;
+  }> = [];
+  try {
+    const { data, error } = await supabase
+      .from("make_relay_dlq")
+      .select("id, event, payload, attempts")
+      .eq("status", "pending")
+      .lte("next_attempt_at", new Date().toISOString())
+      .order("next_attempt_at", { ascending: true })
+      .limit(limit);
+    if (error) throw error;
+    rows = (data ?? []) as typeof rows;
+  } catch (e) {
+    console.error("[make-relay] dlq fetch failed:", e);
+    return out;
+  }
+
+  for (const row of rows) {
+    out.retried += 1;
+    const attempts = (row.attempts ?? 1) + 1;
+    let ok = false;
+    let status: number | undefined;
+    let error = "";
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10_000);
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: row.event,
+          sent_at: new Date().toISOString(),
+          source: "realtrust-whatsapp",
+          retry_attempt: attempts,
+          ...(row.payload ?? {}),
+        }),
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      status = resp.status;
+      ok = resp.ok;
+      if (!ok) error = (await resp.text().catch(() => "")).slice(0, 300) || `http_${resp.status}`;
+    } catch (e) {
+      error = String(e).slice(0, 300);
+    }
+
+    const exhausted = !ok && attempts >= MAX_RELAY_ATTEMPTS;
+    if (ok) out.delivered += 1;
+    else if (exhausted) out.failed += 1;
+
+    try {
+      await supabase
+        .from("make_relay_dlq")
+        .update({
+          status: ok ? "delivered" : exhausted ? "failed" : "pending",
+          attempts,
+          last_status: status ?? null,
+          last_error: ok ? null : error,
+          delivered_at: ok ? new Date().toISOString() : null,
+          next_attempt_at: ok || exhausted ? new Date().toISOString() : nextAttemptAt(attempts),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+    } catch (e) {
+      console.error("[make-relay] dlq update failed:", e);
+    }
+  }
+
+  if (out.retried) {
+    console.log(
+      `[make-relay] dlq drain: retried=${out.retried} delivered=${out.delivered} failed=${out.failed}`,
+    );
+  }
+  return out;
 }
