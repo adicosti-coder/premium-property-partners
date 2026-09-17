@@ -493,6 +493,44 @@ function platformToDomain(platform: string, query: string): string | null {
   return null;
 }
 
+/**
+ * Canonical platform label. Keyword rows historically carried free-text labels
+ * ("publi24.ro", "Publi24.ro", "OLX-Chirii", "Custom", "General"), which split
+ * source health / auto-disable / reporting across duplicate keys. We derive the
+ * canonical name from the listing domain first, then fall back to the label.
+ */
+const CANONICAL_PLATFORM_BY_DOMAIN: Array<[string, string]> = [
+  ['olx.ro', 'OLX'],
+  ['storia.ro', 'Storia.ro'],
+  ['imobiliare.ro', 'imobiliare.ro'],
+  ['publi24.ro', 'Publi24'],
+  ['bursaimobiliara.ro', 'BursaImobiliara.ro'],
+  ['anunturi-imobiliare.ro', 'Anunturi-Imobiliare.ro'],
+  ['facebook.com', 'Facebook Marketplace'],
+];
+
+function canonicalPlatform(label: string, url: string): string {
+  const domain = (extractUrlDomain(url) || '').replace(/^www\./, '');
+  if (domain) {
+    for (const [dom, name] of CANONICAL_PLATFORM_BY_DOMAIN) {
+      if (domain === dom || domain.endsWith(`.${dom}`)) return name;
+    }
+  }
+  const p = (label || '').trim();
+  const low = p.toLowerCase();
+  if (low.includes('olx')) return 'OLX';
+  if (low.includes('storia')) return 'Storia.ro';
+  if (low.includes('imobiliare') && !low.includes('bursa')) return 'imobiliare.ro';
+  if (low.includes('publi24')) return 'Publi24';
+  if (low.includes('bursa')) return 'BursaImobiliara.ro';
+  if (low.includes('facebook') && low.includes('grup')) return 'Grupuri Facebook';
+  if (low.includes('facebook')) return 'Facebook Marketplace';
+  if (!p || low === 'custom' || low === 'general' || low === 'unknown') {
+    return domain || 'Necunoscut';
+  }
+  return p;
+}
+
 interface FreeResult { url: string; title?: string; markdown?: string; description?: string }
 
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
@@ -1850,7 +1888,7 @@ Deno.serve(async (req) => {
             const { data: inserted, error: insertErr } = await supabase
               .from('prospect_listings')
               .upsert({
-                source_platform: platform,
+                source_platform: canonicalPlatform(platform, url),
                 source_url: url,
                 title: extracted.title || result.title || 'Anunț fără titlu',
                 description: extracted.description || markdown.substring(0, 500) || null,
@@ -1916,7 +1954,42 @@ Deno.serve(async (req) => {
               results.push(inserted);
               existingUrls.add(url);
             } else {
+              // Already known URL. Previously we dropped it silently, so
+              // `last_seen_at` never advanced and a phone discovered on a later
+              // pass was lost. Refresh the "still live" markers instead.
               duplicateSkipped++;
+              const refreshedPhone = normalizeRoPhone(extracted.contactPhone);
+              const { data: existingRow } = await supabase
+                .from('prospect_listings')
+                .select('id, search_keywords, phone_normalized, source_platform')
+                .eq('source_url', url)
+                .maybeSingle();
+              if (existingRow) {
+                const prevKeywords: string[] = Array.isArray(existingRow.search_keywords)
+                  ? existingRow.search_keywords.filter((k: unknown) => typeof k === 'string')
+                  : [];
+                const mergedKeywords = query && !prevKeywords.includes(query)
+                  ? [...prevKeywords, query].slice(-25)
+                  : prevKeywords;
+                const patch: Record<string, unknown> = {
+                  last_seen_at: new Date().toISOString(),
+                  search_keywords: mergedKeywords,
+                  source_platform: canonicalPlatform(existingRow.source_platform || platform, url),
+                };
+                // Only fill a missing phone — never overwrite a verified one.
+                if (!existingRow.phone_normalized && refreshedPhone) {
+                  patch.contact_phone = extracted.contactPhone;
+                  patch.phone_normalized = refreshedPhone;
+                  if (extracted.contactName) patch.contact_name = extracted.contactName;
+                }
+                const { error: refreshErr } = await supabase
+                  .from('prospect_listings')
+                  .update(patch)
+                  .eq('id', existingRow.id);
+                if (refreshErr) {
+                  console.warn(`[refresh-duplicate] ${url}: ${refreshErr.message}`);
+                }
+              }
             }
           }
         } catch (err: any) {
