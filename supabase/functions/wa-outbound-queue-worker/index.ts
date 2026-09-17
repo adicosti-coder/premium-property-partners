@@ -63,6 +63,14 @@ Deno.serve(async (req) => {
     console.error("[wa-outbound-worker] stuck reset failed:", e);
   }
 
+  // ── Reia notificările Make.com respinse anterior (ex: „Queue is full") ─────
+  let makeRelayRetry: Awaited<ReturnType<typeof drainMakeRelayDlq>> | null = null;
+  try {
+    makeRelayRetry = await drainMakeRelayDlq(supabase, 20);
+  } catch (e) {
+    console.error("[wa-outbound-worker] make relay drain failed:", e);
+  }
+
   // ── Anti-spam / Meta rate limit guard ──────────────────────────────────────
   const { data: settings } = await supabase
     .from("wa_agent_settings")
