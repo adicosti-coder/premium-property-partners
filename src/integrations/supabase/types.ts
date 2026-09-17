@@ -11396,6 +11396,10 @@ export type Database = {
       }
       retry_failed_crm_syncs: { Args: never; Returns: number }
       revoke_admin_mfa: { Args: never; Returns: undefined }
+      run_scraper_cron: {
+        Args: { _body: Json; _fn: string }
+        Returns: undefined
+      }
       score_lead: {
         Args: {
           p_area: number
