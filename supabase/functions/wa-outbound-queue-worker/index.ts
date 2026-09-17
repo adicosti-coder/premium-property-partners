@@ -480,5 +480,5 @@ Deno.serve(async (req) => {
     }
   }
 
-  return json({ ok: true, processed: results.length, results });
+  return json({ ok: true, processed: results.length, results, make_relay_retry: makeRelayRetry });
 });
