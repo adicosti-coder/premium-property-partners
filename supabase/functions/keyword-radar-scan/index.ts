@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
     // Pick keywords: filter by ids if provided, otherwise priority + staleness
     let query = supabase
       .from("keyword_radar_queries")
-      .select("id, keyword, category, platforms, priority_score, last_scanned_at, total_results_count, scan_count")
+      .select("id, keyword, category, platforms, priority_score, last_scanned_at, total_results_count, scan_count, metadata")
       .eq("is_active", true);
 
     if (onlyKeywordIds && onlyKeywordIds.length > 0) {
@@ -116,7 +116,26 @@ Deno.serve(async (req) => {
       const kwErrors: string[] = [];
       const kwDetail: any = { id: kw.id, keyword: kw.keyword, platforms: {} };
 
-      for (const platform of (kw.platforms as string[])) {
+      // Credit saver: remember per-platform yield. Platforms are tried richest
+      // first, and one that returned nothing 4 scans in a row is skipped until
+      // an admin scans that keyword explicitly (keyword_ids in the body).
+      const meta: any = (kw.metadata && typeof kw.metadata === "object") ? { ...kw.metadata } : {};
+      const pstats: Record<string, { total: number; zero_streak: number }> =
+        (meta.platform_stats && typeof meta.platform_stats === "object") ? { ...meta.platform_stats } : {};
+      const platformList = [...(kw.platforms as string[])].sort(
+        (a, b) => (pstats[b]?.total || 0) - (pstats[a]?.total || 0),
+      );
+
+      for (const platform of platformList) {
+        if (Date.now() - startedAt > MAX_RUNTIME_MS) {
+          stats.skipped_time_budget = (stats.skipped_time_budget || 0) + 1;
+          break;
+        }
+        if (!onlyKeywordIds && (pstats[platform]?.zero_streak || 0) >= 4) {
+          stats.skipped_low_yield = (stats.skipped_low_yield || 0) + 1;
+          kwDetail.platforms[platform] = { skipped: "low_yield" };
+          continue;
+        }
         const pmPlatform = PM_LEAD_PLATFORMS[platform];
         const domain = platformDomain(platform);
         if (!pmPlatform && !domain) continue;
@@ -168,6 +187,11 @@ Deno.serve(async (req) => {
             inserted: cnt,
             route: pmPlatform ? "pm-leads" : "prospects",
           };
+          const cur = pstats[platform] || { total: 0, zero_streak: 0 };
+          pstats[platform] = {
+            total: cur.total + cnt,
+            zero_streak: cnt > 0 ? 0 : cur.zero_streak + 1,
+          };
           if (!resp.ok) {
             stats.errors++;
             kwErrors.push(`${platform}: http_${resp.status}${j?.error ? ` ${String(j.error).slice(0, 120)}` : ""}`);
@@ -189,6 +213,7 @@ Deno.serve(async (req) => {
         total_results_count: Number(kw.total_results_count || 0) + kwResults,
         scan_count: Number(kw.scan_count || 0) + 1,
         last_error: kwErrors.length ? kwErrors.join(" | ").slice(0, 500) : null,
+        metadata: { ...meta, platform_stats: pstats },
       }).eq("id", kw.id);
     }
 
