@@ -5,7 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
-import { relayToMake } from "../_shared/makeRelay.ts";
+import { drainMakeRelayDlq, relayToMake } from "../_shared/makeRelay.ts";
 import { preferredIntroTemplate } from "../_shared/waPreferredTemplate.ts";
 
 const corsHeaders = {
@@ -61,6 +61,14 @@ Deno.serve(async (req) => {
     }
   } catch (e) {
     console.error("[wa-outbound-worker] stuck reset failed:", e);
+  }
+
+  // ── Reia notificările Make.com respinse anterior (ex: „Queue is full") ─────
+  let makeRelayRetry: Awaited<ReturnType<typeof drainMakeRelayDlq>> | null = null;
+  try {
+    makeRelayRetry = await drainMakeRelayDlq(supabase, 20);
+  } catch (e) {
+    console.error("[wa-outbound-worker] make relay drain failed:", e);
   }
 
   // ── Anti-spam / Meta rate limit guard ──────────────────────────────────────
@@ -404,7 +412,8 @@ Deno.serve(async (req) => {
           metadata: { template: item.template_name, attempts },
         });
 
-        // Notifică scenariul Make.com (dacă e configurat webhook-ul)
+        // Notifică scenariul Make.com (dacă e configurat webhook-ul).
+        // Eșecurile (ex: "Queue is full") se salvează în make_relay_dlq și se reia automat.
         await relayToMake("wa_outbound_sent", {
           queue_id: item.id,
           phone: item.phone_normalized,
@@ -414,7 +423,7 @@ Deno.serve(async (req) => {
           template_language: item.template_language || "ro",
           wa_message_id: waMessageId,
           queue_source: item.source,
-        });
+        }, supabase);
 
         consecutiveFailures = 0;
         results.push({ id: item.id, status: "sent" });
@@ -471,5 +480,5 @@ Deno.serve(async (req) => {
     }
   }
 
-  return json({ ok: true, processed: results.length, results });
+  return json({ ok: true, processed: results.length, results, make_relay_retry: makeRelayRetry });
 });

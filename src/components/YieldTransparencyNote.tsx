@@ -4,13 +4,14 @@ import { useLanguage } from "@/i18n/LanguageContext";
 /**
  * Transparency note for the yield calculator.
  *
- * Spells out the full equation behind the advertised 9.4% net ROI so an owner
- * can reconcile the number with their own math:
- *  - 27% operational deduction (platform commissions + effective income tax +
- *    consumables);
+ * Spells out the full equation behind the estimated 9.4% net ROI so an owner
+ * can reconcile the number with their own math. Each cost is listed exactly
+ * once (no double counting):
+ *  - Property Management RealTrust: 15-25% of revenue, depending on the package
+ *    (same range as the pricing page);
+ *  - platform commissions, income tax and consumables are separate costs;
  *  - cleaning fee is paid separately by the guest (not deducted from the owner);
- *  - fixed utilities and the management commission are subtracted afterwards,
- *    so the 9.4% figure is genuinely net.
+ *  - fixed utilities are subtracted afterwards, so 9.4% is genuinely net.
  */
 const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
   const { language } = useLanguage();
@@ -19,9 +20,14 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
   const rows = ro
     ? [
         {
-          title: "Property Management RealTrust — 15-20%",
+          title: "Property Management RealTrust — 15-25% din încasări, în funcție de pachet",
           body:
-            "Include comisioanele platformelor (Booking, Airbnb, Expedia), impozitul efectiv pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie).",
+            "Acoperă administrarea completă: listarea și optimizarea prețurilor, comunicarea cu oaspeții, check-in digital, coordonarea curățeniei și raportarea lunară.",
+        },
+        {
+          title: "Comisioanele platformelor, impozitul și consumabilele — costuri separate",
+          body:
+            "Booking, Airbnb și Expedia își rețin propriul comision din încasări, la care se adaugă impozitul pe venit și consumabilele (produse de igienă, cafea, sare, ulei, lenjerie).",
         },
         {
           title: "Taxa de curățenie — achitată separat de oaspeți",
@@ -29,16 +35,21 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
             "Curățenia dintre rezervări este facturată oaspetelui la momentul rezervării, deci nu se scade din venitul tău.",
         },
         {
-          title: "Utilități & comision de administrare — scăzute ulterior",
+          title: "Utilități & cheltuieli fixe — scăzute ulterior",
           body:
-            "Cheltuielile fixe (utilități, internet, întreținere) și comisionul de administrare se scad, astfel încât 9,4% rămâne venit curat (net), nu brut.",
+            "Cheltuielile fixe (utilități, internet, întreținere) se scad la final, astfel încât 9,4% rămâne venit curat (net), nu brut.",
         },
       ]
     : [
         {
-          title: "RealTrust Property Management — 15-20%",
+          title: "RealTrust Property Management — 15-25% of revenue, depending on the package",
           body:
-            "Covers platform commissions (Booking, Airbnb, Expedia), effective income tax and consumables (toiletries, coffee, salt, oil, linen).",
+            "Covers full management: listing and price optimisation, guest communication, digital check-in, cleaning coordination and monthly reporting.",
+        },
+        {
+          title: "Platform commissions, income tax and consumables — separate costs",
+          body:
+            "Booking, Airbnb and Expedia keep their own commission from revenue, on top of effective income tax and consumables (toiletries, coffee, salt, oil, linen).",
         },
         {
           title: "Cleaning fee — paid separately by guests",
@@ -46,9 +57,9 @@ const YieldTransparencyNote = ({ className = "" }: { className?: string }) => {
             "Turnover cleaning is charged to the guest at booking time, so it is not deducted from your revenue.",
         },
         {
-          title: "Utilities & management fee — subtracted afterwards",
+          title: "Utilities & fixed costs — subtracted afterwards",
           body:
-            "Fixed costs (utilities, internet, maintenance) and the management commission are subtracted as well, so 9.4% is genuinely net income, not gross.",
+            "Fixed costs (utilities, internet, maintenance) are subtracted at the end, so 9.4% is genuinely net income, not gross.",
         },
       ];
 

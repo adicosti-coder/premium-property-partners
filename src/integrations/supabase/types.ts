@@ -3625,6 +3625,48 @@ export type Database = {
         }
         Relationships: []
       }
+      make_relay_dlq: {
+        Row: {
+          attempts: number
+          created_at: string
+          delivered_at: string | null
+          event: string
+          id: string
+          last_error: string | null
+          last_status: number | null
+          next_attempt_at: string
+          payload: Json
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          delivered_at?: string | null
+          event: string
+          id?: string
+          last_error?: string | null
+          last_status?: number | null
+          next_attempt_at?: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          delivered_at?: string | null
+          event?: string
+          id?: string
+          last_error?: string | null
+          last_status?: number | null
+          next_attempt_at?: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketing_snapshot: {
         Row: {
           ad_spend_eur: number
