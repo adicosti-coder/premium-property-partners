@@ -5,7 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
 import { fetchWithRetry } from "../_shared/fetchRetry.ts";
-import { relayToMake } from "../_shared/makeRelay.ts";
+import { drainMakeRelayDlq, relayToMake } from "../_shared/makeRelay.ts";
 import { preferredIntroTemplate } from "../_shared/waPreferredTemplate.ts";
 
 const corsHeaders = {
@@ -404,7 +404,8 @@ Deno.serve(async (req) => {
           metadata: { template: item.template_name, attempts },
         });
 
-        // Notifică scenariul Make.com (dacă e configurat webhook-ul)
+        // Notifică scenariul Make.com (dacă e configurat webhook-ul).
+        // Eșecurile (ex: "Queue is full") se salvează în make_relay_dlq și se reia automat.
         await relayToMake("wa_outbound_sent", {
           queue_id: item.id,
           phone: item.phone_normalized,
