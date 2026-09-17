@@ -493,6 +493,44 @@ function platformToDomain(platform: string, query: string): string | null {
   return null;
 }
 
+/**
+ * Canonical platform label. Keyword rows historically carried free-text labels
+ * ("publi24.ro", "Publi24.ro", "OLX-Chirii", "Custom", "General"), which split
+ * source health / auto-disable / reporting across duplicate keys. We derive the
+ * canonical name from the listing domain first, then fall back to the label.
+ */
+const CANONICAL_PLATFORM_BY_DOMAIN: Array<[string, string]> = [
+  ['olx.ro', 'OLX'],
+  ['storia.ro', 'Storia.ro'],
+  ['imobiliare.ro', 'imobiliare.ro'],
+  ['publi24.ro', 'Publi24'],
+  ['bursaimobiliara.ro', 'BursaImobiliara.ro'],
+  ['anunturi-imobiliare.ro', 'Anunturi-Imobiliare.ro'],
+  ['facebook.com', 'Facebook Marketplace'],
+];
+
+function canonicalPlatform(label: string, url: string): string {
+  const domain = (extractUrlDomain(url) || '').replace(/^www\./, '');
+  if (domain) {
+    for (const [dom, name] of CANONICAL_PLATFORM_BY_DOMAIN) {
+      if (domain === dom || domain.endsWith(`.${dom}`)) return name;
+    }
+  }
+  const p = (label || '').trim();
+  const low = p.toLowerCase();
+  if (low.includes('olx')) return 'OLX';
+  if (low.includes('storia')) return 'Storia.ro';
+  if (low.includes('imobiliare') && !low.includes('bursa')) return 'imobiliare.ro';
+  if (low.includes('publi24')) return 'Publi24';
+  if (low.includes('bursa')) return 'BursaImobiliara.ro';
+  if (low.includes('facebook') && low.includes('grup')) return 'Grupuri Facebook';
+  if (low.includes('facebook')) return 'Facebook Marketplace';
+  if (!p || low === 'custom' || low === 'general' || low === 'unknown') {
+    return domain || 'Necunoscut';
+  }
+  return p;
+}
+
 interface FreeResult { url: string; title?: string; markdown?: string; description?: string }
 
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
