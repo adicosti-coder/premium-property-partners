@@ -17,9 +17,46 @@ export function makeWebhookUrl(): string {
   );
 }
 
+/** Minimal shape of the service-role Supabase client we need for the DLQ. */
+type DlqClient = {
+  from: (table: string) => any;
+};
+
+/** Backoff in minutes per attempt count — 5m, 15m, 45m, 2h, 6h. */
+const BACKOFF_MIN = [5, 15, 45, 120, 360];
+const MAX_RELAY_ATTEMPTS = 6;
+
+function nextAttemptAt(attempts: number): string {
+  const min = BACKOFF_MIN[Math.min(attempts - 1, BACKOFF_MIN.length - 1)];
+  return new Date(Date.now() + min * 60_000).toISOString();
+}
+
+async function pushToDlq(
+  supabase: DlqClient,
+  event: string,
+  payload: Record<string, unknown>,
+  status: number | undefined,
+  error: string,
+) {
+  try {
+    await supabase.from("make_relay_dlq").insert({
+      event,
+      payload,
+      attempts: 1,
+      last_status: status ?? null,
+      last_error: error.slice(0, 500),
+      next_attempt_at: nextAttemptAt(1),
+    });
+  } catch (e) {
+    console.error("[make-relay] dlq insert failed:", e);
+  }
+}
+
 export async function relayToMake(
   event: string,
   payload: Record<string, unknown>,
+  /** Pass the service-role client to persist failures for automatic retry. */
+  supabase?: DlqClient,
 ): Promise<MakeRelayResult> {
   const url = makeWebhookUrl();
   if (!url) return { ok: false, skipped: "not_configured" };
