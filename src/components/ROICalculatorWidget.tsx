@@ -264,7 +264,7 @@ const ROICalculatorWidget = () => {
               <span className="text-sm font-normal text-muted-foreground">/an net</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri, taxe)
+              ≈ {calculations.targetNetMonthly.toLocaleString("ro-RO")} €/lună · ipoteze: ocupare 75%, costuri operaționale și taxe
             </p>
           </div>
 
