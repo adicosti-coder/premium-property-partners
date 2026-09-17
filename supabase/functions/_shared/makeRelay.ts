@@ -95,7 +95,7 @@ export async function relayToMake(
 /**
  * Retries relay events that Make.com rejected earlier (e.g. "Queue is full").
  * Called at the start of the WhatsApp outbound worker, so retries piggyback on
- * the existing */15min cron — no extra function or schedule needed.
+ * the existing 15-minute cron — no extra function or schedule needed.
  */
 export async function drainMakeRelayDlq(
   supabase: DlqClient,
