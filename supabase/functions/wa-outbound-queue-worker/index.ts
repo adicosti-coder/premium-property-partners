@@ -415,7 +415,7 @@ Deno.serve(async (req) => {
           template_language: item.template_language || "ro",
           wa_message_id: waMessageId,
           queue_source: item.source,
-        });
+        }, supabase);
 
         consecutiveFailures = 0;
         results.push({ id: item.id, status: "sent" });
