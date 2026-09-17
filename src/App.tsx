@@ -318,6 +318,7 @@ const App = () => (
                     <Route path="/scraper-leads" element={<ScraperLeads />} />
                     <Route path="/admin/scraper-preview" element={<ScraperPreview />} />
                     <Route path="/admin/prospect-listings" element={<ProspectListings />} />
+                    <Route path="/admin/anunturi-gasite" element={<AnunturiGasite />} />
                     <Route path="/admin/call-dashboard" element={<CallDashboard />} />
                     <Route path="/admin/lead-dashboard" element={<AdminLeadDashboard />} />
                     <Route path="/admin/properties/fast-review" element={<FastReview />} />
