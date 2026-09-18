@@ -163,7 +163,8 @@ export default function PlatformReportPanel() {
       csvFileName("raport-platforme"),
       ["Platformă", "Anunțuri", "Cu telefon", "Duplicate", "Agenții", "Date incomplete", "Preț mediu",
         "Luna curentă", "Luna trecută", "Variație %", "Preț/mp", "Preț/mp luna curentă",
-        "Preț/mp luna trecută", "Variație preț/mp %", "Ultimul anunț"],
+        "Preț/mp luna trecută", "Variație preț/mp %", "Ultimul anunț",
+        "Publicate realtrust.ro", "Preț mediu realtrust.ro", "Preț/mp realtrust.ro", "Ultima publicare"],
       rows.map((r) => [
         r.source_platform,
         r.found_period,
