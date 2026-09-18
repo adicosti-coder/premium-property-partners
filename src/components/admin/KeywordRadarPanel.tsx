@@ -190,6 +190,7 @@ export default function KeywordRadarPanel() {
         .update({ is_active: !row.is_active })
         .eq("id", row.id);
       if (error) throw error;
+      setSearchResults(prev => prev ? prev.map(s => s.id === row.id ? { ...s, is_active: !row.is_active } : s) : prev);
       loadSources();
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
@@ -201,6 +202,7 @@ export default function KeywordRadarPanel() {
       const { error } = await supabase.from("scraper_search_keywords").delete().eq("id", row.id);
       if (error) throw error;
       setSources(prev => prev.filter(s => s.id !== row.id));
+      setSearchResults(prev => prev ? prev.filter(s => s.id !== row.id) : prev);
       toast({ title: "Sursă ștearsă" });
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
