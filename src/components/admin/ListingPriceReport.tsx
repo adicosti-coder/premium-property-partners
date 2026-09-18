@@ -222,6 +222,19 @@ export default function ListingPriceReport() {
                         <div className="space-y-0.5">
                           <p className="whitespace-nowrap">{dateRo(r.site_published_at)}</p>
                           <p className="text-muted-foreground">{eur(r.site_price)}</p>
+                          {r.site_first_price != null && Number(r.site_first_price) !== Number(r.site_price) && (
+                            <p className="text-muted-foreground">
+                              inițial {eur(r.site_first_price)}
+                              {Number(r.site_price_changes || 0) > 1
+                                ? ` · ${r.site_price_changes} valori`
+                                : ""}
+                            </p>
+                          )}
+                          {r.site_price_updated_at && (
+                            <p className="text-muted-foreground">
+                              actualizat {dateRo(r.site_price_updated_at)}
+                            </p>
+                          )}
                           {r.site_slug && (
                             <a
                               href={`/proprietate/${r.site_slug}`}
