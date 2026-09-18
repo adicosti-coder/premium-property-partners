@@ -41,9 +41,9 @@ const DEFAULT_MAX_RUNTIME_MS = 40_000;
 // Credit saver: on scheduled runs we only try the richest few sources per keyword.
 const DEFAULT_MAX_PLATFORMS = 3;
 // Un singur cuvânt-cheie nu poate consuma tot bugetul rulării.
-const DEFAULT_MAX_KEYWORD_MS = 14_000;
+const DEFAULT_MAX_KEYWORD_MS = 18_000;
 // O sursă lentă este abandonată, nu blochează cuvântul.
-const DEFAULT_MAX_PLATFORM_MS = 9_000;
+const DEFAULT_MAX_PLATFORM_MS = 13_000;
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
 // never be published on realtrust.ro). Instead they feed `pm_collaboration_leads`
