@@ -118,7 +118,9 @@ export default function ZonePriceReport() {
         "Preț realtrust.ro luna curentă", "Preț realtrust.ro luna precedentă",
         "Variație realtrust.ro %", "€/mp realtrust.ro luna curentă",
         "€/mp realtrust.ro luna precedentă", "Variație €/mp realtrust.ro %",
-        "Ultima publicare realtrust.ro"],
+        "Ultima publicare realtrust.ro",
+        "Anunțuri Cozi Aprobare", "Preț mediu Cozi Aprobare",
+        "Cu acord primit", "Preț mediu cu acord"],
       rows.map((r) => [
         r.zone,
         r.property_type,
@@ -144,9 +146,14 @@ export default function ZonePriceReport() {
         r.site_avg_sqm_prev_month ?? "",
         variation(r.site_avg_sqm_this_month, r.site_avg_sqm_prev_month)?.toFixed(1) ?? "",
         r.site_last_published_at ?? "",
+        consentFor(r.zone, r.property_type)?.n ?? 0,
+        consentFor(r.zone, r.property_type)?.avg ?? "",
+        consentFor(r.zone, r.property_type)?.granted ?? 0,
+        consentFor(r.zone, r.property_type)?.grantedAvg ?? "",
       ]),
     );
   };
+
 
   return (
     <Card>
