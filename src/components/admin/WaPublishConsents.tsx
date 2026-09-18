@@ -187,8 +187,35 @@ const WaPublishConsents = () => {
           imediat anunțul de pe site. Fără acord, niciun anunț nu ajunge pe site.
         </p>
 
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+          {[
+            { label: "Cerut, așteptăm răspuns", value: stats.requested },
+            { label: "Acord primit", value: stats.granted },
+            { label: "Publicate pe site", value: stats.published },
+            { label: "Acord retras", value: stats.revoked },
+            { label: "Durată medie de răspuns", value: stats.avgLabel },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg border border-border p-3">
+              <p className="text-lg font-semibold">{s.value}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
         <div>
-          <p className="text-sm font-medium mb-2">Anunțuri de proprietari — cere acordul</p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium">Anunțuri de proprietari — cere acordul</p>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="min-h-[44px]"
+              disabled={sending === "all"}
+              onClick={() => void requestAllMissing()}
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Cere acordul tuturor fără cerere
+            </Button>
+          </div>
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
