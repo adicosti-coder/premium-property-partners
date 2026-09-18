@@ -330,6 +330,13 @@
       "when": 1789749871281,
       "tag": "0046_zone_report_site_zone_matching",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1789749930082,
+      "tag": "0047_zone_report_site_price_bounds",
+      "breakpoints": true
     }
   ]
 }
