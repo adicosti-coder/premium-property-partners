@@ -41,9 +41,14 @@ const DEFAULT_MAX_RUNTIME_MS = 40_000;
 // Credit saver: on scheduled runs we only try the richest few sources per keyword.
 const DEFAULT_MAX_PLATFORMS = 3;
 // Un singur cuvânt-cheie nu poate consuma tot bugetul rulării.
-const DEFAULT_MAX_KEYWORD_MS = 18_000;
-// O sursă lentă este abandonată, nu blochează cuvântul.
-const DEFAULT_MAX_PLATFORM_MS = 13_000;
+const DEFAULT_MAX_KEYWORD_MS = 12_000;
+// O sursă lentă este abandonată repede, nu blochează cuvântul.
+const DEFAULT_MAX_PLATFORM_MS = 8_000;
+// Adaptiv: o sursă primește cel mult 2x timpul ei mediu istoric (min 4s).
+const adaptiveTimeout = (avgMs: number | undefined, cap: number) => {
+  if (!avgMs || avgMs <= 0) return cap;
+  return Math.max(4_000, Math.min(cap, Math.round(avgMs * 2)));
+};
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
 // never be published on realtrust.ro). Instead they feed `pm_collaboration_leads`
