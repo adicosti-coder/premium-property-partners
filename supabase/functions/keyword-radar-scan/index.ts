@@ -40,6 +40,10 @@ function platformDomain(p: string): string | null {
 const DEFAULT_MAX_RUNTIME_MS = 40_000;
 // Credit saver: on scheduled runs we only try the richest few sources per keyword.
 const DEFAULT_MAX_PLATFORMS = 3;
+// Un singur cuvânt-cheie nu poate consuma tot bugetul rulării.
+const DEFAULT_MAX_KEYWORD_MS = 14_000;
+// O sursă lentă este abandonată, nu blochează cuvântul.
+const DEFAULT_MAX_PLATFORM_MS = 9_000;
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
 // never be published on realtrust.ro). Instead they feed `pm_collaboration_leads`
@@ -77,10 +81,18 @@ Deno.serve(async (req) => {
   const maxPlatforms = onlyKeywordIds
     ? 99
     : Math.min(Math.max(Number(body?.max_platforms) || DEFAULT_MAX_PLATFORMS, 1), 10);
+  const maxKeywordMs = Math.min(
+    Math.max(Number(body?.max_keyword_ms) || DEFAULT_MAX_KEYWORD_MS, 4_000),
+    30_000,
+  );
+  const maxPlatformMs = Math.min(
+    Math.max(Number(body?.max_platform_ms) || DEFAULT_MAX_PLATFORM_MS, 3_000),
+    20_000,
+  );
 
   const startedAt = Date.now();
   const { data: runRow } = await supabase.from("keyword_radar_runs")
-    .insert({ run_type: "scan", triggered_by: body?.triggered_by || "api" })
+    .insert({ run_type: "scan", triggered_by: body?.triggered_by || "api", status: "running" })
     .select("id").single();
   const runId = runRow?.id;
 
@@ -91,6 +103,31 @@ Deno.serve(async (req) => {
     errors: 0,
   };
   const details: any[] = [];
+  // Progres live: scris în `keyword_radar_runs.stats.progress` după fiecare pas,
+  // ca raportul din Admin să arate exact unde e scanarea în timp ce rulează.
+  const progress: Record<string, any> = {
+    total_keywords: 0,
+    current_keyword: null,
+    current_platform: null,
+    keyword_index: 0,
+    updated_at: new Date().toISOString(),
+  };
+  let lastProgressWrite = 0;
+  const pushProgress = async (force = false) => {
+    if (!runId) return;
+    const now = Date.now();
+    if (!force && now - lastProgressWrite < 1200) return;
+    lastProgressWrite = now;
+    progress.updated_at = new Date().toISOString();
+    progress.elapsed_ms = now - startedAt;
+    progress.budget_ms = maxRuntimeMs;
+    try {
+      await supabase.from("keyword_radar_runs").update({
+        status: "running",
+        stats: { ...stats, progress, details: details.slice(0, 50) },
+      }).eq("id", runId);
+    } catch (_) { /* progresul nu trebuie să oprească scanarea */ }
+  };
 
   try {
     // Pick keywords: filter by ids if provided, otherwise priority + staleness
@@ -116,6 +153,9 @@ Deno.serve(async (req) => {
     const PROJECT_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    progress.total_keywords = kws?.length || 0;
+    await pushProgress(true);
+
     for (const kw of (kws || [])) {
       if (Date.now() - startedAt > maxRuntimeMs) {
         // Oprim complet bucla: restul cuvintelor rămân „stale" și intră la rularea următoare.
@@ -124,6 +164,19 @@ Deno.serve(async (req) => {
         break;
       }
       stats.keywords_scanned++;
+      // Buget propriu pe cuvânt-cheie: nu mai mult decât ce a rămas din rulare,
+      // împărțit echitabil între cuvintele rămase.
+      const remainingRunMs = maxRuntimeMs - (Date.now() - startedAt);
+      const remainingKeywords = Math.max(1, (kws?.length || 1) - stats.keywords_scanned + 1);
+      const keywordStartedAt = Date.now();
+      const keywordBudgetMs = Math.max(
+        4_000,
+        Math.min(maxKeywordMs, Math.ceil(remainingRunMs / remainingKeywords) + 3_000),
+      );
+      progress.keyword_index = stats.keywords_scanned;
+      progress.current_keyword = kw.keyword;
+      progress.current_platform = null;
+      await pushProgress(true);
       let kwResults = 0;
       const kwErrors: string[] = [];
       const kwDetail: any = { id: kw.id, keyword: kw.keyword, platforms: {} };
@@ -151,6 +204,12 @@ Deno.serve(async (req) => {
           stats.skipped_time_budget = (stats.skipped_time_budget || 0) + 1;
           break;
         }
+        // Bugetul cuvântului s-a epuizat: trecem la următorul, nu blocăm rularea.
+        if (Date.now() - keywordStartedAt > keywordBudgetMs) {
+          stats.skipped_keyword_budget = (stats.skipped_keyword_budget || 0) + 1;
+          kwDetail.platforms[platform] = { skipped: "keyword_budget" };
+          continue;
+        }
         // Sursele fără rezultate se sar, dar se reîncearcă la fiecare a 6-a rulare,
         // ca o sursă temporar goală să nu rămână blocată definitiv.
         const zstreak = pstats[platform]?.zero_streak || 0;
@@ -163,6 +222,15 @@ Deno.serve(async (req) => {
         const domain = platformDomain(platform);
         if (!pmPlatform && !domain) continue;
         stats.platforms_called++;
+        progress.current_platform = platform;
+        await pushProgress();
+
+        // Timeout dur pe sursă: dacă nu răspunde, abandonăm apelul.
+        const platformTimeoutMs = Math.max(
+          3_000,
+          Math.min(maxPlatformMs, keywordBudgetMs - (Date.now() - keywordStartedAt)),
+        );
+        const abort = AbortSignal.timeout(platformTimeoutMs);
 
         try {
           let resp: Response;
@@ -182,6 +250,7 @@ Deno.serve(async (req) => {
                 max_results: 8,
                 triggered_by: "keyword-radar",
               }),
+              signal: abort,
             });
           } else {
             const customQuery = `${kw.keyword} site:${domain}`;
@@ -200,6 +269,7 @@ Deno.serve(async (req) => {
                 max_results: 5,
                 source_label: `keyword-radar:${kw.id}`,
               }),
+              signal: abort,
             });
           }
           const j = await resp.json().catch(() => ({}));
@@ -230,14 +300,23 @@ Deno.serve(async (req) => {
             kwErrors.push(`${platform}: http_${resp.status}${j?.error ? ` ${String(j.error).slice(0, 120)}` : ""}`);
           }
         } catch (e) {
-          stats.errors++;
-          kwErrors.push(`${platform}: ${String(e).slice(0, 140)}`);
-          kwDetail.platforms[platform] = { ok: false, error: String(e) };
+          const timedOut = String(e).includes("Timeout") || String(e).includes("abort");
+          if (timedOut) {
+            stats.timeouts = (stats.timeouts || 0) + 1;
+            kwDetail.platforms[platform] = { ok: false, timeout_ms: platformTimeoutMs };
+          } else {
+            stats.errors++;
+            kwDetail.platforms[platform] = { ok: false, error: String(e) };
+          }
+          kwErrors.push(`${platform}: ${timedOut ? `timeout ${platformTimeoutMs}ms` : String(e).slice(0, 140)}`);
         }
+        await pushProgress();
       }
 
       stats.total_results += kwResults;
       details.push(kwDetail);
+      progress.current_platform = null;
+      await pushProgress(true);
 
       // Update keyword row (cumulative counters read from the actual row)
       await supabase.from("keyword_radar_queries").update({
@@ -257,7 +336,11 @@ Deno.serve(async (req) => {
       finished_at: new Date().toISOString(),
       duration_ms: Date.now() - startedAt,
       status,
-      stats: { ...stats, details: details.slice(0, 50) },
+      stats: {
+        ...stats,
+        details: details.slice(0, 50),
+        progress: { ...progress, current_keyword: null, current_platform: null, done: true },
+      },
     }).eq("id", runId);
 
     return new Response(JSON.stringify({ success: true, stats, details }), {
