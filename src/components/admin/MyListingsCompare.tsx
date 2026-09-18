@@ -448,6 +448,7 @@ export default function MyListingsCompare() {
                       {[r.zone, r.property_type, r.rooms ? `${r.rooms} cam` : null, r.size ? `${r.size} mp` : null]
                         .filter(Boolean).join(" · ")}
                     </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge>{eur(r.price)}</Badge>
@@ -478,6 +479,9 @@ export default function MyListingsCompare() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => void copyAd(r)}>
                     <Copy className="mr-1 h-3.5 w-3.5" /> Copiază textul anunțului
+                  </Button>
+                  <Button size="sm" onClick={() => void publishEverywhere(r)}>
+                    <Rocket className="mr-1 h-3.5 w-3.5" /> Publică pe toate cele 5 platforme
                   </Button>
                 </div>
 
