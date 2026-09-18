@@ -208,7 +208,7 @@ export default function MyListingsCompare() {
       const at = new Date().toISOString();
       const url = (urlDraft[`${r.id}|${platform}`] || "").trim() || null;
       status[platform] = { at, url };
-      const { error } = await supabase.from("my_listings").update({ publish_status: status }).eq("id", r.id);
+      const { error } = await supabase.from("my_listings").update({ publish_status: status as any }).eq("id", r.id);
       if (error) {
         toast({ title: "Nu s-a putut actualiza", description: error.message, variant: "destructive" });
         return;
@@ -217,7 +217,7 @@ export default function MyListingsCompare() {
       void load();
       return;
     }
-    const { error } = await supabase.from("my_listings").update({ publish_status: status }).eq("id", r.id);
+    const { error } = await supabase.from("my_listings").update({ publish_status: status as any }).eq("id", r.id);
     if (error) {
       toast({ title: "Nu s-a putut actualiza", description: error.message, variant: "destructive" });
       return;
