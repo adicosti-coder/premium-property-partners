@@ -16,6 +16,17 @@ interface SourceRow {
   created_at: string;
 }
 
+interface AdHocListing {
+  title?: string | null;
+  url?: string | null;
+  price?: number | string | null;
+  phone?: string | null;
+  zone?: string | null;
+  rooms?: number | null;
+  source_platform?: string | null;
+  platform?: string | null;
+}
+
 const ZONE_OPTIONS = [
   "Aradului",
   "Girocului",
@@ -59,10 +70,11 @@ export default function KeywordRadarPanel() {
   const [zoneKeyword, setZoneKeyword] = useState("");
   const [zonePlatform, setZonePlatform] = useState<string>("OLX");
   const [addingZone, setAddingZone] = useState(false);
+  // Căutare liberă de anunțuri de la proprietari (nu în cuvintele salvate)
   const [search, setSearch] = useState("");
-  const [searchPlatform, setSearchPlatform] = useState<string>("__all__");
-  const [searchStatus, setSearchStatus] = useState<string>("__all__");
-  const [searchResults, setSearchResults] = useState<SourceRow[] | null>(null);
+  const [searchPlatform, setSearchPlatform] = useState<string>("OLX");
+  const [searchResults, setSearchResults] = useState<AdHocListing[] | null>(null);
+  const [searchSummary, setSearchSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
 
   const loadSources = useCallback(async () => {
@@ -84,42 +96,48 @@ export default function KeywordRadarPanel() {
 
   useEffect(() => { loadSources(); }, [loadSources]);
 
-  // Rubrică de căutare separată: caută în TOATE cuvintele cheie salvate,
-  // fără diferență de diacritice / majuscule / platformă scrisă diferit.
-  useEffect(() => {
+  // Căutare la cerere: orice frază scrisă aici este trimisă la scraper cu
+  // filtrul „doar proprietari" activ. Nu salvează cuvântul în listă.
+  const runAdHocSearch = async () => {
     const term = search.trim();
-    if (term.length < 2 && searchPlatform === "__all__" && searchStatus === "__all__") {
-      setSearchResults(null);
+    if (term.length < 3) {
+      toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere Aradului" });
       return;
     }
-    let cancelled = false;
-    const t = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const { data, error } = await supabase
-          .from("scraper_search_keywords")
-          .select("id,keyword,platform,is_active,created_at")
-          .order("created_at", { ascending: false })
-          .limit(2000);
-        if (error) throw error;
-        const rows = (data || []) as SourceRow[];
-        const words = normalizeText(term).split(/[\s,]+/).filter(w => w.length >= 2);
-        const filtered = rows.filter(r => {
-          const haystack = `${normalizeText(r.keyword || "")} ${normalizeText(r.platform || "")}`;
-          if (words.length && !words.every(w => haystack.includes(w))) return false;
-          if (searchPlatform !== "__all__" && normalizeText(r.platform || "") !== normalizeText(searchPlatform)) return false;
-          if (searchStatus !== "__all__" && r.is_active !== (searchStatus === "active")) return false;
-          return true;
+    setSearching(true);
+    setSearchResults(null);
+    setSearchSummary(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          custom_query: term,
+          custom_platform: searchPlatform,
+          max_results: 10,
+          preserve_agency_filter: true,
+          hydrate_phones: false,
+        },
+      });
+      if (error) throw error;
+      const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
+      setSearchResults(listings);
+      const skipped = (data as any)?.funnel_breakdown || {};
+      setSearchSummary(
+        `${listings.length} anunțuri de la proprietari` +
+          (skipped.agency_signal ? ` · ${skipped.agency_signal} agenții excluse` : "") +
+          (skipped.duplicate ? ` · ${skipped.duplicate} deja în listă` : ""),
+      );
+      if (listings.length === 0) {
+        toast({
+          title: "Niciun anunț nou",
+          description: "Toate rezultatele erau de la agenții sau existau deja. Încearcă altă formulare sau altă platformă.",
         });
-        if (!cancelled) setSearchResults(filtered.slice(0, 200));
-      } catch (e: any) {
-        if (!cancelled) toast({ title: "Eroare căutare", description: e.message, variant: "destructive" });
-      } finally {
-        if (!cancelled) setSearching(false);
       }
-    }, 250);
-    return () => { cancelled = true; clearTimeout(t); };
-  }, [search, searchPlatform, searchStatus]);
+    } catch (e: any) {
+      toast({ title: "Eroare căutare anunțuri", description: e.message, variant: "destructive" });
+    } finally {
+      setSearching(false);
+    }
+  };
 
   const runDiscover = async () => {
     setRunning(true);
@@ -204,7 +222,6 @@ export default function KeywordRadarPanel() {
         .update({ is_active: !row.is_active })
         .eq("id", row.id);
       if (error) throw error;
-      setSearchResults(prev => prev ? prev.map(s => s.id === row.id ? { ...s, is_active: !row.is_active } : s) : prev);
       loadSources();
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
@@ -216,7 +233,6 @@ export default function KeywordRadarPanel() {
       const { error } = await supabase.from("scraper_search_keywords").delete().eq("id", row.id);
       if (error) throw error;
       setSources(prev => prev.filter(s => s.id !== row.id));
-      setSearchResults(prev => prev ? prev.filter(s => s.id !== row.id) : prev);
       toast({ title: "Sursă ștearsă" });
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
@@ -235,24 +251,25 @@ export default function KeywordRadarPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Rubrică separată: căutare cuvinte cheie */}
+        {/* Rubrică separată: caută anunțuri de la proprietari cu orice cuvinte cheie */}
         <div className="space-y-2 p-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5">
           <label className="text-sm font-medium flex items-center gap-2" htmlFor="kw-search">
-            <Search className="h-4 w-4" /> Caută cuvinte cheie
+            <Search className="h-4 w-4" /> Caută anunțuri de la proprietari
           </label>
           <p className="text-xs text-muted-foreground">
-            Scrie minim 2 litere pentru a găsi cuvintele cheie salvate (zonă, platformă, frază). Poți activa, dezactiva sau șterge direct din rezultate.
+            Scrie orice cuvinte cheie (zonă, tip, detalii) și caut direct anunțuri noi publicate de proprietari. Agențiile sunt excluse automat. Cuvintele nu se salvează în listă.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 pt-1">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="kw-search"
-                placeholder="ex: dumbravita, garsonieră, proprietar"
+                placeholder="ex: apartament 2 camere Aradului proprietar"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") runAdHocSearch(); }}
                 className="pl-8 pr-8"
-                aria-label="Caută în cuvintele cheie salvate"
+                aria-label="Cuvinte cheie pentru căutarea anunțurilor de la proprietari"
               />
               {search && (
                 <button
@@ -266,61 +283,60 @@ export default function KeywordRadarPanel() {
               )}
             </div>
             <Select value={searchPlatform} onValueChange={setSearchPlatform}>
-              <SelectTrigger className="sm:w-[180px]" aria-label="Filtrează după platformă">
+              <SelectTrigger className="sm:w-[180px]" aria-label="Alege platforma de căutare">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={searchStatus} onValueChange={setSearchStatus}>
-              <SelectTrigger className="sm:w-[150px]" aria-label="Filtrează după status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Toate</SelectItem>
-                <SelectItem value="active">Doar active</SelectItem>
-                <SelectItem value="inactive">Doar inactive</SelectItem>
-              </SelectContent>
-            </Select>
+            <Button onClick={runAdHocSearch} disabled={searching} className="shrink-0 min-h-[44px]">
+              {searching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+              Caută anunțuri
+            </Button>
           </div>
 
           {searching && (
             <div className="text-xs text-muted-foreground flex items-center gap-2 pt-1">
-              <Loader2 className="h-3 w-3 animate-spin" /> Caut…
+              <Loader2 className="h-3 w-3 animate-spin" /> Caut anunțuri de la proprietari…
             </div>
           )}
 
           {!searching && searchResults && (
             <div className="pt-1">
               <div className="text-xs text-muted-foreground mb-1">
-                {searchResults.length === 0
-                  ? "Niciun cuvânt cheie găsit."
-                  : `${searchResults.length} rezultate`}
+                {searchSummary || `${searchResults.length} anunțuri`}
               </div>
               {searchResults.length > 0 && (
-                <div className="border rounded-lg divide-y max-h-[320px] overflow-y-auto bg-background/60">
-                  {searchResults.map(s => (
-                    <div key={s.id} className="flex items-center gap-2 p-2 hover:bg-accent/30">
-                      <Badge variant={s.is_active ? "default" : "secondary"} className="text-[10px] shrink-0">
-                        {s.platform || "—"}
-                      </Badge>
-                      <code className="text-xs flex-1 truncate" title={s.keyword}>{s.keyword}</code>
-                      <Button size="sm" variant="ghost" onClick={() => toggleSource(s)} className="h-7 text-xs">
-                        {s.is_active ? "Dezactivează" : "Activează"}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => deleteSource(s)}
-                        className="h-7 w-7 p-0 text-destructive"
-                        aria-label="Șterge cuvântul cheie"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                <div className="border rounded-lg divide-y max-h-[360px] overflow-y-auto bg-background/60">
+                  {searchResults.map((l, idx) => (
+                    <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="text-[10px] shrink-0">
+                          {l.source_platform || l.platform || searchPlatform}
+                        </Badge>
+                        <span className="text-xs flex-1 truncate" title={l.title || ""}>
+                          {l.title || "Anunț fără titlu"}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                        {l.zone && <span>{l.zone}</span>}
+                        {l.rooms ? <span>{l.rooms} camere</span> : null}
+                        {l.price ? <span>{String(l.price)}</span> : null}
+                        {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
+                        {l.url && (
+                          <a
+                            href={l.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline hover:text-foreground"
+                          >
+                            Deschide anunțul
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -328,6 +344,7 @@ export default function KeywordRadarPanel() {
             </div>
           )}
         </div>
+
 
         {/* Discover button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border bg-background/50">

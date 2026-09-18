@@ -1272,10 +1272,14 @@ Deno.serve(async (req) => {
     let autoFallbackOpt = true;
     let autoFallbackThreshold = 1; // min URLs to consider "enough" — below this, escalate to Firecrawl
     let hydratePhones = false;
+    let customPlatform: string | null = null;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 15);
       if (body?.custom_query) customQuery = body.custom_query;
+      if (typeof body?.custom_platform === 'string' && body.custom_platform.trim().length > 0) {
+        customPlatform = body.custom_platform.trim();
+      }
       onlyNewSources = body?.only_new_sources === true;
       preserveAgencyFilter = body?.preserve_agency_filter !== false;
       discoveryMode = body?.discovery_mode === true;
@@ -1420,7 +1424,7 @@ Deno.serve(async (req) => {
       queries = retryBatches.map((b) => ({ platform: b.platform, query: b.query, originalKeyword: b.query }));
       console.log(`Retry mode: re-running ${queries.length} failed batches`);
     } else if (customQuery) {
-      queries = [{ platform: 'Custom', query: customQuery, originalKeyword: customQuery }];
+      queries = [{ platform: customPlatform || 'Custom', query: customQuery, originalKeyword: customQuery }];
     } else {
       const { data: dbKeywords } = await supabase
         .from('scraper_search_keywords')
