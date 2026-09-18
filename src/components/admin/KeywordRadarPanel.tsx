@@ -233,7 +233,6 @@ export default function KeywordRadarPanel() {
       const { error } = await supabase.from("scraper_search_keywords").delete().eq("id", row.id);
       if (error) throw error;
       setSources(prev => prev.filter(s => s.id !== row.id));
-      setSearchResults(prev => prev ? prev.filter(s => s.id !== row.id) : prev);
       toast({ title: "Sursă ștearsă" });
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
