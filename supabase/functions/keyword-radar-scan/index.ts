@@ -37,7 +37,9 @@ function platformDomain(p: string): string | null {
 
 // Hard time budget: edge functions are killed around 60s. Stop the keyword loop
 // before that so the run is recorded as `partial` instead of vanishing.
-const MAX_RUNTIME_MS = 45_000;
+const DEFAULT_MAX_RUNTIME_MS = 40_000;
+// Credit saver: on scheduled runs we only try the richest few sources per keyword.
+const DEFAULT_MAX_PLATFORMS = 3;
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
 // never be published on realtrust.ro). Instead they feed `pm_collaboration_leads`
@@ -67,6 +69,14 @@ Deno.serve(async (req) => {
   const limit = Math.min(Math.max(Number(body?.limit) || 15, 1), 50);
   const staleAfterHours = Number(body?.stale_hours) || 24;
   const onlyKeywordIds: string[] | undefined = Array.isArray(body?.keyword_ids) ? body.keyword_ids : undefined;
+  const maxRuntimeMs = Math.min(
+    Math.max(Number(body?.max_runtime_ms) || DEFAULT_MAX_RUNTIME_MS, 10_000),
+    50_000,
+  );
+  // Manual scans (keyword_ids) pot folosi toate sursele; cron-ul rămâne econom.
+  const maxPlatforms = onlyKeywordIds
+    ? 99
+    : Math.min(Math.max(Number(body?.max_platforms) || DEFAULT_MAX_PLATFORMS, 1), 10);
 
   const startedAt = Date.now();
   const { data: runRow } = await supabase.from("keyword_radar_runs")
@@ -107,9 +117,11 @@ Deno.serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     for (const kw of (kws || [])) {
-      if (Date.now() - startedAt > MAX_RUNTIME_MS) {
-        stats.skipped_time_budget = (stats.skipped_time_budget || 0) + 1;
-        continue;
+      if (Date.now() - startedAt > maxRuntimeMs) {
+        // Oprim complet bucla: restul cuvintelor rămân „stale" și intră la rularea următoare.
+        stats.skipped_time_budget =
+          (stats.skipped_time_budget || 0) + ((kws?.length || 0) - stats.keywords_scanned);
+        break;
       }
       stats.keywords_scanned++;
       let kwResults = 0;
@@ -120,14 +132,22 @@ Deno.serve(async (req) => {
       // first, and one that returned nothing 4 scans in a row is skipped until
       // an admin scans that keyword explicitly (keyword_ids in the body).
       const meta: any = (kw.metadata && typeof kw.metadata === "object") ? { ...kw.metadata } : {};
-      const pstats: Record<string, { total: number; zero_streak: number }> =
+      const pstats: Record<string, { total: number; zero_streak: number; calls?: number }> =
         (meta.platform_stats && typeof meta.platform_stats === "object") ? { ...meta.platform_stats } : {};
-      const platformList = [...(kw.platforms as string[])].sort(
-        (a, b) => (pstats[b]?.total || 0) - (pstats[a]?.total || 0),
-      );
+      // Randament mediu pe apel (nu total brut): sursele noi sunt încercate
+      // înaintea celor testate deja fără rezultate.
+      const yieldOf = (p: string) => {
+        const s = pstats[p];
+        if (!s) return Number.POSITIVE_INFINITY;
+        const calls = Math.max(1, Number(s.calls || 1));
+        return (Number(s.total) || 0) / calls;
+      };
+      const platformList = [...(kw.platforms as string[])]
+        .sort((a, b) => yieldOf(b) - yieldOf(a))
+        .slice(0, maxPlatforms);
 
       for (const platform of platformList) {
-        if (Date.now() - startedAt > MAX_RUNTIME_MS) {
+        if (Date.now() - startedAt > maxRuntimeMs) {
           stats.skipped_time_budget = (stats.skipped_time_budget || 0) + 1;
           break;
         }
@@ -199,10 +219,11 @@ Deno.serve(async (req) => {
             inserted: cnt,
             route: pmPlatform ? "pm-leads" : "prospects",
           };
-          const cur = pstats[platform] || { total: 0, zero_streak: 0 };
+          const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
           pstats[platform] = {
-            total: cur.total + cnt,
-            zero_streak: cnt > 0 ? 0 : cur.zero_streak + 1,
+            total: (Number(cur.total) || 0) + cnt,
+            zero_streak: cnt > 0 ? 0 : (Number(cur.zero_streak) || 0) + 1,
+            calls: (Number(cur.calls) || 0) + 1,
           };
           if (!resp.ok) {
             stats.errors++;
