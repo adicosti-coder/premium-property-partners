@@ -18,6 +18,9 @@ interface ReportRow {
   avg_price: number | null;
   avg_price_this_month: number | null;
   avg_price_prev_month: number | null;
+  avg_price_sqm: number | null;
+  avg_sqm_this_month: number | null;
+  avg_sqm_prev_month: number | null;
   last_found_at: string | null;
 }
 
@@ -75,7 +78,7 @@ export default function PlatformReportPanel() {
     setLoading(true);
     try {
       const [report, runsRes] = await Promise.all([
-        supabase.rpc("get_platform_scan_report", { p_days: Number(days) }),
+        supabase.rpc("get_platform_scan_report_v2", { p_days: Number(days) }),
         supabase
           .from("keyword_radar_runs")
           .select("id,started_at,duration_ms,stats")
@@ -153,7 +156,9 @@ export default function PlatformReportPanel() {
   const exportCsv = () => {
     downloadCsv(
       csvFileName("raport-platforme"),
-      ["Platformă", "Anunțuri", "Cu telefon", "Duplicate", "Agenții", "Date incomplete", "Preț mediu", "Luna curentă", "Luna trecută", "Variație %", "Ultimul anunț"],
+      ["Platformă", "Anunțuri", "Cu telefon", "Duplicate", "Agenții", "Date incomplete", "Preț mediu",
+        "Luna curentă", "Luna trecută", "Variație %", "Preț/mp", "Preț/mp luna curentă",
+        "Preț/mp luna trecută", "Variație preț/mp %", "Ultimul anunț"],
       rows.map((r) => [
         r.source_platform,
         r.found_period,
@@ -165,6 +170,10 @@ export default function PlatformReportPanel() {
         r.avg_price_this_month,
         r.avg_price_prev_month,
         variation(r.avg_price_this_month, r.avg_price_prev_month),
+        r.avg_price_sqm,
+        r.avg_sqm_this_month,
+        r.avg_sqm_prev_month,
+        variation(r.avg_sqm_this_month, r.avg_sqm_prev_month),
         r.last_found_at,
       ]),
     );
@@ -227,7 +236,9 @@ export default function PlatformReportPanel() {
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <span className="font-medium">{r.source_platform}</span>
                       <Badge variant="secondary" className="text-[10px]">{r.found_period} anunțuri</Badge>
-                      <span className="text-xs text-muted-foreground">preț mediu {fmtPrice(r.avg_price)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        preț mediu {fmtPrice(r.avg_price)} · {fmtPrice(r.avg_price_sqm)}/mp
+                      </span>
                       <span className="ml-auto flex items-center gap-1 text-xs">
                         <Icon className={`h-3.5 w-3.5 ${v && v > 0 ? "text-emerald-600" : v && v < 0 ? "text-destructive" : "text-muted-foreground"}`} />
                         {v === null ? "fără comparație lunară" : `${v > 0 ? "+" : ""}${v}% luna aceasta`}
@@ -235,6 +246,7 @@ export default function PlatformReportPanel() {
                     </div>
                     <p className="text-[11px] text-muted-foreground">
                       luna curentă {fmtPrice(r.avg_price_this_month)} · luna trecută {fmtPrice(r.avg_price_prev_month)} ·{" "}
+                      preț/mp {fmtPrice(r.avg_sqm_this_month)} vs {fmtPrice(r.avg_sqm_prev_month)} ·{" "}
                       {r.with_phone} cu telefon · ultimul anunț {fmtDate(r.last_found_at)}
                     </p>
                   </div>

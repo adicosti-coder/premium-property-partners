@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, RefreshCw, Trash2, Copy, ExternalLink, CheckCircle2, TrendingUp, TrendingDown, Mail,
+  ImagePlus, Rocket, Wand2, Loader2,
 } from "lucide-react";
 
 interface MyListing {
@@ -31,6 +32,7 @@ interface MyListing {
   size: number | null;
   price: number | null;
   description: string | null;
+  image_url: string | null;
   contact_phone: string | null;
   listing_url: string | null;
   publish_status: Record<string, unknown> | null;
@@ -79,6 +81,7 @@ const emptyForm = {
   price: "",
   description: "",
   contact_phone: "",
+  image_url: "",
 };
 
 export default function MyListingsCompare() {
@@ -88,6 +91,7 @@ export default function MyListingsCompare() {
   const [urlDraft, setUrlDraft] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -126,6 +130,7 @@ export default function MyListingsCompare() {
       price: form.price ? Number(form.price) : null,
       description: form.description.trim() || null,
       contact_phone: form.contact_phone.trim() || null,
+      image_url: form.image_url.trim() || null,
     });
     setSaving(false);
     if (error) {
@@ -146,6 +151,48 @@ export default function MyListingsCompare() {
     void load();
   };
 
+  /** Încarcă imaginea anunțului în Storage și reține linkul public. */
+  const uploadImage = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Alege un fișier imagine", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `my-listings/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("property-images").upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
+    });
+    setUploading(false);
+    if (error) {
+      toast({ title: "Imaginea nu s-a încărcat", description: error.message, variant: "destructive" });
+      return;
+    }
+    const url = supabase.storage.from("property-images").getPublicUrl(path).data.publicUrl;
+    setForm((f) => ({ ...f, image_url: url }));
+    toast({ title: "Imagine adăugată" });
+  };
+
+  /** Descriere gata de publicat, construită din datele anunțului. */
+  const suggestDescription = () => {
+    const bits: string[] = [];
+    const tip = form.property_type || "imobil";
+    bits.push(
+      `${tip.charAt(0).toUpperCase() + tip.slice(1)}${form.rooms ? ` cu ${form.rooms} camere` : ""}` +
+        `${form.size ? `, ${form.size} mp utili` : ""}${form.zone ? `, în zona ${form.zone}, Timișoara` : ", în Timișoara"}.`,
+    );
+    bits.push(
+      "Imobil îngrijit, potrivit atât pentru locuit, cât și pentru investiție cu randament în regim hotelier.",
+    );
+    if (form.price) bits.push(`Preț: ${Number(form.price).toLocaleString("ro-RO")} € (negociabil în limite rezonabile).`);
+    bits.push("Zonă cu acces rapid la transport public, școli, magazine și centru.");
+    bits.push("Programări vizionare direct la apartament, în intervalul orar convenit telefonic.");
+    setForm((f) => ({ ...f, description: bits.join("\n\n") }));
+    toast({ title: "Descriere generată", description: "O poți ajusta înainte de publicare." });
+  };
+
   const adText = (r: MyListing) =>
     [
       r.title,
@@ -156,6 +203,7 @@ export default function MyListingsCompare() {
       r.price ? `Preț: ${eur(r.price)}` : "",
       "",
       r.description || "",
+      r.image_url ? `\nFoto: ${r.image_url}` : "",
       r.contact_phone ? `\nContact: ${r.contact_phone}` : "",
     ]
       .filter((l) => l !== null)
@@ -169,6 +217,23 @@ export default function MyListingsCompare() {
     } catch {
       toast({ title: "Copiază manual textul", variant: "destructive" });
     }
+  };
+
+  /** Deschide formularul tuturor celor 5 platforme, cu textul deja copiat. */
+  const publishEverywhere = async (r: MyListing) => {
+    await copyAd(r);
+    let blocked = 0;
+    for (const p of PLATFORMS) {
+      const w = window.open(p.addUrl, "_blank", "noopener,noreferrer");
+      if (!w) blocked++;
+    }
+    toast({
+      title: blocked ? "Permite ferestrele pop-up" : "Toate cele 5 formulare sunt deschise",
+      description: blocked
+        ? "Browserul a blocat unele file. Permite pop-up-urile pentru realtrust.ro și reîncearcă."
+        : "Textul e în clipboard — lipește-l în fiecare formular și confirmă publicarea la platformă.",
+      variant: blocked ? "destructive" : undefined,
+    });
   };
 
   /** E-mail de confirmare la marcarea publicării, cu linkul platformei. */
@@ -313,10 +378,49 @@ export default function MyListingsCompare() {
             <Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} />
           </div>
           <div className="md:col-span-3">
-            <Label>Descriere</Label>
-            <Textarea rows={3} value={form.description}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label>Descriere</Label>
+              <Button type="button" variant="outline" size="sm" onClick={suggestDescription}>
+                <Wand2 className="mr-1 h-3.5 w-3.5" /> Generează descrierea
+              </Button>
+            </div>
+            <Textarea rows={5} value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Detalii despre imobil, dotări, disponibilitate..." />
+          </div>
+          <div className="md:col-span-3">
+            <Label htmlFor="my-listing-image">Imagine anunț</Label>
+            <div className="flex flex-wrap items-center gap-3">
+              <Input
+                id="my-listing-image"
+                type="file"
+                accept="image/*"
+                disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void uploadImage(f);
+                }}
+                className="max-w-[280px]"
+              />
+              {uploading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              {form.image_url && (
+                <img
+                  src={form.image_url}
+                  alt="Imaginea anunțului meu"
+                  className="h-16 w-16 rounded-md object-cover"
+                  loading="lazy"
+                />
+              )}
+              {form.image_url && (
+                <Button type="button" variant="ghost" size="sm"
+                  onClick={() => setForm({ ...form, image_url: "" })}>
+                  Elimină imaginea
+                </Button>
+              )}
+            </div>
+            <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+              <ImagePlus className="h-3.5 w-3.5" /> Imaginea se salvează o dată și o folosești la fiecare publicare.
+            </p>
           </div>
           <div className="md:col-span-3">
             <Button onClick={() => void save()} disabled={saving}>
@@ -333,12 +437,18 @@ export default function MyListingsCompare() {
             return (
               <div key={r.id} className="rounded-lg border border-border/50 p-3 space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
+                  <div className="flex items-start gap-3">
+                    {r.image_url && (
+                      <img src={r.image_url} alt={`Imagine pentru ${r.title}`}
+                        className="h-16 w-16 rounded-md object-cover" loading="lazy" />
+                    )}
+                    <div>
                     <p className="font-medium">{r.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {[r.zone, r.property_type, r.rooms ? `${r.rooms} cam` : null, r.size ? `${r.size} mp` : null]
                         .filter(Boolean).join(" · ")}
                     </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge>{eur(r.price)}</Badge>
@@ -369,6 +479,9 @@ export default function MyListingsCompare() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => void copyAd(r)}>
                     <Copy className="mr-1 h-3.5 w-3.5" /> Copiază textul anunțului
+                  </Button>
+                  <Button size="sm" onClick={() => void publishEverywhere(r)}>
+                    <Rocket className="mr-1 h-3.5 w-3.5" /> Publică pe toate cele 5 platforme
                   </Button>
                 </div>
 
