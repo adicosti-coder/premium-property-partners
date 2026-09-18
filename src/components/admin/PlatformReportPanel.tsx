@@ -181,6 +181,10 @@ export default function PlatformReportPanel() {
         r.avg_sqm_prev_month,
         variation(r.avg_sqm_this_month, r.avg_sqm_prev_month),
         r.last_found_at,
+        r.site_published ?? 0,
+        r.site_avg_price ?? "",
+        r.site_avg_price_sqm ?? "",
+        r.site_last_published_at ?? "",
       ]),
     );
   };
