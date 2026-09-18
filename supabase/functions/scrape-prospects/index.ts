@@ -1276,6 +1276,9 @@ Deno.serve(async (req) => {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 15);
       if (body?.custom_query) customQuery = body.custom_query;
+      if (typeof body?.custom_platform === 'string' && body.custom_platform.trim().length > 0) {
+        customPlatform = body.custom_platform.trim();
+      }
       onlyNewSources = body?.only_new_sources === true;
       preserveAgencyFilter = body?.preserve_agency_filter !== false;
       discoveryMode = body?.discovery_mode === true;
