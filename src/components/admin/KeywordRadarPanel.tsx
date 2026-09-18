@@ -85,42 +85,48 @@ export default function KeywordRadarPanel() {
 
   useEffect(() => { loadSources(); }, [loadSources]);
 
-  // Rubrică de căutare separată: caută în TOATE cuvintele cheie salvate,
-  // fără diferență de diacritice / majuscule / platformă scrisă diferit.
-  useEffect(() => {
+  // Căutare la cerere: orice frază scrisă aici este trimisă la scraper cu
+  // filtrul „doar proprietari" activ. Nu salvează cuvântul în listă.
+  const runAdHocSearch = async () => {
     const term = search.trim();
-    if (term.length < 2 && searchPlatform === "__all__" && searchStatus === "__all__") {
-      setSearchResults(null);
+    if (term.length < 3) {
+      toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere Aradului" });
       return;
     }
-    let cancelled = false;
-    const t = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const { data, error } = await supabase
-          .from("scraper_search_keywords")
-          .select("id,keyword,platform,is_active,created_at")
-          .order("created_at", { ascending: false })
-          .limit(2000);
-        if (error) throw error;
-        const rows = (data || []) as SourceRow[];
-        const words = normalizeText(term).split(/[\s,]+/).filter(w => w.length >= 2);
-        const filtered = rows.filter(r => {
-          const haystack = `${normalizeText(r.keyword || "")} ${normalizeText(r.platform || "")}`;
-          if (words.length && !words.every(w => haystack.includes(w))) return false;
-          if (searchPlatform !== "__all__" && normalizeText(r.platform || "") !== normalizeText(searchPlatform)) return false;
-          if (searchStatus !== "__all__" && r.is_active !== (searchStatus === "active")) return false;
-          return true;
+    setSearching(true);
+    setSearchResults(null);
+    setSearchSummary(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-prospects", {
+        body: {
+          custom_query: term,
+          custom_platform: searchPlatform,
+          max_results: 10,
+          preserve_agency_filter: true,
+          hydrate_phones: false,
+        },
+      });
+      if (error) throw error;
+      const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
+      setSearchResults(listings);
+      const skipped = (data as any)?.funnel_breakdown || {};
+      setSearchSummary(
+        `${listings.length} anunțuri de la proprietari` +
+          (skipped.agency_signal ? ` · ${skipped.agency_signal} agenții excluse` : "") +
+          (skipped.duplicate ? ` · ${skipped.duplicate} deja în listă` : ""),
+      );
+      if (listings.length === 0) {
+        toast({
+          title: "Niciun anunț nou",
+          description: "Toate rezultatele erau de la agenții sau existau deja. Încearcă altă formulare sau altă platformă.",
         });
-        if (!cancelled) setSearchResults(filtered.slice(0, 200));
-      } catch (e: any) {
-        if (!cancelled) toast({ title: "Eroare căutare", description: e.message, variant: "destructive" });
-      } finally {
-        if (!cancelled) setSearching(false);
       }
-    }, 250);
-    return () => { cancelled = true; clearTimeout(t); };
-  }, [search, searchPlatform, searchStatus]);
+    } catch (e: any) {
+      toast({ title: "Eroare căutare anunțuri", description: e.message, variant: "destructive" });
+    } finally {
+      setSearching(false);
+    }
+  };
 
   const runDiscover = async () => {
     setRunning(true);
