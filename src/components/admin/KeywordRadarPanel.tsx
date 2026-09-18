@@ -347,6 +347,10 @@ export default function KeywordRadarPanel() {
 
         <KeywordRadarSourceHealth />
 
+        <PlatformReportPanel />
+
+        <PlatformConfigPanel />
+
         <KeywordRadarNewListings />
 
         {/* Rubrică separată: caută anunțuri de la proprietari cu orice cuvinte cheie */}
