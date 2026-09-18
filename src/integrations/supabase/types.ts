@@ -5874,6 +5874,7 @@ export type Database = {
           id: string
           listing_id: string | null
           price: number | null
+          property_type: string | null
           recorded_at: string
           rooms: number | null
           source_platform: string
@@ -5885,6 +5886,7 @@ export type Database = {
           id?: string
           listing_id?: string | null
           price?: number | null
+          property_type?: string | null
           recorded_at?: string
           rooms?: number | null
           source_platform: string
@@ -5896,6 +5898,7 @@ export type Database = {
           id?: string
           listing_id?: string | null
           price?: number | null
+          property_type?: string | null
           recorded_at?: string
           rooms?: number | null
           source_platform?: string
