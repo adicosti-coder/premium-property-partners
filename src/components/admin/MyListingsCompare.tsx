@@ -81,6 +81,7 @@ const emptyForm = {
   price: "",
   description: "",
   contact_phone: "",
+  image_url: "",
 };
 
 export default function MyListingsCompare() {
@@ -90,6 +91,7 @@ export default function MyListingsCompare() {
   const [urlDraft, setUrlDraft] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -128,6 +130,7 @@ export default function MyListingsCompare() {
       price: form.price ? Number(form.price) : null,
       description: form.description.trim() || null,
       contact_phone: form.contact_phone.trim() || null,
+      image_url: form.image_url.trim() || null,
     });
     setSaving(false);
     if (error) {
