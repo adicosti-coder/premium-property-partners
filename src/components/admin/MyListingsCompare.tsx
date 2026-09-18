@@ -219,7 +219,7 @@ export default function MyListingsCompare() {
     }
   };
 
-  /** Deschide formularul tuturor celor 5 platforme, cu textul deja copiat. */
+  /** Deschide formularul tuturor celor 5 platforme + pagina de pe realtrust.ro. */
   const publishEverywhere = async (r: MyListing) => {
     await copyAd(r);
     let blocked = 0;
@@ -227,14 +227,23 @@ export default function MyListingsCompare() {
       const w = window.open(p.addUrl, "_blank", "noopener,noreferrer");
       if (!w) blocked++;
     }
+    // realtrust.ro: publică dacă nu e deja publicat, apoi deschide linkul paginii
+    const site = readPublish((r.publish_status || {})["realtrust.ro"]);
+    if (site?.url) {
+      if (!window.open(site.url, "_blank", "noopener,noreferrer")) blocked++;
+    } else {
+      const url = await publishOnSite(r);
+      if (url && !window.open(url, "_blank", "noopener,noreferrer")) blocked++;
+    }
     toast({
-      title: blocked ? "Permite ferestrele pop-up" : "Toate cele 5 formulare sunt deschise",
+      title: blocked ? "Permite ferestrele pop-up" : "Toate linkurile sunt deschise",
       description: blocked
         ? "Browserul a blocat unele file. Permite pop-up-urile pentru realtrust.ro și reîncearcă."
-        : "Textul e în clipboard — lipește-l în fiecare formular și confirmă publicarea la platformă.",
+        : "Textul e în clipboard — lipește-l în fiecare formular; pagina de pe realtrust.ro s-a deschis direct.",
       variant: blocked ? "destructive" : undefined,
     });
   };
+
 
   const [publishingSite, setPublishingSite] = useState<string | null>(null);
 
