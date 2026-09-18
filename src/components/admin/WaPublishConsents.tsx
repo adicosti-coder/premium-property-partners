@@ -90,6 +90,21 @@ const WaPublishConsents = () => {
 
   useEffect(() => { void load(); }, [load]);
 
+  // Actualizare instantanee: când proprietarul răspunde pe WhatsApp, lista se
+  // reîncarcă singură, fără să fie nevoie de apăsarea butonului „Reîncarcă”.
+  useEffect(() => {
+    const channel = supabase
+      .channel("wa-publish-consents-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wa_publish_consents" },
+        () => { void load(); },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [load]);
+
+
   const requestConsent = async (prospectId: string) => {
     setSending(prospectId);
     const { data, error } = await supabase.functions.invoke("wa-request-publish-consent", {
