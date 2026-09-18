@@ -283,7 +283,11 @@ Deno.serve(async (req) => {
         const platformTimeoutMs = Math.max(
           3_000,
           Math.min(
-            adaptiveTimeout(pstats[platform]?.avg_ms, maxPlatformMs),
+            adaptiveTimeout(
+              pstats[platform]?.avg_ms,
+              maxPlatformMs,
+              Number(pstats[platform]?.timeout_streak) || 0,
+            ),
             keywordBudgetMs - (Date.now() - keywordStartedAt),
           ),
         );
