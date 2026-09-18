@@ -37,7 +37,9 @@ function platformDomain(p: string): string | null {
 
 // Hard time budget: edge functions are killed around 60s. Stop the keyword loop
 // before that so the run is recorded as `partial` instead of vanishing.
-const MAX_RUNTIME_MS = 45_000;
+const DEFAULT_MAX_RUNTIME_MS = 40_000;
+// Credit saver: on scheduled runs we only try the richest few sources per keyword.
+const DEFAULT_MAX_PLATFORMS = 3;
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
 // never be published on realtrust.ro). Instead they feed `pm_collaboration_leads`
