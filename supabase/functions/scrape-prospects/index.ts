@@ -1272,6 +1272,7 @@ Deno.serve(async (req) => {
     let autoFallbackOpt = true;
     let autoFallbackThreshold = 1; // min URLs to consider "enough" — below this, escalate to Firecrawl
     let hydratePhones = false;
+    let customPlatform: string | null = null;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 15);
