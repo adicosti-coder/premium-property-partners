@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Radar, Loader2, Plus, Trash2, Globe, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import KeywordRadarLiveReport from "./KeywordRadarLiveReport";
+import KeywordRadarSourceHealth from "./KeywordRadarSourceHealth";
 import KeywordRadarNewListings, { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 
 interface SourceRow {
@@ -58,6 +59,17 @@ const PLATFORM_OPTIONS = [
 // Platformele acoperite când se caută „pe toate" (cele cu anunțuri de proprietari)
 const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
 
+const ANY_TYPE = "__any__";
+const ANY_ZONE = "__anyzone__";
+
+const PROPERTY_TYPES = [
+  { value: "apartament", label: "Apartament" },
+  { value: "garsonieră", label: "Garsonieră" },
+  { value: "casă", label: "Casă / vilă" },
+  { value: "teren", label: "Teren" },
+  { value: "spațiu comercial", label: "Spațiu comercial" },
+];
+
 const normalizeText = (v: string) =>
   v
     .normalize("NFD")
@@ -80,12 +92,15 @@ export default function KeywordRadarPanel() {
   // Căutare liberă de anunțuri de la proprietari (nu în cuvintele salvate)
   const [search, setSearch] = useState("");
   const [searchPlatform, setSearchPlatform] = useState<string>(ALL_PLATFORMS);
+  const [searchType, setSearchType] = useState<string>(ANY_TYPE);
+  const [searchZone, setSearchZone] = useState<string>(ANY_ZONE);
   const [searchResults, setSearchResults] = useState<AdHocListing[] | null>(null);
   const [searchSummary, setSearchSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   // Căutare pe zonă + caracteristică
   const [zsZone, setZsZone] = useState<string>(ZONE_OPTIONS[0]);
   const [zsPlatform, setZsPlatform] = useState<string>(ALL_PLATFORMS);
+  const [zsType, setZsType] = useState<string>("apartament");
   const [zsFeature, setZsFeature] = useState("2 camere");
   const [zsSearching, setZsSearching] = useState(false);
 
@@ -181,7 +196,9 @@ export default function KeywordRadarPanel() {
   };
 
   const runAdHocSearch = async () => {
-    const term = search.trim();
+    const typePart = searchType === ANY_TYPE ? "" : searchType;
+    const zonePart = searchZone === ANY_ZONE ? "" : `${searchZone} Timișoara`;
+    const term = `${typePart} ${search.trim()} ${zonePart}`.replace(/\s+/g, " ").trim();
     if (term.length < 3) {
       toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere Aradului" });
       return;
@@ -198,11 +215,12 @@ export default function KeywordRadarPanel() {
 
   const runZoneSearch = async () => {
     const feature = zsFeature.trim();
-    const term = `apartament ${feature} ${zsZone} Timișoara proprietar`.replace(/\s+/g, " ");
+    const typePart = zsType === ANY_TYPE ? "" : zsType;
+    const term = `${typePart} ${feature} ${zsZone} Timișoara proprietar`.replace(/\s+/g, " ").trim();
     setZsSearching(true);
     try {
       await executeSearch(term, zsPlatform);
-      toast({ title: "Căutare pe zonă rulată", description: `${zsZone} · ${zsPlatform === ALL_PLATFORMS ? "toate platformele" : zsPlatform} · ${feature || "toate"}` });
+      toast({ title: "Căutare pe zonă rulată", description: `${zsZone} · ${zsPlatform === ALL_PLATFORMS ? "toate platformele" : zsPlatform} · ${typePart || "orice tip"} · ${feature || "toate"}` });
     } catch (e: any) {
       toast({ title: "Eroare căutare pe zonă", description: e.message, variant: "destructive" });
     } finally {
@@ -325,6 +343,8 @@ export default function KeywordRadarPanel() {
         {/* Raport scanare cu progres live */}
         <KeywordRadarLiveReport />
 
+        <KeywordRadarSourceHealth />
+
         <KeywordRadarNewListings />
 
         {/* Rubrică separată: caută anunțuri de la proprietari cu orice cuvinte cheie */}
@@ -373,6 +393,31 @@ export default function KeywordRadarPanel() {
               {searching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
               Caută anunțuri
             </Button>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Select value={searchType} onValueChange={setSearchType}>
+              <SelectTrigger className="sm:w-[190px] min-h-[44px] sm:min-h-0" aria-label="Tip de imobil">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_TYPE}>Orice tip de imobil</SelectItem>
+                {PROPERTY_TYPES.map(t => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={searchZone} onValueChange={setSearchZone}>
+              <SelectTrigger className="sm:w-[190px] min-h-[44px] sm:min-h-0" aria-label="Zonă">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_ZONE}>Toate zonele</SelectItem>
+                {ZONE_OPTIONS.map(z => (
+                  <SelectItem key={z} value={z}>{z}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {searching && (
@@ -456,6 +501,17 @@ export default function KeywordRadarPanel() {
                 <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={zsType} onValueChange={setZsType}>
+              <SelectTrigger className="sm:w-[180px] min-h-[44px] sm:min-h-0" aria-label="Tip de imobil pentru căutarea pe zonă">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_TYPE}>Orice tip de imobil</SelectItem>
+                {PROPERTY_TYPES.map(t => (
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
