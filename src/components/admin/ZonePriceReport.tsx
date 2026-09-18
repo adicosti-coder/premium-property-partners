@@ -96,6 +96,9 @@ export default function ZonePriceReport() {
         r.avg_price_prev_month ?? "",
         variation(r.avg_price_this_month, r.avg_price_prev_month)?.toFixed(1) ?? "",
         r.platforms,
+        r.site_published ?? 0,
+        r.site_avg_price ?? "",
+        r.site_avg_price_sqm ?? "",
       ]),
     );
   };
