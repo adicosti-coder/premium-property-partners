@@ -1424,7 +1424,7 @@ Deno.serve(async (req) => {
       queries = retryBatches.map((b) => ({ platform: b.platform, query: b.query, originalKeyword: b.query }));
       console.log(`Retry mode: re-running ${queries.length} failed batches`);
     } else if (customQuery) {
-      queries = [{ platform: 'Custom', query: customQuery, originalKeyword: customQuery }];
+      queries = [{ platform: customPlatform || 'Custom', query: customQuery, originalKeyword: customQuery }];
     } else {
       const { data: dbKeywords } = await supabase
         .from('scraper_search_keywords')
