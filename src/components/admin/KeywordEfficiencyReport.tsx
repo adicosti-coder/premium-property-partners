@@ -23,6 +23,14 @@ interface KeywordRow {
   consecutive_zero: number;
   unique_leads_count: number;
   last_success_at: string | null;
+  /** Zona în care cuvântul cheie aduce cele mai multe anunțuri. */
+  top_zone: string | null;
+  zone_avg_price: number | null;
+  zone_avg_price_prev: number | null;
+  zone_variation_pct: number | null;
+  zone_avg_sqm: number | null;
+  site_zone_count: number;
+  site_zone_avg_price: number | null;
 }
 
 const PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
@@ -59,7 +67,7 @@ export default function KeywordEfficiencyReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_keyword_scan_report", {
+    const { data, error } = await supabase.rpc("get_keyword_scan_report_v2", {
       p_days: Number(days),
       p_platform: platform === "all" ? null : platform,
     });
