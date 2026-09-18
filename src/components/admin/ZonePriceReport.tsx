@@ -79,7 +79,8 @@ export default function ZonePriceReport() {
       csvFileName("preturi-pe-zona"),
       ["Zonă", "Tip", "Anunțuri", "Preț mediu", "Preț/mp", "Preț/mp luna curentă",
         "Preț/mp luna precedentă", "Variație preț/mp %", "Min preț/mp", "Max preț/mp",
-        "Luna curentă", "Luna precedentă", "Variație %", "Platforme"],
+        "Luna curentă", "Luna precedentă", "Variație %", "Platforme",
+        "Publicate realtrust.ro", "Preț mediu realtrust.ro", "Preț/mp realtrust.ro"],
       rows.map((r) => [
         r.zone,
         r.property_type,
