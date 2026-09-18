@@ -4068,6 +4068,48 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_scan_config: {
+        Row: {
+          is_enabled: boolean
+          max_price: number | null
+          max_results: number
+          max_rooms: number | null
+          min_price: number | null
+          min_rooms: number | null
+          notes: string | null
+          owner_only: boolean
+          platform: string
+          updated_at: string
+          zones: string[]
+        }
+        Insert: {
+          is_enabled?: boolean
+          max_price?: number | null
+          max_results?: number
+          max_rooms?: number | null
+          min_price?: number | null
+          min_rooms?: number | null
+          notes?: string | null
+          owner_only?: boolean
+          platform: string
+          updated_at?: string
+          zones?: string[]
+        }
+        Update: {
+          is_enabled?: boolean
+          max_price?: number | null
+          max_results?: number
+          max_rooms?: number | null
+          min_price?: number | null
+          min_rooms?: number | null
+          notes?: string | null
+          owner_only?: boolean
+          platform?: string
+          updated_at?: string
+          zones?: string[]
+        }
+        Relationships: []
+      }
       pm_collaboration_leads: {
         Row: {
           ai_pitch: string | null
@@ -11161,6 +11203,21 @@ export type Database = {
           source: string
           title: string
           updated_at: string
+        }[]
+      }
+      get_platform_scan_report: {
+        Args: { p_days?: number }
+        Returns: {
+          agencies: number
+          avg_price: number
+          avg_price_prev_month: number
+          avg_price_this_month: number
+          duplicates: number
+          found_period: number
+          invalid_data: number
+          last_found_at: string
+          source_platform: string
+          with_phone: number
         }[]
       }
       get_poi_review_throttle: { Args: never; Returns: number }
