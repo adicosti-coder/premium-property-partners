@@ -28,6 +28,9 @@ interface Health {
   timeouts: number;
   errors: number;
   inserted: number;
+  /** Durata reală măsurată pentru fiecare verificare, ca să vedem cine încetinește scanarea. */
+  durations: number[];
+  lastMs: number | null;
 }
 
 export default function KeywordRadarSourceHealth() {
