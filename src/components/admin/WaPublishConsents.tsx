@@ -305,6 +305,10 @@ const WaPublishConsents = () => {
                   {fmt(c.published_at)}
                   {c.revoked_at ? ` · Retras: ${fmt(c.revoked_at)}` : ""}
                 </p>
+                {durationLabel(c) && (
+                  <p className="text-xs font-medium text-muted-foreground">{durationLabel(c)}</p>
+                )}
+
                 {c.consent_text && (
                   <p className="text-xs italic text-muted-foreground">„{c.consent_text}”</p>
                 )}
