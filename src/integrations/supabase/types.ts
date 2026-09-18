@@ -5851,6 +5851,75 @@ export type Database = {
           },
         ]
       }
+      prospect_new_listing_alert_state: {
+        Row: {
+          id: boolean
+          last_alerted_at: string
+          last_count: number
+        }
+        Insert: {
+          id?: boolean
+          last_alerted_at?: string
+          last_count?: number
+        }
+        Update: {
+          id?: boolean
+          last_alerted_at?: string
+          last_count?: number
+        }
+        Relationships: []
+      }
+      prospect_price_history: {
+        Row: {
+          id: string
+          listing_id: string | null
+          price: number | null
+          recorded_at: string
+          rooms: number | null
+          source_platform: string
+          source_url: string | null
+          surface: number | null
+          zone: string | null
+        }
+        Insert: {
+          id?: string
+          listing_id?: string | null
+          price?: number | null
+          recorded_at?: string
+          rooms?: number | null
+          source_platform: string
+          source_url?: string | null
+          surface?: number | null
+          zone?: string | null
+        }
+        Update: {
+          id?: string
+          listing_id?: string | null
+          price?: number | null
+          recorded_at?: string
+          rooms?: number | null
+          source_platform?: string
+          source_url?: string | null
+          surface?: number | null
+          zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+        ]
+      }
       prospect_rejection_alerts: {
         Row: {
           acknowledged_at: string | null
