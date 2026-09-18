@@ -248,15 +248,15 @@ export default function MyListingsCompare() {
   const [publishingSite, setPublishingSite] = useState<string | null>(null);
 
   /** Publică anunțul direct pe realtrust.ro (creează pagina proprietății). */
-  const publishOnSite = async (r: MyListing) => {
+  const publishOnSite = async (r: MyListing): Promise<string | null> => {
     if (!r.price) {
       toast({ title: "Adaugă prețul înainte de publicare", variant: "destructive" });
-      return;
+      return null;
     }
     const existing = readPublish((r.publish_status || {})["realtrust.ro"]);
     if (existing) {
       toast({ title: "Anunțul este deja publicat pe realtrust.ro" });
-      return;
+      return existing.url || null;
     }
     setPublishingSite(r.id);
     const slug = `${r.title
