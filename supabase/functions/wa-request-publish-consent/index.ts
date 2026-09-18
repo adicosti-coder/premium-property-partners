@@ -33,18 +33,27 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+
+  // Apel intern (cron / declanșare din baza de date) cu secretul de cron; altfel admin autentificat.
+  const cronHeader = req.headers.get("x-cron-secret") || "";
+  let internalOk = false;
+  if (cronHeader) {
+    const { data: secret } = await supabase.rpc("get_cron_reconcile_secret");
+    internalOk = typeof secret === "string" && secret.length > 0 && secret === cronHeader;
+  }
+  if (!internalOk) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
 
   let body: { prospect_ids?: string[] } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
   const ids = (body.prospect_ids || []).filter((x) => typeof x === "string").slice(0, 50);
   if (ids.length === 0) return json({ error: "prospect_ids required" }, 400);
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
   const { data: prospects, error } = await supabase
     .from("prospect_listings")
