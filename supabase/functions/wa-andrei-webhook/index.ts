@@ -27,6 +27,86 @@ function normalizeRoPhone(raw: string): string {
   return `+${c}`;
 }
 
+/**
+ * Acordul proprietarului pe WhatsApp pentru preluarea anunțului pe realtrust.ro.
+ * „DA PUBLIC” → salvăm dovada acordului și pornim publicarea prin fluxul existent.
+ * „RETRAG” → marcăm retragerea și scoatem imediat anunțul de pe site.
+ */
+async function handlePublishIntent(
+  supabase: any,
+  args: {
+    phone: string;
+    intent: "consent" | "revoke";
+    message: string;
+    supabaseUrl: string;
+    serviceKey: string;
+  },
+): Promise<void> {
+  const { phone, intent, message, supabaseUrl, serviceKey } = args;
+  const nowIso = new Date().toISOString();
+
+  // Anunțul proprietarului la care se referă acordul (cel mai recent pentru acest număr).
+  const { data: prospect } = await supabase
+    .from("prospect_listings")
+    .select("id, title, zone")
+    .eq("phone_normalized", phone)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (intent === "revoke") {
+    const { data: consents } = await supabase
+      .from("wa_publish_consents")
+      .select("id, property_id")
+      .eq("phone_normalized", phone)
+      .neq("status", "revoked");
+
+    for (const c of consents ?? []) {
+      await supabase
+        .from("wa_publish_consents")
+        .update({ status: "revoked", revoked_at: nowIso, notes: message.slice(0, 500) })
+        .eq("id", c.id);
+      if (c.property_id) {
+        await supabase.from("properties").update({ is_active: false }).eq("id", c.property_id);
+      }
+    }
+    return;
+  }
+
+  // Acord: salvăm dovada (idempotent pe telefon + anunț).
+  const { data: consent, error: cErr } = await supabase
+    .from("wa_publish_consents")
+    .upsert({
+      phone_normalized: phone,
+      prospect_listing_id: prospect?.id ?? null,
+      status: "granted",
+      consent_text: message.slice(0, 1000),
+      consented_at: nowIso,
+      revoked_at: null,
+      source: "whatsapp",
+    }, { onConflict: "phone_normalized,prospect_listing_id" })
+    .select("id")
+    .maybeSingle();
+  if (cErr) console.error("[wa-webhook] consent upsert failed:", cErr);
+
+  if (!prospect?.id) return;
+
+  // Pornim preluarea pe site prin fluxul existent (curățare text, imagini, calitate).
+  fetch(`${supabaseUrl}/functions/v1/auto-publish-listing-worker`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serviceKey}`,
+      "x-cron-secret": serviceKey,
+    },
+    body: JSON.stringify({
+      prospect_id: prospect.id,
+      triggered_by: "wa_owner_consent",
+      consent_id: consent?.id ?? null,
+    }),
+  }).catch((e) => console.error("[wa-webhook] publish trigger failed:", e));
+}
+
 async function verifySignature(rawBody: string, sigHeader: string, appSecret: string): Promise<boolean> {
   if (!sigHeader || !sigHeader.startsWith("sha256=")) return false;
   const expected = sigHeader.slice("sha256=".length);
