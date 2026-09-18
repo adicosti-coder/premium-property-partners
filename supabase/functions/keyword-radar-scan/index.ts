@@ -239,12 +239,20 @@ Deno.serve(async (req) => {
           kwDetail.platforms[platform] = { skipped: "low_yield" };
           continue;
         }
+        // Sursă oprită manual din „Configurare pe platformă"
+        const cfg = platformCfg.get(platform);
+        if (cfg && cfg.is_enabled === false) {
+          stats.skipped_disabled = (stats.skipped_disabled || 0) + 1;
+          kwDetail.platforms[platform] = { skipped: "disabled" };
+          continue;
+        }
         const pmPlatform = PM_LEAD_PLATFORMS[platform];
         const domain = platformDomain(platform);
         if (!pmPlatform && !domain) continue;
         stats.platforms_called++;
         progress.current_platform = platform;
         await pushProgress();
+        const platformStartedAt = Date.now();
 
         // Timeout dur pe sursă: dacă nu răspunde, abandonăm apelul.
         const platformTimeoutMs = Math.max(
