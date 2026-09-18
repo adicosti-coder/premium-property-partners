@@ -44,10 +44,18 @@ const DEFAULT_MAX_PLATFORMS = 3;
 const DEFAULT_MAX_KEYWORD_MS = 12_000;
 // O sursă lentă este abandonată repede, nu blochează cuvântul.
 const DEFAULT_MAX_PLATFORM_MS = 8_000;
-// Adaptiv: o sursă primește cel mult 2x timpul ei mediu istoric (min 4s).
-const adaptiveTimeout = (avgMs: number | undefined, cap: number) => {
+// Peste acest prag o sursă e considerată „lentă" și primește mai puțin timp,
+// pentru că oricum depășește bugetul și blochează restul scanării.
+const SLOW_SOURCE_MS = 6_000;
+// Adaptiv:
+//  - sursă rapidă (medie < 6s): 1.5x media ei, minim 3.5s;
+//  - sursă lentă (medie >= 6s): doar 5s — dacă nu răspunde, trecem imediat mai departe.
+const adaptiveTimeout = (avgMs: number | undefined, cap: number, timeoutStreak = 0) => {
   if (!avgMs || avgMs <= 0) return cap;
-  return Math.max(4_000, Math.min(cap, Math.round(avgMs * 2)));
+  if (avgMs >= SLOW_SOURCE_MS) return Math.min(cap, 5_000);
+  const base = Math.max(3_500, Math.min(cap, Math.round(avgMs * 1.5)));
+  // O sursă care a dat timeout recent primește și mai puțin timp.
+  return timeoutStreak > 0 ? Math.max(3_000, Math.round(base * 0.7)) : base;
 };
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
