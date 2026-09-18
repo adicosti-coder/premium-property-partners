@@ -96,6 +96,27 @@ Deno.serve(async (req) => {
     .select("id").single();
   const runId = runRow?.id;
 
+  // Configurare per platformă (sursă oprită / câte anunțuri pe căutare / filtre)
+  type PlatformCfg = {
+    is_enabled: boolean;
+    owner_only: boolean;
+    max_results: number;
+    min_price: number | null;
+    max_price: number | null;
+    min_rooms: number | null;
+    max_rooms: number | null;
+    zones: string[] | null;
+  };
+  const platformCfg = new Map<string, PlatformCfg>();
+  try {
+    const { data: cfgRows } = await supabase
+      .from("platform_scan_config")
+      .select("platform,is_enabled,owner_only,max_results,min_price,max_price,min_rooms,max_rooms,zones");
+    for (const row of cfgRows || []) {
+      platformCfg.set(String((row as any).platform), row as unknown as PlatformCfg);
+    }
+  } catch (_) { /* fără configurare: se folosesc valorile implicite */ }
+
   const stats: Record<string, number> = {
     keywords_scanned: 0,
     platforms_called: 0,
