@@ -236,7 +236,9 @@ export default function PlatformReportPanel() {
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <span className="font-medium">{r.source_platform}</span>
                       <Badge variant="secondary" className="text-[10px]">{r.found_period} anunțuri</Badge>
-                      <span className="text-xs text-muted-foreground">preț mediu {fmtPrice(r.avg_price)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        preț mediu {fmtPrice(r.avg_price)} · {fmtPrice(r.avg_price_sqm)}/mp
+                      </span>
                       <span className="ml-auto flex items-center gap-1 text-xs">
                         <Icon className={`h-3.5 w-3.5 ${v && v > 0 ? "text-emerald-600" : v && v < 0 ? "text-destructive" : "text-muted-foreground"}`} />
                         {v === null ? "fără comparație lunară" : `${v > 0 ? "+" : ""}${v}% luna aceasta`}
@@ -244,6 +246,7 @@ export default function PlatformReportPanel() {
                     </div>
                     <p className="text-[11px] text-muted-foreground">
                       luna curentă {fmtPrice(r.avg_price_this_month)} · luna trecută {fmtPrice(r.avg_price_prev_month)} ·{" "}
+                      preț/mp {fmtPrice(r.avg_sqm_this_month)} vs {fmtPrice(r.avg_sqm_prev_month)} ·{" "}
                       {r.with_phone} cu telefon · ultimul anunț {fmtDate(r.last_found_at)}
                     </p>
                   </div>
