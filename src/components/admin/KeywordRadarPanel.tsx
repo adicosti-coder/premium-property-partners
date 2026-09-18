@@ -256,6 +256,8 @@ export default function KeywordRadarPanel() {
         {/* Raport scanare cu progres live */}
         <KeywordRadarLiveReport />
 
+        <KeywordRadarNewListings />
+
         {/* Rubrică separată: caută anunțuri de la proprietari cu orice cuvinte cheie */}
         <div className="space-y-2 p-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5">
           <label className="text-sm font-medium flex items-center gap-2" htmlFor="kw-search">
