@@ -151,6 +151,48 @@ export default function MyListingsCompare() {
     void load();
   };
 
+  /** Încarcă imaginea anunțului în Storage și reține linkul public. */
+  const uploadImage = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Alege un fișier imagine", variant: "destructive" });
+      return;
+    }
+    setUploading(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `my-listings/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("property-images").upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
+    });
+    setUploading(false);
+    if (error) {
+      toast({ title: "Imaginea nu s-a încărcat", description: error.message, variant: "destructive" });
+      return;
+    }
+    const url = supabase.storage.from("property-images").getPublicUrl(path).data.publicUrl;
+    setForm((f) => ({ ...f, image_url: url }));
+    toast({ title: "Imagine adăugată" });
+  };
+
+  /** Descriere gata de publicat, construită din datele anunțului. */
+  const suggestDescription = () => {
+    const bits: string[] = [];
+    const tip = form.property_type || "imobil";
+    bits.push(
+      `${tip.charAt(0).toUpperCase() + tip.slice(1)}${form.rooms ? ` cu ${form.rooms} camere` : ""}` +
+        `${form.size ? `, ${form.size} mp utili` : ""}${form.zone ? `, în zona ${form.zone}, Timișoara` : ", în Timișoara"}.`,
+    );
+    bits.push(
+      "Imobil îngrijit, potrivit atât pentru locuit, cât și pentru investiție cu randament în regim hotelier.",
+    );
+    if (form.price) bits.push(`Preț: ${Number(form.price).toLocaleString("ro-RO")} € (negociabil în limite rezonabile).`);
+    bits.push("Zonă cu acces rapid la transport public, școli, magazine și centru.");
+    bits.push("Programări vizionare direct la apartament, în intervalul orar convenit telefonic.");
+    setForm((f) => ({ ...f, description: bits.join("\n\n") }));
+    toast({ title: "Descriere generată", description: "O poți ajusta înainte de publicare." });
+  };
+
   const adText = (r: MyListing) =>
     [
       r.title,
@@ -161,6 +203,7 @@ export default function MyListingsCompare() {
       r.price ? `Preț: ${eur(r.price)}` : "",
       "",
       r.description || "",
+      r.image_url ? `\nFoto: ${r.image_url}` : "",
       r.contact_phone ? `\nContact: ${r.contact_phone}` : "",
     ]
       .filter((l) => l !== null)
@@ -174,6 +217,23 @@ export default function MyListingsCompare() {
     } catch {
       toast({ title: "Copiază manual textul", variant: "destructive" });
     }
+  };
+
+  /** Deschide formularul tuturor celor 5 platforme, cu textul deja copiat. */
+  const publishEverywhere = async (r: MyListing) => {
+    await copyAd(r);
+    let blocked = 0;
+    for (const p of PLATFORMS) {
+      const w = window.open(p.addUrl, "_blank", "noopener,noreferrer");
+      if (!w) blocked++;
+    }
+    toast({
+      title: blocked ? "Permite ferestrele pop-up" : "Toate cele 5 formulare sunt deschise",
+      description: blocked
+        ? "Browserul a blocat unele file. Permite pop-up-urile pentru realtrust.ro și reîncearcă."
+        : "Textul e în clipboard — lipește-l în fiecare formular și confirmă publicarea la platformă.",
+      variant: blocked ? "destructive" : undefined,
+    });
   };
 
   /** E-mail de confirmare la marcarea publicării, cu linkul platformei. */
