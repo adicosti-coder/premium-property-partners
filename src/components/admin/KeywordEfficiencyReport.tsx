@@ -342,6 +342,20 @@ export default function KeywordEfficiencyReport() {
                     {timings[r.keyword].timeouts} depășiri de timp · {timings[r.keyword].skipped} surse sărite
                   </p>
                 )}
+                {r.top_zone && (
+                  <p className="text-[11px] text-muted-foreground">
+                    zona {r.top_zone} · preț mediu {fmtPrice(r.zone_avg_price)}
+                    {r.zone_variation_pct != null && (
+                      <span className={r.zone_variation_pct >= 0 ? "text-emerald-600" : "text-red-600"}>
+                        {" "}({r.zone_variation_pct > 0 ? "+" : ""}{r.zone_variation_pct}% față de luna trecută)
+                      </span>
+                    )}
+                    {r.zone_avg_sqm ? ` · ${Number(r.zone_avg_sqm).toLocaleString("ro-RO")} €/mp` : ""}
+                    {r.site_zone_count
+                      ? ` · pe realtrust.ro ${r.site_zone_count} anunțuri, ${fmtPrice(r.site_zone_avg_price)}`
+                      : ""}
+                  </p>
+                )}
               </div>
             ))}
           </div>
