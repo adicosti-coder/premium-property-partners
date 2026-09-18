@@ -348,10 +348,16 @@ Deno.serve(async (req) => {
             route: pmPlatform ? "pm-leads" : "prospects",
           };
           const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
+          const took = Date.now() - platformStartedAt;
+          const prevCalls = Number(cur.calls) || 0;
           pstats[platform] = {
             total: (Number(cur.total) || 0) + cnt,
             zero_streak: cnt > 0 ? 0 : (Number(cur.zero_streak) || 0) + 1,
-            calls: (Number(cur.calls) || 0) + 1,
+            calls: prevCalls + 1,
+            // medie glisantă a duratei, folosită pentru timeout adaptiv
+            avg_ms: Math.round(((Number(cur.avg_ms) || took) * Math.min(prevCalls, 9) + took) /
+              (Math.min(prevCalls, 9) + 1)),
+            timeout_streak: 0,
           };
           if (!resp.ok) {
             stats.errors++;
@@ -359,9 +365,15 @@ Deno.serve(async (req) => {
           }
         } catch (e) {
           const timedOut = String(e).includes("Timeout") || String(e).includes("abort");
+          const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
           if (timedOut) {
             stats.timeouts = (stats.timeouts || 0) + 1;
             kwDetail.platforms[platform] = { ok: false, timeout_ms: platformTimeoutMs };
+            pstats[platform] = {
+              ...cur,
+              calls: (Number(cur.calls) || 0) + 1,
+              timeout_streak: (Number(cur.timeout_streak) || 0) + 1,
+            };
           } else {
             stats.errors++;
             kwDetail.platforms[platform] = { ok: false, error: String(e) };
