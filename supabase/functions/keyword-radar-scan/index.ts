@@ -180,7 +180,16 @@ Deno.serve(async (req) => {
             });
           }
           const j = await resp.json().catch(() => ({}));
-          const cnt = Number(j?.inserted || j?.results?.length || 0);
+          // scrape-prospects / pm-leads răspund cu chei diferite; le acceptăm pe toate.
+          const cnt = Number(
+            j?.new_listings ??
+              j?.inserted ??
+              j?.count ??
+              (Array.isArray(j?.listings) ? j.listings.length : undefined) ??
+              (Array.isArray(j?.results) ? j.results.length : undefined) ??
+              (Array.isArray(j?.leads) ? j.leads.length : undefined) ??
+              0,
+          ) || 0;
           kwResults += cnt;
           kwDetail.platforms[platform] = {
             ok: resp.ok,
