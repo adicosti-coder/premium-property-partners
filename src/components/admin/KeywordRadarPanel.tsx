@@ -105,6 +105,37 @@ export default function KeywordRadarPanel() {
 
   // Căutare la cerere: orice frază scrisă aici este trimisă la scraper cu
   // filtrul „doar proprietari" activ. Nu salvează cuvântul în listă.
+  const executeSearch = async (term: string, platform: string) => {
+    setSearchResults(null);
+    setSearchSummary(null);
+    const { data, error } = await supabase.functions.invoke("scrape-prospects", {
+      body: {
+        custom_query: term,
+        custom_platform: platform,
+        max_results: 10,
+        preserve_agency_filter: true,
+        hydrate_phones: false,
+      },
+    });
+    if (error) throw error;
+    const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
+    setSearchResults(listings);
+    const skipped = (data as any)?.funnel_breakdown || {};
+    setSearchSummary(
+      `${listings.length} anunțuri de la proprietari` +
+        (skipped.agency_signal ? ` · ${skipped.agency_signal} agenții excluse` : "") +
+        (skipped.duplicate ? ` · ${skipped.duplicate} deja în listă` : ""),
+    );
+    // Anunțurile salvate apar imediat în „Anunțuri noi găsite"
+    window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
+    if (listings.length === 0) {
+      toast({
+        title: "Niciun anunț nou",
+        description: "Toate rezultatele erau de la agenții sau existau deja. Încearcă altă formulare sau altă platformă.",
+      });
+    }
+  };
+
   const runAdHocSearch = async () => {
     const term = search.trim();
     if (term.length < 3) {
@@ -112,37 +143,26 @@ export default function KeywordRadarPanel() {
       return;
     }
     setSearching(true);
-    setSearchResults(null);
-    setSearchSummary(null);
     try {
-      const { data, error } = await supabase.functions.invoke("scrape-prospects", {
-        body: {
-          custom_query: term,
-          custom_platform: searchPlatform,
-          max_results: 10,
-          preserve_agency_filter: true,
-          hydrate_phones: false,
-        },
-      });
-      if (error) throw error;
-      const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
-      setSearchResults(listings);
-      const skipped = (data as any)?.funnel_breakdown || {};
-      setSearchSummary(
-        `${listings.length} anunțuri de la proprietari` +
-          (skipped.agency_signal ? ` · ${skipped.agency_signal} agenții excluse` : "") +
-          (skipped.duplicate ? ` · ${skipped.duplicate} deja în listă` : ""),
-      );
-      if (listings.length === 0) {
-        toast({
-          title: "Niciun anunț nou",
-          description: "Toate rezultatele erau de la agenții sau existau deja. Încearcă altă formulare sau altă platformă.",
-        });
-      }
+      await executeSearch(term, searchPlatform);
     } catch (e: any) {
       toast({ title: "Eroare căutare anunțuri", description: e.message, variant: "destructive" });
     } finally {
       setSearching(false);
+    }
+  };
+
+  const runZoneSearch = async () => {
+    const feature = zsFeature.trim();
+    const term = `apartament ${feature} ${zsZone} Timișoara proprietar`.replace(/\s+/g, " ");
+    setZsSearching(true);
+    try {
+      await executeSearch(term, zsPlatform);
+      toast({ title: "Căutare pe zonă rulată", description: `${zsZone} · ${zsPlatform} · ${feature || "toate"}` });
+    } catch (e: any) {
+      toast({ title: "Eroare căutare pe zonă", description: e.message, variant: "destructive" });
+    } finally {
+      setZsSearching(false);
     }
   };
 
