@@ -79,13 +79,13 @@ export default function KeywordRadarPanel() {
   const [addingZone, setAddingZone] = useState(false);
   // Căutare liberă de anunțuri de la proprietari (nu în cuvintele salvate)
   const [search, setSearch] = useState("");
-  const [searchPlatform, setSearchPlatform] = useState<string>("OLX");
+  const [searchPlatform, setSearchPlatform] = useState<string>(ALL_PLATFORMS);
   const [searchResults, setSearchResults] = useState<AdHocListing[] | null>(null);
   const [searchSummary, setSearchSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   // Căutare pe zonă + caracteristică
   const [zsZone, setZsZone] = useState<string>(ZONE_OPTIONS[0]);
-  const [zsPlatform, setZsPlatform] = useState<string>("OLX");
+  const [zsPlatform, setZsPlatform] = useState<string>(ALL_PLATFORMS);
   const [zsFeature, setZsFeature] = useState("2 camere");
   const [zsSearching, setZsSearching] = useState(false);
 
@@ -202,7 +202,7 @@ export default function KeywordRadarPanel() {
     setZsSearching(true);
     try {
       await executeSearch(term, zsPlatform);
-      toast({ title: "Căutare pe zonă rulată", description: `${zsZone} · ${zsPlatform} · ${feature || "toate"}` });
+      toast({ title: "Căutare pe zonă rulată", description: `${zsZone} · ${zsPlatform === ALL_PLATFORMS ? "toate platformele" : zsPlatform} · ${feature || "toate"}` });
     } catch (e: any) {
       toast({ title: "Eroare căutare pe zonă", description: e.message, variant: "destructive" });
     } finally {
@@ -363,6 +363,7 @@ export default function KeywordRadarPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
@@ -391,7 +392,7 @@ export default function KeywordRadarPanel() {
                     <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                       <div className="flex items-center gap-2">
                         <Badge variant="default" className="text-[10px] shrink-0">
-                          {l.source_platform || l.platform || searchPlatform}
+                          {l.source_platform || l.platform || "—"}
                         </Badge>
                         <span className="text-xs flex-1 truncate" title={l.title || ""}>
                           {l.title || "Anunț fără titlu"}
@@ -452,6 +453,7 @@ export default function KeywordRadarPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
@@ -519,6 +521,7 @@ export default function KeywordRadarPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
@@ -547,6 +550,7 @@ export default function KeywordRadarPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
