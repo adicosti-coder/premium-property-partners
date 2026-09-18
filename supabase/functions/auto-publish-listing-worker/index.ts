@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
 
     const { data: prospect, error: pErr } = await supabase
       .from("prospect_listings")
-      .select("id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score, prospect_type")
+      .select("id, source_url, title, description, location, zone, rooms, size, price, currency, floor, year_built, features, images, category, source_platform, enriched_title, enriched_description, enriched_images, enrichment_status, lead_score, prospect_type, phone_normalized")
       .eq("id", prospectId).maybeSingle();
     if (pErr || !prospect) return safeJson({ success: false, error: pErr?.message || "prospect not found" });
 
@@ -245,6 +245,26 @@ Deno.serve(async (req) => {
         lifecycle_status: cat === "hotelier" ? "updated_reservation" : "to_call",
       }).eq("id", prospect.id);
       return safeJson({ success: true, published: false, reason: "recruitment_lead", category: cat });
+    }
+
+    // ── Acordul proprietarului (obligatoriu) ────────────────────────────────
+    // Un anunț ajunge pe realtrust.ro doar dacă proprietarul a dat acordul pe
+    // WhatsApp („DA PUBLIC”) și nu l-a retras între timp.
+    const { data: consentRow } = await supabase
+      .from("wa_publish_consents")
+      .select("id, status, revoked_at")
+      .eq("prospect_listing_id", prospect.id)
+      .is("revoked_at", null)
+      .in("status", ["granted", "published"])
+      .limit(1)
+      .maybeSingle();
+    if (!consentRow) {
+      return safeJson({
+        success: true,
+        published: false,
+        reason: "owner_consent_required",
+        prospect_id: prospect.id,
+      });
     }
 
     if (!firecrawlKey) return safeJson({ success: false, error: "FIRECRAWL_API_KEY not configured" });
