@@ -7,6 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isExpressOptOut } from "../_shared/dncPolicy.ts";
 import { publishConsentRequestText } from "../_shared/waAutoReply.ts";
+import { resolveApprovedTemplate } from "../_shared/waPreferredTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
