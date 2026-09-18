@@ -309,6 +309,13 @@
       "when": 1789745903884,
       "tag": "0043_site_published_prices_in_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1789748992417,
+      "tag": "0044_site_price_history_and_site_vs_market",
+      "breakpoints": true
     }
   ]
 }
