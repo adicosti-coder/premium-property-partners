@@ -59,10 +59,11 @@ export default function KeywordRadarPanel() {
   const [zoneKeyword, setZoneKeyword] = useState("");
   const [zonePlatform, setZonePlatform] = useState<string>("OLX");
   const [addingZone, setAddingZone] = useState(false);
+  // Căutare liberă de anunțuri de la proprietari (nu în cuvintele salvate)
   const [search, setSearch] = useState("");
-  const [searchPlatform, setSearchPlatform] = useState<string>("__all__");
-  const [searchStatus, setSearchStatus] = useState<string>("__all__");
-  const [searchResults, setSearchResults] = useState<SourceRow[] | null>(null);
+  const [searchPlatform, setSearchPlatform] = useState<string>("OLX");
+  const [searchResults, setSearchResults] = useState<AdHocListing[] | null>(null);
+  const [searchSummary, setSearchSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
 
   const loadSources = useCallback(async () => {
