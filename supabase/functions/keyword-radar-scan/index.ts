@@ -131,7 +131,10 @@ Deno.serve(async (req) => {
           stats.skipped_time_budget = (stats.skipped_time_budget || 0) + 1;
           break;
         }
-        if (!onlyKeywordIds && (pstats[platform]?.zero_streak || 0) >= 4) {
+        // Sursele fără rezultate se sar, dar se reîncearcă la fiecare a 6-a rulare,
+        // ca o sursă temporar goală să nu rămână blocată definitiv.
+        const zstreak = pstats[platform]?.zero_streak || 0;
+        if (!onlyKeywordIds && zstreak >= 4 && zstreak % 6 !== 0) {
           stats.skipped_low_yield = (stats.skipped_low_yield || 0) + 1;
           kwDetail.platforms[platform] = { skipped: "low_yield" };
           continue;
