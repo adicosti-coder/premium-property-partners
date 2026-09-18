@@ -2,7 +2,15 @@
 // Public endpoint (verify_jwt = false). Validates signature via WHATSAPP_APP_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
-import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext, autoReplyText } from "../_shared/waAutoReply.ts";
+import {
+  ACK_MESSAGE,
+  buildIntakeMessage,
+  loadProspectContext,
+  autoReplyText,
+  detectPublishIntent,
+  PUBLISH_CONSENT_ACK,
+  PUBLISH_REVOKE_ACK,
+} from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
 
@@ -17,6 +25,86 @@ function normalizeRoPhone(raw: string): string {
   if (!c) return "";
   if (c.startsWith("+")) return c;
   return `+${c}`;
+}
+
+/**
+ * Acordul proprietarului pe WhatsApp pentru preluarea anunțului pe realtrust.ro.
+ * „DA PUBLIC” → salvăm dovada acordului și pornim publicarea prin fluxul existent.
+ * „RETRAG” → marcăm retragerea și scoatem imediat anunțul de pe site.
+ */
+async function handlePublishIntent(
+  supabase: any,
+  args: {
+    phone: string;
+    intent: "consent" | "revoke";
+    message: string;
+    supabaseUrl: string;
+    serviceKey: string;
+  },
+): Promise<void> {
+  const { phone, intent, message, supabaseUrl, serviceKey } = args;
+  const nowIso = new Date().toISOString();
+
+  // Anunțul proprietarului la care se referă acordul (cel mai recent pentru acest număr).
+  const { data: prospect } = await supabase
+    .from("prospect_listings")
+    .select("id, title, zone")
+    .eq("phone_normalized", phone)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (intent === "revoke") {
+    const { data: consents } = await supabase
+      .from("wa_publish_consents")
+      .select("id, property_id")
+      .eq("phone_normalized", phone)
+      .neq("status", "revoked");
+
+    for (const c of consents ?? []) {
+      await supabase
+        .from("wa_publish_consents")
+        .update({ status: "revoked", revoked_at: nowIso, notes: message.slice(0, 500) })
+        .eq("id", c.id);
+      if (c.property_id) {
+        await supabase.from("properties").update({ is_active: false }).eq("id", c.property_id);
+      }
+    }
+    return;
+  }
+
+  // Acord: salvăm dovada (idempotent pe telefon + anunț).
+  const { data: consent, error: cErr } = await supabase
+    .from("wa_publish_consents")
+    .upsert({
+      phone_normalized: phone,
+      prospect_listing_id: prospect?.id ?? null,
+      status: "granted",
+      consent_text: message.slice(0, 1000),
+      consented_at: nowIso,
+      revoked_at: null,
+      source: "whatsapp",
+    }, { onConflict: "phone_normalized,prospect_listing_id" })
+    .select("id")
+    .maybeSingle();
+  if (cErr) console.error("[wa-webhook] consent upsert failed:", cErr);
+
+  if (!prospect?.id) return;
+
+  // Pornim preluarea pe site prin fluxul existent (curățare text, imagini, calitate).
+  fetch(`${supabaseUrl}/functions/v1/auto-publish-listing-worker`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serviceKey}`,
+      "x-cron-secret": serviceKey,
+    },
+    body: JSON.stringify({
+      prospect_id: prospect.id,
+      triggered_by: "wa_owner_consent",
+      consent_id: consent?.id ?? null,
+    }),
+  }).catch((e) => console.error("[wa-webhook] publish trigger failed:", e));
 }
 
 async function verifySignature(rawBody: string, sigHeader: string, appSecret: string): Promise<boolean> {
@@ -230,9 +318,34 @@ Deno.serve(async (req) => {
           .eq("direction", "outbound");
 
         let quick = outboundCount ? autoReplyText(text) : null;
+
+        // Acordul proprietarului pentru preluarea anunțului pe realtrust.ro
+        // („DA PUBLIC”) sau retragerea acordului („RETRAG”) — are prioritate
+        // față de orice alt răspuns automat și declanșează publicarea/retragerea.
+        const publishIntent = detectPublishIntent(text);
+        if (publishIntent) {
+          quick = publishIntent === "consent"
+            ? { kind: "publish_consent", text: PUBLISH_CONSENT_ACK }
+            : { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
+          try {
+            await handlePublishIntent(supabase, {
+              phone: from,
+              intent: publishIntent,
+              message: text,
+              supabaseUrl,
+              serviceKey,
+            });
+          } catch (e) {
+            console.error("[wa-webhook] publish consent handling failed:", e);
+          }
+        }
+
         // Nu repetăm același răspuns automat la fiecare mesaj: dacă exact acest
         // răspuns a plecat în ultimele 6 ore, lăsăm discuția pe mâna agentului.
-        if (quick && quick.kind !== "quick_no" && quick.kind !== "quick_stop") {
+        if (
+          quick && quick.kind !== "quick_no" && quick.kind !== "quick_stop" &&
+          quick.kind !== "publish_consent" && quick.kind !== "publish_revoke"
+        ) {
           try {
             const sixHoursAgo = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
             const { count: repeated } = await supabase

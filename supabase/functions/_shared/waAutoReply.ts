@@ -207,6 +207,52 @@ export function propertyFinanceBlock(p: {
   return propertyFinanceLines(p).join("\n");
 }
 
+/**
+ * Acordul proprietarului pentru preluarea anunțului pe realtrust.ro și retragerea lui.
+ * Se verifică ÎNAINTEA regulilor de refuz, ca „da, publicați, mulțumesc” să fie citit corect.
+ */
+const PUBLISH_CONSENT_RE =
+  /\bda\s*public\b|\bdapublic\b|accept(?:a|ati)?\s+publicarea|sunt de acord (?:cu|sa|să)?\s*public|acord(?:ul)?\s+(?:de|pentru)\s+publicare|pute?ti\s+(?:sa\s+)?publica|publicati\s+anuntul|da,?\s*publica(?:ti|ți)?/;
+const PUBLISH_REVOKE_RE =
+  /\bretrag\b|nu mai public|nu mai doresc publicarea|scoateti anuntul|stergeti anuntul|scoate anuntul de pe site/;
+
+/** Textul standard prin care cerem acordul de publicare pe realtrust.ro. */
+export function publishConsentRequestText(p?: {
+  title?: string | null;
+  zone?: string | null;
+  rooms?: number | null;
+} | null): string {
+  const what = p?.title
+    ? `apartamentul „${p.title}”`
+    : p?.zone
+      ? `apartamentul din ${p.zone}`
+      : "apartamentul dumneavoastra";
+  return [
+    `Buna ziua! Suntem RealTrust din Timisoara. Dorim sa preluam ${what} pe site-ul nostru, realtrust.ro, gratuit,`,
+    "ca sa ajunga la clientii care caută direct pe site (fara costuri si fara exclusivitate).",
+    "",
+    "Daca sunteti de acord, raspundeti cu DA PUBLIC. Retrageti acordul oricand, scriind RETRAG.",
+  ].join("\n");
+}
+
+export const PUBLISH_CONSENT_ACK =
+  "Va mulțumim! Am inregistrat acordul dumneavoastra pentru publicarea anunțului pe realtrust.ro. " +
+  "Anunțul apare pe site in scurt timp, fara costuri si fara exclusivitate. " +
+  "Puteti retrage acordul oricand, scriind RETRAG, iar anunțul este scos imediat de pe site.";
+
+export const PUBLISH_REVOKE_ACK =
+  "Am inteles, am retras acordul: anunțul nu mai apare pe realtrust.ro. " +
+  "Daca doriti sa il publicam din nou, ne scrieti aici DA PUBLIC.";
+
+/** „consent” / „revoke” / null pentru mesajul primit de la proprietar. */
+export function detectPublishIntent(raw: string): "consent" | "revoke" | null {
+  const t = stripDiacritics(raw);
+  if (!t) return null;
+  if (PUBLISH_REVOKE_RE.test(t)) return "revoke";
+  if (PUBLISH_CONSENT_RE.test(t)) return "consent";
+  return null;
+}
+
 /** Refuz explicit: butonul „Nu, mulțumesc" sau un „nu" clar, fără semnale de interes. */
 const EXPLICIT_NO = /^nu\s*,?\s*(mult?umesc|mersi|nu doresc)?\s*[.!]?$/;
 /** Cuvinte care arată interes — anulează interpretarea de refuz. */
@@ -215,6 +261,9 @@ const INTEREST_HINT =
 
 export function quickReplyText(raw: string): { kind: string; text: string } | null {
   const t = stripDiacritics(raw);
+  const publishIntent = detectPublishIntent(raw);
+  if (publishIntent === "consent") return { kind: "publish_consent", text: PUBLISH_CONSENT_ACK };
+  if (publishIntent === "revoke") return { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
   if (EXPLICIT_NO.test(t.trim()) && !INTEREST_HINT.test(t)) {
     return {
       kind: "quick_no",

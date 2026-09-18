@@ -12,6 +12,7 @@ import PipelineReconciliationPanel from "./PipelineReconciliationPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
 import { PerformanceROIPanel } from "./PerformanceROIPanel";
 import GrowthEngineDashboard from "./GrowthEngineDashboard";
+import WaPublishConsents from "./WaPublishConsents";
 
 const VALID_SUBTABS = ["manual", "radar", "pm-leads", "auto-publish", "sandbox", "performance", "growth"] as const;
 
@@ -84,6 +85,7 @@ const ListingImportTabs = () => {
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
       <TabsContent value="auto-publish">
         <div className="space-y-4">
+          <WaPublishConsents />
           <PipelineReconciliationPanel />
           <AutoPublishListingsPanel />
         </div>
