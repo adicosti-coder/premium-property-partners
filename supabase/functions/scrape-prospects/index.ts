@@ -1160,16 +1160,37 @@ function extractFromMarkdown(markdown: string, title: string, url: string): {
 } {
   const text = markdown || '';
   
-  // Price extraction
+  // Price extraction — multe portaluri scriu prețul în formate diferite
+  // ("120.000 €", "€ 120,000", "120000 EUR", "Preț: 550 euro/lună", "2.500 lei").
+  // Fără aceste variante prețul rămâne gol și raportul pe zonă nu are ce compara.
   let price: number | null = null;
   let currency = 'EUR';
-  const priceMatch = text.match(/(\d[\d\s.,]*)\s*€/) || text.match(/preț[:\s]*(\d[\d\s.,]*)/i);
-  const ronMatch = text.match(/(\d[\d\s.,]*)\s*(?:RON|lei)/i);
-  if (priceMatch) {
-    price = parseFloat(priceMatch[1].replace(/[\s.]/g, '').replace(',', '.'));
-  } else if (ronMatch) {
-    price = parseFloat(ronMatch[1].replace(/[\s.]/g, '').replace(',', '.'));
-    currency = 'RON';
+  const haystack = `${title || ''}\n${text}`;
+  const num = (raw: string) => {
+    const cleaned = raw.replace(/\s/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(/,(?=\d{3}\b)/g, '').replace(',', '.');
+    const v = parseFloat(cleaned);
+    return Number.isFinite(v) ? v : null;
+  };
+  const eurPatterns = [
+    /(\d[\d\s.,]{2,})\s*(?:€|eur\b|euro\b)/i,
+    /(?:€|eur\b|euro\b)\s*(\d[\d\s.,]{2,})/i,
+    /pre[țt][^\d]{0,12}(\d[\d\s.,]{2,})/i,
+  ];
+  const ronPatterns = [
+    /(\d[\d\s.,]{2,})\s*(?:ron\b|lei\b)/i,
+    /(?:ron\b|lei\b)\s*(\d[\d\s.,]{2,})/i,
+  ];
+  for (const re of eurPatterns) {
+    const m = haystack.match(re);
+    const v = m ? num(m[1]) : null;
+    if (v && v >= 100) { price = v; currency = 'EUR'; break; }
+  }
+  if (!price) {
+    for (const re of ronPatterns) {
+      const m = haystack.match(re);
+      const v = m ? num(m[1]) : null;
+      if (v && v >= 500) { price = v; currency = 'RON'; break; }
+    }
   }
 
   // Size extraction
