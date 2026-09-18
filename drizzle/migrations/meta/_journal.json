@@ -295,6 +295,13 @@
       "when": 1789743967635,
       "tag": "0041_my_listing_image_and_price_refresh",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1789745228177,
+      "tag": "0042_wa_publish_consents",
+      "breakpoints": true
     }
   ]
 }

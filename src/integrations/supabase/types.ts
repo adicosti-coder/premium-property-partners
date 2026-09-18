@@ -10870,6 +10870,72 @@ export type Database = {
           },
         ]
       }
+      wa_publish_consents: {
+        Row: {
+          consent_text: string | null
+          consented_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          phone_normalized: string
+          property_id: string | null
+          prospect_listing_id: string | null
+          published_at: string | null
+          requested_at: string | null
+          revoked_at: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          consent_text?: string | null
+          consented_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          phone_normalized: string
+          property_id?: string | null
+          prospect_listing_id?: string | null
+          published_at?: string | null
+          requested_at?: string | null
+          revoked_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          consent_text?: string | null
+          consented_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          phone_normalized?: string
+          property_id?: string | null
+          prospect_listing_id?: string | null
+          published_at?: string | null
+          requested_at?: string | null
+          revoked_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_publish_consents_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wa_publish_consents_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+        ]
+      }
       wa_templates: {
         Row: {
           body_preview: string
