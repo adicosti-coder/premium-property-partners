@@ -27,6 +27,10 @@ interface ZoneRow {
   max_price_sqm: number | null;
   platforms: number;
   last_seen_at: string | null;
+  /** Anunțurile publicate pe realtrust.ro în aceeași zonă. */
+  site_published: number | null;
+  site_avg_price: number | null;
+  site_avg_price_sqm: number | null;
 }
 
 const TYPES = [
