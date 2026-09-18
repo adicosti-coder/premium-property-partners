@@ -65,8 +65,16 @@ export default function KeywordRadarSourceHealth() {
     for (const run of runs) {
       for (const detail of run.stats?.details || []) {
         for (const [platform, res] of Object.entries(detail.platforms || {})) {
-          const h = map.get(platform) || { platform, calls: 0, ok: 0, timeouts: 0, errors: 0, inserted: 0 };
+          const h: Health = map.get(platform) || {
+            platform, calls: 0, ok: 0, timeouts: 0, errors: 0, inserted: 0, durations: [], lastMs: null,
+          };
           h.calls += 1;
+          const ms = Number(res?.duration_ms || 0);
+          if (ms > 0) {
+            h.durations.push(ms);
+            // Rulările vin de la cea mai nouă la cea mai veche, deci prima valoare e cea recentă.
+            if (h.lastMs == null) h.lastMs = ms;
+          }
           if (res?.ok) {
             h.ok += 1;
             h.inserted += Number(res.inserted || 0);
