@@ -16,6 +16,17 @@ interface SourceRow {
   created_at: string;
 }
 
+interface AdHocListing {
+  title?: string | null;
+  url?: string | null;
+  price?: number | string | null;
+  phone?: string | null;
+  zone?: string | null;
+  rooms?: number | null;
+  source_platform?: string | null;
+  platform?: string | null;
+}
+
 const ZONE_OPTIONS = [
   "Aradului",
   "Girocului",
