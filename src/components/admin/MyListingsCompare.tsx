@@ -288,7 +288,7 @@ export default function MyListingsCompare() {
     if (error) {
       setPublishingSite(null);
       toast({ title: "Nu s-a putut publica pe realtrust.ro", description: error.message, variant: "destructive" });
-      return;
+      return null;
     }
 
     const at = new Date().toISOString();
