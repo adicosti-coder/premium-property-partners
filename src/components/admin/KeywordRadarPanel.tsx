@@ -377,6 +377,60 @@ export default function KeywordRadarPanel() {
           )}
         </div>
 
+        {/* Căutare pe zonă + caracteristică */}
+        <div className="space-y-2 p-4 rounded-lg border-2 border-sky-500/40 bg-sky-500/5">
+          <label className="text-sm font-medium flex items-center gap-2">
+            <Search className="h-4 w-4" /> Caută pe zonă (doar proprietari)
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Alege zona și platforma, scrie o caracteristică (ex: 2 camere, garsonieră, mobilat) și primești anunțurile noi de la proprietari.
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {ZONE_OPTIONS.map(z => (
+              <button
+                key={z}
+                type="button"
+                onClick={() => setZsZone(z)}
+                aria-pressed={zsZone === z}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  zsZone === z
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background hover:bg-accent border-border"
+                }`}
+              >
+                {z}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <Select value={zsPlatform} onValueChange={setZsPlatform}>
+              <SelectTrigger className="sm:w-[180px]" aria-label="Platformă căutare pe zonă">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PLATFORM_OPTIONS.map(p => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="ex: 2 camere, garsonieră, mobilat, etaj 2"
+              value={zsFeature}
+              onChange={e => setZsFeature(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") runZoneSearch(); }}
+              className="flex-1"
+              aria-label="Caracteristică apartament"
+            />
+            <Button onClick={runZoneSearch} disabled={zsSearching} className="shrink-0 min-h-[44px]">
+              {zsSearching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+              Caută în {zsZone}
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Rezultatele apar mai sus și se salvează automat în „Anunțuri noi găsite”.
+          </p>
+        </div>
+
 
         {/* Discover button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border bg-background/50">
