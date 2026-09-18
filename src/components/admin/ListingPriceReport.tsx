@@ -209,12 +209,31 @@ export default function ListingPriceReport() {
                         </a>
                       ) : "—"}
                     </TableCell>
+                    <TableCell className="text-xs">
+                      {r.site_published_at ? (
+                        <div className="space-y-0.5">
+                          <p className="whitespace-nowrap">{dateRo(r.site_published_at)}</p>
+                          <p className="text-muted-foreground">{eur(r.site_price)}</p>
+                          {r.site_slug && (
+                            <a
+                              href={`/proprietate/${r.site_slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 underline"
+                              aria-label={`Deschide pagina de pe realtrust.ro pentru ${r.title || "anunț"}`}
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" /> Vezi pagina
+                            </a>
+                          )}
+                        </div>
+                      ) : "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
               {!filtered.length && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={9} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun anunț în perioada selectată."}
                   </TableCell>
                 </TableRow>
