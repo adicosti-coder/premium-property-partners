@@ -42,6 +42,8 @@ const ZONE_OPTIONS = [
   "Șagului",
 ];
 
+const ALL_PLATFORMS = "__all__";
+
 const PLATFORM_OPTIONS = [
   "Facebook Groups",
   "Facebook Marketplace",
@@ -52,6 +54,9 @@ const PLATFORM_OPTIONS = [
   "BursaImobiliara.ro",
   "Custom",
 ];
+
+// Platformele acoperite când se caută „pe toate" (cele cu anunțuri de proprietari)
+const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
 
 const normalizeText = (v: string) =>
   v
