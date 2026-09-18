@@ -429,7 +429,9 @@ Deno.serve(async (req) => {
         results.push({ id: item.id, status: "sent" });
       } else {
         const err = (send.error ?? `http_${send.status}`).slice(0, 500);
-        const exhausted = attempts >= MAX_ATTEMPTS;
+        // Eroarea 132001 = șablonul nu există la Meta; reîncercarea nu ajută.
+        const permanent = /132001|does not exist in the translation|Template name does not exist/i.test(err);
+        const exhausted = permanent || attempts >= MAX_ATTEMPTS;
         // Backoff la nivel de coadă: 5min, 25min
         const delayMin = attempts === 1 ? 5 : 25;
         await supabase
