@@ -259,6 +259,12 @@ export default function PlatformReportPanel() {
                       preț/mp {fmtPrice(r.avg_sqm_this_month)} vs {fmtPrice(r.avg_sqm_prev_month)} ·{" "}
                       {r.with_phone} cu telefon · ultimul anunț {fmtDate(r.last_found_at)}
                     </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      pe realtrust.ro: {r.site_published ?? 0} anunțuri preluate
+                      {r.site_avg_price ? ` · preț mediu ${fmtPrice(r.site_avg_price)}` : ""}
+                      {r.site_avg_price_sqm ? ` · ${fmtPrice(r.site_avg_price_sqm)}/mp` : ""}
+                      {r.site_last_published_at ? ` · ultima publicare ${fmtDate(r.site_last_published_at)}` : ""}
+                    </p>
                   </div>
                 );
               })}
