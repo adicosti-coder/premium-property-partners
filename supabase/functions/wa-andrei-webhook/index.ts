@@ -2,7 +2,15 @@
 // Public endpoint (verify_jwt = false). Validates signature via WHATSAPP_APP_SECRET.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { relayToMake } from "../_shared/makeRelay.ts";
-import { ACK_MESSAGE, buildIntakeMessage, loadProspectContext, autoReplyText } from "../_shared/waAutoReply.ts";
+import {
+  ACK_MESSAGE,
+  buildIntakeMessage,
+  loadProspectContext,
+  autoReplyText,
+  detectPublishIntent,
+  PUBLISH_CONSENT_ACK,
+  PUBLISH_REVOKE_ACK,
+} from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
 
