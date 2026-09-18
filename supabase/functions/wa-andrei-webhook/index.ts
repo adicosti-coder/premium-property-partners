@@ -10,6 +10,7 @@ import {
   detectPublishIntent,
   PUBLISH_CONSENT_ACK,
   PUBLISH_REVOKE_ACK,
+  publishConsentRequestText,
 } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
