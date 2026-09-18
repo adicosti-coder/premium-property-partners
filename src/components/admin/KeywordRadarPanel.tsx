@@ -222,7 +222,6 @@ export default function KeywordRadarPanel() {
         .update({ is_active: !row.is_active })
         .eq("id", row.id);
       if (error) throw error;
-      setSearchResults(prev => prev ? prev.map(s => s.id === row.id ? { ...s, is_active: !row.is_active } : s) : prev);
       loadSources();
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
