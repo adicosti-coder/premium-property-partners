@@ -58,7 +58,7 @@ export default function ZonePriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_zone_price_report_v2", {
+    const { data, error } = await supabase.rpc("get_zone_price_report_v3", {
       p_days: Number(days),
       p_type: type === "__all__" ? null : type,
     });
