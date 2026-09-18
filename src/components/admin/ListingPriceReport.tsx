@@ -82,7 +82,8 @@ export default function ListingPriceReport() {
     downloadCsv(
       csvFileName("raport-pe-anunt"),
       ["Data apariției", "Ultima vedere", "Titlu", "Zonă", "Tip", "Camere", "mp", "Platformă",
-        "Preț inițial", "Preț actual", "Preț/mp", "Modificări preț", "Telefon", "Link"],
+        "Preț inițial", "Preț actual", "Preț/mp", "Modificări preț", "Telefon", "Link",
+        "Publicat pe realtrust.ro", "Preț realtrust.ro", "Pagina realtrust.ro"],
       filtered.map((r) => [
         dateRo(r.first_seen_at),
         dateRo(r.last_seen_at),
