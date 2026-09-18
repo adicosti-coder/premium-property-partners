@@ -156,14 +156,29 @@ export default function ZonePriceReport() {
             <TableBody>
               {rows.map((r) => {
                 const v = variation(r.avg_price_this_month, r.avg_price_prev_month);
+                const vs = variation(r.avg_sqm_this_month, r.avg_sqm_prev_month);
                 const Icon = v == null ? Minus : v > 0 ? TrendingUp : TrendingDown;
+                const IconSqm = vs == null ? Minus : vs > 0 ? TrendingUp : TrendingDown;
                 return (
                   <TableRow key={`${r.zone}-${r.property_type}`}>
                     <TableCell className="font-medium">{r.zone}</TableCell>
                     <TableCell className="capitalize">{r.property_type}</TableCell>
                     <TableCell className="text-right">{r.samples}</TableCell>
                     <TableCell className="text-right">{eur(r.avg_price)}</TableCell>
-                    <TableCell className="text-right">{eur(r.avg_price_sqm)}</TableCell>
+                    <TableCell className="text-right font-medium">{eur(r.avg_price_sqm)}</TableCell>
+                    <TableCell className="text-right">{eur(r.avg_sqm_this_month)}</TableCell>
+                    <TableCell className="text-right">{eur(r.avg_sqm_prev_month)}</TableCell>
+                    <TableCell className="text-right">
+                      <span className="inline-flex items-center gap-1">
+                        <IconSqm className="h-3.5 w-3.5" />
+                        {vs == null ? "—" : `${vs > 0 ? "+" : ""}${vs.toFixed(1)}%`}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right text-xs text-muted-foreground">
+                      {r.min_price_sqm && r.max_price_sqm
+                        ? `${eur(r.min_price_sqm)} – ${eur(r.max_price_sqm)}`
+                        : "—"}
+                    </TableCell>
                     <TableCell className="text-right">{eur(r.avg_price_this_month)}</TableCell>
                     <TableCell className="text-right">{eur(r.avg_price_prev_month)}</TableCell>
                     <TableCell className="text-right">
@@ -177,7 +192,7 @@ export default function ZonePriceReport() {
               })}
               {!rows.length && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={12} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun preț înregistrat în perioada selectată."}
                   </TableCell>
                 </TableRow>

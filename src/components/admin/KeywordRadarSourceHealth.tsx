@@ -9,6 +9,7 @@ interface PlatformResult {
   ok?: boolean;
   inserted?: number;
   timeout_ms?: number;
+  duration_ms?: number;
   error?: string;
 }
 
