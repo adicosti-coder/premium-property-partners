@@ -86,7 +86,11 @@ export default function ZonePriceReport() {
       ["Zonă", "Tip", "Anunțuri", "Preț mediu", "Preț/mp", "Preț/mp luna curentă",
         "Preț/mp luna precedentă", "Variație preț/mp %", "Min preț/mp", "Max preț/mp",
         "Luna curentă", "Luna precedentă", "Variație %", "Platforme",
-        "Publicate realtrust.ro", "Preț mediu realtrust.ro", "Preț/mp realtrust.ro"],
+        "Publicate realtrust.ro", "Preț mediu realtrust.ro", "Preț/mp realtrust.ro",
+        "Preț realtrust.ro luna curentă", "Preț realtrust.ro luna precedentă",
+        "Variație realtrust.ro %", "€/mp realtrust.ro luna curentă",
+        "€/mp realtrust.ro luna precedentă", "Variație €/mp realtrust.ro %",
+        "Ultima publicare realtrust.ro"],
       rows.map((r) => [
         r.zone,
         r.property_type,
@@ -105,6 +109,13 @@ export default function ZonePriceReport() {
         r.site_published ?? 0,
         r.site_avg_price ?? "",
         r.site_avg_price_sqm ?? "",
+        r.site_avg_price_this_month ?? "",
+        r.site_avg_price_prev_month ?? "",
+        variation(r.site_avg_price_this_month, r.site_avg_price_prev_month)?.toFixed(1) ?? "",
+        r.site_avg_sqm_this_month ?? "",
+        r.site_avg_sqm_prev_month ?? "",
+        variation(r.site_avg_sqm_this_month, r.site_avg_sqm_prev_month)?.toFixed(1) ?? "",
+        r.site_last_published_at ?? "",
       ]),
     );
   };
