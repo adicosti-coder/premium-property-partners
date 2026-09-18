@@ -113,6 +113,55 @@ const WaPublishConsents = () => {
     consents.filter((c) => c.prospect_listing_id).map((c) => [c.prospect_listing_id!, c]),
   );
 
+  /** Trimite cererea de acord tuturor anunțurilor de proprietari fără acord înregistrat. */
+  const requestAllMissing = async () => {
+    const ids = prospects
+      .filter((p) => !consentByProspect.has(p.id) && p.phone_normalized)
+      .map((p) => p.id)
+      .slice(0, 25);
+    if (!ids.length) {
+      toast.info("Toate anunțurile de proprietari au deja o cerere de acord.");
+      return;
+    }
+    setSending("all");
+    const { data, error } = await supabase.functions.invoke("wa-request-publish-consent", {
+      body: { prospect_ids: ids },
+    });
+    setSending(null);
+    if (error) {
+      toast.error("Cererile nu au putut fi trimise.");
+      return;
+    }
+    const results = (data as { results?: { status: string }[] })?.results ?? [];
+    const ok = results.filter((r) => r.status === "sent" || r.status === "queued").length;
+    toast.success(`${ok} din ${results.length} cereri de acord au plecat pe WhatsApp.`);
+    void load();
+  };
+
+  // Dashboard: câte acorduri sunt cerute, primite, publicate, retrase + durata medie de răspuns.
+  const stats = (() => {
+    const count = (s: string) => consents.filter((c) => c.status === s).length;
+    const durations = consents
+      .filter((c) => c.requested_at && c.consented_at)
+      .map((c) => new Date(c.consented_at!).getTime() - new Date(c.requested_at!).getTime())
+      .filter((ms) => ms > 0);
+    const avgMs = durations.length
+      ? durations.reduce((a, b) => a + b, 0) / durations.length
+      : null;
+    const avgLabel = avgMs == null
+      ? "—"
+      : avgMs < 3600_000
+        ? `${Math.round(avgMs / 60_000)} min`
+        : `${(avgMs / 3600_000).toFixed(1)} h`;
+    return {
+      requested: count("requested"),
+      granted: count("granted"),
+      published: count("published"),
+      revoked: count("revoked"),
+      avgLabel,
+    };
+  })();
+
   const q = search.trim().toLowerCase();
   const visible = prospects.filter((p) =>
     !q ||
