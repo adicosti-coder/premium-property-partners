@@ -72,7 +72,7 @@ export default function ListingPriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_listing_price_report_v3", {
+    const { data, error } = await supabase.rpc("get_listing_price_report_v4", {
       p_days: Number(days),
       p_platform: platform === "__all__" ? null : platform,
     });
