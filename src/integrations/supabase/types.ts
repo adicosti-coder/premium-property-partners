@@ -11482,6 +11482,38 @@ export type Database = {
           zone: string
         }[]
       }
+      get_listing_price_report_v4: {
+        Args: { p_days?: number; p_platform?: string }
+        Returns: {
+          consent_granted_at: string
+          consent_requested_at: string
+          consent_status: string
+          contact_phone: string
+          current_price: number
+          first_price: number
+          first_seen_at: string
+          last_seen_at: string
+          listing_id: string
+          price_changes: number
+          price_sqm: number
+          property_type: string
+          rooms: number
+          site_days_online: number
+          site_delisted_at: string
+          site_first_price: number
+          site_is_active: boolean
+          site_price: number
+          site_price_changes: number
+          site_price_updated_at: string
+          site_published_at: string
+          site_slug: string
+          source_platform: string
+          source_url: string
+          surface: number
+          title: string
+          zone: string
+        }[]
+      }
       get_owner_property_reviews: {
         Args: { p_property_id?: string }
         Returns: {

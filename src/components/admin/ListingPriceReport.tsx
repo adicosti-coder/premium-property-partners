@@ -38,7 +38,22 @@ interface Row {
   site_first_price: number | null;
   site_price_changes: number | null;
   site_price_updated_at: string | null;
+  /** Cât timp a stat pe site și când a fost scos (dezactivat). */
+  site_is_active: boolean | null;
+  site_delisted_at: string | null;
+  site_days_online: number | null;
+  /** Starea acordului din Cozi Aprobare, pentru comparație. */
+  consent_status: string | null;
+  consent_requested_at: string | null;
+  consent_granted_at: string | null;
 }
+
+const CONSENT_LABEL: Record<string, string> = {
+  requested: "cerere trimisă",
+  granted: "acord primit",
+  revoked: "acord retras",
+  published: "publicat",
+};
 
 const PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
 
@@ -57,7 +72,7 @@ export default function ListingPriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_listing_price_report_v3", {
+    const { data, error } = await supabase.rpc("get_listing_price_report_v4", {
       p_days: Number(days),
       p_platform: platform === "__all__" ? null : platform,
     });
@@ -88,7 +103,9 @@ export default function ListingPriceReport() {
       ["Data apariției", "Ultima vedere", "Titlu", "Zonă", "Tip", "Camere", "mp", "Platformă",
         "Preț inițial", "Preț actual", "Preț/mp", "Modificări preț", "Telefon", "Link",
         "Publicat pe realtrust.ro", "Preț realtrust.ro", "Preț inițial realtrust.ro",
-        "Modificări preț realtrust.ro", "Ultima actualizare realtrust.ro", "Pagina realtrust.ro"],
+        "Modificări preț realtrust.ro", "Ultima actualizare realtrust.ro", "Pagina realtrust.ro",
+        "Zile pe realtrust.ro", "Activ pe site", "Scos de pe site",
+        "Stare acord", "Acord cerut", "Acord primit"],
       filtered.map((r) => [
         dateRo(r.first_seen_at),
         dateRo(r.last_seen_at),
@@ -110,6 +127,12 @@ export default function ListingPriceReport() {
         r.site_price_changes ?? 0,
         dateRo(r.site_price_updated_at),
         r.site_slug ? `https://realtrust.ro/proprietate/${r.site_slug}` : "",
+        r.site_days_online ?? "",
+        r.site_published_at ? (r.site_is_active ? "da" : "nu") : "",
+        dateRo(r.site_delisted_at),
+        r.consent_status ? (CONSENT_LABEL[r.consent_status] || r.consent_status) : "",
+        dateRo(r.consent_requested_at),
+        dateRo(r.consent_granted_at),
       ]),
     );
   };
@@ -175,6 +198,7 @@ export default function ListingPriceReport() {
                 <TableHead className="text-right">Evoluție</TableHead>
                 <TableHead>Link</TableHead>
                 <TableHead>Pe realtrust.ro</TableHead>
+                <TableHead>Acord (Cozi Aprobare)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -235,6 +259,14 @@ export default function ListingPriceReport() {
                               actualizat {dateRo(r.site_price_updated_at)}
                             </p>
                           )}
+                          <p className="text-muted-foreground">
+                            {r.site_days_online != null ? `${r.site_days_online} zile pe site` : ""}
+                            {r.site_is_active === false
+                              ? ` · scos ${dateRo(r.site_delisted_at)}`
+                              : r.site_is_active
+                                ? " · activ"
+                                : ""}
+                          </p>
                           {r.site_slug && (
                             <a
                               href={`/proprietate/${r.site_slug}`}
@@ -249,12 +281,28 @@ export default function ListingPriceReport() {
                         </div>
                       ) : "—"}
                     </TableCell>
+                    <TableCell className="text-xs">
+                      {r.consent_status ? (
+                        <div className="space-y-0.5">
+                          <Badge variant={r.consent_status === "granted" || r.consent_status === "published"
+                            ? "secondary" : "outline"} className="text-[10px]">
+                            {CONSENT_LABEL[r.consent_status] || r.consent_status}
+                          </Badge>
+                          {r.consent_requested_at && (
+                            <p className="text-muted-foreground">cerut {dateRo(r.consent_requested_at)}</p>
+                          )}
+                          {r.consent_granted_at && (
+                            <p className="text-muted-foreground">acord {dateRo(r.consent_granted_at)}</p>
+                          )}
+                        </div>
+                      ) : "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
               {!filtered.length && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={10} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun anunț în perioada selectată."}
                   </TableCell>
                 </TableRow>
