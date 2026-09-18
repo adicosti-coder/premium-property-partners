@@ -386,6 +386,13 @@
       "when": 1789761935542,
       "tag": "0054_keyword_scan_report_collection",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1789762329778,
+      "tag": "0055_collection_listings_report",
+      "breakpoints": true
     }
   ]
 }
