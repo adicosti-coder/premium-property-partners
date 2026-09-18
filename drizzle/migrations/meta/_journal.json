@@ -211,6 +211,13 @@
       "when": 1789718441541,
       "tag": "0029_prospect_price_history_and_alert_state",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1789718653677,
+      "tag": "0030_cron_prospect_new_listings_alert",
+      "breakpoints": true
     }
   ]
 }
