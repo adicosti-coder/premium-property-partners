@@ -267,19 +267,48 @@ export default function MyListingsCompare() {
       .replace(/^-|-$/g, "")
       .slice(0, 60)}-${r.id.slice(0, 6)}`;
 
+    // Descriere scurtă pentru căutări (max ~160 caractere) + descriere completă
+    const shortDesc = [
+      `${(r.property_type || "Imobil").charAt(0).toUpperCase()}${(r.property_type || "mobil").slice(1)}`,
+      r.rooms ? `${r.rooms} camere` : null,
+      r.size ? `${r.size} mp` : null,
+      r.zone ? `zona ${r.zone}, Timișoara` : "Timișoara",
+      `${Math.round(Number(r.price)).toLocaleString("ro-RO")} €`,
+    ]
+      .filter(Boolean)
+      .join(" · ")
+      .slice(0, 160);
+
+    const longDesc = (r.description || "").trim()
+      ? `${r.description}\n\nAdministrare în regim hotelier disponibilă prin RealTrust.`
+      : `${shortDesc}. Imobil disponibil prin RealTrust Timișoara, cu opțiunea de administrare în regim hotelier.`;
+
+    const imageAlt = [
+      r.property_type || "Imobil",
+      r.rooms ? `${r.rooms} camere` : null,
+      r.zone ? `${r.zone}, Timișoara` : "Timișoara",
+    ]
+      .filter(Boolean)
+      .join(", ");
+
     const { data: prop, error } = await supabase
       .from("properties")
       .insert({
         name: r.title,
         location: r.zone || "Timișoara",
-        description_ro: r.description || r.title,
-        description_en: r.description || r.title,
+        description_ro: shortDesc,
+        description_en: shortDesc,
+        long_description_ro: longDesc,
+        long_description_en: longDesc,
         tag: "Anunț proprietar",
         slug,
         capital_necesar: Number(r.price),
         size: r.size ? Number(r.size) : null,
         rooms: r.rooms ? Number(r.rooms) : null,
+        property_subtype: r.property_type || null,
         images: r.image_url ? [r.image_url] : [],
+        image_path: r.image_url || null,
+        image_alts: r.image_url ? [imageAlt] : [],
         is_active: true,
       } as never)
       .select("id, slug")
