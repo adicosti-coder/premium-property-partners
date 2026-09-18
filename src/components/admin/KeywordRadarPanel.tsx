@@ -40,6 +40,14 @@ const PLATFORM_OPTIONS = [
   "Custom",
 ];
 
+const normalizeText = (v: string) =>
+  v
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[ĂÂÎȘȚăâîșț]/g, c => ({ Ă: "A", Â: "A", Î: "I", Ș: "S", Ț: "T", ă: "a", â: "a", î: "i", ș: "s", ț: "t" }[c] || c))
+    .toLowerCase()
+    .trim();
+
 export default function KeywordRadarPanel() {
   const [running, setRunning] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
