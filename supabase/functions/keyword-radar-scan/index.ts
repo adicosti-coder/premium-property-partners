@@ -219,10 +219,11 @@ Deno.serve(async (req) => {
             inserted: cnt,
             route: pmPlatform ? "pm-leads" : "prospects",
           };
-          const cur = pstats[platform] || { total: 0, zero_streak: 0 };
+          const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
           pstats[platform] = {
-            total: cur.total + cnt,
-            zero_streak: cnt > 0 ? 0 : cur.zero_streak + 1,
+            total: (Number(cur.total) || 0) + cnt,
+            zero_streak: cnt > 0 ? 0 : (Number(cur.zero_streak) || 0) + 1,
+            calls: (Number(cur.calls) || 0) + 1,
           };
           if (!resp.ok) {
             stats.errors++;
