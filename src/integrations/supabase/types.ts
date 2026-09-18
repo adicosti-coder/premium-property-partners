@@ -11364,6 +11364,24 @@ export type Database = {
           impressions: number
         }[]
       }
+      get_collection_listings_report: {
+        Args: { p_collection?: string; p_days?: number }
+        Returns: {
+          collection: string
+          contact_phone: string
+          created_at: string
+          id: string
+          keyword: string
+          last_seen_at: string
+          price: number
+          rooms: number
+          size: number
+          source_platform: string
+          source_url: string
+          title: string
+          zone: string
+        }[]
+      }
       get_conversion_attribution_report: {
         Args: { p_days?: number }
         Returns: Json
