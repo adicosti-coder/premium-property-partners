@@ -337,6 +337,20 @@
       "when": 1789749930082,
       "tag": "0047_zone_report_site_price_bounds",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1789751455965,
+      "tag": "0048_keyword_scan_report",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1789752100690,
+      "tag": "0049_keyword_scan_report_prefix_match",
+      "breakpoints": true
     }
   ]
 }

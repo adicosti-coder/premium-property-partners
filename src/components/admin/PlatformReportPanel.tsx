@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BarChart3, Loader2, RefreshCw, Download, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { downloadCsv, csvFileName } from "@/utils/exportCsv";
+import KeywordEfficiencyReport from "./KeywordEfficiencyReport";
 
 interface ReportRow {
   source_platform: string;
@@ -308,6 +309,8 @@ export default function PlatformReportPanel() {
           )}
         </CardContent>
       </Card>
+
+      <KeywordEfficiencyReport />
     </div>
   );
 }
