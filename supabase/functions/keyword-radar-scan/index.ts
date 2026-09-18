@@ -271,10 +271,13 @@ Deno.serve(async (req) => {
         await pushProgress();
         const platformStartedAt = Date.now();
 
-        // Timeout dur pe sursă: dacă nu răspunde, abandonăm apelul.
+        // Timeout dur pe sursă, adaptat la viteza ei istorică: dacă nu răspunde, abandonăm apelul.
         const platformTimeoutMs = Math.max(
           3_000,
-          Math.min(maxPlatformMs, keywordBudgetMs - (Date.now() - keywordStartedAt)),
+          Math.min(
+            adaptiveTimeout(pstats[platform]?.avg_ms, maxPlatformMs),
+            keywordBudgetMs - (Date.now() - keywordStartedAt),
+          ),
         );
         const abort = AbortSignal.timeout(platformTimeoutMs);
 
