@@ -521,7 +521,6 @@ export default function KeywordRadarPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
@@ -550,7 +549,6 @@ export default function KeywordRadarPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
