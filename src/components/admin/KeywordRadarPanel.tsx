@@ -47,6 +47,10 @@ export default function KeywordRadarPanel() {
   const [adding, setAdding] = useState(false);
   const [sources, setSources] = useState<SourceRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [zone, setZone] = useState<string>(ZONE_OPTIONS[0]);
+  const [zoneKeyword, setZoneKeyword] = useState("");
+  const [zonePlatform, setZonePlatform] = useState<string>("OLX");
+  const [addingZone, setAddingZone] = useState(false);
 
   const loadSources = useCallback(async () => {
     setLoading(true);
