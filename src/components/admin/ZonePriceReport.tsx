@@ -31,6 +31,12 @@ interface ZoneRow {
   site_published: number | null;
   site_avg_price: number | null;
   site_avg_price_sqm: number | null;
+  /** Variația lunară a prețurilor publicate pe realtrust.ro, din istoricul de preț. */
+  site_avg_price_this_month: number | null;
+  site_avg_price_prev_month: number | null;
+  site_avg_sqm_this_month: number | null;
+  site_avg_sqm_prev_month: number | null;
+  site_last_published_at: string | null;
 }
 
 const TYPES = [
@@ -58,7 +64,7 @@ export default function ZonePriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_zone_price_report_v3", {
+    const { data, error } = await supabase.rpc("get_zone_price_report_v4", {
       p_days: Number(days),
       p_type: type === "__all__" ? null : type,
     });
