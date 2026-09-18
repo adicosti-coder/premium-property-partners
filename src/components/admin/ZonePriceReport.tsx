@@ -62,17 +62,45 @@ export default function ZonePriceReport() {
   const [rows, setRows] = useState<ZoneRow[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [consent, setConsent] = useState<Record<string, { n: number; avg: number | null; granted: number; grantedAvg: number | null }>>({});
+
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_zone_price_report_v4", {
-      p_days: Number(days),
-      p_type: type === "__all__" ? null : type,
-    });
+    const [{ data, error }, { data: cData }] = await Promise.all([
+      supabase.rpc("get_zone_price_report_v4", {
+        p_days: Number(days),
+        p_type: type === "__all__" ? null : type,
+      }),
+      // Prețul mediu al anunțurilor aflate în Cozi Aprobare, pe aceeași zonă și tip.
+      supabase.rpc("get_zone_consent_price_report", {
+        p_days: Number(days),
+        p_type: type === "__all__" ? null : type,
+      }),
+    ]);
     if (!error) setRows((data || []) as unknown as ZoneRow[]);
+    const map: Record<string, { n: number; avg: number | null; granted: number; grantedAvg: number | null }> = {};
+    for (const c of (cData || []) as unknown as {
+      zone: string; property_type: string; consent_listings: number;
+      consent_avg_price: number | null; granted_listings: number; granted_avg_price: number | null;
+    }[]) {
+      map[`${c.zone.toLowerCase()}-${c.property_type}`] = {
+        n: Number(c.consent_listings || 0),
+        avg: c.consent_avg_price,
+        granted: Number(c.granted_listings || 0),
+        grantedAvg: c.granted_avg_price,
+      };
+    }
+    setConsent(map);
     setLoading(false);
   }, [days, type]);
 
   useEffect(() => { void load(); }, [load]);
+
+  const consentFor = useCallback(
+    (zone: string, t: string) => consent[`${zone.toLowerCase()}-${t}`] ?? null,
+    [consent],
+  );
+
 
   const totals = useMemo(() => {
     const samples = rows.reduce((s, r) => s + Number(r.samples || 0), 0);
