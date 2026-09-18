@@ -292,6 +292,19 @@ export default function ZonePriceReport() {
                         ? new Date(r.site_last_published_at).toLocaleDateString("ro-RO")
                         : "—"}
                     </TableCell>
+                    <TableCell className="text-right">
+                      {(() => {
+                        const c = consentFor(r.zone, r.property_type);
+                        return c?.n ? `${c.n} · ${eur(c.avg)}` : "—";
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(() => {
+                        const c = consentFor(r.zone, r.property_type);
+                        return c?.granted ? `${c.granted} · ${eur(c.grantedAvg)}` : "—";
+                      })()}
+                    </TableCell>
+
                   </TableRow>
                 );
               })}
