@@ -340,6 +340,40 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Cererea de acord a fost pregătită din Admin, dar fereastra de 24h era
+        // închisă → punem întrebarea acum, la primul răspuns al proprietarului.
+        if (!publishIntent) {
+          try {
+            const { data: pending } = await supabase
+              .from("wa_publish_consents")
+              .select("id, prospect_listing_id, notes")
+              .eq("phone_normalized", from)
+              .eq("status", "requested")
+              .is("revoked_at", null)
+              .limit(1)
+              .maybeSingle();
+            if (pending && pending.notes !== "question_sent") {
+              const { data: pr } = await supabase
+                .from("prospect_listings")
+                .select("title, zone, rooms")
+                .eq("id", pending.prospect_listing_id ?? "")
+                .maybeSingle();
+              quick = {
+                kind: "publish_consent_request",
+                text: publishConsentRequestText(pr ?? null),
+              };
+              await supabase
+                .from("wa_publish_consents")
+                .update({ notes: "question_sent" })
+                .eq("id", pending.id);
+            }
+          } catch (e) {
+            console.error("[wa-webhook] pending consent question failed:", e);
+          }
+        }
+
+
+
         // Nu repetăm același răspuns automat la fiecare mesaj: dacă exact acest
         // răspuns a plecat în ultimele 6 ore, lăsăm discuția pe mâna agentului.
         if (
