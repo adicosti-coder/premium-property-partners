@@ -83,7 +83,7 @@ export default function PlatformReportPanel() {
     setLoading(true);
     try {
       const [report, runsRes] = await Promise.all([
-        supabase.rpc("get_platform_scan_report_v2", { p_days: Number(days) }),
+        supabase.rpc("get_platform_scan_report_v3", { p_days: Number(days) }),
         supabase
           .from("keyword_radar_runs")
           .select("id,started_at,duration_ms,stats")
