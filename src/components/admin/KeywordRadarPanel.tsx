@@ -40,6 +40,14 @@ const PLATFORM_OPTIONS = [
   "Custom",
 ];
 
+const normalizeText = (v: string) =>
+  v
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[ĂÂÎȘȚăâîșț]/g, c => ({ Ă: "A", Â: "A", Î: "I", Ș: "S", Ț: "T", ă: "a", â: "a", î: "i", ș: "s", ț: "t" }[c] || c))
+    .toLowerCase()
+    .trim();
+
 export default function KeywordRadarPanel() {
   const [running, setRunning] = useState(false);
   const [newKeyword, setNewKeyword] = useState("");
@@ -76,7 +84,8 @@ export default function KeywordRadarPanel() {
 
   useEffect(() => { loadSources(); }, [loadSources]);
 
-  // Rubrică de căutare separată în toate cuvintele cheie salvate
+  // Rubrică de căutare separată: caută în TOATE cuvintele cheie salvate,
+  // fără diferență de diacritice / majuscule / platformă scrisă diferit.
   useEffect(() => {
     const term = search.trim();
     if (term.length < 2 && searchPlatform === "__all__" && searchStatus === "__all__") {
@@ -87,23 +96,28 @@ export default function KeywordRadarPanel() {
     const t = setTimeout(async () => {
       setSearching(true);
       try {
-        let q = supabase
+        const { data, error } = await supabase
           .from("scraper_search_keywords")
           .select("id,keyword,platform,is_active,created_at")
           .order("created_at", { ascending: false })
-          .limit(100);
-        if (term.length >= 2) q = q.ilike("keyword", `%${term}%`);
-        if (searchPlatform !== "__all__") q = q.eq("platform", searchPlatform);
-        if (searchStatus !== "__all__") q = q.eq("is_active", searchStatus === "active");
-        const { data, error } = await q;
+          .limit(2000);
         if (error) throw error;
-        if (!cancelled) setSearchResults((data || []) as SourceRow[]);
+        const rows = (data || []) as SourceRow[];
+        const words = normalizeText(term).split(/[\s,]+/).filter(w => w.length >= 2);
+        const filtered = rows.filter(r => {
+          const haystack = `${normalizeText(r.keyword || "")} ${normalizeText(r.platform || "")}`;
+          if (words.length && !words.every(w => haystack.includes(w))) return false;
+          if (searchPlatform !== "__all__" && normalizeText(r.platform || "") !== normalizeText(searchPlatform)) return false;
+          if (searchStatus !== "__all__" && r.is_active !== (searchStatus === "active")) return false;
+          return true;
+        });
+        if (!cancelled) setSearchResults(filtered.slice(0, 200));
       } catch (e: any) {
         if (!cancelled) toast({ title: "Eroare căutare", description: e.message, variant: "destructive" });
       } finally {
         if (!cancelled) setSearching(false);
       }
-    }, 300);
+    }, 250);
     return () => { cancelled = true; clearTimeout(t); };
   }, [search, searchPlatform, searchStatus]);
 
