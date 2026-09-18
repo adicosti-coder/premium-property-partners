@@ -115,6 +115,38 @@ export default function KeywordRadarPanel() {
     }
   };
 
+  const addZoneKeywords = async () => {
+    const parts = zoneKeyword
+      .split(/[\n,]/)
+      .map(s => s.trim())
+      .filter(Boolean);
+    if (!parts.length) {
+      toast({ title: "Câmp gol", description: "Scrie cel puțin un cuvânt cheie.", variant: "destructive" });
+      return;
+    }
+    setAddingZone(true);
+    try {
+      const rows = parts.map(kw => ({
+        keyword: `${kw} ${zone} Timișoara`.replace(/\s+/g, " "),
+        platform: zonePlatform,
+        is_active: true,
+        owner_filters: { owner_only: true, zone } as any,
+      }));
+      const { error } = await supabase.from("scraper_search_keywords").insert(rows);
+      if (error) throw error;
+      toast({
+        title: `${rows.length} cuvinte cheie adăugate`,
+        description: `${zone} · ${zonePlatform} · doar proprietari`,
+      });
+      setZoneKeyword("");
+      loadSources();
+    } catch (e: any) {
+      toast({ title: "Eroare adăugare", description: e.message, variant: "destructive" });
+    } finally {
+      setAddingZone(false);
+    }
+  };
+
   const toggleSource = async (row: SourceRow) => {
     try {
       const { error } = await supabase
