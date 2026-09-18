@@ -84,6 +84,7 @@ const ListingImportTabs = () => {
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
       <TabsContent value="auto-publish">
         <div className="space-y-4">
+          <WaPublishConsents />
           <PipelineReconciliationPanel />
           <AutoPublishListingsPanel />
         </div>
