@@ -132,14 +132,22 @@ Deno.serve(async (req) => {
       // first, and one that returned nothing 4 scans in a row is skipped until
       // an admin scans that keyword explicitly (keyword_ids in the body).
       const meta: any = (kw.metadata && typeof kw.metadata === "object") ? { ...kw.metadata } : {};
-      const pstats: Record<string, { total: number; zero_streak: number }> =
+      const pstats: Record<string, { total: number; zero_streak: number; calls?: number }> =
         (meta.platform_stats && typeof meta.platform_stats === "object") ? { ...meta.platform_stats } : {};
-      const platformList = [...(kw.platforms as string[])].sort(
-        (a, b) => (pstats[b]?.total || 0) - (pstats[a]?.total || 0),
-      );
+      // Randament mediu pe apel (nu total brut): sursele noi sunt încercate
+      // înaintea celor testate deja fără rezultate.
+      const yieldOf = (p: string) => {
+        const s = pstats[p];
+        if (!s) return Number.POSITIVE_INFINITY;
+        const calls = Math.max(1, Number(s.calls || 1));
+        return (Number(s.total) || 0) / calls;
+      };
+      const platformList = [...(kw.platforms as string[])]
+        .sort((a, b) => yieldOf(b) - yieldOf(a))
+        .slice(0, maxPlatforms);
 
       for (const platform of platformList) {
-        if (Date.now() - startedAt > MAX_RUNTIME_MS) {
+        if (Date.now() - startedAt > maxRuntimeMs) {
           stats.skipped_time_budget = (stats.skipped_time_budget || 0) + 1;
           break;
         }
