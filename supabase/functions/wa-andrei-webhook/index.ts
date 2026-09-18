@@ -230,9 +230,34 @@ Deno.serve(async (req) => {
           .eq("direction", "outbound");
 
         let quick = outboundCount ? autoReplyText(text) : null;
+
+        // Acordul proprietarului pentru preluarea anunțului pe realtrust.ro
+        // („DA PUBLIC”) sau retragerea acordului („RETRAG”) — are prioritate
+        // față de orice alt răspuns automat și declanșează publicarea/retragerea.
+        const publishIntent = detectPublishIntent(text);
+        if (publishIntent) {
+          quick = publishIntent === "consent"
+            ? { kind: "publish_consent", text: PUBLISH_CONSENT_ACK }
+            : { kind: "publish_revoke", text: PUBLISH_REVOKE_ACK };
+          try {
+            await handlePublishIntent(supabase, {
+              phone: from,
+              intent: publishIntent,
+              message: text,
+              supabaseUrl,
+              serviceKey,
+            });
+          } catch (e) {
+            console.error("[wa-webhook] publish consent handling failed:", e);
+          }
+        }
+
         // Nu repetăm același răspuns automat la fiecare mesaj: dacă exact acest
         // răspuns a plecat în ultimele 6 ore, lăsăm discuția pe mâna agentului.
-        if (quick && quick.kind !== "quick_no" && quick.kind !== "quick_stop") {
+        if (
+          quick && quick.kind !== "quick_no" && quick.kind !== "quick_stop" &&
+          quick.kind !== "publish_consent" && quick.kind !== "publish_revoke"
+        ) {
           try {
             const sixHoursAgo = new Date(Date.now() - 6 * 3600 * 1000).toISOString();
             const { count: repeated } = await supabase
