@@ -1,11 +1,12 @@
 /**
  * „Anunțurile mele" — introduc propriile anunțuri, le compar cu prețul mediu din
- * zonă (din anunțurile găsite) și pregătesc publicarea pe platforme.
+ * zonă (din anunțurile găsite), pregătesc publicarea pe platforme, salvez linkul
+ * fiecărei publicări și primesc e-mail de confirmare.
  *
  * Notă: OLX / Storia / imobiliare.ro / Publi24 / BursaImobiliara nu oferă un API
  * public de postare, deci publicarea nu poate fi 100% automată. Aici se pregătește
  * textul anunțului, se copiază cu un clic, se deschide pagina de adăugare a
- * platformei și se marchează platformele pe care anunțul a fost publicat.
+ * platformei și se salvează linkul anunțului publicat.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -17,7 +18,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Plus, RefreshCw, Trash2, Copy, ExternalLink, CheckCircle2, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  Plus, RefreshCw, Trash2, Copy, ExternalLink, CheckCircle2, TrendingUp, TrendingDown, Mail,
+} from "lucide-react";
 
 interface MyListing {
   id: string;
@@ -34,18 +37,38 @@ interface MyListing {
   created_at: string | null;
 }
 
+/** publish_status acceptă atât formatul vechi (dată text) cât și cel nou ({ at, url }). */
+interface PublishInfo {
+  at: string | null;
+  url: string | null;
+}
+
+const readPublish = (raw: unknown): PublishInfo | null => {
+  if (!raw) return null;
+  if (typeof raw === "string") return { at: raw, url: null };
+  if (typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    return { at: typeof o.at === "string" ? o.at : null, url: typeof o.url === "string" ? o.url : null };
+  }
+  return null;
+};
+
 const PLATFORMS: Array<{ name: string; addUrl: string }> = [
-  { name: "OLX", addUrl: "https://www.olx.ro/adauga/" },
+  { name: "OLX", addUrl: "https://www.olx.ro/post/" },
   { name: "Storia.ro", addUrl: "https://www.storia.ro/ro/adauga-anunt" },
   { name: "imobiliare.ro", addUrl: "https://www.imobiliare.ro/adauga-anunt" },
-  { name: "Publi24", addUrl: "https://www.publi24.ro/adauga-anunt.html" },
+  { name: "Publi24", addUrl: "https://www.publi24.ro/adauga-anunt/" },
   { name: "BursaImobiliara.ro", addUrl: "https://www.bursaimobiliara.ro/adauga-anunt" },
 ];
 
 const TYPES = ["apartament", "garsoniera", "casa", "teren", "comercial"];
+const NOTIFY_EMAIL = "info@realtrust.ro";
 
 const eur = (v: number | null | undefined) =>
   v == null ? "—" : `${Math.round(Number(v)).toLocaleString("ro-RO")} €`;
+
+const dateTimeRo = (v: string | null) =>
+  v ? new Date(v).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 
 const emptyForm = {
   title: "",
@@ -62,6 +85,7 @@ export default function MyListingsCompare() {
   const [rows, setRows] = useState<MyListing[]>([]);
   const [market, setMarket] = useState<Record<string, { avg: number; avgSqm: number | null; n: number }>>({});
   const [form, setForm] = useState({ ...emptyForm });
+  const [urlDraft, setUrlDraft] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -69,13 +93,17 @@ export default function MyListingsCompare() {
     setLoading(true);
     const [mine, zones] = await Promise.all([
       supabase.from("my_listings").select("*").eq("is_active", true).order("created_at", { ascending: false }),
-      supabase.rpc("get_zone_price_report", { p_days: 90, p_type: null }),
+      supabase.rpc("get_zone_price_report_v2", { p_days: 90, p_type: null }),
     ]);
     setRows(((mine.data || []) as unknown as MyListing[]));
     const map: Record<string, { avg: number; avgSqm: number | null; n: number }> = {};
     for (const z of (zones.data || []) as any[]) {
       const key = `${String(z.zone).toLowerCase()}|${String(z.property_type).toLowerCase()}`;
-      map[key] = { avg: Number(z.avg_price) || 0, avgSqm: z.avg_price_sqm ? Number(z.avg_price_sqm) : null, n: Number(z.samples) || 0 };
+      map[key] = {
+        avg: Number(z.avg_price) || 0,
+        avgSqm: z.avg_price_sqm ? Number(z.avg_price_sqm) : null,
+        n: Number(z.samples) || 0,
+      };
     }
     setMarket(map);
     setLoading(false);
@@ -143,10 +171,53 @@ export default function MyListingsCompare() {
     }
   };
 
+  /** E-mail de confirmare la marcarea publicării, cu linkul platformei. */
+  const notifyPublished = async (r: MyListing, platform: string, url: string | null, at: string) => {
+    const { error } = await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "my-listing-published",
+        recipientEmail: NOTIFY_EMAIL,
+        idempotencyKey: `my-listing-published-${r.id}-${platform}-${at.slice(0, 16)}`,
+        templateData: {
+          listingTitle: r.title,
+          platform,
+          platformUrl: url || undefined,
+          price: r.price ? eur(r.price) : undefined,
+          zone: r.zone || undefined,
+          publishedAt: dateTimeRo(at),
+        },
+      },
+    });
+    if (error) {
+      toast({
+        title: "Publicarea a fost salvată, dar e-mailul nu a plecat",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: `Publicat pe ${platform}`, description: `Confirmare trimisă la ${NOTIFY_EMAIL}.` });
+  };
+
   const togglePublished = async (r: MyListing, platform: string) => {
-    const status = { ...(r.publish_status || {}) } as Record<string, string | null>;
-    status[platform] = status[platform] ? null : new Date().toISOString();
-    const { error } = await supabase.from("my_listings").update({ publish_status: status }).eq("id", r.id);
+    const status = { ...(r.publish_status || {}) } as Record<string, unknown>;
+    const existing = readPublish(status[platform]);
+    if (existing) {
+      status[platform] = null;
+    } else {
+      const at = new Date().toISOString();
+      const url = (urlDraft[`${r.id}|${platform}`] || "").trim() || null;
+      status[platform] = { at, url };
+      const { error } = await supabase.from("my_listings").update({ publish_status: status as any }).eq("id", r.id);
+      if (error) {
+        toast({ title: "Nu s-a putut actualiza", description: error.message, variant: "destructive" });
+        return;
+      }
+      await notifyPublished(r, platform, url, at);
+      void load();
+      return;
+    }
+    const { error } = await supabase.from("my_listings").update({ publish_status: status as any }).eq("id", r.id);
     if (error) {
       toast({ title: "Nu s-a putut actualiza", description: error.message, variant: "destructive" });
       return;
@@ -162,7 +233,29 @@ export default function MyListingsCompare() {
     return { ...m, diff };
   };
 
-  const summary = useMemo(() => rows.length, [rows]);
+  /** Anunțurile publicate, grupate pe platformă. */
+  const publishedByPlatform = useMemo(() => {
+    const map: Record<string, Array<{ listing: MyListing; info: PublishInfo }>> = {};
+    for (const p of PLATFORMS) map[p.name] = [];
+    for (const r of rows) {
+      const status = (r.publish_status || {}) as Record<string, unknown>;
+      for (const [platform, raw] of Object.entries(status)) {
+        const info = readPublish(raw);
+        if (!info) continue;
+        if (!map[platform]) map[platform] = [];
+        map[platform].push({ listing: r, info });
+      }
+    }
+    for (const k of Object.keys(map)) {
+      map[k].sort((a, b) => String(b.info.at || "").localeCompare(String(a.info.at || "")));
+    }
+    return map;
+  }, [rows]);
+
+  const publishedTotal = useMemo(
+    () => Object.values(publishedByPlatform).reduce((s, arr) => s + arr.length, 0),
+    [publishedByPlatform],
+  );
 
   return (
     <Card>
@@ -170,12 +263,14 @@ export default function MyListingsCompare() {
         <div>
           <CardTitle className="text-lg">Anunțurile mele & publicare</CardTitle>
           <CardDescription>
-            Adaugă anunțurile tale, compară prețul cu media din zonă și pregătește publicarea pe cele 5 platforme.
+            Adaugă anunțurile tale, compară prețul cu media din zonă și publică-le pe cele 5 platforme.
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary">{summary} anunțuri</Badge>
-          <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
+          <Badge variant="secondary">{rows.length} anunțuri</Badge>
+          <Badge variant="secondary">{publishedTotal} publicări</Badge>
+          <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}
+            aria-label="Reîncarcă anunțurile mele">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         </div>
@@ -234,7 +329,7 @@ export default function MyListingsCompare() {
         <div className="space-y-3">
           {rows.map((r) => {
             const c = compare(r);
-            const status = (r.publish_status || {}) as Record<string, string | null>;
+            const status = (r.publish_status || {}) as Record<string, unknown>;
             return (
               <div key={r.id} className="rounded-lg border border-border/50 p-3 space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -247,7 +342,8 @@ export default function MyListingsCompare() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge>{eur(r.price)}</Badge>
-                    <Button variant="ghost" size="sm" onClick={() => void remove(r.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => void remove(r.id)}
+                      aria-label={`Șterge anunțul ${r.title}`}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -274,13 +370,19 @@ export default function MyListingsCompare() {
                   <Button variant="outline" size="sm" onClick={() => void copyAd(r)}>
                     <Copy className="mr-1 h-3.5 w-3.5" /> Copiază textul anunțului
                   </Button>
+                </div>
+
+                <div className="space-y-2">
                   {PLATFORMS.map((p) => {
-                    const published = !!status[p.name];
+                    const info = readPublish(status[p.name]);
+                    const published = !!info;
+                    const key = `${r.id}|${p.name}`;
                     return (
-                      <span key={p.name} className="inline-flex items-center gap-1">
+                      <div key={p.name} className="flex flex-wrap items-center gap-2 text-xs">
                         <Button
                           variant={published ? "secondary" : "outline"}
                           size="sm"
+                          className="min-w-[150px] justify-start"
                           onClick={() => {
                             void copyAd(r);
                             window.open(p.addUrl, "_blank", "noopener,noreferrer");
@@ -288,15 +390,34 @@ export default function MyListingsCompare() {
                         >
                           <ExternalLink className="mr-1 h-3.5 w-3.5" /> {p.name}
                         </Button>
+                        {published ? (
+                          <>
+                            <span className="text-muted-foreground">publicat {dateTimeRo(info!.at)}</span>
+                            {info!.url && (
+                              <a href={info!.url} target="_blank" rel="noopener noreferrer" className="underline">
+                                vezi anunțul
+                              </a>
+                            )}
+                          </>
+                        ) : (
+                          <Input
+                            value={urlDraft[key] || ""}
+                            onChange={(e) => setUrlDraft({ ...urlDraft, [key]: e.target.value })}
+                            placeholder={`Link anunț pe ${p.name} (opțional)`}
+                            className="h-8 max-w-[260px] text-xs"
+                          />
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label={`Marchează ${r.title} ca publicat pe ${p.name}`}
+                          aria-label={published
+                            ? `Anulează marcarea publicării pe ${p.name}`
+                            : `Marchează ${r.title} ca publicat pe ${p.name}`}
                           onClick={() => void togglePublished(r, p.name)}
                         >
                           <CheckCircle2 className={`h-4 w-4 ${published ? "text-green-600" : "text-muted-foreground"}`} />
                         </Button>
-                      </span>
+                      </div>
                     );
                   })}
                 </div>
@@ -308,6 +429,50 @@ export default function MyListingsCompare() {
               {loading ? "Se încarcă..." : "Niciun anunț adăugat încă."}
             </p>
           )}
+        </div>
+
+        {/* Rubrica: anunțurile publicate, pe fiecare platformă */}
+        <div className="space-y-3 rounded-lg border border-border/50 p-3">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <CheckCircle2 className="h-4 w-4 text-green-600" /> Anunțurile publicate, pe platformă
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {PLATFORMS.map((p) => {
+              const list = publishedByPlatform[p.name] || [];
+              return (
+                <div key={p.name} className="rounded-lg border border-border/40 p-2.5">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium">{p.name}</span>
+                    <Badge variant="secondary" className="text-[10px]">{list.length}</Badge>
+                  </div>
+                  {list.length ? (
+                    <ul className="space-y-1.5">
+                      {list.map(({ listing, info }) => (
+                        <li key={`${listing.id}-${p.name}`} className="text-xs">
+                          <span className="font-medium">{listing.title}</span>
+                          <span className="text-muted-foreground"> · {eur(listing.price)} · {dateTimeRo(info.at)}</span>
+                          {info.url && (
+                            <>
+                              {" "}
+                              <a href={info.url} target="_blank" rel="noopener noreferrer" className="underline">
+                                deschide
+                              </a>
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Încă niciun anunț publicat aici.</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+            <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            La fiecare publicare marcată primești e-mail de confirmare la {NOTIFY_EMAIL}, cu platforma și linkul anunțului.
+          </p>
         </div>
 
         <p className="text-xs text-muted-foreground">

@@ -9,6 +9,7 @@ interface PlatformResult {
   ok?: boolean;
   inserted?: number;
   timeout_ms?: number;
+  duration_ms?: number;
   error?: string;
 }
 
@@ -27,6 +28,9 @@ interface Health {
   timeouts: number;
   errors: number;
   inserted: number;
+  /** Durata reală măsurată pentru fiecare verificare, ca să vedem cine încetinește scanarea. */
+  durations: number[];
+  lastMs: number | null;
 }
 
 export default function KeywordRadarSourceHealth() {
@@ -61,8 +65,16 @@ export default function KeywordRadarSourceHealth() {
     for (const run of runs) {
       for (const detail of run.stats?.details || []) {
         for (const [platform, res] of Object.entries(detail.platforms || {})) {
-          const h = map.get(platform) || { platform, calls: 0, ok: 0, timeouts: 0, errors: 0, inserted: 0 };
+          const h: Health = map.get(platform) || {
+            platform, calls: 0, ok: 0, timeouts: 0, errors: 0, inserted: 0, durations: [], lastMs: null,
+          };
           h.calls += 1;
+          const ms = Number(res?.duration_ms || 0);
+          if (ms > 0) {
+            h.durations.push(ms);
+            // Rulările vin de la cea mai nouă la cea mai veche, deci prima valoare e cea recentă.
+            if (h.lastMs == null) h.lastMs = ms;
+          }
           if (res?.ok) {
             h.ok += 1;
             h.inserted += Number(res.inserted || 0);
@@ -136,14 +148,23 @@ export default function KeywordRadarSourceHealth() {
                 : rate > 0
                   ? "secondary"
                   : "outline";
+            const sec = (ms: number | null) => (ms ? `${(ms / 1000).toFixed(1)}s` : "—");
+            const avgMs = h.durations.length
+              ? Math.round(h.durations.reduce((s, v) => s + v, 0) / h.durations.length)
+              : null;
+            const maxMs = h.durations.length ? Math.max(...h.durations) : null;
             return (
               <div key={h.platform} className="p-2.5 flex flex-wrap items-center gap-2 text-xs">
                 <span className="font-medium min-w-[110px]">{h.platform}</span>
                 <Badge variant={tone as "destructive" | "secondary" | "outline"} className="text-[10px]">
                   {label}
                 </Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  timp mediu {sec(avgMs)}
+                </Badge>
                 <span className="text-muted-foreground">
                   {h.calls} verificări · {h.timeouts} depășiri de timp · {h.errors} erori · {h.inserted} anunțuri
+                  {" · "}ultima {sec(h.lastMs)} · cea mai lentă {sec(maxMs)}
                 </span>
                 {rate > 0 && (
                   <Button

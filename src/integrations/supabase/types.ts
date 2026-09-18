@@ -11244,6 +11244,26 @@ export type Database = {
       }
       get_cron_reconcile_secret: { Args: never; Returns: string }
       get_ga4_daily_sessions: { Args: { p_days?: number }; Returns: Json }
+      get_listing_price_report: {
+        Args: { p_days?: number; p_platform?: string }
+        Returns: {
+          contact_phone: string
+          current_price: number
+          first_price: number
+          first_seen_at: string
+          last_seen_at: string
+          listing_id: string
+          price_changes: number
+          price_sqm: number
+          property_type: string
+          rooms: number
+          source_platform: string
+          source_url: string
+          surface: number
+          title: string
+          zone: string
+        }[]
+      }
       get_owner_property_reviews: {
         Args: { p_property_id?: string }
         Returns: {
@@ -11442,6 +11462,24 @@ export type Database = {
           avg_price_sqm: number
           avg_price_this_month: number
           last_seen_at: string
+          platforms: number
+          property_type: string
+          samples: number
+          zone: string
+        }[]
+      }
+      get_zone_price_report_v2: {
+        Args: { p_days?: number; p_type?: string }
+        Returns: {
+          avg_price: number
+          avg_price_prev_month: number
+          avg_price_sqm: number
+          avg_price_this_month: number
+          avg_sqm_prev_month: number
+          avg_sqm_this_month: number
+          last_seen_at: string
+          max_price_sqm: number
+          min_price_sqm: number
           platforms: number
           property_type: string
           samples: number

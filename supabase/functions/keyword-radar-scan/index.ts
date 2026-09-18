@@ -44,10 +44,18 @@ const DEFAULT_MAX_PLATFORMS = 3;
 const DEFAULT_MAX_KEYWORD_MS = 12_000;
 // O sursă lentă este abandonată repede, nu blochează cuvântul.
 const DEFAULT_MAX_PLATFORM_MS = 8_000;
-// Adaptiv: o sursă primește cel mult 2x timpul ei mediu istoric (min 4s).
-const adaptiveTimeout = (avgMs: number | undefined, cap: number) => {
+// Peste acest prag o sursă e considerată „lentă" și primește mai puțin timp,
+// pentru că oricum depășește bugetul și blochează restul scanării.
+const SLOW_SOURCE_MS = 6_000;
+// Adaptiv:
+//  - sursă rapidă (medie < 6s): 1.5x media ei, minim 3.5s;
+//  - sursă lentă (medie >= 6s): doar 5s — dacă nu răspunde, trecem imediat mai departe.
+const adaptiveTimeout = (avgMs: number | undefined, cap: number, timeoutStreak = 0) => {
   if (!avgMs || avgMs <= 0) return cap;
-  return Math.max(4_000, Math.min(cap, Math.round(avgMs * 2)));
+  if (avgMs >= SLOW_SOURCE_MS) return Math.min(cap, 5_000);
+  const base = Math.max(3_500, Math.min(cap, Math.round(avgMs * 1.5)));
+  // O sursă care a dat timeout recent primește și mai puțin timp.
+  return timeoutStreak > 0 ? Math.max(3_000, Math.round(base * 0.7)) : base;
 };
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
@@ -275,7 +283,11 @@ Deno.serve(async (req) => {
         const platformTimeoutMs = Math.max(
           3_000,
           Math.min(
-            adaptiveTimeout(pstats[platform]?.avg_ms, maxPlatformMs),
+            adaptiveTimeout(
+              pstats[platform]?.avg_ms,
+              maxPlatformMs,
+              Number(pstats[platform]?.timeout_streak) || 0,
+            ),
             keywordBudgetMs - (Date.now() - keywordStartedAt),
           ),
         );
@@ -366,17 +378,31 @@ Deno.serve(async (req) => {
         } catch (e) {
           const timedOut = String(e).includes("Timeout") || String(e).includes("abort");
           const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
+          const failedAfter = Date.now() - platformStartedAt;
+          const prevCallsF = Number(cur.calls) || 0;
+          // Durata reală se măsoară și când sursa nu răspunde, ca panoul „surse lente"
+          // să arate timpul adevărat, nu doar numărul de depășiri.
+          const avgF = Math.round(
+            ((Number(cur.avg_ms) || failedAfter) * Math.min(prevCallsF, 9) + failedAfter) /
+              (Math.min(prevCallsF, 9) + 1),
+          );
           if (timedOut) {
             stats.timeouts = (stats.timeouts || 0) + 1;
-            kwDetail.platforms[platform] = { ok: false, timeout_ms: platformTimeoutMs };
+            kwDetail.platforms[platform] = {
+              ok: false,
+              timeout_ms: platformTimeoutMs,
+              duration_ms: failedAfter,
+            };
             pstats[platform] = {
               ...cur,
-              calls: (Number(cur.calls) || 0) + 1,
+              calls: prevCallsF + 1,
+              avg_ms: avgF,
               timeout_streak: (Number(cur.timeout_streak) || 0) + 1,
             };
           } else {
             stats.errors++;
-            kwDetail.platforms[platform] = { ok: false, error: String(e) };
+            kwDetail.platforms[platform] = { ok: false, error: String(e), duration_ms: failedAfter };
+            pstats[platform] = { ...cur, calls: prevCallsF + 1, avg_ms: avgF };
           }
           kwErrors.push(`${platform}: ${timedOut ? `timeout ${platformTimeoutMs}ms` : String(e).slice(0, 140)}`);
         }

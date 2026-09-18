@@ -21,6 +21,10 @@ interface ZoneRow {
   avg_price_sqm: number | null;
   avg_price_this_month: number | null;
   avg_price_prev_month: number | null;
+  avg_sqm_this_month: number | null;
+  avg_sqm_prev_month: number | null;
+  min_price_sqm: number | null;
+  max_price_sqm: number | null;
   platforms: number;
   last_seen_at: string | null;
 }
@@ -50,7 +54,7 @@ export default function ZonePriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_zone_price_report", {
+    const { data, error } = await supabase.rpc("get_zone_price_report_v2", {
       p_days: Number(days),
       p_type: type === "__all__" ? null : type,
     });
@@ -69,13 +73,20 @@ export default function ZonePriceReport() {
   const exportCsv = () => {
     downloadCsv(
       csvFileName("preturi-pe-zona"),
-      ["Zonă", "Tip", "Anunțuri", "Preț mediu", "Preț/mp", "Luna curentă", "Luna precedentă", "Variație %", "Platforme"],
+      ["Zonă", "Tip", "Anunțuri", "Preț mediu", "Preț/mp", "Preț/mp luna curentă",
+        "Preț/mp luna precedentă", "Variație preț/mp %", "Min preț/mp", "Max preț/mp",
+        "Luna curentă", "Luna precedentă", "Variație %", "Platforme"],
       rows.map((r) => [
         r.zone,
         r.property_type,
         r.samples,
         r.avg_price ?? "",
         r.avg_price_sqm ?? "",
+        r.avg_sqm_this_month ?? "",
+        r.avg_sqm_prev_month ?? "",
+        variation(r.avg_sqm_this_month, r.avg_sqm_prev_month)?.toFixed(1) ?? "",
+        r.min_price_sqm ?? "",
+        r.max_price_sqm ?? "",
         r.avg_price_this_month ?? "",
         r.avg_price_prev_month ?? "",
         variation(r.avg_price_this_month, r.avg_price_prev_month)?.toFixed(1) ?? "",
@@ -133,6 +144,10 @@ export default function ZonePriceReport() {
                 <TableHead className="text-right">Anunțuri</TableHead>
                 <TableHead className="text-right">Preț mediu</TableHead>
                 <TableHead className="text-right">Preț/mp</TableHead>
+                <TableHead className="text-right">Preț/mp luna asta</TableHead>
+                <TableHead className="text-right">Preț/mp luna trecută</TableHead>
+                <TableHead className="text-right">Variație preț/mp</TableHead>
+                <TableHead className="text-right">Interval preț/mp</TableHead>
                 <TableHead className="text-right">Luna curentă</TableHead>
                 <TableHead className="text-right">Luna precedentă</TableHead>
                 <TableHead className="text-right">Variație</TableHead>
@@ -141,14 +156,29 @@ export default function ZonePriceReport() {
             <TableBody>
               {rows.map((r) => {
                 const v = variation(r.avg_price_this_month, r.avg_price_prev_month);
+                const vs = variation(r.avg_sqm_this_month, r.avg_sqm_prev_month);
                 const Icon = v == null ? Minus : v > 0 ? TrendingUp : TrendingDown;
+                const IconSqm = vs == null ? Minus : vs > 0 ? TrendingUp : TrendingDown;
                 return (
                   <TableRow key={`${r.zone}-${r.property_type}`}>
                     <TableCell className="font-medium">{r.zone}</TableCell>
                     <TableCell className="capitalize">{r.property_type}</TableCell>
                     <TableCell className="text-right">{r.samples}</TableCell>
                     <TableCell className="text-right">{eur(r.avg_price)}</TableCell>
-                    <TableCell className="text-right">{eur(r.avg_price_sqm)}</TableCell>
+                    <TableCell className="text-right font-medium">{eur(r.avg_price_sqm)}</TableCell>
+                    <TableCell className="text-right">{eur(r.avg_sqm_this_month)}</TableCell>
+                    <TableCell className="text-right">{eur(r.avg_sqm_prev_month)}</TableCell>
+                    <TableCell className="text-right">
+                      <span className="inline-flex items-center gap-1">
+                        <IconSqm className="h-3.5 w-3.5" />
+                        {vs == null ? "—" : `${vs > 0 ? "+" : ""}${vs.toFixed(1)}%`}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right text-xs text-muted-foreground">
+                      {r.min_price_sqm && r.max_price_sqm
+                        ? `${eur(r.min_price_sqm)} – ${eur(r.max_price_sqm)}`
+                        : "—"}
+                    </TableCell>
                     <TableCell className="text-right">{eur(r.avg_price_this_month)}</TableCell>
                     <TableCell className="text-right">{eur(r.avg_price_prev_month)}</TableCell>
                     <TableCell className="text-right">
@@ -162,7 +192,7 @@ export default function ZonePriceReport() {
               })}
               {!rows.length && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={12} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun preț înregistrat în perioada selectată."}
                   </TableCell>
                 </TableRow>

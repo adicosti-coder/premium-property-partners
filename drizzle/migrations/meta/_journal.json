@@ -281,6 +281,13 @@
       "when": 1789740882230,
       "tag": "0039_price_history_sanity_bounds",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789741561436,
+      "tag": "0040_zone_sqm_trend_and_listing_report_v2",
+      "breakpoints": true
     }
   ]
 }
