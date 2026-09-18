@@ -34,6 +34,10 @@ interface Row {
   site_published_at: string | null;
   site_price: number | null;
   site_slug: string | null;
+  /** Evoluția prețului de pe realtrust.ro, din istoricul de preț. */
+  site_first_price: number | null;
+  site_price_changes: number | null;
+  site_price_updated_at: string | null;
 }
 
 const PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
@@ -53,7 +57,7 @@ export default function ListingPriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_listing_price_report_v2", {
+    const { data, error } = await supabase.rpc("get_listing_price_report_v3", {
       p_days: Number(days),
       p_platform: platform === "__all__" ? null : platform,
     });
@@ -83,7 +87,8 @@ export default function ListingPriceReport() {
       csvFileName("raport-pe-anunt"),
       ["Data apariției", "Ultima vedere", "Titlu", "Zonă", "Tip", "Camere", "mp", "Platformă",
         "Preț inițial", "Preț actual", "Preț/mp", "Modificări preț", "Telefon", "Link",
-        "Publicat pe realtrust.ro", "Preț realtrust.ro", "Pagina realtrust.ro"],
+        "Publicat pe realtrust.ro", "Preț realtrust.ro", "Preț inițial realtrust.ro",
+        "Modificări preț realtrust.ro", "Ultima actualizare realtrust.ro", "Pagina realtrust.ro"],
       filtered.map((r) => [
         dateRo(r.first_seen_at),
         dateRo(r.last_seen_at),
@@ -101,6 +106,9 @@ export default function ListingPriceReport() {
         r.source_url || "",
         dateRo(r.site_published_at),
         r.site_price ?? "",
+        r.site_first_price ?? "",
+        r.site_price_changes ?? 0,
+        dateRo(r.site_price_updated_at),
         r.site_slug ? `https://realtrust.ro/proprietate/${r.site_slug}` : "",
       ]),
     );
