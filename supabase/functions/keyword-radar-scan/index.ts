@@ -378,17 +378,31 @@ Deno.serve(async (req) => {
         } catch (e) {
           const timedOut = String(e).includes("Timeout") || String(e).includes("abort");
           const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
+          const failedAfter = Date.now() - platformStartedAt;
+          const prevCallsF = Number(cur.calls) || 0;
+          // Durata reală se măsoară și când sursa nu răspunde, ca panoul „surse lente"
+          // să arate timpul adevărat, nu doar numărul de depășiri.
+          const avgF = Math.round(
+            ((Number(cur.avg_ms) || failedAfter) * Math.min(prevCallsF, 9) + failedAfter) /
+              (Math.min(prevCallsF, 9) + 1),
+          );
           if (timedOut) {
             stats.timeouts = (stats.timeouts || 0) + 1;
-            kwDetail.platforms[platform] = { ok: false, timeout_ms: platformTimeoutMs };
+            kwDetail.platforms[platform] = {
+              ok: false,
+              timeout_ms: platformTimeoutMs,
+              duration_ms: failedAfter,
+            };
             pstats[platform] = {
               ...cur,
-              calls: (Number(cur.calls) || 0) + 1,
+              calls: prevCallsF + 1,
+              avg_ms: avgF,
               timeout_streak: (Number(cur.timeout_streak) || 0) + 1,
             };
           } else {
             stats.errors++;
-            kwDetail.platforms[platform] = { ok: false, error: String(e) };
+            kwDetail.platforms[platform] = { ok: false, error: String(e), duration_ms: failedAfter };
+            pstats[platform] = { ...cur, calls: prevCallsF + 1, avg_ms: avgF };
           }
           kwErrors.push(`${platform}: ${timedOut ? `timeout ${platformTimeoutMs}ms` : String(e).slice(0, 140)}`);
         }
