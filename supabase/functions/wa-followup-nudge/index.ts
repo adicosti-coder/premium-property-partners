@@ -177,6 +177,8 @@ Deno.serve(async (req) => {
     queued,
     dry_run: dryRun,
     template,
+    template_configured: configuredTemplate,
+    template_fallback: resolved.fallback,
     after_hours: afterHours,
     results: results.slice(0, 50),
   });
