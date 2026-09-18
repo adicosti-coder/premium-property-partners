@@ -27,6 +27,10 @@ interface ZoneRow {
   max_price_sqm: number | null;
   platforms: number;
   last_seen_at: string | null;
+  /** Anunțurile publicate pe realtrust.ro în aceeași zonă. */
+  site_published: number | null;
+  site_avg_price: number | null;
+  site_avg_price_sqm: number | null;
 }
 
 const TYPES = [
@@ -54,7 +58,7 @@ export default function ZonePriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_zone_price_report_v2", {
+    const { data, error } = await supabase.rpc("get_zone_price_report_v3", {
       p_days: Number(days),
       p_type: type === "__all__" ? null : type,
     });
@@ -75,7 +79,8 @@ export default function ZonePriceReport() {
       csvFileName("preturi-pe-zona"),
       ["Zonă", "Tip", "Anunțuri", "Preț mediu", "Preț/mp", "Preț/mp luna curentă",
         "Preț/mp luna precedentă", "Variație preț/mp %", "Min preț/mp", "Max preț/mp",
-        "Luna curentă", "Luna precedentă", "Variație %", "Platforme"],
+        "Luna curentă", "Luna precedentă", "Variație %", "Platforme",
+        "Publicate realtrust.ro", "Preț mediu realtrust.ro", "Preț/mp realtrust.ro"],
       rows.map((r) => [
         r.zone,
         r.property_type,
@@ -91,6 +96,9 @@ export default function ZonePriceReport() {
         r.avg_price_prev_month ?? "",
         variation(r.avg_price_this_month, r.avg_price_prev_month)?.toFixed(1) ?? "",
         r.platforms,
+        r.site_published ?? 0,
+        r.site_avg_price ?? "",
+        r.site_avg_price_sqm ?? "",
       ]),
     );
   };
@@ -151,6 +159,8 @@ export default function ZonePriceReport() {
                 <TableHead className="text-right">Luna curentă</TableHead>
                 <TableHead className="text-right">Luna precedentă</TableHead>
                 <TableHead className="text-right">Variație</TableHead>
+                <TableHead className="text-right">Pe realtrust.ro</TableHead>
+                <TableHead className="text-right">Preț/mp realtrust.ro</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -187,6 +197,12 @@ export default function ZonePriceReport() {
                         {v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(1)}%`}
                       </span>
                     </TableCell>
+                    <TableCell className="text-right">
+                      {r.site_published
+                        ? `${r.site_published} · ${eur(r.site_avg_price)}`
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-right">{eur(r.site_avg_price_sqm)}</TableCell>
                   </TableRow>
                 );
               })}

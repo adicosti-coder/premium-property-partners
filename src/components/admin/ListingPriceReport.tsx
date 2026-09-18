@@ -30,6 +30,10 @@ interface Row {
   price_changes: number | null;
   price_sqm: number | null;
   contact_phone: string | null;
+  /** Preluarea pe realtrust.ro: data publicării, prețul publicat și adresa paginii. */
+  site_published_at: string | null;
+  site_price: number | null;
+  site_slug: string | null;
 }
 
 const PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
@@ -49,7 +53,7 @@ export default function ListingPriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_listing_price_report", {
+    const { data, error } = await supabase.rpc("get_listing_price_report_v2", {
       p_days: Number(days),
       p_platform: platform === "__all__" ? null : platform,
     });
@@ -78,7 +82,8 @@ export default function ListingPriceReport() {
     downloadCsv(
       csvFileName("raport-pe-anunt"),
       ["Data apariției", "Ultima vedere", "Titlu", "Zonă", "Tip", "Camere", "mp", "Platformă",
-        "Preț inițial", "Preț actual", "Preț/mp", "Modificări preț", "Telefon", "Link"],
+        "Preț inițial", "Preț actual", "Preț/mp", "Modificări preț", "Telefon", "Link",
+        "Publicat pe realtrust.ro", "Preț realtrust.ro", "Pagina realtrust.ro"],
       filtered.map((r) => [
         dateRo(r.first_seen_at),
         dateRo(r.last_seen_at),
@@ -94,6 +99,9 @@ export default function ListingPriceReport() {
         r.price_changes ?? 0,
         r.contact_phone || "",
         r.source_url || "",
+        dateRo(r.site_published_at),
+        r.site_price ?? "",
+        r.site_slug ? `https://realtrust.ro/proprietate/${r.site_slug}` : "",
       ]),
     );
   };
@@ -158,6 +166,7 @@ export default function ListingPriceReport() {
                 <TableHead className="text-right">Preț/mp</TableHead>
                 <TableHead className="text-right">Evoluție</TableHead>
                 <TableHead>Link</TableHead>
+                <TableHead>Pe realtrust.ro</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -200,12 +209,31 @@ export default function ListingPriceReport() {
                         </a>
                       ) : "—"}
                     </TableCell>
+                    <TableCell className="text-xs">
+                      {r.site_published_at ? (
+                        <div className="space-y-0.5">
+                          <p className="whitespace-nowrap">{dateRo(r.site_published_at)}</p>
+                          <p className="text-muted-foreground">{eur(r.site_price)}</p>
+                          {r.site_slug && (
+                            <a
+                              href={`/proprietate/${r.site_slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 underline"
+                              aria-label={`Deschide pagina de pe realtrust.ro pentru ${r.title || "anunț"}`}
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" /> Vezi pagina
+                            </a>
+                          )}
+                        </div>
+                      ) : "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
               {!filtered.length && (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={9} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun anunț în perioada selectată."}
                   </TableCell>
                 </TableRow>

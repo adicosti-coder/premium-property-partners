@@ -22,6 +22,11 @@ interface ReportRow {
   avg_sqm_this_month: number | null;
   avg_sqm_prev_month: number | null;
   last_found_at: string | null;
+  /** Anunțuri preluate pe realtrust.ro din platforma respectivă. */
+  site_published: number | null;
+  site_avg_price: number | null;
+  site_avg_price_sqm: number | null;
+  site_last_published_at: string | null;
 }
 
 interface PlatformResult {
@@ -78,7 +83,7 @@ export default function PlatformReportPanel() {
     setLoading(true);
     try {
       const [report, runsRes] = await Promise.all([
-        supabase.rpc("get_platform_scan_report_v2", { p_days: Number(days) }),
+        supabase.rpc("get_platform_scan_report_v3", { p_days: Number(days) }),
         supabase
           .from("keyword_radar_runs")
           .select("id,started_at,duration_ms,stats")
@@ -158,7 +163,8 @@ export default function PlatformReportPanel() {
       csvFileName("raport-platforme"),
       ["Platformă", "Anunțuri", "Cu telefon", "Duplicate", "Agenții", "Date incomplete", "Preț mediu",
         "Luna curentă", "Luna trecută", "Variație %", "Preț/mp", "Preț/mp luna curentă",
-        "Preț/mp luna trecută", "Variație preț/mp %", "Ultimul anunț"],
+        "Preț/mp luna trecută", "Variație preț/mp %", "Ultimul anunț",
+        "Publicate realtrust.ro", "Preț mediu realtrust.ro", "Preț/mp realtrust.ro", "Ultima publicare"],
       rows.map((r) => [
         r.source_platform,
         r.found_period,
@@ -175,6 +181,10 @@ export default function PlatformReportPanel() {
         r.avg_sqm_prev_month,
         variation(r.avg_sqm_this_month, r.avg_sqm_prev_month),
         r.last_found_at,
+        r.site_published ?? 0,
+        r.site_avg_price ?? "",
+        r.site_avg_price_sqm ?? "",
+        r.site_last_published_at ?? "",
       ]),
     );
   };
@@ -248,6 +258,12 @@ export default function PlatformReportPanel() {
                       luna curentă {fmtPrice(r.avg_price_this_month)} · luna trecută {fmtPrice(r.avg_price_prev_month)} ·{" "}
                       preț/mp {fmtPrice(r.avg_sqm_this_month)} vs {fmtPrice(r.avg_sqm_prev_month)} ·{" "}
                       {r.with_phone} cu telefon · ultimul anunț {fmtDate(r.last_found_at)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      pe realtrust.ro: {r.site_published ?? 0} anunțuri preluate
+                      {r.site_avg_price ? ` · preț mediu ${fmtPrice(r.site_avg_price)}` : ""}
+                      {r.site_avg_price_sqm ? ` · ${fmtPrice(r.site_avg_price_sqm)}/mp` : ""}
+                      {r.site_last_published_at ? ` · ultima publicare ${fmtDate(r.site_last_published_at)}` : ""}
                     </p>
                   </div>
                 );
