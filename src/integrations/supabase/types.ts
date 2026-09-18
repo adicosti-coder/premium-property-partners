@@ -11930,6 +11930,7 @@ export type Database = {
         Args: { _reason: string }
         Returns: boolean
       }
+      zone_norm: { Args: { p: string }; Returns: string }
     }
     Enums: {
       agency_keyword_type: "hard" | "soft" | "owner"
