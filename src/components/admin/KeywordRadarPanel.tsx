@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Radar, Loader2, Plus, Trash2, Globe, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import KeywordRadarLiveReport from "./KeywordRadarLiveReport";
-import KeywordRadarNewListings from "./KeywordRadarNewListings";
+import KeywordRadarNewListings, { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 
 interface SourceRow {
   id: string;
@@ -78,6 +78,11 @@ export default function KeywordRadarPanel() {
   const [searchResults, setSearchResults] = useState<AdHocListing[] | null>(null);
   const [searchSummary, setSearchSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+  // Căutare pe zonă + caracteristică
+  const [zsZone, setZsZone] = useState<string>(ZONE_OPTIONS[0]);
+  const [zsPlatform, setZsPlatform] = useState<string>("OLX");
+  const [zsFeature, setZsFeature] = useState("2 camere");
+  const [zsSearching, setZsSearching] = useState(false);
 
   const loadSources = useCallback(async () => {
     setLoading(true);
