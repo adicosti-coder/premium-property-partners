@@ -38,7 +38,22 @@ interface Row {
   site_first_price: number | null;
   site_price_changes: number | null;
   site_price_updated_at: string | null;
+  /** Cât timp a stat pe site și când a fost scos (dezactivat). */
+  site_is_active: boolean | null;
+  site_delisted_at: string | null;
+  site_days_online: number | null;
+  /** Starea acordului din Cozi Aprobare, pentru comparație. */
+  consent_status: string | null;
+  consent_requested_at: string | null;
+  consent_granted_at: string | null;
 }
+
+const CONSENT_LABEL: Record<string, string> = {
+  requested: "cerere trimisă",
+  granted: "acord primit",
+  revoked: "acord retras",
+  published: "publicat",
+};
 
 const PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
 
