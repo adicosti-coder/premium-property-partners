@@ -15,6 +15,7 @@ import PlatformConfigPanel from "./PlatformConfigPanel";
 import ZonePriceReport from "./ZonePriceReport";
 import MyListingsCompare from "./MyListingsCompare";
 import ListingPriceReport from "./ListingPriceReport";
+import SiteVsMarketReport from "./SiteVsMarketReport";
 
 interface SourceRow {
   id: string;
@@ -355,6 +356,8 @@ export default function KeywordRadarPanel() {
         <ZonePriceReport />
 
         <ListingPriceReport />
+
+        <SiteVsMarketReport />
 
         <PlatformConfigPanel />
 
