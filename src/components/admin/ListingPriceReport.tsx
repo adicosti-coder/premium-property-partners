@@ -103,7 +103,9 @@ export default function ListingPriceReport() {
       ["Data apariției", "Ultima vedere", "Titlu", "Zonă", "Tip", "Camere", "mp", "Platformă",
         "Preț inițial", "Preț actual", "Preț/mp", "Modificări preț", "Telefon", "Link",
         "Publicat pe realtrust.ro", "Preț realtrust.ro", "Preț inițial realtrust.ro",
-        "Modificări preț realtrust.ro", "Ultima actualizare realtrust.ro", "Pagina realtrust.ro"],
+        "Modificări preț realtrust.ro", "Ultima actualizare realtrust.ro", "Pagina realtrust.ro",
+        "Zile pe realtrust.ro", "Activ pe site", "Scos de pe site",
+        "Stare acord", "Acord cerut", "Acord primit"],
       filtered.map((r) => [
         dateRo(r.first_seen_at),
         dateRo(r.last_seen_at),
@@ -125,6 +127,12 @@ export default function ListingPriceReport() {
         r.site_price_changes ?? 0,
         dateRo(r.site_price_updated_at),
         r.site_slug ? `https://realtrust.ro/proprietate/${r.site_slug}` : "",
+        r.site_days_online ?? "",
+        r.site_published_at ? (r.site_is_active ? "da" : "nu") : "",
+        dateRo(r.site_delisted_at),
+        r.consent_status ? (CONSENT_LABEL[r.consent_status] || r.consent_status) : "",
+        dateRo(r.consent_requested_at),
+        dateRo(r.consent_granted_at),
       ]),
     );
   };
