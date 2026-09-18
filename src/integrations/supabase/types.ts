@@ -11359,6 +11359,32 @@ export type Database = {
           zone: string
         }[]
       }
+      get_listing_price_report_v3: {
+        Args: { p_days?: number; p_platform?: string }
+        Returns: {
+          contact_phone: string
+          current_price: number
+          first_price: number
+          first_seen_at: string
+          last_seen_at: string
+          listing_id: string
+          price_changes: number
+          price_sqm: number
+          property_type: string
+          rooms: number
+          site_first_price: number
+          site_price: number
+          site_price_changes: number
+          site_price_updated_at: string
+          site_published_at: string
+          site_slug: string
+          source_platform: string
+          source_url: string
+          surface: number
+          title: string
+          zone: string
+        }[]
+      }
       get_owner_property_reviews: {
         Args: { p_property_id?: string }
         Returns: {
@@ -11657,6 +11683,32 @@ export type Database = {
           zone: string
         }[]
       }
+      get_zone_price_report_v4: {
+        Args: { p_days?: number; p_type?: string }
+        Returns: {
+          avg_price: number
+          avg_price_prev_month: number
+          avg_price_sqm: number
+          avg_price_this_month: number
+          avg_sqm_prev_month: number
+          avg_sqm_this_month: number
+          last_seen_at: string
+          max_price_sqm: number
+          min_price_sqm: number
+          platforms: number
+          property_type: string
+          samples: number
+          site_avg_price: number
+          site_avg_price_prev_month: number
+          site_avg_price_sqm: number
+          site_avg_price_this_month: number
+          site_avg_sqm_prev_month: number
+          site_avg_sqm_this_month: number
+          site_last_published_at: string
+          site_published: number
+          zone: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -11878,6 +11930,7 @@ export type Database = {
         Args: { _reason: string }
         Returns: boolean
       }
+      zone_norm: { Args: { p: string }; Returns: string }
     }
     Enums: {
       agency_keyword_type: "hard" | "soft" | "owner"

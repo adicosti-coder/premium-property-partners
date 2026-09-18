@@ -316,6 +316,27 @@
       "when": 1789748992417,
       "tag": "0044_site_price_history_and_site_vs_market",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1789749707519,
+      "tag": "0045_zone_and_listing_reports_with_site_prices",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1789749871281,
+      "tag": "0046_zone_report_site_zone_matching",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1789749930082,
+      "tag": "0047_zone_report_site_price_bounds",
+      "breakpoints": true
     }
   ]
 }

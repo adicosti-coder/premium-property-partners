@@ -31,6 +31,12 @@ interface ZoneRow {
   site_published: number | null;
   site_avg_price: number | null;
   site_avg_price_sqm: number | null;
+  /** Variația lunară a prețurilor publicate pe realtrust.ro, din istoricul de preț. */
+  site_avg_price_this_month: number | null;
+  site_avg_price_prev_month: number | null;
+  site_avg_sqm_this_month: number | null;
+  site_avg_sqm_prev_month: number | null;
+  site_last_published_at: string | null;
 }
 
 const TYPES = [
@@ -58,7 +64,7 @@ export default function ZonePriceReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_zone_price_report_v3", {
+    const { data, error } = await supabase.rpc("get_zone_price_report_v4", {
       p_days: Number(days),
       p_type: type === "__all__" ? null : type,
     });
@@ -80,7 +86,11 @@ export default function ZonePriceReport() {
       ["Zonă", "Tip", "Anunțuri", "Preț mediu", "Preț/mp", "Preț/mp luna curentă",
         "Preț/mp luna precedentă", "Variație preț/mp %", "Min preț/mp", "Max preț/mp",
         "Luna curentă", "Luna precedentă", "Variație %", "Platforme",
-        "Publicate realtrust.ro", "Preț mediu realtrust.ro", "Preț/mp realtrust.ro"],
+        "Publicate realtrust.ro", "Preț mediu realtrust.ro", "Preț/mp realtrust.ro",
+        "Preț realtrust.ro luna curentă", "Preț realtrust.ro luna precedentă",
+        "Variație realtrust.ro %", "€/mp realtrust.ro luna curentă",
+        "€/mp realtrust.ro luna precedentă", "Variație €/mp realtrust.ro %",
+        "Ultima publicare realtrust.ro"],
       rows.map((r) => [
         r.zone,
         r.property_type,
@@ -99,6 +109,13 @@ export default function ZonePriceReport() {
         r.site_published ?? 0,
         r.site_avg_price ?? "",
         r.site_avg_price_sqm ?? "",
+        r.site_avg_price_this_month ?? "",
+        r.site_avg_price_prev_month ?? "",
+        variation(r.site_avg_price_this_month, r.site_avg_price_prev_month)?.toFixed(1) ?? "",
+        r.site_avg_sqm_this_month ?? "",
+        r.site_avg_sqm_prev_month ?? "",
+        variation(r.site_avg_sqm_this_month, r.site_avg_sqm_prev_month)?.toFixed(1) ?? "",
+        r.site_last_published_at ?? "",
       ]),
     );
   };
@@ -161,6 +178,8 @@ export default function ZonePriceReport() {
                 <TableHead className="text-right">Variație</TableHead>
                 <TableHead className="text-right">Pe realtrust.ro</TableHead>
                 <TableHead className="text-right">Preț/mp realtrust.ro</TableHead>
+                <TableHead className="text-right">Variație realtrust.ro</TableHead>
+                <TableHead className="text-right">Ultima publicare</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -203,12 +222,29 @@ export default function ZonePriceReport() {
                         : "—"}
                     </TableCell>
                     <TableCell className="text-right">{eur(r.site_avg_price_sqm)}</TableCell>
+                    <TableCell className="text-right">
+                      {(() => {
+                        const vSite = variation(r.site_avg_price_this_month, r.site_avg_price_prev_month);
+                        const IconSite = vSite == null ? Minus : vSite > 0 ? TrendingUp : TrendingDown;
+                        return (
+                          <span className="inline-flex items-center gap-1">
+                            <IconSite className="h-3.5 w-3.5" />
+                            {vSite == null ? "—" : `${vSite > 0 ? "+" : ""}${vSite.toFixed(1)}%`}
+                          </span>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-right text-xs text-muted-foreground">
+                      {r.site_last_published_at
+                        ? new Date(r.site_last_published_at).toLocaleDateString("ro-RO")
+                        : "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
               {!rows.length && (
                 <TableRow>
-                  <TableCell colSpan={12} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={16} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun preț înregistrat în perioada selectată."}
                   </TableCell>
                 </TableRow>
