@@ -564,7 +564,11 @@ export default function MyListingsCompare() {
                         size="sm"
                         variant="secondary"
                         disabled={publishingSite === r.id}
-                        onClick={() => void publishOnSite(r)}
+                        onClick={() =>
+                          void publishOnSite(r).then((url) => {
+                            if (url) window.open(url, "_blank", "noopener,noreferrer");
+                          })
+                        }
                       >
                         {publishingSite === r.id
                           ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
