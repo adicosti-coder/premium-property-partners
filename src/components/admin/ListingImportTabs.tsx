@@ -12,6 +12,7 @@ import PipelineReconciliationPanel from "./PipelineReconciliationPanel";
 import { ListingImportHealthPanel } from "./ListingImportHealthPanel";
 import { PerformanceROIPanel } from "./PerformanceROIPanel";
 import GrowthEngineDashboard from "./GrowthEngineDashboard";
+import WaPublishConsents from "./WaPublishConsents";
 
 const VALID_SUBTABS = ["manual", "radar", "pm-leads", "auto-publish", "sandbox", "performance", "growth"] as const;
 
