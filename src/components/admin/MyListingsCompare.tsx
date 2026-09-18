@@ -437,7 +437,12 @@ export default function MyListingsCompare() {
             return (
               <div key={r.id} className="rounded-lg border border-border/50 p-3 space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
+                  <div className="flex items-start gap-3">
+                    {r.image_url && (
+                      <img src={r.image_url} alt={`Imagine pentru ${r.title}`}
+                        className="h-16 w-16 rounded-md object-cover" loading="lazy" />
+                    )}
+                    <div>
                     <p className="font-medium">{r.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {[r.zone, r.property_type, r.rooms ? `${r.rooms} cam` : null, r.size ? `${r.size} mp` : null]
