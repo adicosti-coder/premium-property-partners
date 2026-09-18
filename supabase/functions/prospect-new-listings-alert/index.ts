@@ -131,10 +131,21 @@ Deno.serve(async (req) => {
       .select("user_id")
       .eq("role", "admin");
 
+    // Preview cu preț + link pentru primele anunțuri
+    const preview = rows.slice(0, 3).map((r) => {
+      const bits = [
+        r.source_platform || "Necunoscut",
+        r.zone || null,
+        r.rooms ? `${r.rooms} cam` : null,
+        r.price ? `${Number(r.price).toLocaleString("ro-RO")} €` : "preț nespecificat",
+      ].filter(Boolean).join(" · ");
+      return r.source_url ? `${bits} — ${r.source_url}` : bits;
+    }).join("\n");
+
     const notifications = (admins || []).map((a: { user_id: string }) => ({
       user_id: a.user_id,
       title: `${rows.length} anunțuri noi găsite`,
-      message: platformSummary,
+      message: `${platformSummary}\n${preview}${rows.length > 3 ? `\n+ ${rows.length - 3} alte anunțuri` : ""}`,
       type: "info",
       action_url: "/admin?tab=listing-import",
       action_label: "Vezi anunțurile",
