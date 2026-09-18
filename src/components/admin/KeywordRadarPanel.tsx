@@ -354,6 +354,8 @@ export default function KeywordRadarPanel() {
 
         <ZonePriceReport />
 
+        <ListingPriceReport />
+
         <PlatformConfigPanel />
 
         <MyListingsCompare />
