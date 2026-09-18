@@ -191,7 +191,7 @@ export default function KeywordEfficiencyReport() {
   const exportCsv = () => {
     downloadCsv(
       csvFileName("raport-cuvinte-cheie"),
-      ["Cuvânt cheie", "Platformă", "Activ", "Anunțuri", "Cu telefon", "Preț mediu", "Ultimul anunț", "Scanări reușite", "Scanări fără rezultat", "Zero consecutiv", "Timp mediu sursă (ms)", "Cea mai lentă sursă", "Timp cea mai lentă (ms)", "Depășiri de timp", "Surse sărite"],
+      ["Cuvânt cheie", "Platformă", "Activ", "Anunțuri", "Cu telefon", "Preț mediu", "Ultimul anunț", "Scanări reușite", "Scanări fără rezultat", "Zero consecutiv", "Timp mediu sursă (ms)", "Cea mai lentă sursă", "Timp cea mai lentă (ms)", "Depășiri de timp", "Surse sărite", "Zonă principală", "Preț mediu zonă luna asta", "Preț mediu zonă luna trecută", "Variație lunară %", "€/mp zonă", "Anunțuri realtrust.ro în zonă", "Preț mediu realtrust.ro"],
       filtered.map((r) => {
         const t = timings[r.keyword];
         return [
@@ -210,6 +210,13 @@ export default function KeywordEfficiencyReport() {
           t?.slowestMs ?? "",
           t?.timeouts ?? "",
           t?.skipped ?? "",
+          r.top_zone ?? "",
+          r.zone_avg_price ?? "",
+          r.zone_avg_price_prev ?? "",
+          r.zone_variation_pct ?? "",
+          r.zone_avg_sqm ?? "",
+          r.site_zone_count ?? 0,
+          r.site_zone_avg_price ?? "",
         ];
       }),
     );
