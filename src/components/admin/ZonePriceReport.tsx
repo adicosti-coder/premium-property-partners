@@ -178,6 +178,8 @@ export default function ZonePriceReport() {
                 <TableHead className="text-right">Variație</TableHead>
                 <TableHead className="text-right">Pe realtrust.ro</TableHead>
                 <TableHead className="text-right">Preț/mp realtrust.ro</TableHead>
+                <TableHead className="text-right">Variație realtrust.ro</TableHead>
+                <TableHead className="text-right">Ultima publicare</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -220,6 +222,23 @@ export default function ZonePriceReport() {
                         : "—"}
                     </TableCell>
                     <TableCell className="text-right">{eur(r.site_avg_price_sqm)}</TableCell>
+                    <TableCell className="text-right">
+                      {(() => {
+                        const vSite = variation(r.site_avg_price_this_month, r.site_avg_price_prev_month);
+                        const IconSite = vSite == null ? Minus : vSite > 0 ? TrendingUp : TrendingDown;
+                        return (
+                          <span className="inline-flex items-center gap-1">
+                            <IconSite className="h-3.5 w-3.5" />
+                            {vSite == null ? "—" : `${vSite > 0 ? "+" : ""}${vSite.toFixed(1)}%`}
+                          </span>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-right text-xs text-muted-foreground">
+                      {r.site_last_published_at
+                        ? new Date(r.site_last_published_at).toLocaleDateString("ro-RO")
+                        : "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
