@@ -7,6 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isExpressOptOut } from "../_shared/dncPolicy.ts";
 import { publishConsentRequestText } from "../_shared/waAutoReply.ts";
+import { resolveApprovedTemplate } from "../_shared/waPreferredTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,18 +34,27 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+
+  // Apel intern (cron / declanșare din baza de date) cu secretul de cron; altfel admin autentificat.
+  const cronHeader = req.headers.get("x-cron-secret") || "";
+  let internalOk = false;
+  if (cronHeader) {
+    const { data: secret } = await supabase.rpc("get_cron_reconcile_secret");
+    internalOk = typeof secret === "string" && secret.length > 0 && secret === cronHeader;
+  }
+  if (!internalOk) {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response!;
+  }
 
   let body: { prospect_ids?: string[] } = {};
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
 
   const ids = (body.prospect_ids || []).filter((x) => typeof x === "string").slice(0, 50);
   if (ids.length === 0) return json({ error: "prospect_ids required" }, 400);
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
   const { data: prospects, error } = await supabase
     .from("prospect_listings")
@@ -104,16 +114,34 @@ Deno.serve(async (req) => {
     }
 
     // Fereastră închisă → coada de mesaj inițial cu șablonul aprobat.
-    const { error: qErr } = await supabase.from("wa_outbound_queue").upsert({
+    // Indexul unic este parțial (doar status='pending'), deci verificăm manual
+    // și inserăm; un upsert pe phone_normalized nu poate folosi acel index.
+    const { data: pendingRow } = await supabase
+      .from("wa_outbound_queue")
+      .select("id")
+      .eq("phone_normalized", phone)
+      .eq("status", "pending")
+      .limit(1)
+      .maybeSingle();
+    if (pendingRow) {
+      results.push({ id: p.id, status: "already_queued" });
+      continue;
+    }
+    const tpl = await resolveApprovedTemplate(
+      Deno.env.get("WA_OUTBOUND_TEMPLATE") || "intake_prospect_apartments",
+      "ro",
+    );
+    const { error: qErr } = await supabase.from("wa_outbound_queue").insert({
       phone_normalized: phone,
       prospect_listing_id: p.id,
-      template_name: Deno.env.get("WA_OUTBOUND_TEMPLATE") || "intake_prospect_apartments",
+      template_name: tpl.name,
       template_language: "ro",
       template_params: [],
       status: "pending",
       priority: 5,
       source: "publish_consent_request",
-    }, { onConflict: "phone_normalized", ignoreDuplicates: true });
+    });
+    if (qErr) console.error("[wa-request-publish-consent] queue insert failed:", qErr);
     results.push({ id: p.id, status: qErr ? "queue_failed" : "queued" });
   }
 
