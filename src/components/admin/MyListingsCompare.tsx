@@ -538,6 +538,31 @@ export default function MyListingsCompare() {
                   <Button size="sm" onClick={() => void publishEverywhere(r)}>
                     <Rocket className="mr-1 h-3.5 w-3.5" /> Publică pe toate cele 5 platforme
                   </Button>
+                  {(() => {
+                    const site = readPublish(status["realtrust.ro"]);
+                    return site ? (
+                      <a
+                        href={site.url || "https://realtrust.ro"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs underline"
+                      >
+                        publicat pe realtrust.ro {dateTimeRo(site.at)}
+                      </a>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={publishingSite === r.id}
+                        onClick={() => void publishOnSite(r)}
+                      >
+                        {publishingSite === r.id
+                          ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                          : <Rocket className="mr-1 h-3.5 w-3.5" />}
+                        Publică pe realtrust.ro
+                      </Button>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-2">
