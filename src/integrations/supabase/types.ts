@@ -11336,6 +11336,29 @@ export type Database = {
           zone: string
         }[]
       }
+      get_listing_price_report_v2: {
+        Args: { p_days?: number; p_platform?: string }
+        Returns: {
+          contact_phone: string
+          current_price: number
+          first_price: number
+          first_seen_at: string
+          last_seen_at: string
+          listing_id: string
+          price_changes: number
+          price_sqm: number
+          property_type: string
+          rooms: number
+          site_price: number
+          site_published_at: string
+          site_slug: string
+          source_platform: string
+          source_url: string
+          surface: number
+          title: string
+          zone: string
+        }[]
+      }
       get_owner_property_reviews: {
         Args: { p_property_id?: string }
         Returns: {
@@ -11386,6 +11409,28 @@ export type Database = {
           found_period: number
           invalid_data: number
           last_found_at: string
+          source_platform: string
+          with_phone: number
+        }[]
+      }
+      get_platform_scan_report_v3: {
+        Args: { p_days?: number }
+        Returns: {
+          agencies: number
+          avg_price: number
+          avg_price_prev_month: number
+          avg_price_sqm: number
+          avg_price_this_month: number
+          avg_sqm_prev_month: number
+          avg_sqm_this_month: number
+          duplicates: number
+          found_period: number
+          invalid_data: number
+          last_found_at: string
+          site_avg_price: number
+          site_avg_price_sqm: number
+          site_last_published_at: string
+          site_published: number
           source_platform: string
           with_phone: number
         }[]
@@ -11573,6 +11618,27 @@ export type Database = {
           platforms: number
           property_type: string
           samples: number
+          zone: string
+        }[]
+      }
+      get_zone_price_report_v3: {
+        Args: { p_days?: number; p_type?: string }
+        Returns: {
+          avg_price: number
+          avg_price_prev_month: number
+          avg_price_sqm: number
+          avg_price_this_month: number
+          avg_sqm_prev_month: number
+          avg_sqm_this_month: number
+          last_seen_at: string
+          max_price_sqm: number
+          min_price_sqm: number
+          platforms: number
+          property_type: string
+          samples: number
+          site_avg_price: number
+          site_avg_price_sqm: number
+          site_published: number
           zone: string
         }[]
       }
