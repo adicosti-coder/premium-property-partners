@@ -37,3 +37,36 @@ export async function preferredIntroTemplate(): Promise<string> {
     return WA_LEGACY_TEMPLATE;
   }
 }
+
+/**
+ * Verifică dacă un șablon există APROBAT în limba cerută. Dacă nu, întoarce
+ * șablonul aprobat de primul mesaj, ca mesajele automate să nu mai fie
+ * respinse de Meta cu eroarea 132001 („template name does not exist").
+ */
+export async function resolveApprovedTemplate(
+  name: string,
+  language = "ro",
+): Promise<{ name: string; fallback: boolean }> {
+  const token = waToken();
+  if (!token) return { name, fallback: false };
+  try {
+    const resp = await fetch(
+      `https://graph.facebook.com/${WA_API_VERSION}/${WA_BUSINESS_ACCOUNT_ID}/message_templates?fields=name,status,language&limit=200`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!resp.ok) return { name, fallback: false };
+    const rows: { name?: string; status?: string; language?: string }[] =
+      (await resp.json())?.data ?? [];
+    const ok = rows.some(
+      (t) =>
+        t.name === name &&
+        String(t.status).toUpperCase() === "APPROVED" &&
+        String(t.language || "").toLowerCase().startsWith(language.toLowerCase().slice(0, 2)),
+    );
+    if (ok) return { name, fallback: false };
+    const alt = await preferredIntroTemplate();
+    return { name: alt, fallback: alt !== name };
+  } catch {
+    return { name, fallback: false };
+  }
+}
