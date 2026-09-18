@@ -216,6 +216,9 @@ export default function ZonePriceReport() {
                 <TableHead className="text-right">Variație €/mp realtrust.ro</TableHead>
                 <TableHead className="text-right">Variație realtrust.ro</TableHead>
                 <TableHead className="text-right">Ultima publicare</TableHead>
+                <TableHead className="text-right">Cozi Aprobare</TableHead>
+                <TableHead className="text-right">Preț mediu cu acord</TableHead>
+
               </TableRow>
             </TableHeader>
             <TableBody>
