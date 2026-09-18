@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { LinkIcon, Radar, Building2, CheckSquare, Wrench, LineChart, TrendingUp } from "lucide-react";
+import { LinkIcon, Radar, Building2, CheckSquare, Wrench, LineChart, TrendingUp, Layers } from "lucide-react";
 import ListingImporter from "./ListingImporter";
 import KeywordRadarPanel from "./KeywordRadarPanel";
+import CollectionListingsReport from "./CollectionListingsReport";
 import KeywordSimulatorPanel from "./KeywordSimulatorPanel";
 import QuickKeywordSimulator from "./QuickKeywordSimulator";
 import PmLeadsPanel from "./PmLeadsPanel";
@@ -14,7 +15,7 @@ import { PerformanceROIPanel } from "./PerformanceROIPanel";
 import GrowthEngineDashboard from "./GrowthEngineDashboard";
 import WaPublishConsents from "./WaPublishConsents";
 
-const VALID_SUBTABS = ["manual", "radar", "pm-leads", "auto-publish", "sandbox", "performance", "growth"] as const;
+const VALID_SUBTABS = ["manual", "radar", "colectii", "pm-leads", "auto-publish", "sandbox", "performance", "growth"] as const;
 
 type SubTab = (typeof VALID_SUBTABS)[number];
 
@@ -57,6 +58,9 @@ const ListingImportTabs = () => {
         <TabsTrigger value="radar" className="gap-2">
           <Radar className="w-4 h-4" /> Keyword Radar
         </TabsTrigger>
+        <TabsTrigger value="colectii" className="gap-2">
+          <Layers className="w-4 h-4" /> Anunțuri pe colecții
+        </TabsTrigger>
         <TabsTrigger value="pm-leads" className="gap-2">
           <Building2 className="w-4 h-4" /> PM Leads
         </TabsTrigger>
@@ -82,6 +86,7 @@ const ListingImportTabs = () => {
           <KeywordSimulatorPanel />
         </div>
       </TabsContent>
+      <TabsContent value="colectii"><CollectionListingsReport /></TabsContent>
       <TabsContent value="pm-leads"><PmLeadsPanel /></TabsContent>
       <TabsContent value="auto-publish">
         <div className="space-y-4">
