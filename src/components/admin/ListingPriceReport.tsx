@@ -166,6 +166,7 @@ export default function ListingPriceReport() {
                 <TableHead className="text-right">Preț/mp</TableHead>
                 <TableHead className="text-right">Evoluție</TableHead>
                 <TableHead>Link</TableHead>
+                <TableHead>Pe realtrust.ro</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
