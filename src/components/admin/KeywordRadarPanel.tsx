@@ -42,6 +42,8 @@ const ZONE_OPTIONS = [
   "Șagului",
 ];
 
+const ALL_PLATFORMS = "__all__";
+
 const PLATFORM_OPTIONS = [
   "Facebook Groups",
   "Facebook Marketplace",
@@ -52,6 +54,9 @@ const PLATFORM_OPTIONS = [
   "BursaImobiliara.ro",
   "Custom",
 ];
+
+// Platformele acoperite când se caută „pe toate" (cele cu anunțuri de proprietari)
+const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
 
 const normalizeText = (v: string) =>
   v
@@ -74,13 +79,13 @@ export default function KeywordRadarPanel() {
   const [addingZone, setAddingZone] = useState(false);
   // Căutare liberă de anunțuri de la proprietari (nu în cuvintele salvate)
   const [search, setSearch] = useState("");
-  const [searchPlatform, setSearchPlatform] = useState<string>("OLX");
+  const [searchPlatform, setSearchPlatform] = useState<string>(ALL_PLATFORMS);
   const [searchResults, setSearchResults] = useState<AdHocListing[] | null>(null);
   const [searchSummary, setSearchSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   // Căutare pe zonă + caracteristică
   const [zsZone, setZsZone] = useState<string>(ZONE_OPTIONS[0]);
-  const [zsPlatform, setZsPlatform] = useState<string>("OLX");
+  const [zsPlatform, setZsPlatform] = useState<string>(ALL_PLATFORMS);
   const [zsFeature, setZsFeature] = useState("2 camere");
   const [zsSearching, setZsSearching] = useState(false);
 
@@ -105,9 +110,7 @@ export default function KeywordRadarPanel() {
 
   // Căutare la cerere: orice frază scrisă aici este trimisă la scraper cu
   // filtrul „doar proprietari" activ. Nu salvează cuvântul în listă.
-  const executeSearch = async (term: string, platform: string) => {
-    setSearchResults(null);
-    setSearchSummary(null);
+  const searchOnePlatform = async (term: string, platform: string) => {
     const { data, error } = await supabase.functions.invoke("scrape-prospects", {
       body: {
         custom_query: term,
@@ -119,12 +122,53 @@ export default function KeywordRadarPanel() {
     });
     if (error) throw error;
     const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
+    const b = (data as any)?.funnel_breakdown || {};
+    return {
+      platform,
+      listings: listings.map(l => ({ ...l, source_platform: l.source_platform || l.platform || platform })),
+      agency: Number(b.agency_signal || 0),
+      duplicate: Number(b.duplicate || 0),
+    };
+  };
+
+  const executeSearch = async (term: string, platform: string) => {
+    setSearchResults(null);
+    setSearchSummary(null);
+    const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
+
+    const settled = await Promise.allSettled(platforms.map(p => searchOnePlatform(term, p)));
+    const ok = settled.flatMap(r => (r.status === "fulfilled" ? [r.value] : []));
+    const failedCount = settled.length - ok.length;
+    if (ok.length === 0) {
+      const first = settled.find(r => r.status === "rejected") as PromiseRejectedResult | undefined;
+      throw new Error(first?.reason?.message || "Căutarea nu a returnat rezultate.");
+    }
+
+    // Deduplicare pe link între platforme
+    const seen = new Set<string>();
+    const listings: AdHocListing[] = [];
+    for (const r of ok) {
+      for (const l of r.listings) {
+        const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
+        if (key && seen.has(key)) continue;
+        if (key) seen.add(key);
+        listings.push(l);
+      }
+    }
     setSearchResults(listings);
-    const skipped = (data as any)?.funnel_breakdown || {};
+
+    const agency = ok.reduce((s, r) => s + r.agency, 0);
+    const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
+    const perPlatform = ok
+      .filter(r => r.listings.length > 0)
+      .map(r => `${r.platform}: ${r.listings.length}`)
+      .join(" · ");
     setSearchSummary(
-      `${listings.length} anunțuri de la proprietari` +
-        (skipped.agency_signal ? ` · ${skipped.agency_signal} agenții excluse` : "") +
-        (skipped.duplicate ? ` · ${skipped.duplicate} deja în listă` : ""),
+      `${listings.length} anunțuri de la proprietari pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
+        (perPlatform ? ` (${perPlatform})` : "") +
+        (agency ? ` · ${agency} agenții excluse` : "") +
+        (duplicate ? ` · ${duplicate} deja în listă` : "") +
+        (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
     );
     // Anunțurile salvate apar imediat în „Anunțuri noi găsite"
     window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
@@ -158,7 +202,7 @@ export default function KeywordRadarPanel() {
     setZsSearching(true);
     try {
       await executeSearch(term, zsPlatform);
-      toast({ title: "Căutare pe zonă rulată", description: `${zsZone} · ${zsPlatform} · ${feature || "toate"}` });
+      toast({ title: "Căutare pe zonă rulată", description: `${zsZone} · ${zsPlatform === ALL_PLATFORMS ? "toate platformele" : zsPlatform} · ${feature || "toate"}` });
     } catch (e: any) {
       toast({ title: "Eroare căutare pe zonă", description: e.message, variant: "destructive" });
     } finally {
@@ -319,6 +363,7 @@ export default function KeywordRadarPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
@@ -347,7 +392,7 @@ export default function KeywordRadarPanel() {
                     <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                       <div className="flex items-center gap-2">
                         <Badge variant="default" className="text-[10px] shrink-0">
-                          {l.source_platform || l.platform || searchPlatform}
+                          {l.source_platform || l.platform || "—"}
                         </Badge>
                         <span className="text-xs flex-1 truncate" title={l.title || ""}>
                           {l.title || "Anunț fără titlu"}
@@ -408,6 +453,7 @@ export default function KeywordRadarPanel() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
                 {PLATFORM_OPTIONS.map(p => (
                   <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
