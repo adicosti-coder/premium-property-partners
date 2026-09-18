@@ -379,6 +379,13 @@
       "when": 1789760179438,
       "tag": "0053_listing_report_v4_site_duration",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1789761935542,
+      "tag": "0054_keyword_scan_report_collection",
+      "breakpoints": true
     }
   ]
 }
