@@ -148,14 +148,23 @@ export default function KeywordRadarSourceHealth() {
                 : rate > 0
                   ? "secondary"
                   : "outline";
+            const sec = (ms: number | null) => (ms ? `${(ms / 1000).toFixed(1)}s` : "—");
+            const avgMs = h.durations.length
+              ? Math.round(h.durations.reduce((s, v) => s + v, 0) / h.durations.length)
+              : null;
+            const maxMs = h.durations.length ? Math.max(...h.durations) : null;
             return (
               <div key={h.platform} className="p-2.5 flex flex-wrap items-center gap-2 text-xs">
                 <span className="font-medium min-w-[110px]">{h.platform}</span>
                 <Badge variant={tone as "destructive" | "secondary" | "outline"} className="text-[10px]">
                   {label}
                 </Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  timp mediu {sec(avgMs)}
+                </Badge>
                 <span className="text-muted-foreground">
                   {h.calls} verificări · {h.timeouts} depășiri de timp · {h.errors} erori · {h.inserted} anunțuri
+                  {" · "}ultima {sec(h.lastMs)} · cea mai lentă {sec(maxMs)}
                 </span>
                 {rate > 0 && (
                   <Button

@@ -14,6 +14,7 @@ import PlatformReportPanel from "./PlatformReportPanel";
 import PlatformConfigPanel from "./PlatformConfigPanel";
 import ZonePriceReport from "./ZonePriceReport";
 import MyListingsCompare from "./MyListingsCompare";
+import ListingPriceReport from "./ListingPriceReport";
 
 interface SourceRow {
   id: string;
