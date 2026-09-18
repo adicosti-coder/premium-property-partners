@@ -197,6 +197,54 @@ export default function KeywordRadarPanel() {
           </Button>
         </div>
 
+        {/* Zone keywords */}
+        <div className="space-y-2 p-4 rounded-lg border bg-background/50">
+          <label className="text-sm font-medium">Cuvinte cheie pe zonă (doar proprietari)</label>
+          <p className="text-xs text-muted-foreground">
+            Alege zona, scrie cuvintele cheie (unul pe linie sau separate prin virgulă) și se caută doar anunțuri de la proprietari, fără agenții.
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {ZONE_OPTIONS.map(z => (
+              <button
+                key={z}
+                type="button"
+                onClick={() => setZone(z)}
+                aria-pressed={zone === z}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  zone === z
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background hover:bg-accent border-border"
+                }`}
+              >
+                {z}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <Select value={zonePlatform} onValueChange={setZonePlatform}>
+              <SelectTrigger className="sm:w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PLATFORM_OPTIONS.map(p => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="ex: apartament 2 camere, garsonieră, apartament 3 camere"
+              value={zoneKeyword}
+              onChange={e => setZoneKeyword(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") addZoneKeywords(); }}
+              className="flex-1"
+            />
+            <Button onClick={addZoneKeywords} disabled={addingZone}>
+              {addingZone ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+              Adaugă în {zone}
+            </Button>
+          </div>
+        </div>
+
         {/* Add manual source */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Adaugă manual sursă / URL</label>
