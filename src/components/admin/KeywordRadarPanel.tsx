@@ -16,6 +16,19 @@ interface SourceRow {
   created_at: string;
 }
 
+const ZONE_OPTIONS = [
+  "Aradului",
+  "Girocului",
+  "Complex Studențesc",
+  "Iosefin",
+  "Cetate / Centru",
+  "Fabric",
+  "Dumbrăvița",
+  "Circumvalațiunii",
+  "Calea Lipovei",
+  "Șagului",
+];
+
 const PLATFORM_OPTIONS = [
   "Facebook Groups",
   "Facebook Marketplace",
@@ -34,6 +47,10 @@ export default function KeywordRadarPanel() {
   const [adding, setAdding] = useState(false);
   const [sources, setSources] = useState<SourceRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [zone, setZone] = useState<string>(ZONE_OPTIONS[0]);
+  const [zoneKeyword, setZoneKeyword] = useState("");
+  const [zonePlatform, setZonePlatform] = useState<string>("OLX");
+  const [addingZone, setAddingZone] = useState(false);
 
   const loadSources = useCallback(async () => {
     setLoading(true);
@@ -98,6 +115,38 @@ export default function KeywordRadarPanel() {
     }
   };
 
+  const addZoneKeywords = async () => {
+    const parts = zoneKeyword
+      .split(/[\n,]/)
+      .map(s => s.trim())
+      .filter(Boolean);
+    if (!parts.length) {
+      toast({ title: "Câmp gol", description: "Scrie cel puțin un cuvânt cheie.", variant: "destructive" });
+      return;
+    }
+    setAddingZone(true);
+    try {
+      const rows = parts.map(kw => ({
+        keyword: `${kw} ${zone} Timișoara`.replace(/\s+/g, " "),
+        platform: zonePlatform,
+        is_active: true,
+        owner_filters: { owner_only: true, zone } as any,
+      }));
+      const { error } = await supabase.from("scraper_search_keywords").insert(rows);
+      if (error) throw error;
+      toast({
+        title: `${rows.length} cuvinte cheie adăugate`,
+        description: `${zone} · ${zonePlatform} · doar proprietari`,
+      });
+      setZoneKeyword("");
+      loadSources();
+    } catch (e: any) {
+      toast({ title: "Eroare adăugare", description: e.message, variant: "destructive" });
+    } finally {
+      setAddingZone(false);
+    }
+  };
+
   const toggleSource = async (row: SourceRow) => {
     try {
       const { error } = await supabase
@@ -146,6 +195,54 @@ export default function KeywordRadarPanel() {
             {running ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Radar className="h-4 w-4 mr-2" />}
             Rulează Descoperire Cuvinte Cheie
           </Button>
+        </div>
+
+        {/* Zone keywords */}
+        <div className="space-y-2 p-4 rounded-lg border bg-background/50">
+          <label className="text-sm font-medium">Cuvinte cheie pe zonă (doar proprietari)</label>
+          <p className="text-xs text-muted-foreground">
+            Alege zona, scrie cuvintele cheie (unul pe linie sau separate prin virgulă) și se caută doar anunțuri de la proprietari, fără agenții.
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {ZONE_OPTIONS.map(z => (
+              <button
+                key={z}
+                type="button"
+                onClick={() => setZone(z)}
+                aria-pressed={zone === z}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  zone === z
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background hover:bg-accent border-border"
+                }`}
+              >
+                {z}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <Select value={zonePlatform} onValueChange={setZonePlatform}>
+              <SelectTrigger className="sm:w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PLATFORM_OPTIONS.map(p => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="ex: apartament 2 camere, garsonieră, apartament 3 camere"
+              value={zoneKeyword}
+              onChange={e => setZoneKeyword(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") addZoneKeywords(); }}
+              className="flex-1"
+            />
+            <Button onClick={addZoneKeywords} disabled={addingZone}>
+              {addingZone ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+              Adaugă în {zone}
+            </Button>
+          </div>
         </div>
 
         {/* Add manual source */}
