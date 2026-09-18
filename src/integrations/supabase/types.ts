@@ -11727,6 +11727,19 @@ export type Database = {
           url_count: number
         }[]
       }
+      get_zone_consent_price_report: {
+        Args: { p_days?: number; p_type?: string }
+        Returns: {
+          consent_avg_price: number
+          consent_listings: number
+          granted_avg_price: number
+          granted_listings: number
+          property_type: string
+          published_avg_price: number
+          published_listings: number
+          zone: string
+        }[]
+      }
       get_zone_price_report: {
         Args: { p_days?: number; p_type?: string }
         Returns: {
