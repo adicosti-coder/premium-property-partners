@@ -264,6 +264,16 @@ Deno.serve(async (req) => {
           kwDetail.platforms[platform] = { skipped: "slow_source" };
           continue;
         }
+        // Sursele constant foarte lente (peste 9s medie, după cel puțin 3 verificări)
+        // se sar în rulările programate și se reîncearcă la fiecare a 8-a rulare:
+        // altfel o singură sursă consumă tot bugetul scanării.
+        const avgMsHist = Number(pstats[platform]?.avg_ms || 0);
+        const callsHist = Number(pstats[platform]?.calls || 0);
+        if (!onlyKeywordIds && callsHist >= 3 && avgMsHist >= 9_000 && callsHist % 8 !== 0) {
+          stats.skipped_very_slow = (stats.skipped_very_slow || 0) + 1;
+          kwDetail.platforms[platform] = { skipped: "very_slow_source", avg_ms: avgMsHist };
+          continue;
+        }
         // Sursă oprită manual din „Configurare pe platformă"
         const cfg = platformCfg.get(platform);
         if (cfg && cfg.is_enabled === false) {

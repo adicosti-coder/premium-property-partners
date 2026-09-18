@@ -351,6 +351,13 @@
       "when": 1789752100690,
       "tag": "0049_keyword_scan_report_prefix_match",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1789753368394,
+      "tag": "0050_prospect_price_drop_alerts",
+      "breakpoints": true
     }
   ]
 }

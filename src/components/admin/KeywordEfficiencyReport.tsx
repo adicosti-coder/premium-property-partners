@@ -36,11 +36,22 @@ const fmtPrice = (p: number | null) => (p ? `${Number(p).toLocaleString("ro-RO")
 const fmtDate = (v: string | null) =>
   v ? new Date(v).toLocaleDateString("ro-RO", { day: "2-digit", month: "short" }) : "—";
 
+/** Durata surselor pentru un cuvânt cheie, calculată din ultimele scanări. */
+interface KeywordTiming {
+  calls: number;
+  avgMs: number;
+  slowestMs: number;
+  slowestPlatform: string | null;
+  timeouts: number;
+  skipped: number;
+}
+
 export default function KeywordEfficiencyReport() {
   const [days, setDays] = useState("30");
   const [platform, setPlatform] = useState("all");
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<KeywordRow[]>([]);
+  const [timings, setTimings] = useState<Record<string, KeywordTiming>>({});
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [newKeyword, setNewKeyword] = useState("");
@@ -58,9 +69,49 @@ export default function KeywordEfficiencyReport() {
       return;
     }
     setRows((data || []) as unknown as KeywordRow[]);
+
+    // Durata reală a surselor pentru fiecare cuvânt cheie, din ultimele scanări.
+    const { data: runs } = await supabase
+      .from("keyword_radar_runs")
+      .select("stats")
+      .order("started_at", { ascending: false })
+      .limit(15);
+
+    const acc: Record<string, KeywordTiming & { total: number }> = {};
+    for (const run of runs || []) {
+      const details = (run as { stats?: { details?: unknown[] } }).stats?.details || [];
+      for (const d of details as {
+        keyword?: string;
+        platforms?: Record<string, { duration_ms?: number; timeout_ms?: number; skipped?: string }>;
+      }[]) {
+        const kw = d?.keyword;
+        if (!kw) continue;
+        const t = acc[kw] || {
+          calls: 0, avgMs: 0, slowestMs: 0, slowestPlatform: null, timeouts: 0, skipped: 0, total: 0,
+        };
+        for (const [p, res] of Object.entries(d.platforms || {})) {
+          if (res?.skipped) { t.skipped += 1; continue; }
+          const ms = Number(res?.duration_ms || 0);
+          if (res?.timeout_ms) t.timeouts += 1;
+          if (ms > 0) {
+            t.calls += 1;
+            t.total += ms;
+            if (ms > t.slowestMs) { t.slowestMs = ms; t.slowestPlatform = p; }
+          }
+        }
+        acc[kw] = t;
+      }
+    }
+    const out: Record<string, KeywordTiming> = {};
+    for (const [kw, t] of Object.entries(acc)) {
+      out[kw] = { ...t, avgMs: t.calls ? Math.round(t.total / t.calls) : 0 };
+    }
+    setTimings(out);
   }, [days, platform]);
 
   useEffect(() => { void load(); }, [load]);
+
+  const sec = (ms: number | null | undefined) => (ms ? `${(ms / 1000).toFixed(1)}s` : "—");
 
   const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -132,19 +183,27 @@ export default function KeywordEfficiencyReport() {
   const exportCsv = () => {
     downloadCsv(
       csvFileName("raport-cuvinte-cheie"),
-      ["Cuvânt cheie", "Platformă", "Activ", "Anunțuri", "Cu telefon", "Preț mediu", "Ultimul anunț", "Scanări reușite", "Scanări fără rezultat", "Zero consecutiv"],
-      filtered.map((r) => [
-        r.keyword,
-        r.platform,
-        r.is_active ? "da" : "nu",
-        r.found_period,
-        r.with_phone,
-        r.avg_price ?? "",
-        r.last_found_at ?? "",
-        r.success_count,
-        r.fail_count,
-        r.consecutive_zero,
-      ]),
+      ["Cuvânt cheie", "Platformă", "Activ", "Anunțuri", "Cu telefon", "Preț mediu", "Ultimul anunț", "Scanări reușite", "Scanări fără rezultat", "Zero consecutiv", "Timp mediu sursă (ms)", "Cea mai lentă sursă", "Timp cea mai lentă (ms)", "Depășiri de timp", "Surse sărite"],
+      filtered.map((r) => {
+        const t = timings[r.keyword];
+        return [
+          r.keyword,
+          r.platform,
+          r.is_active ? "da" : "nu",
+          r.found_period,
+          r.with_phone,
+          r.avg_price ?? "",
+          r.last_found_at ?? "",
+          r.success_count,
+          r.fail_count,
+          r.consecutive_zero,
+          t?.avgMs ?? "",
+          t?.slowestPlatform ?? "",
+          t?.slowestMs ?? "",
+          t?.timeouts ?? "",
+          t?.skipped ?? "",
+        ];
+      }),
     );
   };
 
@@ -261,6 +320,13 @@ export default function KeywordEfficiencyReport() {
                   {r.with_phone} cu telefon · preț mediu {fmtPrice(r.avg_price)} · ultimul anunț {fmtDate(r.last_found_at)} ·{" "}
                   {r.success_count} scanări cu rezultat · {r.fail_count} fără · {r.consecutive_zero} zero consecutiv
                 </p>
+                {timings[r.keyword] && (
+                  <p className="text-[11px] text-muted-foreground">
+                    timp mediu pe sursă {sec(timings[r.keyword].avgMs)} · cea mai lentă{" "}
+                    {timings[r.keyword].slowestPlatform || "—"} {sec(timings[r.keyword].slowestMs)} ·{" "}
+                    {timings[r.keyword].timeouts} depășiri de timp · {timings[r.keyword].skipped} surse sărite
+                  </p>
+                )}
               </div>
             ))}
           </div>

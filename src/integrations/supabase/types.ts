@@ -5977,6 +5977,57 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_price_drop_alerts: {
+        Row: {
+          alerted_at: string
+          drop_pct: number | null
+          id: string
+          listing_id: string | null
+          new_price: number | null
+          old_price: number | null
+          recorded_at: string | null
+          source_platform: string | null
+          source_url: string | null
+        }
+        Insert: {
+          alerted_at?: string
+          drop_pct?: number | null
+          id?: string
+          listing_id?: string | null
+          new_price?: number | null
+          old_price?: number | null
+          recorded_at?: string | null
+          source_platform?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          alerted_at?: string
+          drop_pct?: number | null
+          id?: string
+          listing_id?: string | null
+          new_price?: number | null
+          old_price?: number | null
+          recorded_at?: string | null
+          source_platform?: string | null
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_price_drop_alerts_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_price_drop_alerts_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+        ]
+      }
       prospect_price_history: {
         Row: {
           id: string

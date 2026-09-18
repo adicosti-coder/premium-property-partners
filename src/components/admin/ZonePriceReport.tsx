@@ -178,6 +178,7 @@ export default function ZonePriceReport() {
                 <TableHead className="text-right">Variație</TableHead>
                 <TableHead className="text-right">Pe realtrust.ro</TableHead>
                 <TableHead className="text-right">Preț/mp realtrust.ro</TableHead>
+                <TableHead className="text-right">Variație €/mp realtrust.ro</TableHead>
                 <TableHead className="text-right">Variație realtrust.ro</TableHead>
                 <TableHead className="text-right">Ultima publicare</TableHead>
               </TableRow>
@@ -224,6 +225,20 @@ export default function ZonePriceReport() {
                     <TableCell className="text-right">{eur(r.site_avg_price_sqm)}</TableCell>
                     <TableCell className="text-right">
                       {(() => {
+                        const vSqmSite = variation(r.site_avg_sqm_this_month, r.site_avg_sqm_prev_month);
+                        const IconSqmSite = vSqmSite == null ? Minus : vSqmSite > 0 ? TrendingUp : TrendingDown;
+                        return (
+                          <span className="inline-flex items-center gap-1">
+                            <IconSqmSite className="h-3.5 w-3.5" />
+                            {vSqmSite == null
+                              ? "—"
+                              : `${vSqmSite > 0 ? "+" : ""}${vSqmSite.toFixed(1)}%`}
+                          </span>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(() => {
                         const vSite = variation(r.site_avg_price_this_month, r.site_avg_price_prev_month);
                         const IconSite = vSite == null ? Minus : vSite > 0 ? TrendingUp : TrendingDown;
                         return (
@@ -244,7 +259,7 @@ export default function ZonePriceReport() {
               })}
               {!rows.length && (
                 <TableRow>
-                  <TableCell colSpan={16} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={17} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun preț înregistrat în perioada selectată."}
                   </TableCell>
                 </TableRow>
