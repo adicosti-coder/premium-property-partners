@@ -197,6 +197,12 @@ export default function ZonePriceReport() {
                         {v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(1)}%`}
                       </span>
                     </TableCell>
+                    <TableCell className="text-right">
+                      {r.site_published
+                        ? `${r.site_published} · ${eur(r.site_avg_price)}`
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-right">{eur(r.site_avg_price_sqm)}</TableCell>
                   </TableRow>
                 );
               })}
