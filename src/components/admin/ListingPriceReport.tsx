@@ -30,6 +30,10 @@ interface Row {
   price_changes: number | null;
   price_sqm: number | null;
   contact_phone: string | null;
+  /** Preluarea pe realtrust.ro: data publicării, prețul publicat și adresa paginii. */
+  site_published_at: string | null;
+  site_price: number | null;
+  site_slug: string | null;
 }
 
 const PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
