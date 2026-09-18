@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Radar, Loader2, Plus, Trash2, Globe, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import KeywordRadarLiveReport from "./KeywordRadarLiveReport";
-import KeywordRadarNewListings from "./KeywordRadarNewListings";
+import KeywordRadarNewListings, { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 
 interface SourceRow {
   id: string;
@@ -78,6 +78,11 @@ export default function KeywordRadarPanel() {
   const [searchResults, setSearchResults] = useState<AdHocListing[] | null>(null);
   const [searchSummary, setSearchSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+  // Căutare pe zonă + caracteristică
+  const [zsZone, setZsZone] = useState<string>(ZONE_OPTIONS[0]);
+  const [zsPlatform, setZsPlatform] = useState<string>("OLX");
+  const [zsFeature, setZsFeature] = useState("2 camere");
+  const [zsSearching, setZsSearching] = useState(false);
 
   const loadSources = useCallback(async () => {
     setLoading(true);
@@ -100,6 +105,37 @@ export default function KeywordRadarPanel() {
 
   // Căutare la cerere: orice frază scrisă aici este trimisă la scraper cu
   // filtrul „doar proprietari" activ. Nu salvează cuvântul în listă.
+  const executeSearch = async (term: string, platform: string) => {
+    setSearchResults(null);
+    setSearchSummary(null);
+    const { data, error } = await supabase.functions.invoke("scrape-prospects", {
+      body: {
+        custom_query: term,
+        custom_platform: platform,
+        max_results: 10,
+        preserve_agency_filter: true,
+        hydrate_phones: false,
+      },
+    });
+    if (error) throw error;
+    const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
+    setSearchResults(listings);
+    const skipped = (data as any)?.funnel_breakdown || {};
+    setSearchSummary(
+      `${listings.length} anunțuri de la proprietari` +
+        (skipped.agency_signal ? ` · ${skipped.agency_signal} agenții excluse` : "") +
+        (skipped.duplicate ? ` · ${skipped.duplicate} deja în listă` : ""),
+    );
+    // Anunțurile salvate apar imediat în „Anunțuri noi găsite"
+    window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
+    if (listings.length === 0) {
+      toast({
+        title: "Niciun anunț nou",
+        description: "Toate rezultatele erau de la agenții sau existau deja. Încearcă altă formulare sau altă platformă.",
+      });
+    }
+  };
+
   const runAdHocSearch = async () => {
     const term = search.trim();
     if (term.length < 3) {
@@ -107,37 +143,26 @@ export default function KeywordRadarPanel() {
       return;
     }
     setSearching(true);
-    setSearchResults(null);
-    setSearchSummary(null);
     try {
-      const { data, error } = await supabase.functions.invoke("scrape-prospects", {
-        body: {
-          custom_query: term,
-          custom_platform: searchPlatform,
-          max_results: 10,
-          preserve_agency_filter: true,
-          hydrate_phones: false,
-        },
-      });
-      if (error) throw error;
-      const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
-      setSearchResults(listings);
-      const skipped = (data as any)?.funnel_breakdown || {};
-      setSearchSummary(
-        `${listings.length} anunțuri de la proprietari` +
-          (skipped.agency_signal ? ` · ${skipped.agency_signal} agenții excluse` : "") +
-          (skipped.duplicate ? ` · ${skipped.duplicate} deja în listă` : ""),
-      );
-      if (listings.length === 0) {
-        toast({
-          title: "Niciun anunț nou",
-          description: "Toate rezultatele erau de la agenții sau existau deja. Încearcă altă formulare sau altă platformă.",
-        });
-      }
+      await executeSearch(term, searchPlatform);
     } catch (e: any) {
       toast({ title: "Eroare căutare anunțuri", description: e.message, variant: "destructive" });
     } finally {
       setSearching(false);
+    }
+  };
+
+  const runZoneSearch = async () => {
+    const feature = zsFeature.trim();
+    const term = `apartament ${feature} ${zsZone} Timișoara proprietar`.replace(/\s+/g, " ");
+    setZsSearching(true);
+    try {
+      await executeSearch(term, zsPlatform);
+      toast({ title: "Căutare pe zonă rulată", description: `${zsZone} · ${zsPlatform} · ${feature || "toate"}` });
+    } catch (e: any) {
+      toast({ title: "Eroare căutare pe zonă", description: e.message, variant: "destructive" });
+    } finally {
+      setZsSearching(false);
     }
   };
 
@@ -350,6 +375,60 @@ export default function KeywordRadarPanel() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Căutare pe zonă + caracteristică */}
+        <div className="space-y-2 p-4 rounded-lg border-2 border-sky-500/40 bg-sky-500/5">
+          <label className="text-sm font-medium flex items-center gap-2">
+            <Search className="h-4 w-4" /> Caută pe zonă (doar proprietari)
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Alege zona și platforma, scrie o caracteristică (ex: 2 camere, garsonieră, mobilat) și primești anunțurile noi de la proprietari.
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {ZONE_OPTIONS.map(z => (
+              <button
+                key={z}
+                type="button"
+                onClick={() => setZsZone(z)}
+                aria-pressed={zsZone === z}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  zsZone === z
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background hover:bg-accent border-border"
+                }`}
+              >
+                {z}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <Select value={zsPlatform} onValueChange={setZsPlatform}>
+              <SelectTrigger className="sm:w-[180px]" aria-label="Platformă căutare pe zonă">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PLATFORM_OPTIONS.map(p => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="ex: 2 camere, garsonieră, mobilat, etaj 2"
+              value={zsFeature}
+              onChange={e => setZsFeature(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") runZoneSearch(); }}
+              className="flex-1"
+              aria-label="Caracteristică apartament"
+            />
+            <Button onClick={runZoneSearch} disabled={zsSearching} className="shrink-0 min-h-[44px]">
+              {zsSearching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+              Caută în {zsZone}
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Rezultatele apar mai sus și se salvează automat în „Anunțuri noi găsite”.
+          </p>
         </div>
 
 
