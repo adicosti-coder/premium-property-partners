@@ -10,6 +10,8 @@ import { toast } from "@/hooks/use-toast";
 import KeywordRadarLiveReport from "./KeywordRadarLiveReport";
 import KeywordRadarSourceHealth from "./KeywordRadarSourceHealth";
 import KeywordRadarNewListings, { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
+import PlatformReportPanel from "./PlatformReportPanel";
+import PlatformConfigPanel from "./PlatformConfigPanel";
 
 interface SourceRow {
   id: string;
@@ -344,6 +346,10 @@ export default function KeywordRadarPanel() {
         <KeywordRadarLiveReport />
 
         <KeywordRadarSourceHealth />
+
+        <PlatformReportPanel />
+
+        <PlatformConfigPanel />
 
         <KeywordRadarNewListings />
 

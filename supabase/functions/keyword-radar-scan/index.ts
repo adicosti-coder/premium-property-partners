@@ -96,6 +96,27 @@ Deno.serve(async (req) => {
     .select("id").single();
   const runId = runRow?.id;
 
+  // Configurare per platformă (sursă oprită / câte anunțuri pe căutare / filtre)
+  type PlatformCfg = {
+    is_enabled: boolean;
+    owner_only: boolean;
+    max_results: number;
+    min_price: number | null;
+    max_price: number | null;
+    min_rooms: number | null;
+    max_rooms: number | null;
+    zones: string[] | null;
+  };
+  const platformCfg = new Map<string, PlatformCfg>();
+  try {
+    const { data: cfgRows } = await supabase
+      .from("platform_scan_config")
+      .select("platform,is_enabled,owner_only,max_results,min_price,max_price,min_rooms,max_rooms,zones");
+    for (const row of cfgRows || []) {
+      platformCfg.set(String((row as any).platform), row as unknown as PlatformCfg);
+    }
+  } catch (_) { /* fără configurare: se folosesc valorile implicite */ }
+
   const stats: Record<string, number> = {
     keywords_scanned: 0,
     platforms_called: 0,
@@ -218,12 +239,20 @@ Deno.serve(async (req) => {
           kwDetail.platforms[platform] = { skipped: "low_yield" };
           continue;
         }
+        // Sursă oprită manual din „Configurare pe platformă"
+        const cfg = platformCfg.get(platform);
+        if (cfg && cfg.is_enabled === false) {
+          stats.skipped_disabled = (stats.skipped_disabled || 0) + 1;
+          kwDetail.platforms[platform] = { skipped: "disabled" };
+          continue;
+        }
         const pmPlatform = PM_LEAD_PLATFORMS[platform];
         const domain = platformDomain(platform);
         if (!pmPlatform && !domain) continue;
         stats.platforms_called++;
         progress.current_platform = platform;
         await pushProgress();
+        const platformStartedAt = Date.now();
 
         // Timeout dur pe sursă: dacă nu răspunde, abandonăm apelul.
         const platformTimeoutMs = Math.max(
@@ -264,9 +293,14 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 custom_query: customQuery,
                 only_new_sources: true,
-                preserve_agency_filter: true,
+                preserve_agency_filter: cfg?.owner_only !== false,
                 discovery_mode: true,
-                max_results: 5,
+                max_results: Math.min(Math.max(Number(cfg?.max_results) || 5, 1), 20),
+                min_price: cfg?.min_price ?? undefined,
+                max_price: cfg?.max_price ?? undefined,
+                min_rooms: cfg?.min_rooms ?? undefined,
+                max_rooms: cfg?.max_rooms ?? undefined,
+                zones: cfg?.zones?.length ? cfg.zones : undefined,
                 source_label: `keyword-radar:${kw.id}`,
               }),
               signal: abort,
@@ -284,9 +318,13 @@ Deno.serve(async (req) => {
               0,
           ) || 0;
           kwResults += cnt;
+          const fb = j?.funnel_breakdown || {};
           kwDetail.platforms[platform] = {
             ok: resp.ok,
             inserted: cnt,
+            duration_ms: Date.now() - platformStartedAt,
+            agency: Number(fb.agency_signal || 0) || 0,
+            duplicate: Number(fb.duplicate || 0) || 0,
             route: pmPlatform ? "pm-leads" : "prospects",
           };
           const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };

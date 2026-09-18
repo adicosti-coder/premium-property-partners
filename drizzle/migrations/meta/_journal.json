@@ -246,6 +246,20 @@
       "when": 1789727179965,
       "tag": "0034_prospect_price_history_property_type",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1789739513215,
+      "tag": "0035_platform_scan_config_and_report",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1789739545552,
+      "tag": "0036_fix_platform_scan_report_monthly",
+      "breakpoints": true
     }
   ]
 }
