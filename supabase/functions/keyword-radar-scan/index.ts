@@ -69,6 +69,14 @@ Deno.serve(async (req) => {
   const limit = Math.min(Math.max(Number(body?.limit) || 15, 1), 50);
   const staleAfterHours = Number(body?.stale_hours) || 24;
   const onlyKeywordIds: string[] | undefined = Array.isArray(body?.keyword_ids) ? body.keyword_ids : undefined;
+  const maxRuntimeMs = Math.min(
+    Math.max(Number(body?.max_runtime_ms) || DEFAULT_MAX_RUNTIME_MS, 10_000),
+    50_000,
+  );
+  // Manual scans (keyword_ids) pot folosi toate sursele; cron-ul rămâne econom.
+  const maxPlatforms = onlyKeywordIds
+    ? 99
+    : Math.min(Math.max(Number(body?.max_platforms) || DEFAULT_MAX_PLATFORMS, 1), 10);
 
   const startedAt = Date.now();
   const { data: runRow } = await supabase.from("keyword_radar_runs")
