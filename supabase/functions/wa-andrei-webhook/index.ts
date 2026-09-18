@@ -14,6 +14,7 @@ import {
 } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
+import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
