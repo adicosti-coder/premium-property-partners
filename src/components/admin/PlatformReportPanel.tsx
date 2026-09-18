@@ -18,6 +18,9 @@ interface ReportRow {
   avg_price: number | null;
   avg_price_this_month: number | null;
   avg_price_prev_month: number | null;
+  avg_price_sqm: number | null;
+  avg_sqm_this_month: number | null;
+  avg_sqm_prev_month: number | null;
   last_found_at: string | null;
 }
 
@@ -75,7 +78,7 @@ export default function PlatformReportPanel() {
     setLoading(true);
     try {
       const [report, runsRes] = await Promise.all([
-        supabase.rpc("get_platform_scan_report", { p_days: Number(days) }),
+        supabase.rpc("get_platform_scan_report_v2", { p_days: Number(days) }),
         supabase
           .from("keyword_radar_runs")
           .select("id,started_at,duration_ms,stats")
@@ -153,7 +156,9 @@ export default function PlatformReportPanel() {
   const exportCsv = () => {
     downloadCsv(
       csvFileName("raport-platforme"),
-      ["Platformă", "Anunțuri", "Cu telefon", "Duplicate", "Agenții", "Date incomplete", "Preț mediu", "Luna curentă", "Luna trecută", "Variație %", "Ultimul anunț"],
+      ["Platformă", "Anunțuri", "Cu telefon", "Duplicate", "Agenții", "Date incomplete", "Preț mediu",
+        "Luna curentă", "Luna trecută", "Variație %", "Preț/mp", "Preț/mp luna curentă",
+        "Preț/mp luna trecută", "Variație preț/mp %", "Ultimul anunț"],
       rows.map((r) => [
         r.source_platform,
         r.found_period,
@@ -165,6 +170,10 @@ export default function PlatformReportPanel() {
         r.avg_price_this_month,
         r.avg_price_prev_month,
         variation(r.avg_price_this_month, r.avg_price_prev_month),
+        r.avg_price_sqm,
+        r.avg_sqm_this_month,
+        r.avg_sqm_prev_month,
+        variation(r.avg_sqm_this_month, r.avg_sqm_prev_month),
         r.last_found_at,
       ]),
     );
