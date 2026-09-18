@@ -16,6 +16,19 @@ interface SourceRow {
   created_at: string;
 }
 
+const ZONE_OPTIONS = [
+  "Aradului",
+  "Girocului",
+  "Complex Studențesc",
+  "Iosefin",
+  "Cetate / Centru",
+  "Fabric",
+  "Dumbrăvița",
+  "Circumvalațiunii",
+  "Calea Lipovei",
+  "Șagului",
+];
+
 const PLATFORM_OPTIONS = [
   "Facebook Groups",
   "Facebook Marketplace",
