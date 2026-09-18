@@ -117,9 +117,11 @@ Deno.serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     for (const kw of (kws || [])) {
-      if (Date.now() - startedAt > MAX_RUNTIME_MS) {
-        stats.skipped_time_budget = (stats.skipped_time_budget || 0) + 1;
-        continue;
+      if (Date.now() - startedAt > maxRuntimeMs) {
+        // Oprim complet bucla: restul cuvintelor rămân „stale" și intră la rularea următoare.
+        stats.skipped_time_budget =
+          (stats.skipped_time_budget || 0) + ((kws?.length || 0) - stats.keywords_scanned);
+        break;
       }
       stats.keywords_scanned++;
       let kwResults = 0;
