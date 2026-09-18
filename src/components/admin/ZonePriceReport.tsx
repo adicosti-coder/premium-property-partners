@@ -159,6 +159,8 @@ export default function ZonePriceReport() {
                 <TableHead className="text-right">Luna curentă</TableHead>
                 <TableHead className="text-right">Luna precedentă</TableHead>
                 <TableHead className="text-right">Variație</TableHead>
+                <TableHead className="text-right">Pe realtrust.ro</TableHead>
+                <TableHead className="text-right">Preț/mp realtrust.ro</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
