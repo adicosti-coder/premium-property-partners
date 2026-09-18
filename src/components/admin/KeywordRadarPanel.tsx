@@ -76,6 +76,37 @@ export default function KeywordRadarPanel() {
 
   useEffect(() => { loadSources(); }, [loadSources]);
 
+  // Rubrică de căutare separată în toate cuvintele cheie salvate
+  useEffect(() => {
+    const term = search.trim();
+    if (term.length < 2 && searchPlatform === "__all__" && searchStatus === "__all__") {
+      setSearchResults(null);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        let q = supabase
+          .from("scraper_search_keywords")
+          .select("id,keyword,platform,is_active,created_at")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (term.length >= 2) q = q.ilike("keyword", `%${term}%`);
+        if (searchPlatform !== "__all__") q = q.eq("platform", searchPlatform);
+        if (searchStatus !== "__all__") q = q.eq("is_active", searchStatus === "active");
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!cancelled) setSearchResults((data || []) as SourceRow[]);
+      } catch (e: any) {
+        if (!cancelled) toast({ title: "Eroare căutare", description: e.message, variant: "destructive" });
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [search, searchPlatform, searchStatus]);
+
   const runDiscover = async () => {
     setRunning(true);
     try {
