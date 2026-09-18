@@ -274,6 +274,13 @@
       "when": 1789740843237,
       "tag": "0038_price_history_skip_null_price",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1789740882230,
+      "tag": "0039_price_history_sanity_bounds",
+      "breakpoints": true
     }
   ]
 }
