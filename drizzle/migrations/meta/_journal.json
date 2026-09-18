@@ -288,6 +288,13 @@
       "when": 1789741561436,
       "tag": "0040_zone_sqm_trend_and_listing_report_v2",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1789743967635,
+      "tag": "0041_my_listing_image_and_price_refresh",
+      "breakpoints": true
     }
   ]
 }

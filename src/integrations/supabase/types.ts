@@ -3707,6 +3707,7 @@ export type Database = {
           currency: string | null
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           listing_url: string | null
           notes: string | null
@@ -3726,6 +3727,7 @@ export type Database = {
           currency?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           listing_url?: string | null
           notes?: string | null
@@ -3745,6 +3747,7 @@ export type Database = {
           currency?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           listing_url?: string | null
           notes?: string | null
@@ -5698,6 +5701,7 @@ export type Database = {
           pre_campaign_status: string | null
           predictive_score: number | null
           price: number | null
+          price_checked_at: string | null
           price_per_sqm: number | null
           prospect_type: string
           quality_analysis: Json | null
@@ -5794,6 +5798,7 @@ export type Database = {
           pre_campaign_status?: string | null
           predictive_score?: number | null
           price?: number | null
+          price_checked_at?: string | null
           price_per_sqm?: number | null
           prospect_type?: string
           quality_analysis?: Json | null
@@ -5890,6 +5895,7 @@ export type Database = {
           pre_campaign_status?: string | null
           predictive_score?: number | null
           price?: number | null
+          price_checked_at?: string | null
           price_per_sqm?: number | null
           prospect_type?: string
           quality_analysis?: Json | null
@@ -11292,6 +11298,24 @@ export type Database = {
           avg_price: number
           avg_price_prev_month: number
           avg_price_this_month: number
+          duplicates: number
+          found_period: number
+          invalid_data: number
+          last_found_at: string
+          source_platform: string
+          with_phone: number
+        }[]
+      }
+      get_platform_scan_report_v2: {
+        Args: { p_days?: number }
+        Returns: {
+          agencies: number
+          avg_price: number
+          avg_price_prev_month: number
+          avg_price_sqm: number
+          avg_price_this_month: number
+          avg_sqm_prev_month: number
+          avg_sqm_this_month: number
           duplicates: number
           found_period: number
           invalid_data: number
