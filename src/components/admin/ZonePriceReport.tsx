@@ -244,7 +244,7 @@ export default function ZonePriceReport() {
               })}
               {!rows.length && (
                 <TableRow>
-                  <TableCell colSpan={12} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={16} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun preț înregistrat în perioada selectată."}
                   </TableCell>
                 </TableRow>
