@@ -198,6 +198,7 @@ export default function ListingPriceReport() {
                 <TableHead className="text-right">Evoluție</TableHead>
                 <TableHead>Link</TableHead>
                 <TableHead>Pe realtrust.ro</TableHead>
+                <TableHead>Acord (Cozi Aprobare)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -258,6 +259,14 @@ export default function ListingPriceReport() {
                               actualizat {dateRo(r.site_price_updated_at)}
                             </p>
                           )}
+                          <p className="text-muted-foreground">
+                            {r.site_days_online != null ? `${r.site_days_online} zile pe site` : ""}
+                            {r.site_is_active === false
+                              ? ` · scos ${dateRo(r.site_delisted_at)}`
+                              : r.site_is_active
+                                ? " · activ"
+                                : ""}
+                          </p>
                           {r.site_slug && (
                             <a
                               href={`/proprietate/${r.site_slug}`}
@@ -272,12 +281,28 @@ export default function ListingPriceReport() {
                         </div>
                       ) : "—"}
                     </TableCell>
+                    <TableCell className="text-xs">
+                      {r.consent_status ? (
+                        <div className="space-y-0.5">
+                          <Badge variant={r.consent_status === "granted" || r.consent_status === "published"
+                            ? "secondary" : "outline"} className="text-[10px]">
+                            {CONSENT_LABEL[r.consent_status] || r.consent_status}
+                          </Badge>
+                          {r.consent_requested_at && (
+                            <p className="text-muted-foreground">cerut {dateRo(r.consent_requested_at)}</p>
+                          )}
+                          {r.consent_granted_at && (
+                            <p className="text-muted-foreground">acord {dateRo(r.consent_granted_at)}</p>
+                          )}
+                        </div>
+                      ) : "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
               {!filtered.length && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-6 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={10} className="py-6 text-center text-sm text-muted-foreground">
                     {loading ? "Se încarcă..." : "Niciun anunț în perioada selectată."}
                   </TableCell>
                 </TableRow>
