@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { resolveApprovedTemplate } from "../_shared/waPreferredTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
