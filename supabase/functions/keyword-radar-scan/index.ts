@@ -211,8 +211,10 @@ Deno.serve(async (req) => {
       // first, and one that returned nothing 4 scans in a row is skipped until
       // an admin scans that keyword explicitly (keyword_ids in the body).
       const meta: any = (kw.metadata && typeof kw.metadata === "object") ? { ...kw.metadata } : {};
-      const pstats: Record<string, { total: number; zero_streak: number; calls?: number }> =
-        (meta.platform_stats && typeof meta.platform_stats === "object") ? { ...meta.platform_stats } : {};
+      const pstats: Record<
+        string,
+        { total: number; zero_streak: number; calls?: number; avg_ms?: number; timeout_streak?: number }
+      > = (meta.platform_stats && typeof meta.platform_stats === "object") ? { ...meta.platform_stats } : {};
       // Randament mediu pe apel (nu total brut): sursele noi sunt încercate
       // înaintea celor testate deja fără rezultate.
       const yieldOf = (p: string) => {
@@ -221,8 +223,10 @@ Deno.serve(async (req) => {
         const calls = Math.max(1, Number(s.calls || 1));
         return (Number(s.total) || 0) / calls;
       };
+      // La randament egal, sursa mai rapidă merge prima: scanarea completă se termină mai repede.
+      const speedOf = (p: string) => Number(pstats[p]?.avg_ms || 0) || 0;
       const platformList = [...(kw.platforms as string[])]
-        .sort((a, b) => yieldOf(b) - yieldOf(a))
+        .sort((a, b) => (yieldOf(b) - yieldOf(a)) || (speedOf(a) - speedOf(b)))
         .slice(0, maxPlatforms);
 
       for (const platform of platformList) {
@@ -242,6 +246,14 @@ Deno.serve(async (req) => {
         if (!onlyKeywordIds && zstreak >= 4 && zstreak % 6 !== 0) {
           stats.skipped_low_yield = (stats.skipped_low_yield || 0) + 1;
           kwDetail.platforms[platform] = { skipped: "low_yield" };
+          continue;
+        }
+        // Sursele care au dat timeout de 2 ori la rând se sar temporar (reîncercare
+        // la fiecare a 5-a rulare): nu mai consumăm bugetul pe surse blocate.
+        const tstreak = pstats[platform]?.timeout_streak || 0;
+        if (!onlyKeywordIds && tstreak >= 2 && tstreak % 5 !== 0) {
+          stats.skipped_slow = (stats.skipped_slow || 0) + 1;
+          kwDetail.platforms[platform] = { skipped: "slow_source" };
           continue;
         }
         // Sursă oprită manual din „Configurare pe platformă"
