@@ -99,6 +99,9 @@ export default function ListingPriceReport() {
         r.price_changes ?? 0,
         r.contact_phone || "",
         r.source_url || "",
+        dateRo(r.site_published_at),
+        r.site_price ?? "",
+        r.site_slug ? `https://realtrust.ro/proprietate/${r.site_slug}` : "",
       ]),
     );
   };
