@@ -10927,6 +10927,7 @@ export type Database = {
           consented_at: string | null
           created_at: string
           id: string
+          last_reply_notified_at: string | null
           notes: string | null
           phone_normalized: string
           property_id: string | null
@@ -10943,6 +10944,7 @@ export type Database = {
           consented_at?: string | null
           created_at?: string
           id?: string
+          last_reply_notified_at?: string | null
           notes?: string | null
           phone_normalized: string
           property_id?: string | null
@@ -10959,6 +10961,7 @@ export type Database = {
           consented_at?: string | null
           created_at?: string
           id?: string
+          last_reply_notified_at?: string | null
           notes?: string | null
           phone_normalized?: string
           property_id?: string | null
@@ -11383,6 +11386,31 @@ export type Database = {
           success_count: number
           unique_leads_count: number
           with_phone: number
+        }[]
+      }
+      get_keyword_scan_report_v2: {
+        Args: { p_days?: number; p_platform?: string }
+        Returns: {
+          avg_price: number
+          consecutive_zero: number
+          fail_count: number
+          found_period: number
+          id: string
+          is_active: boolean
+          keyword: string
+          last_found_at: string
+          last_success_at: string
+          platform: string
+          site_zone_avg_price: number
+          site_zone_count: number
+          success_count: number
+          top_zone: string
+          unique_leads_count: number
+          with_phone: number
+          zone_avg_price: number
+          zone_avg_price_prev: number
+          zone_avg_sqm: number
+          zone_variation_pct: number
         }[]
       }
       get_listing_price_report: {

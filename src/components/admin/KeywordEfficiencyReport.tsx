@@ -23,6 +23,14 @@ interface KeywordRow {
   consecutive_zero: number;
   unique_leads_count: number;
   last_success_at: string | null;
+  /** Zona în care cuvântul cheie aduce cele mai multe anunțuri. */
+  top_zone: string | null;
+  zone_avg_price: number | null;
+  zone_avg_price_prev: number | null;
+  zone_variation_pct: number | null;
+  zone_avg_sqm: number | null;
+  site_zone_count: number;
+  site_zone_avg_price: number | null;
 }
 
 const PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
@@ -59,7 +67,7 @@ export default function KeywordEfficiencyReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_keyword_scan_report", {
+    const { data, error } = await supabase.rpc("get_keyword_scan_report_v2", {
       p_days: Number(days),
       p_platform: platform === "all" ? null : platform,
     });
@@ -183,7 +191,7 @@ export default function KeywordEfficiencyReport() {
   const exportCsv = () => {
     downloadCsv(
       csvFileName("raport-cuvinte-cheie"),
-      ["Cuvânt cheie", "Platformă", "Activ", "Anunțuri", "Cu telefon", "Preț mediu", "Ultimul anunț", "Scanări reușite", "Scanări fără rezultat", "Zero consecutiv", "Timp mediu sursă (ms)", "Cea mai lentă sursă", "Timp cea mai lentă (ms)", "Depășiri de timp", "Surse sărite"],
+      ["Cuvânt cheie", "Platformă", "Activ", "Anunțuri", "Cu telefon", "Preț mediu", "Ultimul anunț", "Scanări reușite", "Scanări fără rezultat", "Zero consecutiv", "Timp mediu sursă (ms)", "Cea mai lentă sursă", "Timp cea mai lentă (ms)", "Depășiri de timp", "Surse sărite", "Zonă principală", "Preț mediu zonă luna asta", "Preț mediu zonă luna trecută", "Variație lunară %", "€/mp zonă", "Anunțuri realtrust.ro în zonă", "Preț mediu realtrust.ro"],
       filtered.map((r) => {
         const t = timings[r.keyword];
         return [
@@ -202,6 +210,13 @@ export default function KeywordEfficiencyReport() {
           t?.slowestMs ?? "",
           t?.timeouts ?? "",
           t?.skipped ?? "",
+          r.top_zone ?? "",
+          r.zone_avg_price ?? "",
+          r.zone_avg_price_prev ?? "",
+          r.zone_variation_pct ?? "",
+          r.zone_avg_sqm ?? "",
+          r.site_zone_count ?? 0,
+          r.site_zone_avg_price ?? "",
         ];
       }),
     );
@@ -325,6 +340,20 @@ export default function KeywordEfficiencyReport() {
                     timp mediu pe sursă {sec(timings[r.keyword].avgMs)} · cea mai lentă{" "}
                     {timings[r.keyword].slowestPlatform || "—"} {sec(timings[r.keyword].slowestMs)} ·{" "}
                     {timings[r.keyword].timeouts} depășiri de timp · {timings[r.keyword].skipped} surse sărite
+                  </p>
+                )}
+                {r.top_zone && (
+                  <p className="text-[11px] text-muted-foreground">
+                    zona {r.top_zone} · preț mediu {fmtPrice(r.zone_avg_price)}
+                    {r.zone_variation_pct != null && (
+                      <span className={r.zone_variation_pct >= 0 ? "text-emerald-600" : "text-red-600"}>
+                        {" "}({r.zone_variation_pct > 0 ? "+" : ""}{r.zone_variation_pct}% față de luna trecută)
+                      </span>
+                    )}
+                    {r.zone_avg_sqm ? ` · ${Number(r.zone_avg_sqm).toLocaleString("ro-RO")} €/mp` : ""}
+                    {r.site_zone_count
+                      ? ` · pe realtrust.ro ${r.site_zone_count} anunțuri, ${fmtPrice(r.site_zone_avg_price)}`
+                      : ""}
                   </p>
                 )}
               </div>

@@ -14,6 +14,7 @@ import {
 } from "../_shared/waAutoReply.ts";
 import { notifyClientChatLink } from "../_shared/waClientEmail.ts";
 import { notifyAgentInbound } from "../_shared/waAgentNotify.ts";
+import { notifyConsentReply } from "../_shared/waPublishConsentNotify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -339,6 +340,20 @@ Deno.serve(async (req) => {
           } catch (e) {
             console.error("[wa-webhook] publish consent handling failed:", e);
           }
+        }
+
+        // Orice răspuns al unui proprietar din „Cozi Aprobare” ajunge pe e-mail
+        // la echipă, ca acordul sau întrebarea lui să nu treacă neobservată.
+        try {
+          await notifyConsentReply(supabase, {
+            phone: from,
+            message: text,
+            profileName,
+            conversationId: convId,
+            intent: publishIntent ?? null,
+          });
+        } catch (e) {
+          console.error("[wa-webhook] consent reply email failed:", e);
         }
 
         // Cererea de acord a fost pregătită din Admin, dar fereastra de 24h era
