@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Radar, Loader2, Plus, Trash2, Globe } from "lucide-react";
+import { Radar, Loader2, Plus, Trash2, Globe, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface SourceRow {
@@ -51,6 +51,11 @@ export default function KeywordRadarPanel() {
   const [zoneKeyword, setZoneKeyword] = useState("");
   const [zonePlatform, setZonePlatform] = useState<string>("OLX");
   const [addingZone, setAddingZone] = useState(false);
+  const [search, setSearch] = useState("");
+  const [searchPlatform, setSearchPlatform] = useState<string>("__all__");
+  const [searchStatus, setSearchStatus] = useState<string>("__all__");
+  const [searchResults, setSearchResults] = useState<SourceRow[] | null>(null);
+  const [searching, setSearching] = useState(false);
 
   const loadSources = useCallback(async () => {
     setLoading(true);
@@ -70,6 +75,37 @@ export default function KeywordRadarPanel() {
   }, []);
 
   useEffect(() => { loadSources(); }, [loadSources]);
+
+  // Rubrică de căutare separată în toate cuvintele cheie salvate
+  useEffect(() => {
+    const term = search.trim();
+    if (term.length < 2 && searchPlatform === "__all__" && searchStatus === "__all__") {
+      setSearchResults(null);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        let q = supabase
+          .from("scraper_search_keywords")
+          .select("id,keyword,platform,is_active,created_at")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (term.length >= 2) q = q.ilike("keyword", `%${term}%`);
+        if (searchPlatform !== "__all__") q = q.eq("platform", searchPlatform);
+        if (searchStatus !== "__all__") q = q.eq("is_active", searchStatus === "active");
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!cancelled) setSearchResults((data || []) as SourceRow[]);
+      } catch (e: any) {
+        if (!cancelled) toast({ title: "Eroare căutare", description: e.message, variant: "destructive" });
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [search, searchPlatform, searchStatus]);
 
   const runDiscover = async () => {
     setRunning(true);
@@ -154,6 +190,7 @@ export default function KeywordRadarPanel() {
         .update({ is_active: !row.is_active })
         .eq("id", row.id);
       if (error) throw error;
+      setSearchResults(prev => prev ? prev.map(s => s.id === row.id ? { ...s, is_active: !row.is_active } : s) : prev);
       loadSources();
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
@@ -165,6 +202,7 @@ export default function KeywordRadarPanel() {
       const { error } = await supabase.from("scraper_search_keywords").delete().eq("id", row.id);
       if (error) throw error;
       setSources(prev => prev.filter(s => s.id !== row.id));
+      setSearchResults(prev => prev ? prev.filter(s => s.id !== row.id) : prev);
       toast({ title: "Sursă ștearsă" });
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message, variant: "destructive" });
@@ -183,6 +221,100 @@ export default function KeywordRadarPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Rubrică separată: căutare cuvinte cheie */}
+        <div className="space-y-2 p-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5">
+          <label className="text-sm font-medium flex items-center gap-2" htmlFor="kw-search">
+            <Search className="h-4 w-4" /> Caută cuvinte cheie
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Scrie minim 2 litere pentru a găsi cuvintele cheie salvate (zonă, platformă, frază). Poți activa, dezactiva sau șterge direct din rezultate.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="kw-search"
+                placeholder="ex: dumbravita, garsonieră, proprietar"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-8 pr-8"
+                aria-label="Caută în cuvintele cheie salvate"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="Șterge căutarea"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <Select value={searchPlatform} onValueChange={setSearchPlatform}>
+              <SelectTrigger className="sm:w-[180px]" aria-label="Filtrează după platformă">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Toate platformele</SelectItem>
+                {PLATFORM_OPTIONS.map(p => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={searchStatus} onValueChange={setSearchStatus}>
+              <SelectTrigger className="sm:w-[150px]" aria-label="Filtrează după status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Toate</SelectItem>
+                <SelectItem value="active">Doar active</SelectItem>
+                <SelectItem value="inactive">Doar inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {searching && (
+            <div className="text-xs text-muted-foreground flex items-center gap-2 pt-1">
+              <Loader2 className="h-3 w-3 animate-spin" /> Caut…
+            </div>
+          )}
+
+          {!searching && searchResults && (
+            <div className="pt-1">
+              <div className="text-xs text-muted-foreground mb-1">
+                {searchResults.length === 0
+                  ? "Niciun cuvânt cheie găsit."
+                  : `${searchResults.length} rezultate`}
+              </div>
+              {searchResults.length > 0 && (
+                <div className="border rounded-lg divide-y max-h-[320px] overflow-y-auto bg-background/60">
+                  {searchResults.map(s => (
+                    <div key={s.id} className="flex items-center gap-2 p-2 hover:bg-accent/30">
+                      <Badge variant={s.is_active ? "default" : "secondary"} className="text-[10px] shrink-0">
+                        {s.platform || "—"}
+                      </Badge>
+                      <code className="text-xs flex-1 truncate" title={s.keyword}>{s.keyword}</code>
+                      <Button size="sm" variant="ghost" onClick={() => toggleSource(s)} className="h-7 text-xs">
+                        {s.is_active ? "Dezactivează" : "Activează"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteSource(s)}
+                        className="h-7 w-7 p-0 text-destructive"
+                        aria-label="Șterge cuvântul cheie"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Discover button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border bg-background/50">
           <div className="flex-1">
