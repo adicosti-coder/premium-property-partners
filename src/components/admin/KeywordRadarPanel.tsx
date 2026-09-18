@@ -110,9 +110,7 @@ export default function KeywordRadarPanel() {
 
   // Căutare la cerere: orice frază scrisă aici este trimisă la scraper cu
   // filtrul „doar proprietari" activ. Nu salvează cuvântul în listă.
-  const executeSearch = async (term: string, platform: string) => {
-    setSearchResults(null);
-    setSearchSummary(null);
+  const searchOnePlatform = async (term: string, platform: string) => {
     const { data, error } = await supabase.functions.invoke("scrape-prospects", {
       body: {
         custom_query: term,
@@ -124,12 +122,53 @@ export default function KeywordRadarPanel() {
     });
     if (error) throw error;
     const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
+    const b = (data as any)?.funnel_breakdown || {};
+    return {
+      platform,
+      listings: listings.map(l => ({ ...l, source_platform: l.source_platform || l.platform || platform })),
+      agency: Number(b.agency_signal || 0),
+      duplicate: Number(b.duplicate || 0),
+    };
+  };
+
+  const executeSearch = async (term: string, platform: string) => {
+    setSearchResults(null);
+    setSearchSummary(null);
+    const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
+
+    const settled = await Promise.allSettled(platforms.map(p => searchOnePlatform(term, p)));
+    const ok = settled.flatMap(r => (r.status === "fulfilled" ? [r.value] : []));
+    const failedCount = settled.length - ok.length;
+    if (ok.length === 0) {
+      const first = settled.find(r => r.status === "rejected") as PromiseRejectedResult | undefined;
+      throw new Error(first?.reason?.message || "Căutarea nu a returnat rezultate.");
+    }
+
+    // Deduplicare pe link între platforme
+    const seen = new Set<string>();
+    const listings: AdHocListing[] = [];
+    for (const r of ok) {
+      for (const l of r.listings) {
+        const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
+        if (key && seen.has(key)) continue;
+        if (key) seen.add(key);
+        listings.push(l);
+      }
+    }
     setSearchResults(listings);
-    const skipped = (data as any)?.funnel_breakdown || {};
+
+    const agency = ok.reduce((s, r) => s + r.agency, 0);
+    const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
+    const perPlatform = ok
+      .filter(r => r.listings.length > 0)
+      .map(r => `${r.platform}: ${r.listings.length}`)
+      .join(" · ");
     setSearchSummary(
-      `${listings.length} anunțuri de la proprietari` +
-        (skipped.agency_signal ? ` · ${skipped.agency_signal} agenții excluse` : "") +
-        (skipped.duplicate ? ` · ${skipped.duplicate} deja în listă` : ""),
+      `${listings.length} anunțuri de la proprietari pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
+        (perPlatform ? ` (${perPlatform})` : "") +
+        (agency ? ` · ${agency} agenții excluse` : "") +
+        (duplicate ? ` · ${duplicate} deja în listă` : "") +
+        (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
     );
     // Anunțurile salvate apar imediat în „Anunțuri noi găsite"
     window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
