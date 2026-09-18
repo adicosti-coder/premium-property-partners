@@ -298,6 +298,7 @@ export default function MyListingsCompare() {
     setPublishingSite(null);
     await notifyPublished(r, "realtrust.ro", url, at);
     void load();
+    return url;
   };
 
   /** E-mail de confirmare la marcarea publicării, cu linkul platformei. */
