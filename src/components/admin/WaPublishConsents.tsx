@@ -40,6 +40,17 @@ const STATUS_LABEL: Record<string, string> = {
 const fmt = (d: string | null) =>
   d ? new Date(d).toLocaleString("ro-RO", { dateStyle: "short", timeStyle: "short" }) : "—";
 
+/** Cât a durat până a răspuns proprietarul; pentru cererile fără răspuns, cât așteptăm deja. */
+const durationLabel = (c: { requested_at: string | null; consented_at: string | null; revoked_at: string | null; status: string }) => {
+  if (!c.requested_at) return null;
+  const end = c.consented_at || c.revoked_at;
+  const ms = (end ? new Date(end).getTime() : Date.now()) - new Date(c.requested_at).getTime();
+  if (ms <= 0) return null;
+  const text = ms < 3600_000 ? `${Math.round(ms / 60_000)} min` : ms < 86_400_000 ? `${(ms / 3600_000).toFixed(1)} h` : `${Math.round(ms / 86_400_000)} zile`;
+  return end ? `Răspuns în ${text}` : `Așteptăm de ${text}`;
+};
+
+
 /**
  * Acordurile proprietarilor, date pe WhatsApp, pentru preluarea anunțului pe
  * realtrust.ro. Nimic nu se publică fără un acord valid înregistrat aici.
@@ -89,6 +100,21 @@ const WaPublishConsents = () => {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Actualizare instantanee: când proprietarul răspunde pe WhatsApp, lista se
+  // reîncarcă singură, fără să fie nevoie de apăsarea butonului „Reîncarcă”.
+  useEffect(() => {
+    const channel = supabase
+      .channel("wa-publish-consents-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wa_publish_consents" },
+        () => { void load(); },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [load]);
+
 
   const requestConsent = async (prospectId: string) => {
     setSending(prospectId);
@@ -279,6 +305,10 @@ const WaPublishConsents = () => {
                   {fmt(c.published_at)}
                   {c.revoked_at ? ` · Retras: ${fmt(c.revoked_at)}` : ""}
                 </p>
+                {durationLabel(c) && (
+                  <p className="text-xs font-medium text-muted-foreground">{durationLabel(c)}</p>
+                )}
+
                 {c.consent_text && (
                   <p className="text-xs italic text-muted-foreground">„{c.consent_text}”</p>
                 )}
