@@ -58,7 +58,16 @@ Deno.serve(async (req) => {
   }
 
   const afterHours = Math.max(6, Number(settings?.outbound_followup_after_hours ?? 48));
-  const template = String(settings?.outbound_followup_template || "andrei_followup_ro");
+  const configuredTemplate = String(settings?.outbound_followup_template || "andrei_followup_ro");
+  // Dacă șablonul configurat nu e aprobat în română, folosim unul aprobat —
+  // altfel Meta respinge fiecare mesaj cu eroarea 132001 și coada se blochează.
+  const resolved = await resolveApprovedTemplate(configuredTemplate, "ro");
+  const template = resolved.name;
+  if (resolved.fallback) {
+    console.warn(
+      `[wa-followup-nudge] template "${configuredTemplate}" nu e aprobat în ro — folosesc "${template}"`,
+    );
+  }
   const maxPerRun = Math.min(
     50,
     Math.max(1, Number(body.limit ?? settings?.outbound_followup_max_per_run ?? 20)),
