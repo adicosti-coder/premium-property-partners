@@ -293,9 +293,14 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 custom_query: customQuery,
                 only_new_sources: true,
-                preserve_agency_filter: true,
+                preserve_agency_filter: cfg?.owner_only !== false,
                 discovery_mode: true,
-                max_results: 5,
+                max_results: Math.min(Math.max(Number(cfg?.max_results) || 5, 1), 20),
+                min_price: cfg?.min_price ?? undefined,
+                max_price: cfg?.max_price ?? undefined,
+                min_rooms: cfg?.min_rooms ?? undefined,
+                max_rooms: cfg?.max_rooms ?? undefined,
+                zones: cfg?.zones?.length ? cfg.zones : undefined,
                 source_label: `keyword-radar:${kw.id}`,
               }),
               signal: abort,
@@ -313,9 +318,13 @@ Deno.serve(async (req) => {
               0,
           ) || 0;
           kwResults += cnt;
+          const fb = j?.funnel_breakdown || {};
           kwDetail.platforms[platform] = {
             ok: resp.ok,
             inserted: cnt,
+            duration_ms: Date.now() - platformStartedAt,
+            agency: Number(fb.agency_signal || 0) || 0,
+            duplicate: Number(fb.duplicate || 0) || 0,
             route: pmPlatform ? "pm-leads" : "prospects",
           };
           const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
