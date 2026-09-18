@@ -41,9 +41,14 @@ const DEFAULT_MAX_RUNTIME_MS = 40_000;
 // Credit saver: on scheduled runs we only try the richest few sources per keyword.
 const DEFAULT_MAX_PLATFORMS = 3;
 // Un singur cuvânt-cheie nu poate consuma tot bugetul rulării.
-const DEFAULT_MAX_KEYWORD_MS = 18_000;
-// O sursă lentă este abandonată, nu blochează cuvântul.
-const DEFAULT_MAX_PLATFORM_MS = 13_000;
+const DEFAULT_MAX_KEYWORD_MS = 12_000;
+// O sursă lentă este abandonată repede, nu blochează cuvântul.
+const DEFAULT_MAX_PLATFORM_MS = 8_000;
+// Adaptiv: o sursă primește cel mult 2x timpul ei mediu istoric (min 4s).
+const adaptiveTimeout = (avgMs: number | undefined, cap: number) => {
+  if (!avgMs || avgMs <= 0) return cap;
+  return Math.max(4_000, Math.min(cap, Math.round(avgMs * 2)));
+};
 
 // Hospitality platforms are NOT scraped into prospect_listings (they would
 // never be published on realtrust.ro). Instead they feed `pm_collaboration_leads`
@@ -206,8 +211,10 @@ Deno.serve(async (req) => {
       // first, and one that returned nothing 4 scans in a row is skipped until
       // an admin scans that keyword explicitly (keyword_ids in the body).
       const meta: any = (kw.metadata && typeof kw.metadata === "object") ? { ...kw.metadata } : {};
-      const pstats: Record<string, { total: number; zero_streak: number; calls?: number }> =
-        (meta.platform_stats && typeof meta.platform_stats === "object") ? { ...meta.platform_stats } : {};
+      const pstats: Record<
+        string,
+        { total: number; zero_streak: number; calls?: number; avg_ms?: number; timeout_streak?: number }
+      > = (meta.platform_stats && typeof meta.platform_stats === "object") ? { ...meta.platform_stats } : {};
       // Randament mediu pe apel (nu total brut): sursele noi sunt încercate
       // înaintea celor testate deja fără rezultate.
       const yieldOf = (p: string) => {
@@ -216,8 +223,10 @@ Deno.serve(async (req) => {
         const calls = Math.max(1, Number(s.calls || 1));
         return (Number(s.total) || 0) / calls;
       };
+      // La randament egal, sursa mai rapidă merge prima: scanarea completă se termină mai repede.
+      const speedOf = (p: string) => Number(pstats[p]?.avg_ms || 0) || 0;
       const platformList = [...(kw.platforms as string[])]
-        .sort((a, b) => yieldOf(b) - yieldOf(a))
+        .sort((a, b) => (yieldOf(b) - yieldOf(a)) || (speedOf(a) - speedOf(b)))
         .slice(0, maxPlatforms);
 
       for (const platform of platformList) {
@@ -239,6 +248,14 @@ Deno.serve(async (req) => {
           kwDetail.platforms[platform] = { skipped: "low_yield" };
           continue;
         }
+        // Sursele care au dat timeout de 2 ori la rând se sar temporar (reîncercare
+        // la fiecare a 5-a rulare): nu mai consumăm bugetul pe surse blocate.
+        const tstreak = pstats[platform]?.timeout_streak || 0;
+        if (!onlyKeywordIds && tstreak >= 2 && tstreak % 5 !== 0) {
+          stats.skipped_slow = (stats.skipped_slow || 0) + 1;
+          kwDetail.platforms[platform] = { skipped: "slow_source" };
+          continue;
+        }
         // Sursă oprită manual din „Configurare pe platformă"
         const cfg = platformCfg.get(platform);
         if (cfg && cfg.is_enabled === false) {
@@ -254,10 +271,13 @@ Deno.serve(async (req) => {
         await pushProgress();
         const platformStartedAt = Date.now();
 
-        // Timeout dur pe sursă: dacă nu răspunde, abandonăm apelul.
+        // Timeout dur pe sursă, adaptat la viteza ei istorică: dacă nu răspunde, abandonăm apelul.
         const platformTimeoutMs = Math.max(
           3_000,
-          Math.min(maxPlatformMs, keywordBudgetMs - (Date.now() - keywordStartedAt)),
+          Math.min(
+            adaptiveTimeout(pstats[platform]?.avg_ms, maxPlatformMs),
+            keywordBudgetMs - (Date.now() - keywordStartedAt),
+          ),
         );
         const abort = AbortSignal.timeout(platformTimeoutMs);
 
@@ -328,10 +348,16 @@ Deno.serve(async (req) => {
             route: pmPlatform ? "pm-leads" : "prospects",
           };
           const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
+          const took = Date.now() - platformStartedAt;
+          const prevCalls = Number(cur.calls) || 0;
           pstats[platform] = {
             total: (Number(cur.total) || 0) + cnt,
             zero_streak: cnt > 0 ? 0 : (Number(cur.zero_streak) || 0) + 1,
-            calls: (Number(cur.calls) || 0) + 1,
+            calls: prevCalls + 1,
+            // medie glisantă a duratei, folosită pentru timeout adaptiv
+            avg_ms: Math.round(((Number(cur.avg_ms) || took) * Math.min(prevCalls, 9) + took) /
+              (Math.min(prevCalls, 9) + 1)),
+            timeout_streak: 0,
           };
           if (!resp.ok) {
             stats.errors++;
@@ -339,9 +365,15 @@ Deno.serve(async (req) => {
           }
         } catch (e) {
           const timedOut = String(e).includes("Timeout") || String(e).includes("abort");
+          const cur = pstats[platform] || { total: 0, zero_streak: 0, calls: 0 };
           if (timedOut) {
             stats.timeouts = (stats.timeouts || 0) + 1;
             kwDetail.platforms[platform] = { ok: false, timeout_ms: platformTimeoutMs };
+            pstats[platform] = {
+              ...cur,
+              calls: (Number(cur.calls) || 0) + 1,
+              timeout_streak: (Number(cur.timeout_streak) || 0) + 1,
+            };
           } else {
             stats.errors++;
             kwDetail.platforms[platform] = { ok: false, error: String(e) };

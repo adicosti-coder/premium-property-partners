@@ -3700,6 +3700,66 @@ export type Database = {
         }
         Relationships: []
       }
+      my_listings: {
+        Row: {
+          contact_phone: string | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          listing_url: string | null
+          notes: string | null
+          platforms: string[] | null
+          price: number | null
+          property_type: string | null
+          publish_status: Json | null
+          rooms: number | null
+          size: number | null
+          title: string
+          updated_at: string | null
+          zone: string | null
+        }
+        Insert: {
+          contact_phone?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          listing_url?: string | null
+          notes?: string | null
+          platforms?: string[] | null
+          price?: number | null
+          property_type?: string | null
+          publish_status?: Json | null
+          rooms?: number | null
+          size?: number | null
+          title: string
+          updated_at?: string | null
+          zone?: string | null
+        }
+        Update: {
+          contact_phone?: string | null
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          listing_url?: string | null
+          notes?: string | null
+          platforms?: string[] | null
+          price?: number | null
+          property_type?: string | null
+          publish_status?: Json | null
+          rooms?: number | null
+          size?: number | null
+          title?: string
+          updated_at?: string | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
@@ -11372,6 +11432,20 @@ export type Database = {
           cache_key: string
           generated_at: string
           url_count: number
+        }[]
+      }
+      get_zone_price_report: {
+        Args: { p_days?: number; p_type?: string }
+        Returns: {
+          avg_price: number
+          avg_price_prev_month: number
+          avg_price_sqm: number
+          avg_price_this_month: number
+          last_seen_at: string
+          platforms: number
+          property_type: string
+          samples: number
+          zone: string
         }[]
       }
       has_role: {

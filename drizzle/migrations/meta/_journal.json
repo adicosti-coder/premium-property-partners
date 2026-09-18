@@ -260,6 +260,27 @@
       "when": 1789739545552,
       "tag": "0036_fix_platform_scan_report_monthly",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1789740463874,
+      "tag": "0037_my_listings_and_zone_price_report",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1789740843237,
+      "tag": "0038_price_history_skip_null_price",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1789740882230,
+      "tag": "0039_price_history_sanity_bounds",
+      "breakpoints": true
     }
   ]
 }
