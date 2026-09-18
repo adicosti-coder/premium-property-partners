@@ -12,6 +12,8 @@ import KeywordRadarSourceHealth from "./KeywordRadarSourceHealth";
 import KeywordRadarNewListings, { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 import PlatformReportPanel from "./PlatformReportPanel";
 import PlatformConfigPanel from "./PlatformConfigPanel";
+import ZonePriceReport from "./ZonePriceReport";
+import MyListingsCompare from "./MyListingsCompare";
 
 interface SourceRow {
   id: string;
@@ -349,7 +351,11 @@ export default function KeywordRadarPanel() {
 
         <PlatformReportPanel />
 
+        <ZonePriceReport />
+
         <PlatformConfigPanel />
+
+        <MyListingsCompare />
 
         <KeywordRadarNewListings />
 
