@@ -445,6 +445,13 @@ Deno.serve(async (req) => {
       lifecycle_status: "to_call",
     }).eq("id", prospect.id);
 
+    // Legăm acordul proprietarului de pagina publicată (pentru retragere rapidă).
+    await supabase.from("wa_publish_consents").update({
+      status: "published",
+      property_id: inserted.id,
+      published_at: new Date().toISOString(),
+    }).eq("id", consentRow.id);
+
     // Fire-and-forget: image processing
     if (finalImages.length > 0) {
       const proc = fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/process-listing-images`, {
