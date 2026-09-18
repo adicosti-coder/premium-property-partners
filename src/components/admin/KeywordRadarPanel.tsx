@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Radar, Loader2, Plus, Trash2, Globe, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import KeywordRadarLiveReport from "./KeywordRadarLiveReport";
+import KeywordRadarNewListings from "./KeywordRadarNewListings";
 
 interface SourceRow {
   id: string;
@@ -254,6 +255,8 @@ export default function KeywordRadarPanel() {
       <CardContent className="space-y-6">
         {/* Raport scanare cu progres live */}
         <KeywordRadarLiveReport />
+
+        <KeywordRadarNewListings />
 
         {/* Rubrică separată: caută anunțuri de la proprietari cu orice cuvinte cheie */}
         <div className="space-y-2 p-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5">
