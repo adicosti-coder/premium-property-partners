@@ -113,16 +113,34 @@ Deno.serve(async (req) => {
     }
 
     // Fereastră închisă → coada de mesaj inițial cu șablonul aprobat.
-    const { error: qErr } = await supabase.from("wa_outbound_queue").upsert({
+    // Indexul unic este parțial (doar status='pending'), deci verificăm manual
+    // și inserăm; un upsert pe phone_normalized nu poate folosi acel index.
+    const { data: pendingRow } = await supabase
+      .from("wa_outbound_queue")
+      .select("id")
+      .eq("phone_normalized", phone)
+      .eq("status", "pending")
+      .limit(1)
+      .maybeSingle();
+    if (pendingRow) {
+      results.push({ id: p.id, status: "already_queued" });
+      continue;
+    }
+    const tpl = await resolveApprovedTemplate(
+      Deno.env.get("WA_OUTBOUND_TEMPLATE") || "intake_prospect_apartments",
+      "ro",
+    );
+    const { error: qErr } = await supabase.from("wa_outbound_queue").insert({
       phone_normalized: phone,
       prospect_listing_id: p.id,
-      template_name: Deno.env.get("WA_OUTBOUND_TEMPLATE") || "intake_prospect_apartments",
+      template_name: tpl.name,
       template_language: "ro",
       template_params: [],
       status: "pending",
       priority: 5,
       source: "publish_consent_request",
-    }, { onConflict: "phone_normalized", ignoreDuplicates: true });
+    });
+    if (qErr) console.error("[wa-request-publish-consent] queue insert failed:", qErr);
     results.push({ id: p.id, status: qErr ? "queue_failed" : "queued" });
   }
 
