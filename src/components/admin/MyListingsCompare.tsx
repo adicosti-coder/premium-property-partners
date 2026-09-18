@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, RefreshCw, Trash2, Copy, ExternalLink, CheckCircle2, TrendingUp, TrendingDown, Mail,
+  ImagePlus, Rocket, Wand2, Loader2,
 } from "lucide-react";
 
 interface MyListing {
@@ -31,6 +32,7 @@ interface MyListing {
   size: number | null;
   price: number | null;
   description: string | null;
+  image_url: string | null;
   contact_phone: string | null;
   listing_url: string | null;
   publish_status: Record<string, unknown> | null;
