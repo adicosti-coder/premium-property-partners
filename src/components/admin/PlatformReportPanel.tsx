@@ -22,6 +22,11 @@ interface ReportRow {
   avg_sqm_this_month: number | null;
   avg_sqm_prev_month: number | null;
   last_found_at: string | null;
+  /** Anunțuri preluate pe realtrust.ro din platforma respectivă. */
+  site_published: number | null;
+  site_avg_price: number | null;
+  site_avg_price_sqm: number | null;
+  site_last_published_at: string | null;
 }
 
 interface PlatformResult {
