@@ -378,10 +378,49 @@ export default function MyListingsCompare() {
             <Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} />
           </div>
           <div className="md:col-span-3">
-            <Label>Descriere</Label>
-            <Textarea rows={3} value={form.description}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label>Descriere</Label>
+              <Button type="button" variant="outline" size="sm" onClick={suggestDescription}>
+                <Wand2 className="mr-1 h-3.5 w-3.5" /> Generează descrierea
+              </Button>
+            </div>
+            <Textarea rows={5} value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Detalii despre imobil, dotări, disponibilitate..." />
+          </div>
+          <div className="md:col-span-3">
+            <Label htmlFor="my-listing-image">Imagine anunț</Label>
+            <div className="flex flex-wrap items-center gap-3">
+              <Input
+                id="my-listing-image"
+                type="file"
+                accept="image/*"
+                disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void uploadImage(f);
+                }}
+                className="max-w-[280px]"
+              />
+              {uploading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              {form.image_url && (
+                <img
+                  src={form.image_url}
+                  alt="Imaginea anunțului meu"
+                  className="h-16 w-16 rounded-md object-cover"
+                  loading="lazy"
+                />
+              )}
+              {form.image_url && (
+                <Button type="button" variant="ghost" size="sm"
+                  onClick={() => setForm({ ...form, image_url: "" })}>
+                  Elimină imaginea
+                </Button>
+              )}
+            </div>
+            <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+              <ImagePlus className="h-3.5 w-3.5" /> Imaginea se salvează o dată și o folosești la fiecare publicare.
+            </p>
           </div>
           <div className="md:col-span-3">
             <Button onClick={() => void save()} disabled={saving}>
