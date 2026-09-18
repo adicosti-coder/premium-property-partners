@@ -13,6 +13,8 @@ interface KeywordRow {
   id: string;
   keyword: string;
   platform: string;
+  /** Colecția de cuvinte cheie din care provine (blocuri noi, ansambluri etc.). */
+  collection: string;
   is_active: boolean;
   found_period: number;
   with_phone: number;
@@ -57,6 +59,7 @@ interface KeywordTiming {
 export default function KeywordEfficiencyReport() {
   const [days, setDays] = useState("30");
   const [platform, setPlatform] = useState("all");
+  const [collection, setCollection] = useState("all");
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<KeywordRow[]>([]);
   const [timings, setTimings] = useState<Record<string, KeywordTiming>>({});
@@ -67,7 +70,7 @@ export default function KeywordEfficiencyReport() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_keyword_scan_report_v2", {
+    const { data, error } = await supabase.rpc("get_keyword_scan_report_v3", {
       p_days: Number(days),
       p_platform: platform === "all" ? null : platform,
     });
@@ -125,8 +128,22 @@ export default function KeywordEfficiencyReport() {
 
   const filtered = useMemo(() => {
     const q = norm(search.trim());
-    return q ? rows.filter((r) => norm(r.keyword).includes(q)) : rows;
-  }, [rows, search]);
+    let list = rows;
+    if (collection !== "all") list = list.filter((r) => (r.collection || "nealocat") === collection);
+    return q ? list.filter((r) => norm(r.keyword).includes(q)) : list;
+  }, [rows, search, collection]);
+
+  const collections = useMemo(() => {
+    const map = new Map<string, { found: number; total: number }>();
+    for (const r of rows) {
+      const key = r.collection || "nealocat";
+      const cur = map.get(key) || { found: 0, total: 0 };
+      cur.found += r.found_period;
+      cur.total += 1;
+      map.set(key, cur);
+    }
+    return [...map.entries()].sort((a, b) => b[1].found - a[1].found);
+  }, [rows]);
 
   const active = useMemo(() => filtered.filter((r) => r.is_active), [filtered]);
   const useless = useMemo(
@@ -191,12 +208,13 @@ export default function KeywordEfficiencyReport() {
   const exportCsv = () => {
     downloadCsv(
       csvFileName("raport-cuvinte-cheie"),
-      ["Cuvânt cheie", "Platformă", "Activ", "Anunțuri", "Cu telefon", "Preț mediu", "Ultimul anunț", "Scanări reușite", "Scanări fără rezultat", "Zero consecutiv", "Timp mediu sursă (ms)", "Cea mai lentă sursă", "Timp cea mai lentă (ms)", "Depășiri de timp", "Surse sărite", "Zonă principală", "Preț mediu zonă luna asta", "Preț mediu zonă luna trecută", "Variație lunară %", "€/mp zonă", "Anunțuri realtrust.ro în zonă", "Preț mediu realtrust.ro"],
+      ["Cuvânt cheie", "Platformă", "Colecție", "Activ", "Anunțuri", "Cu telefon", "Preț mediu", "Ultimul anunț", "Scanări reușite", "Scanări fără rezultat", "Zero consecutiv", "Timp mediu sursă (ms)", "Cea mai lentă sursă", "Timp cea mai lentă (ms)", "Depășiri de timp", "Surse sărite", "Zonă principală", "Preț mediu zonă luna asta", "Preț mediu zonă luna trecută", "Variație lunară %", "€/mp zonă", "Anunțuri realtrust.ro în zonă", "Preț mediu realtrust.ro"],
       filtered.map((r) => {
         const t = timings[r.keyword];
         return [
           r.keyword,
           r.platform,
+          r.collection || "nealocat",
           r.is_active ? "da" : "nu",
           r.found_period,
           r.with_phone,
@@ -242,6 +260,17 @@ export default function KeywordEfficiencyReport() {
                 {PLATFORMS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={collection} onValueChange={setCollection}>
+              <SelectTrigger className="w-[185px] min-h-[44px] sm:min-h-0" aria-label="Filtrează pe colecție">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toate colecțiile</SelectItem>
+                {collections.map(([c, s2]) => (
+                  <SelectItem key={c} value={c}>{c} ({s2.found} anunțuri)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={days} onValueChange={setDays}>
               <SelectTrigger className="w-[150px] min-h-[44px] sm:min-h-0" aria-label="Alege perioada">
                 <SelectValue />
@@ -272,6 +301,11 @@ export default function KeywordEfficiencyReport() {
             />
           </div>
           <Badge variant="secondary">{active.length} active</Badge>
+          {collections.slice(0, 4).map(([c, s2]) => (
+            <Badge key={c} variant="outline" className="text-[10px]">
+              {c}: {s2.found} anunțuri / {s2.total} cuvinte
+            </Badge>
+          ))}
           <Badge variant="outline">{useless.length} fără rezultate</Badge>
           <Button
             size="sm"
@@ -317,6 +351,7 @@ export default function KeywordEfficiencyReport() {
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <span className="font-medium">{r.keyword}</span>
                   <Badge variant="outline" className="text-[10px]">{r.platform}</Badge>
+                  <Badge variant="secondary" className="text-[10px]">{r.collection || "nealocat"}</Badge>
                   <Badge variant={r.found_period > 0 ? "secondary" : "destructive"} className="text-[10px]">
                     {r.found_period} anunțuri
                   </Badge>
