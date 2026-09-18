@@ -218,6 +218,27 @@
       "when": 1789718653677,
       "tag": "0030_cron_prospect_new_listings_alert",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1789726267933,
+      "tag": "0031_prospect_instant_alert_and_30d_archive",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1789726480264,
+      "tag": "0032_fix_prospect_price_history_surface_column",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1789726649056,
+      "tag": "0033_fix_prospect_scorer_trigger_auth",
+      "breakpoints": true
     }
   ]
 }

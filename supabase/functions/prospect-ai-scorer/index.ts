@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { isInternalCall } from "../_shared/cronAuth.ts";
 
 /* ──────────────────────────────────────────────────────────────
    AI Lead Scorer for prospect_listings.
@@ -14,7 +15,7 @@ import { requireAdmin } from "../_shared/adminAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret, x-webhook-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -34,11 +35,13 @@ function hasOwnerFilterSignal(prospect: any): boolean {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Allow either: (a) admin JWT, or (b) internal call from DB trigger using service_role bearer
+  // Allow either: (a) admin JWT, or (b) internal call from DB trigger
+  // (x-cron-secret / x-webhook-secret / service_role bearer)
   const authHeader = req.headers.get("Authorization") || "";
   const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
   const SERVICE_KEY_ENV = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  const isInternal = bearer.length > 0 && SERVICE_KEY_ENV.length > 0 && bearer === SERVICE_KEY_ENV;
+  const bearerInternal = bearer.length > 0 && SERVICE_KEY_ENV.length > 0 && bearer === SERVICE_KEY_ENV;
+  const isInternal = bearerInternal || (await isInternalCall(req));
   if (!isInternal) {
     const auth = await requireAdmin(req, corsHeaders);
     if (!auth.ok) return auth.response!;
