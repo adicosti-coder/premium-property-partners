@@ -236,6 +236,61 @@ export default function MyListingsCompare() {
     });
   };
 
+  const [publishingSite, setPublishingSite] = useState<string | null>(null);
+
+  /** Publică anunțul direct pe realtrust.ro (creează pagina proprietății). */
+  const publishOnSite = async (r: MyListing) => {
+    if (!r.price) {
+      toast({ title: "Adaugă prețul înainte de publicare", variant: "destructive" });
+      return;
+    }
+    const existing = readPublish((r.publish_status || {})["realtrust.ro"]);
+    if (existing) {
+      toast({ title: "Anunțul este deja publicat pe realtrust.ro" });
+      return;
+    }
+    setPublishingSite(r.id);
+    const slug = `${r.title
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60)}-${r.id.slice(0, 6)}`;
+
+    const { data: prop, error } = await supabase
+      .from("properties")
+      .insert({
+        name: r.title,
+        location: r.zone || "Timișoara",
+        description_ro: r.description || r.title,
+        description_en: r.description || r.title,
+        tag: "Anunț proprietar",
+        slug,
+        capital_necesar: Number(r.price),
+        size: r.size ? Number(r.size) : null,
+        rooms: r.rooms ? Number(r.rooms) : null,
+        images: r.image_url ? [r.image_url] : [],
+        is_active: true,
+      } as never)
+      .select("id, slug")
+      .single();
+
+    if (error) {
+      setPublishingSite(null);
+      toast({ title: "Nu s-a putut publica pe realtrust.ro", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const at = new Date().toISOString();
+    const url = `https://realtrust.ro/proprietate/${(prop as { slug: string }).slug}`;
+    const status = { ...(r.publish_status || {}), "realtrust.ro": { at, url } };
+    await supabase.from("my_listings").update({ publish_status: status as never }).eq("id", r.id);
+    setPublishingSite(null);
+    await notifyPublished(r, "realtrust.ro", url, at);
+    void load();
+  };
+
   /** E-mail de confirmare la marcarea publicării, cu linkul platformei. */
   const notifyPublished = async (r: MyListing, platform: string, url: string | null, at: string) => {
     const { error } = await supabase.functions.invoke("send-transactional-email", {
@@ -483,6 +538,31 @@ export default function MyListingsCompare() {
                   <Button size="sm" onClick={() => void publishEverywhere(r)}>
                     <Rocket className="mr-1 h-3.5 w-3.5" /> Publică pe toate cele 5 platforme
                   </Button>
+                  {(() => {
+                    const site = readPublish(status["realtrust.ro"]);
+                    return site ? (
+                      <a
+                        href={site.url || "https://realtrust.ro"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs underline"
+                      >
+                        publicat pe realtrust.ro {dateTimeRo(site.at)}
+                      </a>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={publishingSite === r.id}
+                        onClick={() => void publishOnSite(r)}
+                      >
+                        {publishingSite === r.id
+                          ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                          : <Rocket className="mr-1 h-3.5 w-3.5" />}
+                        Publică pe realtrust.ro
+                      </Button>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-2">

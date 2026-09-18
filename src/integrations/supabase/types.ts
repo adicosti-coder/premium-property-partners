@@ -11580,6 +11580,21 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_site_vs_market_report: {
+        Args: { p_days?: number; p_type?: string }
+        Returns: {
+          market_avg_price: number
+          market_avg_sqm: number
+          market_count: number
+          price_diff_pct: number
+          property_type: string
+          site_avg_price: number
+          site_avg_sqm: number
+          site_count: number
+          sqm_diff_pct: number
+          zone: string
+        }[]
+      }
       get_sitemap_status: {
         Args: never
         Returns: {

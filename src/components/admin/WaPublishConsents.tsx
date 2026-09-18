@@ -113,6 +113,55 @@ const WaPublishConsents = () => {
     consents.filter((c) => c.prospect_listing_id).map((c) => [c.prospect_listing_id!, c]),
   );
 
+  /** Trimite cererea de acord tuturor anunțurilor de proprietari fără acord înregistrat. */
+  const requestAllMissing = async () => {
+    const ids = prospects
+      .filter((p) => !consentByProspect.has(p.id) && p.phone_normalized)
+      .map((p) => p.id)
+      .slice(0, 25);
+    if (!ids.length) {
+      toast.info("Toate anunțurile de proprietari au deja o cerere de acord.");
+      return;
+    }
+    setSending("all");
+    const { data, error } = await supabase.functions.invoke("wa-request-publish-consent", {
+      body: { prospect_ids: ids },
+    });
+    setSending(null);
+    if (error) {
+      toast.error("Cererile nu au putut fi trimise.");
+      return;
+    }
+    const results = (data as { results?: { status: string }[] })?.results ?? [];
+    const ok = results.filter((r) => r.status === "sent" || r.status === "queued").length;
+    toast.success(`${ok} din ${results.length} cereri de acord au plecat pe WhatsApp.`);
+    void load();
+  };
+
+  // Dashboard: câte acorduri sunt cerute, primite, publicate, retrase + durata medie de răspuns.
+  const stats = (() => {
+    const count = (s: string) => consents.filter((c) => c.status === s).length;
+    const durations = consents
+      .filter((c) => c.requested_at && c.consented_at)
+      .map((c) => new Date(c.consented_at!).getTime() - new Date(c.requested_at!).getTime())
+      .filter((ms) => ms > 0);
+    const avgMs = durations.length
+      ? durations.reduce((a, b) => a + b, 0) / durations.length
+      : null;
+    const avgLabel = avgMs == null
+      ? "—"
+      : avgMs < 3600_000
+        ? `${Math.round(avgMs / 60_000)} min`
+        : `${(avgMs / 3600_000).toFixed(1)} h`;
+    return {
+      requested: count("requested"),
+      granted: count("granted"),
+      published: count("published"),
+      revoked: count("revoked"),
+      avgLabel,
+    };
+  })();
+
   const q = search.trim().toLowerCase();
   const visible = prospects.filter((p) =>
     !q ||
@@ -138,8 +187,35 @@ const WaPublishConsents = () => {
           imediat anunțul de pe site. Fără acord, niciun anunț nu ajunge pe site.
         </p>
 
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+          {[
+            { label: "Cerut, așteptăm răspuns", value: stats.requested },
+            { label: "Acord primit", value: stats.granted },
+            { label: "Publicate pe site", value: stats.published },
+            { label: "Acord retras", value: stats.revoked },
+            { label: "Durată medie de răspuns", value: stats.avgLabel },
+          ].map((s) => (
+            <div key={s.label} className="rounded-lg border border-border p-3">
+              <p className="text-lg font-semibold">{s.value}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
         <div>
-          <p className="text-sm font-medium mb-2">Anunțuri de proprietari — cere acordul</p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium">Anunțuri de proprietari — cere acordul</p>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="min-h-[44px]"
+              disabled={sending === "all"}
+              onClick={() => void requestAllMissing()}
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Cere acordul tuturor fără cerere
+            </Button>
+          </div>
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
