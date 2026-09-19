@@ -604,7 +604,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
     const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
-    const term = `${typePart} ${roomsPart} ${partitionPart} ${floorPart} ${base} ${zonePart} ${cityPart} ${dealPart}`
+    // Compartimentarea și etajul NU intră în interogare (restrâng prea mult
+    // rezultatele pe portaluri) — se aplică la filtrarea rezultatelor.
+    void partitionPart; void floorPart;
+    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`
       .replace(/\s+/g, " ")
       .trim();
     if (term.length < 3) {
