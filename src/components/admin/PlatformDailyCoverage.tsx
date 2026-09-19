@@ -137,7 +137,7 @@ export default function PlatformDailyCoverage() {
       .sort((a, b) => (a[0] < b[0] ? 1 : -1))
       .map(([day, m]) => ({ day, counts: m, total: Array.from(m.values()).reduce((s, v) => s + v, 0) }));
     return { platforms: plats, dayRows: rows, totals: tot, lastSeen: seen };
-  }, [raw]);
+  }, [filtered]);
 
   /** Preț mediu, €/mp mediu și scăderi de preț pe fiecare platformă. */
   const stats = useMemo(() => {
