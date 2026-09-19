@@ -654,7 +654,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 
