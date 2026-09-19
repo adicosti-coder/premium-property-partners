@@ -277,8 +277,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   /** Portalul pe care a fost găsit anunțul. */
   const listingPortal = (l: AdHocListing) => (l.source_platform || l.platform || "").trim();
 
-  /** Filtrele se aplică instant pe rezultate, fără o nouă căutare. */
-  const filterListings = (list: AdHocListing[]): AdHocListing[] => {
+  /**
+   * Motivul exact pentru care un anunț nu respectă filtrele, sau `null` dacă
+   * le respectă. Informația lipsă din anunț NU exclude anunțul — arătăm mai
+   * degrabă oferta, decât să o pierdem din cauza unui titlu sărac.
+   */
+  const excludeReason = (l: AdHocListing): string | null => {
     const min = minPrice ? Number(minPrice.replace(/[^\d]/g, "")) : null;
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
@@ -287,34 +291,46 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
     const wantedZone = zone === ANY_ZONE ? null : zone;
     const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
-    return list.filter(l => {
-      const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
-      const normalizedText = ` ${norm(rawText)} `;
-      const text = rawText.toLowerCase();
-      // Cuvintele scrise în căutare sunt obligatorii. Potrivirea pe cuvinte
-      // întregi evită ca „decomandat” să accepte automat „semidecomandat”.
-      if (searchTokens.some(token => !normalizedText.includes(` ${token} `))) return false;
-      if (onlyWithPhone && !l.phone) return false;
-      if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
-      if (wantedRooms !== null) {
-        const r = typeof l.rooms === "number" ? l.rooms : null;
-        const fromTitle = /(\d+)\s*[- ]?\s*(?:camere?|cam\.?\b)/i.exec(text);
-        const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
-        // nr. camere necunoscut → nu excludem anunțul
-        if (value !== null && (wantedRooms === 4 ? value < 4 : value !== wantedRooms)) return false;
+
+    const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
+    const normalizedText = ` ${norm(rawText)} `;
+    const text = rawText.toLowerCase();
+    /** Anunț cu metadate sărace: nu putem verifica detaliile fine. */
+    const thinText = norm(`${l.title || ""} ${l.description || ""}`).length < 45;
+
+    // Cuvintele scrise în căutare sunt obligatorii doar dacă anunțul are text
+    // suficient; potrivirea pe cuvinte întregi evită „semidecomandat”.
+    if (!thinText && searchTokens.some(token => !normalizedText.includes(` ${token} `))) {
+      return "cuvintele căutate nu apar în anunț";
+    }
+    if (onlyWithPhone && !l.phone) return "fără telefon";
+    if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) {
+      return "alt portal";
+    }
+    if (wantedRooms !== null) {
+      const r = typeof l.rooms === "number" ? l.rooms : null;
+      const fromTitle = /(\d+)\s*[- ]?\s*(?:camere?|cam\.?\b)/i.exec(text);
+      const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
+      if (value !== null && (wantedRooms === 4 ? value < 4 : value !== wantedRooms)) {
+        return `are ${value} camere`;
       }
-      if (deal === "vanzare" && /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
-      if (deal === "inchiriere" && !/(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
-      if (wantedTypes.length > 0) {
-        const hasWanted = wantedTypes.some(t => normalizedText.includes(t));
-        if (!hasWanted) {
-          // tipul poate lipsi din titlu — excludem doar dacă apare clar alt tip
-          const otherTypes = PROPERTY_TYPES.map(t => norm(t.value)).filter(v => !wantedTypes.includes(v));
-          if (otherTypes.some(v => normalizedText.includes(v))) return false;
-        }
+    }
+    const isRentText = /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text);
+    if (deal === "vanzare" && isRentText) return "este închiriere";
+    if (deal === "inchiriere" && !isRentText && !thinText) return "nu pare închiriere";
+    if (wantedTypes.length > 0) {
+      const hasWanted = wantedTypes.some(t => normalizedText.includes(t));
+      if (!hasWanted) {
+        const otherTypes = PROPERTY_TYPES.map(t => norm(t.value)).filter(v => !wantedTypes.includes(v));
+        if (otherTypes.some(v => normalizedText.includes(v))) return "alt tip de imobil";
       }
-      // Compartimentare — cel puțin una dintre variantele bifate.
-      if (partitions.length > 0) {
+    }
+    // Compartimentare — doar dacă anunțul spune ceva despre compartimentare.
+    if (partitions.length > 0) {
+      const anyPartitionMentioned = PARTITION_OPTIONS.some(o =>
+        (o.words ?? [o.value]).some(w => normalizedText.includes(norm(w))),
+      );
+      if (anyPartitionMentioned) {
         const ok = partitions.some(p => {
           const opt = PARTITION_OPTIONS.find(o => o.value === p);
           return (opt?.words ?? [p]).some(w => {
@@ -323,62 +339,62 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             return normalizedText.includes(nw);
           });
         });
-        if (!ok) return false;
+        if (!ok) return "altă compartimentare";
       }
-      // Dotări cerute — toate trebuie să apară în anunț.
-      if (extras.length > 0) {
-        const allOk = extras.every(x => {
-          const opt = EXTRA_OPTIONS.find(o => o.value === x);
-          return (opt?.words ?? [x]).some(w => normalizedText.includes(norm(w)));
-        });
-        if (!allOk) return false;
+    }
+    // Dotări cerute — verificate doar când anunțul are descriere utilizabilă.
+    if (extras.length > 0 && !thinText) {
+      const missing = extras.filter(x => {
+        const opt = EXTRA_OPTIONS.find(o => o.value === x);
+        return !(opt?.words ?? [x]).some(w => normalizedText.includes(norm(w)));
+      });
+      if (missing.length > 0) return `nu menționează: ${missing.join(", ")}`;
+    }
+    // Etaj — anunțurile fără informații despre etaj nu se exclud.
+    if (floors.length > 0) {
+      const f = floorInfo(rawText);
+      if (f.known) {
+        const v = f.value;
+        const ok = floors.some(sel =>
+          sel === "parter" ? f.isGround :
+          sel === "not-ground" ? !f.isGround :
+          sel === "1-3" ? v !== null && v >= 1 && v <= 3 :
+          sel === "4-7" ? v !== null && v >= 4 && v <= 7 :
+          sel === "8plus" ? v !== null && v >= 8 :
+          sel === "last" ? f.isLast :
+          sel === "not-last" ? !f.isLast :
+          sel === "mansarda" ? f.isAttic :
+          true);
+        if (!ok) return "alt etaj";
       }
-      // Etaj — anunțurile fără informații despre etaj nu se exclud.
-      if (floors.length > 0) {
-        const f = floorInfo(rawText);
-        if (f.known) {
-          const v = f.value;
-          // Mai multe etaje bifate = oricare dintre ele este acceptat.
-          const ok = floors.some(sel =>
-            sel === "parter" ? f.isGround :
-            sel === "not-ground" ? !f.isGround :
-            sel === "1-3" ? v !== null && v >= 1 && v <= 3 :
-            sel === "4-7" ? v !== null && v >= 4 && v <= 7 :
-            sel === "8plus" ? v !== null && v >= 8 :
-            sel === "last" ? f.isLast :
-            sel === "not-last" ? !f.isLast :
-            sel === "mansarda" ? f.isAttic :
-            true);
-          if (!ok) return false;
-        }
-      }
-      // Suprafață — necunoscută înseamnă păstrat.
-      const mp = surfaceOf(rawText);
-      if (mp !== null) {
-        if (minMp !== null && mp < minMp) return false;
-        if (maxMp !== null && mp > maxMp) return false;
-      }
-      if (yearFilter !== ANY_YEAR && !matchesYear(yearFilter, null, rawText)) return false;
-      const zoneText = `${l.zone || ""} ${l.title || ""}`;
-      if (wantedZone && !zoneMatchesText(zoneText, wantedZone)) return false;
-      // Fără zonă aleasă: dacă avem zone preferate și limitarea e activă, păstrăm doar acele zone.
-      if (!wantedZone && limitToPreferred && preferredZones.length > 0) {
-        if (!preferredZones.some(z => zoneMatchesText(zoneText, z))) return false;
-      }
-      const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
-      // preț necunoscut → păstrăm anunțul, poate fi verificat cu „Verifică prețurile exacte”
-      if (min !== null && price !== null && price < min) return false;
-      if (max !== null && price !== null && price > max) return false;
-      return true;
-    });
+    }
+    const mp = surfaceOf(rawText);
+    if (mp !== null) {
+      if (minMp !== null && mp < minMp) return `${mp} mp, sub minim`;
+      if (maxMp !== null && mp > maxMp) return `${mp} mp, peste maxim`;
+    }
+    if (yearFilter !== ANY_YEAR && !matchesYear(yearFilter, null, rawText)) return "alt an de construcție";
+    const zoneText = `${l.zone || ""} ${l.title || ""} ${l.description || ""}`;
+    if (wantedZone && !zoneMatchesText(zoneText, wantedZone)) return `zona nu apare (${wantedZone})`;
+    if (!wantedZone && limitToPreferred && preferredZones.length > 0) {
+      if (!preferredZones.some(z => zoneMatchesText(zoneText, z))) return "în afara zonelor preferate";
+    }
+    const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
+    if (min !== null && price !== null && price < min) return "preț sub minim";
+    if (max !== null && price !== null && price > max) return "preț peste maxim";
+    return null;
   };
+
+  /** Filtrele se aplică instant pe rezultate, fără o nouă căutare. */
+  const filterListings = (list: AdHocListing[]): AdHocListing[] =>
+    list.filter(l => excludeReason(l) === null);
 
   const searchOnePlatform = async (term: string, p: string) => {
     const { data, error } = await supabase.functions.invoke("scrape-prospects", {
       body: {
         custom_query: term,
         custom_platform: p,
-        max_results: 15,
+        max_results: 25,
         preserve_agency_filter: true,
         hydrate_phones: false,
         discovery_mode: true,
@@ -588,7 +604,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
     const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
-    const term = `${typePart} ${roomsPart} ${partitionPart} ${floorPart} ${base} ${zonePart} ${cityPart} ${dealPart}`
+    // Compartimentarea și etajul NU intră în interogare (restrâng prea mult
+    // rezultatele pe portaluri) — se aplică la filtrarea rezultatelor.
+    void partitionPart; void floorPart;
+    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`
       .replace(/\s+/g, " ")
       .trim();
     if (term.length < 3) {
@@ -1113,6 +1132,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     <Badge variant="default" className="text-[10px] shrink-0">
                       {listingPortal(l) || "platformă necunoscută"}
                     </Badge>
+                    {(() => {
+                      const why = excludeReason(l);
+                      return why ? (
+                        <Badge variant="outline" className="text-[10px] shrink-0 border-destructive/40 text-destructive">
+                          {why}
+                        </Badge>
+                      ) : null;
+                    })()}
                     {zone !== ANY_ZONE && (
                       <Badge
                         variant={zoneMatches(l, zone) ? "secondary" : "outline"}
@@ -1276,9 +1303,24 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                 {results.length > 0
-                  ? `Am găsit ${results.length} anunțuri, dar niciunul nu respectă filtrele alese (tip, tranzacție, camere, zonă, preț, portal).`
+                  ? `Am găsit ${results.length} anunțuri, dar niciunul nu respectă filtrele alese.`
                   : "Niciun anunț găsit pentru aceste cuvinte. Încearcă o formulare mai simplă (ex: „decomandat Timișoara”)."}
               </p>
+              {results.length > 0 && (() => {
+                const per = new Map<string, number>();
+                for (const l of results) {
+                  const why = excludeReason(l);
+                  if (why) per.set(why, (per.get(why) || 0) + 1);
+                }
+                const top = Array.from(per.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                return top.length ? (
+                  <ul className="text-xs text-muted-foreground list-disc pl-5">
+                    {top.map(([why, n]) => (
+                      <li key={why}>{n} {n === 1 ? "anunț" : "anunțuri"} — {why}</li>
+                    ))}
+                  </ul>
+                ) : null;
+              })()}
               {results.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
