@@ -69,6 +69,37 @@ export default function ExternalPublishedListings() {
   const [loading, setLoading] = useState(false);
   const [platform, setPlatform] = useState("all");
   const [q, setQ] = useState("");
+  const [livePrices, setLivePrices] = useState<Record<string, number | null>>({});
+  const [checking, setChecking] = useState(false);
+
+  /** Citește prețul afișat chiar acum pe pagina anunțului de pe fiecare platformă. */
+  const checkLivePrices = async (urls: string[]) => {
+    const list = Array.from(new Set(urls.filter(Boolean))).slice(0, 12);
+    if (!list.length) {
+      toast({ title: "Niciun link de verificat", description: "Adaugă linkul anunțului publicat pe platformă." });
+      return;
+    }
+    setChecking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-listing-prices", { body: { urls: list } });
+      if (error) throw error;
+      const map = (data as { prices?: Record<string, { price: number | null; rent: number | null }> } | null)?.prices;
+      if (!map) throw new Error("Platformele nu au returnat prețuri.");
+      const next: Record<string, number | null> = {};
+      for (const [u, v] of Object.entries(map)) next[u] = v?.price ?? v?.rent ?? null;
+      setLivePrices(prev => ({ ...prev, ...next }));
+      const found = Object.values(next).filter(v => v != null).length;
+      toast({ title: "Prețuri live citite", description: `${found} din ${list.length} anunțuri au preț citit acum.` });
+    } catch (e) {
+      toast({
+        title: "Nu am putut citi prețurile live",
+        description: e instanceof Error ? e.message : "Eroare necunoscută",
+        variant: "destructive",
+      });
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
