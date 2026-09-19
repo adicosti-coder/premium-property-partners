@@ -11,6 +11,13 @@ import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 import AddAgencyPhoneDialog from "./AddAgencyPhoneDialog";
 import MarkAsAgencyButton from "./MarkAsAgencyButton";
 import { PORTAL_ZONE_LABELS, zoneMatchesText, zoneSearchTerm } from "@/lib/timisoaraPortalZones";
+import {
+  SORT_OPTIONS,
+  YEAR_OPTIONS,
+  matchesYear,
+  pricePerSqm,
+  type SortValue,
+} from "@/lib/portalSearch";
 
 export interface AdHocListing {
   title?: string | null;
@@ -66,6 +73,7 @@ const PARTITION_OPTIONS = [
 ];
 
 const ANY_FLOOR = "__anyfloor__";
+const ANY_YEAR = "__anyyear__";
 const FLOOR_OPTIONS = [
   { value: "parter", label: "Parter" },
   { value: "not-ground", label: "Fără parter" },
@@ -143,6 +151,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   // preferate rămân un filtru opțional, activat explicit de administrator.
   const [limitToPreferred, setLimitToPreferred] = useState(false);
   const [savingZone, setSavingZone] = useState(false);
+  /** Sortarea rezultatelor, ca pe portaluri. */
+  const [sort, setSort] = useState<SortValue>("relevance");
+  /** An construcție (interval), ca pe portaluri. */
+  const [yearFilter, setYearFilter] = useState<string>(ANY_YEAR);
 
   /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
   const norm = (s: string) =>
@@ -220,6 +232,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setOnlyWithPhone(false);
     setPortalFilter(ALL_PLATFORMS);
     setIgnoreFilters(false);
+    setSort("relevance");
+    setYearFilter(ANY_YEAR);
   };
 
   const toggleIn = (list: string[], value: string) =>
@@ -335,6 +349,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         if (minMp !== null && mp < minMp) return false;
         if (maxMp !== null && mp > maxMp) return false;
       }
+      if (yearFilter !== ANY_YEAR && !matchesYear(yearFilter, null, rawText)) return false;
       const zoneText = `${l.zone || ""} ${l.title || ""}`;
       if (wantedZone && !zoneMatchesText(zoneText, wantedZone)) return false;
       // Fără zonă aleasă: dacă avem zone preferate și limitarea e activă, păstrăm doar acele zone.
@@ -758,6 +773,27 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             ))}
           </SelectContent>
         </Select>
+        <Select value={yearFilter} onValueChange={setYearFilter}>
+          <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="An construcție">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY_YEAR}>Orice an construcție</SelectItem>
+            {YEAR_OPTIONS.map(y => (
+              <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sort} onValueChange={v => setSort(v as SortValue)}>
+          <SelectTrigger className="sm:w-[180px] min-h-[48px] sm:min-h-0" aria-label="Sortare rezultate">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map(o => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Input
           value={minSurface}
           onChange={e => setMinSurface(e.target.value)}
@@ -930,8 +966,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
       {!searching && results && (() => {
         // Filtrele se aplică strict: afișăm DOAR anunțurile care le respectă, fără listă de rezervă.
-        const matched = filterListings(results);
-        const main = ignoreFilters ? results : matched;
+        const sortResults = (list: AdHocListing[]): AdHocListing[] => {
+          if (sort === "relevance") return list;
+          const price = (l: AdHocListing) => exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
+          const mp = (l: AdHocListing) => surfaceOf(`${l.title || ""} ${l.description || ""}`);
+          const arr = [...list];
+          if (sort === "price-asc") return arr.sort((a, b) => (price(a) ?? Infinity) - (price(b) ?? Infinity));
+          if (sort === "price-desc") return arr.sort((a, b) => (price(b) ?? -Infinity) - (price(a) ?? -Infinity));
+          if (sort === "surface-desc") return arr.sort((a, b) => (mp(b) ?? 0) - (mp(a) ?? 0));
+          if (sort === "eur-mp-asc")
+            return arr.sort(
+              (a, b) =>
+                (pricePerSqm(price(a), mp(a)) ?? Infinity) - (pricePerSqm(price(b), mp(b)) ?? Infinity),
+            );
+          return arr;
+        };
+        const matched = sortResults(filterListings(results));
+        const main = ignoreFilters ? sortResults(results) : matched;
         const rest = ignoreFilters ? [] : results.filter(r => !matched.includes(r));
 
         const renderRow = (l: AdHocListing, idx: number) => (
@@ -975,6 +1026,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     ) : l.price ? (
                       <span>{String(l.price)}</span>
                     ) : null}
+                    {(() => {
+                      const pv = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
+                      const mp = surfaceOf(`${l.title || ""} ${l.description || ""}`);
+                      const per = pricePerSqm(pv, mp);
+                      return per ? <span>{per.toLocaleString("ro-RO")} €/mp</span> : null;
+                    })()}
                     {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
                     {(l.phone || l.url) && (
                       <MarkAsAgencyButton
