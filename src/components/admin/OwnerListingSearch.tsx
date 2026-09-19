@@ -686,6 +686,60 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
   };
 
+  // Referință la ultima versiune a căutării, pentru rescanarea automată.
+  const runRef = useRef(run);
+  runRef.current = run;
+
+  /** Scanare automată la fiecare 2 minute, cât timp pagina este deschisă. */
+  useEffect(() => {
+    try { window.localStorage.setItem("rt_owner_search_auto", autoLive ? "1" : "0"); } catch { /* ignorăm */ }
+    if (!autoLive) return;
+    const tick = () => {
+      if (document.hidden) return;
+      const base = (lastTermRef.current || search).trim();
+      if (base.length < 3) return;
+      void runRef.current(base, { quiet: true });
+    };
+    const id = window.setInterval(tick, 120_000);
+    return () => window.clearInterval(id);
+  }, [autoLive, search]);
+
+  /** Anunțurile salvate de scraper apar imediat în listă, fără reîncărcare. */
+  useEffect(() => {
+    if (!autoLive) return;
+    const ch = supabase
+      .channel("owner-search-live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "prospect_listings" },
+        payload => {
+          const r = payload.new as Record<string, any>;
+          if (r?.prospect_type === "agentie") return;
+          if (r?.lifecycle_status === "expired" || r?.lifecycle_status === "rejected") return;
+          const l: AdHocListing = {
+            title: r.title,
+            description: r.description,
+            url: r.source_url,
+            price: r.price,
+            phone: r.contact_phone,
+            zone: r.zone,
+            rooms: r.rooms,
+            source_platform: r.source_platform,
+          };
+          if (!isIndividualAd(l)) return;
+          setResults(prev => {
+            if (!prev) return prev; // nicio căutare activă
+            const key = (l.url || "").trim();
+            if (prev.some(x => (x.url || "").trim() === key)) return prev;
+            return [l, ...prev];
+          });
+          setLastAutoAt(new Date());
+        },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [autoLive]);
+
   const body = (
     <div className="space-y-3">
       <div className="flex flex-col sm:flex-row gap-2">
