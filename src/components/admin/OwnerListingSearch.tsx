@@ -129,7 +129,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [floors, setFloors] = useState<string[]>([]);
   const [minSurface, setMinSurface] = useState("");
   const [maxSurface, setMaxSurface] = useState("");
-  const [zone, setZone] = useState<string>(ANY_ZONE);
+  /** Zone — se pot bifa mai multe; gol înseamnă toată Timișoara. */
+  const [zones, setZones] = useState<string[]>([]);
+  /** Anunțuri apărute chiar acum (scanare automată / live) — marcate „NOU”. */
+  const [freshUrls, setFreshUrls] = useState<string[]>([]);
   const [deal, setDeal] = useState<string>(ANY_DEAL);
   /** Camere — selecție multiplă („4” = 4 sau mai multe). */
   const [rooms, setRooms] = useState<string[]>([]);
@@ -189,6 +192,54 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
   useEffect(() => { void loadPreferredZones(); }, []);
 
+  /** Filtrele se memorează pe acest dispozitiv, ca să nu fie rescrise la fiecare intrare. */
+  const hydratedRef = useRef(false);
+  const FILTERS_KEY = "rt_owner_search_filters_v2";
+  useEffect(() => {
+    try {
+      const s = JSON.parse(window.localStorage.getItem(FILTERS_KEY) || "{}") || {};
+      if (Array.isArray(s.types)) setTypes(s.types);
+      if (Array.isArray(s.partitions)) setPartitions(s.partitions);
+      if (Array.isArray(s.extras)) setExtras(s.extras);
+      if (Array.isArray(s.floors)) setFloors(s.floors);
+      if (Array.isArray(s.rooms)) setRooms(s.rooms);
+      if (Array.isArray(s.zones)) setZones(s.zones);
+      if (typeof s.deal === "string") setDeal(s.deal);
+      if (typeof s.platform === "string") setPlatform(s.platform);
+      if (typeof s.minPrice === "string") setMinPrice(s.minPrice);
+      if (typeof s.maxPrice === "string") setMaxPrice(s.maxPrice);
+      if (typeof s.minSurface === "string") setMinSurface(s.minSurface);
+      if (typeof s.maxSurface === "string") setMaxSurface(s.maxSurface);
+      if (typeof s.onlyWithPhone === "boolean") setOnlyWithPhone(s.onlyWithPhone);
+      if (typeof s.sort === "string") setSort(s.sort as SortValue);
+      if (typeof s.yearFilter === "string") setYearFilter(s.yearFilter);
+      if (typeof s.search === "string") setSearch(s.search);
+    } catch { /* filtrele memorate sunt opționale */ }
+    hydratedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    try {
+      window.localStorage.setItem(
+        FILTERS_KEY,
+        JSON.stringify({
+          types, partitions, extras, floors, rooms, zones, deal, platform,
+          minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search,
+        }),
+      );
+    } catch { /* ignorăm */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [types, partitions, extras, floors, rooms, zones, deal, platform, minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search]);
+
+  /** Câte filtre sunt active acum — util ca să știi de ce lipsesc rezultate. */
+  const activeFilterCount =
+    types.length + partitions.length + extras.length + floors.length + rooms.length + zones.length +
+    (deal !== ANY_DEAL ? 1 : 0) + (minPrice ? 1 : 0) + (maxPrice ? 1 : 0) +
+    (minSurface ? 1 : 0) + (maxSurface ? 1 : 0) + (onlyWithPhone ? 1 : 0) +
+    (yearFilter !== ANY_YEAR ? 1 : 0) + (portalFilter !== ALL_PLATFORMS ? 1 : 0);
+
   const addPreferredZone = async () => {
     const z = newZone.trim();
     if (z.length < 3) {
@@ -233,7 +284,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setFloors([]);
     setMinSurface("");
     setMaxSurface("");
-    setZone(ANY_ZONE);
+    setZones([]);
     setDeal(ANY_DEAL);
     setRooms([]);
     setMinPrice("");
@@ -290,7 +341,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const wantedTypes = types.map(t => norm(t));
     const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
     const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
-    const wantedZone = zone === ANY_ZONE ? null : zone;
+    const wantedZones = zones;
     const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
 
     const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
@@ -375,9 +426,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (maxMp !== null && mp > maxMp) return `${mp} mp, peste maxim`;
     }
     if (yearFilter !== ANY_YEAR && !matchesYear(yearFilter, null, rawText)) return "alt an de construcție";
-    const zoneText = `${l.zone || ""} ${l.title || ""} ${l.description || ""}`;
-    if (wantedZone && !zoneMatchesText(zoneText, wantedZone)) return `zona nu apare (${wantedZone})`;
-    if (!wantedZone && limitToPreferred && preferredZones.length > 0) {
+    const zoneText = `${l.zone || ""} ${l.title || ""} ${l.description || ""} ${l.url || ""}`;
+    if (wantedZones.length > 0 && !wantedZones.some(z => zoneMatchesText(zoneText, z))) {
+      return `altă zonă (căutate: ${wantedZones.join(", ")})`;
+    }
+    if (wantedZones.length === 0 && limitToPreferred && preferredZones.length > 0) {
       if (!preferredZones.some(z => zoneMatchesText(zoneText, z))) return "în afara zonelor preferate";
     }
     const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
