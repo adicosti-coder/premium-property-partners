@@ -327,20 +327,21 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         if (!allOk) return false;
       }
       // Etaj — anunțurile fără informații despre etaj nu se exclud.
-      if (floor !== ANY_FLOOR) {
+      if (floors.length > 0) {
         const f = floorInfo(rawText);
         if (f.known) {
           const v = f.value;
-          const ok =
-            floor === "parter" ? f.isGround :
-            floor === "not-ground" ? !f.isGround :
-            floor === "1-3" ? v !== null && v >= 1 && v <= 3 :
-            floor === "4-7" ? v !== null && v >= 4 && v <= 7 :
-            floor === "8plus" ? v !== null && v >= 8 :
-            floor === "last" ? f.isLast :
-            floor === "not-last" ? !f.isLast :
-            floor === "mansarda" ? f.isAttic :
-            true;
+          // Mai multe etaje bifate = oricare dintre ele este acceptat.
+          const ok = floors.some(sel =>
+            sel === "parter" ? f.isGround :
+            sel === "not-ground" ? !f.isGround :
+            sel === "1-3" ? v !== null && v >= 1 && v <= 3 :
+            sel === "4-7" ? v !== null && v >= 4 && v <= 7 :
+            sel === "8plus" ? v !== null && v >= 8 :
+            sel === "last" ? f.isLast :
+            sel === "not-last" ? !f.isLast :
+            sel === "mansarda" ? f.isAttic :
+            true);
           if (!ok) return false;
         }
       }
