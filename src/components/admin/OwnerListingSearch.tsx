@@ -261,7 +261,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const min = minPrice ? Number(minPrice.replace(/[^\d]/g, "")) : null;
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
-    const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
+    const wantedTypes = types.map(t => norm(t));
+    const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
+    const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
     const wantedZone = zone === ANY_ZONE ? null : zone;
     const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
     return list.filter(l => {
