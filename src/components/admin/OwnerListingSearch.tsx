@@ -186,8 +186,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
     const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
     const wantedZone = zone === ANY_ZONE ? null : zone;
+    const searchTokens = norm(search).split(" ").filter(token => token.length >= 2);
     return list.filter(l => {
-      const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
+      const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
+      const normalizedText = ` ${norm(rawText)} `;
+      const text = rawText.toLowerCase();
+      // Cuvintele scrise în căutare sunt obligatorii. Potrivirea pe cuvinte
+      // întregi evită ca „decomandat” să accepte automat „semidecomandat”.
+      if (searchTokens.some(token => !normalizedText.includes(` ${token} `))) return false;
       if (onlyWithPhone && !l.phone) return false;
       if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
@@ -781,7 +787,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     {l.url && (
                       <button
                         type="button"
-                        onClick={() => { navigator.clipboard?.writeText(l.url!); toast({ title: "Link copiat" }); }}
+                        onClick={() => {
+                          const url = l.url;
+                          if (!url) return;
+                          navigator.clipboard?.writeText(url);
+                          toast({ title: "Link copiat" });
+                        }}
                         className="underline hover:text-foreground"
                       >
                         Copiază linkul
