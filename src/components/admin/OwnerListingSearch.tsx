@@ -393,6 +393,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         if (value != null) exact[u] = value;
       }
       setExactPrices(prev => ({ ...prev, ...exact }));
+      // Prețurile citite acum sunt salvate în istoric; verificăm imediat scăderile.
+      void checkPriceDrops();
     } catch (e: any) {
       toast({ title: "Nu am putut citi prețurile exacte", description: e.message, variant: "destructive" });
     } finally {
