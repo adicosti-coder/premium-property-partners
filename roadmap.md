@@ -15,3 +15,4 @@
 - [x] Tab Admin „Anunțuri publicate extern" (link, preț, durată sursă, durata rămasă)
 - [x] refresh-published-prices la 24h + afișare ultimă reverificare în Anunțuri salvate
 - [x] Buton „Expirat" pentru marcarea manuală a anunțurilor expirate
+- [x] Căutare manuală reparată: oraș obligatoriu, rezultate noi + cunoscute și linkuri normalizate

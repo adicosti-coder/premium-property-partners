@@ -693,6 +693,10 @@ async function freeSearchWithRetry(
   } = {},
 ): Promise<FcSearchOutcome> {
   const domain = platformToDomain(platform, query);
+  // Căutările ad-hoc trimit platforma separat, fără operator `site:` în text.
+  // Fără această ancoră, DDG/Bing întorc rezultate din tot web-ul, apoi filtrul
+  // de domeniu le elimină aproape pe toate.
+  const webQuery = domain && !/\bsite:/i.test(query) ? `${query} site:${domain}` : query;
   const aggregated: FreeResult[] = [];
   const seen = new Set<string>();
   const pushAll = (arr: FreeResult[]) => {
@@ -736,7 +740,7 @@ async function freeSearchWithRetry(
     attempts++;
     const t0 = Date.now();
     try {
-      const ddg = await duckduckgoSearch(query, maxResults);
+      const ddg = await duckduckgoSearch(webQuery, maxResults);
       const dt = Date.now() - t0;
       if (stats) { stats.duckduckgo.hits++; stats.duckduckgo.ms += dt; stats.duckduckgo.urls += ddg.length; }
       opts.logger?.({ kind: 'free_ddg', platform, results: ddg.length, ms: dt });
@@ -755,7 +759,7 @@ async function freeSearchWithRetry(
     attempts++;
     const t0 = Date.now();
     try {
-      const bing = await bingSearch(query, maxResults);
+      const bing = await bingSearch(webQuery, maxResults);
       const dt = Date.now() - t0;
       if (stats) { stats.bing.hits++; stats.bing.ms += dt; stats.bing.urls += bing.length; }
       opts.logger?.({ kind: 'free_bing', platform, results: bing.length, ms: dt });
@@ -1378,6 +1382,7 @@ Deno.serve(async (req) => {
     }
 
     const results: any[] = [];
+    let insertedCount = 0;
     const errors: string[] = [];
     let blacklistedSkipped = 0;
     let blacklistedReviewed = 0;
@@ -1415,6 +1420,7 @@ Deno.serve(async (req) => {
       });
     };
     const existingUrls = new Set<string>();
+    const existingProspectsByUrl = new Map<string, any>();
     const blockedPhones = new Set<string>();
     const blockedDomains = new Set<string>();
     const whitelistedPhones = new Set<string>();
@@ -1533,7 +1539,7 @@ Deno.serve(async (req) => {
     if (onlyNewSources || preserveAgencyFilter) {
       const [{ data: archiveRows }, { data: prospectRows }, { data: blockRows }, { data: whitelistRows }] = await Promise.all([
         supabase.from('scraper_leads_archive_2026').select('url, phone, prospect_category, status'),
-        supabase.from('prospect_listings').select('source_url, phone_normalized, contact_phone, prospect_type, is_active'),
+        supabase.from('prospect_listings').select('source_url, title, description, price, contact_phone, phone_normalized, zone, rooms, source_platform, prospect_type, is_active, lifecycle_status'),
         supabase.from('agency_blocklist').select('phone_normalized, domain'),
         supabase.from('agency_whitelist').select('phone_normalized, domain'),
       ]);
@@ -1548,7 +1554,10 @@ Deno.serve(async (req) => {
         }
       }
       for (const row of prospectRows || []) {
-        if (row.source_url) existingUrls.add(row.source_url);
+        if (row.source_url) {
+          existingUrls.add(row.source_url);
+          existingProspectsByUrl.set(row.source_url, row);
+        }
         if (row.prospect_type === 'agentie' || row.is_active === false) {
           const phone = normalizeRoPhone(row.phone_normalized || row.contact_phone);
           const domain = extractUrlDomain(row.source_url);
@@ -1748,6 +1757,28 @@ Deno.serve(async (req) => {
             // with 0 new listings even when fresh keywords were still queued.
             if (existingUrls.has(url)) {
               duplicateSkipped++;
+              // Căutarea manuală trebuie să afișeze și potrivirile cunoscute,
+              // nu doar rândurile inserate pentru prima dată în această rulare.
+              const known = existingProspectsByUrl.get(url);
+              if (
+                customQuery &&
+                known?.prospect_type !== 'agentie' &&
+                known?.lifecycle_status !== 'expired' &&
+                known?.lifecycle_status !== 'rejected'
+              ) {
+                results.push({
+                  title: known.title || result.title || titleFromListingUrl(url),
+                  description: known.description || result.markdown || result.description || null,
+                  url,
+                  source_url: url,
+                  price: known.price,
+                  phone: known.contact_phone,
+                  contact_phone: known.contact_phone,
+                  zone: known.zone,
+                  rooms: known.rooms,
+                  source_platform: canonicalPlatform(known.source_platform || platform, url),
+                });
+              }
               continue;
             }
 
@@ -1973,7 +2004,7 @@ Deno.serve(async (req) => {
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
               }, { onConflict: 'source_url', ignoreDuplicates: true })
-              .select('id, title, lead_score, source_url')
+              .select('id, title, description, price, contact_phone, zone, rooms, source_platform, lead_score, source_url')
               .maybeSingle();
 
 
@@ -1981,7 +2012,12 @@ Deno.serve(async (req) => {
               console.error(`Insert error for ${url}:`, insertErr.message);
               errors.push(`${url}: ${insertErr.message}`);
             } else if (inserted) {
-              results.push(inserted);
+              insertedCount++;
+              results.push({
+                ...inserted,
+                url: inserted.source_url,
+                phone: inserted.contact_phone,
+              });
               existingUrls.add(url);
             } else {
               // Already known URL. Previously we dropped it silently, so
@@ -2051,7 +2087,7 @@ Deno.serve(async (req) => {
       scan_mode: scanMode,
       scan_mode_override: scanModeOverride,
       auto_fallback_enabled: enableAutoFallback, auto_fallback_threshold: autoFallbackThreshold,
-      new_listings: results.length,
+      new_listings: insertedCount,
       count: results.length,
       blacklisted_skipped: blacklistedSkipped,
       blacklisted_reviewed: blacklistedReviewed,

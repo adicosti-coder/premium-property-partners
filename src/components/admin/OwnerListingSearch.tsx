@@ -14,6 +14,7 @@ import { PORTAL_ZONE_LABELS, zoneMatchesText, zoneSearchTerm } from "@/lib/timis
 
 export interface AdHocListing {
   title?: string | null;
+  description?: string | null;
   url?: string | null;
   price?: number | string | null;
   phone?: string | null;
@@ -185,8 +186,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
     const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
     const wantedZone = zone === ANY_ZONE ? null : zone;
+    const searchTokens = norm(search).split(" ").filter(token => token.length >= 2);
     return list.filter(l => {
-      const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
+      const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
+      const normalizedText = ` ${norm(rawText)} `;
+      const text = rawText.toLowerCase();
+      // Cuvintele scrise în căutare sunt obligatorii. Potrivirea pe cuvinte
+      // întregi evită ca „decomandat” să accepte automat „semidecomandat”.
+      if (searchTokens.some(token => !normalizedText.includes(` ${token} `))) return false;
       if (onlyWithPhone && !l.phone) return false;
       if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
@@ -228,7 +235,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       },
     });
     if (error) throw error;
-    const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
+    const rawListings = Array.isArray((data as any)?.listings) ? ((data as any).listings as Array<AdHocListing & { source_url?: string | null; contact_phone?: string | null }>) : [];
+    const listings = rawListings.map(l => ({
+      ...l,
+      url: l.url || l.source_url || null,
+      phone: l.phone || l.contact_phone || null,
+    }));
     const b = (data as any)?.funnel_breakdown || {};
     return {
       platform: p,
@@ -276,10 +288,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const fetchFor = async (w?: string) => {
       let q = supabase
         .from("prospect_listings")
-        .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at,last_seen_at")
+        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,updated_at,last_seen_at")
         .not("source_url", "is", null)
-        // fără anunțuri expirate / dezactivate
-        .eq("is_active", true)
+        // „De verificat” poate avea date incomplete, dar este un rezultat real.
+        // Excludem doar agențiile și anunțurile confirmate ca expirate/respinse.
+        .or("prospect_type.is.null,prospect_type.neq.agentie")
         .not("lifecycle_status", "in", "(expired,rejected)")
         .order("updated_at", { ascending: false })
         .limit(25);
@@ -294,7 +307,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       return data ?? [];
     };
 
-    // Caută pe fiecare cuvânt (titlu / zonă / adresă); dacă nimic, arată ultimele salvate.
+    // Caută strict după cuvintele cerute; nu afișăm anunțuri fără legătură.
     let rows: any[] = [];
     if (words.length) {
       const parts = await Promise.all(words.map(w => fetchFor(w)));
@@ -307,8 +320,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         }
       }
     }
-    if (rows.length === 0) rows = await fetchFor();
-
     // Eliminăm anunțurile marcate expirate sau nemaivăzute de peste 21 de zile.
     const staleBefore = Date.now() - 21 * 24 * 60 * 60 * 1000;
     return rows
@@ -319,6 +330,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       })
       .map((r: any) => ({
         title: r.title,
+        description: r.description,
         url: r.source_url,
         price: r.price,
         phone: r.contact_phone,
@@ -414,7 +426,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
-    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${dealPart}`.replace(/\s+/g, " ").trim();
+    // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
+    const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
+    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`.replace(/\s+/g, " ").trim();
     if (term.length < 3) {
       toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
@@ -773,7 +787,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     {l.url && (
                       <button
                         type="button"
-                        onClick={() => { navigator.clipboard?.writeText(l.url!); toast({ title: "Link copiat" }); }}
+                        onClick={() => {
+                          const url = l.url;
+                          if (!url) return;
+                          navigator.clipboard?.writeText(url);
+                          toast({ title: "Link copiat" });
+                        }}
                         className="underline hover:text-foreground"
                       >
                         Copiază linkul
