@@ -1132,6 +1132,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     <Badge variant="default" className="text-[10px] shrink-0">
                       {listingPortal(l) || "platformă necunoscută"}
                     </Badge>
+                    {(() => {
+                      const why = excludeReason(l);
+                      return why ? (
+                        <Badge variant="outline" className="text-[10px] shrink-0 border-destructive/40 text-destructive">
+                          {why}
+                        </Badge>
+                      ) : null;
+                    })()}
                     {zone !== ANY_ZONE && (
                       <Badge
                         variant={zoneMatches(l, zone) ? "secondary" : "outline"}
