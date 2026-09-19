@@ -11387,6 +11387,19 @@ export type Database = {
         Returns: Json
       }
       get_cron_reconcile_secret: { Args: never; Returns: string }
+      get_daily_price_trends: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_drop_pct: number
+          avg_price: number
+          avg_price_per_sqm: number
+          avg_source_days: number
+          day: string
+          drops_count: number
+          listings_count: number
+          max_drop_pct: number
+        }[]
+      }
       get_ga4_daily_sessions: { Args: { p_days?: number }; Returns: Json }
       get_keyword_scan_report: {
         Args: { p_days?: number; p_platform?: string }

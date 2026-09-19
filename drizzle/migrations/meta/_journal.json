@@ -393,6 +393,13 @@
       "when": 1789762329778,
       "tag": "0055_collection_listings_report",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1789823136834,
+      "tag": "0056_daily_price_trends_report",
+      "breakpoints": true
     }
   ]
 }
