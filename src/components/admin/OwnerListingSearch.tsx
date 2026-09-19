@@ -182,7 +182,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
     const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
-    const zoneWord = zone === ANY_ZONE ? null : norm(zone.split("/")[0]);
+    const wantedZone = zone === ANY_ZONE ? null : zone;
     return list.filter(l => {
       const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
       const nText = norm(`${l.title || ""} ${l.zone || ""}`);
