@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, Loader2, Search, X } from "lucide-react";
+import { ExternalLink, Loader2, Search, X, XCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 import AddAgencyPhoneDialog from "./AddAgencyPhoneDialog";
@@ -292,7 +292,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   /** Marchează manual un anunț ca expirat, ca să nu mai apară în căutări și rapoarte. */
   const markExpired = async (l: AdHocListing) => {
     const url = (l.url || "").trim();
-    if (!url) return;
+    if (!url) {
+      setResults(prev => (prev ? prev.filter(x => x !== l) : prev));
+      toast({ title: "Ascuns din rezultate", description: "Anunțul nu are link, deci nu era salvat în listă." });
+      return;
+    }
     const { data, error } = await supabase
       .from("prospect_listings")
       .update({ is_active: false, lifecycle_status: "expired" } as never)
@@ -628,17 +632,15 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                         Copiază linkul
                       </button>
                     )}
-                    {l.url && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="h-8 px-2 text-[11px]"
-                        onClick={() => markExpired(l)}
-                      >
-                        Expirat
-                      </Button>
-                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 px-2 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10"
+                      onClick={() => markExpired(l)}
+                    >
+                      <XCircle className="h-3 w-3 mr-1" /> Anunț expirat
+                    </Button>
                   </div>
                 </div>
               ))}
