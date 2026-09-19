@@ -207,6 +207,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       const existing = await fetchExisting(base, platforms);
       let existingShown = 0;
       for (const l of existing) {
+        if (!isIndividualAd(l)) { generic++; continue; }
         const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
         if (key && seen.has(key)) continue;
         if (key) seen.add(key);
