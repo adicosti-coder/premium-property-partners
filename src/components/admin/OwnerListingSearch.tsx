@@ -100,7 +100,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [preferredZones, setPreferredZones] = useState<string[]>([]);
   const [newZone, setNewZone] = useState("");
   /** Când e activ, rezultatele se limitează la zonele preferate (dacă nu e aleasă o zonă anume). */
-  const [limitToPreferred, setLimitToPreferred] = useState(true);
+  // „Toate zonele” trebuie să însemne implicit întreaga Timișoară; zonele
+  // preferate rămân un filtru opțional, activat explicit de administrator.
+  const [limitToPreferred, setLimitToPreferred] = useState(false);
   const [savingZone, setSavingZone] = useState(false);
 
   /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
@@ -186,7 +188,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
     const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
     const wantedZone = zone === ANY_ZONE ? null : zone;
-    const searchTokens = norm(search).split(" ").filter(token => token.length >= 2);
+    const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
     return list.filter(l => {
       const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
       const normalizedText = ` ${norm(rawText)} `;
@@ -198,7 +200,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
         const r = typeof l.rooms === "number" ? l.rooms : null;
-        const fromTitle = /(\d)\s*camer/.exec(text);
+        const fromTitle = /(\d+)\s*[- ]?\s*(?:camere?|cam\.?\b)/i.exec(text);
         const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
         // nr. camere necunoscut → nu excludem anunțul
         if (value !== null && (wantedRooms === 4 ? value < 4 : value !== wantedRooms)) return false;
@@ -229,9 +231,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       body: {
         custom_query: term,
         custom_platform: p,
-        max_results: 10,
+        max_results: 15,
         preserve_agency_filter: true,
         hydrate_phones: false,
+        discovery_mode: true,
       },
     });
     if (error) throw error;
@@ -461,7 +464,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
       const newCount = listings.length;
 
-      // Completăm cu anunțuri deja salvate, ca răspunsul să aibă mereu linkuri.
+      // Completăm cu anunțuri reale deja văzute care respectă termenii ceruți.
       const existing = await fetchExisting(base, platforms);
       let existingShown = 0;
       for (const l of existing) {
