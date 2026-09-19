@@ -662,6 +662,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
       const perPlatform = ok.filter(r => r.listings.length > 0).map(r => `${r.platform}: ${r.listings.length}`).join(" · ");
       setSummary(
+        (quiet && addedNow > 0 ? `+${addedNow} anunțuri adăugate automat · ` : "") +
         `${newCount} anunțuri noi pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
           (perPlatform ? ` (${perPlatform})` : "") +
           (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
