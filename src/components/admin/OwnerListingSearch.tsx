@@ -498,14 +498,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
    * Elimină paginile generice de căutare/listare ale platformelor.
    */
   const isIndividualAd = (l: AdHocListing): boolean => {
-    const url = (l.url || "").trim();
-    if (!url) return false;
-    let path = url;
-    let hasQuery = false;
+    const clean = normalizeAdUrl(l.url);
+    if (!clean) return false;
+    let path = clean;
+    let searchQuery = "";
     try {
-      const u = new URL(url);
+      const u = new URL(clean);
       path = u.pathname;
-      hasQuery = u.search.length > 1;
+      searchQuery = u.search.toLowerCase();
     } catch {
       /* fallback pe string brut */
     }
@@ -514,7 +514,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const genericPath = /(caut|search|rezultate|results|filtr|anunturi\/?$|oferte\/?$|lista|categorie|category|zona\/|cartier\/|\/q\/|\/sitemap)/.test(
       lowerPath,
     );
-    if (genericPath || hasQuery) return false;
+    // Parametrii de urmărire au fost deja eliminați; rămân doar filtre reale de listare.
+    const searchQueryParams = /(q=|query=|search|filtr|page=|pagina=|categor|pret|price|camere)/.test(searchQuery);
+    if (genericPath || searchQueryParams) return false;
     // un anunț individual are un identificator în URL (id numeric sau slug lung cu hash)
     const last = lowerPath.replace(/\/+$/, "").split("/").pop() || "";
     const looksLikeAd = /\d{4,}/.test(last) || /-[a-z0-9]{6,}$/.test(last) || /ID[a-zA-Z0-9]{4,}/.test(last);
