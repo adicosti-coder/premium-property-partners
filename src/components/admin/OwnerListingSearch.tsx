@@ -25,6 +25,8 @@ export interface AdHocListing {
 const ALL_PLATFORMS = "__all__";
 const ANY_TYPE = "__any__";
 const ANY_ZONE = "__anyzone__";
+const ANY_DEAL = "__anydeal__";
+const ANY_ROOMS = "__anyrooms__";
 
 const PLATFORM_OPTIONS = [
   "OLX",
@@ -87,9 +89,67 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [platform, setPlatform] = useState<string>(ALL_PLATFORMS);
   const [type, setType] = useState<string>(ANY_TYPE);
   const [zone, setZone] = useState<string>(ANY_ZONE);
+  const [deal, setDeal] = useState<string>(ANY_DEAL);
+  const [rooms, setRooms] = useState<string>(ANY_ROOMS);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [onlyWithPhone, setOnlyWithPhone] = useState(false);
   const [results, setResults] = useState<AdHocListing[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+
+  /** Extrage prima valoare numerică dintr-un preț de tip "55.000 €" sau 2021450. */
+  const priceValue = (p: AdHocListing["price"]): number | null => {
+    if (p === null || p === undefined) return null;
+    if (typeof p === "number") return Number.isFinite(p) ? p : null;
+    const digits = String(p).replace(/[^\d]/g, "");
+    if (!digits) return null;
+    const n = Number(digits);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const resetFilters = () => {
+    setType(ANY_TYPE);
+    setZone(ANY_ZONE);
+    setDeal(ANY_DEAL);
+    setRooms(ANY_ROOMS);
+    setMinPrice("");
+    setMaxPrice("");
+    setOnlyWithPhone(false);
+  };
+
+  /** Filtrele se aplică instant pe rezultate, fără o nouă căutare. */
+  const filterListings = (list: AdHocListing[]): AdHocListing[] => {
+    const min = minPrice ? Number(minPrice.replace(/[^\d]/g, "")) : null;
+    const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
+    const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
+    const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
+    const zoneWord = zone === ANY_ZONE ? null : zone.split("/")[0].trim().toLowerCase();
+    return list.filter(l => {
+      const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
+      if (onlyWithPhone && !l.phone) return false;
+      if (wantedRooms !== null) {
+        const r = typeof l.rooms === "number" ? l.rooms : null;
+        const fromTitle = /(\d)\s*camer/.exec(text);
+        const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
+        if (value === null) return false;
+        if (wantedRooms === 4 ? value < 4 : value !== wantedRooms) return false;
+      }
+      if (deal === "vanzare" && /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
+      if (deal === "inchiriere" && !/(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
+      if (typeWord && !text.includes(typeWord.replace(/ț/g, "t").replace(/ă/g, "a")) && !text.includes(typeWord)) {
+        // tipul poate lipsi din titlu — nu excludem dacă nu avem indicii contrare
+        const otherTypes = PROPERTY_TYPES.map(t => t.value).filter(v => v !== type);
+        if (otherTypes.some(v => text.includes(v))) return false;
+      }
+      if (zoneWord && l.zone && !l.zone.toLowerCase().includes(zoneWord) && !text.includes(zoneWord)) return false;
+      const price = priceValue(l.price);
+      if ((min !== null || max !== null) && price === null) return false;
+      if (min !== null && price !== null && price < min) return false;
+      if (max !== null && price !== null && price > max) return false;
+      return true;
+    });
+  };
 
   const searchOnePlatform = async (term: string, p: string) => {
     const { data, error } = await supabase.functions.invoke("scrape-prospects", {
