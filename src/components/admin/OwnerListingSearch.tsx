@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, Loader2, Search, X, XCircle } from "lucide-react";
+import { Download, ExternalLink, Loader2, Search, X, XCircle } from "lucide-react";
+import { csvFileName, downloadCsv } from "@/utils/exportCsv";
 import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 import AddAgencyPhoneDialog from "./AddAgencyPhoneDialog";
@@ -128,7 +129,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [floors, setFloors] = useState<string[]>([]);
   const [minSurface, setMinSurface] = useState("");
   const [maxSurface, setMaxSurface] = useState("");
-  const [zone, setZone] = useState<string>(ANY_ZONE);
+  /** Zone — se pot bifa mai multe; gol înseamnă toată Timișoara. */
+  const [zones, setZones] = useState<string[]>([]);
+  /** Anunțuri apărute chiar acum (scanare automată / live) — marcate „NOU”. */
+  const [freshUrls, setFreshUrls] = useState<string[]>([]);
   const [deal, setDeal] = useState<string>(ANY_DEAL);
   /** Camere — selecție multiplă („4” = 4 sau mai multe). */
   const [rooms, setRooms] = useState<string[]>([]);
@@ -188,6 +192,54 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
   useEffect(() => { void loadPreferredZones(); }, []);
 
+  /** Filtrele se memorează pe acest dispozitiv, ca să nu fie rescrise la fiecare intrare. */
+  const hydratedRef = useRef(false);
+  const FILTERS_KEY = "rt_owner_search_filters_v2";
+  useEffect(() => {
+    try {
+      const s = JSON.parse(window.localStorage.getItem(FILTERS_KEY) || "{}") || {};
+      if (Array.isArray(s.types)) setTypes(s.types);
+      if (Array.isArray(s.partitions)) setPartitions(s.partitions);
+      if (Array.isArray(s.extras)) setExtras(s.extras);
+      if (Array.isArray(s.floors)) setFloors(s.floors);
+      if (Array.isArray(s.rooms)) setRooms(s.rooms);
+      if (Array.isArray(s.zones)) setZones(s.zones);
+      if (typeof s.deal === "string") setDeal(s.deal);
+      if (typeof s.platform === "string") setPlatform(s.platform);
+      if (typeof s.minPrice === "string") setMinPrice(s.minPrice);
+      if (typeof s.maxPrice === "string") setMaxPrice(s.maxPrice);
+      if (typeof s.minSurface === "string") setMinSurface(s.minSurface);
+      if (typeof s.maxSurface === "string") setMaxSurface(s.maxSurface);
+      if (typeof s.onlyWithPhone === "boolean") setOnlyWithPhone(s.onlyWithPhone);
+      if (typeof s.sort === "string") setSort(s.sort as SortValue);
+      if (typeof s.yearFilter === "string") setYearFilter(s.yearFilter);
+      if (typeof s.search === "string") setSearch(s.search);
+    } catch { /* filtrele memorate sunt opționale */ }
+    hydratedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    try {
+      window.localStorage.setItem(
+        FILTERS_KEY,
+        JSON.stringify({
+          types, partitions, extras, floors, rooms, zones, deal, platform,
+          minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search,
+        }),
+      );
+    } catch { /* ignorăm */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [types, partitions, extras, floors, rooms, zones, deal, platform, minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search]);
+
+  /** Câte filtre sunt active acum — util ca să știi de ce lipsesc rezultate. */
+  const activeFilterCount =
+    types.length + partitions.length + extras.length + floors.length + rooms.length + zones.length +
+    (deal !== ANY_DEAL ? 1 : 0) + (minPrice ? 1 : 0) + (maxPrice ? 1 : 0) +
+    (minSurface ? 1 : 0) + (maxSurface ? 1 : 0) + (onlyWithPhone ? 1 : 0) +
+    (yearFilter !== ANY_YEAR ? 1 : 0) + (portalFilter !== ALL_PLATFORMS ? 1 : 0);
+
   const addPreferredZone = async () => {
     const z = newZone.trim();
     if (z.length < 3) {
@@ -232,7 +284,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setFloors([]);
     setMinSurface("");
     setMaxSurface("");
-    setZone(ANY_ZONE);
+    setZones([]);
     setDeal(ANY_DEAL);
     setRooms([]);
     setMinPrice("");
@@ -289,7 +341,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const wantedTypes = types.map(t => norm(t));
     const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
     const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
-    const wantedZone = zone === ANY_ZONE ? null : zone;
+    const wantedZones = zones;
     const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
 
     const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
@@ -374,9 +426,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (maxMp !== null && mp > maxMp) return `${mp} mp, peste maxim`;
     }
     if (yearFilter !== ANY_YEAR && !matchesYear(yearFilter, null, rawText)) return "alt an de construcție";
-    const zoneText = `${l.zone || ""} ${l.title || ""} ${l.description || ""}`;
-    if (wantedZone && !zoneMatchesText(zoneText, wantedZone)) return `zona nu apare (${wantedZone})`;
-    if (!wantedZone && limitToPreferred && preferredZones.length > 0) {
+    const zoneText = `${l.zone || ""} ${l.title || ""} ${l.description || ""} ${l.url || ""}`;
+    if (wantedZones.length > 0 && !wantedZones.some(z => zoneMatchesText(zoneText, z))) {
+      return `altă zonă (căutate: ${wantedZones.join(", ")})`;
+    }
+    if (wantedZones.length === 0 && limitToPreferred && preferredZones.length > 0) {
       if (!preferredZones.some(z => zoneMatchesText(zoneText, z))) return "în afara zonelor preferate";
     }
     const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
@@ -593,25 +647,27 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const run = async (prefill?: string, opts?: { quiet?: boolean }) => {
     const quiet = opts?.quiet === true;
     const base = (prefill ?? search).trim();
-    // În interogare intră un singur tip/compartimentare (portalurile nu acceptă liste),
-    // restul bifelor se aplică la filtrarea rezultatelor.
+    // Portalurile nu acceptă liste într-o singură căutare, așa că generăm mai
+    // multe interogări: câte una pentru fiecare zonă bifată și fiecare număr de
+    // camere. Compartimentarea, etajul și dotările se aplică pe rezultate.
     const typePart = types[0] ?? "";
-    const partitionPart = partitions.length === 1 ? partitions[0] : "";
-    const onlyFloor = floors.length === 1 ? floors[0] : "";
-    const floorPart = onlyFloor === "parter" ? "parter" : onlyFloor === "last" ? "ultimul etaj" : onlyFloor === "mansarda" ? "mansarda" : "";
-    const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
-    // În interogare intră un singur număr de camere (portalurile nu accepta liste).
-    const roomsPart = rooms.length === 1 ? `${rooms[0]} camere` : "";
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
-    // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
-    const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
-    // Compartimentarea și etajul NU intră în interogare (restrâng prea mult
-    // rezultatele pe portaluri) — se aplică la filtrarea rezultatelor.
-    void partitionPart; void floorPart;
-    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`
-      .replace(/\s+/g, " ")
-      .trim();
-    if (term.length < 3) {
+    const roomVariants = rooms.length ? rooms.slice(0, 3).map(r => `${r} camere`) : [""];
+    const zoneVariants = zones.length
+      ? zones.slice(0, 3).map(z => `${zoneSearchTerm(z)} Timișoara`)
+      : [""];
+    // Orașul este obligatoriu când nu e bifată nicio zonă.
+    const cityPart = zones.length === 0 && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
+    const terms = Array.from(
+      new Set(
+        roomVariants.flatMap(rp =>
+          zoneVariants.map(zp =>
+            `${typePart} ${rp} ${base} ${zp} ${cityPart} ${dealPart}`.replace(/\s+/g, " ").trim(),
+          ),
+        ),
+      ),
+    ).filter(t => t.length >= 3);
+    if (terms.length === 0) {
       if (!quiet) toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
     }
@@ -626,7 +682,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
     try {
       const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
-      const settled = await Promise.allSettled(platforms.map(p => searchOnePlatform(term, p)));
+      // Limităm numărul total de interogări ca să nu consumăm credite inutil.
+      const jobs = platforms
+        .flatMap(p => terms.slice(0, 3).map(t => ({ p, t })))
+        .slice(0, 12);
+      const settled = await Promise.allSettled(jobs.map(j => searchOnePlatform(j.t, j.p)));
       const ok = settled.flatMap(r => (r.status === "fulfilled" ? [r.value] : []));
       const failedCount = settled.length - ok.length;
       if (ok.length === 0) {
@@ -660,27 +720,42 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         listings.push(l);
         existingShown++;
       }
+      const keyOf = (x: AdHocListing) => (x.url || "").trim() || `${x.title || ""}|${x.price || ""}`;
       let addedNow = listings.length;
       if (quiet) {
         // Rescanare automată: păstrăm lista și adăugăm în față doar ce e nou.
-        setResults(prev => {
-          if (!prev) return listings;
-          const have = new Set(prev.map(x => (x.url || "").trim() || `${x.title || ""}|${x.price || ""}`));
-          const fresh = listings.filter(x => !have.has((x.url || "").trim() || `${x.title || ""}|${x.price || ""}`));
+        const prev = results;
+        if (!prev) {
+          setResults(listings);
+        } else {
+          const have = new Set(prev.map(keyOf));
+          const fresh = listings.filter(x => !have.has(keyOf(x)));
           addedNow = fresh.length;
-          return fresh.length ? [...fresh, ...prev] : prev;
-        });
+          if (fresh.length) {
+            setResults([...fresh, ...prev]);
+            setFreshUrls(f =>
+              Array.from(new Set([...fresh.map(x => (x.url || "").trim()).filter(Boolean), ...f])).slice(0, 200),
+            );
+          }
+        }
         setLastAutoAt(new Date());
         if (addedNow > 0) void hydrateExactPrices(listings);
       } else {
         setResults(listings);
         setExactPrices({});
+        setFreshUrls([]);
         void hydrateExactPrices(listings);
       }
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
-      const perPlatform = ok.filter(r => r.listings.length > 0).map(r => `${r.platform}: ${r.listings.length}`).join(" · ");
+      const perMap = new Map<string, number>();
+      for (const r of ok) perMap.set(r.platform, (perMap.get(r.platform) || 0) + r.listings.length);
+      const perPlatform = Array.from(perMap.entries())
+        .filter(([, n]) => n > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([p, n]) => `${p}: ${n}`)
+        .join(" · ");
       setSummary(
         (quiet && addedNow > 0 ? `+${addedNow} anunțuri adăugate automat · ` : "") +
         `${newCount} anunțuri noi pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
@@ -752,6 +827,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             const key = (l.url || "").trim();
             if (prev.some(x => (x.url || "").trim() === key)) return prev;
             return [l, ...prev];
+          });
+          setFreshUrls(f => {
+            const key = (l.url || "").trim();
+            return key ? Array.from(new Set([key, ...f])).slice(0, 200) : f;
           });
           setLastAutoAt(new Date());
         },
@@ -954,18 +1033,42 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         />
       </div>
 
+      <div className="space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="text-[11px] text-muted-foreground">
+            Zone (poți bifa mai multe; niciuna bifată = toată Timișoara)
+          </div>
+          {zones.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setZones([])}
+              className="text-[11px] underline text-muted-foreground hover:text-foreground"
+            >
+              Șterge zonele ({zones.length})
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5 max-h-[132px] overflow-y-auto rounded-md border p-1.5">
+          {ZONE_OPTIONS.map(z => {
+            const on = zones.includes(z);
+            return (
+              <Button
+                key={z}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-8 text-[11px]"
+                onClick={() => { setZones(v => toggleIn(v, z)); setIgnoreFilters(false); }}
+              >
+                {z}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={zone} onValueChange={setZone}>
-          <SelectTrigger className="sm:w-[200px] min-h-[48px] sm:min-h-0" aria-label="Zonă">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_ZONE}>Toate zonele</SelectItem>
-            {ZONE_OPTIONS.map(z => (
-              <SelectItem key={z} value={z}>{z}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={portalFilter} onValueChange={setPortalFilter}>
           <SelectTrigger className="sm:w-[220px] min-h-[48px] sm:min-h-0" aria-label="Portalul unde apare anunțul">
             <SelectValue />
@@ -1144,6 +1247,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
+                    {freshUrls.includes((l.url || "").trim()) && (
+                      <Badge className="text-[10px] shrink-0 bg-emerald-600 text-primary-foreground hover:bg-emerald-600">
+                        NOU
+                      </Badge>
+                    )}
                     <Badge variant="default" className="text-[10px] shrink-0">
                       {listingPortal(l) || "platformă necunoscută"}
                     </Badge>
@@ -1155,14 +1263,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                         </Badge>
                       ) : null;
                     })()}
-                    {zone !== ANY_ZONE && (
-                      <Badge
-                        variant={zoneMatches(l, zone) ? "secondary" : "outline"}
-                        className="text-[10px] shrink-0"
-                      >
-                        {zoneMatches(l, zone) ? `zona ${zone} apare` : `zona ${zone} nu apare în anunț`}
-                      </Badge>
-                    )}
+                    {zones.length > 0 && (() => {
+                      const hit = zones.find(z => zoneMatches(l, z));
+                      return (
+                        <Badge variant={hit ? "secondary" : "outline"} className="text-[10px] shrink-0">
+                          {hit ? `zona ${hit}` : "zona cerută nu apare în anunț"}
+                        </Badge>
+                      );
+                    })()}
                     {l.url ? (
                       <a
                         href={l.url}
@@ -1271,7 +1379,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               return txt ? <> · afișate pe portal — {txt}</> : null;
             })()}
           </div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <Button
               type="button"
               size="sm"
@@ -1283,6 +1391,40 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
               Verifică prețurile exacte
             </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs"
+              disabled={main.length === 0}
+              onClick={() =>
+                downloadCsv(
+                  csvFileName("anunturi-proprietari"),
+                  ["Titlu", "Platformă", "Zonă", "Camere", "Preț (€)", "€/mp", "Telefon", "Link"],
+                  main.map(l => {
+                    const pv = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
+                    const mp = surfaceOf(`${l.title || ""} ${l.description || ""}`);
+                    return [
+                      l.title || "",
+                      listingPortal(l),
+                      l.zone || "",
+                      l.rooms ?? "",
+                      pv ?? "",
+                      pricePerSqm(pv, mp) ?? "",
+                      l.phone || "",
+                      l.url || "",
+                    ];
+                  }),
+                )
+              }
+            >
+              <Download className="h-3 w-3 mr-1" /> Descarcă lista ({main.length})
+            </Button>
+            {activeFilterCount > 0 && (
+              <span className="text-[11px] text-muted-foreground">
+                {activeFilterCount} {activeFilterCount === 1 ? "filtru activ" : "filtre active"}
+              </span>
+            )}
             {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
             {results.length > 0 && (
               <Button
