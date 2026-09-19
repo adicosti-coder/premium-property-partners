@@ -601,7 +601,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const onlyFloor = floors.length === 1 ? floors[0] : "";
     const floorPart = onlyFloor === "parter" ? "parter" : onlyFloor === "last" ? "ultimul etaj" : onlyFloor === "mansarda" ? "mansarda" : "";
     const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
-    const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
+    // În interogare intră un singur număr de camere (portalurile nu accepta liste).
+    const roomsPart = rooms.length === 1 ? `${rooms[0]} camere` : "";
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
     const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
