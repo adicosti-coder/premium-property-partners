@@ -1756,7 +1756,12 @@ Deno.serve(async (req) => {
               // Căutarea manuală trebuie să afișeze și potrivirile cunoscute,
               // nu doar rândurile inserate pentru prima dată în această rulare.
               const known = existingProspectsByUrl.get(url);
-              if (customQuery && known?.is_active !== false && known?.lifecycle_status !== 'expired' && known?.lifecycle_status !== 'rejected') {
+              if (
+                customQuery &&
+                known?.prospect_type !== 'agentie' &&
+                known?.lifecycle_status !== 'expired' &&
+                known?.lifecycle_status !== 'rejected'
+              ) {
                 results.push({
                   title: known.title || result.title || titleFromListingUrl(url),
                   description: known.description || result.markdown || result.description || null,
