@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
 
       const { data: listing } = await admin
         .from("prospect_listings")
-        .select("title,listing_url,source_url,zone,rooms,source_platform")
+        .select("title,source_url,zone,rooms,source_platform")
         .eq("id", listingId)
         .maybeSingle();
 
@@ -134,8 +134,7 @@ Deno.serve(async (req) => {
         drop_pct: Math.round(pct * 10) / 10,
         recorded_at: latest.recorded_at,
         platform: latest.source_platform || (listing?.source_platform as string) || "Necunoscut",
-        url: (listing?.listing_url as string) || latest.source_url ||
-          (listing?.source_url as string) || null,
+        url: latest.source_url || (listing?.source_url as string) || null,
         zone: latest.zone || (listing?.zone as string) || null,
         rooms: latest.rooms ?? (listing?.rooms as number) ?? null,
         title: (listing?.title as string) || null,

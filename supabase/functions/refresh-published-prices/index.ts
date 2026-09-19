@@ -68,9 +68,9 @@ Deno.serve(async (req) => {
 
   const { data: listings, error } = await supabase
     .from("prospect_listings")
-    .select("id,listing_url,price,source_platform,price_checked_at")
+    .select("id,source_url,price,source_platform,price_checked_at")
     .eq("is_active", true)
-    .not("listing_url", "is", null)
+    .not("source_url", "is", null)
     .or(
       `price_checked_at.is.null,price_checked_at.lt.${new Date(Date.now() - 12 * 3600_000).toISOString()}`,
     )
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
 
   for (const row of listings || []) {
     if (Date.now() - startedAt > GLOBAL_BUDGET_MS) break;
-    const url = String(row.listing_url || "");
+    const url = String(row.source_url || "");
     if (!url || !isUrlAllowed(url).ok) continue;
 
     checked++;
