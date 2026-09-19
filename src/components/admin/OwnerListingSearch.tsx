@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 import AddAgencyPhoneDialog from "./AddAgencyPhoneDialog";
 import MarkAsAgencyButton from "./MarkAsAgencyButton";
+import { PORTAL_ZONE_LABELS, zoneMatchesText, zoneSearchTerm } from "@/lib/timisoaraPortalZones";
 
 export interface AdHocListing {
   title?: string | null;
@@ -42,64 +43,9 @@ const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", 
 
 /**
  * Zonele Timișoarei exact cum sunt definite de platformele de anunțuri
- * (imobiliare.ro, olx.ro, publi24.ro) — nu cartierele administrative.
+ * (imobiliare.ro, olx.ro, publi24.ro) — vezi src/lib/timisoaraPortalZones.ts.
  */
-const ZONE_OPTIONS = [
-  // Zone centrale, așa cum apar pe portaluri
-  "Ultracentral",
-  "Central",
-  "Semicentral",
-  "Cetate",
-  "Iosefin",
-  "Elisabetin",
-  "Fabric",
-  "Traian",
-  "Complex Studențesc",
-  "Mehala",
-  // Zone nord
-  "Aradului",
-  "Bucovina",
-  "Lipovei",
-  "Circumvalațiunii",
-  "Torontalului",
-  "Ronaț",
-  "Take Ionescu",
-  "Dacia",
-  "Gheorghe Lazăr",
-  "Sever Bocu (Lipovei II)",
-  // Zone sud
-  "Girocului",
-  "Soarelui",
-  "Braytim",
-  "Buziașului",
-  "Lunei",
-  "Șagului",
-  "Steaua",
-  "Dâmbovița",
-  "Blașcovici",
-  "Olimpia-Stadion",
-  "Zona Medicină",
-  // Zone est / vest / periferice
-  "Plopi",
-  "Ciarda Roșie",
-  "Freidorf",
-  "Kuncz",
-  "Modern",
-  "Tipografilor",
-  "UMT",
-  "Zona Gării",
-  "Zona Industrială",
-  // Localități limitrofe (zone separate pe portaluri)
-  "Dumbrăvița",
-  "Giroc",
-  "Chișoda",
-  "Ghiroda",
-  "Moșnița Nouă",
-  "Sânmihaiu Român",
-  "Săcălaz",
-  "Șag",
-  "Remetea Mare",
-];
+const ZONE_OPTIONS = PORTAL_ZONE_LABELS;
 
 const PROPERTY_TYPES = [
   { value: "apartament", label: "Apartament" },
@@ -164,12 +110,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       .replace(/\s+/g, " ")
       .trim();
 
-  /** Anunțul aparține zonei date (după câmpul zone sau titlu). */
-  const zoneMatches = (l: AdHocListing, z: string) => {
-    const needle = norm(z.split("/")[0]);
-    if (!needle) return false;
-    return norm(`${l.zone || ""} ${l.title || ""}`).includes(needle);
-  };
+  /** Anunțul aparține zonei date — acceptă toate denumirile de pe portaluri. */
+  const zoneMatches = (l: AdHocListing, z: string) =>
+    zoneMatchesText(`${l.zone || ""} ${l.title || ""}`, z);
 
   const loadPreferredZones = async () => {
     const { data } = await supabase
@@ -239,10 +182,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
     const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
-    const zoneWord = zone === ANY_ZONE ? null : norm(zone.split("/")[0]);
+    const wantedZone = zone === ANY_ZONE ? null : zone;
     return list.filter(l => {
       const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
-      const nText = norm(`${l.title || ""} ${l.zone || ""}`);
       if (onlyWithPhone && !l.phone) return false;
       if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
@@ -259,7 +201,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const otherTypes = PROPERTY_TYPES.map(t => t.value).filter(v => v !== type);
         if (otherTypes.some(v => text.includes(v))) return false;
       }
-      if (zoneWord && !nText.includes(zoneWord) && !norm(l.zone || "").includes(zoneWord)) return false;
+      if (wantedZone && !zoneMatchesText(`${l.zone || ""} ${l.title || ""}`, wantedZone)) return false;
       const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
       // preț necunoscut → păstrăm anunțul, poate fi verificat cu „Verifică prețurile exacte”
       if (min !== null && price !== null && price < min) return false;
@@ -462,7 +404,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
-    const zonePart = zone === ANY_ZONE ? "" : `${zone} Timișoara`;
+    const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${dealPart}`.replace(/\s+/g, " ").trim();

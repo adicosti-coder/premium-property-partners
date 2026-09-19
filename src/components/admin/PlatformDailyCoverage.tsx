@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RefreshCw, Download, Radio } from "lucide-react";
 import { downloadCsv, csvFileName } from "@/utils/exportCsv";
 import { toast } from "sonner";
+import { PORTAL_ZONE_LABELS, canonicalZone } from "@/lib/timisoaraPortalZones";
 
 interface Raw {
   source_platform: string | null;
@@ -18,6 +19,8 @@ interface Raw {
   last_seen_at: string | null;
   price: number | null;
   price_per_sqm: number | null;
+  zone: string | null;
+  title: string | null;
 }
 
 interface HistRow {
@@ -43,11 +46,14 @@ const normPlatform = (p: string | null) => {
   return p as string;
 };
 
+const ALL_ZONES = "__all_zones__";
+
 export default function PlatformDailyCoverage() {
   const [raw, setRaw] = useState<Raw[]>([]);
   const [hist, setHist] = useState<HistRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [days, setDays] = useState("14");
+  const [zoneFilter, setZoneFilter] = useState(ALL_ZONES);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,7 +61,7 @@ export default function PlatformDailyCoverage() {
     const [listings, history] = await Promise.all([
       supabase
         .from("prospect_listings")
-        .select("source_platform,created_at,last_seen_at,price,price_per_sqm")
+        .select("source_platform,created_at,last_seen_at,price,price_per_sqm,zone,title")
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(10000),
@@ -76,13 +82,44 @@ export default function PlatformDailyCoverage() {
     load();
   }, [load]);
 
+  /** Zona canonică a fiecărui anunț, după denumirile reale de pe portaluri. */
+  const withZone = useMemo(
+    () => raw.map((r) => ({ ...r, canonZone: canonicalZone(`${r.zone || ""} ${r.title || ""}`) })),
+    [raw],
+  );
+
+  /** Anunțurile din zona selectată (sau toate). */
+  const filtered = useMemo(
+    () => (zoneFilter === ALL_ZONES ? withZone : withZone.filter((r) => r.canonZone === zoneFilter)),
+    [withZone, zoneFilter],
+  );
+
+  /** Câte anunțuri are fiecare zonă, pe fiecare portal. */
+  const zoneRows = useMemo(() => {
+    const byZone = new Map<string, Map<string, number>>();
+    for (const r of withZone) {
+      const z = r.canonZone || "Zonă nedetectată";
+      const p = normPlatform(r.source_platform);
+      if (!byZone.has(z)) byZone.set(z, new Map());
+      const m = byZone.get(z)!;
+      m.set(p, (m.get(p) || 0) + 1);
+    }
+    return Array.from(byZone.entries())
+      .map(([zone, counts]) => ({
+        zone,
+        counts,
+        total: Array.from(counts.values()).reduce((s, v) => s + v, 0),
+      }))
+      .sort((a, b) => b.total - a.total);
+  }, [withZone]);
+
   const { platforms, dayRows, totals, lastSeen } = useMemo(() => {
     const platformSet = new Set<string>();
     const byDay = new Map<string, Map<string, number>>();
     const tot = new Map<string, number>();
     const seen = new Map<string, string>();
 
-    for (const r of raw) {
+    for (const r of filtered) {
       if (!r.created_at) continue;
       const p = normPlatform(r.source_platform);
       const d = dayKey(r.created_at);
@@ -100,7 +137,7 @@ export default function PlatformDailyCoverage() {
       .sort((a, b) => (a[0] < b[0] ? 1 : -1))
       .map(([day, m]) => ({ day, counts: m, total: Array.from(m.values()).reduce((s, v) => s + v, 0) }));
     return { platforms: plats, dayRows: rows, totals: tot, lastSeen: seen };
-  }, [raw]);
+  }, [filtered]);
 
   /** Preț mediu, €/mp mediu și scăderi de preț pe fiecare platformă. */
   const stats = useMemo(() => {
@@ -109,7 +146,7 @@ export default function PlatformDailyCoverage() {
       if (!acc.has(p)) acc.set(p, { count: 0, priceSum: 0, priceN: 0, sqmSum: 0, sqmN: 0, drops: 0 });
       return acc.get(p)!;
     };
-    for (const r of raw) {
+    for (const r of filtered) {
       const s = get(normPlatform(r.source_platform));
       s.count += 1;
       if (r.price && Number(r.price) > 0) { s.priceSum += Number(r.price); s.priceN += 1; }
@@ -131,7 +168,7 @@ export default function PlatformDailyCoverage() {
       }
     }
     return acc;
-  }, [raw, hist]);
+  }, [filtered, hist]);
 
   const isLive = (p: string) => {
     const ls = lastSeen.get(p);
@@ -170,6 +207,17 @@ export default function PlatformDailyCoverage() {
                 <SelectItem value="30">Ultimele 30 zile</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={zoneFilter} onValueChange={setZoneFilter}>
+              <SelectTrigger className="w-[190px]" aria-label="Zona de pe portaluri">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[320px]">
+                <SelectItem value={ALL_ZONES}>Toate zonele</SelectItem>
+                {PORTAL_ZONE_LABELS.map((z) => (
+                  <SelectItem key={z} value={z}>{z}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
@@ -187,8 +235,48 @@ export default function PlatformDailyCoverage() {
               </Badge>
             ))}
             {!platforms.length && !loading && (
-              <span className="text-sm text-muted-foreground">Nicio platformă cu anunțuri în perioada aleasă.</span>
+              <span className="text-sm text-muted-foreground">
+                {zoneFilter === ALL_ZONES
+                  ? "Nicio platformă cu anunțuri în perioada aleasă."
+                  : `Nicio platformă nu a adus anunțuri în zona ${zoneFilter} în perioada aleasă.`}
+              </span>
             )}
+          </div>
+
+          <div className="overflow-x-auto">
+            <div className="mb-1 text-xs font-medium">Zone, cum apar pe portaluri</div>
+            <table className="w-full text-sm mb-4">
+              <thead>
+                <tr className="border-b text-left text-muted-foreground">
+                  <th className="py-2 pr-3 font-medium">Zonă</th>
+                  <th className="py-2 pr-3 font-medium">imobiliare.ro</th>
+                  <th className="py-2 pr-3 font-medium">OLX</th>
+                  <th className="py-2 pr-3 font-medium">Publi24</th>
+                  <th className="py-2 pr-3 font-medium">Storia.ro</th>
+                  <th className="py-2 font-medium">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {zoneRows.slice(0, 25).map((r) => (
+                  <tr key={r.zone} className="border-b last:border-0">
+                    <td className="py-2 pr-3 whitespace-nowrap font-medium">{r.zone}</td>
+                    {["imobiliare.ro", "OLX", "Publi24", "Storia.ro"].map((p) => (
+                      <td key={p} className={`py-2 pr-3 ${r.counts.get(p) ? "" : "text-muted-foreground"}`}>
+                        {r.counts.get(p) || "—"}
+                      </td>
+                    ))}
+                    <td className="py-2 font-medium">{r.total}</td>
+                  </tr>
+                ))}
+                {!zoneRows.length && (
+                  <tr>
+                    <td className="py-3 text-muted-foreground" colSpan={6}>
+                      {loading ? "Se încarcă…" : "Nicio zonă cu anunțuri în perioada aleasă."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div className="overflow-x-auto">
