@@ -165,14 +165,27 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           listings.push(l);
         }
       }
+      const newCount = listings.length;
+
+      // Completăm cu anunțuri deja salvate, ca răspunsul să aibă mereu linkuri.
+      const existing = await fetchExisting(base, platforms);
+      let existingShown = 0;
+      for (const l of existing) {
+        const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
+        if (key && seen.has(key)) continue;
+        if (key) seen.add(key);
+        listings.push(l);
+        existingShown++;
+      }
       setResults(listings);
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
       const perPlatform = ok.filter(r => r.listings.length > 0).map(r => `${r.platform}: ${r.listings.length}`).join(" · ");
       setSummary(
-        `${listings.length} anunțuri de la proprietari pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
+        `${newCount} anunțuri noi pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
           (perPlatform ? ` (${perPlatform})` : "") +
+          (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
           (agency ? ` · ${agency} agenții excluse` : "") +
           (duplicate ? ` · ${duplicate} deja în listă` : "") +
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
@@ -180,8 +193,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
       if (listings.length === 0) {
         toast({
-          title: "Niciun anunț nou",
-          description: "Toate rezultatele erau de la agenții sau existau deja. Încearcă altă formulare sau altă platformă.",
+          title: "Niciun anunț găsit",
+          description: "Toate rezultatele erau de la agenții. Încearcă altă formulare sau altă platformă.",
         });
       }
     } catch (e: any) {
