@@ -331,7 +331,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         .order("updated_at", { ascending: false })
         .limit(25);
 
-      if (w) q = q.or(`title.ilike.%${w}%,zone.ilike.%${w}%,address.ilike.%${w}%`);
+      if (w) {
+        const safe = w.replace(/[,%()]/g, " ").trim();
+        if (safe) q = q.or(`title.ilike.%${safe}%,zone.ilike.%${safe}%,description.ilike.%${safe}%`);
+      }
       if (platform !== ALL_PLATFORMS) q = q.in("source_platform", platforms);
       const { data, error } = await q;
       if (error) return [];
