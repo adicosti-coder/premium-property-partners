@@ -185,7 +185,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const wantedZone = zone === ANY_ZONE ? null : zone;
     return list.filter(l => {
       const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
-      const nText = norm(`${l.title || ""} ${l.zone || ""}`);
       if (onlyWithPhone && !l.phone) return false;
       if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
