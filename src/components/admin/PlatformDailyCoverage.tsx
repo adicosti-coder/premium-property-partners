@@ -16,6 +16,15 @@ interface Raw {
   source_platform: string | null;
   created_at: string | null;
   last_seen_at: string | null;
+  price: number | null;
+  price_per_sqm: number | null;
+}
+
+interface HistRow {
+  listing_id: string | null;
+  source_platform: string | null;
+  price: number | null;
+  recorded_at: string | null;
 }
 
 const dayKey = (iso: string) => iso.slice(0, 10);
