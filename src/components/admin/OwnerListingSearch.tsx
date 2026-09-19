@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,6 +99,63 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [searching, setSearching] = useState(false);
   const [pricing, setPricing] = useState(false);
   const [exactPrices, setExactPrices] = useState<Record<string, number>>({});
+  const [preferredZones, setPreferredZones] = useState<string[]>([]);
+  const [newZone, setNewZone] = useState("");
+  const [savingZone, setSavingZone] = useState(false);
+
+  /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9 ]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  /** Anunțul aparține zonei date (după câmpul zone sau titlu). */
+  const zoneMatches = (l: AdHocListing, z: string) => {
+    const needle = norm(z.split("/")[0]);
+    if (!needle) return false;
+    return norm(`${l.zone || ""} ${l.title || ""}`).includes(needle);
+  };
+
+  const loadPreferredZones = async () => {
+    const { data } = await supabase
+      .from("admin_preferred_zones")
+      .select("zone")
+      .order("zone", { ascending: true });
+    setPreferredZones(((data ?? []) as { zone: string }[]).map(r => r.zone));
+  };
+
+  useEffect(() => { void loadPreferredZones(); }, []);
+
+  const addPreferredZone = async () => {
+    const z = newZone.trim();
+    if (z.length < 3) {
+      toast({ title: "Scrie numele zonei", description: "Ex: Dumbrăvița" });
+      return;
+    }
+    setSavingZone(true);
+    const { error } = await supabase.from("admin_preferred_zones").insert({ zone: z } as never);
+    setSavingZone(false);
+    if (error) {
+      toast({ title: "Nu am putut adăuga zona", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNewZone("");
+    await loadPreferredZones();
+    toast({ title: "Zonă adăugată", description: z });
+  };
+
+  const removePreferredZone = async (z: string) => {
+    const { error } = await supabase.from("admin_preferred_zones").delete().eq("zone", z);
+    if (error) {
+      toast({ title: "Nu am putut șterge zona", description: error.message, variant: "destructive" });
+      return;
+    }
+    setPreferredZones(prev => prev.filter(x => x !== z));
+  };
 
   /** Extrage prima valoare numerică dintr-un preț de tip "55.000 €" sau 2021450. */
   const priceValue = (p: AdHocListing["price"]): number | null => {
@@ -318,7 +375,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
     const zonePart = zone === ANY_ZONE ? "" : `${zone} Timișoara`;
-    const term = `${typePart} ${base} ${zonePart}`.replace(/\s+/g, " ").trim();
+    const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
+    const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
+    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${dealPart}`.replace(/\s+/g, " ").trim();
     if (term.length < 3) {
       toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
@@ -513,6 +572,43 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </Button>
       </div>
 
+      <div className="rounded-lg border p-2 space-y-2">
+        <div className="text-[11px] text-muted-foreground">
+          Zone preferate — filtrele se aplică pe acestea, restul anunțurilor apar în lista de rezervă.
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {preferredZones.length === 0 && (
+            <span className="text-[11px] text-muted-foreground">Nicio zonă preferată — se afișează toate zonele.</span>
+          )}
+          {preferredZones.map(z => (
+            <span key={z} className="inline-flex items-center gap-1 rounded-full border bg-background px-2 py-1 text-[11px]">
+              {z}
+              <button
+                type="button"
+                onClick={() => removePreferredZone(z)}
+                aria-label={`Șterge zona ${z}`}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={newZone}
+            onChange={e => setNewZone(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") void addPreferredZone(); }}
+            placeholder="Adaugă o zonă preferată (ex: Dumbrăvița)"
+            aria-label="Adaugă o zonă preferată"
+            className="min-h-[44px]"
+          />
+          <Button type="button" variant="outline" onClick={() => void addPreferredZone()} disabled={savingZone} className="min-h-[44px]">
+            {savingZone ? <Loader2 className="h-4 w-4 animate-spin" /> : "Adaugă zona"}
+          </Button>
+        </div>
+      </div>
+
 
       <div className="flex flex-wrap gap-1.5">
         <span className="text-[11px] text-muted-foreground self-center mr-1">Blocuri din zona mea:</span>
@@ -537,37 +633,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       )}
 
       {!searching && results && (() => {
+        // Filtrele se aplică strict: afișăm doar anunțurile care le respectă.
         const matched = filterListings(results);
-        // Dacă filtrele exclud tot, arătăm totuși anunțurile găsite cu link,
-        // ca să nu pierdem legăturile către ele.
-        const visible = matched.length > 0 ? matched : results;
-        const showingAll = matched.length === 0 && results.length > 0;
-        return (
-        <div>
-          <div className="text-xs text-muted-foreground mb-1">
-            {summary || `${results.length} anunțuri`}
-            {matched.length !== results.length && <> · {matched.length} potrivesc filtrele</>}
-            {showingAll && (
-              <> · afișez toate cele {results.length} anunțuri cu link (filtrele nu se potrivesc)</>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mb-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={pricing}
-              onClick={() => hydrateExactPrices(visible)}
-              className="h-8 text-xs"
-            >
-              {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
-              Verifică prețurile exacte
-            </Button>
-            {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
-          </div>
-          {visible.length > 0 && (
-            <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
-              {visible.map((l, idx) => (
+        const inPreferred = (l: AdHocListing) =>
+          preferredZones.length === 0 ? true : preferredZones.some(z => zoneMatches(l, z));
+        const main = matched.filter(inPreferred);
+        const reserve = matched.filter(l => !inPreferred(l));
+
+        const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
                     <Badge variant="default" className="text-[10px] shrink-0">
@@ -650,7 +723,49 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     </Button>
                   </div>
                 </div>
-              ))}
+        );
+
+        return (
+        <div>
+          <div className="text-xs text-muted-foreground mb-1">
+            {summary || `${results.length} anunțuri`}
+            {matched.length !== results.length && <> · {matched.length} respectă filtrele</>}
+            {preferredZones.length > 0 && reserve.length > 0 && (
+              <> · {reserve.length} în listă de rezervă (în afara zonelor preferate)</>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pricing}
+              onClick={() => hydrateExactPrices([...main, ...reserve])}
+              className="h-8 text-xs"
+            >
+              {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+              Verifică prețurile exacte
+            </Button>
+            {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
+          </div>
+          {main.length > 0 ? (
+            <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
+              {main.map(renderRow)}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Niciun anunț nu respectă filtrele alese{preferredZones.length > 0 ? " în zonele preferate" : ""}.
+            </p>
+          )}
+
+          {reserve.length > 0 && (
+            <div className="mt-3">
+              <div className="text-xs font-medium mb-1">
+                Listă de rezervă · {reserve.length} anunțuri în afara zonelor preferate
+              </div>
+              <div className="border rounded-lg divide-y max-h-[320px] overflow-y-auto bg-muted/30">
+                {reserve.map(renderRow)}
+              </div>
             </div>
           )}
         </div>

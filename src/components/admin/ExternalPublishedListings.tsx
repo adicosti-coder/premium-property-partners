@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, RefreshCw, Download, Clock, AlertTriangle } from "lucide-react";
+import { ExternalLink, RefreshCw, Download, Clock, AlertTriangle, Loader2, Euro } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { downloadCsv, csvFileName } from "@/utils/exportCsv";
 
 /** Durata standard de afișare a unui anunț pe fiecare platformă (zile). */
@@ -68,6 +69,37 @@ export default function ExternalPublishedListings() {
   const [loading, setLoading] = useState(false);
   const [platform, setPlatform] = useState("all");
   const [q, setQ] = useState("");
+  const [livePrices, setLivePrices] = useState<Record<string, number | null>>({});
+  const [checking, setChecking] = useState(false);
+
+  /** Citește prețul afișat chiar acum pe pagina anunțului de pe fiecare platformă. */
+  const checkLivePrices = async (urls: string[]) => {
+    const list = Array.from(new Set(urls.filter(Boolean))).slice(0, 12);
+    if (!list.length) {
+      toast({ title: "Niciun link de verificat", description: "Adaugă linkul anunțului publicat pe platformă." });
+      return;
+    }
+    setChecking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-listing-prices", { body: { urls: list } });
+      if (error) throw error;
+      const map = (data as { prices?: Record<string, { price: number | null; rent: number | null }> } | null)?.prices;
+      if (!map) throw new Error("Platformele nu au returnat prețuri.");
+      const next: Record<string, number | null> = {};
+      for (const [u, v] of Object.entries(map)) next[u] = v?.price ?? v?.rent ?? null;
+      setLivePrices(prev => ({ ...prev, ...next }));
+      const found = Object.values(next).filter(v => v != null).length;
+      toast({ title: "Prețuri live citite", description: `${found} din ${list.length} anunțuri au preț citit acum.` });
+    } catch (e) {
+      toast({
+        title: "Nu am putut citi prețurile live",
+        description: e instanceof Error ? e.message : "Eroare necunoscută",
+        variant: "destructive",
+      });
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -158,6 +190,16 @@ export default function ExternalPublishedListings() {
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading} className="min-h-[40px]">
               <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Reîncarcă
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void checkLivePrices(filtered.map(r => r.url || ""))}
+              disabled={checking || !filtered.length}
+              className="min-h-[40px]"
+            >
+              {checking ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Euro className="h-4 w-4 mr-1" />}
+              Preț live
+            </Button>
             <Button variant="outline" size="sm" onClick={exportCsv} disabled={!filtered.length} className="min-h-[40px]">
               <Download className="h-4 w-4 mr-1" /> CSV
             </Button>
@@ -221,6 +263,27 @@ export default function ExternalPublishedListings() {
               </div>
               <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
                 <span className="font-medium text-foreground">{eur(r.price)}</span>
+                {r.url && livePrices[r.url] != null && (
+                  <span className="font-medium text-emerald-600">
+                    live: {eur(livePrices[r.url] as number)}
+                    {r.price != null && Number(livePrices[r.url]) !== Number(r.price) && (
+                      <span className="ml-1 text-amber-600">
+                        ({Number(livePrices[r.url]) > Number(r.price) ? "+" : ""}
+                        {Math.round(Number(livePrices[r.url]) - Number(r.price)).toLocaleString("ro-RO")} €)
+                      </span>
+                    )}
+                  </span>
+                )}
+                {r.url && (
+                  <button
+                    type="button"
+                    onClick={() => void checkLivePrices([r.url as string])}
+                    className="underline hover:text-foreground"
+                    disabled={checking}
+                  >
+                    Verifică prețul live
+                  </button>
+                )}
                 {r.price && r.size ? <span>{Math.round(Number(r.price) / Number(r.size)).toLocaleString("ro-RO")} €/mp</span> : null}
                 {r.zone && <span>{r.zone}</span>}
                 <span>Publicat: {dateRo(r.publishedAt)}</span>
