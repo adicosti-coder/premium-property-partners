@@ -304,9 +304,21 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     <Badge variant="default" className="text-[10px] shrink-0">
                       {l.source_platform || l.platform || "—"}
                     </Badge>
-                    <span className="text-xs flex-1 truncate" title={l.title || ""}>
-                      {l.title || "Anunț fără titlu"}
-                    </span>
+                    {l.url ? (
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs flex-1 truncate underline underline-offset-2 hover:text-primary"
+                        title={l.url}
+                      >
+                        {l.title || "Anunț fără titlu"}
+                      </a>
+                    ) : (
+                      <span className="text-xs flex-1 truncate" title={l.title || ""}>
+                        {l.title || "Anunț fără titlu"}
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     {l.zone && <span>{l.zone}</span>}
@@ -314,9 +326,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     {l.price ? <span>{String(l.price)}</span> : null}
                     {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
                     {l.url && (
-                      <a href={l.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
-                        Deschide anunțul
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium text-foreground hover:bg-accent min-h-[32px]"
+                      >
+                        <ExternalLink className="h-3 w-3" /> Deschide anunțul
                       </a>
+                    )}
+                    {l.url && (
+                      <button
+                        type="button"
+                        onClick={() => { navigator.clipboard?.writeText(l.url!); toast({ title: "Link copiat" }); }}
+                        className="underline hover:text-foreground"
+                      >
+                        Copiază linkul
+                      </button>
                     )}
                   </div>
                 </div>
