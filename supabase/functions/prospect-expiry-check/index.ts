@@ -100,8 +100,9 @@ async function checkUrl(url: string): Promise<{ expired: boolean; reason: string
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  // Acceptă atât apeluri interne (pg_cron) cât și administratori autentificați.
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const body = await req.json().catch(() => ({}));
