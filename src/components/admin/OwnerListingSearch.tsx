@@ -147,16 +147,36 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   /** Anunțuri deja salvate care se potrivesc cu căutarea — ca să avem mereu linkuri. */
   const fetchExisting = async (base: string, platforms: string[]): Promise<AdHocListing[]> => {
     const words = base.split(/\s+/).filter(w => w.length >= 3).slice(0, 3);
-    let q = supabase
-      .from("prospect_listings")
-      .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(25);
-    for (const w of words) q = q.ilike("title", `%${w}%`);
-    if (platform !== ALL_PLATFORMS) q = q.in("source_platform", platforms);
-    const { data, error } = await q;
-    if (error) return [];
-    return (data ?? []).map((r: any) => ({
+    const fetchFor = async (w?: string) => {
+      let q = supabase
+        .from("prospect_listings")
+        .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at")
+        .not("source_url", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(25);
+      if (w) q = q.or(`title.ilike.%${w}%,zone.ilike.%${w}%,address.ilike.%${w}%`);
+      if (platform !== ALL_PLATFORMS) q = q.in("source_platform", platforms);
+      const { data, error } = await q;
+      if (error) return [];
+      return data ?? [];
+    };
+
+    // Caută pe fiecare cuvânt (titlu / zonă / adresă); dacă nimic, arată ultimele salvate.
+    let rows: any[] = [];
+    if (words.length) {
+      const parts = await Promise.all(words.map(w => fetchFor(w)));
+      const seenUrl = new Set<string>();
+      for (const p of parts) {
+        for (const r of p) {
+          if (seenUrl.has(r.source_url)) continue;
+          seenUrl.add(r.source_url);
+          rows.push(r);
+        }
+      }
+    }
+    if (rows.length === 0) rows = await fetchFor();
+
+    return rows.map((r: any) => ({
       title: r.title,
       url: r.source_url,
       price: r.price,
@@ -166,6 +186,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       source_platform: r.source_platform,
     }));
   };
+
 
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
