@@ -150,10 +150,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const fetchFor = async (w?: string) => {
       let q = supabase
         .from("prospect_listings")
-        .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at")
+        .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at,last_seen_at")
         .not("source_url", "is", null)
+        // fără anunțuri expirate / dezactivate
+        .eq("is_active", true)
+        .not("lifecycle_status", "in", "(expired,rejected)")
         .order("updated_at", { ascending: false })
         .limit(25);
+
       if (w) q = q.or(`title.ilike.%${w}%,zone.ilike.%${w}%,address.ilike.%${w}%`);
       if (platform !== ALL_PLATFORMS) q = q.in("source_platform", platforms);
       const { data, error } = await q;
