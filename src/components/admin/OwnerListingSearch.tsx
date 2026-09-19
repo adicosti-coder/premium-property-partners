@@ -235,7 +235,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setMaxSurface("");
     setZone(ANY_ZONE);
     setDeal(ANY_DEAL);
-    setRooms(ANY_ROOMS);
+    setRooms([]);
     setMinPrice("");
     setMaxPrice("");
     setOnlyWithPhone(false);
