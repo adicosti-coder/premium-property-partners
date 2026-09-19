@@ -146,7 +146,7 @@ export default function PlatformDailyCoverage() {
       if (!acc.has(p)) acc.set(p, { count: 0, priceSum: 0, priceN: 0, sqmSum: 0, sqmN: 0, drops: 0 });
       return acc.get(p)!;
     };
-    for (const r of raw) {
+    for (const r of filtered) {
       const s = get(normPlatform(r.source_platform));
       s.count += 1;
       if (r.price && Number(r.price) > 0) { s.priceSum += Number(r.price); s.priceN += 1; }
