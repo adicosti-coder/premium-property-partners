@@ -286,7 +286,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const excludeReason = (l: AdHocListing): string | null => {
     const min = minPrice ? Number(minPrice.replace(/[^\d]/g, "")) : null;
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
-    const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
+    const wantedRooms = rooms.map(r => Number(r)).filter(n => Number.isFinite(n));
     const wantedTypes = types.map(t => norm(t));
     const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
     const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
