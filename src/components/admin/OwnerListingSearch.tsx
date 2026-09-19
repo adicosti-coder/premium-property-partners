@@ -227,6 +227,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setMaxPrice("");
     setOnlyWithPhone(false);
     setPortalFilter(ALL_PLATFORMS);
+    setIgnoreFilters(false);
   };
 
   /** Portalul pe care a fost găsit anunțul. */
