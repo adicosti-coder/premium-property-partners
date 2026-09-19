@@ -40,62 +40,65 @@ const PLATFORM_OPTIONS = [
 
 const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
 
-/** Cartierele și zonele Timișoarei + comunele limitrofe (ordine alfabetică pe grupe). */
+/**
+ * Zonele Timișoarei exact cum sunt definite de platformele de anunțuri
+ * (imobiliare.ro, olx.ro, publi24.ro) — nu cartierele administrative.
+ */
 const ZONE_OPTIONS = [
-  // Zone centrale
-  "Cetate / Centru",
-  "Complex Studențesc",
+  // Zone centrale, așa cum apar pe portaluri
+  "Ultracentral",
+  "Central",
+  "Semicentral",
+  "Cetate",
+  "Iosefin",
   "Elisabetin",
   "Fabric",
-  "Iosefin",
-  "Mehala",
   "Traian",
-  // Nord
+  "Complex Studențesc",
+  "Mehala",
+  // Zone nord
   "Aradului",
   "Bucovina",
-  "Calea Lipovei",
-  "Circumvalațiunii",
   "Lipovei",
+  "Circumvalațiunii",
   "Torontalului",
   "Ronaț",
   "Take Ionescu",
-  // Est
-  "Blașcovici",
-  "Dâmbovița",
-  "Olimpia / Stadion",
-  "Steaua",
-  "Soarelui",
-  // Sud
+  "Dacia",
+  "Gheorghe Lazăr",
+  "Sever Bocu (Lipovei II)",
+  // Zone sud
   "Girocului",
+  "Soarelui",
   "Braytim",
   "Buziașului",
   "Lunei",
   "Șagului",
-  "Timiș / Calea Martirilor",
+  "Steaua",
+  "Dâmbovița",
+  "Blașcovici",
+  "Olimpia-Stadion",
   "Zona Medicină",
-  // Vest
-  "Freidorf",
-  "Kuncz",
+  // Zone est / vest / periferice
   "Plopi",
   "Ciarda Roșie",
-  "Calea Buziașului",
-  "Calea Șagului",
-  "Calea Torontalului",
-  "Calea Aradului",
+  "Freidorf",
+  "Kuncz",
   "Modern",
   "Tipografilor",
   "UMT",
   "Zona Gării",
-  // Comune limitrofe
+  "Zona Industrială",
+  // Localități limitrofe (zone separate pe portaluri)
   "Dumbrăvița",
   "Giroc",
   "Chișoda",
-  "Moșnița Nouă",
   "Ghiroda",
+  "Moșnița Nouă",
   "Sânmihaiu Român",
+  "Săcălaz",
   "Șag",
   "Remetea Mare",
-  "Săcălaz",
 ];
 
 const PROPERTY_TYPES = [
