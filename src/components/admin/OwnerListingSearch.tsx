@@ -56,6 +56,38 @@ const PROPERTY_TYPES = [
   { value: "spațiu comercial", label: "Spațiu comercial" },
 ];
 
+/** Compartimentarea apartamentului, cum apare scrisă pe portaluri. */
+const PARTITION_OPTIONS = [
+  { value: "decomandat", label: "Decomandat", words: ["decomandat"] },
+  { value: "semidecomandat", label: "Semidecomandat", words: ["semidecomandat", "semi decomandat"] },
+  { value: "nedecomandat", label: "Nedecomandat", words: ["nedecomandat"] },
+  { value: "circular", label: "Circular", words: ["circular"] },
+  { value: "vagon", label: "Vagon", words: ["vagon"] },
+  { value: "open space", label: "Open space", words: ["open space", "openspace"] },
+];
+
+const ANY_FLOOR = "__anyfloor__";
+const FLOOR_OPTIONS = [
+  { value: "parter", label: "Parter" },
+  { value: "not-ground", label: "Fără parter" },
+  { value: "1-3", label: "Etaj 1–3" },
+  { value: "4-7", label: "Etaj 4–7" },
+  { value: "8plus", label: "Etaj 8 sau mai sus" },
+  { value: "last", label: "Ultimul etaj" },
+  { value: "not-last", label: "Fără ultimul etaj" },
+  { value: "mansarda", label: "Mansardă / demisol" },
+];
+
+/** Dotări căutate în titlu și descriere. */
+const EXTRA_OPTIONS = [
+  { value: "balcon", label: "Balcon", words: ["balcon", "terasa", "terasă"] },
+  { value: "parcare", label: "Parcare / garaj", words: ["parcare", "garaj", "loc de parcare"] },
+  { value: "lift", label: "Lift", words: ["lift", "ascensor"] },
+  { value: "bloc nou", label: "Bloc nou", words: ["bloc nou", "construcție nouă", "constructie noua", "202", "imobil nou"] },
+  { value: "mobilat", label: "Mobilat", words: ["mobilat", "mobilată", "complet mobilat"] },
+  { value: "centrala", label: "Centrală proprie", words: ["centrala proprie", "centrală proprie", "centrala termica", "centrală termică"] },
+];
+
 /** Blocuri și ansambluri din zona proprie — completează rapid căutarea. */
 const BUILDINGS = [
   "NordOne",
