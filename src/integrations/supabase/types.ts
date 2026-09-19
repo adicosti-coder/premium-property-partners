@@ -263,6 +263,27 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_preferred_zones: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          zone: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          zone: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          zone?: string
+        }
+        Relationships: []
+      }
       advanced_simulations: {
         Row: {
           average_stay_duration: number
