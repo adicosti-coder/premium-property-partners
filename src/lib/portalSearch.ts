@@ -108,7 +108,14 @@ export function matchesAllTokens(text: string, tokens: string[]): boolean {
 
 /** Etajul dedus din text: „etaj 3”, „3/4”, „parter”, „ultimul etaj”. */
 export function floorInfo(text: string) {
-  const t = norm(text);
+  // păstrăm „/” pentru formele „2/4”
+  const t = (text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 /]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   const isGround = /\bparter\b/.test(t);
   const isAttic = /\b(mansarda|demisol|subsol)\b/.test(t);
   let value: number | null = null;

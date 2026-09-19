@@ -61,7 +61,7 @@ describe("matchesPortalFilters", () => {
     expect(matchesPortalFilters(l({ zone: "Dumbrăvița" }), f({ zone: "dumbravita" }))).toBe(true);
   });
   it("păstrează anunțul când datele lipsesc", () => {
-    expect(matchesPortalFilters(l({ price: null, surface: null, rooms: null, text: "" }), f({ maxPrice: "1000", rooms: ["2"] }))).toBe(true);
+    expect(matchesPortalFilters(l({ title: "Apartament", text: "", price: null, surface: null, rooms: null }), f({ maxPrice: "1000", rooms: ["2"] }))).toBe(true);
   });
 });
 
