@@ -33,7 +33,6 @@ export interface AdHocListing {
 }
 
 const ALL_PLATFORMS = "__all__";
-const ANY_ZONE = "__anyzone__";
 const ANY_DEAL = "__anydeal__";
 
 const PLATFORM_OPTIONS = [
@@ -47,6 +46,30 @@ const PLATFORM_OPTIONS = [
 ];
 
 const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
+
+/** Parametri de urmărire care nu schimbă anunțul — se elimină la comparare. */
+const TRACKING_PARAMS = /^(utm_|gclid|fbclid|msclkid|reason|ref|source|srsltid|_ga|mc_|sid|clickid)/i;
+
+/**
+ * Curăță linkul unui anunț: elimină parametrii de urmărire și „/” final,
+ * ca același anunț să nu apară de două ori în listă.
+ */
+export function normalizeAdUrl(raw: string | null | undefined): string {
+  const url = (raw || "").trim();
+  if (!url) return "";
+  try {
+    const u = new URL(url);
+    const keep = new URLSearchParams();
+    u.searchParams.forEach((v, k) => { if (!TRACKING_PARAMS.test(k)) keep.append(k, v); });
+    u.search = keep.toString();
+    u.hash = "";
+    u.hostname = u.hostname.replace(/^www\./i, "").toLowerCase();
+    const path = u.pathname.replace(/\/+$/, "");
+    return `${u.protocol}//${u.hostname}${path}${u.search ? `?${u.search}` : ""}`;
+  } catch {
+    return url.replace(/[#?].*$/, "").replace(/\/+$/, "");
+  }
+}
 
 /**
  * Zonele Timișoarei exact cum sunt definite de platformele de anunțuri
@@ -342,7 +365,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
     const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
     const wantedZones = zones;
-    const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
+    // Cuvintele de legătură (de, cu, la, pe...) nu sunt cerințe de căutare.
+    const STOPWORDS = new Set(["de", "cu", "la", "pe", "in", "din", "si", "sau", "un", "o", "al", "ale", "pentru", "camere", "camera"]);
+    const searchTokens = norm(search)
+      .split(" ")
+      .filter(token => !STOPWORDS.has(token))
+      .filter(token => token.length >= 3 || /^\d+$/.test(token));
 
     const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
     const normalizedText = ` ${norm(rawText)} `;
@@ -475,14 +503,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
    * Elimină paginile generice de căutare/listare ale platformelor.
    */
   const isIndividualAd = (l: AdHocListing): boolean => {
-    const url = (l.url || "").trim();
-    if (!url) return false;
-    let path = url;
-    let hasQuery = false;
+    const clean = normalizeAdUrl(l.url);
+    if (!clean) return false;
+    let path = clean;
+    let searchQuery = "";
     try {
-      const u = new URL(url);
+      const u = new URL(clean);
       path = u.pathname;
-      hasQuery = u.search.length > 1;
+      searchQuery = u.search.toLowerCase();
     } catch {
       /* fallback pe string brut */
     }
@@ -491,7 +519,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const genericPath = /(caut|search|rezultate|results|filtr|anunturi\/?$|oferte\/?$|lista|categorie|category|zona\/|cartier\/|\/q\/|\/sitemap)/.test(
       lowerPath,
     );
-    if (genericPath || hasQuery) return false;
+    // Parametrii de urmărire au fost deja eliminați; rămân doar filtre reale de listare.
+    const searchQueryParams = /(q=|query=|search|filtr|page=|pagina=|categor|pret|price|camere)/.test(searchQuery);
+    if (genericPath || searchQueryParams) return false;
     // un anunț individual are un identificator în URL (id numeric sau slug lung cu hash)
     const last = lowerPath.replace(/\/+$/, "").split("/").pop() || "";
     const looksLikeAd = /\d{4,}/.test(last) || /-[a-z0-9]{6,}$/.test(last) || /ID[a-zA-Z0-9]{4,}/.test(last);
@@ -671,7 +701,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (!quiet) toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
     }
-    if (runningRef.current) return;
+    if (runningRef.current) {
+      // O scanare rulează deja (manual sau automat) — nu o pornim de două ori.
+      if (!quiet) {
+        toast({ title: "Căutarea rulează deja", description: "Așteaptă câteva secunde, rezultatele apar singure." });
+      }
+      return;
+    }
     runningRef.current = true;
     lastTermRef.current = base;
     if (!quiet) {
@@ -700,7 +736,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       for (const r of ok) {
         for (const l of r.listings) {
           if (!isIndividualAd(l)) { generic++; continue; }
-          const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
+          const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
           if (key && seen.has(key)) continue;
           if (key) seen.add(key);
           listings.push(l);
@@ -714,13 +750,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       for (const l of existing) {
         if (!(l.url || "").trim()) continue; // salvate deja verificate; cerem doar link
 
-        const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
+        const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
         if (key && seen.has(key)) continue;
         if (key) seen.add(key);
         listings.push(l);
         existingShown++;
       }
-      const keyOf = (x: AdHocListing) => (x.url || "").trim() || `${x.title || ""}|${x.price || ""}`;
+      const keyOf = (x: AdHocListing) => normalizeAdUrl(x.url) || `${x.title || ""}|${x.price || ""}`;
       let addedNow = listings.length;
       if (quiet) {
         // Rescanare automată: păstrăm lista și adăugăm în față doar ce e nou.
@@ -734,7 +770,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           if (fresh.length) {
             setResults([...fresh, ...prev]);
             setFreshUrls(f =>
-              Array.from(new Set([...fresh.map(x => (x.url || "").trim()).filter(Boolean), ...f])).slice(0, 200),
+              Array.from(new Set([...fresh.map(x => normalizeAdUrl(x.url)).filter(Boolean), ...f])).slice(0, 200),
             );
           }
         }
@@ -784,6 +820,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   // Referință la ultima versiune a căutării, pentru rescanarea automată.
   const runRef = useRef(run);
   runRef.current = run;
+  // Termenul curent, ca să nu repornim cronometrul la fiecare literă scrisă.
+  const searchRef = useRef(search);
+  searchRef.current = search;
 
   /** Scanare automată la fiecare 2 minute, cât timp pagina este deschisă. */
   useEffect(() => {
@@ -791,13 +830,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     if (!autoLive) return;
     const tick = () => {
       if (document.hidden) return;
-      const base = (lastTermRef.current || search).trim();
+      const base = (lastTermRef.current || searchRef.current).trim();
       if (base.length < 3) return;
       void runRef.current(base, { quiet: true });
     };
     const id = window.setInterval(tick, 120_000);
     return () => window.clearInterval(id);
-  }, [autoLive, search]);
+  }, [autoLive]);
 
   /** Anunțurile salvate de scraper apar imediat în listă, fără reîncărcare. */
   useEffect(() => {
@@ -824,12 +863,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           if (!isIndividualAd(l)) return;
           setResults(prev => {
             if (!prev) return prev; // nicio căutare activă
-            const key = (l.url || "").trim();
-            if (prev.some(x => (x.url || "").trim() === key)) return prev;
+            const key = normalizeAdUrl(l.url);
+            if (prev.some(x => normalizeAdUrl(x.url) === key)) return prev;
             return [l, ...prev];
           });
           setFreshUrls(f => {
-            const key = (l.url || "").trim();
+            const key = normalizeAdUrl(l.url);
             return key ? Array.from(new Set([key, ...f])).slice(0, 200) : f;
           });
           setLastAutoAt(new Date());
@@ -1247,7 +1286,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
-                    {freshUrls.includes((l.url || "").trim()) && (
+                    {freshUrls.includes(normalizeAdUrl(l.url)) && (
                       <Badge className="text-[10px] shrink-0 bg-emerald-600 text-primary-foreground hover:bg-emerald-600">
                         NOU
                       </Badge>
