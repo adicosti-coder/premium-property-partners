@@ -113,7 +113,15 @@ interface Props {
 export default function OwnerListingSearch({ embedded = false }: Props) {
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<string>(ALL_PLATFORMS);
-  const [type, setType] = useState<string>(ANY_TYPE);
+  /** Se pot alege mai multe tipuri de imobil simultan. */
+  const [types, setTypes] = useState<string[]>([]);
+  /** Compartimentare: decomandat, semidecomandat, nedecomandat etc. */
+  const [partitions, setPartitions] = useState<string[]>([]);
+  /** Dotări cerute (balcon, parcare, lift...). */
+  const [extras, setExtras] = useState<string[]>([]);
+  const [floor, setFloor] = useState<string>(ANY_FLOOR);
+  const [minSurface, setMinSurface] = useState("");
+  const [maxSurface, setMaxSurface] = useState("");
   const [zone, setZone] = useState<string>(ANY_ZONE);
   const [deal, setDeal] = useState<string>(ANY_DEAL);
   const [rooms, setRooms] = useState<string>(ANY_ROOMS);
