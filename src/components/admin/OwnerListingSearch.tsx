@@ -678,6 +678,105 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </Button>
       </div>
 
+      {/* Tipuri de imobil — se pot alege mai multe */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Tip de imobil (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {PROPERTY_TYPES.map(t => {
+            const on = types.includes(t.value);
+            return (
+              <Button
+                key={t.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setTypes(v => toggleIn(v, t.value)); setIgnoreFilters(false); }}
+              >
+                {t.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Compartimentare */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Compartimentare (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {PARTITION_OPTIONS.map(p => {
+            const on = partitions.includes(p.value);
+            return (
+              <Button
+                key={p.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setPartitions(v => toggleIn(v, p.value)); setIgnoreFilters(false); }}
+              >
+                {p.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Dotări */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Dotări cerute (toate bifele trebuie să apară în anunț)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {EXTRA_OPTIONS.map(x => {
+            const on = extras.includes(x.value);
+            return (
+              <Button
+                key={x.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setExtras(v => toggleIn(v, x.value)); setIgnoreFilters(false); }}
+              >
+                {x.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Select value={floor} onValueChange={setFloor}>
+          <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="Etaj">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY_FLOOR}>Orice etaj</SelectItem>
+            {FLOOR_OPTIONS.map(f => (
+              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          value={minSurface}
+          onChange={e => setMinSurface(e.target.value)}
+          inputMode="numeric"
+          placeholder="Suprafață min. (mp)"
+          aria-label="Suprafață minimă în metri pătrați"
+          className="sm:w-[170px] min-h-[48px] sm:min-h-0"
+        />
+        <Input
+          value={maxSurface}
+          onChange={e => setMaxSurface(e.target.value)}
+          inputMode="numeric"
+          placeholder="Suprafață max. (mp)"
+          aria-label="Suprafață maximă în metri pătrați"
+          className="sm:w-[170px] min-h-[48px] sm:min-h-0"
+        />
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2">
         <Select value={zone} onValueChange={setZone}>
           <SelectTrigger className="sm:w-[200px] min-h-[48px] sm:min-h-0" aria-label="Zonă">
