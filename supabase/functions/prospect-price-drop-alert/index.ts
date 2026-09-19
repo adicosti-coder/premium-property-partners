@@ -12,8 +12,8 @@ const corsHeaders = {
 };
 
 const ALERT_TO = "info@realtrust.ro";
-/** Prag implicit: scădere de minim 4% și minim 2.000 €. */
-const DEFAULT_MIN_PCT = 4;
+/** Prag implicit: scădere de minim 3% și minim 2.000 €. */
+const DEFAULT_MIN_PCT = 3;
 const DEFAULT_MIN_ABS = 2_000;
 
 interface HistoryRow {

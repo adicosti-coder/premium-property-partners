@@ -54,7 +54,8 @@ export default function PriceDropAlertsPanel() {
   const [threshold, setThreshold] = useState<number>(() => {
     const saved = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
     const n = saved ? Number(saved) : NaN;
-    return Number.isFinite(n) && n > 0 ? n : 5;
+    // Interval recomandat 3–5%: nu pierdem scăderi mici, dar nici nu ne inundă cu zgomot.
+    return Number.isFinite(n) && n >= 3 && n <= 5 ? n : 3;
   });
 
   useEffect(() => {
@@ -174,14 +175,31 @@ export default function PriceDropAlertsPanel() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Scădere minimă (%)</label>
-            <Input
-              type="number"
-              min={1}
-              max={90}
-              value={threshold}
-              onChange={(e) => setThreshold(Math.max(1, Math.min(90, Number(e.target.value) || 1)))}
-              className="w-28"
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={3}
+                max={5}
+                step={0.5}
+                value={threshold}
+                onChange={(e) => setThreshold(Math.max(3, Math.min(5, Number(e.target.value) || 3)))}
+                className="w-24"
+              />
+              <div className="flex gap-1">
+                {[3, 4, 5].map((v) => (
+                  <Button
+                    key={v}
+                    type="button"
+                    size="sm"
+                    variant={threshold === v ? "default" : "outline"}
+                    onClick={() => setThreshold(v)}
+                    aria-label={`Setează scăderea minimă la ${v}%`}
+                  >
+                    {v}%
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Perioadă</label>
