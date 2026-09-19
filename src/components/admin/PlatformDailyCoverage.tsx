@@ -102,6 +102,37 @@ export default function PlatformDailyCoverage() {
     return { platforms: plats, dayRows: rows, totals: tot, lastSeen: seen };
   }, [raw]);
 
+  /** Preț mediu, €/mp mediu și scăderi de preț pe fiecare platformă. */
+  const stats = useMemo(() => {
+    const acc = new Map<string, { count: number; priceSum: number; priceN: number; sqmSum: number; sqmN: number; drops: number }>();
+    const get = (p: string) => {
+      if (!acc.has(p)) acc.set(p, { count: 0, priceSum: 0, priceN: 0, sqmSum: 0, sqmN: 0, drops: 0 });
+      return acc.get(p)!;
+    };
+    for (const r of raw) {
+      const s = get(normPlatform(r.source_platform));
+      s.count += 1;
+      if (r.price && Number(r.price) > 0) { s.priceSum += Number(r.price); s.priceN += 1; }
+      if (r.price_per_sqm && Number(r.price_per_sqm) > 0) { s.sqmSum += Number(r.price_per_sqm); s.sqmN += 1; }
+    }
+    // scăderi: preț mai mic decât precedentul aceluiași anunț
+    const byListing = new Map<string, HistRow[]>();
+    for (const h of hist) {
+      const id = h.listing_id || "";
+      if (!id) continue;
+      if (!byListing.has(id)) byListing.set(id, []);
+      byListing.get(id)!.push(h);
+    }
+    for (const rows of byListing.values()) {
+      for (let i = 1; i < rows.length; i++) {
+        const prev = Number(rows[i - 1].price || 0);
+        const cur = Number(rows[i].price || 0);
+        if (prev > 0 && cur > 0 && cur < prev) get(normPlatform(rows[i].source_platform)).drops += 1;
+      }
+    }
+    return acc;
+  }, [raw, hist]);
+
   const isLive = (p: string) => {
     const ls = lastSeen.get(p);
     if (!ls) return false;
