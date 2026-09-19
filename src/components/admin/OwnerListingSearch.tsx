@@ -677,12 +677,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       )}
 
       {!searching && results && (() => {
-        // Filtrele se aplică strict: afișăm doar anunțurile care le respectă.
+        // Filtrele se aplică strict: afișăm DOAR anunțurile care le respectă, fără listă de rezervă.
         const matched = filterListings(results);
-        const inPreferred = (l: AdHocListing) =>
-          preferredZones.length === 0 ? true : preferredZones.some(z => zoneMatches(l, z));
-        const main = matched.filter(inPreferred);
-        const reserve = matched.filter(l => !inPreferred(l));
+        const main = matched;
 
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
