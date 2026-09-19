@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RefreshCw, Download, Radio } from "lucide-react";
 import { downloadCsv, csvFileName } from "@/utils/exportCsv";
 import { toast } from "sonner";
+import { PORTAL_ZONE_LABELS, canonicalZone } from "@/lib/timisoaraPortalZones";
 
 interface Raw {
   source_platform: string | null;
