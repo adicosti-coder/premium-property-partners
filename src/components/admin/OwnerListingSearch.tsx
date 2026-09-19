@@ -572,6 +572,43 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </Button>
       </div>
 
+      <div className="rounded-lg border p-2 space-y-2">
+        <div className="text-[11px] text-muted-foreground">
+          Zone preferate — filtrele se aplică pe acestea, restul anunțurilor apar în lista de rezervă.
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {preferredZones.length === 0 && (
+            <span className="text-[11px] text-muted-foreground">Nicio zonă preferată — se afișează toate zonele.</span>
+          )}
+          {preferredZones.map(z => (
+            <span key={z} className="inline-flex items-center gap-1 rounded-full border bg-background px-2 py-1 text-[11px]">
+              {z}
+              <button
+                type="button"
+                onClick={() => removePreferredZone(z)}
+                aria-label={`Șterge zona ${z}`}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={newZone}
+            onChange={e => setNewZone(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") void addPreferredZone(); }}
+            placeholder="Adaugă o zonă preferată (ex: Dumbrăvița)"
+            aria-label="Adaugă o zonă preferată"
+            className="min-h-[44px]"
+          />
+          <Button type="button" variant="outline" onClick={() => void addPreferredZone()} disabled={savingZone} className="min-h-[44px]">
+            {savingZone ? <Loader2 className="h-4 w-4 animate-spin" /> : "Adaugă zona"}
+          </Button>
+        </div>
+      </div>
+
 
       <div className="flex flex-wrap gap-1.5">
         <span className="text-[11px] text-muted-foreground self-center mr-1">Blocuri din zona mea:</span>
