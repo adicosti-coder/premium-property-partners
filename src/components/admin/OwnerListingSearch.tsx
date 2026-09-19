@@ -143,6 +143,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [onlyWithPhone, setOnlyWithPhone] = useState(false);
   /** Filtru pe portalul unde a fost găsit anunțul (se aplică pe rezultate). */
   const [portalFilter, setPortalFilter] = useState<string>(ALL_PLATFORMS);
+  /** Când filtrele nu lasă nimic, putem afișa toate anunțurile găsite. */
+  const [ignoreFilters, setIgnoreFilters] = useState(false);
   const [results, setResults] = useState<AdHocListing[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
@@ -225,6 +227,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setMaxPrice("");
     setOnlyWithPhone(false);
     setPortalFilter(ALL_PLATFORMS);
+    setIgnoreFilters(false);
   };
 
   /** Portalul pe care a fost găsit anunțul. */
@@ -236,17 +239,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
     const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
-    const zoneWord = zone === ANY_ZONE ? null : zone.split("/")[0].trim().toLowerCase();
+    const zoneWord = zone === ANY_ZONE ? null : norm(zone.split("/")[0]);
     return list.filter(l => {
       const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
+      const nText = norm(`${l.title || ""} ${l.zone || ""}`);
       if (onlyWithPhone && !l.phone) return false;
       if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
         const r = typeof l.rooms === "number" ? l.rooms : null;
         const fromTitle = /(\d)\s*camer/.exec(text);
         const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
-        if (value === null) return false;
-        if (wantedRooms === 4 ? value < 4 : value !== wantedRooms) return false;
+        // nr. camere necunoscut → nu excludem anunțul
+        if (value !== null && (wantedRooms === 4 ? value < 4 : value !== wantedRooms)) return false;
       }
       if (deal === "vanzare" && /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
       if (deal === "inchiriere" && !/(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
@@ -255,9 +259,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const otherTypes = PROPERTY_TYPES.map(t => t.value).filter(v => v !== type);
         if (otherTypes.some(v => text.includes(v))) return false;
       }
-      if (zoneWord && l.zone && !l.zone.toLowerCase().includes(zoneWord) && !text.includes(zoneWord)) return false;
+      if (zoneWord && !nText.includes(zoneWord) && !norm(l.zone || "").includes(zoneWord)) return false;
       const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
-      if ((min !== null || max !== null) && price === null) return false;
+      // preț necunoscut → păstrăm anunțul, poate fi verificat cu „Verifică prețurile exacte”
       if (min !== null && price !== null && price < min) return false;
       if (max !== null && price !== null && price > max) return false;
       return true;
@@ -331,7 +335,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         .order("updated_at", { ascending: false })
         .limit(25);
 
-      if (w) q = q.or(`title.ilike.%${w}%,zone.ilike.%${w}%,address.ilike.%${w}%`);
+      if (w) {
+        const safe = w.replace(/[,%()]/g, " ").trim();
+        if (safe) q = q.or(`title.ilike.%${safe}%,zone.ilike.%${safe}%,description.ilike.%${safe}%`);
+      }
       if (platform !== ALL_PLATFORMS) q = q.in("source_platform", platforms);
       const { data, error } = await q;
       if (error) return [];
@@ -465,6 +472,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
     setSearching(true);
     setResults(null);
+    setIgnoreFilters(false);
     setSummary(null);
     try {
       const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
@@ -727,7 +735,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       {!searching && results && (() => {
         // Filtrele se aplică strict: afișăm DOAR anunțurile care le respectă, fără listă de rezervă.
         const matched = filterListings(results);
-        const main = matched;
+        const main = ignoreFilters ? results : matched;
 
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
@@ -859,9 +867,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               {main.map(renderRow)}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Niciun anunț nu respectă filtrele alese.
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {results.length > 0
+                  ? `Am găsit ${results.length} anunțuri, dar niciunul nu respectă filtrele alese (tip, tranzacție, camere, zonă, preț, portal).`
+                  : "Niciun anunț găsit pentru aceste cuvinte. Încearcă o formulare mai simplă (ex: „decomandat Timișoara”)."}
+              </p>
+              {results.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
+                    Arată toate cele {results.length} anunțuri găsite
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={resetFilters}>
+                    Șterge filtrele
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </div>
         );
