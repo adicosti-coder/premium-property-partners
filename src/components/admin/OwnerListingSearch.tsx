@@ -72,7 +72,6 @@ const PARTITION_OPTIONS = [
   { value: "open space", label: "Open space", words: ["open space", "openspace"] },
 ];
 
-const ANY_FLOOR = "__anyfloor__";
 const ANY_YEAR = "__anyyear__";
 const FLOOR_OPTIONS = [
   { value: "parter", label: "Parter" },
