@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ExternalLink, Loader2, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
+import AddAgencyPhoneDialog from "./AddAgencyPhoneDialog";
+import MarkAsAgencyButton from "./MarkAsAgencyButton";
 
 export interface AdHocListing {
   title?: string | null;
@@ -269,6 +271,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             ))}
           </SelectContent>
         </Select>
+        <AddAgencyPhoneDialog size="default" className="min-h-[48px] sm:min-h-0" />
       </div>
 
       <div className="flex flex-wrap gap-1.5">
@@ -325,6 +328,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     {l.rooms ? <span>{l.rooms} camere</span> : null}
                     {l.price ? <span>{String(l.price)}</span> : null}
                     {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
+                    {l.phone && (
+                      <MarkAsAgencyButton
+                        rawPhone={l.phone}
+                        url={l.url || undefined}
+                        contextLabel="căutare anunțuri proprietari"
+                        label="Agenție"
+                        className="h-8 px-2 text-[11px]"
+                        onMarked={() =>
+                          setResults(prev => (prev ? prev.filter(x => x.phone !== l.phone) : prev))
+                        }
+                      />
+                    )}
                     {l.url && (
                       <a
                         href={l.url}
