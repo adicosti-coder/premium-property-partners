@@ -519,6 +519,20 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               <> · {filterListings(results).length} potrivesc filtrele</>
             )}
           </div>
+          <div className="flex items-center gap-2 mb-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pricing}
+              onClick={() => hydrateExactPrices(filterListings(results))}
+              className="h-8 text-xs"
+            >
+              {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+              Verifică prețurile exacte
+            </Button>
+            {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
+          </div>
           {filterListings(results).length > 0 && (
             <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
               {filterListings(results).map((l, idx) => (
