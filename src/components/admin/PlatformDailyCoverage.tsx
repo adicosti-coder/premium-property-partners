@@ -168,7 +168,7 @@ export default function PlatformDailyCoverage() {
       }
     }
     return acc;
-  }, [raw, hist]);
+  }, [filtered, hist]);
 
   const isLive = (p: string) => {
     const ls = lastSeen.get(p);
