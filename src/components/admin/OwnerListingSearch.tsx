@@ -143,6 +143,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [onlyWithPhone, setOnlyWithPhone] = useState(false);
   /** Filtru pe portalul unde a fost găsit anunțul (se aplică pe rezultate). */
   const [portalFilter, setPortalFilter] = useState<string>(ALL_PLATFORMS);
+  /** Când filtrele nu lasă nimic, putem afișa toate anunțurile găsite. */
+  const [ignoreFilters, setIgnoreFilters] = useState(false);
   const [results, setResults] = useState<AdHocListing[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
