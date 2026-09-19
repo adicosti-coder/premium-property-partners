@@ -549,13 +549,19 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
-    const typePart = type === ANY_TYPE ? "" : type;
+    // În interogare intră un singur tip/compartimentare (portalurile nu acceptă liste),
+    // restul bifelor se aplică la filtrarea rezultatelor.
+    const typePart = types[0] ?? "";
+    const partitionPart = partitions.length === 1 ? partitions[0] : "";
+    const floorPart = floor === "parter" ? "parter" : floor === "last" ? "ultimul etaj" : floor === "mansarda" ? "mansarda" : "";
     const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
     const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
-    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`.replace(/\s+/g, " ").trim();
+    const term = `${typePart} ${roomsPart} ${partitionPart} ${floorPart} ${base} ${zonePart} ${cityPart} ${dealPart}`
+      .replace(/\s+/g, " ")
+      .trim();
     if (term.length < 3) {
       toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
