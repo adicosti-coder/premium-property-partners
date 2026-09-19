@@ -224,7 +224,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setMinPrice("");
     setMaxPrice("");
     setOnlyWithPhone(false);
+    setPortalFilter(ALL_PLATFORMS);
   };
+
+  /** Portalul pe care a fost găsit anunțul. */
+  const listingPortal = (l: AdHocListing) => (l.source_platform || l.platform || "").trim();
 
   /** Filtrele se aplică instant pe rezultate, fără o nouă căutare. */
   const filterListings = (list: AdHocListing[]): AdHocListing[] => {
