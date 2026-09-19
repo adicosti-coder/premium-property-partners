@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
 
       const { data: listing } = await admin
         .from("prospect_listings")
-        .select("title,listing_url,source_url,zone,rooms,source_platform")
+        .select("title,source_url,zone,rooms,source_platform")
         .eq("id", listingId)
         .maybeSingle();
 
