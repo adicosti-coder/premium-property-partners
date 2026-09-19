@@ -292,7 +292,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         .not("source_url", "is", null)
         // „De verificat” poate avea date incomplete, dar este un rezultat real.
         // Excludem doar agențiile și anunțurile confirmate ca expirate/respinse.
-        .neq("prospect_type", "agentie")
+        .or("prospect_type.is.null,prospect_type.neq.agentie")
         .not("lifecycle_status", "in", "(expired,rejected)")
         .order("updated_at", { ascending: false })
         .limit(25);
