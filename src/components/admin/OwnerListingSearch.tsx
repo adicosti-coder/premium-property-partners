@@ -800,6 +800,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           <div className="text-xs text-muted-foreground mb-1">
             {summary || `${results.length} anunțuri`}
             {matched.length !== results.length && <> · {matched.length} respectă filtrele</>}
+            {(() => {
+              const per = new Map<string, number>();
+              for (const l of matched) {
+                const p = listingPortal(l) || "necunoscut";
+                per.set(p, (per.get(p) || 0) + 1);
+              }
+              const txt = Array.from(per.entries())
+                .sort((a, b) => b[1] - a[1])
+                .map(([p, n]) => `${p}: ${n}`)
+                .join(" · ");
+              return txt ? <> · afișate pe portal — {txt}</> : null;
+            })()}
           </div>
           <div className="flex items-center gap-2 mb-2">
             <Button
