@@ -225,6 +225,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
           (agency ? ` · ${agency} agenții excluse` : "") +
           (duplicate ? ` · ${duplicate} deja în listă` : "") +
+          (generic ? ` · ${generic} pagini de căutare eliminate` : "") +
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
       );
       window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
