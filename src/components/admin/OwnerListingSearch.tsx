@@ -34,7 +34,6 @@ export interface AdHocListing {
 const ALL_PLATFORMS = "__all__";
 const ANY_ZONE = "__anyzone__";
 const ANY_DEAL = "__anydeal__";
-const ANY_ROOMS = "__anyrooms__";
 
 const PLATFORM_OPTIONS = [
   "OLX",
@@ -131,7 +130,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [maxSurface, setMaxSurface] = useState("");
   const [zone, setZone] = useState<string>(ANY_ZONE);
   const [deal, setDeal] = useState<string>(ANY_DEAL);
-  const [rooms, setRooms] = useState<string>(ANY_ROOMS);
+  /** Camere — selecție multiplă („4” = 4 sau mai multe). */
+  const [rooms, setRooms] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [onlyWithPhone, setOnlyWithPhone] = useState(false);
@@ -234,7 +234,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setMaxSurface("");
     setZone(ANY_ZONE);
     setDeal(ANY_DEAL);
-    setRooms(ANY_ROOMS);
+    setRooms([]);
     setMinPrice("");
     setMaxPrice("");
     setOnlyWithPhone(false);
@@ -285,7 +285,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const excludeReason = (l: AdHocListing): string | null => {
     const min = minPrice ? Number(minPrice.replace(/[^\d]/g, "")) : null;
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
-    const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
+    const wantedRooms = rooms.map(r => Number(r)).filter(n => Number.isFinite(n));
     const wantedTypes = types.map(t => norm(t));
     const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
     const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
@@ -307,13 +307,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) {
       return "alt portal";
     }
-    if (wantedRooms !== null) {
+    if (wantedRooms.length > 0) {
       const r = typeof l.rooms === "number" ? l.rooms : null;
       const fromTitle = /(\d+)\s*[- ]?\s*(?:camere?|cam\.?\b)/i.exec(text);
       const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
-      if (value !== null && (wantedRooms === 4 ? value < 4 : value !== wantedRooms)) {
-        return `are ${value} camere`;
-      }
+      // OR între bifele alese; „4” înseamnă 4 sau mai multe camere.
+      const ok = value === null || wantedRooms.some(w => (w === 4 ? value >= 4 : value === w));
+      if (!ok) return `are ${value} camere`;
     }
     const isRentText = /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text);
     if (deal === "vanzare" && isRentText) return "este închiriere";
@@ -600,7 +600,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const onlyFloor = floors.length === 1 ? floors[0] : "";
     const floorPart = onlyFloor === "parter" ? "parter" : onlyFloor === "last" ? "ultimul etaj" : onlyFloor === "mansarda" ? "mansarda" : "";
     const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
-    const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
+    // În interogare intră un singur număr de camere (portalurile nu accepta liste).
+    const roomsPart = rooms.length === 1 ? `${rooms[0]} camere` : "";
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
     const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
@@ -990,18 +991,32 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <SelectItem value="inchiriere">Doar închiriere</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={rooms} onValueChange={setRooms}>
-          <SelectTrigger className="sm:w-[150px] min-h-[48px] sm:min-h-0" aria-label="Număr de camere">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_ROOMS}>Orice nr. camere</SelectItem>
-            <SelectItem value="1">1 cameră</SelectItem>
-            <SelectItem value="2">2 camere</SelectItem>
-            <SelectItem value="3">3 camere</SelectItem>
-            <SelectItem value="4">4+ camere</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <div className="text-[11px] text-muted-foreground">Camere (poți alege mai multe)</div>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { value: "1", label: "1 cameră" },
+              { value: "2", label: "2 camere" },
+              { value: "3", label: "3 camere" },
+              { value: "4", label: "4+ camere" },
+            ].map(r => {
+              const on = rooms.includes(r.value);
+              return (
+                <Button
+                  key={r.value}
+                  type="button"
+                  size="sm"
+                  variant={on ? "default" : "outline"}
+                  aria-pressed={on}
+                  className="h-9 text-xs"
+                  onClick={() => { setRooms(v => toggleIn(v, r.value)); setIgnoreFilters(false); }}
+                >
+                  {r.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
         <Input
           value={minPrice}
           onChange={e => setMinPrice(e.target.value)}
