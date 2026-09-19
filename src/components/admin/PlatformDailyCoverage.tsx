@@ -235,8 +235,48 @@ export default function PlatformDailyCoverage() {
               </Badge>
             ))}
             {!platforms.length && !loading && (
-              <span className="text-sm text-muted-foreground">Nicio platformă cu anunțuri în perioada aleasă.</span>
+              <span className="text-sm text-muted-foreground">
+                {zoneFilter === ALL_ZONES
+                  ? "Nicio platformă cu anunțuri în perioada aleasă."
+                  : `Nicio platformă nu a adus anunțuri în zona ${zoneFilter} în perioada aleasă.`}
+              </span>
             )}
+          </div>
+
+          <div className="overflow-x-auto">
+            <div className="mb-1 text-xs font-medium">Zone, cum apar pe portaluri</div>
+            <table className="w-full text-sm mb-4">
+              <thead>
+                <tr className="border-b text-left text-muted-foreground">
+                  <th className="py-2 pr-3 font-medium">Zonă</th>
+                  <th className="py-2 pr-3 font-medium">imobiliare.ro</th>
+                  <th className="py-2 pr-3 font-medium">OLX</th>
+                  <th className="py-2 pr-3 font-medium">Publi24</th>
+                  <th className="py-2 pr-3 font-medium">Storia.ro</th>
+                  <th className="py-2 font-medium">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {zoneRows.slice(0, 25).map((r) => (
+                  <tr key={r.zone} className="border-b last:border-0">
+                    <td className="py-2 pr-3 whitespace-nowrap font-medium">{r.zone}</td>
+                    {["imobiliare.ro", "OLX", "Publi24", "Storia.ro"].map((p) => (
+                      <td key={p} className={`py-2 pr-3 ${r.counts.get(p) ? "" : "text-muted-foreground"}`}>
+                        {r.counts.get(p) || "—"}
+                      </td>
+                    ))}
+                    <td className="py-2 font-medium">{r.total}</td>
+                  </tr>
+                ))}
+                {!zoneRows.length && (
+                  <tr>
+                    <td className="py-3 text-muted-foreground" colSpan={6}>
+                      {loading ? "Se încarcă…" : "Nicio zonă cu anunțuri în perioada aleasă."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div className="overflow-x-auto">
