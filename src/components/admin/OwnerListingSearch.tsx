@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, X } from "lucide-react";
+import { ExternalLink, Loader2, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 
@@ -110,6 +110,29 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     };
   };
 
+  /** Anunțuri deja salvate care se potrivesc cu căutarea — ca să avem mereu linkuri. */
+  const fetchExisting = async (base: string, platforms: string[]): Promise<AdHocListing[]> => {
+    const words = base.split(/\s+/).filter(w => w.length >= 3).slice(0, 3);
+    let q = supabase
+      .from("prospect_listings")
+      .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(25);
+    for (const w of words) q = q.ilike("title", `%${w}%`);
+    if (platform !== ALL_PLATFORMS) q = q.in("source_platform", platforms);
+    const { data, error } = await q;
+    if (error) return [];
+    return (data ?? []).map((r: any) => ({
+      title: r.title,
+      url: r.source_url,
+      price: r.price,
+      phone: r.contact_phone,
+      zone: r.zone,
+      rooms: r.rooms,
+      source_platform: r.source_platform,
+    }));
+  };
+
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
@@ -142,14 +165,27 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           listings.push(l);
         }
       }
+      const newCount = listings.length;
+
+      // Completăm cu anunțuri deja salvate, ca răspunsul să aibă mereu linkuri.
+      const existing = await fetchExisting(base, platforms);
+      let existingShown = 0;
+      for (const l of existing) {
+        const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
+        if (key && seen.has(key)) continue;
+        if (key) seen.add(key);
+        listings.push(l);
+        existingShown++;
+      }
       setResults(listings);
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
       const perPlatform = ok.filter(r => r.listings.length > 0).map(r => `${r.platform}: ${r.listings.length}`).join(" · ");
       setSummary(
-        `${listings.length} anunțuri de la proprietari pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
+        `${newCount} anunțuri noi pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
           (perPlatform ? ` (${perPlatform})` : "") +
+          (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
           (agency ? ` · ${agency} agenții excluse` : "") +
           (duplicate ? ` · ${duplicate} deja în listă` : "") +
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
@@ -157,8 +193,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
       if (listings.length === 0) {
         toast({
-          title: "Niciun anunț nou",
-          description: "Toate rezultatele erau de la agenții sau existau deja. Încearcă altă formulare sau altă platformă.",
+          title: "Niciun anunț găsit",
+          description: "Toate rezultatele erau de la agenții. Încearcă altă formulare sau altă platformă.",
         });
       }
     } catch (e: any) {
@@ -268,9 +304,21 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     <Badge variant="default" className="text-[10px] shrink-0">
                       {l.source_platform || l.platform || "—"}
                     </Badge>
-                    <span className="text-xs flex-1 truncate" title={l.title || ""}>
-                      {l.title || "Anunț fără titlu"}
-                    </span>
+                    {l.url ? (
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs flex-1 truncate underline underline-offset-2 hover:text-primary"
+                        title={l.url}
+                      >
+                        {l.title || "Anunț fără titlu"}
+                      </a>
+                    ) : (
+                      <span className="text-xs flex-1 truncate" title={l.title || ""}>
+                        {l.title || "Anunț fără titlu"}
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     {l.zone && <span>{l.zone}</span>}
@@ -278,9 +326,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     {l.price ? <span>{String(l.price)}</span> : null}
                     {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
                     {l.url && (
-                      <a href={l.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
-                        Deschide anunțul
+                      <a
+                        href={l.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium text-foreground hover:bg-accent min-h-[32px]"
+                      >
+                        <ExternalLink className="h-3 w-3" /> Deschide anunțul
                       </a>
+                    )}
+                    {l.url && (
+                      <button
+                        type="button"
+                        onClick={() => { navigator.clipboard?.writeText(l.url!); toast({ title: "Link copiat" }); }}
+                        className="underline hover:text-foreground"
+                      >
+                        Copiază linkul
+                      </button>
                     )}
                   </div>
                 </div>
