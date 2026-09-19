@@ -82,13 +82,44 @@ export default function PlatformDailyCoverage() {
     load();
   }, [load]);
 
+  /** Zona canonică a fiecărui anunț, după denumirile reale de pe portaluri. */
+  const withZone = useMemo(
+    () => raw.map((r) => ({ ...r, canonZone: canonicalZone(`${r.zone || ""} ${r.title || ""}`) })),
+    [raw],
+  );
+
+  /** Anunțurile din zona selectată (sau toate). */
+  const filtered = useMemo(
+    () => (zoneFilter === ALL_ZONES ? withZone : withZone.filter((r) => r.canonZone === zoneFilter)),
+    [withZone, zoneFilter],
+  );
+
+  /** Câte anunțuri are fiecare zonă, pe fiecare portal. */
+  const zoneRows = useMemo(() => {
+    const byZone = new Map<string, Map<string, number>>();
+    for (const r of withZone) {
+      const z = r.canonZone || "Zonă nedetectată";
+      const p = normPlatform(r.source_platform);
+      if (!byZone.has(z)) byZone.set(z, new Map());
+      const m = byZone.get(z)!;
+      m.set(p, (m.get(p) || 0) + 1);
+    }
+    return Array.from(byZone.entries())
+      .map(([zone, counts]) => ({
+        zone,
+        counts,
+        total: Array.from(counts.values()).reduce((s, v) => s + v, 0),
+      }))
+      .sort((a, b) => b.total - a.total);
+  }, [withZone]);
+
   const { platforms, dayRows, totals, lastSeen } = useMemo(() => {
     const platformSet = new Set<string>();
     const byDay = new Map<string, Map<string, number>>();
     const tot = new Map<string, number>();
     const seen = new Map<string, string>();
 
-    for (const r of raw) {
+    for (const r of filtered) {
       if (!r.created_at) continue;
       const p = normPlatform(r.source_platform);
       const d = dayKey(r.created_at);
