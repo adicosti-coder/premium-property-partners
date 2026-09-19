@@ -80,6 +80,24 @@ export const ADMIN_GROUPS: AdminGroup[] = [
         ],
       },
       {
+        value: "price-drops",
+        label: "Scăderi de preț",
+        icon: Clock,
+        keywords: [
+          "scadere", "scădere", "scaderi", "preț scăzut", "pret scazut", "alerta pret",
+          "alertă preț", "procent", "reducere", "negociabil",
+        ],
+      },
+      {
+        value: "daily-price-trends",
+        label: "Raport zilnic prețuri",
+        icon: Clock,
+        keywords: [
+          "raport zilnic", "trend", "trenduri", "preturi zilnice", "prețuri zilnice",
+          "durata sursa", "scaderi zilnice", "grafic", "evolutie", "evoluție",
+        ],
+      },
+      {
         value: "expired-listings",
         label: "Anunțuri expirate",
         icon: Clock,
