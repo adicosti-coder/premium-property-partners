@@ -59,6 +59,7 @@ const loaders: Record<string, Loader> = {
   "external-published": () => import("@/components/admin/ExternalPublishedListings"),
   "price-drops": () => import("@/components/admin/PriceDropAlertsPanel"),
   "daily-price-trends": () => import("@/components/admin/DailyPriceTrendsReport"),
+  "platform-daily": () => import("@/components/admin/PlatformDailyCoverage"),
   "guest-guides": () => import("@/components/admin/GuestGuideManager"),
   catalogs: () => import("@/components/admin/CatalogManager"),
   "scraper-status": () => import("@/components/admin/ScraperStatusDashboard"),

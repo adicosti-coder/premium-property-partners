@@ -98,6 +98,15 @@ export const ADMIN_GROUPS: AdminGroup[] = [
         ],
       },
       {
+        value: "platform-daily",
+        label: "Anunțuri pe platformă / zi",
+        icon: Radar,
+        keywords: [
+          "platforma", "platformă", "pe zi", "zilnic", "live", "acoperire", "olx",
+          "storia", "imobiliare", "publi24", "bursa", "cate anunturi", "câte anunțuri",
+        ],
+      },
+      {
         value: "expired-listings",
         label: "Anunțuri expirate",
         icon: Clock,
