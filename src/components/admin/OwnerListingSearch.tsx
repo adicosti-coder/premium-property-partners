@@ -537,37 +537,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       )}
 
       {!searching && results && (() => {
+        // Filtrele se aplică strict: afișăm doar anunțurile care le respectă.
         const matched = filterListings(results);
-        // Dacă filtrele exclud tot, arătăm totuși anunțurile găsite cu link,
-        // ca să nu pierdem legăturile către ele.
-        const visible = matched.length > 0 ? matched : results;
-        const showingAll = matched.length === 0 && results.length > 0;
-        return (
-        <div>
-          <div className="text-xs text-muted-foreground mb-1">
-            {summary || `${results.length} anunțuri`}
-            {matched.length !== results.length && <> · {matched.length} potrivesc filtrele</>}
-            {showingAll && (
-              <> · afișez toate cele {results.length} anunțuri cu link (filtrele nu se potrivesc)</>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mb-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={pricing}
-              onClick={() => hydrateExactPrices(visible)}
-              className="h-8 text-xs"
-            >
-              {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
-              Verifică prețurile exacte
-            </Button>
-            {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
-          </div>
-          {visible.length > 0 && (
-            <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
-              {visible.map((l, idx) => (
+        const inPreferred = (l: AdHocListing) =>
+          preferredZones.length === 0 ? true : preferredZones.some(z => zoneMatches(l, z));
+        const main = matched.filter(inPreferred);
+        const reserve = matched.filter(l => !inPreferred(l));
+
+        const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
                     <Badge variant="default" className="text-[10px] shrink-0">
@@ -650,7 +627,49 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     </Button>
                   </div>
                 </div>
-              ))}
+        );
+
+        return (
+        <div>
+          <div className="text-xs text-muted-foreground mb-1">
+            {summary || `${results.length} anunțuri`}
+            {matched.length !== results.length && <> · {matched.length} respectă filtrele</>}
+            {preferredZones.length > 0 && reserve.length > 0 && (
+              <> · {reserve.length} în listă de rezervă (în afara zonelor preferate)</>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pricing}
+              onClick={() => hydrateExactPrices([...main, ...reserve])}
+              className="h-8 text-xs"
+            >
+              {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+              Verifică prețurile exacte
+            </Button>
+            {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
+          </div>
+          {main.length > 0 ? (
+            <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
+              {main.map(renderRow)}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Niciun anunț nu respectă filtrele alese{preferredZones.length > 0 ? " în zonele preferate" : ""}.
+            </p>
+          )}
+
+          {reserve.length > 0 && (
+            <div className="mt-3">
+              <div className="text-xs font-medium mb-1">
+                Listă de rezervă · {reserve.length} anunțuri în afara zonelor preferate
+              </div>
+              <div className="border rounded-lg divide-y max-h-[320px] overflow-y-auto bg-muted/30">
+                {reserve.map(renderRow)}
+              </div>
             </div>
           )}
         </div>
