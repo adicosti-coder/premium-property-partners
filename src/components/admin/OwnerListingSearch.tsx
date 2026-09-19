@@ -180,15 +180,24 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
     if (rows.length === 0) rows = await fetchFor();
 
-    return rows.map((r: any) => ({
-      title: r.title,
-      url: r.source_url,
-      price: r.price,
-      phone: r.contact_phone,
-      zone: r.zone,
-      rooms: r.rooms,
-      source_platform: r.source_platform,
-    }));
+    // Eliminăm anunțurile marcate expirate sau nemaivăzute de peste 21 de zile.
+    const staleBefore = Date.now() - 21 * 24 * 60 * 60 * 1000;
+    return rows
+      .filter((r: any) => !/expirat|expired|inactiv|dezactivat/i.test(String(r.title || "")))
+      .filter((r: any) => {
+        const seen = r.last_seen_at ? new Date(r.last_seen_at).getTime() : null;
+        return seen === null || seen >= staleBefore;
+      })
+      .map((r: any) => ({
+        title: r.title,
+        url: r.source_url,
+        price: r.price,
+        phone: r.contact_phone,
+        zone: r.zone,
+        rooms: r.rooms,
+        source_platform: r.source_platform,
+      }));
+
   };
 
 
