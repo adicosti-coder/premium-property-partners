@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { User, Session } from "@supabase/supabase-js";
 import {
-  ArrowLeft, LogOut, Loader2, Users, ShieldAlert, Sparkles,
+  ArrowLeft, LogOut, Loader2, Users, ShieldAlert, Sparkles, Search,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
