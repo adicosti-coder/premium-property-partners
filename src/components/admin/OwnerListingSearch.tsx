@@ -199,7 +199,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   };
 
   const resetFilters = () => {
-    setType(ANY_TYPE);
+    setTypes([]);
+    setPartitions([]);
+    setExtras([]);
+    setFloor(ANY_FLOOR);
+    setMinSurface("");
+    setMaxSurface("");
     setZone(ANY_ZONE);
     setDeal(ANY_DEAL);
     setRooms(ANY_ROOMS);
@@ -208,6 +213,36 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setOnlyWithPhone(false);
     setPortalFilter(ALL_PLATFORMS);
     setIgnoreFilters(false);
+  };
+
+  const toggleIn = (list: string[], value: string) =>
+    list.includes(value) ? list.filter(v => v !== value) : [...list, value];
+
+  /** Etajul dedus din textul anunțului: „etaj 3”, „3/4”, „parter”, „ultimul etaj”. */
+  const floorInfo = (text: string) => {
+    const t = norm(text);
+    const isGround = /\bparter\b/.test(t);
+    const isAttic = /\b(mansarda|demisol|subsol)\b/.test(t);
+    let value: number | null = null;
+    let total: number | null = null;
+    const m = /\betaj(?:ul)?\s*(\d{1,2})\b/.exec(t) || /\bet\s*\.?\s*(\d{1,2})\b/.exec(t);
+    if (m) value = Number(m[1]);
+    const frac = /\b(\d{1,2})\s*\/\s*(\d{1,2})\b/.exec(t);
+    if (frac && Number(frac[2]) <= 30) {
+      if (value === null) value = Number(frac[1]);
+      total = Number(frac[2]);
+    }
+    const isLast = /\bultimul etaj\b/.test(t) || (value !== null && total !== null && value === total);
+    return { value, isGround, isAttic, isLast, known: value !== null || isGround || isAttic || isLast };
+  };
+
+  /** Suprafața utilă în mp, dedusă din text. */
+  const surfaceOf = (text: string): number | null => {
+    const t = norm(text);
+    const m = /\b(\d{2,4})(?:[.,]\d{1,2})?\s*(?:mp|m2|metri patrati)\b/.exec(t);
+    if (!m) return null;
+    const n = Number(m[1]);
+    return Number.isFinite(n) && n >= 10 && n <= 2000 ? n : null;
   };
 
   /** Portalul pe care a fost găsit anunțul. */
