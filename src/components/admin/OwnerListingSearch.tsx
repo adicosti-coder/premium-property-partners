@@ -97,6 +97,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [results, setResults] = useState<AdHocListing[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+  const [pricing, setPricing] = useState(false);
+  const [exactPrices, setExactPrices] = useState<Record<string, number>>({});
 
   /** Extrage prima valoare numerică dintr-un preț de tip "55.000 €" sau 2021450. */
   const priceValue = (p: AdHocListing["price"]): number | null => {
