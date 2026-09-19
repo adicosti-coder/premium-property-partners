@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 import AddAgencyPhoneDialog from "./AddAgencyPhoneDialog";
 import MarkAsAgencyButton from "./MarkAsAgencyButton";
+import { PORTAL_ZONE_LABELS, zoneMatchesText, zoneSearchTerm } from "@/lib/timisoaraPortalZones";
 
 export interface AdHocListing {
   title?: string | null;
