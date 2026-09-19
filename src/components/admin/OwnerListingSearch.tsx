@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -155,6 +155,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [sort, setSort] = useState<SortValue>("relevance");
   /** An construcție (interval), ca pe portaluri. */
   const [yearFilter, setYearFilter] = useState<string>(ANY_YEAR);
+  /** Scanare automată: caută periodic și adaugă anunțurile noi fără click. */
+  const [autoLive, setAutoLive] = useState<boolean>(() => {
+    try { return window.localStorage.getItem("rt_owner_search_auto") !== "0"; } catch { return true; }
+  });
+  const [lastAutoAt, setLastAutoAt] = useState<Date | null>(null);
+  /** Ultimul termen căutat, ca rescanarea automată să folosească același text. */
+  const lastTermRef = useRef<string>("");
+  const runningRef = useRef(false);
 
   /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
   const norm = (s: string) =>
@@ -562,7 +570,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
   };
 
-  const run = async (prefill?: string) => {
+  /**
+   * `quiet` = rescanare automată: păstrează lista afișată, adaugă doar
+   * anunțurile noi și nu deranjează cu mesaje de eroare.
+   */
+  const run = async (prefill?: string, opts?: { quiet?: boolean }) => {
+    const quiet = opts?.quiet === true;
     const base = (prefill ?? search).trim();
     // În interogare intră un singur tip/compartimentare (portalurile nu acceptă liste),
     // restul bifelor se aplică la filtrarea rezultatelor.
@@ -579,13 +592,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       .replace(/\s+/g, " ")
       .trim();
     if (term.length < 3) {
-      toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
+      if (!quiet) toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
     }
-    setSearching(true);
-    setResults(null);
-    setIgnoreFilters(false);
-    setSummary(null);
+    if (runningRef.current) return;
+    runningRef.current = true;
+    lastTermRef.current = base;
+    if (!quiet) {
+      setSearching(true);
+      setResults(null);
+      setIgnoreFilters(false);
+      setSummary(null);
+    }
     try {
       const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
       const settled = await Promise.allSettled(platforms.map(p => searchOnePlatform(term, p)));
@@ -622,14 +640,29 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         listings.push(l);
         existingShown++;
       }
-      setResults(listings);
-      setExactPrices({});
-      void hydrateExactPrices(listings);
+      let addedNow = listings.length;
+      if (quiet) {
+        // Rescanare automată: păstrăm lista și adăugăm în față doar ce e nou.
+        setResults(prev => {
+          if (!prev) return listings;
+          const have = new Set(prev.map(x => (x.url || "").trim() || `${x.title || ""}|${x.price || ""}`));
+          const fresh = listings.filter(x => !have.has((x.url || "").trim() || `${x.title || ""}|${x.price || ""}`));
+          addedNow = fresh.length;
+          return fresh.length ? [...fresh, ...prev] : prev;
+        });
+        setLastAutoAt(new Date());
+        if (addedNow > 0) void hydrateExactPrices(listings);
+      } else {
+        setResults(listings);
+        setExactPrices({});
+        void hydrateExactPrices(listings);
+      }
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
       const perPlatform = ok.filter(r => r.listings.length > 0).map(r => `${r.platform}: ${r.listings.length}`).join(" · ");
       setSummary(
+        (quiet && addedNow > 0 ? `+${addedNow} anunțuri adăugate automat · ` : "") +
         `${newCount} anunțuri noi pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
           (perPlatform ? ` (${perPlatform})` : "") +
           (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
@@ -639,18 +672,73 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
       );
       window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
-      if (listings.length === 0) {
+      if (!quiet && listings.length === 0) {
         toast({
           title: "Niciun anunț găsit",
           description: "Toate rezultatele erau de la agenții. Încearcă altă formulare sau altă platformă.",
         });
       }
     } catch (e: any) {
-      toast({ title: "Eroare căutare anunțuri", description: e.message, variant: "destructive" });
+      if (!quiet) toast({ title: "Eroare căutare anunțuri", description: e.message, variant: "destructive" });
     } finally {
-      setSearching(false);
+      runningRef.current = false;
+      if (!quiet) setSearching(false);
     }
   };
+
+  // Referință la ultima versiune a căutării, pentru rescanarea automată.
+  const runRef = useRef(run);
+  runRef.current = run;
+
+  /** Scanare automată la fiecare 2 minute, cât timp pagina este deschisă. */
+  useEffect(() => {
+    try { window.localStorage.setItem("rt_owner_search_auto", autoLive ? "1" : "0"); } catch { /* ignorăm */ }
+    if (!autoLive) return;
+    const tick = () => {
+      if (document.hidden) return;
+      const base = (lastTermRef.current || search).trim();
+      if (base.length < 3) return;
+      void runRef.current(base, { quiet: true });
+    };
+    const id = window.setInterval(tick, 120_000);
+    return () => window.clearInterval(id);
+  }, [autoLive, search]);
+
+  /** Anunțurile salvate de scraper apar imediat în listă, fără reîncărcare. */
+  useEffect(() => {
+    if (!autoLive) return;
+    const ch = supabase
+      .channel("owner-search-live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "prospect_listings" },
+        payload => {
+          const r = payload.new as Record<string, any>;
+          if (r?.prospect_type === "agentie") return;
+          if (r?.lifecycle_status === "expired" || r?.lifecycle_status === "rejected") return;
+          const l: AdHocListing = {
+            title: r.title,
+            description: r.description,
+            url: r.source_url,
+            price: r.price,
+            phone: r.contact_phone,
+            zone: r.zone,
+            rooms: r.rooms,
+            source_platform: r.source_platform,
+          };
+          if (!isIndividualAd(l)) return;
+          setResults(prev => {
+            if (!prev) return prev; // nicio căutare activă
+            const key = (l.url || "").trim();
+            if (prev.some(x => (x.url || "").trim() === key)) return prev;
+            return [l, ...prev];
+          });
+          setLastAutoAt(new Date());
+        },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [autoLive]);
 
   const body = (
     <div className="space-y-3">
@@ -692,6 +780,26 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           {searching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
           Caută anunțuri
         </Button>
+      </div>
+
+      {/* Scanare automată */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant={autoLive ? "default" : "outline"}
+          aria-pressed={autoLive}
+          className="h-9 text-xs"
+          onClick={() => setAutoLive(v => !v)}
+        >
+          {autoLive ? "Scanare automată: pornită" : "Scanare automată: oprită"}
+        </Button>
+        <span className="text-[11px] text-muted-foreground">
+          {autoLive
+            ? "Caută singură la fiecare 2 minute și adaugă anunțurile noi în listă."
+            : "Rezultatele se actualizează doar când apeși „Caută anunțuri”."}
+          {lastAutoAt && ` Ultima actualizare: ${lastAutoAt.toLocaleTimeString("ro-RO")}.`}
+        </span>
       </div>
 
       {/* Tipuri de imobil — se pot alege mai multe */}
