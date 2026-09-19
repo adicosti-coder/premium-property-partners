@@ -386,18 +386,25 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     {l.rooms ? <span>{l.rooms} camere</span> : null}
                     {l.price ? <span>{String(l.price)}</span> : null}
                     {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
-                    {l.phone && (
+                    {(l.phone || l.url) && (
                       <MarkAsAgencyButton
-                        rawPhone={l.phone}
+                        rawPhone={l.phone || undefined}
                         url={l.url || undefined}
                         contextLabel="căutare anunțuri proprietari"
                         label="Agenție"
                         className="h-8 px-2 text-[11px]"
                         onMarked={() =>
-                          setResults(prev => (prev ? prev.filter(x => x.phone !== l.phone) : prev))
+                          setResults(prev =>
+                            prev
+                              ? prev.filter(x =>
+                                  l.phone ? x.phone !== l.phone : x.url !== l.url,
+                                )
+                              : prev,
+                          )
                         }
                       />
                     )}
+
                     {l.url && (
                       <a
                         href={l.url}
