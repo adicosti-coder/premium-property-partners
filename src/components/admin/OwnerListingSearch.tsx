@@ -126,7 +126,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [partitions, setPartitions] = useState<string[]>([]);
   /** Dotări cerute (balcon, parcare, lift...). */
   const [extras, setExtras] = useState<string[]>([]);
-  const [floor, setFloor] = useState<string>(ANY_FLOOR);
+  /** Etaje: se pot bifa mai multe simultan (se aplică „sau”). */
+  const [floors, setFloors] = useState<string[]>([]);
   const [minSurface, setMinSurface] = useState("");
   const [maxSurface, setMaxSurface] = useState("");
   const [zone, setZone] = useState<string>(ANY_ZONE);
