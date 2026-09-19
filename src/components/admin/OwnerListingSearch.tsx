@@ -764,18 +764,30 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </div>
       </div>
 
+      {/* Etaj — selecție multiplă */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Etaj (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {FLOOR_OPTIONS.map(f => {
+            const on = floors.includes(f.value);
+            return (
+              <Button
+                key={f.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setFloors(v => toggleIn(v, f.value)); setIgnoreFilters(false); }}
+              >
+                {f.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={floor} onValueChange={setFloor}>
-          <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="Etaj">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_FLOOR}>Orice etaj</SelectItem>
-            {FLOOR_OPTIONS.map(f => (
-              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={yearFilter} onValueChange={setYearFilter}>
           <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="An construcție">
             <SelectValue />
