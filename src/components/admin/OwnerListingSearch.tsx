@@ -228,7 +228,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       },
     });
     if (error) throw error;
-    const listings = Array.isArray((data as any)?.listings) ? ((data as any).listings as AdHocListing[]) : [];
+    const rawListings = Array.isArray((data as any)?.listings) ? ((data as any).listings as Array<AdHocListing & { source_url?: string | null; contact_phone?: string | null }>) : [];
+    const listings = rawListings.map(l => ({
+      ...l,
+      url: l.url || l.source_url || null,
+      phone: l.phone || l.contact_phone || null,
+    }));
     const b = (data as any)?.funnel_breakdown || {};
     return {
       platform: p,
@@ -294,7 +299,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       return data ?? [];
     };
 
-    // Caută pe fiecare cuvânt (titlu / zonă / adresă); dacă nimic, arată ultimele salvate.
+    // Caută strict după cuvintele cerute; nu afișăm anunțuri fără legătură.
     let rows: any[] = [];
     if (words.length) {
       const parts = await Promise.all(words.map(w => fetchFor(w)));
@@ -307,8 +312,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         }
       }
     }
-    if (rows.length === 0) rows = await fetchFor();
-
     // Eliminăm anunțurile marcate expirate sau nemaivăzute de peste 21 de zile.
     const staleBefore = Date.now() - 21 * 24 * 60 * 60 * 1000;
     return rows
@@ -414,7 +417,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
-    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${dealPart}`.replace(/\s+/g, " ").trim();
+    // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
+    const cityPart = zone === ANY_ZONE ? "Timișoara" : "";
+    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`.replace(/\s+/g, " ").trim();
     if (term.length < 3) {
       toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
