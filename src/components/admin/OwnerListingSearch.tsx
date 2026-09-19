@@ -865,9 +865,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               {main.map(renderRow)}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Niciun anunț nu respectă filtrele alese.
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {results.length > 0
+                  ? `Am găsit ${results.length} anunțuri, dar niciunul nu respectă filtrele alese (tip, tranzacție, camere, zonă, preț, portal).`
+                  : "Niciun anunț găsit pentru aceste cuvinte. Încearcă o formulare mai simplă (ex: „decomandat Timișoara”)."}
+              </p>
+              {results.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
+                    Arată toate cele {results.length} anunțuri găsite
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={resetFilters}>
+                    Șterge filtrele
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </div>
         );
