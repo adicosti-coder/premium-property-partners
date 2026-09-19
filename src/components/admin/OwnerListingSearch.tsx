@@ -570,7 +570,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
   };
 
-  const run = async (prefill?: string) => {
+  /**
+   * `quiet` = rescanare automată: păstrează lista afișată, adaugă doar
+   * anunțurile noi și nu deranjează cu mesaje de eroare.
+   */
+  const run = async (prefill?: string, opts?: { quiet?: boolean }) => {
+    const quiet = opts?.quiet === true;
     const base = (prefill ?? search).trim();
     // În interogare intră un singur tip/compartimentare (portalurile nu acceptă liste),
     // restul bifelor se aplică la filtrarea rezultatelor.
