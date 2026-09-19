@@ -18,6 +18,8 @@ interface Raw {
   last_seen_at: string | null;
   price: number | null;
   price_per_sqm: number | null;
+  zone: string | null;
+  title: string | null;
 }
 
 interface HistRow {
