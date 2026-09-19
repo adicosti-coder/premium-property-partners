@@ -47,6 +47,30 @@ const PLATFORM_OPTIONS = [
 
 const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
 
+/** Parametri de urmărire care nu schimbă anunțul — se elimină la comparare. */
+const TRACKING_PARAMS = /^(utm_|gclid|fbclid|msclkid|reason|ref|source|srsltid|_ga|mc_|sid|clickid)/i;
+
+/**
+ * Curăță linkul unui anunț: elimină parametrii de urmărire și „/” final,
+ * ca același anunț să nu apară de două ori în listă.
+ */
+export function normalizeAdUrl(raw: string | null | undefined): string {
+  const url = (raw || "").trim();
+  if (!url) return "";
+  try {
+    const u = new URL(url);
+    const keep = new URLSearchParams();
+    u.searchParams.forEach((v, k) => { if (!TRACKING_PARAMS.test(k)) keep.append(k, v); });
+    u.search = keep.toString();
+    u.hash = "";
+    u.hostname = u.hostname.replace(/^www\./i, "").toLowerCase();
+    const path = u.pathname.replace(/\/+$/, "");
+    return `${u.protocol}//${u.hostname}${path}${u.search ? `?${u.search}` : ""}`;
+  } catch {
+    return url.replace(/[#?].*$/, "").replace(/\/+$/, "");
+  }
+}
+
 /**
  * Zonele Timișoarei exact cum sunt definite de platformele de anunțuri
  * (imobiliare.ro, olx.ro, publi24.ro) — vezi src/lib/timisoaraPortalZones.ts.
