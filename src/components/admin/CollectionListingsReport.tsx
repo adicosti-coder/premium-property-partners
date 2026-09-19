@@ -26,6 +26,7 @@ interface Row {
 }
 
 const COLLECTION_LABELS: Record<string, string> = {
+  zona_mea: "Zona mea (blocuri)",
   blocuri_noi: "Blocuri noi",
   ansambluri: "Ansambluri rezidențiale",
   complexe_prestigiu: "Complexe de prestigiu",
