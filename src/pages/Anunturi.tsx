@@ -341,7 +341,8 @@ const Anunturi = () => {
                 const href = `/proprietate/${l.slug ?? l.id}`;
                 const src = imageUrl(l);
                 const price = priceText(l);
-                const perSqm = pricePerSqm(l.capital_necesar, l.size);
+                // €/mp are sens doar pentru prețuri de vânzare, nu pentru chirii/tarife
+                const perSqm = (l.capital_necesar ?? 0) >= 20000 ? pricePerSqm(l.capital_necesar, l.size) : null;
                 return (
                   <article
                     key={l.id}
