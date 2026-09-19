@@ -647,25 +647,27 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const run = async (prefill?: string, opts?: { quiet?: boolean }) => {
     const quiet = opts?.quiet === true;
     const base = (prefill ?? search).trim();
-    // În interogare intră un singur tip/compartimentare (portalurile nu acceptă liste),
-    // restul bifelor se aplică la filtrarea rezultatelor.
+    // Portalurile nu acceptă liste într-o singură căutare, așa că generăm mai
+    // multe interogări: câte una pentru fiecare zonă bifată și fiecare număr de
+    // camere. Compartimentarea, etajul și dotările se aplică pe rezultate.
     const typePart = types[0] ?? "";
-    const partitionPart = partitions.length === 1 ? partitions[0] : "";
-    const onlyFloor = floors.length === 1 ? floors[0] : "";
-    const floorPart = onlyFloor === "parter" ? "parter" : onlyFloor === "last" ? "ultimul etaj" : onlyFloor === "mansarda" ? "mansarda" : "";
-    const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
-    // În interogare intră un singur număr de camere (portalurile nu accepta liste).
-    const roomsPart = rooms.length === 1 ? `${rooms[0]} camere` : "";
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
-    // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
-    const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
-    // Compartimentarea și etajul NU intră în interogare (restrâng prea mult
-    // rezultatele pe portaluri) — se aplică la filtrarea rezultatelor.
-    void partitionPart; void floorPart;
-    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`
-      .replace(/\s+/g, " ")
-      .trim();
-    if (term.length < 3) {
+    const roomVariants = rooms.length ? rooms.slice(0, 3).map(r => `${r} camere`) : [""];
+    const zoneVariants = zones.length
+      ? zones.slice(0, 3).map(z => `${zoneSearchTerm(z)} Timișoara`)
+      : [""];
+    // Orașul este obligatoriu când nu e bifată nicio zonă.
+    const cityPart = zones.length === 0 && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
+    const terms = Array.from(
+      new Set(
+        roomVariants.flatMap(rp =>
+          zoneVariants.map(zp =>
+            `${typePart} ${rp} ${base} ${zp} ${cityPart} ${dealPart}`.replace(/\s+/g, " ").trim(),
+          ),
+        ),
+      ),
+    ).filter(t => t.length >= 3);
+    if (terms.length === 0) {
       if (!quiet) toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
     }
@@ -680,7 +682,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
     try {
       const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
-      const settled = await Promise.allSettled(platforms.map(p => searchOnePlatform(term, p)));
+      // Limităm numărul total de interogări ca să nu consumăm credite inutil.
+      const jobs = platforms
+        .flatMap(p => terms.slice(0, 3).map(t => ({ p, t })))
+        .slice(0, 12);
+      const settled = await Promise.allSettled(jobs.map(j => searchOnePlatform(j.t, j.p)));
       const ok = settled.flatMap(r => (r.status === "fulfilled" ? [r.value] : []));
       const failedCount = settled.length - ok.length;
       if (ok.length === 0) {
