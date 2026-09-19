@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExternalLink, RefreshCw, Download, Clock, AlertTriangle } from "lucide-react";
+import { ExternalLink, RefreshCw, Download, Clock, AlertTriangle, Loader2, Euro } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { downloadCsv, csvFileName } from "@/utils/exportCsv";
 
 /** Durata standard de afișare a unui anunț pe fiecare platformă (zile). */
