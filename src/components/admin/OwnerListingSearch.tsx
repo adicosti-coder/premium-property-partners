@@ -405,6 +405,60 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         <AddAgencyPhoneDialog size="default" className="min-h-[48px] sm:min-h-0" />
       </div>
 
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <Select value={deal} onValueChange={setDeal}>
+          <SelectTrigger className="sm:w-[170px] min-h-[48px] sm:min-h-0" aria-label="Tip tranzacție">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY_DEAL}>Vânzare și închiriere</SelectItem>
+            <SelectItem value="vanzare">Doar vânzare</SelectItem>
+            <SelectItem value="inchiriere">Doar închiriere</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={rooms} onValueChange={setRooms}>
+          <SelectTrigger className="sm:w-[150px] min-h-[48px] sm:min-h-0" aria-label="Număr de camere">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY_ROOMS}>Orice nr. camere</SelectItem>
+            <SelectItem value="1">1 cameră</SelectItem>
+            <SelectItem value="2">2 camere</SelectItem>
+            <SelectItem value="3">3 camere</SelectItem>
+            <SelectItem value="4">4+ camere</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
+          value={minPrice}
+          onChange={e => setMinPrice(e.target.value)}
+          inputMode="numeric"
+          placeholder="Preț min."
+          aria-label="Preț minim"
+          className="sm:w-[120px] min-h-[48px] sm:min-h-0"
+        />
+        <Input
+          value={maxPrice}
+          onChange={e => setMaxPrice(e.target.value)}
+          inputMode="numeric"
+          placeholder="Preț max."
+          aria-label="Preț maxim"
+          className="sm:w-[120px] min-h-[48px] sm:min-h-0"
+        />
+        <Button
+          type="button"
+          variant={onlyWithPhone ? "default" : "outline"}
+          onClick={() => setOnlyWithPhone(v => !v)}
+          className="min-h-[48px] sm:min-h-0"
+          aria-pressed={onlyWithPhone}
+        >
+          Doar cu telefon
+        </Button>
+        <Button type="button" variant="ghost" onClick={resetFilters} className="min-h-[48px] sm:min-h-0">
+          Resetează filtrele
+        </Button>
+      </div>
+
+
       <div className="flex flex-wrap gap-1.5">
         <span className="text-[11px] text-muted-foreground self-center mr-1">Blocuri din zona mea:</span>
         {BUILDINGS.map(b => (
