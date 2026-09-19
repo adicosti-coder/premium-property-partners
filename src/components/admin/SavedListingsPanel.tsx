@@ -103,6 +103,22 @@ export default function SavedListingsPanel() {
     });
   }, [rows, q, platform]);
 
+  /** Cea mai recentă reverificare automată a prețurilor. */
+  const lastPriceCheck = useMemo(() => {
+    const times = rows
+      .map((r) => (r.price_checked_at ? new Date(r.price_checked_at).getTime() : null))
+      .filter((t): t is number => t != null && Number.isFinite(t));
+    if (!times.length) return "încă niciodată";
+    const d = new Date(Math.max(...times));
+    return d.toLocaleString("ro-RO", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, [rows]);
+
   const expiringSoon = useMemo(
     () =>
       filtered.filter((r) => {
@@ -164,6 +180,9 @@ export default function SavedListingsPanel() {
             <CardTitle>Anunțuri salvate</CardTitle>
             <CardDescription>
               {filtered.length} anunțuri active — preț, durata pe sursă, telefon și link direct
+              <br />
+              Prețurile se reverifică automat o dată la 24 de ore. Ultima reverificare:{" "}
+              <span className="font-medium text-foreground">{lastPriceCheck}</span>
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">

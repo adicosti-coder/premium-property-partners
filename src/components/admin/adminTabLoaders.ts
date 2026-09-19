@@ -56,6 +56,7 @@ const loaders: Record<string, Loader> = {
   "owner-search": () => import("@/components/admin/OwnerListingSearch"),
   "saved-listings": () => import("@/components/admin/SavedListingsPanel"),
   "expired-listings": () => import("@/components/admin/ExpiredListingsPanel"),
+  "external-published": () => import("@/components/admin/ExternalPublishedListings"),
   "guest-guides": () => import("@/components/admin/GuestGuideManager"),
   catalogs: () => import("@/components/admin/CatalogManager"),
   "scraper-status": () => import("@/components/admin/ScraperStatusDashboard"),

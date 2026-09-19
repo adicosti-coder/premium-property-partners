@@ -71,6 +71,15 @@ export const ADMIN_GROUPS: AdminGroup[] = [
         keywords: ["salvate", "anunturi salvate", "preț", "pret", "telefon", "link", "durata sursa", "compar", "prospect"],
       },
       {
+        value: "external-published",
+        label: "Anunțuri publicate extern",
+        icon: Radar,
+        keywords: [
+          "publicate", "extern", "olx", "storia", "imobiliare", "publi24", "bursa",
+          "link", "durata sursa", "durata ramasa", "expira", "compar",
+        ],
+      },
+      {
         value: "expired-listings",
         label: "Anunțuri expirate",
         icon: Clock,

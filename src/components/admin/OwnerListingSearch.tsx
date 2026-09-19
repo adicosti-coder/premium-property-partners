@@ -97,6 +97,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [results, setResults] = useState<AdHocListing[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+  const [pricing, setPricing] = useState(false);
+  const [exactPrices, setExactPrices] = useState<Record<string, number>>({});
 
   /** Extrage prima valoare numerică dintr-un preț de tip "55.000 €" sau 2021450. */
   const priceValue = (p: AdHocListing["price"]): number | null => {
@@ -143,7 +145,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         if (otherTypes.some(v => text.includes(v))) return false;
       }
       if (zoneWord && l.zone && !l.zone.toLowerCase().includes(zoneWord) && !text.includes(zoneWord)) return false;
-      const price = priceValue(l.price);
+      const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
       if ((min !== null || max !== null) && price === null) return false;
       if (min !== null && price !== null && price < min) return false;
       if (max !== null && price !== null && price > max) return false;
@@ -261,6 +263,53 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   };
 
 
+  /**
+   * Deschide paginile reale ale anunțurilor și citește prețul exact publicat acolo.
+   * Rezultatele înlocuiesc prețul aproximativ din listă.
+   */
+  const hydrateExactPrices = async (list: AdHocListing[]) => {
+    const urls = list.map(l => (l.url || "").trim()).filter(Boolean).slice(0, 12);
+    if (!urls.length) return;
+    setPricing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-listing-prices", { body: { urls } });
+      if (error) throw error;
+      const map = (data as any)?.prices as Record<string, { price: number | null; rent: number | null }> | undefined;
+      if (!map) return;
+      const exact: Record<string, number> = {};
+      for (const [u, v] of Object.entries(map)) {
+        const value = v?.price ?? v?.rent ?? null;
+        if (value != null) exact[u] = value;
+      }
+      setExactPrices(prev => ({ ...prev, ...exact }));
+    } catch (e: any) {
+      toast({ title: "Nu am putut citi prețurile exacte", description: e.message, variant: "destructive" });
+    } finally {
+      setPricing(false);
+    }
+  };
+
+  /** Marchează manual un anunț ca expirat, ca să nu mai apară în căutări și rapoarte. */
+  const markExpired = async (l: AdHocListing) => {
+    const url = (l.url || "").trim();
+    if (!url) return;
+    const { data, error } = await supabase
+      .from("prospect_listings")
+      .update({ is_active: false, lifecycle_status: "expired" } as never)
+      .eq("source_url", url)
+      .select("id");
+    if (error) {
+      toast({ title: "Nu am putut marca anunțul", description: error.message, variant: "destructive" });
+      return;
+    }
+    setResults(prev => (prev ? prev.filter(x => (x.url || "").trim() !== url) : prev));
+    toast({
+      title: "Marcat ca expirat",
+      description: data?.length ? "Anunțul a fost scos din listă." : "Anunțul nu era salvat, dar a fost ascuns din rezultate.",
+    });
+    window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
+  };
+
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
@@ -310,6 +359,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         existingShown++;
       }
       setResults(listings);
+      setExactPrices({});
+      void hydrateExactPrices(listings);
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
@@ -489,6 +540,20 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               <> · {filterListings(results).length} potrivesc filtrele</>
             )}
           </div>
+          <div className="flex items-center gap-2 mb-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pricing}
+              onClick={() => hydrateExactPrices(filterListings(results))}
+              className="h-8 text-xs"
+            >
+              {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+              Verifică prețurile exacte
+            </Button>
+            {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
+          </div>
           {filterListings(results).length > 0 && (
             <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
               {filterListings(results).map((l, idx) => (
@@ -516,7 +581,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     {l.zone && <span>{l.zone}</span>}
                     {l.rooms ? <span>{l.rooms} camere</span> : null}
-                    {l.price ? <span>{String(l.price)}</span> : null}
+                    {exactPrices[(l.url || "").trim()] != null ? (
+                      <span className="font-medium text-foreground">
+                        {Math.round(exactPrices[(l.url || "").trim()]).toLocaleString("ro-RO")} €
+                        <span className="ml-1 text-[10px] text-emerald-600">preț exact</span>
+                      </span>
+                    ) : l.price ? (
+                      <span>{String(l.price)}</span>
+                    ) : null}
                     {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
                     {(l.phone || l.url) && (
                       <MarkAsAgencyButton
@@ -555,6 +627,17 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                       >
                         Copiază linkul
                       </button>
+                    )}
+                    {l.url && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-[11px]"
+                        onClick={() => markExpired(l)}
+                      >
+                        Expirat
+                      </Button>
                     )}
                   </div>
                 </div>
