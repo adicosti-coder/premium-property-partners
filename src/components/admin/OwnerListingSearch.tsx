@@ -145,7 +145,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         if (otherTypes.some(v => text.includes(v))) return false;
       }
       if (zoneWord && l.zone && !l.zone.toLowerCase().includes(zoneWord) && !text.includes(zoneWord)) return false;
-      const price = priceValue(l.price);
+      const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
       if ((min !== null || max !== null) && price === null) return false;
       if (min !== null && price !== null && price < min) return false;
       if (max !== null && price !== null && price > max) return false;
@@ -546,7 +546,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     {l.zone && <span>{l.zone}</span>}
                     {l.rooms ? <span>{l.rooms} camere</span> : null}
-                    {l.price ? <span>{String(l.price)}</span> : null}
+                    {exactPrices[(l.url || "").trim()] != null ? (
+                      <span className="font-medium text-foreground">
+                        {Math.round(exactPrices[(l.url || "").trim()]).toLocaleString("ro-RO")} €
+                        <span className="ml-1 text-[10px] text-emerald-600">preț exact</span>
+                      </span>
+                    ) : l.price ? (
+                      <span>{String(l.price)}</span>
+                    ) : null}
                     {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
                     {(l.phone || l.url) && (
                       <MarkAsAgencyButton
