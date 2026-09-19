@@ -4,7 +4,7 @@ import {
   Sparkles, BarChart3, Star,
   Mail, MailCheck, Megaphone, Euro, PenLine, BookOpen, Lightbulb, Play,
   MousePointerClick, Target, Activity, FlaskConical,
-  Film, MapPin, Wrench, Shield, ShieldCheck, Brain, Radar,
+  Film, MapPin, Wrench, Shield, ShieldCheck, Brain, Radar, Clock,
   type LucideIcon,
 } from "lucide-react";
 
