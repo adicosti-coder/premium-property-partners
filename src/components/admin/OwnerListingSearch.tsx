@@ -472,6 +472,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
     setSearching(true);
     setResults(null);
+    setIgnoreFilters(false);
     setSummary(null);
     try {
       const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
