@@ -782,6 +782,26 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </Button>
       </div>
 
+      {/* Scanare automată */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant={autoLive ? "default" : "outline"}
+          aria-pressed={autoLive}
+          className="h-9 text-xs"
+          onClick={() => setAutoLive(v => !v)}
+        >
+          {autoLive ? "Scanare automată: pornită" : "Scanare automată: oprită"}
+        </Button>
+        <span className="text-[11px] text-muted-foreground">
+          {autoLive
+            ? "Caută singură la fiecare 2 minute și adaugă anunțurile noi în listă."
+            : "Rezultatele se actualizează doar când apeși „Caută anunțuri”."}
+          {lastAutoAt && ` Ultima actualizare: ${lastAutoAt.toLocaleTimeString("ro-RO")}.`}
+        </span>
+      </div>
+
       {/* Tipuri de imobil — se pot alege mai multe */}
       <div className="space-y-1.5">
         <div className="text-[11px] text-muted-foreground">Tip de imobil (poți alege mai multe)</div>
