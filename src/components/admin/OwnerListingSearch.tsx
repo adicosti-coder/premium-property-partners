@@ -483,10 +483,15 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
       {!searching && results && (
         <div>
-          <div className="text-xs text-muted-foreground mb-1">{summary || `${results.length} anunțuri`}</div>
-          {results.length > 0 && (
+          <div className="text-xs text-muted-foreground mb-1">
+            {summary || `${results.length} anunțuri`}
+            {filterListings(results).length !== results.length && (
+              <> · {filterListings(results).length} potrivesc filtrele</>
+            )}
+          </div>
+          {filterListings(results).length > 0 && (
             <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
-              {results.map((l, idx) => (
+              {filterListings(results).map((l, idx) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
                     <Badge variant="default" className="text-[10px] shrink-0">
