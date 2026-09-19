@@ -64,6 +64,18 @@ export const ADMIN_GROUPS: AdminGroup[] = [
           "fructus", "city of mara", "ring", "ateneo", "xcity", "denya", "vivalia", "monarh",
         ],
       },
+      {
+        value: "saved-listings",
+        label: "Anunțuri salvate",
+        icon: Radar,
+        keywords: ["salvate", "anunturi salvate", "preț", "pret", "telefon", "link", "durata sursa", "compar", "prospect"],
+      },
+      {
+        value: "expired-listings",
+        label: "Anunțuri expirate",
+        icon: Clock,
+        keywords: ["expirate", "expirat", "sterse", "inactive", "data expirarii", "istoric anunturi"],
+      },
       { value: "properties", label: "Proprietăți", icon: Building },
       { value: "cazare", label: "Cazare", icon: Hotel },
       { value: "investitii-premium", label: "Investiții Premium", icon: TrendingUp },
