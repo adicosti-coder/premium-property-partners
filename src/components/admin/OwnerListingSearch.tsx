@@ -14,6 +14,7 @@ import { PORTAL_ZONE_LABELS, zoneMatchesText, zoneSearchTerm } from "@/lib/timis
 
 export interface AdHocListing {
   title?: string | null;
+  description?: string | null;
   url?: string | null;
   price?: number | string | null;
   phone?: string | null;
@@ -281,10 +282,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const fetchFor = async (w?: string) => {
       let q = supabase
         .from("prospect_listings")
-        .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at,last_seen_at")
+        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,updated_at,last_seen_at")
         .not("source_url", "is", null)
-        // fără anunțuri expirate / dezactivate
-        .eq("is_active", true)
+        // „De verificat” poate avea date incomplete, dar este un rezultat real.
+        // Excludem doar agențiile și anunțurile confirmate ca expirate/respinse.
+        .neq("prospect_type", "agentie")
         .not("lifecycle_status", "in", "(expired,rejected)")
         .order("updated_at", { ascending: false })
         .limit(25);
@@ -322,6 +324,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       })
       .map((r: any) => ({
         title: r.title,
+        description: r.description,
         url: r.source_url,
         price: r.price,
         phone: r.contact_phone,
