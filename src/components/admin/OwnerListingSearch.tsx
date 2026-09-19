@@ -1303,9 +1303,24 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                 {results.length > 0
-                  ? `Am găsit ${results.length} anunțuri, dar niciunul nu respectă filtrele alese (tip, tranzacție, camere, zonă, preț, portal).`
+                  ? `Am găsit ${results.length} anunțuri, dar niciunul nu respectă filtrele alese.`
                   : "Niciun anunț găsit pentru aceste cuvinte. Încearcă o formulare mai simplă (ex: „decomandat Timișoara”)."}
               </p>
+              {results.length > 0 && (() => {
+                const per = new Map<string, number>();
+                for (const l of results) {
+                  const why = excludeReason(l);
+                  if (why) per.set(why, (per.get(why) || 0) + 1);
+                }
+                const top = Array.from(per.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                return top.length ? (
+                  <ul className="text-xs text-muted-foreground list-disc pl-5">
+                    {top.map(([why, n]) => (
+                      <li key={why}>{n} {n === 1 ? "anunț" : "anunțuri"} — {why}</li>
+                    ))}
+                  </ul>
+                ) : null;
+              })()}
               {results.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
