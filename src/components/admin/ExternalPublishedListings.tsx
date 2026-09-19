@@ -281,6 +281,9 @@ export default function ExternalPublishedListings() {
                     )}
                   </span>
                 )}
+                {r.url && liveCheckedAt[r.url] && (
+                  <span className="text-[10px]">actualizat {liveCheckedAt[r.url]}</span>
+                )}
                 {r.url && (
                   <button
                     type="button"
