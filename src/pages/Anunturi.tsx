@@ -1,5 +1,5 @@
-import { lazy, Suspense, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { fetchWithRetry } from "@/lib/supabaseRetry";
@@ -13,21 +13,34 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { storageImage, storageImageSrcSet } from "@/utils/supabaseImage";
+import PortalSearchFilters from "@/components/search/PortalSearchFilters";
+import {
+  EMPTY_PORTAL_FILTERS,
+  distanceKm,
+  filtersToParams,
+  matchesPortalFilters,
+  paramsToFilters,
+  pricePerSqm,
+  sortPortalListings,
+  type PortalFilters,
+} from "@/lib/portalSearch";
 import {
   Building2,
-  Key,
-  Hotel,
   MapPin,
   Maximize2,
   BedDouble,
   MessageCircle,
   ArrowRight,
+  List,
+  Map as MapIcon,
 } from "lucide-react";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
+const PortalSearchMap = lazy(() => import("@/components/search/PortalSearchMap"));
 
 const BASE_URL = "https://realtrust.ro";
 const WA_NUMBER = "40799069256";
+const CITY_CENTER = { lat: 45.754, lng: 21.227 };
 
 interface Listing {
   id: string;
@@ -39,29 +52,29 @@ interface Listing {
   size: number | null;
   bedrooms: number | null;
   floor: string | null;
+  year_built: number | null;
+  compartimentare: string | null;
+  parking: string | null;
+  furnished: string | null;
+  features: string[] | null;
+  description_ro: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  created_at: string | null;
   image_path: string | null;
   images: string[] | null;
   property_images: { image_path: string; is_primary: boolean; display_order: number }[] | null;
 }
 
-type FilterKey = "toate" | "vanzare" | "inchiriere" | "cazare";
-
 const COPY = {
   ro: {
-    seoTitle: "Anunțuri apartamente Timișoara — poze, suprafață, etaj | RealTrust",
+    seoTitle: "Anunțuri apartamente Timișoara — caută pe zonă, preț, etaj | RealTrust",
     seoDescription:
-      "Toate apartamentele RealTrust din Timișoara: poze, suprafață, etaj, cameră și vecinătate, cu preț și contact direct pe WhatsApp înainte de discuție.",
+      "Caută apartamente în Timișoara ca pe portaluri: zonă, preț, suprafață, camere, etaj, compartimentare și dotări, plus căutare pe hartă cu rază.",
     breadcrumb: "Anunțuri",
     h1: "Anunțuri apartamente în Timișoara",
     intro:
-      "Vezi toate apartamentele noastre — poze, suprafață, etaj, camere și vecinătate — și scrie-ne direct pe WhatsApp pentru ofertă sau vizionare.",
-    filters: {
-      toate: "Toate",
-      vanzare: "De vânzare",
-      inchiriere: "De închiriat",
-      cazare: "Regim hotelier",
-    },
-    size: "Suprafață",
+      "Filtrează exact ca pe marile portaluri — zonă, preț, suprafață, camere, etaj, compartimentare, an și dotări — sau caută pe hartă, în raza care te interesează.",
     rooms: "Camere",
     floorLabel: "Etaj",
     ground: "Parter",
@@ -69,24 +82,19 @@ const COPY = {
     perNight: "/noapte",
     details: "Vezi apartamentul",
     whatsapp: "Întreabă pe WhatsApp",
-    empty: "Momentan nu avem anunțuri în această categorie.",
-    count: (n: number) => `${n} apartamente disponibile`,
+    empty: "Niciun anunț nu respectă filtrele. Încearcă o rază mai mare sau șterge un filtru.",
+    list: "Listă",
+    map: "Hartă",
+    sqm: "€/mp",
   },
   en: {
-    seoTitle: "Apartment listings in Timișoara — photos, size, floor | RealTrust",
+    seoTitle: "Apartment listings in Timișoara — search by area, price, floor | RealTrust",
     seoDescription:
-      "All RealTrust apartments in Timișoara: photos, size, floor, rooms and neighbourhood, with price and direct WhatsApp contact.",
+      "Search apartments in Timișoara like on the big portals: area, price, size, rooms, floor, layout and amenities, plus map search with radius.",
     breadcrumb: "Listings",
     h1: "Apartment listings in Timișoara",
     intro:
-      "Browse all our apartments — photos, size, floor, rooms and neighbourhood — and message us on WhatsApp for an offer or a viewing.",
-    filters: {
-      toate: "All",
-      vanzare: "For sale",
-      inchiriere: "For rent",
-      cazare: "Short-term rental",
-    },
-    size: "Size",
+      "Filter just like on the big portals — area, price, size, rooms, floor, layout, year and amenities — or search on the map within your radius.",
     rooms: "Rooms",
     floorLabel: "Floor",
     ground: "Ground floor",
@@ -94,8 +102,10 @@ const COPY = {
     perNight: "/night",
     details: "View apartment",
     whatsapp: "Ask on WhatsApp",
-    empty: "No listings in this category right now.",
-    count: (n: number) => `${n} apartments available`,
+    empty: "No listing matches your filters. Try a wider radius or clear a filter.",
+    list: "List",
+    map: "Map",
+    sqm: "€/sqm",
   },
 } as const;
 
@@ -114,17 +124,28 @@ const Anunturi = () => {
   const { language } = useLanguage();
   const ro = language !== "en";
   const copy = ro ? COPY.ro : COPY.en;
-  const [filter, setFilter] = useState<FilterKey>("toate");
+  const [params, setParams] = useSearchParams();
+  const [filters, setFilters] = useState<PortalFilters>(() => paramsToFilters(params));
+  const [view, setView] = useState<"list" | "map">("list");
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [radiusKm, setRadiusKm] = useState(3);
+
+  /** Filtrele rămân în adresa paginii, ca să poată fi trimise ca link. */
+  useEffect(() => {
+    const next = filtersToParams(filters);
+    if (next.toString() !== params.toString()) setParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["anunturi-page-listings"],
+    queryKey: ["anunturi-page-listings-v2"],
     staleTime: 1000 * 60 * 5,
     queryFn: async () => {
       const { data: rows, error } = await fetchWithRetry<Listing[]>(() =>
         supabase
           .from("properties")
           .select(
-            "id, slug, name, location, listing_type, capital_necesar, size, bedrooms, floor, image_path, images, property_images(image_path, is_primary, display_order)",
+            "id, slug, name, location, listing_type, capital_necesar, size, bedrooms, floor, year_built, compartimentare, parking, furnished, features, description_ro, latitude, longitude, created_at, image_path, images, property_images(image_path, is_primary, display_order)",
           )
           .eq("is_active", true)
           .order("display_order", { ascending: true }) as unknown as PromiseLike<{
@@ -138,16 +159,57 @@ const Anunturi = () => {
   });
 
   const listings = data ?? [];
-  const filtered = useMemo(
-    () => (filter === "toate" ? listings : listings.filter((l) => l.listing_type === filter)),
-    [listings, filter],
-  );
 
   const floorText = (floor: string | null) => {
     if (!floor) return null;
     if (/^\d+$/.test(floor)) return Number(floor) === 0 ? copy.ground : `${copy.floorLabel} ${floor}`;
     return floor;
   };
+
+  const filtered = useMemo(() => {
+    const matched = listings.filter((l) => {
+      const ok = matchesPortalFilters(
+        {
+          title: l.name,
+          text: [
+            l.description_ro ?? "",
+            l.compartimentare ?? "",
+            l.parking ?? "",
+            l.furnished ?? "",
+            floorText(l.floor) ?? "",
+            (l.features ?? []).join(" "),
+            l.size ? `${l.size} mp` : "",
+            l.bedrooms ? `${l.bedrooms} camere` : "",
+          ].join(" "),
+          transaction: l.listing_type,
+          price: l.capital_necesar,
+          surface: l.size,
+          rooms: l.bedrooms,
+          year: l.year_built,
+          zone: l.location,
+          createdAt: l.created_at,
+        },
+        filters,
+      );
+      if (!ok) return false;
+      if (view === "map" && mapCenter && l.latitude && l.longitude) {
+        return distanceKm(mapCenter, { lat: l.latitude, lng: l.longitude }) <= radiusKm;
+      }
+      return true;
+    });
+    return sortPortalListings(
+      matched.map((l) => ({
+        ...l,
+        title: l.name,
+        text: "",
+        price: l.capital_necesar,
+        surface: l.size,
+        createdAt: l.created_at,
+      })),
+      filters.sort,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listings, filters, view, mapCenter, radiusKm]);
 
   const priceText = (l: Listing) => {
     if (!l.capital_necesar) return null;
@@ -199,32 +261,71 @@ const Anunturi = () => {
         <div className="container mx-auto px-6 lg:px-8">
           <PageBreadcrumb items={[{ label: copy.breadcrumb }]} />
 
-          <header className="max-w-3xl mx-auto text-center mt-6 mb-10">
+          <header className="max-w-3xl mx-auto text-center mt-6 mb-8">
             <h1 className="text-3xl md:text-4xl lg:text-5xl heading-premium text-foreground mb-4">
               {copy.h1}
             </h1>
             <p className="text-muted-foreground text-lg text-premium">{copy.intro}</p>
-            {!isLoading && (
-              <p className="mt-3 text-sm text-muted-foreground">{copy.count(listings.length)}</p>
-            )}
           </header>
 
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            {(["toate", "vanzare", "inchiriere", "cazare"] as FilterKey[]).map((key) => (
-              <Button
-                key={key}
-                variant={filter === key ? "default" : "outline"}
-                className="min-h-12 rounded-full px-5"
-                onClick={() => setFilter(key)}
-                aria-pressed={filter === key}
-              >
-                {key === "vanzare" && <Building2 className="w-4 h-4 mr-2" aria-hidden="true" />}
-                {key === "inchiriere" && <Key className="w-4 h-4 mr-2" aria-hidden="true" />}
-                {key === "cazare" && <Hotel className="w-4 h-4 mr-2" aria-hidden="true" />}
-                {copy.filters[key]}
-              </Button>
-            ))}
+          <PortalSearchFilters
+            filters={filters}
+            onChange={setFilters}
+            onReset={() => setFilters(EMPTY_PORTAL_FILTERS)}
+            resultCount={filtered.length}
+            english={!ro}
+          />
+
+          <div className="flex justify-center gap-2 my-6">
+            <Button
+              variant={view === "list" ? "default" : "outline"}
+              className="min-h-12 rounded-full px-5"
+              onClick={() => setView("list")}
+              aria-pressed={view === "list"}
+            >
+              <List className="w-4 h-4 mr-2" aria-hidden="true" />
+              {copy.list}
+            </Button>
+            <Button
+              variant={view === "map" ? "default" : "outline"}
+              className="min-h-12 rounded-full px-5"
+              onClick={() => {
+                setView("map");
+                setMapCenter((c) => c ?? CITY_CENTER);
+              }}
+              aria-pressed={view === "map"}
+            >
+              <MapIcon className="w-4 h-4 mr-2" aria-hidden="true" />
+              {copy.map}
+            </Button>
           </div>
+
+          {view === "map" && (
+            <div className="mb-8">
+              <Suspense fallback={<Skeleton className="h-[420px] rounded-2xl" />}>
+                <PortalSearchMap
+                  pins={filtered
+                    .filter((l) => l.latitude && l.longitude)
+                    .map((l) => ({
+                      id: l.id,
+                      name: l.name,
+                      href: `/proprietate/${l.slug ?? l.id}`,
+                      lat: l.latitude as number,
+                      lng: l.longitude as number,
+                      priceLabel: l.capital_necesar
+                        ? `${Math.round(l.capital_necesar / 1000)}k €`
+                        : null,
+                    }))}
+                  center={mapCenter ?? CITY_CENTER}
+                  radiusKm={radiusKm}
+                  onCenterChange={setMapCenter}
+                  onRadiusChange={setRadiusKm}
+                  onReset={() => setMapCenter(null)}
+                  english={!ro}
+                />
+              </Suspense>
+            </div>
+          )}
 
           {isLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -240,6 +341,7 @@ const Anunturi = () => {
                 const href = `/proprietate/${l.slug ?? l.id}`;
                 const src = imageUrl(l);
                 const price = priceText(l);
+                const perSqm = pricePerSqm(l.capital_necesar, l.size);
                 return (
                   <article
                     key={l.id}
@@ -257,13 +359,15 @@ const Anunturi = () => {
                         decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      {l.listing_type && l.listing_type !== "toate" && (
+                      {l.listing_type && (
                         <Badge className="absolute top-3 left-3">
-                          {l.listing_type === "vanzare" || l.listing_type === "inchiriere" || l.listing_type === "cazare"
-                            ? copy.filters[l.listing_type]
-                            : ro
-                              ? "Investiție"
-                              : "Investment"}
+                          {l.listing_type === "vanzare"
+                            ? ro ? "De vânzare" : "For sale"
+                            : l.listing_type === "inchiriere"
+                              ? ro ? "De închiriat" : "For rent"
+                              : l.listing_type === "cazare"
+                                ? ro ? "Regim hotelier" : "Short-term"
+                                : ro ? "Investiție" : "Investment"}
                         </Badge>
                       )}
                     </Link>
@@ -303,7 +407,16 @@ const Anunturi = () => {
                         )}
                       </ul>
 
-                      {price && <p className="text-xl font-semibold text-foreground">{price}</p>}
+                      {price && (
+                        <p className="text-xl font-semibold text-foreground">
+                          {price}
+                          {perSqm && l.listing_type !== "cazare" && (
+                            <span className="ml-2 text-sm font-normal text-muted-foreground">
+                              {perSqm.toLocaleString(ro ? "ro-RO" : "en-US")} {copy.sqm}
+                            </span>
+                          )}
+                        </p>
+                      )}
 
                       <div className="mt-auto flex flex-col sm:flex-row gap-2 pt-2">
                         <Button asChild className="min-h-12 flex-1">
