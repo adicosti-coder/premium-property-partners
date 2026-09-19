@@ -284,10 +284,57 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
       if (deal === "vanzare" && /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
       if (deal === "inchiriere" && !/(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
-      if (typeWord && !text.includes(typeWord.replace(/ț/g, "t").replace(/ă/g, "a")) && !text.includes(typeWord)) {
-        // tipul poate lipsi din titlu — nu excludem dacă nu avem indicii contrare
-        const otherTypes = PROPERTY_TYPES.map(t => t.value).filter(v => v !== type);
-        if (otherTypes.some(v => text.includes(v))) return false;
+      if (wantedTypes.length > 0) {
+        const hasWanted = wantedTypes.some(t => normalizedText.includes(t));
+        if (!hasWanted) {
+          // tipul poate lipsi din titlu — excludem doar dacă apare clar alt tip
+          const otherTypes = PROPERTY_TYPES.map(t => norm(t.value)).filter(v => !wantedTypes.includes(v));
+          if (otherTypes.some(v => normalizedText.includes(v))) return false;
+        }
+      }
+      // Compartimentare — cel puțin una dintre variantele bifate.
+      if (partitions.length > 0) {
+        const ok = partitions.some(p => {
+          const opt = PARTITION_OPTIONS.find(o => o.value === p);
+          return (opt?.words ?? [p]).some(w => {
+            const nw = norm(w);
+            if (nw === "decomandat") return /(^| )decomandat( |$)/.test(normalizedText);
+            return normalizedText.includes(nw);
+          });
+        });
+        if (!ok) return false;
+      }
+      // Dotări cerute — toate trebuie să apară în anunț.
+      if (extras.length > 0) {
+        const allOk = extras.every(x => {
+          const opt = EXTRA_OPTIONS.find(o => o.value === x);
+          return (opt?.words ?? [x]).some(w => normalizedText.includes(norm(w)));
+        });
+        if (!allOk) return false;
+      }
+      // Etaj — anunțurile fără informații despre etaj nu se exclud.
+      if (floor !== ANY_FLOOR) {
+        const f = floorInfo(rawText);
+        if (f.known) {
+          const v = f.value;
+          const ok =
+            floor === "parter" ? f.isGround :
+            floor === "not-ground" ? !f.isGround :
+            floor === "1-3" ? v !== null && v >= 1 && v <= 3 :
+            floor === "4-7" ? v !== null && v >= 4 && v <= 7 :
+            floor === "8plus" ? v !== null && v >= 8 :
+            floor === "last" ? f.isLast :
+            floor === "not-last" ? !f.isLast :
+            floor === "mansarda" ? f.isAttic :
+            true;
+          if (!ok) return false;
+        }
+      }
+      // Suprafață — necunoscută înseamnă păstrat.
+      const mp = surfaceOf(rawText);
+      if (mp !== null) {
+        if (minMp !== null && mp < minMp) return false;
+        if (maxMp !== null && mp > maxMp) return false;
       }
       const zoneText = `${l.zone || ""} ${l.title || ""}`;
       if (wantedZone && !zoneMatchesText(zoneText, wantedZone)) return false;
