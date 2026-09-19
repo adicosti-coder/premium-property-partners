@@ -328,6 +328,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     {l.rooms ? <span>{l.rooms} camere</span> : null}
                     {l.price ? <span>{String(l.price)}</span> : null}
                     {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
+                    {l.phone && (
+                      <MarkAsAgencyButton
+                        rawPhone={l.phone}
+                        url={l.url || undefined}
+                        contextLabel="căutare anunțuri proprietari"
+                        label="Agenție"
+                        className="h-8 px-2 text-[11px]"
+                        onMarked={() =>
+                          setResults(prev => (prev ? prev.filter(x => x.phone !== l.phone) : prev))
+                        }
+                      />
+                    )}
                     {l.url && (
                       <a
                         href={l.url}
