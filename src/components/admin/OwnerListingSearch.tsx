@@ -292,7 +292,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   /** Marchează manual un anunț ca expirat, ca să nu mai apară în căutări și rapoarte. */
   const markExpired = async (l: AdHocListing) => {
     const url = (l.url || "").trim();
-    if (!url) return;
+    if (!url) {
+      setResults(prev => (prev ? prev.filter(x => x !== l) : prev));
+      toast({ title: "Ascuns din rezultate", description: "Anunțul nu are link, deci nu era salvat în listă." });
+      return;
+    }
     const { data, error } = await supabase
       .from("prospect_listings")
       .update({ is_active: false, lifecycle_status: "expired" } as never)
