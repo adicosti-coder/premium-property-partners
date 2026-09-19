@@ -693,6 +693,10 @@ async function freeSearchWithRetry(
   } = {},
 ): Promise<FcSearchOutcome> {
   const domain = platformToDomain(platform, query);
+  // Căutările ad-hoc trimit platforma separat, fără operator `site:` în text.
+  // Fără această ancoră, DDG/Bing întorc rezultate din tot web-ul, apoi filtrul
+  // de domeniu le elimină aproape pe toate.
+  const webQuery = domain && !/\bsite:/i.test(query) ? `${query} site:${domain}` : query;
   const aggregated: FreeResult[] = [];
   const seen = new Set<string>();
   const pushAll = (arr: FreeResult[]) => {
@@ -736,7 +740,7 @@ async function freeSearchWithRetry(
     attempts++;
     const t0 = Date.now();
     try {
-      const ddg = await duckduckgoSearch(query, maxResults);
+      const ddg = await duckduckgoSearch(webQuery, maxResults);
       const dt = Date.now() - t0;
       if (stats) { stats.duckduckgo.hits++; stats.duckduckgo.ms += dt; stats.duckduckgo.urls += ddg.length; }
       opts.logger?.({ kind: 'free_ddg', platform, results: ddg.length, ms: dt });
@@ -755,7 +759,7 @@ async function freeSearchWithRetry(
     attempts++;
     const t0 = Date.now();
     try {
-      const bing = await bingSearch(query, maxResults);
+      const bing = await bingSearch(webQuery, maxResults);
       const dt = Date.now() - t0;
       if (stats) { stats.bing.hits++; stats.bing.ms += dt; stats.bing.urls += bing.length; }
       opts.logger?.({ kind: 'free_bing', platform, results: bing.length, ms: dt });

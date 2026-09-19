@@ -427,7 +427,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
-    const cityPart = zone === ANY_ZONE ? "Timișoara" : "";
+    const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
     const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`.replace(/\s+/g, " ").trim();
     if (term.length < 3) {
       toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
