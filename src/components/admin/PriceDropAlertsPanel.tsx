@@ -49,6 +49,7 @@ export default function PriceDropAlertsPanel() {
   const [rows, setRows] = useState<Row[]>([]);
   const [titles, setTitles] = useState<Titles>({});
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [days, setDays] = useState("30");
   const [platform, setPlatform] = useState("all");
   const [threshold, setThreshold] = useState<number>(() => {
