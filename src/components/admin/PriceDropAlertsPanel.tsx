@@ -234,6 +234,10 @@ export default function PriceDropAlertsPanel() {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Reîncarcă
           </Button>
+          <Button variant="outline" onClick={checkNow} disabled={checking}>
+            <BellRing className={`h-4 w-4 mr-2 ${checking ? "animate-pulse" : ""}`} />
+            Verifică scăderile acum
+          </Button>
           <Button variant="outline" onClick={exportCsv} disabled={!filtered.length}>
             <Download className="h-4 w-4 mr-2" />
             Export CSV
