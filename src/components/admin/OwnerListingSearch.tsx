@@ -592,13 +592,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       .replace(/\s+/g, " ")
       .trim();
     if (term.length < 3) {
-      toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
+      if (!quiet) toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
     }
-    setSearching(true);
-    setResults(null);
-    setIgnoreFilters(false);
-    setSummary(null);
+    if (runningRef.current) return;
+    runningRef.current = true;
+    lastTermRef.current = base;
+    if (!quiet) {
+      setSearching(true);
+      setResults(null);
+      setIgnoreFilters(false);
+      setSummary(null);
+    }
     try {
       const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
       const settled = await Promise.allSettled(platforms.map(p => searchOnePlatform(term, p)));
