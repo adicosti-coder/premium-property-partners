@@ -51,6 +51,7 @@ export default function PlatformDailyCoverage() {
   const [hist, setHist] = useState<HistRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [days, setDays] = useState("14");
+  const [zoneFilter, setZoneFilter] = useState(ALL_ZONES);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,7 +59,7 @@ export default function PlatformDailyCoverage() {
     const [listings, history] = await Promise.all([
       supabase
         .from("prospect_listings")
-        .select("source_platform,created_at,last_seen_at,price,price_per_sqm")
+        .select("source_platform,created_at,last_seen_at,price,price_per_sqm,zone,title")
         .gte("created_at", since)
         .order("created_at", { ascending: false })
         .limit(10000),
