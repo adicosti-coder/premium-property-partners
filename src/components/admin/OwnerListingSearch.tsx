@@ -640,9 +640,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         listings.push(l);
         existingShown++;
       }
-      setResults(listings);
-      setExactPrices({});
-      void hydrateExactPrices(listings);
+      let addedNow = listings.length;
+      if (quiet) {
+        // Rescanare automată: păstrăm lista și adăugăm în față doar ce e nou.
+        setResults(prev => {
+          if (!prev) return listings;
+          const have = new Set(prev.map(x => (x.url || "").trim() || `${x.title || ""}|${x.price || ""}`));
+          const fresh = listings.filter(x => !have.has((x.url || "").trim() || `${x.title || ""}|${x.price || ""}`));
+          addedNow = fresh.length;
+          return fresh.length ? [...fresh, ...prev] : prev;
+        });
+        setLastAutoAt(new Date());
+        if (addedNow > 0) void hydrateExactPrices(listings);
+      } else {
+        setResults(listings);
+        setExactPrices({});
+        void hydrateExactPrices(listings);
+      }
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
