@@ -110,6 +110,29 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     };
   };
 
+  /** Anunțuri deja salvate care se potrivesc cu căutarea — ca să avem mereu linkuri. */
+  const fetchExisting = async (base: string, platforms: string[]): Promise<AdHocListing[]> => {
+    const words = base.split(/\s+/).filter(w => w.length >= 3).slice(0, 3);
+    let q = supabase
+      .from("prospect_listings")
+      .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(25);
+    for (const w of words) q = q.ilike("title", `%${w}%`);
+    if (platform !== ALL_PLATFORMS) q = q.in("source_platform", platforms);
+    const { data, error } = await q;
+    if (error) return [];
+    return (data ?? []).map((r: any) => ({
+      title: r.title,
+      url: r.source_url,
+      price: r.price,
+      phone: r.contact_phone,
+      zone: r.zone,
+      rooms: r.rooms,
+      source_platform: r.source_platform,
+    }));
+  };
+
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
