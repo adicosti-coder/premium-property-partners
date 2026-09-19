@@ -720,27 +720,42 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         listings.push(l);
         existingShown++;
       }
+      const keyOf = (x: AdHocListing) => (x.url || "").trim() || `${x.title || ""}|${x.price || ""}`;
       let addedNow = listings.length;
       if (quiet) {
         // Rescanare automată: păstrăm lista și adăugăm în față doar ce e nou.
-        setResults(prev => {
-          if (!prev) return listings;
-          const have = new Set(prev.map(x => (x.url || "").trim() || `${x.title || ""}|${x.price || ""}`));
-          const fresh = listings.filter(x => !have.has((x.url || "").trim() || `${x.title || ""}|${x.price || ""}`));
+        const prev = results;
+        if (!prev) {
+          setResults(listings);
+        } else {
+          const have = new Set(prev.map(keyOf));
+          const fresh = listings.filter(x => !have.has(keyOf(x)));
           addedNow = fresh.length;
-          return fresh.length ? [...fresh, ...prev] : prev;
-        });
+          if (fresh.length) {
+            setResults([...fresh, ...prev]);
+            setFreshUrls(f =>
+              Array.from(new Set([...fresh.map(x => (x.url || "").trim()).filter(Boolean), ...f])).slice(0, 200),
+            );
+          }
+        }
         setLastAutoAt(new Date());
         if (addedNow > 0) void hydrateExactPrices(listings);
       } else {
         setResults(listings);
         setExactPrices({});
+        setFreshUrls([]);
         void hydrateExactPrices(listings);
       }
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
-      const perPlatform = ok.filter(r => r.listings.length > 0).map(r => `${r.platform}: ${r.listings.length}`).join(" · ");
+      const perMap = new Map<string, number>();
+      for (const r of ok) perMap.set(r.platform, (perMap.get(r.platform) || 0) + r.listings.length);
+      const perPlatform = Array.from(perMap.entries())
+        .filter(([, n]) => n > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([p, n]) => `${p}: ${n}`)
+        .join(" · ");
       setSummary(
         (quiet && addedNow > 0 ? `+${addedNow} anunțuri adăugate automat · ` : "") +
         `${newCount} anunțuri noi pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
@@ -1014,18 +1029,42 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         />
       </div>
 
+      <div className="space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="text-[11px] text-muted-foreground">
+            Zone (poți bifa mai multe; niciuna bifată = toată Timișoara)
+          </div>
+          {zones.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setZones([])}
+              className="text-[11px] underline text-muted-foreground hover:text-foreground"
+            >
+              Șterge zonele ({zones.length})
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-1.5 max-h-[132px] overflow-y-auto rounded-md border p-1.5">
+          {ZONE_OPTIONS.map(z => {
+            const on = zones.includes(z);
+            return (
+              <Button
+                key={z}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-8 text-[11px]"
+                onClick={() => { setZones(v => toggleIn(v, z)); setIgnoreFilters(false); }}
+              >
+                {z}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={zone} onValueChange={setZone}>
-          <SelectTrigger className="sm:w-[200px] min-h-[48px] sm:min-h-0" aria-label="Zonă">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_ZONE}>Toate zonele</SelectItem>
-            {ZONE_OPTIONS.map(z => (
-              <SelectItem key={z} value={z}>{z}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={portalFilter} onValueChange={setPortalFilter}>
           <SelectTrigger className="sm:w-[220px] min-h-[48px] sm:min-h-0" aria-label="Portalul unde apare anunțul">
             <SelectValue />
@@ -1204,6 +1243,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
+                    {freshUrls.includes((l.url || "").trim()) && (
+                      <Badge className="text-[10px] shrink-0 bg-emerald-600 text-primary-foreground hover:bg-emerald-600">
+                        NOU
+                      </Badge>
+                    )}
                     <Badge variant="default" className="text-[10px] shrink-0">
                       {listingPortal(l) || "platformă necunoscută"}
                     </Badge>
@@ -1215,14 +1259,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                         </Badge>
                       ) : null;
                     })()}
-                    {zone !== ANY_ZONE && (
-                      <Badge
-                        variant={zoneMatches(l, zone) ? "secondary" : "outline"}
-                        className="text-[10px] shrink-0"
-                      >
-                        {zoneMatches(l, zone) ? `zona ${zone} apare` : `zona ${zone} nu apare în anunț`}
-                      </Badge>
-                    )}
+                    {zones.length > 0 && (() => {
+                      const hit = zones.find(z => zoneMatches(l, z));
+                      return (
+                        <Badge variant={hit ? "secondary" : "outline"} className="text-[10px] shrink-0">
+                          {hit ? `zona ${hit}` : "zona cerută nu apare în anunț"}
+                        </Badge>
+                      );
+                    })()}
                     {l.url ? (
                       <a
                         href={l.url}
