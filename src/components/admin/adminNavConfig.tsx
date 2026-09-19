@@ -4,7 +4,7 @@ import {
   Sparkles, BarChart3, Star,
   Mail, MailCheck, Megaphone, Euro, PenLine, BookOpen, Lightbulb, Play,
   MousePointerClick, Target, Activity, FlaskConical,
-  Film, MapPin, Wrench, Shield, ShieldCheck, Brain, Radar,
+  Film, MapPin, Wrench, Shield, ShieldCheck, Brain, Radar, Clock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -63,6 +63,18 @@ export const ADMIN_GROUPS: AdminGroup[] = [
           "cuvinte cheie", "scraper", "radar", "zona", "bloc", "nordone",
           "fructus", "city of mara", "ring", "ateneo", "xcity", "denya", "vivalia", "monarh",
         ],
+      },
+      {
+        value: "saved-listings",
+        label: "Anunțuri salvate",
+        icon: Radar,
+        keywords: ["salvate", "anunturi salvate", "preț", "pret", "telefon", "link", "durata sursa", "compar", "prospect"],
+      },
+      {
+        value: "expired-listings",
+        label: "Anunțuri expirate",
+        icon: Clock,
+        keywords: ["expirate", "expirat", "sterse", "inactive", "data expirarii", "istoric anunturi"],
       },
       { value: "properties", label: "Proprietăți", icon: Building },
       { value: "cazare", label: "Cazare", icon: Hotel },
