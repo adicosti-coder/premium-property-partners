@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
 
   for (const row of listings || []) {
     if (Date.now() - startedAt > GLOBAL_BUDGET_MS) break;
-    const url = String(row.listing_url || "");
+    const url = String(row.source_url || "");
     if (!url || !isUrlAllowed(url).ok) continue;
 
     checked++;
