@@ -771,9 +771,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           <div className="text-xs text-muted-foreground mb-1">
             {summary || `${results.length} anunțuri`}
             {matched.length !== results.length && <> · {matched.length} respectă filtrele</>}
-            {preferredZones.length > 0 && reserve.length > 0 && (
-              <> · {reserve.length} în listă de rezervă (în afara zonelor preferate)</>
-            )}
           </div>
           <div className="flex items-center gap-2 mb-2">
             <Button
@@ -781,7 +778,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               size="sm"
               variant="outline"
               disabled={pricing}
-              onClick={() => hydrateExactPrices([...main, ...reserve])}
+              onClick={() => hydrateExactPrices(main)}
               className="h-8 text-xs"
             >
               {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
@@ -795,19 +792,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Niciun anunț nu respectă filtrele alese{preferredZones.length > 0 ? " în zonele preferate" : ""}.
+              Niciun anunț nu respectă filtrele alese.
             </p>
-          )}
-
-          {reserve.length > 0 && (
-            <div className="mt-3">
-              <div className="text-xs font-medium mb-1">
-                Listă de rezervă · {reserve.length} anunțuri în afara zonelor preferate
-              </div>
-              <div className="border rounded-lg divide-y max-h-[320px] overflow-y-auto bg-muted/30">
-                {reserve.map(renderRow)}
-              </div>
-            </div>
           )}
         </div>
         );
