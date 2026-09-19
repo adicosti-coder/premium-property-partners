@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, X } from "lucide-react";
+import { ExternalLink, Loader2, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
 
