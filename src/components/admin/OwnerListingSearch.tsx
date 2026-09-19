@@ -375,6 +375,31 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
 
   /**
+   * Verifică scăderile de preț apărute la anunțurile găsite acum și le trimite
+   * în „Scăderi de preț" (prag 3–5%, setat de administrator în acel tab).
+   */
+  const checkPriceDrops = async () => {
+    const saved = Number(window.localStorage.getItem("rt_price_drop_threshold"));
+    const minPct = Number.isFinite(saved) && saved >= 3 && saved <= 5 ? saved : 3;
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-price-drop-alert", {
+        body: { min_pct: minPct, min_abs: 0, hours: 2 },
+      });
+      if (error) return;
+      const drops = Number((data as any)?.drops || 0);
+      if (drops > 0) {
+        toast({
+          title: `${drops} scădere(i) de preț de cel puțin ${minPct}%`,
+          description: "Vezi detaliile în Admin → Scăderi de preț.",
+        });
+        window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
+      }
+    } catch {
+      /* alerta nu trebuie să blocheze căutarea */
+    }
+  };
+
+  /**
    * Deschide paginile reale ale anunțurilor și citește prețul exact publicat acolo.
    * Rezultatele înlocuiesc prețul aproximativ din listă.
    */
@@ -393,6 +418,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         if (value != null) exact[u] = value;
       }
       setExactPrices(prev => ({ ...prev, ...exact }));
+      // Prețurile citite acum sunt salvate în istoric; verificăm imediat scăderile.
+      void checkPriceDrops();
     } catch (e: any) {
       toast({ title: "Nu am putut citi prețurile exacte", description: e.message, variant: "destructive" });
     } finally {

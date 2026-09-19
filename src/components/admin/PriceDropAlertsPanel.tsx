@@ -49,6 +49,7 @@ export default function PriceDropAlertsPanel() {
   const [rows, setRows] = useState<Row[]>([]);
   const [titles, setTitles] = useState<Titles>({});
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [days, setDays] = useState("30");
   const [platform, setPlatform] = useState("all");
   const [threshold, setThreshold] = useState<number>(() => {
@@ -128,6 +129,26 @@ export default function PriceDropAlertsPanel() {
     () => filtered.filter((r) => r.recorded_at && Date.now() - new Date(r.recorded_at).getTime() < 86_400_000),
     [filtered],
   );
+
+  /** Rulează verificarea imediat, cu pragul ales aici (3–5%). */
+  const checkNow = async () => {
+    setChecking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("prospect-price-drop-alert", {
+        body: { min_pct: threshold, min_abs: 0, hours: 24 },
+      });
+      if (error) throw error;
+      const drops = Number((data as { drops?: number } | null)?.drops || 0);
+      toast[drops ? "success" : "info"](
+        drops ? `${drops} scădere(i) de preț de cel puțin ${threshold}%` : "Nicio scădere nouă de preț",
+      );
+      await load();
+    } catch (e) {
+      toast.error("Nu am putut verifica scăderile de preț");
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const exportCsv = () => {
     downloadCsv(
@@ -233,6 +254,10 @@ export default function PriceDropAlertsPanel() {
           <Button variant="outline" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Reîncarcă
+          </Button>
+          <Button variant="outline" onClick={checkNow} disabled={checking}>
+            <BellRing className={`h-4 w-4 mr-2 ${checking ? "animate-pulse" : ""}`} />
+            Verifică scăderile acum
           </Button>
           <Button variant="outline" onClick={exportCsv} disabled={!filtered.length}>
             <Download className="h-4 w-4 mr-2" />
