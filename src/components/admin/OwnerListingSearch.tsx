@@ -34,7 +34,6 @@ export interface AdHocListing {
 const ALL_PLATFORMS = "__all__";
 const ANY_ZONE = "__anyzone__";
 const ANY_DEAL = "__anydeal__";
-const ANY_ROOMS = "__anyrooms__";
 
 const PLATFORM_OPTIONS = [
   "OLX",
