@@ -40,18 +40,62 @@ const PLATFORM_OPTIONS = [
 
 const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
 
+/** Cartierele și zonele Timișoarei + comunele limitrofe (ordine alfabetică pe grupe). */
 const ZONE_OPTIONS = [
-  "Calea Lipovei",
-  "Aradului",
-  "Torontalului",
-  "Circumvalațiunii",
-  "Dumbrăvița",
-  "Girocului",
+  // Zone centrale
   "Cetate / Centru",
-  "Iosefin",
-  "Fabric",
-  "Șagului",
   "Complex Studențesc",
+  "Elisabetin",
+  "Fabric",
+  "Iosefin",
+  "Mehala",
+  "Traian",
+  // Nord
+  "Aradului",
+  "Bucovina",
+  "Calea Lipovei",
+  "Circumvalațiunii",
+  "Lipovei",
+  "Torontalului",
+  "Ronaț",
+  "Take Ionescu",
+  // Est
+  "Blașcovici",
+  "Dâmbovița",
+  "Olimpia / Stadion",
+  "Steaua",
+  "Soarelui",
+  // Sud
+  "Girocului",
+  "Braytim",
+  "Buziașului",
+  "Lunei",
+  "Șagului",
+  "Timiș / Calea Martirilor",
+  "Zona Medicină",
+  // Vest
+  "Freidorf",
+  "Kuncz",
+  "Plopi",
+  "Ciarda Roșie",
+  "Calea Buziașului",
+  "Calea Șagului",
+  "Calea Torontalului",
+  "Calea Aradului",
+  "Modern",
+  "Tipografilor",
+  "UMT",
+  "Zona Gării",
+  // Comune limitrofe
+  "Dumbrăvița",
+  "Giroc",
+  "Chișoda",
+  "Moșnița Nouă",
+  "Ghiroda",
+  "Sânmihaiu Român",
+  "Șag",
+  "Remetea Mare",
+  "Săcălaz",
 ];
 
 const PROPERTY_TYPES = [
