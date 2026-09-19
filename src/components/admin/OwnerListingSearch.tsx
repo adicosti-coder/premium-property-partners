@@ -193,6 +193,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       const listings: AdHocListing[] = [];
       for (const r of ok) {
         for (const l of r.listings) {
+          if (!isIndividualAd(l)) { generic++; continue; }
           const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
           if (key && seen.has(key)) continue;
           if (key) seen.add(key);
