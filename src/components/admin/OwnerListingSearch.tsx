@@ -93,7 +93,6 @@ const ZONE_OPTIONS = [
   "Moșnița Nouă",
   "Ghiroda",
   "Sânmihaiu Român",
-  "Sacalaz",
   "Șag",
   "Remetea Mare",
   "Săcălaz",
