@@ -141,6 +141,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [onlyWithPhone, setOnlyWithPhone] = useState(false);
+  /** Filtru pe portalul unde a fost găsit anunțul (se aplică pe rezultate). */
+  const [portalFilter, setPortalFilter] = useState<string>(ALL_PLATFORMS);
   const [results, setResults] = useState<AdHocListing[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
