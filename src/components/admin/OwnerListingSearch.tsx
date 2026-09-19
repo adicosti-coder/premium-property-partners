@@ -628,6 +628,17 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                         Copiază linkul
                       </button>
                     )}
+                    {l.url && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-[11px]"
+                        onClick={() => markExpired(l)}
+                      >
+                        Expirat
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
