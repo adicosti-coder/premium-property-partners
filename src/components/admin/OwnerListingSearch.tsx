@@ -110,12 +110,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       .replace(/\s+/g, " ")
       .trim();
 
-  /** Anunțul aparține zonei date (după câmpul zone sau titlu). */
-  const zoneMatches = (l: AdHocListing, z: string) => {
-    const needle = norm(z.split("/")[0]);
-    if (!needle) return false;
-    return norm(`${l.zone || ""} ${l.title || ""}`).includes(needle);
-  };
+  /** Anunțul aparține zonei date — acceptă toate denumirile de pe portaluri. */
+  const zoneMatches = (l: AdHocListing, z: string) =>
+    zoneMatchesText(`${l.zone || ""} ${l.title || ""}`, z);
 
   const loadPreferredZones = async () => {
     const { data } = await supabase
