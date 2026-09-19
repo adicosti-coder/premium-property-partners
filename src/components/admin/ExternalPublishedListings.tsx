@@ -263,6 +263,27 @@ export default function ExternalPublishedListings() {
               </div>
               <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
                 <span className="font-medium text-foreground">{eur(r.price)}</span>
+                {r.url && livePrices[r.url] != null && (
+                  <span className="font-medium text-emerald-600">
+                    live: {eur(livePrices[r.url] as number)}
+                    {r.price != null && Number(livePrices[r.url]) !== Number(r.price) && (
+                      <span className="ml-1 text-amber-600">
+                        ({Number(livePrices[r.url]) > Number(r.price) ? "+" : ""}
+                        {Math.round(Number(livePrices[r.url]) - Number(r.price)).toLocaleString("ro-RO")} €)
+                      </span>
+                    )}
+                  </span>
+                )}
+                {r.url && (
+                  <button
+                    type="button"
+                    onClick={() => void checkLivePrices([r.url as string])}
+                    className="underline hover:text-foreground"
+                    disabled={checking}
+                  >
+                    Verifică prețul live
+                  </button>
+                )}
                 {r.price && r.size ? <span>{Math.round(Number(r.price) / Number(r.size)).toLocaleString("ro-RO")} €/mp</span> : null}
                 {r.zone && <span>{r.zone}</span>}
                 <span>Publicat: {dateRo(r.publishedAt)}</span>
