@@ -261,6 +261,32 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   };
 
 
+  /**
+   * Deschide paginile reale ale anunțurilor și citește prețul exact publicat acolo.
+   * Rezultatele înlocuiesc prețul aproximativ din listă.
+   */
+  const hydrateExactPrices = async (list: AdHocListing[]) => {
+    const urls = list.map(l => (l.url || "").trim()).filter(Boolean).slice(0, 12);
+    if (!urls.length) return;
+    setPricing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-listing-prices", { body: { urls } });
+      if (error) throw error;
+      const map = (data as any)?.prices as Record<string, { price: number | null; rent: number | null }> | undefined;
+      if (!map) return;
+      const exact: Record<string, number> = {};
+      for (const [u, v] of Object.entries(map)) {
+        const value = v?.price ?? v?.rent ?? null;
+        if (value != null) exact[u] = value;
+      }
+      setExactPrices(prev => ({ ...prev, ...exact }));
+    } catch (e: any) {
+      toast({ title: "Nu am putut citi prețurile exacte", description: e.message, variant: "destructive" });
+    } finally {
+      setPricing(false);
+    }
+  };
+
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
@@ -310,6 +336,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         existingShown++;
       }
       setResults(listings);
+      setExactPrices({});
+      void hydrateExactPrices(listings);
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
