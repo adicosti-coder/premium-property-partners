@@ -696,7 +696,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (!quiet) toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
     }
-    if (runningRef.current) return;
+    if (runningRef.current) {
+      // O scanare rulează deja (manual sau automat) — nu o pornim de două ori.
+      if (!quiet) {
+        toast({ title: "Căutarea rulează deja", description: "Așteaptă câteva secunde, rezultatele apar singure." });
+      }
+      return;
+    }
     runningRef.current = true;
     lastTermRef.current = base;
     if (!quiet) {
