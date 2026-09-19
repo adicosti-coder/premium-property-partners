@@ -150,10 +150,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const fetchFor = async (w?: string) => {
       let q = supabase
         .from("prospect_listings")
-        .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at")
+        .select("title,source_url,price,contact_phone,zone,rooms,source_platform,updated_at,last_seen_at")
         .not("source_url", "is", null)
+        // fără anunțuri expirate / dezactivate
+        .eq("is_active", true)
+        .not("lifecycle_status", "in", "(expired,rejected)")
         .order("updated_at", { ascending: false })
         .limit(25);
+
       if (w) q = q.or(`title.ilike.%${w}%,zone.ilike.%${w}%,address.ilike.%${w}%`);
       if (platform !== ALL_PLATFORMS) q = q.in("source_platform", platforms);
       const { data, error } = await q;
@@ -176,15 +180,24 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
     if (rows.length === 0) rows = await fetchFor();
 
-    return rows.map((r: any) => ({
-      title: r.title,
-      url: r.source_url,
-      price: r.price,
-      phone: r.contact_phone,
-      zone: r.zone,
-      rooms: r.rooms,
-      source_platform: r.source_platform,
-    }));
+    // Eliminăm anunțurile marcate expirate sau nemaivăzute de peste 21 de zile.
+    const staleBefore = Date.now() - 21 * 24 * 60 * 60 * 1000;
+    return rows
+      .filter((r: any) => !/expirat|expired|inactiv|dezactivat/i.test(String(r.title || "")))
+      .filter((r: any) => {
+        const seen = r.last_seen_at ? new Date(r.last_seen_at).getTime() : null;
+        return seen === null || seen >= staleBefore;
+      })
+      .map((r: any) => ({
+        title: r.title,
+        url: r.source_url,
+        price: r.price,
+        phone: r.contact_phone,
+        zone: r.zone,
+        rooms: r.rooms,
+        source_platform: r.source_platform,
+      }));
+
   };
 
 
