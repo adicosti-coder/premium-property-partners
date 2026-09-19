@@ -365,7 +365,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
     const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
     const wantedZones = zones;
-    const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
+    // Cuvintele de legătură (de, cu, la, pe...) nu sunt cerințe de căutare.
+    const STOPWORDS = new Set(["de", "cu", "la", "pe", "in", "din", "si", "sau", "un", "o", "al", "ale", "pentru", "camere", "camera"]);
+    const searchTokens = norm(search)
+      .split(" ")
+      .filter(token => !STOPWORDS.has(token))
+      .filter(token => token.length >= 3 || /^\d+$/.test(token));
 
     const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
     const normalizedText = ` ${norm(rawText)} `;
