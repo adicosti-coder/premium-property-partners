@@ -725,7 +725,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       for (const r of ok) {
         for (const l of r.listings) {
           if (!isIndividualAd(l)) { generic++; continue; }
-          const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
+          const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
           if (key && seen.has(key)) continue;
           if (key) seen.add(key);
           listings.push(l);
@@ -739,13 +739,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       for (const l of existing) {
         if (!(l.url || "").trim()) continue; // salvate deja verificate; cerem doar link
 
-        const key = (l.url || "").trim() || `${l.title || ""}|${l.price || ""}`;
+        const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
         if (key && seen.has(key)) continue;
         if (key) seen.add(key);
         listings.push(l);
         existingShown++;
       }
-      const keyOf = (x: AdHocListing) => (x.url || "").trim() || `${x.title || ""}|${x.price || ""}`;
+      const keyOf = (x: AdHocListing) => normalizeAdUrl(x.url) || `${x.title || ""}|${x.price || ""}`;
       let addedNow = listings.length;
       if (quiet) {
         // Rescanare automată: păstrăm lista și adăugăm în față doar ce e nou.
@@ -759,7 +759,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           if (fresh.length) {
             setResults([...fresh, ...prev]);
             setFreshUrls(f =>
-              Array.from(new Set([...fresh.map(x => (x.url || "").trim()).filter(Boolean), ...f])).slice(0, 200),
+              Array.from(new Set([...fresh.map(x => normalizeAdUrl(x.url)).filter(Boolean), ...f])).slice(0, 200),
             );
           }
         }
@@ -849,12 +849,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           if (!isIndividualAd(l)) return;
           setResults(prev => {
             if (!prev) return prev; // nicio căutare activă
-            const key = (l.url || "").trim();
-            if (prev.some(x => (x.url || "").trim() === key)) return prev;
+            const key = normalizeAdUrl(l.url);
+            if (prev.some(x => normalizeAdUrl(x.url) === key)) return prev;
             return [l, ...prev];
           });
           setFreshUrls(f => {
-            const key = (l.url || "").trim();
+            const key = normalizeAdUrl(l.url);
             return key ? Array.from(new Set([key, ...f])).slice(0, 200) : f;
           });
           setLastAutoAt(new Date());
@@ -1272,7 +1272,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
-                    {freshUrls.includes((l.url || "").trim()) && (
+                    {freshUrls.includes(normalizeAdUrl(l.url)) && (
                       <Badge className="text-[10px] shrink-0 bg-emerald-600 text-primary-foreground hover:bg-emerald-600">
                         NOU
                       </Badge>
