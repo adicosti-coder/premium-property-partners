@@ -843,11 +843,36 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               Verifică prețurile exacte
             </Button>
             {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
+            {results.length > 0 && (
+              <Button
+                type="button"
+                size="sm"
+                variant={ignoreFilters ? "default" : "outline"}
+                className="h-8 text-xs"
+                onClick={() => setIgnoreFilters(v => !v)}
+              >
+                {ignoreFilters
+                  ? `Doar cele care respectă filtrele (${matched.length})`
+                  : `Arată toate anunțurile găsite (${results.length})`}
+              </Button>
+            )}
           </div>
           {main.length > 0 ? (
-            <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
-              {main.map(renderRow)}
-            </div>
+            <>
+              <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
+                {main.map(renderRow)}
+              </div>
+              {rest.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Alte {rest.length} anunțuri găsite, care nu respectă toate filtrele — cu link direct:
+                  </p>
+                  <div className="border rounded-lg divide-y max-h-[320px] overflow-y-auto bg-background/40 opacity-90">
+                    {rest.map(renderRow)}
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
