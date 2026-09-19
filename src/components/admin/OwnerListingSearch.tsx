@@ -112,6 +112,38 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     };
   };
 
+  /**
+   * Păstrează doar anunțuri individuale de proprietari.
+   * Elimină paginile generice de căutare/listare ale platformelor.
+   */
+  const isIndividualAd = (l: AdHocListing): boolean => {
+    const url = (l.url || "").trim();
+    if (!url) return false;
+    let path = url;
+    let hasQuery = false;
+    try {
+      const u = new URL(url);
+      path = u.pathname;
+      hasQuery = u.search.length > 1;
+    } catch {
+      /* fallback pe string brut */
+    }
+    const lowerPath = path.toLowerCase();
+    // pagini de căutare / liste / filtre
+    const genericPath = /(caut|search|rezultate|results|filtr|anunturi\/?$|oferte\/?$|lista|categorie|category|zona\/|cartier\/|\/q\/|\/sitemap)/.test(
+      lowerPath,
+    );
+    if (genericPath || hasQuery) return false;
+    // un anunț individual are un identificator în URL (id numeric sau slug lung cu hash)
+    const last = lowerPath.replace(/\/+$/, "").split("/").pop() || "";
+    const looksLikeAd = /\d{4,}/.test(last) || /-[a-z0-9]{6,}$/.test(last) || /ID[a-zA-Z0-9]{4,}/.test(last);
+    if (!looksLikeAd) return false;
+    // titluri de tip listă
+    const title = (l.title || "").toLowerCase();
+    if (/^(apartamente|case|garsoniere|terenuri|imobile|anunturi|anunțuri)\b/.test(title)) return false;
+    return true;
+  };
+
   /** Anunțuri deja salvate care se potrivesc cu căutarea — ca să avem mereu linkuri. */
   const fetchExisting = async (base: string, platforms: string[]): Promise<AdHocListing[]> => {
     const words = base.split(/\s+/).filter(w => w.length >= 3).slice(0, 3);
