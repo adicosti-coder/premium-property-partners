@@ -289,6 +289,27 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
   };
 
+  /** Marchează manual un anunț ca expirat, ca să nu mai apară în căutări și rapoarte. */
+  const markExpired = async (l: AdHocListing) => {
+    const url = (l.url || "").trim();
+    if (!url) return;
+    const { data, error } = await supabase
+      .from("prospect_listings")
+      .update({ is_active: false, lifecycle_status: "expired" } as never)
+      .eq("source_url", url)
+      .select("id");
+    if (error) {
+      toast({ title: "Nu am putut marca anunțul", description: error.message, variant: "destructive" });
+      return;
+    }
+    setResults(prev => (prev ? prev.filter(x => (x.url || "").trim() !== url) : prev));
+    toast({
+      title: "Marcat ca expirat",
+      description: data?.length ? "Anunțul a fost scos din listă." : "Anunțul nu era salvat, dar a fost ascuns din rezultate.",
+    });
+    window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
+  };
+
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
