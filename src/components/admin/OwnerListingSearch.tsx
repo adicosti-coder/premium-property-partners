@@ -155,6 +155,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [sort, setSort] = useState<SortValue>("relevance");
   /** An construcție (interval), ca pe portaluri. */
   const [yearFilter, setYearFilter] = useState<string>(ANY_YEAR);
+  /** Scanare automată: caută periodic și adaugă anunțurile noi fără click. */
+  const [autoLive, setAutoLive] = useState<boolean>(() => {
+    try { return window.localStorage.getItem("rt_owner_search_auto") !== "0"; } catch { return true; }
+  });
+  const [lastAutoAt, setLastAutoAt] = useState<Date | null>(null);
+  /** Ultimul termen căutat, ca rescanarea automată să folosească același text. */
+  const lastTermRef = useRef<string>("");
+  const runningRef = useRef(false);
 
   /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
   const norm = (s: string) =>
