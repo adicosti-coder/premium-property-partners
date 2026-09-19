@@ -815,6 +815,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   // Referință la ultima versiune a căutării, pentru rescanarea automată.
   const runRef = useRef(run);
   runRef.current = run;
+  // Termenul curent, ca să nu repornim cronometrul la fiecare literă scrisă.
+  const searchRef = useRef(search);
+  searchRef.current = search;
 
   /** Scanare automată la fiecare 2 minute, cât timp pagina este deschisă. */
   useEffect(() => {
@@ -822,13 +825,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     if (!autoLive) return;
     const tick = () => {
       if (document.hidden) return;
-      const base = (lastTermRef.current || search).trim();
+      const base = (lastTermRef.current || searchRef.current).trim();
       if (base.length < 3) return;
       void runRef.current(base, { quiet: true });
     };
     const id = window.setInterval(tick, 120_000);
     return () => window.clearInterval(id);
-  }, [autoLive, search]);
+  }, [autoLive]);
 
   /** Anunțurile salvate de scraper apar imediat în listă, fără reîncărcare. */
   useEffect(() => {
