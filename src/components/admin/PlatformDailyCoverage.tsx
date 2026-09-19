@@ -46,6 +46,8 @@ const normPlatform = (p: string | null) => {
   return p as string;
 };
 
+const ALL_ZONES = "__all_zones__";
+
 export default function PlatformDailyCoverage() {
   const [raw, setRaw] = useState<Raw[]>([]);
   const [hist, setHist] = useState<HistRow[]>([]);
