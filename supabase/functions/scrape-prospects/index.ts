@@ -534,6 +534,63 @@ function canonicalPlatform(label: string, url: string): string {
 
 interface FreeResult { url: string; title?: string; markdown?: string; description?: string }
 
+function decodeBasicHtml(text: string): string {
+  return text
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Direct portal searches often expose only a URL or a CSS-contaminated anchor.
+ * For manual searches, read the real ad page so keyword/room/deal filters work
+ * against its title and description instead of discarding a valid result.
+ */
+async function hydrateFreeResult(result: FreeResult): Promise<FreeResult> {
+  const current = `${result.title || ''} ${result.markdown || ''} ${result.description || ''}`.trim();
+  const sparse = current.length < 45 || /(?:listing|display:block|object-fit|aspect-ratio|width:100%)/i.test(current);
+  if (!sparse) return result;
+
+  const referer = (() => { try { return new URL(result.url).origin + '/'; } catch { return undefined; } })();
+  const { ok, html } = await fetchHtml(result.url, 4000, referer);
+  if (!ok || !html) return result;
+
+  const pick = (patterns: RegExp[]): string => {
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) return decodeBasicHtml(match[1].replace(/<[^>]+>/g, ' '));
+    }
+    return '';
+  };
+  const title = pick([
+    /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i,
+    /<title[^>]*>([\s\S]*?)<\/title>/i,
+    /<h1[^>]*>([\s\S]*?)<\/h1>/i,
+  ]);
+  const description = pick([
+    /<meta[^>]+(?:name|property)=["'](?:description|og:description)["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["'](?:description|og:description)["']/i,
+  ]);
+  const jsonLdText = Array.from(html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi))
+    .map((match) => match[1])
+    .join(' ')
+    .slice(0, 12000);
+  const combined = `${title} ${description} ${decodeBasicHtml(jsonLdText)}`.trim().slice(0, 12000);
+  return {
+    ...result,
+    title: title || result.title,
+    description: description || result.description,
+    markdown: combined || result.markdown,
+  };
+}
+
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
   const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
@@ -1743,13 +1800,15 @@ Deno.serve(async (req) => {
           const searchResults = outcome.results;
           console.log(`Found ${searchResults.length} results from ${platform} (source=${outcome.source}, mode=${scanMode})`);
 
-          for (const result of searchResults) {
+          for (const rawResult of searchResults) {
             if (Date.now() - scanStartedAt > MAX_BACKGROUND_RUNTIME_MS) {
               await markTimedOut(Math.min(i + BATCH_SIZE, queries.length), queries.length);
               return;
             }
-            const url = result.url;
+            const url = rawResult.url;
             if (!url) continue;
+
+            const result = customQuery ? await hydrateFreeResult(rawResult) : rawResult;
 
             // New-yield mode: skip already-known source URLs before any costly
             // filters/phone hydration. The previous flow spent most of the 50s
