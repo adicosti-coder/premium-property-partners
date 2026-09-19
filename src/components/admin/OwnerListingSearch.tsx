@@ -570,6 +570,17 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             ))}
           </SelectContent>
         </Select>
+        <Select value={portalFilter} onValueChange={setPortalFilter}>
+          <SelectTrigger className="sm:w-[220px] min-h-[48px] sm:min-h-0" aria-label="Portalul unde apare anunțul">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_PLATFORMS}>Toate portalurile (rezultate)</SelectItem>
+            {PLATFORM_OPTIONS.map(p => (
+              <SelectItem key={p} value={p}>Doar de pe {p}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <AddAgencyPhoneDialog size="default" className="min-h-[48px] sm:min-h-0" />
       </div>
 
