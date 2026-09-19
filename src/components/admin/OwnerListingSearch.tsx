@@ -712,6 +712,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         // Filtrele se aplică strict: afișăm DOAR anunțurile care le respectă, fără listă de rezervă.
         const matched = filterListings(results);
         const main = ignoreFilters ? results : matched;
+        const rest = ignoreFilters ? [] : results.filter(r => !matched.includes(r));
 
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
