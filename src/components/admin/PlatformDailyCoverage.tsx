@@ -207,6 +207,17 @@ export default function PlatformDailyCoverage() {
                 <SelectItem value="30">Ultimele 30 zile</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={zoneFilter} onValueChange={setZoneFilter}>
+              <SelectTrigger className="w-[190px]" aria-label="Zona de pe portaluri">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[320px]">
+                <SelectItem value={ALL_ZONES}>Toate zonele</SelectItem>
+                {PORTAL_ZONE_LABELS.map((z) => (
+                  <SelectItem key={z} value={z}>{z}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
