@@ -45,20 +45,30 @@ const normPlatform = (p: string | null) => {
 
 export default function PlatformDailyCoverage() {
   const [raw, setRaw] = useState<Raw[]>([]);
+  const [hist, setHist] = useState<HistRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [days, setDays] = useState("14");
 
   const load = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - Number(days) * 86400000).toISOString();
-    const { data, error } = await supabase
-      .from("prospect_listings")
-      .select("source_platform,created_at,last_seen_at")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(10000);
-    if (error) toast.error("Nu am putut încărca datele pe platforme");
-    setRaw((data || []) as unknown as Raw[]);
+    const [listings, history] = await Promise.all([
+      supabase
+        .from("prospect_listings")
+        .select("source_platform,created_at,last_seen_at,price,price_per_sqm")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(10000),
+      supabase
+        .from("prospect_price_history")
+        .select("listing_id,source_platform,price,recorded_at")
+        .gte("recorded_at", since)
+        .order("recorded_at", { ascending: true })
+        .limit(10000),
+    ]);
+    if (listings.error) toast.error("Nu am putut încărca datele pe platforme");
+    setRaw((listings.data || []) as unknown as Raw[]);
+    setHist((history.data || []) as unknown as HistRow[]);
     setLoading(false);
   }, [days]);
 
