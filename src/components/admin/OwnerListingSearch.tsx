@@ -99,6 +99,63 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [searching, setSearching] = useState(false);
   const [pricing, setPricing] = useState(false);
   const [exactPrices, setExactPrices] = useState<Record<string, number>>({});
+  const [preferredZones, setPreferredZones] = useState<string[]>([]);
+  const [newZone, setNewZone] = useState("");
+  const [savingZone, setSavingZone] = useState(false);
+
+  /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9 ]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  /** Anunțul aparține zonei date (după câmpul zone sau titlu). */
+  const zoneMatches = (l: AdHocListing, z: string) => {
+    const needle = norm(z.split("/")[0]);
+    if (!needle) return false;
+    return norm(`${l.zone || ""} ${l.title || ""}`).includes(needle);
+  };
+
+  const loadPreferredZones = async () => {
+    const { data } = await supabase
+      .from("admin_preferred_zones")
+      .select("zone")
+      .order("zone", { ascending: true });
+    setPreferredZones(((data ?? []) as { zone: string }[]).map(r => r.zone));
+  };
+
+  useEffect(() => { void loadPreferredZones(); }, []);
+
+  const addPreferredZone = async () => {
+    const z = newZone.trim();
+    if (z.length < 3) {
+      toast({ title: "Scrie numele zonei", description: "Ex: Dumbrăvița" });
+      return;
+    }
+    setSavingZone(true);
+    const { error } = await supabase.from("admin_preferred_zones").insert({ zone: z } as never);
+    setSavingZone(false);
+    if (error) {
+      toast({ title: "Nu am putut adăuga zona", description: error.message, variant: "destructive" });
+      return;
+    }
+    setNewZone("");
+    await loadPreferredZones();
+    toast({ title: "Zonă adăugată", description: z });
+  };
+
+  const removePreferredZone = async (z: string) => {
+    const { error } = await supabase.from("admin_preferred_zones").delete().eq("zone", z);
+    if (error) {
+      toast({ title: "Nu am putut șterge zona", description: error.message, variant: "destructive" });
+      return;
+    }
+    setPreferredZones(prev => prev.filter(x => x !== z));
+  };
 
   /** Extrage prima valoare numerică dintr-un preț de tip "55.000 €" sau 2021450. */
   const priceValue = (p: AdHocListing["price"]): number | null => {
