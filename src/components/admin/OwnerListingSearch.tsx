@@ -569,7 +569,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     // restul bifelor se aplică la filtrarea rezultatelor.
     const typePart = types[0] ?? "";
     const partitionPart = partitions.length === 1 ? partitions[0] : "";
-    const floorPart = floor === "parter" ? "parter" : floor === "last" ? "ultimul etaj" : floor === "mansarda" ? "mansarda" : "";
+    const onlyFloor = floors.length === 1 ? floors[0] : "";
+    const floorPart = onlyFloor === "parter" ? "parter" : onlyFloor === "last" ? "ultimul etaj" : onlyFloor === "mansarda" ? "mansarda" : "";
     const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
