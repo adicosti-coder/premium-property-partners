@@ -256,7 +256,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const otherTypes = PROPERTY_TYPES.map(t => t.value).filter(v => v !== type);
         if (otherTypes.some(v => text.includes(v))) return false;
       }
-      if (zoneWord && !nText.includes(zoneWord) && !norm(l.zone).includes(zoneWord)) return false;
+      if (zoneWord && !nText.includes(zoneWord) && !norm(l.zone || "").includes(zoneWord)) return false;
       const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
       // preț necunoscut → păstrăm anunțul, poate fi verificat cu „Verifică prețurile exacte”
       if (min !== null && price !== null && price < min) return false;
