@@ -240,6 +240,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     return list.filter(l => {
       const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
       if (onlyWithPhone && !l.phone) return false;
+      if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
         const r = typeof l.rooms === "number" ? l.rooms : null;
         const fromTitle = /(\d)\s*camer/.exec(text);
