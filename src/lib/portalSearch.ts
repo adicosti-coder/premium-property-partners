@@ -237,3 +237,166 @@ export function priceValue(p: number | string | null | undefined): number | null
   const n = Number(digits);
   return Number.isFinite(n) ? n : null;
 }
+
+/** Starea completă a filtrelor, ca pe portaluri. */
+export interface PortalFilters {
+  q: string;
+  transaction: string; // "" = toate
+  types: string[];
+  rooms: string[];
+  partitions: string[];
+  amenities: string[];
+  floor: string;
+  year: string;
+  minPrice: string;
+  maxPrice: string;
+  minSurface: string;
+  maxSurface: string;
+  zone: string;
+  sort: SortValue;
+}
+
+export const EMPTY_PORTAL_FILTERS: PortalFilters = {
+  q: "",
+  transaction: "",
+  types: [],
+  rooms: [],
+  partitions: [],
+  amenities: [],
+  floor: "",
+  year: "",
+  minPrice: "",
+  maxPrice: "",
+  minSurface: "",
+  maxSurface: "",
+  zone: "",
+  sort: "relevance",
+};
+
+/** Formă minimă comună a unui anunț, indiferent de sursă. */
+export interface PortalListing {
+  title: string;
+  text: string;
+  transaction?: string | null;
+  price?: number | null;
+  surface?: number | null;
+  rooms?: number | null;
+  year?: number | null;
+  zone?: string | null;
+  createdAt?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}
+
+const toInt = (s: string) => {
+  const n = Number(String(s).replace(/[^\d]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+export function matchesPortalFilters(l: PortalListing, f: PortalFilters): boolean {
+  const text = `${l.title} ${l.text} ${l.zone ?? ""}`;
+  if (!matchesAllTokens(text, tokenize(f.q))) return false;
+  if (f.transaction && l.transaction && norm(l.transaction) !== norm(f.transaction)) return false;
+  if (f.zone && !norm(`${l.zone ?? ""} ${text}`).includes(norm(f.zone))) return false;
+  if (!matchesAnyOption(f.types, PROPERTY_TYPE_OPTIONS, text)) return false;
+  if (!matchesAnyOption(f.partitions, PARTITION_OPTIONS, text)) return false;
+  if (!matchesAllOptions(f.amenities, AMENITY_OPTIONS, text)) return false;
+  if (f.floor && !matchesFloor(f.floor, text)) return false;
+  if (f.year && !matchesYear(f.year, l.year ?? null, text)) return false;
+  if (f.rooms.length > 0) {
+    const value = l.rooms ?? roomsFromText(text);
+    if (value !== null && !f.rooms.some((r) => matchesRooms(Number(r), value))) return false;
+  }
+  const surface = l.surface ?? surfaceFromText(text);
+  const minMp = toInt(f.minSurface);
+  const maxMp = toInt(f.maxSurface);
+  if (surface !== null) {
+    if (minMp !== null && surface < minMp) return false;
+    if (maxMp !== null && surface > maxMp) return false;
+  }
+  const price = l.price ?? null;
+  const minP = toInt(f.minPrice);
+  const maxP = toInt(f.maxPrice);
+  if (price !== null) {
+    if (minP !== null && price < minP) return false;
+    if (maxP !== null && price > maxP) return false;
+  }
+  return true;
+}
+
+export function sortPortalListings<T extends PortalListing>(list: T[], sort: SortValue): T[] {
+  const arr = [...list];
+  const mp = (l: PortalListing) => pricePerSqm(l.price ?? null, l.surface ?? null);
+  switch (sort) {
+    case "price-asc":
+      return arr.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+    case "price-desc":
+      return arr.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+    case "surface-desc":
+      return arr.sort((a, b) => (b.surface ?? 0) - (a.surface ?? 0));
+    case "eur-mp-asc":
+      return arr.sort((a, b) => (mp(a) ?? Infinity) - (mp(b) ?? Infinity));
+    case "newest":
+      return arr.sort(
+        (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime(),
+      );
+    default:
+      return arr;
+  }
+}
+
+/** Numărul de filtre active — pentru badge-ul „Filtre (3)”. */
+export function activeFilterCount(f: PortalFilters): number {
+  let n = 0;
+  if (f.q.trim()) n++;
+  if (f.transaction) n++;
+  if (f.zone) n++;
+  if (f.floor) n++;
+  if (f.year) n++;
+  if (f.minPrice || f.maxPrice) n++;
+  if (f.minSurface || f.maxSurface) n++;
+  n += f.types.length + f.rooms.length + f.partitions.length + f.amenities.length;
+  return n;
+}
+
+/** Filtrele în/din adresa paginii, ca pe portaluri (link partajabil). */
+export function filtersToParams(f: PortalFilters): URLSearchParams {
+  const p = new URLSearchParams();
+  const put = (k: string, v: string) => { if (v) p.set(k, v); };
+  put("q", f.q.trim());
+  put("tranzactie", f.transaction);
+  put("zona", f.zone);
+  put("etaj", f.floor);
+  put("an", f.year);
+  put("pmin", f.minPrice);
+  put("pmax", f.maxPrice);
+  put("smin", f.minSurface);
+  put("smax", f.maxSurface);
+  if (f.types.length) p.set("tip", f.types.join(","));
+  if (f.rooms.length) p.set("camere", f.rooms.join(","));
+  if (f.partitions.length) p.set("comp", f.partitions.join(","));
+  if (f.amenities.length) p.set("dotari", f.amenities.join(","));
+  if (f.sort !== "relevance") p.set("sort", f.sort);
+  return p;
+}
+
+export function paramsToFilters(p: URLSearchParams): PortalFilters {
+  const list = (k: string) => (p.get(k) ? p.get(k)!.split(",").filter(Boolean) : []);
+  const sort = (p.get("sort") ?? "relevance") as SortValue;
+  return {
+    q: p.get("q") ?? "",
+    transaction: p.get("tranzactie") ?? "",
+    types: list("tip"),
+    rooms: list("camere"),
+    partitions: list("comp"),
+    amenities: list("dotari"),
+    floor: p.get("etaj") ?? "",
+    year: p.get("an") ?? "",
+    minPrice: p.get("pmin") ?? "",
+    maxPrice: p.get("pmax") ?? "",
+    minSurface: p.get("smin") ?? "",
+    maxSurface: p.get("smax") ?? "",
+    zone: p.get("zona") ?? "",
+    sort: SORT_OPTIONS.some((o) => o.value === sort) ? sort : "relevance",
+  };
+}
