@@ -236,17 +236,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
     const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
-    const zoneWord = zone === ANY_ZONE ? null : zone.split("/")[0].trim().toLowerCase();
+    const zoneWord = zone === ANY_ZONE ? null : norm(zone.split("/")[0]);
     return list.filter(l => {
       const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
+      const nText = norm(`${l.title || ""} ${l.zone || ""}`);
       if (onlyWithPhone && !l.phone) return false;
       if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
         const r = typeof l.rooms === "number" ? l.rooms : null;
         const fromTitle = /(\d)\s*camer/.exec(text);
         const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
-        if (value === null) return false;
-        if (wantedRooms === 4 ? value < 4 : value !== wantedRooms) return false;
+        // nr. camere necunoscut → nu excludem anunțul
+        if (value !== null && (wantedRooms === 4 ? value < 4 : value !== wantedRooms)) return false;
       }
       if (deal === "vanzare" && /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
       if (deal === "inchiriere" && !/(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
@@ -255,9 +256,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const otherTypes = PROPERTY_TYPES.map(t => t.value).filter(v => v !== type);
         if (otherTypes.some(v => text.includes(v))) return false;
       }
-      if (zoneWord && l.zone && !l.zone.toLowerCase().includes(zoneWord) && !text.includes(zoneWord)) return false;
+      if (zoneWord && !nText.includes(zoneWord) && !norm(l.zone).includes(zoneWord)) return false;
       const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
-      if ((min !== null || max !== null) && price === null) return false;
+      // preț necunoscut → păstrăm anunțul, poate fi verificat cu „Verifică prețurile exacte”
       if (min !== null && price !== null && price < min) return false;
       if (max !== null && price !== null && price > max) return false;
       return true;
