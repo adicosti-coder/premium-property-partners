@@ -992,18 +992,32 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <SelectItem value="inchiriere">Doar închiriere</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={rooms} onValueChange={setRooms}>
-          <SelectTrigger className="sm:w-[150px] min-h-[48px] sm:min-h-0" aria-label="Număr de camere">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_ROOMS}>Orice nr. camere</SelectItem>
-            <SelectItem value="1">1 cameră</SelectItem>
-            <SelectItem value="2">2 camere</SelectItem>
-            <SelectItem value="3">3 camere</SelectItem>
-            <SelectItem value="4">4+ camere</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <div className="text-[11px] text-muted-foreground">Camere (poți alege mai multe)</div>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { value: "1", label: "1 cameră" },
+              { value: "2", label: "2 camere" },
+              { value: "3", label: "3 camere" },
+              { value: "4", label: "4+ camere" },
+            ].map(r => {
+              const on = rooms.includes(r.value);
+              return (
+                <Button
+                  key={r.value}
+                  type="button"
+                  size="sm"
+                  variant={on ? "default" : "outline"}
+                  aria-pressed={on}
+                  className="h-9 text-xs"
+                  onClick={() => { setRooms(v => toggleIn(v, r.value)); setIgnoreFilters(false); }}
+                >
+                  {r.label}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
         <Input
           value={minPrice}
           onChange={e => setMinPrice(e.target.value)}
