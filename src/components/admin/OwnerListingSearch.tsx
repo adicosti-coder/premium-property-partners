@@ -222,7 +222,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setTypes([]);
     setPartitions([]);
     setExtras([]);
-    setFloor(ANY_FLOOR);
+    setFloors([]);
     setMinSurface("");
     setMaxSurface("");
     setZone(ANY_ZONE);
