@@ -53,6 +53,7 @@ const loaders: Record<string, Loader> = {
   "ical-sync": () => import("@/components/admin/ICalManager"),
   prospects: () => import("@/components/admin/ProspectManager"),
   "listing-import": () => import("@/components/admin/ListingImportTabs"),
+  "owner-search": () => import("@/components/admin/OwnerListingSearch"),
   "guest-guides": () => import("@/components/admin/GuestGuideManager"),
   catalogs: () => import("@/components/admin/CatalogManager"),
   "scraper-status": () => import("@/components/admin/ScraperStatusDashboard"),

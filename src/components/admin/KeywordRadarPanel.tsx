@@ -17,6 +17,7 @@ import MyListingsCompare from "./MyListingsCompare";
 import ListingPriceReport from "./ListingPriceReport";
 import SiteVsMarketReport from "./SiteVsMarketReport";
 import SitePublishedListings from "./SitePublishedListings";
+import OwnerListingSearch from "./OwnerListingSearch";
 
 interface SourceRow {
   id: string;
@@ -369,124 +370,8 @@ export default function KeywordRadarPanel() {
         <KeywordRadarNewListings />
 
         {/* Rubrică separată: caută anunțuri de la proprietari cu orice cuvinte cheie */}
-        <div className="space-y-2 p-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5">
-          <label className="text-sm font-medium flex items-center gap-2" htmlFor="kw-search">
-            <Search className="h-4 w-4" /> Caută anunțuri de la proprietari
-          </label>
-          <p className="text-xs text-muted-foreground">
-            Scrie orice cuvinte cheie (zonă, tip, detalii) și caut direct anunțuri noi publicate de proprietari. Agențiile sunt excluse automat. Cuvintele nu se salvează în listă.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 pt-1">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="kw-search"
-                placeholder="ex: apartament 2 camere Aradului proprietar"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") runAdHocSearch(); }}
-                className="pl-8 pr-8"
-                aria-label="Cuvinte cheie pentru căutarea anunțurilor de la proprietari"
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  aria-label="Șterge căutarea"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <Select value={searchPlatform} onValueChange={setSearchPlatform}>
-              <SelectTrigger className="sm:w-[180px]" aria-label="Alege platforma de căutare">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_PLATFORMS}>Toate platformele</SelectItem>
-                {PLATFORM_OPTIONS.map(p => (
-                  <SelectItem key={p} value={p}>{p}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={runAdHocSearch} disabled={searching} className="shrink-0 min-h-[44px]">
-              {searching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
-              Caută anunțuri
-            </Button>
-          </div>
+        <OwnerListingSearch embedded />
 
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Select value={searchType} onValueChange={setSearchType}>
-              <SelectTrigger className="sm:w-[190px] min-h-[44px] sm:min-h-0" aria-label="Tip de imobil">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY_TYPE}>Orice tip de imobil</SelectItem>
-                {PROPERTY_TYPES.map(t => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={searchZone} onValueChange={setSearchZone}>
-              <SelectTrigger className="sm:w-[190px] min-h-[44px] sm:min-h-0" aria-label="Zonă">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ANY_ZONE}>Toate zonele</SelectItem>
-                {ZONE_OPTIONS.map(z => (
-                  <SelectItem key={z} value={z}>{z}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {searching && (
-            <div className="text-xs text-muted-foreground flex items-center gap-2 pt-1">
-              <Loader2 className="h-3 w-3 animate-spin" /> Caut anunțuri de la proprietari…
-            </div>
-          )}
-
-          {!searching && searchResults && (
-            <div className="pt-1">
-              <div className="text-xs text-muted-foreground mb-1">
-                {searchSummary || `${searchResults.length} anunțuri`}
-              </div>
-              {searchResults.length > 0 && (
-                <div className="border rounded-lg divide-y max-h-[360px] overflow-y-auto bg-background/60">
-                  {searchResults.map((l, idx) => (
-                    <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="default" className="text-[10px] shrink-0">
-                          {l.source_platform || l.platform || "—"}
-                        </Badge>
-                        <span className="text-xs flex-1 truncate" title={l.title || ""}>
-                          {l.title || "Anunț fără titlu"}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                        {l.zone && <span>{l.zone}</span>}
-                        {l.rooms ? <span>{l.rooms} camere</span> : null}
-                        {l.price ? <span>{String(l.price)}</span> : null}
-                        {l.phone && <span className="font-medium text-foreground">{l.phone}</span>}
-                        {l.url && (
-                          <a
-                            href={l.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline hover:text-foreground"
-                          >
-                            Deschide anunțul
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
 
         {/* Căutare pe zonă + caracteristică */}
         <div className="space-y-2 p-4 rounded-lg border-2 border-sky-500/40 bg-sky-500/5">
