@@ -192,6 +192,47 @@ export default function PlatformDailyCoverage() {
           </div>
 
           <div className="overflow-x-auto">
+            <div className="mb-1 text-xs font-medium">Rezumat pe platformă</div>
+            <table className="w-full text-sm mb-4">
+              <thead>
+                <tr className="border-b text-left text-muted-foreground">
+                  <th className="py-2 pr-3 font-medium">Platformă</th>
+                  <th className="py-2 pr-3 font-medium">Anunțuri</th>
+                  <th className="py-2 pr-3 font-medium">Preț mediu</th>
+                  <th className="py-2 pr-3 font-medium">€/mp mediu</th>
+                  <th className="py-2 pr-3 font-medium">Scăderi de preț</th>
+                  <th className="py-2 font-medium">Ultimul anunț</th>
+                </tr>
+              </thead>
+              <tbody>
+                {platforms.map((p) => {
+                  const s = stats.get(p);
+                  const avg = s && s.priceN ? Math.round(s.priceSum / s.priceN) : null;
+                  const sqm = s && s.sqmN ? Math.round(s.sqmSum / s.sqmN) : null;
+                  const ls = lastSeen.get(p);
+                  return (
+                    <tr key={p} className="border-b last:border-0">
+                      <td className="py-2 pr-3 whitespace-nowrap font-medium">{p}</td>
+                      <td className="py-2 pr-3">{s?.count ?? 0}</td>
+                      <td className="py-2 pr-3">{avg == null ? "—" : `${avg.toLocaleString("ro-RO")} €`}</td>
+                      <td className="py-2 pr-3">{sqm == null ? "—" : `${sqm.toLocaleString("ro-RO")} €`}</td>
+                      <td className="py-2 pr-3">{s?.drops ?? 0}</td>
+                      <td className="py-2 whitespace-nowrap text-muted-foreground">
+                        {ls ? new Date(ls).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {!platforms.length && (
+                  <tr>
+                    <td className="py-3 text-muted-foreground" colSpan={6}>
+                      {loading ? "Se încarcă…" : "Nicio platformă cu anunțuri."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <div className="mb-1 text-xs font-medium">Pe zi</div>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
