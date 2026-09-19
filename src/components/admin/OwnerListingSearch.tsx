@@ -25,7 +25,6 @@ export interface AdHocListing {
 }
 
 const ALL_PLATFORMS = "__all__";
-const ANY_TYPE = "__any__";
 const ANY_ZONE = "__anyzone__";
 const ANY_DEAL = "__anydeal__";
 const ANY_ROOMS = "__anyrooms__";
@@ -56,6 +55,38 @@ const PROPERTY_TYPES = [
   { value: "spațiu comercial", label: "Spațiu comercial" },
 ];
 
+/** Compartimentarea apartamentului, cum apare scrisă pe portaluri. */
+const PARTITION_OPTIONS = [
+  { value: "decomandat", label: "Decomandat", words: ["decomandat"] },
+  { value: "semidecomandat", label: "Semidecomandat", words: ["semidecomandat", "semi decomandat"] },
+  { value: "nedecomandat", label: "Nedecomandat", words: ["nedecomandat"] },
+  { value: "circular", label: "Circular", words: ["circular"] },
+  { value: "vagon", label: "Vagon", words: ["vagon"] },
+  { value: "open space", label: "Open space", words: ["open space", "openspace"] },
+];
+
+const ANY_FLOOR = "__anyfloor__";
+const FLOOR_OPTIONS = [
+  { value: "parter", label: "Parter" },
+  { value: "not-ground", label: "Fără parter" },
+  { value: "1-3", label: "Etaj 1–3" },
+  { value: "4-7", label: "Etaj 4–7" },
+  { value: "8plus", label: "Etaj 8 sau mai sus" },
+  { value: "last", label: "Ultimul etaj" },
+  { value: "not-last", label: "Fără ultimul etaj" },
+  { value: "mansarda", label: "Mansardă / demisol" },
+];
+
+/** Dotări căutate în titlu și descriere. */
+const EXTRA_OPTIONS = [
+  { value: "balcon", label: "Balcon", words: ["balcon", "terasa", "terasă"] },
+  { value: "parcare", label: "Parcare / garaj", words: ["parcare", "garaj", "loc de parcare"] },
+  { value: "lift", label: "Lift", words: ["lift", "ascensor"] },
+  { value: "bloc nou", label: "Bloc nou", words: ["bloc nou", "construcție nouă", "constructie noua", "202", "imobil nou"] },
+  { value: "mobilat", label: "Mobilat", words: ["mobilat", "mobilată", "complet mobilat"] },
+  { value: "centrala", label: "Centrală proprie", words: ["centrala proprie", "centrală proprie", "centrala termica", "centrală termică"] },
+];
+
 /** Blocuri și ansambluri din zona proprie — completează rapid căutarea. */
 const BUILDINGS = [
   "NordOne",
@@ -81,7 +112,15 @@ interface Props {
 export default function OwnerListingSearch({ embedded = false }: Props) {
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<string>(ALL_PLATFORMS);
-  const [type, setType] = useState<string>(ANY_TYPE);
+  /** Se pot alege mai multe tipuri de imobil simultan. */
+  const [types, setTypes] = useState<string[]>([]);
+  /** Compartimentare: decomandat, semidecomandat, nedecomandat etc. */
+  const [partitions, setPartitions] = useState<string[]>([]);
+  /** Dotări cerute (balcon, parcare, lift...). */
+  const [extras, setExtras] = useState<string[]>([]);
+  const [floor, setFloor] = useState<string>(ANY_FLOOR);
+  const [minSurface, setMinSurface] = useState("");
+  const [maxSurface, setMaxSurface] = useState("");
   const [zone, setZone] = useState<string>(ANY_ZONE);
   const [deal, setDeal] = useState<string>(ANY_DEAL);
   const [rooms, setRooms] = useState<string>(ANY_ROOMS);
@@ -167,7 +206,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   };
 
   const resetFilters = () => {
-    setType(ANY_TYPE);
+    setTypes([]);
+    setPartitions([]);
+    setExtras([]);
+    setFloor(ANY_FLOOR);
+    setMinSurface("");
+    setMaxSurface("");
     setZone(ANY_ZONE);
     setDeal(ANY_DEAL);
     setRooms(ANY_ROOMS);
@@ -178,6 +222,36 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setIgnoreFilters(false);
   };
 
+  const toggleIn = (list: string[], value: string) =>
+    list.includes(value) ? list.filter(v => v !== value) : [...list, value];
+
+  /** Etajul dedus din textul anunțului: „etaj 3”, „3/4”, „parter”, „ultimul etaj”. */
+  const floorInfo = (text: string) => {
+    const t = norm(text);
+    const isGround = /\bparter\b/.test(t);
+    const isAttic = /\b(mansarda|demisol|subsol)\b/.test(t);
+    let value: number | null = null;
+    let total: number | null = null;
+    const m = /\betaj(?:ul)?\s*(\d{1,2})\b/.exec(t) || /\bet\s*\.?\s*(\d{1,2})\b/.exec(t);
+    if (m) value = Number(m[1]);
+    const frac = /\b(\d{1,2})\s*\/\s*(\d{1,2})\b/.exec(t);
+    if (frac && Number(frac[2]) <= 30) {
+      if (value === null) value = Number(frac[1]);
+      total = Number(frac[2]);
+    }
+    const isLast = /\bultimul etaj\b/.test(t) || (value !== null && total !== null && value === total);
+    return { value, isGround, isAttic, isLast, known: value !== null || isGround || isAttic || isLast };
+  };
+
+  /** Suprafața utilă în mp, dedusă din text. */
+  const surfaceOf = (text: string): number | null => {
+    const t = norm(text);
+    const m = /\b(\d{2,4})(?:[.,]\d{1,2})?\s*(?:mp|m2|metri patrati)\b/.exec(t);
+    if (!m) return null;
+    const n = Number(m[1]);
+    return Number.isFinite(n) && n >= 10 && n <= 2000 ? n : null;
+  };
+
   /** Portalul pe care a fost găsit anunțul. */
   const listingPortal = (l: AdHocListing) => (l.source_platform || l.platform || "").trim();
 
@@ -186,7 +260,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const min = minPrice ? Number(minPrice.replace(/[^\d]/g, "")) : null;
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
-    const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
+    const wantedTypes = types.map(t => norm(t));
+    const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
+    const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
     const wantedZone = zone === ANY_ZONE ? null : zone;
     const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
     return list.filter(l => {
@@ -207,10 +283,57 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
       if (deal === "vanzare" && /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
       if (deal === "inchiriere" && !/(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text)) return false;
-      if (typeWord && !text.includes(typeWord.replace(/ț/g, "t").replace(/ă/g, "a")) && !text.includes(typeWord)) {
-        // tipul poate lipsi din titlu — nu excludem dacă nu avem indicii contrare
-        const otherTypes = PROPERTY_TYPES.map(t => t.value).filter(v => v !== type);
-        if (otherTypes.some(v => text.includes(v))) return false;
+      if (wantedTypes.length > 0) {
+        const hasWanted = wantedTypes.some(t => normalizedText.includes(t));
+        if (!hasWanted) {
+          // tipul poate lipsi din titlu — excludem doar dacă apare clar alt tip
+          const otherTypes = PROPERTY_TYPES.map(t => norm(t.value)).filter(v => !wantedTypes.includes(v));
+          if (otherTypes.some(v => normalizedText.includes(v))) return false;
+        }
+      }
+      // Compartimentare — cel puțin una dintre variantele bifate.
+      if (partitions.length > 0) {
+        const ok = partitions.some(p => {
+          const opt = PARTITION_OPTIONS.find(o => o.value === p);
+          return (opt?.words ?? [p]).some(w => {
+            const nw = norm(w);
+            if (nw === "decomandat") return /(^| )decomandat( |$)/.test(normalizedText);
+            return normalizedText.includes(nw);
+          });
+        });
+        if (!ok) return false;
+      }
+      // Dotări cerute — toate trebuie să apară în anunț.
+      if (extras.length > 0) {
+        const allOk = extras.every(x => {
+          const opt = EXTRA_OPTIONS.find(o => o.value === x);
+          return (opt?.words ?? [x]).some(w => normalizedText.includes(norm(w)));
+        });
+        if (!allOk) return false;
+      }
+      // Etaj — anunțurile fără informații despre etaj nu se exclud.
+      if (floor !== ANY_FLOOR) {
+        const f = floorInfo(rawText);
+        if (f.known) {
+          const v = f.value;
+          const ok =
+            floor === "parter" ? f.isGround :
+            floor === "not-ground" ? !f.isGround :
+            floor === "1-3" ? v !== null && v >= 1 && v <= 3 :
+            floor === "4-7" ? v !== null && v >= 4 && v <= 7 :
+            floor === "8plus" ? v !== null && v >= 8 :
+            floor === "last" ? f.isLast :
+            floor === "not-last" ? !f.isLast :
+            floor === "mansarda" ? f.isAttic :
+            true;
+          if (!ok) return false;
+        }
+      }
+      // Suprafață — necunoscută înseamnă păstrat.
+      const mp = surfaceOf(rawText);
+      if (mp !== null) {
+        if (minMp !== null && mp < minMp) return false;
+        if (maxMp !== null && mp > maxMp) return false;
       }
       const zoneText = `${l.zone || ""} ${l.title || ""}`;
       if (wantedZone && !zoneMatchesText(zoneText, wantedZone)) return false;
@@ -425,13 +548,19 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
-    const typePart = type === ANY_TYPE ? "" : type;
+    // În interogare intră un singur tip/compartimentare (portalurile nu acceptă liste),
+    // restul bifelor se aplică la filtrarea rezultatelor.
+    const typePart = types[0] ?? "";
+    const partitionPart = partitions.length === 1 ? partitions[0] : "";
+    const floorPart = floor === "parter" ? "parter" : floor === "last" ? "ultimul etaj" : floor === "mansarda" ? "mansarda" : "";
     const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     // Orașul este obligatoriu și când filtrul de zonă este „Toate zonele”.
     const cityPart = zone === ANY_ZONE && !/\btimi[șs]oara\b/i.test(base) ? "Timișoara" : "";
-    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${cityPart} ${dealPart}`.replace(/\s+/g, " ").trim();
+    const term = `${typePart} ${roomsPart} ${partitionPart} ${floorPart} ${base} ${zonePart} ${cityPart} ${dealPart}`
+      .replace(/\s+/g, " ")
+      .trim();
     if (term.length < 3) {
       toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
@@ -548,18 +677,106 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </Button>
       </div>
 
+      {/* Tipuri de imobil — se pot alege mai multe */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Tip de imobil (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {PROPERTY_TYPES.map(t => {
+            const on = types.includes(t.value);
+            return (
+              <Button
+                key={t.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setTypes(v => toggleIn(v, t.value)); setIgnoreFilters(false); }}
+              >
+                {t.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Compartimentare */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Compartimentare (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {PARTITION_OPTIONS.map(p => {
+            const on = partitions.includes(p.value);
+            return (
+              <Button
+                key={p.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setPartitions(v => toggleIn(v, p.value)); setIgnoreFilters(false); }}
+              >
+                {p.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Dotări */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Dotări cerute (toate bifele trebuie să apară în anunț)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {EXTRA_OPTIONS.map(x => {
+            const on = extras.includes(x.value);
+            return (
+              <Button
+                key={x.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setExtras(v => toggleIn(v, x.value)); setIgnoreFilters(false); }}
+              >
+                {x.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={type} onValueChange={setType}>
-          <SelectTrigger className="sm:w-[200px] min-h-[48px] sm:min-h-0" aria-label="Tip de imobil">
+        <Select value={floor} onValueChange={setFloor}>
+          <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="Etaj">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ANY_TYPE}>Orice tip de imobil</SelectItem>
-            {PROPERTY_TYPES.map(t => (
-              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+            <SelectItem value={ANY_FLOOR}>Orice etaj</SelectItem>
+            {FLOOR_OPTIONS.map(f => (
+              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+        <Input
+          value={minSurface}
+          onChange={e => setMinSurface(e.target.value)}
+          inputMode="numeric"
+          placeholder="Suprafață min. (mp)"
+          aria-label="Suprafață minimă în metri pătrați"
+          className="sm:w-[170px] min-h-[48px] sm:min-h-0"
+        />
+        <Input
+          value={maxSurface}
+          onChange={e => setMaxSurface(e.target.value)}
+          inputMode="numeric"
+          placeholder="Suprafață max. (mp)"
+          aria-label="Suprafață maximă în metri pătrați"
+          className="sm:w-[170px] min-h-[48px] sm:min-h-0"
+        />
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-2">
         <Select value={zone} onValueChange={setZone}>
           <SelectTrigger className="sm:w-[200px] min-h-[48px] sm:min-h-0" aria-label="Zonă">
             <SelectValue />
