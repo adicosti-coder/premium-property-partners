@@ -375,7 +375,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
     const zonePart = zone === ANY_ZONE ? "" : `${zone} Timișoara`;
-    const term = `${typePart} ${base} ${zonePart}`.replace(/\s+/g, " ").trim();
+    const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
+    const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
+    const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${dealPart}`.replace(/\s+/g, " ").trim();
     if (term.length < 3) {
       toast({ title: "Scrie cel puțin 3 litere", description: "Ex: apartament 2 camere NordOne" });
       return;
