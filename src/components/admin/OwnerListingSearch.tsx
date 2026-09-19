@@ -308,13 +308,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) {
       return "alt portal";
     }
-    if (wantedRooms !== null) {
+    if (wantedRooms.length > 0) {
       const r = typeof l.rooms === "number" ? l.rooms : null;
       const fromTitle = /(\d+)\s*[- ]?\s*(?:camere?|cam\.?\b)/i.exec(text);
       const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
-      if (value !== null && (wantedRooms === 4 ? value < 4 : value !== wantedRooms)) {
-        return `are ${value} camere`;
-      }
+      // OR între bifele alese; „4” înseamnă 4 sau mai multe camere.
+      const ok = value === null || wantedRooms.some(w => (w === 4 ? value >= 4 : value === w));
+      if (!ok) return `are ${value} camere`;
     }
     const isRentText = /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text);
     if (deal === "vanzare" && isRentText) return "este închiriere";
