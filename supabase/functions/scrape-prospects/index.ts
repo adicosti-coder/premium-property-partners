@@ -465,7 +465,10 @@ function stripQueryOperators(q: string): string {
 function simplifyForFreeEngine(q: string, maxWords = 6): string {
   const cleaned = stripQueryOperators(q);
   const stop = new Set(['de', 'la', 'cu', 'in', 'în', 'pe', 'si', 'și', 'sau', 'a', 'al', 'ale']);
-  const words = cleaned.split(/\s+/).filter((w) => w.length > 1 && !stop.has(w.toLowerCase()));
+  // Păstrăm cifrele singulare: „3 camere” trebuie să ajungă la portal, nu doar
+  // „camere”. Eliminarea lui 3 lărgea căutarea și consuma limita pe rezultate
+  // cu 1/2 camere înainte să poată fi aplicat filtrul din Admin.
+  const words = cleaned.split(/\s+/).filter((w) => (w.length > 1 || /^\d+$/.test(w)) && !stop.has(w.toLowerCase()));
   return words.slice(0, maxWords).join(' ').trim();
 }
 

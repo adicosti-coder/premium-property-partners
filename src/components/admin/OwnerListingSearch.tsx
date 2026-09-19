@@ -188,7 +188,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const wantedRooms = rooms === ANY_ROOMS ? null : Number(rooms);
     const typeWord = type === ANY_TYPE ? null : type.toLowerCase();
     const wantedZone = zone === ANY_ZONE ? null : zone;
-    const searchTokens = norm(search).split(" ").filter(token => token.length >= 2);
+    const searchTokens = norm(search).split(" ").filter(token => token.length >= 2 || /^\d+$/.test(token));
     return list.filter(l => {
       const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
       const normalizedText = ` ${norm(rawText)} `;
@@ -200,7 +200,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
         const r = typeof l.rooms === "number" ? l.rooms : null;
-        const fromTitle = /(\d)\s*camer/.exec(text);
+        const fromTitle = /(\d+)\s*[- ]?\s*(?:camere?|cam\.?\b)/i.exec(text);
         const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
         // nr. camere necunoscut → nu excludem anunțul
         if (value !== null && (wantedRooms === 4 ? value < 4 : value !== wantedRooms)) return false;
