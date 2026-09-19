@@ -42,64 +42,9 @@ const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", 
 
 /**
  * Zonele Timișoarei exact cum sunt definite de platformele de anunțuri
- * (imobiliare.ro, olx.ro, publi24.ro) — nu cartierele administrative.
+ * (imobiliare.ro, olx.ro, publi24.ro) — vezi src/lib/timisoaraPortalZones.ts.
  */
-const ZONE_OPTIONS = [
-  // Zone centrale, așa cum apar pe portaluri
-  "Ultracentral",
-  "Central",
-  "Semicentral",
-  "Cetate",
-  "Iosefin",
-  "Elisabetin",
-  "Fabric",
-  "Traian",
-  "Complex Studențesc",
-  "Mehala",
-  // Zone nord
-  "Aradului",
-  "Bucovina",
-  "Lipovei",
-  "Circumvalațiunii",
-  "Torontalului",
-  "Ronaț",
-  "Take Ionescu",
-  "Dacia",
-  "Gheorghe Lazăr",
-  "Sever Bocu (Lipovei II)",
-  // Zone sud
-  "Girocului",
-  "Soarelui",
-  "Braytim",
-  "Buziașului",
-  "Lunei",
-  "Șagului",
-  "Steaua",
-  "Dâmbovița",
-  "Blașcovici",
-  "Olimpia-Stadion",
-  "Zona Medicină",
-  // Zone est / vest / periferice
-  "Plopi",
-  "Ciarda Roșie",
-  "Freidorf",
-  "Kuncz",
-  "Modern",
-  "Tipografilor",
-  "UMT",
-  "Zona Gării",
-  "Zona Industrială",
-  // Localități limitrofe (zone separate pe portaluri)
-  "Dumbrăvița",
-  "Giroc",
-  "Chișoda",
-  "Ghiroda",
-  "Moșnița Nouă",
-  "Sânmihaiu Român",
-  "Săcălaz",
-  "Șag",
-  "Remetea Mare",
-];
+const ZONE_OPTIONS = PORTAL_ZONE_LABELS;
 
 const PROPERTY_TYPES = [
   { value: "apartament", label: "Apartament" },
