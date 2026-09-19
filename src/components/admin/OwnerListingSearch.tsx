@@ -98,6 +98,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [exactPrices, setExactPrices] = useState<Record<string, number>>({});
   const [preferredZones, setPreferredZones] = useState<string[]>([]);
   const [newZone, setNewZone] = useState("");
+  /** Când e activ, rezultatele se limitează la zonele preferate (dacă nu e aleasă o zonă anume). */
+  const [limitToPreferred, setLimitToPreferred] = useState(true);
   const [savingZone, setSavingZone] = useState(false);
 
   /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
@@ -201,7 +203,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const otherTypes = PROPERTY_TYPES.map(t => t.value).filter(v => v !== type);
         if (otherTypes.some(v => text.includes(v))) return false;
       }
-      if (wantedZone && !zoneMatchesText(`${l.zone || ""} ${l.title || ""}`, wantedZone)) return false;
+      const zoneText = `${l.zone || ""} ${l.title || ""}`;
+      if (wantedZone && !zoneMatchesText(zoneText, wantedZone)) return false;
+      // Fără zonă aleasă: dacă avem zone preferate și limitarea e activă, păstrăm doar acele zone.
+      if (!wantedZone && limitToPreferred && preferredZones.length > 0) {
+        if (!preferredZones.some(z => zoneMatchesText(zoneText, z))) return false;
+      }
       const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
       // preț necunoscut → păstrăm anunțul, poate fi verificat cu „Verifică prețurile exacte”
       if (min !== null && price !== null && price < min) return false;
