@@ -404,7 +404,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const run = async (prefill?: string) => {
     const base = (prefill ?? search).trim();
     const typePart = type === ANY_TYPE ? "" : type;
-    const zonePart = zone === ANY_ZONE ? "" : `${zone} Timișoara`;
+    const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
     const term = `${typePart} ${roomsPart} ${base} ${zonePart} ${dealPart}`.replace(/\s+/g, " ").trim();
