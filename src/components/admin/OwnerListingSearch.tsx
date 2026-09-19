@@ -828,6 +828,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             if (prev.some(x => (x.url || "").trim() === key)) return prev;
             return [l, ...prev];
           });
+          setFreshUrls(f => {
+            const key = (l.url || "").trim();
+            return key ? Array.from(new Set([key, ...f])).slice(0, 200) : f;
+          });
           setLastAutoAt(new Date());
         },
       )
@@ -1375,7 +1379,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               return txt ? <> · afișate pe portal — {txt}</> : null;
             })()}
           </div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <Button
               type="button"
               size="sm"
@@ -1387,6 +1391,40 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
               Verifică prețurile exacte
             </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs"
+              disabled={main.length === 0}
+              onClick={() =>
+                downloadCsv(
+                  csvFileName("anunturi-proprietari"),
+                  ["Titlu", "Platformă", "Zonă", "Camere", "Preț (€)", "€/mp", "Telefon", "Link"],
+                  main.map(l => {
+                    const pv = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
+                    const mp = surfaceOf(`${l.title || ""} ${l.description || ""}`);
+                    return [
+                      l.title || "",
+                      listingPortal(l),
+                      l.zone || "",
+                      l.rooms ?? "",
+                      pv ?? "",
+                      pricePerSqm(pv, mp) ?? "",
+                      l.phone || "",
+                      l.url || "",
+                    ];
+                  }),
+                )
+              }
+            >
+              <Download className="h-3 w-3 mr-1" /> Descarcă lista ({main.length})
+            </Button>
+            {activeFilterCount > 0 && (
+              <span className="text-[11px] text-muted-foreground">
+                {activeFilterCount} {activeFilterCount === 1 ? "filtru activ" : "filtre active"}
+              </span>
+            )}
             {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
             {results.length > 0 && (
               <Button
