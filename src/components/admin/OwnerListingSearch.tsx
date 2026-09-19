@@ -536,12 +536,19 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </div>
       )}
 
-      {!searching && results && (
+      {!searching && results && (() => {
+        const matched = filterListings(results);
+        // Dacă filtrele exclud tot, arătăm totuși anunțurile găsite cu link,
+        // ca să nu pierdem legăturile către ele.
+        const visible = matched.length > 0 ? matched : results;
+        const showingAll = matched.length === 0 && results.length > 0;
+        return (
         <div>
           <div className="text-xs text-muted-foreground mb-1">
             {summary || `${results.length} anunțuri`}
-            {filterListings(results).length !== results.length && (
-              <> · {filterListings(results).length} potrivesc filtrele</>
+            {matched.length !== results.length && <> · {matched.length} potrivesc filtrele</>}
+            {showingAll && (
+              <> · afișez toate cele {results.length} anunțuri cu link (filtrele nu se potrivesc)</>
             )}
           </div>
           <div className="flex items-center gap-2 mb-2">
@@ -550,7 +557,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               size="sm"
               variant="outline"
               disabled={pricing}
-              onClick={() => hydrateExactPrices(filterListings(results))}
+              onClick={() => hydrateExactPrices(visible)}
               className="h-8 text-xs"
             >
               {pricing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
@@ -558,9 +565,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             </Button>
             {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
           </div>
-          {filterListings(results).length > 0 && (
+          {visible.length > 0 && (
             <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
-              {filterListings(results).map((l, idx) => (
+              {visible.map((l, idx) => (
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
                     <Badge variant="default" className="text-[10px] shrink-0">
@@ -647,7 +654,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 
