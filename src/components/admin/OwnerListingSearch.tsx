@@ -72,7 +72,6 @@ const PARTITION_OPTIONS = [
   { value: "open space", label: "Open space", words: ["open space", "openspace"] },
 ];
 
-const ANY_FLOOR = "__anyfloor__";
 const ANY_YEAR = "__anyyear__";
 const FLOOR_OPTIONS = [
   { value: "parter", label: "Parter" },
@@ -126,7 +125,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [partitions, setPartitions] = useState<string[]>([]);
   /** Dotări cerute (balcon, parcare, lift...). */
   const [extras, setExtras] = useState<string[]>([]);
-  const [floor, setFloor] = useState<string>(ANY_FLOOR);
+  /** Etaje: se pot bifa mai multe simultan (se aplică „sau”). */
+  const [floors, setFloors] = useState<string[]>([]);
   const [minSurface, setMinSurface] = useState("");
   const [maxSurface, setMaxSurface] = useState("");
   const [zone, setZone] = useState<string>(ANY_ZONE);
@@ -221,7 +221,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setTypes([]);
     setPartitions([]);
     setExtras([]);
-    setFloor(ANY_FLOOR);
+    setFloors([]);
     setMinSurface("");
     setMaxSurface("");
     setZone(ANY_ZONE);
@@ -326,20 +326,21 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         if (!allOk) return false;
       }
       // Etaj — anunțurile fără informații despre etaj nu se exclud.
-      if (floor !== ANY_FLOOR) {
+      if (floors.length > 0) {
         const f = floorInfo(rawText);
         if (f.known) {
           const v = f.value;
-          const ok =
-            floor === "parter" ? f.isGround :
-            floor === "not-ground" ? !f.isGround :
-            floor === "1-3" ? v !== null && v >= 1 && v <= 3 :
-            floor === "4-7" ? v !== null && v >= 4 && v <= 7 :
-            floor === "8plus" ? v !== null && v >= 8 :
-            floor === "last" ? f.isLast :
-            floor === "not-last" ? !f.isLast :
-            floor === "mansarda" ? f.isAttic :
-            true;
+          // Mai multe etaje bifate = oricare dintre ele este acceptat.
+          const ok = floors.some(sel =>
+            sel === "parter" ? f.isGround :
+            sel === "not-ground" ? !f.isGround :
+            sel === "1-3" ? v !== null && v >= 1 && v <= 3 :
+            sel === "4-7" ? v !== null && v >= 4 && v <= 7 :
+            sel === "8plus" ? v !== null && v >= 8 :
+            sel === "last" ? f.isLast :
+            sel === "not-last" ? !f.isLast :
+            sel === "mansarda" ? f.isAttic :
+            true);
           if (!ok) return false;
         }
       }
@@ -567,7 +568,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     // restul bifelor se aplică la filtrarea rezultatelor.
     const typePart = types[0] ?? "";
     const partitionPart = partitions.length === 1 ? partitions[0] : "";
-    const floorPart = floor === "parter" ? "parter" : floor === "last" ? "ultimul etaj" : floor === "mansarda" ? "mansarda" : "";
+    const onlyFloor = floors.length === 1 ? floors[0] : "";
+    const floorPart = onlyFloor === "parter" ? "parter" : onlyFloor === "last" ? "ultimul etaj" : onlyFloor === "mansarda" ? "mansarda" : "";
     const zonePart = zone === ANY_ZONE ? "" : `${zoneSearchTerm(zone)} Timișoara`;
     const roomsPart = rooms === ANY_ROOMS ? "" : `${rooms} camere`;
     const dealPart = deal === "vanzare" ? "de vanzare" : deal === "inchiriere" ? "de inchiriat" : "";
@@ -761,18 +763,30 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </div>
       </div>
 
+      {/* Etaj — selecție multiplă */}
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Etaj (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {FLOOR_OPTIONS.map(f => {
+            const on = floors.includes(f.value);
+            return (
+              <Button
+                key={f.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setFloors(v => toggleIn(v, f.value)); setIgnoreFilters(false); }}
+              >
+                {f.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={floor} onValueChange={setFloor}>
-          <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="Etaj">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_FLOOR}>Orice etaj</SelectItem>
-            {FLOOR_OPTIONS.map(f => (
-              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={yearFilter} onValueChange={setYearFilter}>
           <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="An construcție">
             <SelectValue />
