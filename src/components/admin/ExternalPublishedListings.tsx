@@ -70,6 +70,7 @@ export default function ExternalPublishedListings() {
   const [platform, setPlatform] = useState("all");
   const [q, setQ] = useState("");
   const [livePrices, setLivePrices] = useState<Record<string, number | null>>({});
+  const [liveCheckedAt, setLiveCheckedAt] = useState<Record<string, string>>({});
   const [checking, setChecking] = useState(false);
 
   /** Citește prețul afișat chiar acum pe pagina anunțului de pe fiecare platformă. */
