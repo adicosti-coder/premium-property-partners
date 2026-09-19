@@ -679,17 +679,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={type} onValueChange={setType}>
-          <SelectTrigger className="sm:w-[200px] min-h-[48px] sm:min-h-0" aria-label="Tip de imobil">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_TYPE}>Orice tip de imobil</SelectItem>
-            {PROPERTY_TYPES.map(t => (
-              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={zone} onValueChange={setZone}>
           <SelectTrigger className="sm:w-[200px] min-h-[48px] sm:min-h-0" aria-label="Zonă">
             <SelectValue />
