@@ -70,6 +70,7 @@ export default function ExternalPublishedListings() {
   const [platform, setPlatform] = useState("all");
   const [q, setQ] = useState("");
   const [livePrices, setLivePrices] = useState<Record<string, number | null>>({});
+  const [liveCheckedAt, setLiveCheckedAt] = useState<Record<string, string>>({});
   const [checking, setChecking] = useState(false);
 
   /** Citește prețul afișat chiar acum pe pagina anunțului de pe fiecare platformă. */
@@ -88,8 +89,14 @@ export default function ExternalPublishedListings() {
       const next: Record<string, number | null> = {};
       for (const [u, v] of Object.entries(map)) next[u] = v?.price ?? v?.rent ?? null;
       setLivePrices(prev => ({ ...prev, ...next }));
+      const stamp = new Date().toLocaleString("ro-RO", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+      setLiveCheckedAt(prev => {
+        const upd = { ...prev };
+        for (const u of Object.keys(next)) upd[u] = stamp;
+        return upd;
+      });
       const found = Object.values(next).filter(v => v != null).length;
-      toast({ title: "Prețuri live citite", description: `${found} din ${list.length} anunțuri au preț citit acum.` });
+      toast({ title: "Prețuri live citite", description: `${found} din ${list.length} anunțuri au preț citit acum (${stamp}).` });
     } catch (e) {
       toast({
         title: "Nu am putut citi prețurile live",
@@ -273,6 +280,9 @@ export default function ExternalPublishedListings() {
                       </span>
                     )}
                   </span>
+                )}
+                {r.url && liveCheckedAt[r.url] && (
+                  <span className="text-[10px]">actualizat {liveCheckedAt[r.url]}</span>
                 )}
                 {r.url && (
                   <button
