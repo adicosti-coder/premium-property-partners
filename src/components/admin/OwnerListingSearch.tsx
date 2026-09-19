@@ -706,8 +706,16 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
                     <Badge variant="default" className="text-[10px] shrink-0">
-                      {l.source_platform || l.platform || "—"}
+                      {listingPortal(l) || "platformă necunoscută"}
                     </Badge>
+                    {zone !== ANY_ZONE && (
+                      <Badge
+                        variant={zoneMatches(l, zone) ? "secondary" : "outline"}
+                        className="text-[10px] shrink-0"
+                      >
+                        {zoneMatches(l, zone) ? `zona ${zone} apare` : `zona ${zone} nu apare în anunț`}
+                      </Badge>
+                    )}
                     {l.url ? (
                       <a
                         href={l.url}
