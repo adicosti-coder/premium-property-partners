@@ -141,6 +141,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [onlyWithPhone, setOnlyWithPhone] = useState(false);
+  /** Filtru pe portalul unde a fost găsit anunțul (se aplică pe rezultate). */
+  const [portalFilter, setPortalFilter] = useState<string>(ALL_PLATFORMS);
   const [results, setResults] = useState<AdHocListing[] | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
@@ -222,7 +224,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setMinPrice("");
     setMaxPrice("");
     setOnlyWithPhone(false);
+    setPortalFilter(ALL_PLATFORMS);
   };
+
+  /** Portalul pe care a fost găsit anunțul. */
+  const listingPortal = (l: AdHocListing) => (l.source_platform || l.platform || "").trim();
 
   /** Filtrele se aplică instant pe rezultate, fără o nouă căutare. */
   const filterListings = (list: AdHocListing[]): AdHocListing[] => {
@@ -234,6 +240,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     return list.filter(l => {
       const text = `${l.title || ""} ${l.zone || ""}`.toLowerCase();
       if (onlyWithPhone && !l.phone) return false;
+      if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) return false;
       if (wantedRooms !== null) {
         const r = typeof l.rooms === "number" ? l.rooms : null;
         const fromTitle = /(\d)\s*camer/.exec(text);
@@ -563,6 +570,17 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             ))}
           </SelectContent>
         </Select>
+        <Select value={portalFilter} onValueChange={setPortalFilter}>
+          <SelectTrigger className="sm:w-[220px] min-h-[48px] sm:min-h-0" aria-label="Portalul unde apare anunțul">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_PLATFORMS}>Toate portalurile (rezultate)</SelectItem>
+            {PLATFORM_OPTIONS.map(p => (
+              <SelectItem key={p} value={p}>Doar de pe {p}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <AddAgencyPhoneDialog size="default" className="min-h-[48px] sm:min-h-0" />
       </div>
 
@@ -688,8 +706,16 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                 <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
                   <div className="flex items-center gap-2">
                     <Badge variant="default" className="text-[10px] shrink-0">
-                      {l.source_platform || l.platform || "—"}
+                      {listingPortal(l) || "platformă necunoscută"}
                     </Badge>
+                    {zone !== ANY_ZONE && (
+                      <Badge
+                        variant={zoneMatches(l, zone) ? "secondary" : "outline"}
+                        className="text-[10px] shrink-0"
+                      >
+                        {zoneMatches(l, zone) ? `zona ${zone} apare` : `zona ${zone} nu apare în anunț`}
+                      </Badge>
+                    )}
                     {l.url ? (
                       <a
                         href={l.url}
@@ -774,6 +800,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           <div className="text-xs text-muted-foreground mb-1">
             {summary || `${results.length} anunțuri`}
             {matched.length !== results.length && <> · {matched.length} respectă filtrele</>}
+            {(() => {
+              const per = new Map<string, number>();
+              for (const l of matched) {
+                const p = listingPortal(l) || "necunoscut";
+                per.set(p, (per.get(p) || 0) + 1);
+              }
+              const txt = Array.from(per.entries())
+                .sort((a, b) => b[1] - a[1])
+                .map(([p, n]) => `${p}: ${n}`)
+                .join(" · ");
+              return txt ? <> · afișate pe portal — {txt}</> : null;
+            })()}
           </div>
           <div className="flex items-center gap-2 mb-2">
             <Button

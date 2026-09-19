@@ -16,6 +16,15 @@ interface Raw {
   source_platform: string | null;
   created_at: string | null;
   last_seen_at: string | null;
+  price: number | null;
+  price_per_sqm: number | null;
+}
+
+interface HistRow {
+  listing_id: string | null;
+  source_platform: string | null;
+  price: number | null;
+  recorded_at: string | null;
 }
 
 const dayKey = (iso: string) => iso.slice(0, 10);
@@ -36,20 +45,30 @@ const normPlatform = (p: string | null) => {
 
 export default function PlatformDailyCoverage() {
   const [raw, setRaw] = useState<Raw[]>([]);
+  const [hist, setHist] = useState<HistRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [days, setDays] = useState("14");
 
   const load = useCallback(async () => {
     setLoading(true);
     const since = new Date(Date.now() - Number(days) * 86400000).toISOString();
-    const { data, error } = await supabase
-      .from("prospect_listings")
-      .select("source_platform,created_at,last_seen_at")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(10000);
-    if (error) toast.error("Nu am putut încărca datele pe platforme");
-    setRaw((data || []) as unknown as Raw[]);
+    const [listings, history] = await Promise.all([
+      supabase
+        .from("prospect_listings")
+        .select("source_platform,created_at,last_seen_at,price,price_per_sqm")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(10000),
+      supabase
+        .from("prospect_price_history")
+        .select("listing_id,source_platform,price,recorded_at")
+        .gte("recorded_at", since)
+        .order("recorded_at", { ascending: true })
+        .limit(10000),
+    ]);
+    if (listings.error) toast.error("Nu am putut încărca datele pe platforme");
+    setRaw((listings.data || []) as unknown as Raw[]);
+    setHist((history.data || []) as unknown as HistRow[]);
     setLoading(false);
   }, [days]);
 
@@ -82,6 +101,37 @@ export default function PlatformDailyCoverage() {
       .map(([day, m]) => ({ day, counts: m, total: Array.from(m.values()).reduce((s, v) => s + v, 0) }));
     return { platforms: plats, dayRows: rows, totals: tot, lastSeen: seen };
   }, [raw]);
+
+  /** Preț mediu, €/mp mediu și scăderi de preț pe fiecare platformă. */
+  const stats = useMemo(() => {
+    const acc = new Map<string, { count: number; priceSum: number; priceN: number; sqmSum: number; sqmN: number; drops: number }>();
+    const get = (p: string) => {
+      if (!acc.has(p)) acc.set(p, { count: 0, priceSum: 0, priceN: 0, sqmSum: 0, sqmN: 0, drops: 0 });
+      return acc.get(p)!;
+    };
+    for (const r of raw) {
+      const s = get(normPlatform(r.source_platform));
+      s.count += 1;
+      if (r.price && Number(r.price) > 0) { s.priceSum += Number(r.price); s.priceN += 1; }
+      if (r.price_per_sqm && Number(r.price_per_sqm) > 0) { s.sqmSum += Number(r.price_per_sqm); s.sqmN += 1; }
+    }
+    // scăderi: preț mai mic decât precedentul aceluiași anunț
+    const byListing = new Map<string, HistRow[]>();
+    for (const h of hist) {
+      const id = h.listing_id || "";
+      if (!id) continue;
+      if (!byListing.has(id)) byListing.set(id, []);
+      byListing.get(id)!.push(h);
+    }
+    for (const rows of byListing.values()) {
+      for (let i = 1; i < rows.length; i++) {
+        const prev = Number(rows[i - 1].price || 0);
+        const cur = Number(rows[i].price || 0);
+        if (prev > 0 && cur > 0 && cur < prev) get(normPlatform(rows[i].source_platform)).drops += 1;
+      }
+    }
+    return acc;
+  }, [raw, hist]);
 
   const isLive = (p: string) => {
     const ls = lastSeen.get(p);
@@ -142,6 +192,47 @@ export default function PlatformDailyCoverage() {
           </div>
 
           <div className="overflow-x-auto">
+            <div className="mb-1 text-xs font-medium">Rezumat pe platformă</div>
+            <table className="w-full text-sm mb-4">
+              <thead>
+                <tr className="border-b text-left text-muted-foreground">
+                  <th className="py-2 pr-3 font-medium">Platformă</th>
+                  <th className="py-2 pr-3 font-medium">Anunțuri</th>
+                  <th className="py-2 pr-3 font-medium">Preț mediu</th>
+                  <th className="py-2 pr-3 font-medium">€/mp mediu</th>
+                  <th className="py-2 pr-3 font-medium">Scăderi de preț</th>
+                  <th className="py-2 font-medium">Ultimul anunț</th>
+                </tr>
+              </thead>
+              <tbody>
+                {platforms.map((p) => {
+                  const s = stats.get(p);
+                  const avg = s && s.priceN ? Math.round(s.priceSum / s.priceN) : null;
+                  const sqm = s && s.sqmN ? Math.round(s.sqmSum / s.sqmN) : null;
+                  const ls = lastSeen.get(p);
+                  return (
+                    <tr key={p} className="border-b last:border-0">
+                      <td className="py-2 pr-3 whitespace-nowrap font-medium">{p}</td>
+                      <td className="py-2 pr-3">{s?.count ?? 0}</td>
+                      <td className="py-2 pr-3">{avg == null ? "—" : `${avg.toLocaleString("ro-RO")} €`}</td>
+                      <td className="py-2 pr-3">{sqm == null ? "—" : `${sqm.toLocaleString("ro-RO")} €`}</td>
+                      <td className="py-2 pr-3">{s?.drops ?? 0}</td>
+                      <td className="py-2 whitespace-nowrap text-muted-foreground">
+                        {ls ? new Date(ls).toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {!platforms.length && (
+                  <tr>
+                    <td className="py-3 text-muted-foreground" colSpan={6}>
+                      {loading ? "Se încarcă…" : "Nicio platformă cu anunțuri."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <div className="mb-1 text-xs font-medium">Pe zi</div>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
