@@ -190,6 +190,16 @@ export default function ExternalPublishedListings() {
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading} className="min-h-[40px]">
               <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Reîncarcă
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void checkLivePrices(filtered.map(r => r.url || ""))}
+              disabled={checking || !filtered.length}
+              className="min-h-[40px]"
+            >
+              {checking ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Euro className="h-4 w-4 mr-1" />}
+              Preț live
+            </Button>
             <Button variant="outline" size="sm" onClick={exportCsv} disabled={!filtered.length} className="min-h-[40px]">
               <Download className="h-4 w-4 mr-1" /> CSV
             </Button>
