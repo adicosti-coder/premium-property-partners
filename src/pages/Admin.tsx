@@ -243,6 +243,16 @@ const Admin = () => {
                   </h1>
                   <div className="ml-auto flex items-center gap-2">
                     <Button
+                      size="sm"
+                      onClick={() => handleSelectTab("owner-search")}
+                      className="h-9 gap-1.5 bg-amber-500 text-white hover:bg-amber-600"
+                      aria-label="Caută anunțuri de la proprietari"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span className="hidden sm:inline">Caută anunțuri proprietari</span>
+                      <span className="sm:hidden">Anunțuri</span>
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setCmdOpen(true)}

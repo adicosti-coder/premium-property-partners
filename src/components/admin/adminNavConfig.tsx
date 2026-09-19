@@ -53,6 +53,17 @@ export const ADMIN_GROUPS: AdminGroup[] = [
     label: "Properties",
     icon: Building,
     items: [
+      {
+        value: "owner-search",
+        label: "Caută anunțuri proprietari",
+        icon: Radar,
+        keywords: [
+          "cauta", "caută", "anunturi", "anunțuri", "proprietari", "proprietar",
+          "particular", "olx", "storia", "imobiliare", "publi24", "bursa",
+          "cuvinte cheie", "scraper", "radar", "zona", "bloc", "nordone",
+          "fructus", "city of mara", "ring", "ateneo", "xcity", "denya", "vivalia", "monarh",
+        ],
+      },
       { value: "properties", label: "Proprietăți", icon: Building },
       { value: "cazare", label: "Cazare", icon: Hotel },
       { value: "investitii-premium", label: "Investiții Premium", icon: TrendingUp },
