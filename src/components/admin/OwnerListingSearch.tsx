@@ -672,16 +672,17 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
       );
       window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
-      if (listings.length === 0) {
+      if (!quiet && listings.length === 0) {
         toast({
           title: "Niciun anunț găsit",
           description: "Toate rezultatele erau de la agenții. Încearcă altă formulare sau altă platformă.",
         });
       }
     } catch (e: any) {
-      toast({ title: "Eroare căutare anunțuri", description: e.message, variant: "destructive" });
+      if (!quiet) toast({ title: "Eroare căutare anunțuri", description: e.message, variant: "destructive" });
     } finally {
-      setSearching(false);
+      runningRef.current = false;
+      if (!quiet) setSearching(false);
     }
   };
 
