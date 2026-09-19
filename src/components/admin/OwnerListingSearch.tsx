@@ -622,8 +622,21 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       </div>
 
       <div className="rounded-lg border p-2 space-y-2">
-        <div className="text-[11px] text-muted-foreground">
-          Zone preferate — filtrele se aplică pe acestea, restul anunțurilor apar în lista de rezervă.
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-[11px] text-muted-foreground max-w-[26rem]">
+            Zone preferate — când nu alegi o zonă anume în filtre, rezultatele se pot limita la aceste zone.
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant={limitToPreferred && preferredZones.length > 0 ? "default" : "outline"}
+            disabled={preferredZones.length === 0}
+            aria-pressed={limitToPreferred}
+            onClick={() => { setLimitToPreferred(v => !v); setIgnoreFilters(false); }}
+            className="h-9 text-xs"
+          >
+            {limitToPreferred ? "Doar zonele preferate" : "Toate zonele"}
+          </Button>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {preferredZones.length === 0 && (
