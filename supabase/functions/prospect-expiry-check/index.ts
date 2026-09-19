@@ -13,11 +13,11 @@
 // Default: batch de 60 (ordonat după last_expiry_check_at NULLS FIRST).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { requireAdmin } from "../_shared/adminAuth.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret, x-cron-secret",
 };
 
 const EXPIRED_MARKERS: RegExp[] = [
