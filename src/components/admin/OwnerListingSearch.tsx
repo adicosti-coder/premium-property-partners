@@ -271,6 +271,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             ))}
           </SelectContent>
         </Select>
+        <AddAgencyPhoneDialog size="default" className="min-h-[48px] sm:min-h-0" />
       </div>
 
       <div className="flex flex-wrap gap-1.5">
