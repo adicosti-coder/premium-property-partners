@@ -29,6 +29,7 @@ import {
   isActiveOwnerListing,
   isIndividualOwnerListing,
   isResidentialRealEstate,
+  listingTransaction,
   normalizeOwnerListingUrl,
   ownerVerification,
 } from "@/lib/ownerListingRules";
@@ -353,7 +354,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const wantedZones = zones;
     
     const searchTokens = tokenize(search);
-    const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
+    const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""}`;
     const text = rawText.toLowerCase();
     /** Anunt cu metadate sarace: nu putem verifica detaliile fine. */
     const thinText = norm(`${l.title || ""} ${l.description || ""}`).length < 45;
@@ -367,14 +368,15 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     }
     if (wantedRooms.length > 0) {
       const r = typeof l.rooms === "number" ? l.rooms : null;
-      const fromTitle = /(\d+)\s*[- ]?\s*(?:camere?|cam\.?\b)/i.exec(text);
+      const fromTitle = /\b([1-9])\s*(?:camere?|cam\.?)\b/i.exec(text);
       const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
       const ok = value === null || wantedRooms.some(w => (w === 4 ? value >= 4 : value === w));
       if (!ok) return `are ${value} camere`;
     }
-    const isRentText = /(inchirier|de inchiriat|\/luna)/i.test(text.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
-    if (deal === "vanzare" && isRentText) return "este inchiriere";
-    if (deal === "inchiriere" && !isRentText && !thinText) return "nu pare inchiriere";
+    const transaction = listingTransaction(l);
+    if (deal === "vanzare" && transaction === "inchiriere") return "este inchiriere";
+    if (deal === "inchiriere" && transaction === "vanzare") return "este vanzare";
+    if (deal === "inchiriere" && transaction === null && !thinText) return "tranzactie neconfirmata";
     
     const normalizedText = ` ${norm(rawText)} `;
     if (wantedTypes.length > 0) {
@@ -774,9 +776,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         .sort((a, b) => b[1] - a[1])
         .map(([p, n]) => `${p}: ${n}`)
         .join(" · ");
-      setSummary(
+       const totalVisibleCandidates = listings.length;
+       setSummary(
         (quiet && addedNow > 0 ? `+${addedNow} anunțuri adăugate automat · ` : "") +
-        `${newCount} anunțuri noi pe ${ok.length} ${ok.length === 1 ? "platformă" : "platforme"}` +
+         `${newCount} rezultate live noi · ${totalVisibleCandidates} anunțuri individuale în listă · ${ok.length} ${ok.length === 1 ? "platformă verificată" : "platforme verificate"}` +
           (perPlatform ? ` (${perPlatform})` : "") +
           (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
           (agency ? ` · ${agency} agenții excluse` : "") +
@@ -1356,7 +1359,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                         rawPhone={l.phone || undefined}
                         url={l.url || undefined}
                         contextLabel="căutare anunțuri proprietari"
-                        label="Agenție"
+                        label="Marchează agenție"
                         className="h-8 px-2 text-[11px]"
                         onMarked={() =>
                           setResults(prev =>

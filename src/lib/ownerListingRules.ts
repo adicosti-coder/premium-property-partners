@@ -120,3 +120,12 @@ export function isResidentialRealEstate(candidate: OwnerListingCandidate): boole
   if (OFF_TOPIC_SIGNALS.some((signal) => text.includes(` ${norm(signal)} `))) return false;
   return REAL_ESTATE_SIGNALS.some((signal) => text.includes(` ${norm(signal)} `));
 }
+
+export function listingTransaction(candidate: OwnerListingCandidate): "vanzare" | "inchiriere" | null {
+  const text = ` ${norm(`${candidate.title || ""} ${candidate.description || ""}`)} `;
+  if (/\b(inchiriez|inchiriere|inchiriat|se inchiriaza|ofer spre inchiriere|chirie|lunar)\b/.test(text)) {
+    return "inchiriere";
+  }
+  if (/\b(vand|vanzare|de vanzare|se vinde|ofer spre vanzare)\b/.test(text)) return "vanzare";
+  return null;
+}

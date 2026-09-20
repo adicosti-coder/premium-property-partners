@@ -5,6 +5,7 @@ import {
   isActiveOwnerListing,
   isIndividualOwnerListing,
   isResidentialRealEstate,
+  listingTransaction,
   ownerVerification,
 } from "@/lib/ownerListingRules";
 
@@ -51,5 +52,10 @@ describe("regulile anunțurilor de proprietari", () => {
     expect(isActiveOwnerListing({ lifecycle_status: "expired" })).toBe(false);
     expect(isResidentialRealEstate({ title: "Licență taxi de vânzare" })).toBe(false);
     expect(isResidentialRealEstate({ title: "Apartament 3 camere, etaj 2" })).toBe(true);
+  });
+
+  it("deosebește vânzarea de închiriere inclusiv pentru «închiriez»", () => {
+    expect(listingTransaction({ title: "Proprietar închiriez apartament 3 camere" })).toBe("inchiriere");
+    expect(listingTransaction({ title: "Vând apartament decomandat" })).toBe("vanzare");
   });
 });
