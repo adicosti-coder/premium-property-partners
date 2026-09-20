@@ -431,7 +431,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
     }
     const mp = surfaceFromText(rawText);
-    if (mp !== null) {
+    if (!soft && mp !== null) {
       if (minMp !== null && mp < minMp) return `${mp} mp, sub minim`;
       if (maxMp !== null && mp > maxMp) return `${mp} mp, peste maxim`;
     }
