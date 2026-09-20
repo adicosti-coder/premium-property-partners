@@ -35,6 +35,7 @@ import {
   type FoundWindow,
 } from "@/components/admin/scraper/hooks/useScraperLeads";
 import { FoundListingRow } from "@/components/admin/scraper/columns/scraperColumns";
+import { ScraperHealthPanel } from "@/components/admin/ScraperHealthPanel";
 
 type Keyword = {
   id: string;
@@ -581,7 +582,10 @@ export default function ScraperMonitorPanel() {
         </div>
       </div>
 
+      <ScraperHealthPanel />
+
       {/* Live job progress */}
+
       {runningJob && (
         <Card className="border-primary/40 bg-primary/5">
           <CardHeader className="pb-2">

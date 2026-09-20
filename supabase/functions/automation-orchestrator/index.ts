@@ -75,6 +75,8 @@ const JOB_FN: Record<string, string> = {
   "listing-import-self-heal": "listing-import-self-heal",
   "listing.compile_prompt": "listing-import-compile-prompt",
   "listing.learn": "listing-import-learn",
+  // Scraper health: detectează blocaje și aplică remedieri
+  "scraper.health_monitor": "scraper-health-monitor",
 };
 
 // Per-job body overrides for manual Run (event-driven jobs that need params).
