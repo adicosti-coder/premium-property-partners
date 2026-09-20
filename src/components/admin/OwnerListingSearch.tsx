@@ -49,7 +49,40 @@ export interface AdHocListing {
   ai_score_breakdown?: { explicit_owner_signal?: boolean } | null;
   is_active?: boolean | null;
   lifecycle_status?: string | null;
+  /** Data la care anunțul a apărut prima dată la noi (data publicării). */
+  created_at?: string | null;
+  /** Ultima dată când anunțul a fost văzut online. */
+  last_seen_at?: string | null;
 }
+
+/** „Publicat în ultimele...” — data la care anunțul a apărut prima dată. */
+const ANY_AGE = "__anyage__";
+const AGE_OPTIONS = [
+  { value: "1", label: "Publicat azi" },
+  { value: "3", label: "Ultimele 3 zile" },
+  { value: "7", label: "Ultimele 7 zile" },
+  { value: "14", label: "Ultimele 14 zile" },
+  { value: "30", label: "Ultimele 30 zile" },
+];
+
+/** Durata de când anunțul este online — arată cât de „proaspătă” e oferta. */
+const ANY_DURATION = "__anyduration__";
+const DURATION_OPTIONS = [
+  { value: "lt3", label: "Online sub 3 zile" },
+  { value: "lt7", label: "Online sub 7 zile" },
+  { value: "7to30", label: "Online 7–30 zile" },
+  { value: "gt30", label: "Online peste 30 zile" },
+];
+
+/** Numărul de zile de când anunțul este online, sau `null` dacă nu știm. */
+const daysOnline = (l: AdHocListing): number | null => {
+  if (!l.created_at) return null;
+  const start = new Date(l.created_at).getTime();
+  if (!Number.isFinite(start)) return null;
+  const end = l.last_seen_at ? new Date(l.last_seen_at).getTime() : Date.now();
+  const ms = (Number.isFinite(end) ? end : Date.now()) - start;
+  return Math.max(0, Math.floor(ms / 86400000));
+};
 
 const ALL_PLATFORMS = "__all__";
 const ANY_DEAL = "__anydeal__";
