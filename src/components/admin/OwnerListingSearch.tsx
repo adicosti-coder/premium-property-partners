@@ -405,7 +405,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
     }
 
-    if (extras.length > 0 && !thinText) {
+    if (!soft && extras.length > 0 && !thinText) {
       const missing = extras.filter(x => {
         const opt = EXTRA_OPTIONS.find(o => o.value === x);
         return !(opt?.words ?? [x]).some(w => normalizedText.includes(norm(w)));
