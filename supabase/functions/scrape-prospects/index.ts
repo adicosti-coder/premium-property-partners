@@ -131,17 +131,67 @@ function scoreListing(data: {
   return { score: Math.min(score, 100), breakdown };
 }
 
-const DEFAULT_SEARCH_QUERIES = [
-  { platform: 'imobiliare.ro', query: 'apartament vanzare timisoara site:imobiliare.ro' },
-  { platform: 'OLX', query: 'apartament vanzare timisoara site:olx.ro' },
-  { platform: 'Storia.ro', query: 'apartament vanzare timisoara site:storia.ro' },
-  { platform: 'Publi24', query: 'apartament vanzare timisoara site:publi24.ro' },
-  { platform: 'Facebook Marketplace', query: 'apartament vanzare timisoara site:facebook.com/marketplace' },
-  { platform: 'Grupuri Facebook', query: 'apartament vanzare timisoara "facebook.com/groups"' },
-  { platform: 'BursaImobiliara.ro', query: 'apartament vanzare timisoara site:bursaimobiliara.ro' },
-  { platform: 'Homezz.ro', query: 'apartament vanzare timisoara site:homezz.ro' },
-  { platform: 'Anuntul.ro', query: 'apartament vanzare timisoara site:anuntul.ro' },
+/** Portalurile românești acoperite de parsere directe + căutare pe motoare. */
+const PORTAL_SITES: Array<{ platform: string; site: string }> = [
+  { platform: 'OLX', site: 'site:olx.ro' },
+  { platform: 'Storia.ro', site: 'site:storia.ro' },
+  { platform: 'imobiliare.ro', site: 'site:imobiliare.ro' },
+  { platform: 'Publi24', site: 'site:publi24.ro' },
+  { platform: 'BursaImobiliara.ro', site: 'site:bursaimobiliara.ro' },
+  { platform: 'Homezz.ro', site: 'site:homezz.ro' },
+  { platform: 'Anuntul.ro', site: 'site:anuntul.ro' },
+  { platform: 'Anunturi-Imobiliare.ro', site: 'site:anunturi-imobiliare.ro' },
+  { platform: 'Tocmai.ro', site: 'site:tocmai.ro' },
 ];
+
+/**
+ * Zonele Timișoarei folosite pentru extinderea căutărilor implicite.
+ * Oglindesc taxonomia portalurilor (vezi src/lib/timisoaraPortalZones.ts),
+ * limitate la zonele cu volum real de anunțuri ca să nu umflăm costul.
+ */
+const DEFAULT_SCAN_ZONES = [
+  'centru', 'cetate', 'iosefin', 'elisabetin', 'fabric', 'complex studentesc',
+  'aradului', 'lipovei', 'circumvalatiunii', 'torontalului', 'take ionescu',
+  'girocului', 'soarelui', 'buziasului', 'sagului', 'dambovita', 'steaua',
+  'olimpia stadion', 'calea martirilor', 'blascovici', 'mehala', 'bucovina',
+  'dumbravita', 'giroc', 'chisoda', 'ghiroda', 'mosnita noua', 'sanmihaiu roman',
+];
+
+/** Zonele prioritare: primele extinse pe toate portalurile mari. */
+const PRIORITY_SCAN_ZONES = DEFAULT_SCAN_ZONES.slice(0, 14);
+
+function buildDefaultSearchQueries(): Array<{ platform: string; query: string }> {
+  const out: Array<{ platform: string; query: string }> = [];
+  const push = (platform: string, query: string) => out.push({ platform, query });
+
+  // 1) Bază: vânzare + închiriere pe fiecare portal.
+  for (const p of PORTAL_SITES) {
+    push(p.platform, `apartament vanzare timisoara ${p.site}`);
+    push(p.platform, `apartament de inchiriat timisoara ${p.site}`);
+  }
+  // 2) Case/garsoniere pe portalurile mari.
+  for (const p of PORTAL_SITES.slice(0, 5)) {
+    push(p.platform, `garsoniera timisoara ${p.site}`);
+    push(p.platform, `casa vanzare timisoara ${p.site}`);
+  }
+  // 3) Extindere pe zone: portalurile mari × zone prioritare.
+  for (const p of PORTAL_SITES.slice(0, 4)) {
+    for (const zone of PRIORITY_SCAN_ZONES) {
+      push(p.platform, `apartament ${zone} timisoara ${p.site}`);
+    }
+  }
+  // 4) Restul zonelor, doar pe OLX + Publi24 (cele mai bogate în proprietari).
+  for (const zone of DEFAULT_SCAN_ZONES.slice(14)) {
+    push('OLX', `apartament ${zone} timisoara site:olx.ro`);
+    push('Publi24', `apartament ${zone} timisoara site:publi24.ro`);
+  }
+  // 5) Grupuri / marketplace Facebook (volum mic, dar proprietari puri).
+  push('Facebook Marketplace', 'apartament vanzare timisoara site:facebook.com/marketplace');
+  push('Grupuri Facebook', 'apartament vanzare timisoara "facebook.com/groups"');
+  return out;
+}
+
+const DEFAULT_SEARCH_QUERIES = buildDefaultSearchQueries();
 
 /**
  * GLOBAL RULE — "Doar Proprietari"
