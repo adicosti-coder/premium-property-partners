@@ -781,7 +781,7 @@ async function hydrateFreeResult(result: FreeResult): Promise<FreeResult> {
   if (!sparse) return result;
 
   const referer = (() => { try { return new URL(result.url).origin + '/'; } catch { return undefined; } })();
-  const { ok, html } = await fetchHtml(result.url, 4000, referer);
+  const { ok, html } = await fetchHtmlUnblockable(result.url, 4000, referer);
   if (!ok || !html) return result;
 
   const pick = (patterns: RegExp[]): string => {
