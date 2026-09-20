@@ -632,6 +632,37 @@ async function proxyFetchHtml(
 }
 
 /**
+ * Buget de apeluri prin proxy (Scrape.do / Firecrawl stealth) pe invocare.
+ * Fiecare apel costă credite, deci separăm bugetul pentru listele de căutare
+ * (scump și repetitiv) de cel pentru paginile de anunț (valoare mare: preț,
+ * telefon, descriere reală).
+ */
+const PROXY_BUDGET = {
+  searchPages: 0,
+  detailPages: 0,
+  maxSearchPages: 4,
+  maxDetailPages: 12,
+};
+
+function resetProxyBudget(opts?: { maxSearchPages?: number; maxDetailPages?: number }) {
+  PROXY_BUDGET.searchPages = 0;
+  PROXY_BUDGET.detailPages = 0;
+  if (opts?.maxSearchPages !== undefined) PROXY_BUDGET.maxSearchPages = opts.maxSearchPages;
+  if (opts?.maxDetailPages !== undefined) PROXY_BUDGET.maxDetailPages = opts.maxDetailPages;
+}
+
+function canSpendProxy(kind: 'search' | 'detail'): boolean {
+  return kind === 'search'
+    ? PROXY_BUDGET.searchPages < PROXY_BUDGET.maxSearchPages
+    : PROXY_BUDGET.detailPages < PROXY_BUDGET.maxDetailPages;
+}
+
+function spendProxy(kind: 'search' | 'detail') {
+  if (kind === 'search') PROXY_BUDGET.searchPages++;
+  else PROXY_BUDGET.detailPages++;
+}
+
+/**
  * fetch normal + deblocare prin proxy. `alwaysProxy` sare peste fetch-ul direct
  * pentru domeniile despre care știm că blochează sau randează din JS (OLX).
  */
