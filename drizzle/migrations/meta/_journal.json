@@ -407,6 +407,13 @@
       "when": 1789825065166,
       "tag": "0057_preferred_zones_and_expiry_cron",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1789882160509,
+      "tag": "0058_scraper_health_monitor",
+      "breakpoints": true
     }
   ]
 }

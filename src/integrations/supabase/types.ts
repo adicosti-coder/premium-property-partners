@@ -6600,6 +6600,51 @@ export type Database = {
         }
         Relationships: []
       }
+      scraper_health_incidents: {
+        Row: {
+          alerted_at: string | null
+          detail: Json
+          id: string
+          kind: string
+          last_seen_at: string
+          occurrences: number
+          opened_at: string
+          remediation: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          target: string
+        }
+        Insert: {
+          alerted_at?: string | null
+          detail?: Json
+          id?: string
+          kind: string
+          last_seen_at?: string
+          occurrences?: number
+          opened_at?: string
+          remediation?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          target: string
+        }
+        Update: {
+          alerted_at?: string | null
+          detail?: Json
+          id?: string
+          kind?: string
+          last_seen_at?: string
+          occurrences?: number
+          opened_at?: string
+          remediation?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          target?: string
+        }
+        Relationships: []
+      }
       scraper_lead_status_history: {
         Row: {
           changed_at: string
@@ -6771,6 +6816,42 @@ export type Database = {
           updated_at?: string
           url?: string
           whatsapp_message?: string | null
+        }
+        Relationships: []
+      }
+      scraper_platform_health: {
+        Row: {
+          auto_disabled: boolean
+          consecutive_blocked: number
+          consecutive_zero: number
+          cooldown_until: string | null
+          last_blocked_at: string | null
+          last_ok_at: string | null
+          last_reason: string | null
+          platform: string
+          updated_at: string
+        }
+        Insert: {
+          auto_disabled?: boolean
+          consecutive_blocked?: number
+          consecutive_zero?: number
+          cooldown_until?: string | null
+          last_blocked_at?: string | null
+          last_ok_at?: string | null
+          last_reason?: string | null
+          platform: string
+          updated_at?: string
+        }
+        Update: {
+          auto_disabled?: boolean
+          consecutive_blocked?: number
+          consecutive_zero?: number
+          cooldown_until?: string | null
+          last_blocked_at?: string | null
+          last_ok_at?: string | null
+          last_reason?: string | null
+          platform?: string
+          updated_at?: string
         }
         Relationships: []
       }
