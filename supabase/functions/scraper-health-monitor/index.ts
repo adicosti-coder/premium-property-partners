@@ -158,9 +158,11 @@ Deno.serve(async (req) => {
     }
 
     // ── 2+3. portaluri blocate / auto-revenire ────────────────────────────
+    // Doar scanările din ultimele 24h — datele vechi nu trebuie să dezactiveze portaluri.
     const { data: recentRuns } = await sb
       .from("prospect_scan_jobs")
       .select("result, created_at")
+      .gte("created_at", minutesAgo(24 * 60))
       .order("created_at", { ascending: false })
       .limit(RECENT_RUNS);
 
