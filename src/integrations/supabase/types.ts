@@ -6347,6 +6347,48 @@ export type Database = {
         }
         Relationships: []
       }
+      proxy_call_log: {
+        Row: {
+          budget_exhausted: boolean
+          cost_credits: number
+          created_at: string
+          domain: string | null
+          function_name: string
+          id: string
+          kind: string
+          ok: boolean
+          provider: string
+          status: number | null
+          url: string | null
+        }
+        Insert: {
+          budget_exhausted?: boolean
+          cost_credits?: number
+          created_at?: string
+          domain?: string | null
+          function_name?: string
+          id?: string
+          kind?: string
+          ok?: boolean
+          provider?: string
+          status?: number | null
+          url?: string | null
+        }
+        Update: {
+          budget_exhausted?: boolean
+          cost_credits?: number
+          created_at?: string
+          domain?: string | null
+          function_name?: string
+          id?: string
+          kind?: string
+          ok?: boolean
+          provider?: string
+          status?: number | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       public_site_settings: {
         Row: {
           hero_badge_en: string | null
