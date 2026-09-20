@@ -479,6 +479,21 @@ function simplifyForWebEngine(q: string, maxWords = 6): string {
   return siteMatch ? `${base} ${siteMatch[0]}`.trim() : base;
 }
 
+function searchIntent(query: string): { rent: boolean; house: boolean; land: boolean } {
+  const q = removeDiacritics(query.toLowerCase());
+  return {
+    rent: /\b(inchiriere|inchiriat|chirie)\b/.test(q),
+    house: /\b(casa|vila|case|vile)\b/.test(q),
+    land: /\b(teren|terenuri)\b/.test(q),
+  };
+}
+
+function pushUniqueResult(out: FreeResult[], seen: Set<string>, result: FreeResult, max: number) {
+  if (!result.url || seen.has(result.url) || out.length >= max) return;
+  seen.add(result.url);
+  out.push(result);
+}
+
 function extractDomainFromSiteOperator(q: string): string | null {
   const m = q.match(/site:([a-z0-9.\-]+(?:\/[a-z0-9._\-/]*)?)/i);
   return m ? m[1].toLowerCase() : null;
@@ -598,11 +613,14 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
   const slug = clean.replace(/\s+/g, '-').toLowerCase();
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'de-inchiriat' : 'de-vanzare';
+  const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente-garsoniere';
   // private_business=1 filtrează direct anunțurile proprietarilor (fără agenții)
   // Probăm 2 pattern-uri URL OLX (categorie imobiliare + cautare globală) ca să prindem mai multe rezultate.
   const urls = [
     `https://www.olx.ro/d/imobiliare/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
-    `https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
+    `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
   ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -627,21 +645,52 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
 async function directStoriaSearch(query: string, max: number): Promise<FreeResult[]> {
   const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
-  const slug = encodeURIComponent(clean.replace(/\s+/g, '-').toLowerCase());
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'inchiriere' : 'vanzare';
+  const category = intent.house ? 'casa' : intent.land ? 'teren' : 'apartament';
   // ownerTypeSingleSelect=PRIVATE = anunțuri doar de la proprietari
-  const url = `https://www.storia.ro/ro/rezultate/vanzare/apartament/timis/timisoara?ownerTypeSingleSelect=PRIVATE&viewType=listing&searchingCriteria=${slug}`;
+  const url = `https://www.storia.ro/ro/rezultate/${transaction}/${category}/timis/timisoara?ownerTypeSingleSelect=PRIVATE&viewType=listing`;
   const { ok, html } = await fetchHtml(url, 5500, 'https://www.storia.ro/');
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
+
+  // Storia publică toate cardurile paginii într-un JSON-LD AggregateOffer.
+  // Citirea lui evită câte un request lent pentru fiecare anunț și păstrează
+  // titlul, descrierea, camerele, suprafața și prețul din sursa reală.
+  for (const script of html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const root = JSON.parse(script[1]);
+      const visit = (node: unknown) => {
+        if (!node || out.length >= max) return;
+        if (Array.isArray(node)) { node.forEach(visit); return; }
+        if (typeof node !== 'object') return;
+        const obj = node as Record<string, any>;
+        if (obj['@type'] === 'Offer' && typeof obj.url === 'string' && obj.url.includes('/ro/oferta/')) {
+          const offered = obj.itemOffered && typeof obj.itemOffered === 'object' ? obj.itemOffered : {};
+          const rooms = offered.numberOfRooms ? `${offered.numberOfRooms} camere` : '';
+          const size = offered.floorSize?.value ? `${offered.floorSize.value} mp` : '';
+          const location = offered.address?.addressLocality || '';
+          const price = obj.price ? `${obj.price} EUR` : '';
+          const description = decodeBasicHtml(String(offered.description || ''));
+          pushUniqueResult(out, seen, {
+            url: obj.url,
+            title: decodeBasicHtml(String(obj.name || '')),
+            description,
+            markdown: `${obj.name || ''} ${description} ${rooms} ${size} ${location} ${price}`.trim(),
+          }, max);
+        }
+        Object.values(obj).forEach(visit);
+      };
+      visit(root);
+    } catch { /* JSON-LD parțial — continuăm cu linkurile HTML */ }
+  }
   const re = /<a[^>]+href="(\/ro\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) && out.length < max) {
     const href = `https://www.storia.ro${m[1]}`;
-    if (seen.has(href)) continue;
-    seen.add(href);
     const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
-    out.push({ url: href, title, markdown: title });
+    pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
   }
   return out;
 }
@@ -649,10 +698,12 @@ async function directStoriaSearch(query: string, max: number): Promise<FreeResul
 async function directImobiliareSearch(query: string, max: number): Promise<FreeResult[]> {
   const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'inchirieri' : 'vanzare';
+  const category = intent.house ? 'case-vile' : intent.land ? 'terenuri' : 'apartamente';
   // imobiliare.ro nu permite query params arbitrari pe URL public; folosim categoriile + persoane-fizice.
   const urls = [
-    'https://www.imobiliare.ro/vanzare-apartamente/timisoara?id=88&tip_proprietar=persoana-fizica',
-    'https://www.imobiliare.ro/inchirieri-apartamente/timisoara?id=88&tip_proprietar=persoana-fizica',
+    `https://www.imobiliare.ro/${transaction}-${category}/judetul-timis/timisoara?tip_proprietar=persoana-fizica`,
   ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -660,13 +711,16 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
     if (out.length >= max) break;
     const { ok, html } = await fetchHtml(url, 5500, 'https://www.imobiliare.ro/');
     if (!ok || !html) continue;
-    const re = /<a[^>]+href="(https?:\/\/www\.imobiliare\.ro\/[^"#?]*?-X[0-9A-Z]{6,12})"/gi;
+    const decoded = decodeBasicHtml(html);
+    // Formatul actual folosește /oferta/...-<id numeric>, inclusiv în JSON-ul
+    // serializat al paginii. Vechiul parser accepta doar sufixul -X..., deci 0 rezultate.
+    const re = /"url":"(\/oferta\/[^"?#]+)"[\s\S]{0,900}?"title":"([^"]*)"[\s\S]{0,900}?"location":"([^"]*)"[\s\S]{0,500}?"price":"([^"]*)"/gi;
     let m: RegExpExecArray | null;
-    while ((m = re.exec(html)) && out.length < max) {
-      const href = m[1];
-      if (seen.has(href)) continue;
-      seen.add(href);
-      out.push({ url: href, title: 'imobiliare.ro listing', markdown: '' });
+    while ((m = re.exec(decoded)) && out.length < max) {
+      const href = `https://www.imobiliare.ro${m[1]}`;
+      const title = decodeBasicHtml(m[2]);
+      const markdown = `${title} ${decodeBasicHtml(m[3])} ${decodeBasicHtml(m[4])}`.trim();
+      pushUniqueResult(out, seen, { url: href, title, description: markdown, markdown }, max);
     }
   }
   return out;
@@ -675,19 +729,21 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
 async function directPubli24Search(query: string, max: number): Promise<FreeResult[]> {
   const clean = simplifyForFreeEngine(query, 4);
   if (!clean) return [];
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'de-inchiriat' : 'de-vanzare';
+  const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente';
   const slug = encodeURIComponent(clean.replace(/\s+/g, '+'));
-  const url = `https://www.publi24.ro/anunturi/imobiliare/de-vanzare/apartamente/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`;
+  const url = `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`;
   const { ok, html } = await fetchHtml(url, 5500, 'https://www.publi24.ro/');
   if (!ok || !html) return [];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
-  const re = /<a[^>]+href="(https?:\/\/www\.publi24\.ro\/anunturi\/[^"#?]+)"/gi;
+  const re = /<a[^>]+href="(https?:\/\/www\.publi24\.ro\/anunturi\/[^"#?]+\/anunt\/[^"#?]+\/[a-z0-9]+\.html)"[^>]*>[\s\S]{0,900}?<img[^>]+alt="([^"]*)"/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) && out.length < max) {
     const href = m[1];
-    if (seen.has(href) || !/\/[a-z0-9-]+-id\d+\.html/i.test(href)) continue;
-    seen.add(href);
-    out.push({ url: href, title: 'publi24 listing', markdown: '' });
+    const title = decodeBasicHtml(m[2]);
+    pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
   }
   return out;
 }
@@ -1360,7 +1416,7 @@ Deno.serve(async (req) => {
     let customPlatform: string | null = null;
     try {
       const body = await req.json();
-      if (body?.max_results) maxResults = Math.min(body.max_results, 15);
+      if (body?.max_results) maxResults = Math.min(body.max_results, 30);
       if (body?.custom_query) customQuery = body.custom_query;
       if (typeof body?.custom_platform === 'string' && body.custom_platform.trim().length > 0) {
         customPlatform = body.custom_platform.trim();
@@ -1458,7 +1514,7 @@ Deno.serve(async (req) => {
     let bingConsecutiveEmpty = 0;
     const BING_CIRCUIT_LIMIT = 3;
     const scanStartedAt = Date.now();
-    const MAX_BACKGROUND_RUNTIME_MS = 42_000;
+    const MAX_BACKGROUND_RUNTIME_MS = customQuery ? 55_000 : 42_000;
     const markTimedOut = async (processed: number, total: number) => {
       timedOut = true;
       const remaining = (queries ?? []).slice(processed).map((q) => ({ platform: q.platform, query: q.query }));

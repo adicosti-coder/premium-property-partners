@@ -480,6 +480,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         preserve_agency_filter: true,
         hydrate_phones: false,
         discovery_mode: true,
+        scan_mode: "auto",
+        auto_fallback_threshold: 8,
       },
     });
     if (error) throw error;
@@ -719,9 +721,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     try {
       const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
       // Limităm numărul total de interogări ca să nu consumăm credite inutil.
-      const jobs = platforms
-        .flatMap(p => terms.slice(0, 3).map(t => ({ p, t })))
-        .slice(0, 12);
+      // Întâi acoperim fiecare portal cu interogarea principală, apoi adăugăm
+      // variantele. Astfel limita nu mai taie ultimul portal din listă.
+      const primaryJobs = platforms.map(p => ({ p, t: terms[0] }));
+      const variantJobs = terms.slice(1, 3).flatMap(t => platforms.map(p => ({ p, t })));
+      const jobs = [...primaryJobs, ...variantJobs].slice(0, 15);
       const settled = await Promise.allSettled(jobs.map(j => searchOnePlatform(j.t, j.p)));
       const ok = settled.flatMap(r => (r.status === "fulfilled" ? [r.value] : []));
       const failedCount = settled.length - ok.length;
