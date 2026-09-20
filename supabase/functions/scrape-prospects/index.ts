@@ -530,6 +530,77 @@ async function fetchHtml(url: string, timeoutMs = 6000, referer?: string): Promi
   return last;
 }
 
+/**
+ * OLX (CloudFront) blochează cu 403 orice fetch din datacenter. Când se
+ * întâmplă, cerem pagina prin Firecrawl cu proxy stealth — singura cale
+ * care trece de anti-bot. Folosit DOAR ca fallback, deci costul rămâne mic.
+ * `maxAge` permite servirea unei copii recente din cache-ul Firecrawl.
+ */
+async function unblockedFetchHtml(
+  url: string,
+  timeoutMs = 20000,
+  opts: { maxAgeMs?: number } = {},
+): Promise<{ ok: boolean; status: number; html: string; via: 'firecrawl' | 'none' }> {
+  const key = Deno.env.get('FIRECRAWL_API_KEY') || '';
+  if (!key) return { ok: false, status: 0, html: '', via: 'none' };
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const resp = await fetch('https://api.firecrawl.dev/v2/scrape', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        formats: ['html', 'links'],
+        onlyMainContent: false,
+        proxy: 'stealth',
+        blockAds: true,
+        waitFor: 1200,
+        maxAge: opts.maxAgeMs ?? 900000,
+        location: { country: 'RO', languages: ['ro-RO'] },
+      }),
+    });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      console.warn(JSON.stringify({ kind: 'unblock_fetch_failed', url, status: resp.status, body: body.slice(0, 300) }));
+      return { ok: false, status: resp.status, html: '', via: 'firecrawl' };
+    }
+    const json = await resp.json().catch(() => ({} as Record<string, unknown>));
+    const doc = (json as { data?: Record<string, unknown> }).data ?? (json as Record<string, unknown>);
+    const html = typeof doc.html === 'string' ? doc.html : typeof doc.rawHtml === 'string' ? doc.rawHtml : '';
+    const rawLinks = Array.isArray(doc.links) ? (doc.links as unknown[]) : [];
+    const links = rawLinks
+      .map((l) => (typeof l === 'string' ? l : (l as { url?: string })?.url))
+      .filter((l): l is string => typeof l === 'string');
+    // Linkurile descoperite sunt adăugate ca ancore sintetice, ca parserele
+    // existente (bazate pe regex pe <a href>) să le poată folosi direct.
+    const synthetic = links.map((l) => `<a href="${l}"></a>`).join('');
+    const merged = `${html}${synthetic}`;
+    return { ok: merged.length > 0, status: 200, html: merged, via: 'firecrawl' };
+  } catch (e) {
+    console.warn(JSON.stringify({ kind: 'unblock_fetch_error', url, message: (e as Error).message }));
+    return { ok: false, status: 0, html: '', via: 'firecrawl' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** fetch normal, cu fallback automat prin proxy stealth la blocaj (403/429/0). */
+async function fetchHtmlUnblockable(
+  url: string,
+  timeoutMs = 6000,
+  referer?: string,
+): Promise<{ ok: boolean; status: number; html: string; unblocked: boolean }> {
+  const direct = await fetchHtml(url, timeoutMs, referer);
+  if (direct.ok && direct.html) return { ...direct, unblocked: false };
+  const blockedSignal = direct.status === 403 || direct.status === 429 || direct.status === 0 || direct.status === 503;
+  if (!blockedSignal) return { ...direct, unblocked: false };
+  const viaProxy = await unblockedFetchHtml(url);
+  if (viaProxy.ok) return { ok: true, status: 200, html: viaProxy.html, unblocked: true };
+  return { ...direct, unblocked: false };
+}
+
 function stripQueryOperators(q: string): string {
   return q
     .replace(/site:\S+/gi, '')
