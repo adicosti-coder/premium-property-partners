@@ -1794,7 +1794,10 @@ function hasAgencySignal(title: string | null | undefined, url: string | null | 
 }
 
 function hasOwnerFilterIntent(query: string | null | undefined, url: string | null | undefined): boolean {
-  const blob = removeDiacritics(`${query || ''} ${url || ''}`.toLowerCase());
+  // Only a filter present on the returned URL is evidence that the marketplace
+  // enforced owner-only results. Search operators in the outgoing query are
+  // merely intent and are not reliably honoured by fallback search engines.
+  const blob = removeDiacritics(`${url || ''}`.toLowerCase());
   return [
     'proprietar', 'proprietari', 'persoana fizica', 'persoane fizice', 'persoana privata',
     'private_business', 'ownerTypeSingleSelect=PRIVATE', 'tip-anunt-persoane-fizice',

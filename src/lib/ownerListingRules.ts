@@ -77,7 +77,7 @@ export function isIndividualOwnerListing(candidate: OwnerListingCandidate): bool
   }
 
   if (/(q=|query=|search=|filtr|page=|pagina=|categor|pret=|price=|camere=)/.test(query)) return false;
-  if (/(\/caut|\/search|\/rezultate|\/results|\/filtr|\/categorie|\/category|\/sitemap|\/q\/)/.test(path)) return false;
+  if (/(\/caut|\/search|\/rezultate|\/results|\/filtr|\/categorie|\/category|\/sitemap|\/q(?:-|\/))/.test(path)) return false;
 
   const knownPattern =
     (/(^|\.)olx\.ro$/.test(host) && /\/d\/oferta\/.+-id[a-z0-9]+\.html?$/i.test(path)) ||
@@ -98,7 +98,9 @@ export function hasAgencyEvidence(candidate: OwnerListingCandidate): boolean {
 }
 
 export function hasOwnerEvidence(candidate: OwnerListingCandidate): boolean {
-  if (candidate.owner_verified === true || norm(candidate.prospect_type) === "proprietar") return true;
+  // Historic rows were often labelled `proprietar` only because the outgoing
+  // search query contained that word. That label alone is not evidence.
+  if (candidate.owner_verified === true) return true;
   const text = ` ${norm(`${candidate.title || ""} ${candidate.description || ""}`)} `;
   return OWNER_SIGNALS.some((signal) => text.includes(` ${norm(signal)} `));
 }

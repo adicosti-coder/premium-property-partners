@@ -31,7 +31,6 @@ import {
   isResidentialRealEstate,
   normalizeOwnerListingUrl,
   ownerVerification,
-  type OwnerVerification,
 } from "@/lib/ownerListingRules";
 
 export interface AdHocListing {
@@ -459,7 +458,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         max_results: 25,
         preserve_agency_filter: true,
         hydrate_phones: false,
-        discovery_mode: false,
+        discovery_mode: true,
         scan_mode: "auto",
         auto_fallback_threshold: 8,
       },
@@ -500,7 +499,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const fetchFor = async (w?: string) => {
       let q = supabase
         .from("prospect_listings")
-        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,prospect_type,is_active,lifecycle_status,updated_at,last_seen_at")
+        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,prospect_type,ai_score_breakdown,is_active,lifecycle_status,updated_at,last_seen_at")
         .not("source_url", "is", null)
         .eq("is_active", true)
         // „De verificat” poate avea date incomplete, dar este un rezultat real.
@@ -520,7 +519,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       return data ?? [];
     };
 
-    // Caută strict după cuvintele cerute; nu afișăm anunțuri fără legătură.
+    // Caută strict după cuvintele cerute. Dacă termenul liber lipsește, filtrele
+    // vizuale (tip/camere/zonă) decid local, fără să ascundem rândurile salvate.
     let rows: any[] = [];
     if (words.length) {
       const parts = await Promise.all(words.map(w => fetchFor(w)));
@@ -532,6 +532,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           rows.push(r);
         }
       }
+    } else {
+      rows = await fetchFor();
     }
     // Eliminăm anunțurile marcate expirate sau nemaivăzute de peste 21 de zile.
     const staleBefore = Date.now() - 21 * 24 * 60 * 60 * 1000;
@@ -551,6 +553,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         rooms: r.rooms,
         source_platform: r.source_platform,
         prospect_type: r.prospect_type,
+        owner_verified: r.ai_score_breakdown?.explicit_owner_signal === true,
         is_active: r.is_active,
         lifecycle_status: r.lifecycle_status,
       }));
@@ -761,7 +764,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
       const blocked = ok.reduce((s, r) => s + r.blocked, 0);
       const perMap = new Map<string, number>();
-      for (const r of ok) perMap.set(r.platform, (perMap.get(r.platform) || 0) + r.listings.length);
+      for (const listing of listings) {
+        const listingPlatform = listingPortal(listing) || "necunoscut";
+        perMap.set(listingPlatform, (perMap.get(listingPlatform) || 0) + 1);
+      }
       const perPlatform = Array.from(perMap.entries())
         .filter(([, n]) => n > 0)
         .sort((a, b) => b[1] - a[1])
@@ -837,7 +843,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             rooms: r.rooms,
             source_platform: r.source_platform,
             prospect_type: r.prospect_type,
-            owner_verified: r.prospect_type === "proprietar",
+            owner_verified: r.ai_score_breakdown?.explicit_owner_signal === true,
             is_active: r.is_active,
             lifecycle_status: r.lifecycle_status,
           };
