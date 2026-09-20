@@ -459,7 +459,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         max_results: 25,
         preserve_agency_filter: true,
         hydrate_phones: false,
-        discovery_mode: true,
+        discovery_mode: false,
         scan_mode: "auto",
         auto_fallback_threshold: 8,
       },
@@ -502,6 +502,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         .from("prospect_listings")
         .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,prospect_type,is_active,lifecycle_status,updated_at,last_seen_at")
         .not("source_url", "is", null)
+        .eq("is_active", true)
         // „De verificat” poate avea date incomplete, dar este un rezultat real.
         // Excludem doar agențiile și anunțurile confirmate ca expirate/respinse.
         .or("prospect_type.is.null,prospect_type.neq.agentie")
@@ -703,8 +704,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       let offTopic = 0;
       for (const r of ok) {
         for (const l of r.listings) {
-          if (!isIndividualAd(l)) { generic++; continue; }
+          if (!isIndividualOwnerListing(l)) { generic++; continue; }
           if (!isRealEstateAd(l)) { offTopic++; continue; }
+          if (!isActiveOwnerListing(l) || hasAgencyEvidence(l)) continue;
           const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
           if (key && seen.has(key)) continue;
           if (key) seen.add(key);
@@ -718,7 +720,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       let existingShown = 0;
       for (const l of existing) {
         if (!(l.url || "").trim()) continue; // salvate deja verificate; cerem doar link
+        if (!isIndividualOwnerListing(l)) { generic++; continue; }
         if (!isRealEstateAd(l)) { offTopic++; continue; }
+        if (!isActiveOwnerListing(l) || hasAgencyEvidence(l)) continue;
 
         const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
         if (key && seen.has(key)) continue;
@@ -822,7 +826,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         payload => {
           const r = payload.new as Record<string, any>;
           if (r?.prospect_type === "agentie") return;
-          if (r?.lifecycle_status === "expired" || r?.lifecycle_status === "rejected") return;
+          if (r?.is_active === false || r?.lifecycle_status === "expired" || r?.lifecycle_status === "rejected") return;
           const l: AdHocListing = {
             title: r.title,
             description: r.description,
@@ -832,9 +836,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             zone: r.zone,
             rooms: r.rooms,
             source_platform: r.source_platform,
+            prospect_type: r.prospect_type,
+            owner_verified: r.prospect_type === "proprietar",
+            is_active: r.is_active,
+            lifecycle_status: r.lifecycle_status,
           };
-          if (!isIndividualAd(l)) return;
+          if (!isIndividualOwnerListing(l)) return;
           if (!isRealEstateAd(l)) return;
+          if (hasAgencyEvidence(l)) return;
           setResults(prev => {
             if (!prev) return prev; // nicio căutare activă
             const key = normalizeAdUrl(l.url);
@@ -1254,20 +1263,26 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             );
           return arr;
         };
-        const strict = sortResults(filterListings(results));
+        const eligible = results.filter(l =>
+          isIndividualOwnerListing(l) && isResidentialRealEstate(l) && isActiveOwnerListing(l) && !hasAgencyEvidence(l),
+        );
+        const confirmed = eligible.filter(l => ownerVerification(l) === "confirmed");
+        const review = eligible.filter(l => ownerVerification(l) === "review");
+        const strict = sortResults(filterListings(confirmed));
         // Dacă detaliile fine (compartimentare, etaj, dotări, suprafață) nu apar scrise în anunț,
         // nu pierdem oferta: relaxăm automat aceste condiții și spunem clar ce s-a relaxat.
         const relaxed = strict.length === 0
-          ? sortResults(results.filter(l => excludeReason(l, "soft") === null))
+          ? sortResults(confirmed.filter(l => excludeReason(l, "soft") === null))
           : [];
         const usedRelaxed = strict.length === 0 && relaxed.length > 0;
         const matched = usedRelaxed ? relaxed : strict;
-        const main = ignoreFilters ? sortResults(results) : matched;
-        const rest = ignoreFilters ? [] : results.filter(r => !matched.includes(r));
+        const main = ignoreFilters ? sortResults(confirmed) : matched;
+        const reviewMatching = sortResults(review.filter(l => excludeReason(l, usedRelaxed ? "soft" : "strict") === null));
+        const rejected = eligible.filter(r => !matched.includes(r) && !reviewMatching.includes(r));
 
         const renderRow = (l: AdHocListing, idx: number) => (
-                <div key={`${l.url || idx}`} className="p-2 space-y-1 hover:bg-accent/30">
-                  <div className="flex items-center gap-2">
+                <div key={`${l.url || idx}`} className="p-3 space-y-2 hover:bg-accent/30">
+                  <div className="flex flex-wrap items-center gap-2 min-w-0">
                     {freshUrls.includes(normalizeAdUrl(l.url)) && (
                       <Badge className="text-[10px] shrink-0 bg-emerald-600 text-primary-foreground hover:bg-emerald-600">
                         NOU
@@ -1275,6 +1290,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     )}
                     <Badge variant="default" className="text-[10px] shrink-0">
                       {listingPortal(l) || "platformă necunoscută"}
+                    </Badge>
+                    <Badge variant={ownerVerification(l) === "confirmed" ? "secondary" : "outline"} className="text-[10px] shrink-0">
+                      {ownerVerification(l) === "confirmed" ? "Proprietar confirmat" : "De verificat"}
                     </Badge>
                     {(() => {
                       const why = excludeReason(l);
@@ -1297,7 +1315,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                         href={l.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs flex-1 truncate underline underline-offset-2 hover:text-primary"
+                        className="text-sm basis-full sm:basis-auto sm:flex-1 line-clamp-2 underline underline-offset-2 hover:text-primary"
                         title={l.url}
                       >
                         {l.title || "Anunț fără titlu"}
@@ -1384,9 +1402,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
         return (
         <div>
-          <div className="text-xs text-muted-foreground mb-1">
+          <div className="text-xs text-muted-foreground mb-2">
             {summary || `${results.length} anunțuri`}
-            {matched.length !== results.length && <> · {matched.length} respectă filtrele</>}
+            <> · {confirmed.length} proprietari confirmați · {review.length} de verificat · {matched.length} respectă filtrele</>
             {(() => {
               const per = new Map<string, number>();
               for (const l of matched) {
@@ -1447,7 +1465,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               </span>
             )}
             {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
-            {results.length > 0 && (
+            {confirmed.length > 0 && (
               <Button
                 type="button"
                 size="sm"
@@ -1457,7 +1475,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               >
                 {ignoreFilters
                   ? `Doar cele care respectă filtrele (${matched.length})`
-                  : `Arată toate anunțurile găsite (${results.length})`}
+                  : `Arată toți proprietarii confirmați (${confirmed.length})`}
               </Button>
             )}
           </div>
@@ -1472,27 +1490,27 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
                 {main.map(renderRow)}
               </div>
-              {rest.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Alte {rest.length} anunțuri găsite, care nu respectă toate filtrele — cu link direct:
-                  </p>
-                  <div className="border rounded-lg divide-y max-h-[320px] overflow-y-auto bg-background/40 opacity-90">
-                    {rest.map(renderRow)}
-                  </div>
-                </div>
-              )}
+               {(reviewMatching.length > 0 || rejected.length > 0) && (
+                 <details className="mt-3 rounded-md border bg-muted/20">
+                   <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3 text-xs font-medium">
+                     <ChevronDown className="h-4 w-4" /> Diagnostic: {reviewMatching.length} de verificat, {rejected.length} neconforme
+                   </summary>
+                   <div className="border-t divide-y max-h-[320px] overflow-y-auto bg-background/60">
+                     {[...reviewMatching, ...rejected].map(renderRow)}
+                   </div>
+                 </details>
+               )}
             </>
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                {results.length > 0
-                  ? `Am găsit ${results.length} anunțuri, dar niciunul nu respectă filtrele alese.`
+                 {eligible.length > 0
+                   ? `Am găsit ${eligible.length} anunțuri individuale, dar niciun proprietar confirmat nu respectă filtrele alese.`
                   : "Niciun anunț găsit pentru aceste cuvinte. Încearcă o formulare mai simplă (ex: „decomandat Timișoara”)."}
               </p>
-              {results.length > 0 && (() => {
+               {eligible.length > 0 && (() => {
                 const per = new Map<string, number>();
-                for (const l of results) {
+                 for (const l of eligible) {
                   const why = excludeReason(l);
                   if (why) per.set(why, (per.get(why) || 0) + 1);
                 }
@@ -1505,11 +1523,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                   </ul>
                 ) : null;
               })()}
-              {results.length > 0 && (
+               {eligible.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
-                    Arată toate cele {results.length} anunțuri găsite
-                  </Button>
+                   {confirmed.length > 0 && <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
+                     Arată toți proprietarii confirmați ({confirmed.length})
+                   </Button>}
                   <Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={resetFilters}>
                     Șterge filtrele
                   </Button>

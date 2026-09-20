@@ -2451,6 +2451,12 @@ Deno.serve(async (req) => {
             const url = normalizeSourceUrl(rawResult.url);
             if (!url) continue;
 
+            // Reject obvious category/search URLs before spending a detail request.
+            if (isGenericSearchPage(url, rawResult.title || '')) {
+              genericPageSkipped++;
+              archivedSkipped++;
+              continue;
+            }
             const result = customQuery ? await hydrateFreeResult(rawResult) : rawResult;
 
             // New-yield mode: skip already-known source URLs before any costly
@@ -2466,6 +2472,7 @@ Deno.serve(async (req) => {
                 customQuery &&
                 known &&
                 known.prospect_type !== 'agentie' &&
+                known.is_active !== false &&
                 known.lifecycle_status !== 'expired' &&
                 known.lifecycle_status !== 'rejected'
               ) {
@@ -2753,7 +2760,7 @@ Deno.serve(async (req) => {
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
               }, { onConflict: 'source_url', ignoreDuplicates: true })
-              .select('id, title, description, price, contact_phone, zone, rooms, source_platform, lead_score, source_url')
+              .select('id, title, description, price, contact_phone, zone, rooms, source_platform, lead_score, source_url, prospect_type, is_active, lifecycle_status')
               .maybeSingle();
 
 
