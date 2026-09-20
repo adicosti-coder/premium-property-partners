@@ -832,6 +832,7 @@ function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
     const toTs = toDate ? new Date(toDate + "T23:59:59").getTime() : null;
     const list = prospects.filter((p) => {
       if (hiddenIds.has(p.id)) return false;
+      if (!isIndividualListing(p)) return false;
       const isAgency = p.prospect_type === "agentie";
       if (showAgencies) {
         if (!isAgency) return false;
