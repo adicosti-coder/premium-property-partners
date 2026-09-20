@@ -637,6 +637,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         owner_verified: r.ai_score_breakdown?.explicit_owner_signal === true,
         is_active: r.is_active,
         lifecycle_status: r.lifecycle_status,
+        created_at: r.created_at,
+        last_seen_at: r.last_seen_at,
       }));
 
   };
