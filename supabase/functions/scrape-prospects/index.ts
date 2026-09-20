@@ -1041,7 +1041,7 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
       const pick = (key: string) => decodeBasicHtml(block.match(new RegExp(`"${key}":"([^"]*)"`, 'i'))?.[1] || '');
       const sellerType = pick('sellerType').toLowerCase();
       if (sellerType === 'agency' || sellerType === 'developer') continue;
-      const title = pick('title') || titleFromListingUrl(href);
+      const title = pick('title') || titleFromListingUrl(href) || '';
       const markdown = `${title} ${pick('descriptionPreview')} ${pick('location')} ${pick('price')}`.trim();
       pushUniqueResult(out, seen, { url: href, title, description: markdown, markdown }, max);
     }
