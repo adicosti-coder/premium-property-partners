@@ -1153,6 +1153,33 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         <AddAgencyPhoneDialog size="default" className="min-h-[48px] sm:min-h-0" />
       </div>
 
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Camere (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { value: "1", label: "1 cameră" },
+            { value: "2", label: "2 camere" },
+            { value: "3", label: "3 camere" },
+            { value: "4", label: "4+ camere" },
+          ].map(r => {
+            const on = rooms.includes(r.value);
+            return (
+              <Button
+                key={r.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setRooms(v => toggleIn(v, r.value)); setIgnoreFilters(false); }}
+              >
+                {r.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
         <Select value={deal} onValueChange={setDeal}>
           <SelectTrigger className="sm:w-[170px] min-h-[48px] sm:min-h-0" aria-label="Tip tranzacție">
@@ -1164,32 +1191,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <SelectItem value="inchiriere">Doar închiriere</SelectItem>
           </SelectContent>
         </Select>
-        <div className="space-y-1.5">
-          <div className="text-[11px] text-muted-foreground">Camere (poți alege mai multe)</div>
-          <div className="flex flex-wrap gap-1.5">
-            {[
-              { value: "1", label: "1 cameră" },
-              { value: "2", label: "2 camere" },
-              { value: "3", label: "3 camere" },
-              { value: "4", label: "4+ camere" },
-            ].map(r => {
-              const on = rooms.includes(r.value);
-              return (
-                <Button
-                  key={r.value}
-                  type="button"
-                  size="sm"
-                  variant={on ? "default" : "outline"}
-                  aria-pressed={on}
-                  className="h-9 text-xs"
-                  onClick={() => { setRooms(v => toggleIn(v, r.value)); setIgnoreFilters(false); }}
-                >
-                  {r.label}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
         <Input
           value={minPrice}
           onChange={e => setMinPrice(e.target.value)}
