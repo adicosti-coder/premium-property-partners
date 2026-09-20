@@ -139,6 +139,8 @@ const DEFAULT_SEARCH_QUERIES = [
   { platform: 'Facebook Marketplace', query: 'apartament vanzare timisoara site:facebook.com/marketplace' },
   { platform: 'Grupuri Facebook', query: 'apartament vanzare timisoara "facebook.com/groups"' },
   { platform: 'BursaImobiliara.ro', query: 'apartament vanzare timisoara site:bursaimobiliara.ro' },
+  { platform: 'Homezz.ro', query: 'apartament vanzare timisoara site:homezz.ro' },
+  { platform: 'Anuntul.ro', query: 'apartament vanzare timisoara site:anuntul.ro' },
 ];
 
 /**
@@ -163,6 +165,8 @@ const OWNER_URL_FILTERS: Record<string, string> = {
   'imobiliare.ro': 'inurl:persoane-fizice OR inurl:proprietari',
   'Publi24': 'inurl:tip-anunt-persoane-fizice OR inurl:proprietari',
   'BursaImobiliara.ro': 'inurl:proprietar OR inurl:persoane-fizice',
+  'Homezz.ro': 'inurl:proprietar OR inurl:persoane-fizice',
+  'Anuntul.ro': 'inurl:proprietar OR inurl:persoane-fizice',
 };
 
 /** Detect platform name from a free-text query (best-effort). */
