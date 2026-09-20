@@ -343,7 +343,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
    * le respectă. Informația lipsă din anunț NU exclude anunțul — arătăm mai
    * degrabă oferta, decât să o pierdem din cauza unui titlu sărac.
    */
-  const excludeReason = (l: AdHocListing): string | null => {
+  const excludeReason = (l: AdHocListing, mode: "strict" | "soft" = "strict"): string | null => {
+    /** În modul relaxat nu pierdem oferta pentru detalii fine (compartimentare, etaj, dotări, suprafață). */
+    const soft = mode === "soft";
     const min = minPrice ? Number(minPrice.replace(/[^\d]/g, "")) : null;
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms.map(r => Number(r)).filter(n => Number.isFinite(n));
