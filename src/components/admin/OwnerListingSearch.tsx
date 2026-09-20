@@ -547,10 +547,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const isRealEstateAd = (l: AdHocListing): boolean => {
     const t = ` ${norm(`${l.title || ""} ${l.description || ""} ${l.zone || ""}`)} `;
     if (t.trim().length === 0) return false;
-    if (OFF_TOPIC_WORDS.some(w => t.includes(` ${norm(w)} `) || t.includes(` ${norm(w)}`) && norm(w).length > 6)) {
-      return false;
-    }
-    return REAL_ESTATE_WORDS.some(w => t.includes(` ${norm(w)} `) || t.includes(` ${norm(w)}`) && norm(w).length > 4);
+    const hasWord = (w: string) => t.includes(` ${norm(w)} `) || t.includes(` ${norm(w)},`);
+    if (OFF_TOPIC_WORDS.some(hasWord)) return false;
+    return REAL_ESTATE_WORDS.some(hasWord);
   };
 
   /** Anunțuri deja salvate care se potrivesc cu căutarea — ca să avem mereu linkuri. */
