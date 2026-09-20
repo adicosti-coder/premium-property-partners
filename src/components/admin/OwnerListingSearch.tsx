@@ -302,18 +302,21 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         JSON.stringify({
           types, partitions, extras, floors, rooms, zones, deal, platform,
           minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search,
+          ageFilter, durationFilter, publishedFrom, publishedTo,
         }),
       );
     } catch { /* ignorăm */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [types, partitions, extras, floors, rooms, zones, deal, platform, minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search]);
+  }, [types, partitions, extras, floors, rooms, zones, deal, platform, minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search, ageFilter, durationFilter, publishedFrom, publishedTo]);
 
   /** Câte filtre sunt active acum — util ca să știi de ce lipsesc rezultate. */
   const activeFilterCount =
     types.length + partitions.length + extras.length + floors.length + rooms.length + zones.length +
     (deal !== ANY_DEAL ? 1 : 0) + (minPrice ? 1 : 0) + (maxPrice ? 1 : 0) +
     (minSurface ? 1 : 0) + (maxSurface ? 1 : 0) + (onlyWithPhone ? 1 : 0) +
-    (yearFilter !== ANY_YEAR ? 1 : 0) + (portalFilter !== ALL_PLATFORMS ? 1 : 0);
+    (yearFilter !== ANY_YEAR ? 1 : 0) + (portalFilter !== ALL_PLATFORMS ? 1 : 0) +
+    (ageFilter !== ANY_AGE ? 1 : 0) + (durationFilter !== ANY_DURATION ? 1 : 0) +
+    (publishedFrom ? 1 : 0) + (publishedTo ? 1 : 0);
 
   const addPreferredZone = async () => {
     const z = newZone.trim();
