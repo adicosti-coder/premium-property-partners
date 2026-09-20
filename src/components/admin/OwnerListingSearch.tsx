@@ -759,6 +759,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       for (const r of ok) {
         for (const l of r.listings) {
           if (!isIndividualAd(l)) { generic++; continue; }
+          if (!isRealEstateAd(l)) { offTopic++; continue; }
           const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
           if (key && seen.has(key)) continue;
           if (key) seen.add(key);
