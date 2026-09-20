@@ -951,6 +951,10 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
       kind: 'olx_direct_page', url, found: out.length,
       candidates: candidates.length, anchors: anchorTitles.size, htmlLen: html.length,
     }));
+    // Rezervă: doar dacă termenul țintit nu a adus nimic util.
+    if (i === urls.length - 1 && url === targetedUrl && out.length < 2 && canSpendProxy('search')) {
+      urls.push(genericUrl);
+    }
   }
   return out;
 }
