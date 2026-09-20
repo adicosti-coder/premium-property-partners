@@ -2425,22 +2425,44 @@ Deno.serve(async (req) => {
             const phoneFromSearchPayload = normalizeRoPhone(extracted.contactPhone) ??
               extractPhonesFromText(`${markdown}\n${result.title || ''}\n${result.description || ''}`).find(Boolean) ??
               null;
-            const canHydratePhone = hydratePhones && Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 10_000;
-            const hydrate = scanMode === 'firecrawl'
-              ? () => hydratePhoneFromListingUrl(url, firecrawlKey)
-              : () => freeHydratePhoneFromUrl(url);
-            extracted.contactPhone = phoneFromSearchPayload || (canHydratePhone ? await hydrate() : null);
+            const timeLeft = Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 10_000;
+            const canHydratePhone = hydratePhones && timeLeft;
+            // Deschidem pagina reală și când lipsesc prețul/suprafața, nu doar
+            // pentru telefon — altfel anunțul apare doar la numărătoare.
+            const needsDetails = !extracted.price || !extracted.size;
+            let detailPrice: number | null = null;
+            let detailCurrency = 'EUR';
+            let detailSize: number | null = null;
+            let detailText: string | null = null;
+
+            if (scanMode === 'firecrawl' && canHydratePhone) {
+              extracted.contactPhone = phoneFromSearchPayload || await hydratePhoneFromListingUrl(url, firecrawlKey);
+            } else if ((canHydratePhone && !phoneFromSearchPayload) || (needsDetails && timeLeft)) {
+              const d = await freeHydrateDetailsFromUrl(url);
+              extracted.contactPhone = phoneFromSearchPayload || d.phone;
+              detailPrice = d.price;
+              detailCurrency = d.currency;
+              detailSize = d.size;
+              detailText = d.text;
+              if (!extracted.rooms && d.rooms) extracted.rooms = d.rooms;
+            } else {
+              extracted.contactPhone = phoneFromSearchPayload;
+            }
 
             let price = extracted.price;
-            if (price && extracted.currency === 'RON') {
+            let priceCurrency = extracted.currency;
+            if (!price && detailPrice) { price = detailPrice; priceCurrency = detailCurrency; }
+            if (price && priceCurrency === 'RON') {
               price = Math.round(price * 0.2);
             }
 
-            const size = extracted.size;
+            const size = extracted.size ?? detailSize;
             const pricePerSqm = (price && size && size > 0) ? Math.round(price / size) : null;
 
             const locationText = extracted.location || result.title || '';
-            const zone = detectZone(locationText + ' ' + (result.title || ''));
+            const zone = detectZone(
+              `${locationText} ${result.title || ''} ${url} ${(detailText || markdown || '').substring(0, 1500)}`,
+            );
             const features = extracted.features;
 
             // ───── HARD GEO FILTER (Timișoara only) ─────
