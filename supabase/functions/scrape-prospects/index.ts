@@ -170,6 +170,9 @@ function detectPlatformFromQuery(query: string): string | null {
   const q = query.toLowerCase();
   if (q.includes('olx.ro')) return 'OLX';
   if (q.includes('storia.ro')) return 'Storia.ro';
+  if (q.includes('homezz.ro')) return 'Homezz.ro';
+  if (q.includes('anuntul.ro')) return 'Anuntul.ro';
+  if (q.includes('anunturi-imobiliare.ro')) return 'Anunturi-Imobiliare.ro';
   if (q.includes('imobiliare.ro')) return 'imobiliare.ro';
   if (q.includes('publi24.ro')) return 'Publi24';
   if (q.includes('bursaimobiliara.ro')) return 'BursaImobiliara.ro';
@@ -528,6 +531,9 @@ function platformToDomain(platform: string, query: string): string | null {
   const p = (platform || '').toLowerCase();
   if (p.includes('olx')) return 'olx.ro';
   if (p.includes('storia')) return 'storia.ro';
+  if (p.includes('homezz')) return 'homezz.ro';
+  if (p.includes('anuntul')) return 'anuntul.ro';
+  if (p.includes('anunturi-imobiliare')) return 'anunturi-imobiliare.ro';
   if (p.includes('imobiliare')) return 'imobiliare.ro';
   if (p.includes('publi24')) return 'publi24.ro';
   if (p.includes('bursa')) return 'bursaimobiliara.ro';
@@ -548,6 +554,8 @@ const CANONICAL_PLATFORM_BY_DOMAIN: Array<[string, string]> = [
   ['publi24.ro', 'Publi24'],
   ['bursaimobiliara.ro', 'BursaImobiliara.ro'],
   ['anunturi-imobiliare.ro', 'Anunturi-Imobiliare.ro'],
+  ['homezz.ro', 'Homezz.ro'],
+  ['anuntul.ro', 'Anuntul.ro'],
   ['facebook.com', 'Facebook Marketplace'],
 ];
 
@@ -1140,6 +1148,8 @@ const AGENCY_SIGNALS = [
 const MARKETPLACE_DOMAINS = new Set([
   'olx.ro', 'www.olx.ro', 'storia.ro', 'www.storia.ro', 'imobiliare.ro', 'www.imobiliare.ro',
   'publi24.ro', 'www.publi24.ro', 'bursaimobiliara.ro', 'www.bursaimobiliara.ro',
+  'homezz.ro', 'www.homezz.ro', 'anuntul.ro', 'www.anuntul.ro',
+  'anunturi-imobiliare.ro', 'www.anunturi-imobiliare.ro',
 ]);
 
 const GENERIC_LISTING_TITLE_SIGNALS = [
