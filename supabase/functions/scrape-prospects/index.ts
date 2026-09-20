@@ -670,7 +670,7 @@ async function fetchHtmlUnblockable(
   url: string,
   timeoutMs = 6000,
   referer?: string,
-  opts: { alwaysProxy?: boolean } = {},
+  opts: { alwaysProxy?: boolean; budget?: 'search' | 'detail' } = {},
 ): Promise<{ ok: boolean; status: number; html: string; unblocked: boolean }> {
   if (!opts.alwaysProxy) {
     const direct = await fetchHtml(url, timeoutMs, referer);
@@ -678,6 +678,12 @@ async function fetchHtmlUnblockable(
     const blocked = [0, 403, 429, 503].includes(direct.status);
     if (!blocked) return { ...direct, unblocked: false };
   }
+  const budget = opts.budget;
+  if (budget && !canSpendProxy(budget)) {
+    console.log(JSON.stringify({ kind: 'proxy_budget_exhausted', url, budget, spent: PROXY_BUDGET }));
+    return { ok: false, status: 0, html: '', unblocked: false };
+  }
+  if (budget) spendProxy(budget);
   const viaProxy = await proxyFetchHtml(url);
   if (viaProxy.ok) {
     console.log(JSON.stringify({ kind: 'proxy_unblocked', url, via: viaProxy.via, len: viaProxy.html.length }));
