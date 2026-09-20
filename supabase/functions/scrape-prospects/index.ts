@@ -1047,6 +1047,9 @@ async function freeSearchWithRetry(
     { name: 'publi24_direct',     key: 'olx_direct', match: (d) => d.includes('publi24.ro'),    run: () => directPubli24Search(query, maxResults) },
     { name: 'homezz_direct',      key: 'olx_direct', match: (d) => d.includes('homezz.ro'),     run: () => directHomezzSearch(query, maxResults) },
     { name: 'anuntul_direct',     key: 'olx_direct', match: (d) => d.includes('anuntul.ro'),    run: () => directAnuntulSearch(query, maxResults) },
+    { name: 'anunturi_imob_direct', key: 'olx_direct', match: (d) => d.includes('anunturi-imobiliare.ro'), run: () => directAnunturiImobiliareSearch(query, maxResults) },
+    { name: 'bursa_direct',       key: 'olx_direct', match: (d) => d.includes('bursaimobiliara.ro'), run: () => directBursaSearch(query, maxResults) },
+    { name: 'tocmai_direct',      key: 'olx_direct', match: (d) => d.includes('tocmai.ro'),     run: () => directTocmaiSearch(query, maxResults) },
   ];
   const directHit = domain ? directScrapers.find((s) => s.match(domain)) : null;
   if (directHit) {
