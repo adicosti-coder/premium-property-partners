@@ -1978,6 +1978,7 @@ Deno.serve(async (req) => {
     // Buget de apeluri prin proxy pe rulare: puține pagini de căutare (scumpe,
     // rezultate repetitive) și mai multe pagini de anunț (aduc preț/telefon).
     resetProxyBudget({ maxSearchPages: 4, maxDetailPages: 12 });
+    proxyLogClient = supabase;
 
     // Parse optional params
     let maxResults = 8;
