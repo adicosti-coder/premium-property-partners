@@ -780,17 +780,99 @@ async function directPubli24Search(query: string, max: number): Promise<FreeResu
   const transaction = intent.rent ? 'de-inchiriat' : 'de-vanzare';
   const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente';
   const slug = encodeURIComponent(clean.replace(/\s+/g, '+'));
-  const url = `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`;
-  const { ok, html } = await fetchHtml(url, 5500, 'https://www.publi24.ro/');
-  if (!ok || !html) return [];
+  // Două pagini: căutarea cu termen + lista filtrată pe proprietari (unele
+  // interogări nu întorc nimic pe `?q=`, dar lista de proprietari e plină).
+  const urls = [
+    `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`,
+    `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?tip_proprietar=proprietar`,
+  ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
-  const re = /<a[^>]+href="(https?:\/\/www\.publi24\.ro\/anunturi\/[^"#?]+\/anunt\/[^"#?]+\/[a-z0-9]+\.html)"[^>]*>[\s\S]{0,900}?<img[^>]+alt="([^"]*)"/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(html)) && out.length < max) {
-    const href = m[1];
-    const title = decodeBasicHtml(m[2]);
-    pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
+  const adHref = /<a[^>]+href="(https?:\/\/(?:www\.)?publi24\.ro\/anunturi\/[^"#?]+\/anunt\/[^"#?]+\/[a-z0-9]+\.html)"([^>]*)>([\s\S]{0,900}?)<\/a>/gi;
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 5500, 'https://www.publi24.ro/');
+    if (!ok || !html) continue;
+    let m: RegExpExecArray | null;
+    adHref.lastIndex = 0;
+    while ((m = adHref.exec(html)) && out.length < max) {
+      const href = m[1];
+      const attrs = m[2] || '';
+      const inner = m[3] || '';
+      // titlul poate sta în alt="", title="" sau în textul ancorei
+      const title = decodeBasicHtml(
+        inner.match(/<img[^>]+alt="([^"]+)"/i)?.[1] ||
+        attrs.match(/title="([^"]+)"/i)?.[1] ||
+        inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      ).slice(0, 200);
+      const priceTxt = decodeBasicHtml(inner).match(/([\d.\s]{3,12})\s*(?:€|eur|lei)/i)?.[0] ?? '';
+      if (title) {
+        pushUniqueResult(out, seen, {
+          url: href, title, markdown: `${title} ${priceTxt}`.trim(),
+        }, max);
+      }
+    }
+  }
+  return out;
+}
+
+/** Homezz.ro — portal cu multe anunțuri de la proprietari. */
+async function directHomezzSearch(query: string, max: number): Promise<FreeResult[]> {
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'inchiriere' : 'vanzare';
+  const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente';
+  const urls = [
+    `https://www.homezz.ro/anunturi-imobiliare/${category}/${transaction}/timis/timisoara`,
+    `https://www.homezz.ro/anunturi-imobiliare/${category}/${transaction}/timisoara`,
+  ];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 5500, 'https://www.homezz.ro/');
+    if (!ok || !html) continue;
+    const re = /<a[^>]+href="((?:https?:\/\/(?:www\.)?homezz\.ro)?\/[^"#?]*(?:anunt|oferta)[^"#?]*)"([^>]*)>([\s\S]{0,700}?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const href = m[1].startsWith('http') ? m[1] : `https://www.homezz.ro${m[1]}`;
+      const title = decodeBasicHtml(
+        m[2]?.match(/title="([^"]+)"/i)?.[1] ||
+        m[3].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      ).slice(0, 200);
+      if (title.length > 8) pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
+    }
+  }
+  return out;
+}
+
+/** Anuntul.ro — anunțuri de mică publicitate, majoritar persoane fizice. */
+async function directAnuntulSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 4);
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'inchirieri' : 'vanzari';
+  const category = intent.house ? 'case-vile' : intent.land ? 'terenuri' : 'apartamente-garsoniere';
+  const urls = [
+    `https://www.anuntul.ro/anunturi-imobiliare/${transaction}-${category}/timisoara/`,
+    clean
+      ? `https://www.anuntul.ro/cautare/?q=${encodeURIComponent(`${clean} timisoara`)}`
+      : '',
+  ].filter(Boolean) as string[];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 5500, 'https://www.anuntul.ro/');
+    if (!ok || !html) continue;
+    const re = /<a[^>]+href="((?:https?:\/\/(?:www\.)?anuntul\.ro)?\/[^"#?]*\/\d{4,}[^"#?]*)"([^>]*)>([\s\S]{0,700}?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const href = m[1].startsWith('http') ? m[1] : `https://www.anuntul.ro${m[1]}`;
+      const title = decodeBasicHtml(
+        m[2]?.match(/title="([^"]+)"/i)?.[1] ||
+        m[3].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      ).slice(0, 200);
+      if (title.length > 8) pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
+    }
   }
   return out;
 }
