@@ -169,12 +169,13 @@ export default function AnunturiGasite() {
                   <TableHead>Telefon</TableHead>
                   <TableHead>Ultima vizualizare</TableHead>
                   <TableHead>Preluat</TableHead>
+                  <TableHead className="sr-only">Detalii</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
                       Nu există anunțuri pentru filtrul selectat.
                     </TableCell>
                   </TableRow>
@@ -208,6 +209,16 @@ export default function AnunturiGasite() {
                     </TableCell>
                     <TableCell className="text-sm whitespace-nowrap">{fmtDate(r.last_seen_at)}</TableCell>
                     <TableCell className="text-sm whitespace-nowrap">{fmtDate(r.scraped_at)}</TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="min-h-[40px]"
+                        onClick={() => navigate(`/admin/anunt-proprietar/${r.id}`)}
+                      >
+                        Deschide
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

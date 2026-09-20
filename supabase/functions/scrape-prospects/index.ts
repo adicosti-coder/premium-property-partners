@@ -139,6 +139,8 @@ const DEFAULT_SEARCH_QUERIES = [
   { platform: 'Facebook Marketplace', query: 'apartament vanzare timisoara site:facebook.com/marketplace' },
   { platform: 'Grupuri Facebook', query: 'apartament vanzare timisoara "facebook.com/groups"' },
   { platform: 'BursaImobiliara.ro', query: 'apartament vanzare timisoara site:bursaimobiliara.ro' },
+  { platform: 'Homezz.ro', query: 'apartament vanzare timisoara site:homezz.ro' },
+  { platform: 'Anuntul.ro', query: 'apartament vanzare timisoara site:anuntul.ro' },
 ];
 
 /**
@@ -163,6 +165,8 @@ const OWNER_URL_FILTERS: Record<string, string> = {
   'imobiliare.ro': 'inurl:persoane-fizice OR inurl:proprietari',
   'Publi24': 'inurl:tip-anunt-persoane-fizice OR inurl:proprietari',
   'BursaImobiliara.ro': 'inurl:proprietar OR inurl:persoane-fizice',
+  'Homezz.ro': 'inurl:proprietar OR inurl:persoane-fizice',
+  'Anuntul.ro': 'inurl:proprietar OR inurl:persoane-fizice',
 };
 
 /** Detect platform name from a free-text query (best-effort). */
@@ -170,6 +174,9 @@ function detectPlatformFromQuery(query: string): string | null {
   const q = query.toLowerCase();
   if (q.includes('olx.ro')) return 'OLX';
   if (q.includes('storia.ro')) return 'Storia.ro';
+  if (q.includes('homezz.ro')) return 'Homezz.ro';
+  if (q.includes('anuntul.ro')) return 'Anuntul.ro';
+  if (q.includes('anunturi-imobiliare.ro')) return 'Anunturi-Imobiliare.ro';
   if (q.includes('imobiliare.ro')) return 'imobiliare.ro';
   if (q.includes('publi24.ro')) return 'Publi24';
   if (q.includes('bursaimobiliara.ro')) return 'BursaImobiliara.ro';
@@ -206,6 +213,14 @@ const PLATFORM_FILTER_TOGGLES: Record<string, PlatformFilterDef[]> = {
   'BursaImobiliara.ro': [
     { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
     { id: 'no_agency', hint: '-inurl:agentie -inurl:agency', defaultOn: true },
+  ],
+  'Homezz.ro': [
+    { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
+    { id: 'no_agency', hint: '-inurl:agentie -inurl:agency -agentie', defaultOn: true },
+  ],
+  'Anuntul.ro': [
+    { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
+    { id: 'no_agency', hint: '-inurl:agentie -inurl:agency -agentie', defaultOn: true },
   ],
   'Facebook Marketplace': [
     { id: 'owner_kw',  hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
@@ -528,6 +543,9 @@ function platformToDomain(platform: string, query: string): string | null {
   const p = (platform || '').toLowerCase();
   if (p.includes('olx')) return 'olx.ro';
   if (p.includes('storia')) return 'storia.ro';
+  if (p.includes('homezz')) return 'homezz.ro';
+  if (p.includes('anuntul')) return 'anuntul.ro';
+  if (p.includes('anunturi-imobiliare')) return 'anunturi-imobiliare.ro';
   if (p.includes('imobiliare')) return 'imobiliare.ro';
   if (p.includes('publi24')) return 'publi24.ro';
   if (p.includes('bursa')) return 'bursaimobiliara.ro';
@@ -548,6 +566,8 @@ const CANONICAL_PLATFORM_BY_DOMAIN: Array<[string, string]> = [
   ['publi24.ro', 'Publi24'],
   ['bursaimobiliara.ro', 'BursaImobiliara.ro'],
   ['anunturi-imobiliare.ro', 'Anunturi-Imobiliare.ro'],
+  ['homezz.ro', 'Homezz.ro'],
+  ['anuntul.ro', 'Anuntul.ro'],
   ['facebook.com', 'Facebook Marketplace'],
 ];
 
@@ -644,6 +664,8 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   const urls = [
     `https://www.olx.ro/d/imobiliare/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
     `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
+    // fără termen: lista completă a proprietarilor din Timișoara (ordonată după dată)
+    `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
   ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -727,6 +749,7 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
   // imobiliare.ro nu permite query params arbitrari pe URL public; folosim categoriile + persoane-fizice.
   const urls = [
     `https://www.imobiliare.ro/${transaction}-${category}/judetul-timis/timisoara?tip_proprietar=persoana-fizica`,
+    `https://www.imobiliare.ro/${transaction}-${category}/judetul-timis/timisoara?tip_proprietar=persoana-fizica&pagina=2`,
   ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -760,17 +783,99 @@ async function directPubli24Search(query: string, max: number): Promise<FreeResu
   const transaction = intent.rent ? 'de-inchiriat' : 'de-vanzare';
   const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente';
   const slug = encodeURIComponent(clean.replace(/\s+/g, '+'));
-  const url = `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`;
-  const { ok, html } = await fetchHtml(url, 5500, 'https://www.publi24.ro/');
-  if (!ok || !html) return [];
+  // Două pagini: căutarea cu termen + lista filtrată pe proprietari (unele
+  // interogări nu întorc nimic pe `?q=`, dar lista de proprietari e plină).
+  const urls = [
+    `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?q=${slug}&tip_proprietar=proprietar`,
+    `https://www.publi24.ro/anunturi/imobiliare/${transaction}/${category}/timis/timisoara/?tip_proprietar=proprietar`,
+  ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
-  const re = /<a[^>]+href="(https?:\/\/www\.publi24\.ro\/anunturi\/[^"#?]+\/anunt\/[^"#?]+\/[a-z0-9]+\.html)"[^>]*>[\s\S]{0,900}?<img[^>]+alt="([^"]*)"/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(html)) && out.length < max) {
-    const href = m[1];
-    const title = decodeBasicHtml(m[2]);
-    pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
+  const adHref = /<a[^>]+href="(https?:\/\/(?:www\.)?publi24\.ro\/anunturi\/[^"#?]+\/anunt\/[^"#?]+\/[a-z0-9]+\.html)"([^>]*)>([\s\S]{0,900}?)<\/a>/gi;
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 5500, 'https://www.publi24.ro/');
+    if (!ok || !html) continue;
+    let m: RegExpExecArray | null;
+    adHref.lastIndex = 0;
+    while ((m = adHref.exec(html)) && out.length < max) {
+      const href = m[1];
+      const attrs = m[2] || '';
+      const inner = m[3] || '';
+      // titlul poate sta în alt="", title="" sau în textul ancorei
+      const title = decodeBasicHtml(
+        inner.match(/<img[^>]+alt="([^"]+)"/i)?.[1] ||
+        attrs.match(/title="([^"]+)"/i)?.[1] ||
+        inner.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      ).slice(0, 200);
+      const priceTxt = decodeBasicHtml(inner).match(/([\d.\s]{3,12})\s*(?:€|eur|lei)/i)?.[0] ?? '';
+      if (title) {
+        pushUniqueResult(out, seen, {
+          url: href, title, markdown: `${title} ${priceTxt}`.trim(),
+        }, max);
+      }
+    }
+  }
+  return out;
+}
+
+/** Homezz.ro — portal cu multe anunțuri de la proprietari. */
+async function directHomezzSearch(query: string, max: number): Promise<FreeResult[]> {
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'inchiriere' : 'vanzare';
+  const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente';
+  const urls = [
+    `https://www.homezz.ro/anunturi-imobiliare/${category}/${transaction}/timis/timisoara`,
+    `https://www.homezz.ro/anunturi-imobiliare/${category}/${transaction}/timisoara`,
+  ];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 5500, 'https://www.homezz.ro/');
+    if (!ok || !html) continue;
+    const re = /<a[^>]+href="((?:https?:\/\/(?:www\.)?homezz\.ro)?\/[^"#?]*(?:anunt|oferta)[^"#?]*)"([^>]*)>([\s\S]{0,700}?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const href = m[1].startsWith('http') ? m[1] : `https://www.homezz.ro${m[1]}`;
+      const title = decodeBasicHtml(
+        m[2]?.match(/title="([^"]+)"/i)?.[1] ||
+        m[3].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      ).slice(0, 200);
+      if (title.length > 8) pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
+    }
+  }
+  return out;
+}
+
+/** Anuntul.ro — anunțuri de mică publicitate, majoritar persoane fizice. */
+async function directAnuntulSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 4);
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'inchirieri' : 'vanzari';
+  const category = intent.house ? 'case-vile' : intent.land ? 'terenuri' : 'apartamente-garsoniere';
+  const urls = [
+    `https://www.anuntul.ro/anunturi-imobiliare/${transaction}-${category}/timisoara/`,
+    clean
+      ? `https://www.anuntul.ro/cautare/?q=${encodeURIComponent(`${clean} timisoara`)}`
+      : '',
+  ].filter(Boolean) as string[];
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 5500, 'https://www.anuntul.ro/');
+    if (!ok || !html) continue;
+    const re = /<a[^>]+href="((?:https?:\/\/(?:www\.)?anuntul\.ro)?\/[^"#?]*\/\d{4,}[^"#?]*)"([^>]*)>([\s\S]{0,700}?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const href = m[1].startsWith('http') ? m[1] : `https://www.anuntul.ro${m[1]}`;
+      const title = decodeBasicHtml(
+        m[2]?.match(/title="([^"]+)"/i)?.[1] ||
+        m[3].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      ).slice(0, 200);
+      if (title.length > 8) pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
+    }
   }
   return out;
 }
@@ -858,6 +963,8 @@ async function freeSearchWithRetry(
     { name: 'storia_direct',      key: 'olx_direct', match: (d) => d.includes('storia.ro'),     run: () => directStoriaSearch(query, maxResults) },
     { name: 'imobiliare_direct',  key: 'olx_direct', match: (d) => d.includes('imobiliare.ro'), run: () => directImobiliareSearch(query, maxResults) },
     { name: 'publi24_direct',     key: 'olx_direct', match: (d) => d.includes('publi24.ro'),    run: () => directPubli24Search(query, maxResults) },
+    { name: 'homezz_direct',      key: 'olx_direct', match: (d) => d.includes('homezz.ro'),     run: () => directHomezzSearch(query, maxResults) },
+    { name: 'anuntul_direct',     key: 'olx_direct', match: (d) => d.includes('anuntul.ro'),    run: () => directAnuntulSearch(query, maxResults) },
   ];
   const directHit = domain ? directScrapers.find((s) => s.match(domain)) : null;
   if (directHit) {
@@ -1140,6 +1247,8 @@ const AGENCY_SIGNALS = [
 const MARKETPLACE_DOMAINS = new Set([
   'olx.ro', 'www.olx.ro', 'storia.ro', 'www.storia.ro', 'imobiliare.ro', 'www.imobiliare.ro',
   'publi24.ro', 'www.publi24.ro', 'bursaimobiliara.ro', 'www.bursaimobiliara.ro',
+  'homezz.ro', 'www.homezz.ro', 'anuntul.ro', 'www.anuntul.ro',
+  'anunturi-imobiliare.ro', 'www.anunturi-imobiliare.ro',
 ]);
 
 const GENERIC_LISTING_TITLE_SIGNALS = [
