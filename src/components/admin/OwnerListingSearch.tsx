@@ -49,7 +49,40 @@ export interface AdHocListing {
   ai_score_breakdown?: { explicit_owner_signal?: boolean } | null;
   is_active?: boolean | null;
   lifecycle_status?: string | null;
+  /** Data la care anunțul a apărut prima dată la noi (data publicării). */
+  created_at?: string | null;
+  /** Ultima dată când anunțul a fost văzut online. */
+  last_seen_at?: string | null;
 }
+
+/** „Publicat în ultimele...” — data la care anunțul a apărut prima dată. */
+const ANY_AGE = "__anyage__";
+const AGE_OPTIONS = [
+  { value: "1", label: "Publicat azi" },
+  { value: "3", label: "Ultimele 3 zile" },
+  { value: "7", label: "Ultimele 7 zile" },
+  { value: "14", label: "Ultimele 14 zile" },
+  { value: "30", label: "Ultimele 30 zile" },
+];
+
+/** Durata de când anunțul este online — arată cât de „proaspătă” e oferta. */
+const ANY_DURATION = "__anyduration__";
+const DURATION_OPTIONS = [
+  { value: "lt3", label: "Online sub 3 zile" },
+  { value: "lt7", label: "Online sub 7 zile" },
+  { value: "7to30", label: "Online 7–30 zile" },
+  { value: "gt30", label: "Online peste 30 zile" },
+];
+
+/** Numărul de zile de când anunțul este online, sau `null` dacă nu știm. */
+const daysOnline = (l: AdHocListing): number | null => {
+  if (!l.created_at) return null;
+  const start = new Date(l.created_at).getTime();
+  if (!Number.isFinite(start)) return null;
+  const end = l.last_seen_at ? new Date(l.last_seen_at).getTime() : Date.now();
+  const ms = (Number.isFinite(end) ? end : Date.now()) - start;
+  return Math.max(0, Math.floor(ms / 86400000));
+};
 
 const ALL_PLATFORMS = "__all__";
 const ANY_DEAL = "__anydeal__";
@@ -200,6 +233,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [sort, setSort] = useState<SortValue>("relevance");
   /** An construcție (interval), ca pe portaluri. */
   const [yearFilter, setYearFilter] = useState<string>(ANY_YEAR);
+  /** Publicat în ultimele X zile (data apariției anunțului). */
+  const [ageFilter, setAgeFilter] = useState<string>(ANY_AGE);
+  /** Durata de când anunțul este online. */
+  const [durationFilter, setDurationFilter] = useState<string>(ANY_DURATION);
+  /** Interval exact pentru data publicării (opțional). */
+  const [publishedFrom, setPublishedFrom] = useState("");
+  const [publishedTo, setPublishedTo] = useState("");
   /** Scanare automată: caută periodic și adaugă anunțurile noi fără click. */
   const [autoLive, setAutoLive] = useState<boolean>(() => {
     try { return window.localStorage.getItem("rt_owner_search_auto") !== "0"; } catch { return true; }
@@ -241,6 +281,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (typeof s.maxPrice === "string") setMaxPrice(s.maxPrice);
       if (typeof s.minSurface === "string") setMinSurface(s.minSurface);
       if (typeof s.maxSurface === "string") setMaxSurface(s.maxSurface);
+      if (typeof s.ageFilter === "string") setAgeFilter(s.ageFilter);
+      if (typeof s.durationFilter === "string") setDurationFilter(s.durationFilter);
+      if (typeof s.publishedFrom === "string") setPublishedFrom(s.publishedFrom);
+      if (typeof s.publishedTo === "string") setPublishedTo(s.publishedTo);
       if (typeof s.onlyWithPhone === "boolean") setOnlyWithPhone(s.onlyWithPhone);
       if (typeof s.sort === "string") setSort(s.sort as SortValue);
       if (typeof s.yearFilter === "string") setYearFilter(s.yearFilter);
@@ -258,18 +302,21 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         JSON.stringify({
           types, partitions, extras, floors, rooms, zones, deal, platform,
           minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search,
+          ageFilter, durationFilter, publishedFrom, publishedTo,
         }),
       );
     } catch { /* ignorăm */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [types, partitions, extras, floors, rooms, zones, deal, platform, minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search]);
+  }, [types, partitions, extras, floors, rooms, zones, deal, platform, minPrice, maxPrice, minSurface, maxSurface, onlyWithPhone, sort, yearFilter, search, ageFilter, durationFilter, publishedFrom, publishedTo]);
 
   /** Câte filtre sunt active acum — util ca să știi de ce lipsesc rezultate. */
   const activeFilterCount =
     types.length + partitions.length + extras.length + floors.length + rooms.length + zones.length +
     (deal !== ANY_DEAL ? 1 : 0) + (minPrice ? 1 : 0) + (maxPrice ? 1 : 0) +
     (minSurface ? 1 : 0) + (maxSurface ? 1 : 0) + (onlyWithPhone ? 1 : 0) +
-    (yearFilter !== ANY_YEAR ? 1 : 0) + (portalFilter !== ALL_PLATFORMS ? 1 : 0);
+    (yearFilter !== ANY_YEAR ? 1 : 0) + (portalFilter !== ALL_PLATFORMS ? 1 : 0) +
+    (ageFilter !== ANY_AGE ? 1 : 0) + (durationFilter !== ANY_DURATION ? 1 : 0) +
+    (publishedFrom ? 1 : 0) + (publishedTo ? 1 : 0);
 
   const addPreferredZone = async () => {
     const z = newZone.trim();
@@ -325,6 +372,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setIgnoreFilters(false);
     setSort("relevance");
     setYearFilter(ANY_YEAR);
+    setAgeFilter(ANY_AGE);
+    setDurationFilter(ANY_DURATION);
+    setPublishedFrom("");
+    setPublishedTo("");
   };
 
   const toggleIn = (list: string[], value: string) =>
@@ -446,6 +497,33 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
     if (min !== null && price !== null && price < min) return "pret sub minim";
     if (max !== null && price !== null && price > max) return "pret peste maxim";
+    // Data publicării și durata online — datele lipsă nu exclud anunțul.
+    const published = l.created_at ? new Date(l.created_at).getTime() : null;
+    if (published !== null && Number.isFinite(published)) {
+      if (ageFilter !== ANY_AGE) {
+        const limit = Date.now() - Number(ageFilter) * 86400000;
+        if (published < limit) return `publicat mai demult de ${ageFilter} zile`;
+      }
+      if (publishedFrom) {
+        const from = new Date(`${publishedFrom}T00:00:00`).getTime();
+        if (Number.isFinite(from) && published < from) return "publicat inainte de data ceruta";
+      }
+      if (publishedTo) {
+        const to = new Date(`${publishedTo}T23:59:59`).getTime();
+        if (Number.isFinite(to) && published > to) return "publicat dupa data ceruta";
+      }
+    }
+    if (durationFilter !== ANY_DURATION) {
+      const d = daysOnline(l);
+      if (d !== null) {
+        const ok =
+          durationFilter === "lt3" ? d < 3 :
+          durationFilter === "lt7" ? d < 7 :
+          durationFilter === "7to30" ? d >= 7 && d <= 30 :
+          durationFilter === "gt30" ? d > 30 : true;
+        if (!ok) return `online de ${d} zile`;
+      }
+    }
     return null;
   };
 
@@ -502,7 +580,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const fetchFor = async (w?: string) => {
       let q = supabase
         .from("prospect_listings")
-        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,prospect_type,ai_score_breakdown,is_active,lifecycle_status,updated_at,last_seen_at")
+        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,prospect_type,ai_score_breakdown,is_active,lifecycle_status,created_at,updated_at,last_seen_at")
         .not("source_url", "is", null)
         .eq("is_active", true)
         // „De verificat” poate avea date incomplete, dar este un rezultat real.
@@ -559,6 +637,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         owner_verified: r.ai_score_breakdown?.explicit_owner_signal === true,
         is_active: r.is_active,
         lifecycle_status: r.lifecycle_status,
+        created_at: r.created_at,
+        last_seen_at: r.last_seen_at,
       }));
 
   };
