@@ -203,7 +203,7 @@ export default function AnuntProprietar() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead title="Anunț proprietar — Admin" description="Detaliile complete ale unui anunț de la proprietar." noindex />
+      <SEOHead title="Anunț proprietar — Admin" description="Detaliile complete ale unui anunț de la proprietar." noIndex />
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="min-h-[44px] -ml-2">

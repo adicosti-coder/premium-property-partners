@@ -67,7 +67,7 @@ export default function AnunturiProprietari() {
       <SEOHead
         title="Anunțuri de la proprietari în Timișoara | RealTrust"
         description="Apartamente și case oferite direct de proprietari din Timișoara, publicate cu acordul lor: preț, descriere și link către anunțul original."
-        canonicalUrl="https://realtrust.ro/anunturi-proprietari"
+        url="/anunturi-proprietari"
       />
       <Header />
       <main className="container mx-auto px-4 py-12 md:py-16">
