@@ -737,7 +737,7 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
     const decoded = decodeBasicHtml(html);
     // Formatul actual folosește /oferta/...-<id numeric>, inclusiv în JSON-ul
     // serializat al paginii. Vechiul parser accepta doar sufixul -X..., deci 0 rezultate.
-    const re = /"url":"(\/oferta\/[^"?#]+)"([\s\S]{0,2400}?)(?="url":"\/oferta\/|$)/gi;
+    const re = /\{"id":\d+,"url":"(\/oferta\/[^"?#]+)"([\s\S]{0,12000}?)(?=\{"id":\d+,"url":"\/oferta\/|$)/gi;
     let m: RegExpExecArray | null;
     while ((m = re.exec(decoded)) && out.length < max) {
       const href = `https://www.imobiliare.ro${m[1]}`;
