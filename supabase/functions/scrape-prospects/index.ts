@@ -214,6 +214,14 @@ const PLATFORM_FILTER_TOGGLES: Record<string, PlatformFilterDef[]> = {
     { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
     { id: 'no_agency', hint: '-inurl:agentie -inurl:agency', defaultOn: true },
   ],
+  'Homezz.ro': [
+    { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
+    { id: 'no_agency', hint: '-inurl:agentie -inurl:agency -agentie', defaultOn: true },
+  ],
+  'Anuntul.ro': [
+    { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
+    { id: 'no_agency', hint: '-inurl:agentie -inurl:agency -agentie', defaultOn: true },
+  ],
   'Facebook Marketplace': [
     { id: 'owner_kw',  hint: '("proprietar" OR "persoana fizica" OR "persoană fizică")', defaultOn: true },
     { id: 'no_agency', hint: '-agentie -agenție -agency -"comision agentie" -broker', defaultOn: true },
