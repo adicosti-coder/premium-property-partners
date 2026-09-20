@@ -29,21 +29,47 @@ async function requireAdminOr401(req: Request): Promise<Response | null> {
 const PREMIUM_ZONES = ['Centru', 'Iosefin', 'Fabric', 'Elisabetin', 'Circumvalațiunii'];
 const GOOD_ZONES = ['Iulius Town', 'Complex Studențesc', 'Dâmbovița', 'Lipovei', 'Soarelui', 'Torontalului'];
 const ZONE_KEYWORDS: Record<string, string[]> = {
-  'Centru': ['centru', 'piata victoriei', 'piata unirii', 'opera', 'lloyd'],
+  'Centru': ['centru', 'central', 'cetate', 'piata victoriei', 'piata unirii', 'opera', 'lloyd'],
   'Iosefin': ['iosefin', 'josefin'],
   'Fabric': ['fabric'],
   'Elisabetin': ['elisabetin'],
-  'Circumvalațiunii': ['circumvalatiunii', 'circumvalațiunii', 'take ionescu'],
+  'Circumvalațiunii': ['circumvalatiunii', 'circumvalațiunii'],
+  'Take Ionescu': ['take ionescu', 'take-ionescu'],
   'Iulius Town': ['iulius', 'openville'],
-  'Complex Studențesc': ['complex studentesc', 'studențesc', 'studenti'],
+  'Complex Studențesc': ['complex studentesc', 'studențesc', 'studentesc', 'studenti'],
   'Dâmbovița': ['dambovita', 'dâmbovița'],
   'Lipovei': ['lipovei'],
   'Soarelui': ['soarelui'],
   'Torontalului': ['torontalului'],
+  'Aradului': ['aradului', 'calea aradului'],
+  'Șagului': ['sagului', 'șagului', 'calea sagului'],
+  'Girocului': ['girocului', 'calea girocului'],
+  'Buziașului': ['buziasului', 'buziașului', 'calea buziasului'],
+  'Martirilor': ['calea martirilor', 'martirilor'],
+  'Lugojului': ['lugojului', 'calea lugojului'],
+  'Mehala': ['mehala'],
+  'Ronaț': ['ronat', 'ronaț'],
+  'Bucovina': ['bucovina'],
+  'Blașcovici': ['blascovici', 'blașcovici'],
+  'Freidorf': ['freidorf'],
+  'Plopi': ['plopi'],
+  'Olimpia-Stadion': ['olimpia', 'stadion'],
+  'Braytim': ['braytim'],
+  'Steaua': ['steaua'],
+  'Kuncz': ['kuncz'],
+  'Gheorghe Lazăr': ['gheorghe lazar', 'gheorghe lazăr'],
+  'Tipografilor': ['tipografilor'],
+  'Medicina': ['zona medicina', 'umf', 'zona umf'],
+  'Lipovei-Aradului': ['zona lipovei aradului'],
+  'ISHO': ['isho'],
   'Giroc': ['giroc'],
+  'Chișoda': ['chisoda', 'chișoda'],
   'Dumbrăvița': ['dumbravita', 'dumbrăvița'],
   'Ghiroda': ['ghiroda'],
   'Moșnița': ['mosnita', 'moșnița'],
+  'Săcălaz': ['sacalaz', 'săcălaz'],
+  'Remetea Mare': ['remetea'],
+  'Sânmihaiu Român': ['sanmihaiu', 'sânmihaiu'],
 };
 
 function detectZone(text: string): string | null {
@@ -1322,13 +1348,48 @@ async function freeSearchWithRetry(
 }
 
 async function freeHydratePhoneFromUrl(url: string): Promise<string | null> {
+  const d = await freeHydrateDetailsFromUrl(url);
+  return d.phone;
+}
+
+/**
+ * O singură deschidere a paginii reale a anunțului din care luăm telefon,
+ * preț, suprafață și textul pe care îl folosim pentru zonă. Fără asta multe
+ * anunțuri rămâneau fără preț și fără zonă (doar număr în raport).
+ */
+async function freeHydrateDetailsFromUrl(url: string): Promise<{
+  phone: string | null; price: number | null; currency: string; size: number | null;
+  rooms: number | null; text: string | null;
+}> {
+  const empty = { phone: null, price: null, currency: 'EUR', size: null, rooms: null, text: null };
   try {
     const referer = (() => { try { return new URL(url).origin + '/'; } catch { return undefined; } })();
     const { ok, html } = await fetchHtmlUnblockable(url, 4500, referer);
-    if (!ok || !html) return null;
+    if (!ok || !html) return empty;
     const phones = extractPhonesFromPayload('', html, html, null);
-    return phones[0] ?? null;
-  } catch { return null; }
+    const text = htmlToText(html).substring(0, 6000);
+    const ex = extractFromMarkdown(text, '', url);
+    return {
+      phone: phones[0] ?? null,
+      price: ex.price,
+      currency: ex.currency,
+      size: ex.size,
+      rooms: ex.rooms,
+      text,
+    };
+  } catch { return empty; }
+}
+
+/** HTML → text simplu, suficient pentru regex de preț / suprafață / zonă. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1587,7 +1648,8 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
     u.includes('/d/oferta/') ||
     /storia\.ro\/ro\/oferta\//.test(u) ||
     /imobiliare\.ro\/oferta[/-]/.test(u) ||
-    /imobiliare\.ro\/[^/]+\/[^/]+\/[a-z0-9]{6,}/i.test(rawUrl) ||
+    // imobiliare.ro: doar anunț real (slug cu ID numeric la final), nu pagini de listare pe zonă
+    /imobiliare\.ro\/[^?#]*-\d{6,}(?:[/?#]|$)/i.test(rawUrl) ||
     /publi24\.ro\/anunturi\//.test(u) ||
     /bursaimobiliara\.ro\/.+\/[a-z0-9-]+-\d+\.html/.test(u) ||
     /lajumate\.ro\/ad\//.test(u) ||
@@ -2364,22 +2426,44 @@ Deno.serve(async (req) => {
             const phoneFromSearchPayload = normalizeRoPhone(extracted.contactPhone) ??
               extractPhonesFromText(`${markdown}\n${result.title || ''}\n${result.description || ''}`).find(Boolean) ??
               null;
-            const canHydratePhone = hydratePhones && Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 10_000;
-            const hydrate = scanMode === 'firecrawl'
-              ? () => hydratePhoneFromListingUrl(url, firecrawlKey)
-              : () => freeHydratePhoneFromUrl(url);
-            extracted.contactPhone = phoneFromSearchPayload || (canHydratePhone ? await hydrate() : null);
+            const timeLeft = Date.now() - scanStartedAt < MAX_BACKGROUND_RUNTIME_MS - 10_000;
+            const canHydratePhone = hydratePhones && timeLeft;
+            // Deschidem pagina reală și când lipsesc prețul/suprafața, nu doar
+            // pentru telefon — altfel anunțul apare doar la numărătoare.
+            const needsDetails = !extracted.price || !extracted.size;
+            let detailPrice: number | null = null;
+            let detailCurrency = 'EUR';
+            let detailSize: number | null = null;
+            let detailText: string | null = null;
+
+            if (scanMode === 'firecrawl' && canHydratePhone) {
+              extracted.contactPhone = phoneFromSearchPayload || await hydratePhoneFromListingUrl(url, firecrawlKey);
+            } else if ((canHydratePhone && !phoneFromSearchPayload) || (needsDetails && timeLeft)) {
+              const d = await freeHydrateDetailsFromUrl(url);
+              extracted.contactPhone = phoneFromSearchPayload || d.phone;
+              detailPrice = d.price;
+              detailCurrency = d.currency;
+              detailSize = d.size;
+              detailText = d.text;
+              if (!extracted.rooms && d.rooms) extracted.rooms = d.rooms;
+            } else {
+              extracted.contactPhone = phoneFromSearchPayload;
+            }
 
             let price = extracted.price;
-            if (price && extracted.currency === 'RON') {
+            let priceCurrency = extracted.currency;
+            if (!price && detailPrice) { price = detailPrice; priceCurrency = detailCurrency; }
+            if (price && priceCurrency === 'RON') {
               price = Math.round(price * 0.2);
             }
 
-            const size = extracted.size;
+            const size = extracted.size ?? detailSize;
             const pricePerSqm = (price && size && size > 0) ? Math.round(price / size) : null;
 
             const locationText = extracted.location || result.title || '';
-            const zone = detectZone(locationText + ' ' + (result.title || ''));
+            const zone = detectZone(
+              `${locationText} ${result.title || ''} ${url} ${(detailText || markdown || '').substring(0, 1500)}`,
+            );
             const features = extracted.features;
 
             // ───── HARD GEO FILTER (Timișoara only) ─────
