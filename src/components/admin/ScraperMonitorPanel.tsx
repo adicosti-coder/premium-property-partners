@@ -36,6 +36,7 @@ import {
 } from "@/components/admin/scraper/hooks/useScraperLeads";
 import { FoundListingRow } from "@/components/admin/scraper/columns/scraperColumns";
 import { ScraperHealthPanel } from "@/components/admin/ScraperHealthPanel";
+import ProxyBudgetPanel from "@/components/admin/ProxyBudgetPanel";
 
 type Keyword = {
   id: string;
@@ -583,6 +584,8 @@ export default function ScraperMonitorPanel() {
       </div>
 
       <ScraperHealthPanel />
+
+      <ProxyBudgetPanel />
 
       {/* Live job progress */}
 
