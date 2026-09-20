@@ -414,6 +414,13 @@
       "when": 1789882160509,
       "tag": "0058_scraper_health_monitor",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1789882698981,
+      "tag": "0059_owner_public_listings",
+      "breakpoints": true
     }
   ]
 }

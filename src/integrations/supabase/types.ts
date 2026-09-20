@@ -4083,6 +4083,106 @@ export type Database = {
           },
         ]
       }
+      owner_public_listings: {
+        Row: {
+          consent_id: string | null
+          consent_proof: string | null
+          created_at: string
+          created_by: string | null
+          currency: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean
+          price: number | null
+          property_type: string | null
+          prospect_listing_id: string | null
+          published_at: string | null
+          rooms: number | null
+          size: number | null
+          slug: string
+          source_platform: string | null
+          source_url: string | null
+          title: string
+          transaction_type: string | null
+          unpublished_at: string | null
+          updated_at: string
+          zone: string | null
+        }
+        Insert: {
+          consent_id?: string | null
+          consent_proof?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          price?: number | null
+          property_type?: string | null
+          prospect_listing_id?: string | null
+          published_at?: string | null
+          rooms?: number | null
+          size?: number | null
+          slug: string
+          source_platform?: string | null
+          source_url?: string | null
+          title: string
+          transaction_type?: string | null
+          unpublished_at?: string | null
+          updated_at?: string
+          zone?: string | null
+        }
+        Update: {
+          consent_id?: string | null
+          consent_proof?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          price?: number | null
+          property_type?: string | null
+          prospect_listing_id?: string | null
+          published_at?: string | null
+          rooms?: number | null
+          size?: number | null
+          slug?: string
+          source_platform?: string | null
+          source_url?: string | null
+          title?: string
+          transaction_type?: string | null
+          unpublished_at?: string | null
+          updated_at?: string
+          zone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_public_listings_consent_id_fkey"
+            columns: ["consent_id"]
+            isOneToOne: false
+            referencedRelation: "wa_publish_consents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_public_listings_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_public_listings_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+        ]
+      }
       pdf_funnel_events: {
         Row: {
           created_at: string
