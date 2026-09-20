@@ -98,6 +98,8 @@ const ScraperLeads = lazyWithRetry(() => import("./pages/ScraperLeads"));
 const ScraperPreview = lazyWithRetry(() => import("./pages/ScraperPreview"));
 const ProspectListings = lazyWithRetry(() => import("./pages/ProspectListings"));
 const AnunturiGasite = lazyWithRetry(() => import("./pages/AnunturiGasite"));
+const AnuntProprietar = lazyWithRetry(() => import("./pages/AnuntProprietar"));
+const AnunturiProprietari = lazyWithRetry(() => import("./pages/AnunturiProprietari"));
 const ImobiliareTimisoara = lazyWithRetry(() => import("./pages/ImobiliareTimisoara"));
 const NeighborhoodDetail = lazyWithRetry(() => import("./pages/NeighborhoodDetail"));
 const ZoneInvestitiiTimisoara = lazyWithRetry(() => import("./pages/ZoneInvestitiiTimisoara"));
