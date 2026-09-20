@@ -894,17 +894,22 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   // Probăm 2 pattern-uri URL OLX (categorie imobiliare + cautare globală) ca să prindem mai multe rezultate.
   // Proxy-ul costă, deci mergem pe cel mai productiv URL mai întâi și ne oprim
   // imediat ce avem suficiente rezultate.
-  const urls = [
-    `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
-    // fără termen: lista completă a proprietarilor din Timișoara (ordonată după dată)
-    `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
-  ];
+  const targetedUrl = `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`;
+  // Lista generică (fără termen) aduce aceleași anunțuri la fiecare rulare și
+  // consumă proxy degeaba → o folosim doar ca rezervă, când căutarea țintită
+  // nu a returnat aproape nimic.
+  const genericUrl = `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`;
   const out: FreeResult[] = [];
   const seen = new Set<string>();
-  for (const url of urls) {
+  const urls = [targetedUrl];
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
     if (out.length >= max) break;
     // OLX blochează datacenter-ul și randează lista din JS → mereu prin proxy.
-    const { ok, html } = await fetchHtmlUnblockable(url, 5500, 'https://www.olx.ro/', { alwaysProxy: true });
+    const { ok, html } = await fetchHtmlUnblockable(url, 5500, 'https://www.olx.ro/', {
+      alwaysProxy: true,
+      budget: 'search',
+    });
     if (!ok || !html) continue;
     // Titluri din ancore + linkuri din payload-ul JSON (OLX randează din JS,
     // deci calea sigură e să luăm orice apariție de /d/oferta/, chiar escapată).
