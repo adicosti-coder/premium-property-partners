@@ -372,6 +372,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     setIgnoreFilters(false);
     setSort("relevance");
     setYearFilter(ANY_YEAR);
+    setAgeFilter(ANY_AGE);
+    setDurationFilter(ANY_DURATION);
+    setPublishedFrom("");
+    setPublishedTo("");
   };
 
   const toggleIn = (list: string[], value: string) =>
