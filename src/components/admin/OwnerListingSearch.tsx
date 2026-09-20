@@ -827,6 +827,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (duplicate ? ` · ${duplicate} deja în listă` : "") +
           (blocked ? ` · ${blocked} surse blocate sau schimbate` : "") +
           (generic ? ` · ${generic} pagini de căutare eliminate` : "") +
+          (offTopic ? ` · ${offTopic} anunțuri fără legătură cu imobiliarele eliminate` : "") +
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
       );
       window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
