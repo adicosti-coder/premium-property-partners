@@ -837,25 +837,46 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
     // OLX blochează datacenter-ul și randează lista din JS → mereu prin proxy.
     const { ok, html } = await fetchHtmlUnblockable(url, 5500, 'https://www.olx.ro/', { alwaysProxy: true });
     if (!ok || !html) continue;
-    // Titlurile din HTML (parser clasic) + linkurile brute (fallback proxy).
-    const re = /<a[^>]+href="((?:https:\/\/www\.olx\.ro)?\/d\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(html)) && out.length < max) {
-      const href = m[1].startsWith('http') ? m[1] : `https://www.olx.ro${m[1]}`;
+    // Titluri din ancore + linkuri din payload-ul JSON (OLX randează din JS,
+    // deci calea sigură e să luăm orice apariție de /d/oferta/, chiar escapată).
+    const anchorTitles = new Map<string, string>();
+    const anchorRe = /<a[^>]*href=["']((?:https?:\/\/www\.olx\.ro)?\\?\/d\\?\/oferta\\?\/[^"'\s]+)["'][^>]*>([\s\S]{0,600}?)<\/a>/gi;
+    let am: RegExpExecArray | null;
+    while ((am = anchorRe.exec(html))) {
+      const path = am[1].replace(/\\\//g, '/').split(/[?#]/)[0];
+      const href = path.startsWith('http') ? path : `https://www.olx.ro${path}`;
+      const title = am[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+      if (title && !anchorTitles.has(href)) anchorTitles.set(href, title);
+    }
+
+    const pathRe = /(?:https?:\/\/www\.olx\.ro)?\\?\/d\\?\/oferta\\?\/[A-Za-z0-9\-_%.]+/gi;
+    const candidates: string[] = [];
+    let pm: RegExpExecArray | null;
+    while ((pm = pathRe.exec(html))) {
+      const path = pm[0].replace(/\\\//g, '/');
+      const href = path.startsWith('http') ? path : `https://www.olx.ro${path}`;
+      if (!/\.html?$/i.test(href) && !/-[A-Za-z0-9]{6,}$/.test(href)) continue;
       if (seen.has(href)) continue;
       seen.add(href);
-      const title = m[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
-      // Fără titlu în listă (cazul linkurilor brute): folosim slugul anunțului,
-      // care conține deja descrierea. Hidratarea ulterioară aduce datele reale.
+      candidates.push(href);
+    }
+
+    for (const href of candidates) {
+      if (out.length >= max) break;
+      // Fără titlu în ancoră: folosim slugul anunțului, care conține deja
+      // descrierea. Hidratarea ulterioară aduce datele reale.
       const slugTitle = decodeURIComponent(href.split('/d/oferta/')[1] || '')
         .replace(/\.html?$/i, '')
         .replace(/-[A-Za-z0-9]{6,}$/i, '')
         .replace(/-+/g, ' ')
         .trim();
-      const finalTitle = title || slugTitle;
+      const finalTitle = anchorTitles.get(href) || slugTitle;
       if (finalTitle.length > 5) out.push({ url: href, title: finalTitle, markdown: finalTitle });
     }
-    console.log(JSON.stringify({ kind: 'olx_direct_page', url, found: out.length }));
+    console.log(JSON.stringify({
+      kind: 'olx_direct_page', url, found: out.length,
+      candidates: candidates.length, anchors: anchorTitles.size, htmlLen: html.length,
+    }));
   }
   return out;
 }
