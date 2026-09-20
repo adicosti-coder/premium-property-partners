@@ -80,6 +80,19 @@ export const PORTAL_ZONES: PortalZone[] = [
   { label: "UMT", group: "Est / Vest", aliases: ["umt", "zona umt"] },
   { label: "Zona Gării", group: "Est / Vest", aliases: ["zona garii", "gara de nord", "gara", "zona gara"] },
   { label: "Zona Industrială", group: "Est / Vest", aliases: ["zona industriala", "industrial", "calea buziasului industrial"] },
+  { label: "Calea Martirilor", group: "Est / Vest", aliases: ["calea martirilor", "martirilor", "zona martirilor", "zona-martirilor"] },
+  { label: "Lidia", group: "Sud", aliases: ["lidia", "zona lidia", "strada lidia"] },
+  { label: "Odobescu", group: "Centru", aliases: ["odobescu", "zona odobescu"] },
+  { label: "Telegrafului", group: "Sud", aliases: ["telegrafului", "zona telegrafului", "calea telegrafului"] },
+  { label: "Bogdăneștilor", group: "Est / Vest", aliases: ["bogdanestilor", "zona bogdanestilor", "bogdanesti"] },
+  { label: "Dorobanților", group: "Centru", aliases: ["dorobantilor", "zona dorobantilor"] },
+  { label: "Simion Bărnuțiu", group: "Est / Vest", aliases: ["simion barnutiu", "barnutiu", "zona simion barnutiu"] },
+  { label: "Mircea cel Bătrân", group: "Nord", aliases: ["mircea cel batran", "zona mircea cel batran"] },
+  { label: "Crișan", group: "Nord", aliases: ["crisan", "zona crisan"] },
+  { label: "Bălcescu", group: "Centru", aliases: ["balcescu", "zona balcescu", "piata nicolae balcescu"] },
+  { label: "Weiss / Mehala Nord", group: "Nord", aliases: ["weiss", "zona weiss", "mehala nord"] },
+  { label: "Solventul", group: "Est / Vest", aliases: ["solventul", "zona solventul"] },
+  { label: "Șoarecului / Lipovei Nord", group: "Nord", aliases: ["soarecului", "lipovei nord", "zona soarecului"] },
 
   // ── Localități limitrofe (zone separate pe portaluri) ─────────────────────
   { label: "Dumbrăvița", group: "Limitrof", aliases: ["dumbravita", "zona dumbravita", "comuna dumbravita"] },
@@ -91,6 +104,13 @@ export const PORTAL_ZONES: PortalZone[] = [
   { label: "Săcălaz", group: "Limitrof", aliases: ["sacalaz"] },
   { label: "Șag", group: "Limitrof", aliases: ["sag", "comuna sag"] },
   { label: "Remetea Mare", group: "Limitrof", aliases: ["remetea mare", "remetea"] },
+  { label: "Sânandrei", group: "Limitrof", aliases: ["sanandrei", "sin andrei", "comuna sanandrei"] },
+  { label: "Dudeștii Noi", group: "Limitrof", aliases: ["dudestii noi", "dudesti noi"] },
+  { label: "Utvin", group: "Limitrof", aliases: ["utvin"] },
+  { label: "Sânmihaiu Nou", group: "Limitrof", aliases: ["sanmihaiu nou", "sinmihaiu nou"] },
+  { label: "Pișchia", group: "Limitrof", aliases: ["pischia"] },
+  { label: "Covaci", group: "Limitrof", aliases: ["covaci"] },
+  { label: "Recaș", group: "Limitrof", aliases: ["recas", "oras recas"] },
 ];
 
 /** Etichetele canonice, în ordinea din listă. */

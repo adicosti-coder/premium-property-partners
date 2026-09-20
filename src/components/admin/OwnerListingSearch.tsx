@@ -46,11 +46,25 @@ const PLATFORM_OPTIONS = [
   "imobiliare.ro",
   "Publi24",
   "BursaImobiliara.ro",
+  "Homezz.ro",
+  "Anuntul.ro",
+  "Anunturi-Imobiliare.ro",
+  "Tocmai.ro",
   "Facebook Groups",
   "Facebook Marketplace",
 ];
 
-const MULTI_SEARCH_PLATFORMS = ["OLX", "Storia.ro", "imobiliare.ro", "Publi24", "BursaImobiliara.ro"];
+const MULTI_SEARCH_PLATFORMS = [
+  "OLX",
+  "Storia.ro",
+  "imobiliare.ro",
+  "Publi24",
+  "BursaImobiliara.ro",
+  "Homezz.ro",
+  "Anuntul.ro",
+  "Anunturi-Imobiliare.ro",
+  "Tocmai.ro",
+];
 
 /** Parametri de urmărire care nu schimbă anunțul — se elimină la comparare. */
 const TRACKING_PARAMS = /^(utm_|gclid|fbclid|msclkid|reason|ref|source|srsltid|_ga|mc_|sid|clickid)/i;
@@ -1538,7 +1552,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           Caută anunțuri de la proprietari
         </CardTitle>
         <CardDescription>
-          Caută pe OLX, Storia.ro, imobiliare.ro, Publi24 și BursaImobiliara.ro doar anunțurile publicate de proprietari.
+          Caută pe OLX, Storia.ro, imobiliare.ro, Publi24, BursaImobiliara.ro, Homezz.ro, Anuntul.ro,
+          Anunturi-Imobiliare.ro și Tocmai.ro doar anunțurile publicate de proprietari.
           Agențiile sunt excluse automat, iar rezultatele intră și în „Anunțuri noi găsite”.
         </CardDescription>
       </CardHeader>
