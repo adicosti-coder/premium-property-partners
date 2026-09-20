@@ -1322,13 +1322,48 @@ async function freeSearchWithRetry(
 }
 
 async function freeHydratePhoneFromUrl(url: string): Promise<string | null> {
+  const d = await freeHydrateDetailsFromUrl(url);
+  return d.phone;
+}
+
+/**
+ * O singură deschidere a paginii reale a anunțului din care luăm telefon,
+ * preț, suprafață și textul pe care îl folosim pentru zonă. Fără asta multe
+ * anunțuri rămâneau fără preț și fără zonă (doar număr în raport).
+ */
+async function freeHydrateDetailsFromUrl(url: string): Promise<{
+  phone: string | null; price: number | null; currency: string; size: number | null;
+  rooms: number | null; text: string | null;
+}> {
+  const empty = { phone: null, price: null, currency: 'EUR', size: null, rooms: null, text: null };
   try {
     const referer = (() => { try { return new URL(url).origin + '/'; } catch { return undefined; } })();
     const { ok, html } = await fetchHtmlUnblockable(url, 4500, referer);
-    if (!ok || !html) return null;
+    if (!ok || !html) return empty;
     const phones = extractPhonesFromPayload('', html, html, null);
-    return phones[0] ?? null;
-  } catch { return null; }
+    const text = htmlToText(html).substring(0, 6000);
+    const ex = extractFromMarkdown(text, '', url);
+    return {
+      phone: phones[0] ?? null,
+      price: ex.price,
+      currency: ex.currency,
+      size: ex.size,
+      rooms: ex.rooms,
+      text,
+    };
+  } catch { return empty; }
+}
+
+/** HTML → text simplu, suficient pentru regex de preț / suprafață / zonă. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // ────────────────────────────────────────────────────────────────────────────
