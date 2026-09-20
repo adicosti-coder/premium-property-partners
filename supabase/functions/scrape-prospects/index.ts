@@ -433,19 +433,25 @@ const BROWSER_HEADERS: Record<string, string> = {
 };
 
 async function fetchHtml(url: string, timeoutMs = 6000, referer?: string): Promise<{ ok: boolean; status: number; html: string }> {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const headers: Record<string, string> = { ...BROWSER_HEADERS };
-    if (referer) headers['Referer'] = referer;
-    const resp = await fetch(url, { signal: ctrl.signal, headers, redirect: 'follow' });
-    const html = resp.ok ? await resp.text() : '';
-    return { ok: resp.ok, status: resp.status, html };
-  } catch (_e) {
-    return { ok: false, status: 0, html: '' };
-  } finally {
-    clearTimeout(t);
+  let last = { ok: false, status: 0, html: '' };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const headers: Record<string, string> = { ...BROWSER_HEADERS };
+      if (referer) headers['Referer'] = referer;
+      const resp = await fetch(url, { signal: ctrl.signal, headers, redirect: 'follow' });
+      const html = resp.ok ? await resp.text() : '';
+      last = { ok: resp.ok, status: resp.status, html };
+      if (resp.ok || (resp.status > 0 && resp.status < 500 && resp.status !== 429)) return last;
+    } catch (_e) {
+      last = { ok: false, status: 0, html: '' };
+    } finally {
+      clearTimeout(t);
+    }
+    if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 250));
   }
+  return last;
 }
 
 function stripQueryOperators(q: string): string {
@@ -489,9 +495,26 @@ function searchIntent(query: string): { rent: boolean; house: boolean; land: boo
 }
 
 function pushUniqueResult(out: FreeResult[], seen: Set<string>, result: FreeResult, max: number) {
-  if (!result.url || seen.has(result.url) || out.length >= max) return;
-  seen.add(result.url);
-  out.push(result);
+  const url = normalizeSourceUrl(result.url);
+  if (!url || seen.has(url) || out.length >= max) return;
+  seen.add(url);
+  out.push({ ...result, url });
+}
+
+function normalizeSourceUrl(raw: string | null | undefined): string {
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    url.hash = '';
+    for (const key of Array.from(url.searchParams.keys())) {
+      if (/^(utm_|fbclid$|gclid$|ref$|source$)/i.test(key)) url.searchParams.delete(key);
+    }
+    url.hostname = url.hostname.toLowerCase().replace(/^www\./, '');
+    url.pathname = url.pathname.replace(/\/$/, '');
+    return url.toString();
+  } catch {
+    return raw.trim();
+  }
 }
 
 function extractDomainFromSiteOperator(q: string): string | null {
@@ -714,12 +737,16 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
     const decoded = decodeBasicHtml(html);
     // Formatul actual folosește /oferta/...-<id numeric>, inclusiv în JSON-ul
     // serializat al paginii. Vechiul parser accepta doar sufixul -X..., deci 0 rezultate.
-    const re = /"url":"(\/oferta\/[^"?#]+)"[\s\S]{0,900}?"title":"([^"]*)"[\s\S]{0,900}?"location":"([^"]*)"[\s\S]{0,500}?"price":"([^"]*)"/gi;
+    const re = /"url":"(\/oferta\/[^"?#]+)"([\s\S]{0,2400}?)(?="url":"\/oferta\/|$)/gi;
     let m: RegExpExecArray | null;
     while ((m = re.exec(decoded)) && out.length < max) {
       const href = `https://www.imobiliare.ro${m[1]}`;
-      const title = decodeBasicHtml(m[2]);
-      const markdown = `${title} ${decodeBasicHtml(m[3])} ${decodeBasicHtml(m[4])}`.trim();
+      const block = m[2];
+      const pick = (key: string) => decodeBasicHtml(block.match(new RegExp(`"${key}":"([^"]*)"`, 'i'))?.[1] || '');
+      const sellerType = pick('sellerType').toLowerCase();
+      if (sellerType === 'agency' || sellerType === 'developer') continue;
+      const title = pick('title') || titleFromListingUrl(href);
+      const markdown = `${title} ${pick('descriptionPreview')} ${pick('location')} ${pick('price')}`.trim();
       pushUniqueResult(out, seen, { url: href, title, description: markdown, markdown }, max);
     }
   }
@@ -1864,7 +1891,7 @@ Deno.serve(async (req) => {
               await markTimedOut(Math.min(i + BATCH_SIZE, queries.length), queries.length);
               return;
             }
-            const url = rawResult.url;
+            const url = normalizeSourceUrl(rawResult.url);
             if (!url) continue;
 
             const result = customQuery ? await hydrateFreeResult(rawResult) : rawResult;

@@ -128,7 +128,8 @@ export function floorInfo(text: string) {
   if (m) value = Number(m[1]);
   
   // 3/4, 3 / 4
-  const frac = /\b(\d{1,2})\s*\/\s*(\d{1,2})\b/.exec(t);
+  // `norm()` transformă separatorul `/` în spațiu, deci acceptăm ambele forme.
+  const frac = /\b(\d{1,2})\s*(?:\/|\s)\s*(\d{1,2})\b/.exec(t);
   if (frac && Number(frac[2]) <= 30) {
     if (value === null) value = Number(frac[1]);
     total = Number(frac[2]);

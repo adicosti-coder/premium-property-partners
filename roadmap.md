@@ -17,4 +17,4 @@
 - [x] Buton „Expirat" pentru marcarea manuală a anunțurilor expirate
 - [x] Căutare manuală reparată: oraș obligatoriu, rezultate noi + cunoscute și linkuri normalizate
 - [x] Căutare live extinsă: toate zonele implicit, 15 rezultate/portal și citirea titlului/descrierii din pagina anunțului
-- [ ] Reparare P0 descoperire live: parsere portal actualizate, acoperire echitabilă și verificare cu rezultate reale
+- [x] Reparare P0 descoperire live: parsere portal actualizate, acoperire echitabilă și verificare cu rezultate reale

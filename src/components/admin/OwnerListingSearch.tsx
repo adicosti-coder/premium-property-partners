@@ -458,11 +458,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       phone: l.phone || l.contact_phone || null,
     }));
     const b = (data as any)?.funnel_breakdown || {};
+    const blocked = Array.isArray((data as any)?.blocked_alerts) ? (data as any).blocked_alerts.length : 0;
     return {
       platform: p,
       listings: listings.map(l => ({ ...l, source_platform: l.source_platform || l.platform || p })),
       agency: Number(b.agency_signal || 0),
       duplicate: Number(b.duplicate || 0),
+      blocked,
     };
   };
 
@@ -755,6 +757,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
+      const blocked = ok.reduce((s, r) => s + r.blocked, 0);
       const perMap = new Map<string, number>();
       for (const r of ok) perMap.set(r.platform, (perMap.get(r.platform) || 0) + r.listings.length);
       const perPlatform = Array.from(perMap.entries())
@@ -769,6 +772,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
           (agency ? ` · ${agency} agenții excluse` : "") +
           (duplicate ? ` · ${duplicate} deja în listă` : "") +
+          (blocked ? ` · ${blocked} surse blocate sau schimbate` : "") +
           (generic ? ` · ${generic} pagini de căutare eliminate` : "") +
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
       );
