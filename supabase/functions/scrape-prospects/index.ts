@@ -664,6 +664,8 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   const urls = [
     `https://www.olx.ro/d/imobiliare/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
     `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
+    // fără termen: lista completă a proprietarilor din Timișoara (ordonată după dată)
+    `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
   ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
@@ -747,6 +749,7 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
   // imobiliare.ro nu permite query params arbitrari pe URL public; folosim categoriile + persoane-fizice.
   const urls = [
     `https://www.imobiliare.ro/${transaction}-${category}/judetul-timis/timisoara?tip_proprietar=persoana-fizica`,
+    `https://www.imobiliare.ro/${transaction}-${category}/judetul-timis/timisoara?tip_proprietar=persoana-fizica&pagina=2`,
   ];
   const out: FreeResult[] = [];
   const seen = new Set<string>();
