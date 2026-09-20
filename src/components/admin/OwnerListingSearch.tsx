@@ -493,8 +493,15 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const searchQueryParams = /(q=|query=|search|filtr|page=|pagina=|categor|pret|price|camere)/.test(searchQuery);
     if (genericPath || searchQueryParams) return false;
     // un anunț individual are un identificator în URL (id numeric sau slug lung cu hash)
-    const last = lowerPath.replace(/\/+$/, "").split("/").pop() || "";
-    const looksLikeAd = /\d{4,}/.test(last) || /-[a-z0-9]{6,}$/.test(last) || /ID[a-zA-Z0-9]{4,}/.test(last);
+    const lastRaw = lowerPath.replace(/\/+$/, "").split("/").pop() || "";
+    // eliminăm extensia (.html, .htm, .php) ca să putem recunoaște slug-urile OLX
+    const last = lastRaw.replace(/\.(html?|php|aspx?)$/, "");
+    const looksLikeAd =
+      /\d{4,}/.test(last) ||
+      /-[a-z0-9]{6,}$/.test(last) ||
+      /id[a-z0-9]{4,}/.test(last) ||
+      /\/d\/oferta\//.test(lowerPath) ||
+      /-[a-z0-9-]{10,}$/.test(last);
     if (!looksLikeAd) return false;
     // titluri de tip listă
     const title = (l.title || "").toLowerCase();

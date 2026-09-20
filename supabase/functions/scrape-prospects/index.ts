@@ -1907,21 +1907,36 @@ Deno.serve(async (req) => {
               const known = existingProspectsByUrl.get(url);
               if (
                 customQuery &&
-                known?.prospect_type !== 'agentie' &&
-                known?.lifecycle_status !== 'expired' &&
-                known?.lifecycle_status !== 'rejected'
+                known &&
+                known.prospect_type !== 'agentie' &&
+                known.lifecycle_status !== 'expired' &&
+                known.lifecycle_status !== 'rejected'
               ) {
                 results.push({
                   title: known.title || result.title || titleFromListingUrl(url),
                   description: known.description || result.markdown || result.description || null,
                   url,
                   source_url: url,
-                  price: known.price,
-                  phone: known.contact_phone,
-                  contact_phone: known.contact_phone,
-                  zone: known.zone,
-                  rooms: known.rooms,
+                  price: known.price ?? null,
+                  phone: known.contact_phone ?? null,
+                  contact_phone: known.contact_phone ?? null,
+                  zone: known.zone ?? null,
+                  rooms: known.rooms ?? null,
                   source_platform: canonicalPlatform(known.source_platform || platform, url),
+                });
+              } else if (customQuery && !known) {
+                // URL cunoscut doar din arhivă: îl afișăm cu datele din rezultatul live.
+                results.push({
+                  title: result.title || titleFromListingUrl(url),
+                  description: result.markdown || result.description || null,
+                  url,
+                  source_url: url,
+                  price: null,
+                  phone: null,
+                  contact_phone: null,
+                  zone: null,
+                  rooms: null,
+                  source_platform: canonicalPlatform(platform, url),
                 });
               }
               continue;
