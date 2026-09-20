@@ -20,7 +20,7 @@
 - [x] Reparare P0 descoperire live: parsere portal actualizate, acoperire echitabilă și verificare cu rezultate reale
 
 ## Reparare completă căutare proprietari (20 sep 2026)
-- [ ] Eliminare agenții, anunțuri expirate și pagini generice înainte de afișare
-- [ ] Aliniere filtre, interogări live și numărători pe rezultate reale
-- [ ] Îmbunătățire discovery/parsing pentru anunțuri rezidențiale Timișoara
+- [x] Eliminare agenții, anunțuri expirate și pagini generice înainte de afișare
+- [x] Aliniere filtre, interogări live și numărători pe rezultate reale
+- [x] Îmbunătățire discovery/parsing pentru anunțuri rezidențiale Timișoara
 - [ ] Teste de regresie și verificare autentificată în Admin
