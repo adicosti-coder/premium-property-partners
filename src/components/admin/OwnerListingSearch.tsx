@@ -413,7 +413,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (missing.length > 0) return `nu mentioneaza: ${missing.join(", ")}`;
     }
 
-    if (floors.length > 0) {
+    if (!soft && floors.length > 0) {
       const f = floorInfo(rawText);
       if (f.known) {
         const v = f.value;
