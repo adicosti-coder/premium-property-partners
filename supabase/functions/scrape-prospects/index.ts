@@ -844,7 +844,13 @@ async function hydrateFreeResult(result: FreeResult): Promise<FreeResult> {
   if (!sparse) return result;
 
   const referer = (() => { try { return new URL(result.url).origin + '/'; } catch { return undefined; } })();
-  const { ok, html } = await fetchHtmlUnblockable(result.url, 4000, referer);
+  // OLX blochează fetch-ul direct din datacenter (403) — mergem direct pe proxy
+  // stealth, ca să nu pierdem un apel inutil, dar pe bugetul de „detail”.
+  const isOlx = /(?:^|\.)olx\.ro$/i.test((() => { try { return new URL(result.url).hostname.replace(/^www\./, ''); } catch { return ''; } })());
+  const { ok, html } = await fetchHtmlUnblockable(result.url, isOlx ? 12000 : 4000, referer, {
+    alwaysProxy: isOlx,
+    budget: isOlx ? 'detail' : undefined,
+  });
   if (!ok || !html) return result;
 
   const pick = (patterns: RegExp[]): string => {
