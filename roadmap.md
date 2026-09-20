@@ -18,3 +18,9 @@
 - [x] Căutare manuală reparată: oraș obligatoriu, rezultate noi + cunoscute și linkuri normalizate
 - [x] Căutare live extinsă: toate zonele implicit, 15 rezultate/portal și citirea titlului/descrierii din pagina anunțului
 - [x] Reparare P0 descoperire live: parsere portal actualizate, acoperire echitabilă și verificare cu rezultate reale
+
+## Reparare completă căutare proprietari (20 sep 2026)
+- [ ] Eliminare agenții, anunțuri expirate și pagini generice înainte de afișare
+- [ ] Aliniere filtre, interogări live și numărători pe rezultate reale
+- [ ] Îmbunătățire discovery/parsing pentru anunțuri rezidențiale Timișoara
+- [ ] Teste de regresie și verificare autentificată în Admin
