@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { normalizeAdUrl } from "./OwnerListingSearch";
+import {
+  hasAgencyEvidence,
+  isActiveOwnerListing,
+  isIndividualOwnerListing,
+  isResidentialRealEstate,
+  listingTransaction,
+  ownerVerification,
+} from "@/lib/ownerListingRules";
 
 describe("normalizeAdUrl", () => {
   it("elimină parametrii de urmărire", () => {
@@ -18,5 +26,36 @@ describe("normalizeAdUrl", () => {
 
   it("întoarce text gol pentru linkuri lipsă", () => {
     expect(normalizeAdUrl(null)).toBe("");
+  });
+});
+
+describe("regulile anunțurilor de proprietari", () => {
+  it("acceptă un anunț OLX individual și respinge pagina de căutare", () => {
+    expect(isIndividualOwnerListing({ url: "https://www.olx.ro/d/oferta/apartament-3-camere-IDabc12.html" })).toBe(true);
+    expect(isIndividualOwnerListing({ url: "https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/q-proprietar/" })).toBe(false);
+  });
+
+  it("nu prezintă agenția ca proprietar", () => {
+    const listing = { title: "Apartament 3 camere", description: "Agenție imobiliară, comision cumpărător" };
+    expect(hasAgencyEvidence(listing)).toBe(true);
+    expect(ownerVerification(listing)).toBe("agency");
+  });
+
+  it("separă proprietarul confirmat de rezultatul neverificat", () => {
+    expect(ownerVerification({ title: "Direct proprietar, apartament decomandat" })).toBe("confirmed");
+    expect(ownerVerification({ title: "Apartament 3 camere decomandat" })).toBe("review");
+    expect(ownerVerification({ title: "Apartament 3 camere", prospect_type: "proprietar" })).toBe("review");
+  });
+
+  it("respinge anunțurile expirate și conținutul neimobiliar", () => {
+    expect(isActiveOwnerListing({ is_active: false, lifecycle_status: "to_review" })).toBe(false);
+    expect(isActiveOwnerListing({ lifecycle_status: "expired" })).toBe(false);
+    expect(isResidentialRealEstate({ title: "Licență taxi de vânzare" })).toBe(false);
+    expect(isResidentialRealEstate({ title: "Apartament 3 camere, etaj 2" })).toBe(true);
+  });
+
+  it("deosebește vânzarea de închiriere inclusiv pentru «închiriez»", () => {
+    expect(listingTransaction({ title: "Proprietar închiriez apartament 3 camere" })).toBe("inchiriere");
+    expect(listingTransaction({ title: "Vând apartament decomandat" })).toBe("vanzare");
   });
 });

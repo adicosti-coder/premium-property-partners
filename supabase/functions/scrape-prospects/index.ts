@@ -1794,7 +1794,10 @@ function hasAgencySignal(title: string | null | undefined, url: string | null | 
 }
 
 function hasOwnerFilterIntent(query: string | null | undefined, url: string | null | undefined): boolean {
-  const blob = removeDiacritics(`${query || ''} ${url || ''}`.toLowerCase());
+  // Only a filter present on the returned URL is evidence that the marketplace
+  // enforced owner-only results. Search operators in the outgoing query are
+  // merely intent and are not reliably honoured by fallback search engines.
+  const blob = removeDiacritics(`${url || ''}`.toLowerCase());
   return [
     'proprietar', 'proprietari', 'persoana fizica', 'persoane fizice', 'persoana privata',
     'private_business', 'ownerTypeSingleSelect=PRIVATE', 'tip-anunt-persoane-fizice',
@@ -2451,6 +2454,12 @@ Deno.serve(async (req) => {
             const url = normalizeSourceUrl(rawResult.url);
             if (!url) continue;
 
+            // Reject obvious category/search URLs before spending a detail request.
+            if (isGenericSearchPage(url, rawResult.title || '')) {
+              genericPageSkipped++;
+              archivedSkipped++;
+              continue;
+            }
             const result = customQuery ? await hydrateFreeResult(rawResult) : rawResult;
 
             // New-yield mode: skip already-known source URLs before any costly
@@ -2466,6 +2475,7 @@ Deno.serve(async (req) => {
                 customQuery &&
                 known &&
                 known.prospect_type !== 'agentie' &&
+                known.is_active !== false &&
                 known.lifecycle_status !== 'expired' &&
                 known.lifecycle_status !== 'rejected'
               ) {
@@ -2480,6 +2490,10 @@ Deno.serve(async (req) => {
                   zone: known.zone ?? null,
                   rooms: known.rooms ?? null,
                   source_platform: canonicalPlatform(known.source_platform || platform, url),
+                  prospect_type: known.prospect_type ?? null,
+                  owner_verified: known.prospect_type === 'proprietar',
+                  is_active: known.is_active ?? true,
+                  lifecycle_status: known.lifecycle_status ?? null,
                 });
               } else if (customQuery && !known) {
                 // URL cunoscut doar din arhivă: îl afișăm cu datele din rezultatul live.
@@ -2494,6 +2508,10 @@ Deno.serve(async (req) => {
                   zone: null,
                   rooms: null,
                   source_platform: canonicalPlatform(platform, url),
+                  prospect_type: null,
+                  owner_verified: false,
+                  is_active: true,
+                  lifecycle_status: 'to_review',
                 });
               }
               continue;
@@ -2719,7 +2737,9 @@ Deno.serve(async (req) => {
                   suspect_spam: suspectSpam,
                 },
                 status: 'new',
-                prospect_type: 'proprietar',
+                // A query containing „proprietar” is search intent, not proof.
+                // Only explicit wording on the listing can confirm ownership.
+                prospect_type: explicitOwnerSignal ? 'proprietar' : null,
                 category,
                 lifecycle_status: suspectSpam ? 'to_review' : (failedValidation ? 'to_review' : 'new'),
                 is_active: failedValidation ? false : true,
@@ -2743,7 +2763,7 @@ Deno.serve(async (req) => {
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
               }, { onConflict: 'source_url', ignoreDuplicates: true })
-              .select('id, title, description, price, contact_phone, zone, rooms, source_platform, lead_score, source_url')
+              .select('id, title, description, price, contact_phone, zone, rooms, source_platform, lead_score, source_url, prospect_type, is_active, lifecycle_status')
               .maybeSingle();
 
 
@@ -2756,6 +2776,10 @@ Deno.serve(async (req) => {
                 ...inserted,
                 url: inserted.source_url,
                 phone: inserted.contact_phone,
+                prospect_type: explicitOwnerSignal ? 'proprietar' : null,
+                owner_verified: explicitOwnerSignal,
+                is_active: !failedValidation,
+                lifecycle_status: suspectSpam || failedValidation ? 'to_review' : 'new',
               });
               existingUrls.add(url);
             } else {
