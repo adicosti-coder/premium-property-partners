@@ -1043,11 +1043,12 @@ async function freeSearchWithRetry(
   const directScrapers: { name: string; key: keyof EngineStats; match: (d: string) => boolean; run: () => Promise<FreeResult[]> }[] = [
     { name: 'olx_direct',         key: 'olx_direct', match: (d) => d.includes('olx.ro'),        run: () => directOlxSearch(query, maxResults) },
     { name: 'storia_direct',      key: 'olx_direct', match: (d) => d.includes('storia.ro'),     run: () => directStoriaSearch(query, maxResults) },
+    // ordinea contează: `anunturi-imobiliare.ro` conține „imobiliare.ro”
+    { name: 'anunturi_imob_direct', key: 'olx_direct', match: (d) => d.includes('anunturi-imobiliare.ro'), run: () => directAnunturiImobiliareSearch(query, maxResults) },
     { name: 'imobiliare_direct',  key: 'olx_direct', match: (d) => d.includes('imobiliare.ro'), run: () => directImobiliareSearch(query, maxResults) },
     { name: 'publi24_direct',     key: 'olx_direct', match: (d) => d.includes('publi24.ro'),    run: () => directPubli24Search(query, maxResults) },
     { name: 'homezz_direct',      key: 'olx_direct', match: (d) => d.includes('homezz.ro'),     run: () => directHomezzSearch(query, maxResults) },
     { name: 'anuntul_direct',     key: 'olx_direct', match: (d) => d.includes('anuntul.ro'),    run: () => directAnuntulSearch(query, maxResults) },
-    { name: 'anunturi_imob_direct', key: 'olx_direct', match: (d) => d.includes('anunturi-imobiliare.ro'), run: () => directAnunturiImobiliareSearch(query, maxResults) },
     { name: 'bursa_direct',       key: 'olx_direct', match: (d) => d.includes('bursaimobiliara.ro'), run: () => directBursaSearch(query, maxResults) },
     { name: 'tocmai_direct',      key: 'olx_direct', match: (d) => d.includes('tocmai.ro'),     run: () => directTocmaiSearch(query, maxResults) },
   ];
