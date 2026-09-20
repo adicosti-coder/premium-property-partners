@@ -16,6 +16,8 @@ import {
   tokenize,
   matchesAllTokens,
   surfaceFromText,
+  floorInfo,
+  norm,
   SORT_OPTIONS,
   YEAR_OPTIONS,
   matchesYear,
@@ -193,14 +195,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   /** Ultimul termen căutat, ca rescanarea automată să folosească același text. */
   const lastTermRef = useRef<string>("");
   const runningRef = useRef(false);
-
-  /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9 ]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
 
   /** Anunțul aparține zonei date — acceptă toate denumirile de pe portaluri. */
   const zoneMatches = (l: AdHocListing, z: string) =>
