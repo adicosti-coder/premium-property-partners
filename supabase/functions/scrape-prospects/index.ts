@@ -880,6 +880,88 @@ async function directAnuntulSearch(query: string, max: number): Promise<FreeResu
   return out;
 }
 
+/** Generic portal scraper: listă de URL-uri + regex pentru linkul de anunț. */
+async function directGenericPortal(
+  urls: string[],
+  adRe: RegExp,
+  origin: string,
+  referer: string,
+  max: number,
+): Promise<FreeResult[]> {
+  const out: FreeResult[] = [];
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (out.length >= max) break;
+    const { ok, html } = await fetchHtml(url, 5500, referer);
+    if (!ok || !html) continue;
+    const re = new RegExp(adRe.source, 'gi');
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) && out.length < max) {
+      const raw = m[1];
+      const href = raw.startsWith('http') ? raw : `${origin}${raw.startsWith('/') ? '' : '/'}${raw}`;
+      const title = decodeBasicHtml(
+        m[2]?.match(/title="([^"]+)"/i)?.[1] ||
+        m[2]?.match(/alt="([^"]+)"/i)?.[1] ||
+        (m[3] ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+      ).slice(0, 200);
+      if (title.length > 8) pushUniqueResult(out, seen, { url: href, title, markdown: title }, max);
+    }
+  }
+  return out;
+}
+
+/** BursaImobiliara.ro — portal regional cu anunțuri de proprietari. */
+async function directBursaSearch(query: string, max: number): Promise<FreeResult[]> {
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'inchirieri' : 'vanzari';
+  const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente';
+  return directGenericPortal(
+    [
+      `https://www.bursaimobiliara.ro/${transaction}-${category}/timis/timisoara`,
+      `https://www.bursaimobiliara.ro/anunturi/${transaction}/${category}/timisoara`,
+    ],
+    /<a[^>]+href="((?:https?:\/\/(?:www\.)?bursaimobiliara\.ro)?\/[^"#?]*(?:anunt|oferta|id-\d+)[^"#?]*)"([^>]*)>([\s\S]{0,700}?)<\/a>/,
+    'https://www.bursaimobiliara.ro',
+    'https://www.bursaimobiliara.ro/',
+    max,
+  );
+}
+
+/** Anunturi-Imobiliare.ro — agregator cu secțiune dedicată proprietarilor. */
+async function directAnunturiImobiliareSearch(query: string, max: number): Promise<FreeResult[]> {
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'de-inchiriat' : 'de-vanzare';
+  const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente';
+  return directGenericPortal(
+    [
+      `https://www.anunturi-imobiliare.ro/${category}-${transaction}/timisoara`,
+      `https://www.anunturi-imobiliare.ro/anunturi/${category}/${transaction}/timis/timisoara`,
+    ],
+    /<a[^>]+href="((?:https?:\/\/(?:www\.)?anunturi-imobiliare\.ro)?\/[^"#?]*(?:anunt|oferta|\d{5,})[^"#?]*)"([^>]*)>([\s\S]{0,700}?)<\/a>/,
+    'https://www.anunturi-imobiliare.ro',
+    'https://www.anunturi-imobiliare.ro/',
+    max,
+  );
+}
+
+/** Tocmai.ro — mică publicitate cu multe anunțuri de la persoane fizice. */
+async function directTocmaiSearch(query: string, max: number): Promise<FreeResult[]> {
+  const intent = searchIntent(query);
+  const transaction = intent.rent ? 'de-inchiriat' : 'de-vanzare';
+  const category = intent.house ? 'case-vile' : intent.land ? 'terenuri' : 'apartamente-de-vanzare';
+  return directGenericPortal(
+    [
+      `https://www.tocmai.ro/imobiliare/${category}/timis/timisoara`,
+      `https://www.tocmai.ro/imobiliare-${transaction}/timisoara`,
+    ],
+    /<a[^>]+href="((?:https?:\/\/(?:www\.)?tocmai\.ro)?\/[^"#?]*(?:anunt|\d{5,})[^"#?]*)"([^>]*)>([\s\S]{0,700}?)<\/a>/,
+    'https://www.tocmai.ro',
+    'https://www.tocmai.ro/',
+    max,
+  );
+}
+
+
 async function duckduckgoSearch(query: string, max: number): Promise<FreeResult[]> {
   const simple = simplifyForWebEngine(query, 6) || query;
   const { ok, html } = await fetchHtml(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(simple)}`, 6500);
