@@ -239,6 +239,7 @@ const App = () => (
                     <Route path="/pentru-oaspeti" element={<Navigate to="/cazare" replace />} />
                     <Route path="/imobiliare" element={<Imobiliare />} />
                     <Route path="/anunturi" element={<Anunturi />} />
+                    <Route path="/anunturi-proprietari" element={<AnunturiProprietari />} />
                     <Route path="/apartamente" element={<Navigate to="/anunturi" replace />} />
 
                     <Route path="/blog" element={<Blog />} />
@@ -321,6 +322,7 @@ const App = () => (
                     <Route path="/admin/scraper-preview" element={<ScraperPreview />} />
                     <Route path="/admin/prospect-listings" element={<ProspectListings />} />
                     <Route path="/admin/anunturi-gasite" element={<AnunturiGasite />} />
+                    <Route path="/admin/anunt-proprietar/:id" element={<AnuntProprietar />} />
                     <Route path="/admin/call-dashboard" element={<CallDashboard />} />
                     <Route path="/admin/lead-dashboard" element={<AdminLeadDashboard />} />
                     <Route path="/admin/properties/fast-review" element={<FastReview />} />
