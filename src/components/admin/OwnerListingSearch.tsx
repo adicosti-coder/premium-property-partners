@@ -1310,7 +1310,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             );
           return arr;
         };
-        const matched = sortResults(filterListings(results));
+        const strict = sortResults(filterListings(results));
+        // Dacă detaliile fine (compartimentare, etaj, dotări, suprafață) nu apar scrise în anunț,
+        // nu pierdem oferta: relaxăm automat aceste condiții și spunem clar ce s-a relaxat.
+        const relaxed = strict.length === 0
+          ? sortResults(results.filter(l => excludeReason(l, "soft") === null))
+          : [];
+        const usedRelaxed = strict.length === 0 && relaxed.length > 0;
+        const matched = usedRelaxed ? relaxed : strict;
         const main = ignoreFilters ? sortResults(results) : matched;
         const rest = ignoreFilters ? [] : results.filter(r => !matched.includes(r));
 
