@@ -2480,6 +2480,10 @@ Deno.serve(async (req) => {
                   zone: known.zone ?? null,
                   rooms: known.rooms ?? null,
                   source_platform: canonicalPlatform(known.source_platform || platform, url),
+                  prospect_type: known.prospect_type ?? null,
+                  owner_verified: known.prospect_type === 'proprietar',
+                  is_active: known.is_active ?? true,
+                  lifecycle_status: known.lifecycle_status ?? null,
                 });
               } else if (customQuery && !known) {
                 // URL cunoscut doar din arhivă: îl afișăm cu datele din rezultatul live.
@@ -2494,6 +2498,10 @@ Deno.serve(async (req) => {
                   zone: null,
                   rooms: null,
                   source_platform: canonicalPlatform(platform, url),
+                  prospect_type: null,
+                  owner_verified: false,
+                  is_active: true,
+                  lifecycle_status: 'to_review',
                 });
               }
               continue;
@@ -2719,7 +2727,9 @@ Deno.serve(async (req) => {
                   suspect_spam: suspectSpam,
                 },
                 status: 'new',
-                prospect_type: 'proprietar',
+                // A query containing „proprietar” is search intent, not proof.
+                // Only explicit wording on the listing can confirm ownership.
+                prospect_type: explicitOwnerSignal ? 'proprietar' : null,
                 category,
                 lifecycle_status: suspectSpam ? 'to_review' : (failedValidation ? 'to_review' : 'new'),
                 is_active: failedValidation ? false : true,
@@ -2756,6 +2766,10 @@ Deno.serve(async (req) => {
                 ...inserted,
                 url: inserted.source_url,
                 phone: inserted.contact_phone,
+                prospect_type: explicitOwnerSignal ? 'proprietar' : null,
+                owner_verified: explicitOwnerSignal,
+                is_active: !failedValidation,
+                lifecycle_status: suspectSpam || failedValidation ? 'to_review' : 'new',
               });
               existingUrls.add(url);
             } else {

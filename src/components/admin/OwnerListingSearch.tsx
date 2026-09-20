@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, ExternalLink, Loader2, Search, X, XCircle } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, Loader2, Search, X, XCircle } from "lucide-react";
 import { csvFileName, downloadCsv } from "@/utils/exportCsv";
 import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
@@ -24,6 +24,15 @@ import {
   pricePerSqm,
   type SortValue,
 } from "@/lib/portalSearch";
+import {
+  hasAgencyEvidence,
+  isActiveOwnerListing,
+  isIndividualOwnerListing,
+  isResidentialRealEstate,
+  normalizeOwnerListingUrl,
+  ownerVerification,
+  type OwnerVerification,
+} from "@/lib/ownerListingRules";
 
 export interface AdHocListing {
   title?: string | null;
@@ -35,6 +44,10 @@ export interface AdHocListing {
   rooms?: number | null;
   source_platform?: string | null;
   platform?: string | null;
+  prospect_type?: string | null;
+  owner_verified?: boolean | null;
+  is_active?: boolean | null;
+  lifecycle_status?: string | null;
 }
 
 const ALL_PLATFORMS = "__all__";
@@ -67,27 +80,12 @@ const MULTI_SEARCH_PLATFORMS = [
 ];
 
 /** Parametri de urmărire care nu schimbă anunțul — se elimină la comparare. */
-const TRACKING_PARAMS = /^(utm_|gclid|fbclid|msclkid|reason|ref|source|srsltid|_ga|mc_|sid|clickid)/i;
-
 /**
  * Curăță linkul unui anunț: elimină parametrii de urmărire și „/” final,
  * ca același anunț să nu apară de două ori în listă.
  */
 export function normalizeAdUrl(raw: string | null | undefined): string {
-  const url = (raw || "").trim();
-  if (!url) return "";
-  try {
-    const u = new URL(url);
-    const keep = new URLSearchParams();
-    u.searchParams.forEach((v, k) => { if (!TRACKING_PARAMS.test(k)) keep.append(k, v); });
-    u.search = keep.toString();
-    u.hash = "";
-    u.hostname = u.hostname.replace(/^www\./i, "").toLowerCase();
-    const path = u.pathname.replace(/\/+$/, "");
-    return `${u.protocol}//${u.hostname}${path}${u.search ? `?${u.search}` : ""}`;
-  } catch {
-    return url.replace(/[#?].*$/, "").replace(/\/+$/, "");
-  }
+  return normalizeOwnerListingUrl(raw);
 }
 
 /**
@@ -488,70 +486,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
    * Păstrează doar anunțuri individuale de proprietari.
    * Elimină paginile generice de căutare/listare ale platformelor.
    */
-  const isIndividualAd = (l: AdHocListing): boolean => {
-    const clean = normalizeAdUrl(l.url);
-    if (!clean) return false;
-    let path = clean;
-    let searchQuery = "";
-    try {
-      const u = new URL(clean);
-      path = u.pathname;
-      searchQuery = u.search.toLowerCase();
-    } catch {
-      /* fallback pe string brut */
-    }
-    const lowerPath = path.toLowerCase();
-    // pagini de căutare / liste / filtre
-    const genericPath = /(caut|search|rezultate|results|filtr|anunturi\/?$|oferte\/?$|lista|categorie|category|zona\/|cartier\/|\/q\/|\/sitemap)/.test(
-      lowerPath,
-    );
-    // Parametrii de urmărire au fost deja eliminați; rămân doar filtre reale de listare.
-    const searchQueryParams = /(q=|query=|search|filtr|page=|pagina=|categor|pret|price|camere)/.test(searchQuery);
-    if (genericPath || searchQueryParams) return false;
-    // un anunț individual are un identificator în URL (id numeric sau slug lung cu hash)
-    const lastRaw = lowerPath.replace(/\/+$/, "").split("/").pop() || "";
-    // eliminăm extensia (.html, .htm, .php) ca să putem recunoaște slug-urile OLX
-    const last = lastRaw.replace(/\.(html?|php|aspx?)$/, "");
-    const looksLikeAd =
-      /\d{4,}/.test(last) ||
-      /-[a-z0-9]{6,}$/.test(last) ||
-      /id[a-z0-9]{4,}/.test(last) ||
-      /\/d\/oferta\//.test(lowerPath) ||
-      /-[a-z0-9-]{10,}$/.test(last);
-    if (!looksLikeAd) return false;
-    // titluri de tip listă
-    const title = (l.title || "").toLowerCase();
-    if (/^(apartamente|case|garsoniere|terenuri|imobile|anunturi|anunțuri)\b/.test(title)) return false;
-    return true;
-  };
-
-  /** Cuvinte care arată clar că anunțul NU este imobiliar rezidențial. */
-  const OFF_TOPIC_WORDS = [
-    "taxi", "licenta taxi", "autorizatie", "autorizatia", "vand afacere", "afacere la cheie",
-    "afaceri", "srl", "s r l", "firma", "fond de comert", "masina", "autoturism", "remorca",
-    "tractor", "utilaj", "loc de munca", "angajez", "angajam", "curs", "meditatii",
-    "accomodation", "accommodation", "cazare", "regim hotelier", "noapte", "camere de hotel",
-    "statie de autobuz", "publicitate", "panou", "reclama", "credit", "asigurari",
-  ];
-
-  /** Cuvinte care confirmă că este vorba de un imobil rezidențial. */
-  const REAL_ESTATE_WORDS = [
-    "apartament", "apartamente", "garsoniera", "garsoniere", "casa", "case", "vila", "vile",
-    "duplex", "penthouse", "imobil", "imobile", "locuinta", "bloc", "mansarda", "teren",
-    "camere", "camera", "mp", "m2", "spatiu comercial", "birou", "studio", "decomandat",
-    "semidecomandat", "nedecomandat", "etaj", "parter", "bucatarie", "dormitor",
-  ];
-
   /**
    * Elimină anunțurile care nu au nicio legătură cu imobiliarele rezidențiale
    * (licențe taxi, afaceri, utilaje, cazare turistică etc.).
    */
   const isRealEstateAd = (l: AdHocListing): boolean => {
-    const t = ` ${norm(`${l.title || ""} ${l.description || ""} ${l.zone || ""}`)} `;
-    if (t.trim().length === 0) return false;
-    const hasWord = (w: string) => t.includes(` ${norm(w)} `) || t.includes(` ${norm(w)},`);
-    if (OFF_TOPIC_WORDS.some(hasWord)) return false;
-    return REAL_ESTATE_WORDS.some(hasWord);
+    return isResidentialRealEstate(l);
   };
 
   /** Anunțuri deja salvate care se potrivesc cu căutarea — ca să avem mereu linkuri. */
@@ -560,7 +500,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const fetchFor = async (w?: string) => {
       let q = supabase
         .from("prospect_listings")
-        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,updated_at,last_seen_at")
+        .select("title,description,source_url,price,contact_phone,zone,rooms,source_platform,prospect_type,is_active,lifecycle_status,updated_at,last_seen_at")
         .not("source_url", "is", null)
         // „De verificat” poate avea date incomplete, dar este un rezultat real.
         // Excludem doar agențiile și anunțurile confirmate ca expirate/respinse.
@@ -609,6 +549,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         zone: r.zone,
         rooms: r.rooms,
         source_platform: r.source_platform,
+        prospect_type: r.prospect_type,
+        is_active: r.is_active,
+        lifecycle_status: r.lifecycle_status,
       }));
 
   };
