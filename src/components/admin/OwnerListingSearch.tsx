@@ -773,6 +773,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       let existingShown = 0;
       for (const l of existing) {
         if (!(l.url || "").trim()) continue; // salvate deja verificate; cerem doar link
+        if (!isRealEstateAd(l)) { offTopic++; continue; }
 
         const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
         if (key && seen.has(key)) continue;
