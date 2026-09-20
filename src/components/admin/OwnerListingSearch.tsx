@@ -281,6 +281,10 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (typeof s.maxPrice === "string") setMaxPrice(s.maxPrice);
       if (typeof s.minSurface === "string") setMinSurface(s.minSurface);
       if (typeof s.maxSurface === "string") setMaxSurface(s.maxSurface);
+      if (typeof s.ageFilter === "string") setAgeFilter(s.ageFilter);
+      if (typeof s.durationFilter === "string") setDurationFilter(s.durationFilter);
+      if (typeof s.publishedFrom === "string") setPublishedFrom(s.publishedFrom);
+      if (typeof s.publishedTo === "string") setPublishedTo(s.publishedTo);
       if (typeof s.onlyWithPhone === "boolean") setOnlyWithPhone(s.onlyWithPhone);
       if (typeof s.sort === "string") setSort(s.sort as SortValue);
       if (typeof s.yearFilter === "string") setYearFilter(s.yearFilter);
