@@ -663,6 +663,45 @@ function spendProxy(kind: 'search' | 'detail') {
 }
 
 /**
+ * Contor persistent de apeluri prin proxy (pentru panoul din Admin).
+ * Cost aproximativ în credite per apel, ca să vedem când bugetul se epuizează.
+ */
+const PROXY_COST_CREDITS: Record<string, number> = { scrapedo: 5, firecrawl: 5, none: 0 };
+// deno-lint-ignore no-explicit-any
+let proxyLogClient: any = null;
+
+function hostOf(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+}
+
+function logProxyCall(entry: {
+  provider: string;
+  kind: 'search' | 'detail' | 'other';
+  url: string;
+  ok: boolean;
+  status?: number;
+  budgetExhausted?: boolean;
+}) {
+  if (!proxyLogClient) return;
+  const row = {
+    provider: entry.provider,
+    kind: entry.kind,
+    domain: hostOf(entry.url),
+    url: entry.url.slice(0, 500),
+    ok: entry.ok,
+    status: entry.status ?? null,
+    budget_exhausted: entry.budgetExhausted ?? false,
+    cost_credits: entry.budgetExhausted ? 0 : (PROXY_COST_CREDITS[entry.provider] ?? 0),
+    function_name: 'scrape-prospects',
+  };
+  // fire-and-forget: contorizarea nu trebuie să blocheze scanarea
+  proxyLogClient.from('proxy_call_log').insert(row).then(
+    () => {},
+    (e: unknown) => console.warn(JSON.stringify({ kind: 'proxy_log_failed', message: String(e) })),
+  );
+}
+
+/**
  * fetch normal + deblocare prin proxy. `alwaysProxy` sare peste fetch-ul direct
  * pentru domeniile despre care știm că blochează sau randează din JS (OLX).
  */
