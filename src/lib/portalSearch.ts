@@ -93,11 +93,20 @@ export function norm(s: string | null | undefined): string {
     .trim();
 }
 
+/** Cuvinte de legătură și zgomot care nu trebuie să blocheze căutarea dacă lipsesc. */
+export const SEARCH_STOPWORDS = new Set([
+  "de", "cu", "la", "pe", "in", "din", "si", "sau", "un", "o", "al", "ale", "pentru", "prin",
+  "camere", "camera", "cam", "apartament", "apartamente", "garsoniera", "garsoniere", "casa", "case", "vila", "vile",
+  "proprietar", "proprietari", "persoana", "fizica", "pf", "direct", "comision", "urgent", "vand", "inchiriez",
+  "timisoara", "zona", "etaj", "bloc", "pret", "oferta", "anunt", "vanzare", "inchiriere"
+]);
+
 /** Cuvintele scrise de utilizator, ca termeni obligatorii. */
 export function tokenize(q: string): string[] {
   return norm(q)
     .split(" ")
-    .filter((t) => t.length >= 2 || /^\d+$/.test(t));
+    .filter((t) => !SEARCH_STOPWORDS.has(t))
+    .filter((t) => t.length >= 3 || /^\d+$/.test(t));
 }
 
 export function matchesAllTokens(text: string, tokens: string[]): boolean {
@@ -108,25 +117,24 @@ export function matchesAllTokens(text: string, tokens: string[]): boolean {
 
 /** Etajul dedus din text: „etaj 3”, „3/4”, „parter”, „ultimul etaj”. */
 export function floorInfo(text: string) {
-  // păstrăm „/” pentru formele „2/4”
-  const t = (text || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9 /]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const t = norm(text);
   const isGround = /\bparter\b/.test(t);
   const isAttic = /\b(mansarda|demisol|subsol)\b/.test(t);
   let value: number | null = null;
   let total: number | null = null;
-  const m = /\betaj(?:ul)?\s*(\d{1,2})\b/.exec(t) || /\bet\s*(\d{1,2})\b/.exec(t);
+  
+  // etaj 3, et. 3, etaj3
+  const m = /\betaj(?:ul)?\s*(\d{1,2})\b/.exec(t) || /\bet\s*\.?\s*(\d{1,2})\b/.exec(t);
   if (m) value = Number(m[1]);
-  const frac = /\b(\d{1,2})\s*\/\s*(\d{1,2})\b/.exec(t);
+  
+  // 3/4, 3 / 4
+  // `norm()` transformă separatorul `/` în spațiu, deci acceptăm ambele forme.
+  const frac = /\b(\d{1,2})\s*(?:\/|\s)\s*(\d{1,2})\b/.exec(t);
   if (frac && Number(frac[2]) <= 30) {
     if (value === null) value = Number(frac[1]);
     total = Number(frac[2]);
   }
+  
   const isLast = /\bultimul etaj\b/.test(t) || (value !== null && total !== null && value === total);
   return { value, isGround, isAttic, isLast, known: value !== null || isGround || isAttic || isLast };
 }
@@ -150,7 +158,8 @@ export function matchesFloor(floorFilter: string, text: string): boolean {
 
 /** Suprafața utilă în mp, dedusă din text. */
 export function surfaceFromText(text: string): number | null {
-  const m = /\b(\d{2,4})(?:[.,]\d{1,2})?\s*(?:mp|m2|metri patrati)\b/.exec(norm(text));
+  const t = norm(text);
+  const m = /\b(\d{2,4})(?:[.,]\d{1,2})?\s*(?:mp|m2|metri patrati)\b/.exec(t);
   if (!m) return null;
   const n = Number(m[1]);
   return Number.isFinite(n) && n >= 10 && n <= 2000 ? n : null;
@@ -158,7 +167,8 @@ export function surfaceFromText(text: string): number | null {
 
 /** Numărul de camere dedus din text: „3 camere”, „3 cam.”, „2-camere”. */
 export function roomsFromText(text: string): number | null {
-  const m = /\b(\d)\s*(?:camere?|cam)\b/.exec(norm(text));
+  const t = norm(text);
+  const m = /\b(\d)\s*(?:camere?|cam)\b/.exec(t);
   if (!m) return null;
   const n = Number(m[1]);
   return n >= 1 && n <= 9 ? n : null;

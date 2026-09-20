@@ -13,6 +13,11 @@ import AddAgencyPhoneDialog from "./AddAgencyPhoneDialog";
 import MarkAsAgencyButton from "./MarkAsAgencyButton";
 import { PORTAL_ZONE_LABELS, zoneMatchesText, zoneSearchTerm } from "@/lib/timisoaraPortalZones";
 import {
+  tokenize,
+  matchesAllTokens,
+  surfaceFromText,
+  floorInfo,
+  norm,
   SORT_OPTIONS,
   YEAR_OPTIONS,
   matchesYear,
@@ -191,16 +196,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const lastTermRef = useRef<string>("");
   const runningRef = useRef(false);
 
-  /** Text fără diacritice și majuscule, pentru potriviri de zonă. */
-  const norm = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9 ]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-
   /** Anunțul aparține zonei date — acceptă toate denumirile de pe portaluri. */
   const zoneMatches = (l: AdHocListing, z: string) =>
     zoneMatchesText(`${l.zone || ""} ${l.title || ""}`, z);
@@ -323,31 +318,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     list.includes(value) ? list.filter(v => v !== value) : [...list, value];
 
   /** Etajul dedus din textul anunțului: „etaj 3”, „3/4”, „parter”, „ultimul etaj”. */
-  const floorInfo = (text: string) => {
-    const t = norm(text);
-    const isGround = /\bparter\b/.test(t);
-    const isAttic = /\b(mansarda|demisol|subsol)\b/.test(t);
-    let value: number | null = null;
-    let total: number | null = null;
-    const m = /\betaj(?:ul)?\s*(\d{1,2})\b/.exec(t) || /\bet\s*\.?\s*(\d{1,2})\b/.exec(t);
-    if (m) value = Number(m[1]);
-    const frac = /\b(\d{1,2})\s*\/\s*(\d{1,2})\b/.exec(t);
-    if (frac && Number(frac[2]) <= 30) {
-      if (value === null) value = Number(frac[1]);
-      total = Number(frac[2]);
-    }
-    const isLast = /\bultimul etaj\b/.test(t) || (value !== null && total !== null && value === total);
-    return { value, isGround, isAttic, isLast, known: value !== null || isGround || isAttic || isLast };
-  };
 
   /** Suprafața utilă în mp, dedusă din text. */
-  const surfaceOf = (text: string): number | null => {
-    const t = norm(text);
-    const m = /\b(\d{2,4})(?:[.,]\d{1,2})?\s*(?:mp|m2|metri patrati)\b/.exec(t);
-    if (!m) return null;
-    const n = Number(m[1]);
-    return Number.isFinite(n) && n >= 10 && n <= 2000 ? n : null;
-  };
 
   /** Portalul pe care a fost găsit anunțul. */
   const listingPortal = (l: AdHocListing) => (l.source_platform || l.platform || "").trim();
@@ -365,25 +337,17 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const minMp = minSurface ? Number(minSurface.replace(/[^\d]/g, "")) : null;
     const maxMp = maxSurface ? Number(maxSurface.replace(/[^\d]/g, "")) : null;
     const wantedZones = zones;
-    // Cuvintele de legătură (de, cu, la, pe...) nu sunt cerințe de căutare.
-    const STOPWORDS = new Set(["de", "cu", "la", "pe", "in", "din", "si", "sau", "un", "o", "al", "ale", "pentru", "camere", "camera"]);
-    const searchTokens = norm(search)
-      .split(" ")
-      .filter(token => !STOPWORDS.has(token))
-      .filter(token => token.length >= 3 || /^\d+$/.test(token));
-
+    
+    const searchTokens = tokenize(search);
     const rawText = `${l.title || ""} ${l.description || ""} ${l.zone || ""} ${l.url || ""}`;
-    const normalizedText = ` ${norm(rawText)} `;
     const text = rawText.toLowerCase();
-    /** Anunț cu metadate sărace: nu putem verifica detaliile fine. */
+    /** Anunt cu metadate sarace: nu putem verifica detaliile fine. */
     const thinText = norm(`${l.title || ""} ${l.description || ""}`).length < 45;
 
-    // Cuvintele scrise în căutare sunt obligatorii doar dacă anunțul are text
-    // suficient; potrivirea pe cuvinte întregi evită „semidecomandat”.
-    if (!thinText && searchTokens.some(token => !normalizedText.includes(` ${token} `))) {
-      return "cuvintele căutate nu apar în anunț";
+    if (!thinText && !matchesAllTokens(rawText, searchTokens)) {
+      return "cuvintele cautate nu apar in anunt";
     }
-    if (onlyWithPhone && !l.phone) return "fără telefon";
+    if (onlyWithPhone && !l.phone) return "fara telefon";
     if (portalFilter !== ALL_PLATFORMS && !norm(listingPortal(l)).includes(norm(portalFilter))) {
       return "alt portal";
     }
@@ -391,21 +355,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       const r = typeof l.rooms === "number" ? l.rooms : null;
       const fromTitle = /(\d+)\s*[- ]?\s*(?:camere?|cam\.?\b)/i.exec(text);
       const value = r ?? (fromTitle ? Number(fromTitle[1]) : null);
-      // OR între bifele alese; „4” înseamnă 4 sau mai multe camere.
       const ok = value === null || wantedRooms.some(w => (w === 4 ? value >= 4 : value === w));
       if (!ok) return `are ${value} camere`;
     }
-    const isRentText = /(închirier|inchirier|de inchiriat|de închiriat|\/lună|\/luna)/i.test(text);
-    if (deal === "vanzare" && isRentText) return "este închiriere";
-    if (deal === "inchiriere" && !isRentText && !thinText) return "nu pare închiriere";
+    const isRentText = /(inchirier|de inchiriat|\/luna)/i.test(text.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    if (deal === "vanzare" && isRentText) return "este inchiriere";
+    if (deal === "inchiriere" && !isRentText && !thinText) return "nu pare inchiriere";
+    
+    const normalizedText = ` ${norm(rawText)} `;
     if (wantedTypes.length > 0) {
-      const hasWanted = wantedTypes.some(t => normalizedText.includes(t));
+      const hasWanted = wantedTypes.some(t => normalizedText.includes(` ${t} `) || normalizedText.includes(` ${t}s `));
       if (!hasWanted) {
-        const otherTypes = PROPERTY_TYPES.map(t => norm(t.value)).filter(v => !wantedTypes.includes(v));
-        if (otherTypes.some(v => normalizedText.includes(v))) return "alt tip de imobil";
+        const ALL_TYPES = ["apartament", "garsoniera", "casa", "teren", "spatiu comercial"].map(norm);
+        const otherTypes = ALL_TYPES.filter(v => !wantedTypes.includes(v));
+        if (otherTypes.some(v => normalizedText.includes(` ${v} `))) return "alt tip de imobil";
       }
     }
-    // Compartimentare — doar dacă anunțul spune ceva despre compartimentare.
+    
     if (partitions.length > 0) {
       const anyPartitionMentioned = PARTITION_OPTIONS.some(o =>
         (o.words ?? [o.value]).some(w => normalizedText.includes(norm(w))),
@@ -419,18 +385,18 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             return normalizedText.includes(nw);
           });
         });
-        if (!ok) return "altă compartimentare";
+        if (!ok) return "alta compartimentare";
       }
     }
-    // Dotări cerute — verificate doar când anunțul are descriere utilizabilă.
+
     if (extras.length > 0 && !thinText) {
       const missing = extras.filter(x => {
         const opt = EXTRA_OPTIONS.find(o => o.value === x);
         return !(opt?.words ?? [x]).some(w => normalizedText.includes(norm(w)));
       });
-      if (missing.length > 0) return `nu menționează: ${missing.join(", ")}`;
+      if (missing.length > 0) return `nu mentioneaza: ${missing.join(", ")}`;
     }
-    // Etaj — anunțurile fără informații despre etaj nu se exclud.
+
     if (floors.length > 0) {
       const f = floorInfo(rawText);
       if (f.known) {
@@ -448,22 +414,22 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         if (!ok) return "alt etaj";
       }
     }
-    const mp = surfaceOf(rawText);
+    const mp = surfaceFromText(rawText);
     if (mp !== null) {
       if (minMp !== null && mp < minMp) return `${mp} mp, sub minim`;
       if (maxMp !== null && mp > maxMp) return `${mp} mp, peste maxim`;
     }
-    if (yearFilter !== ANY_YEAR && !matchesYear(yearFilter, null, rawText)) return "alt an de construcție";
+    if (yearFilter !== ANY_YEAR && !matchesYear(yearFilter, null, rawText)) return "alt an de constructie";
     const zoneText = `${l.zone || ""} ${l.title || ""} ${l.description || ""} ${l.url || ""}`;
     if (wantedZones.length > 0 && !wantedZones.some(z => zoneMatchesText(zoneText, z))) {
-      return `altă zonă (căutate: ${wantedZones.join(", ")})`;
+      return `alta zona (cautate: ${wantedZones.join(", ")})`;
     }
     if (wantedZones.length === 0 && limitToPreferred && preferredZones.length > 0) {
-      if (!preferredZones.some(z => zoneMatchesText(zoneText, z))) return "în afara zonelor preferate";
+      if (!preferredZones.some(z => zoneMatchesText(zoneText, z))) return "in afara zonelor preferate";
     }
     const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
-    if (min !== null && price !== null && price < min) return "preț sub minim";
-    if (max !== null && price !== null && price > max) return "preț peste maxim";
+    if (min !== null && price !== null && price < min) return "pret sub minim";
+    if (max !== null && price !== null && price > max) return "pret peste maxim";
     return null;
   };
 
@@ -480,6 +446,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         preserve_agency_filter: true,
         hydrate_phones: false,
         discovery_mode: true,
+        scan_mode: "auto",
+        auto_fallback_threshold: 8,
       },
     });
     if (error) throw error;
@@ -490,11 +458,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       phone: l.phone || l.contact_phone || null,
     }));
     const b = (data as any)?.funnel_breakdown || {};
+    const blocked = Array.isArray((data as any)?.blocked_alerts) ? (data as any).blocked_alerts.length : 0;
     return {
       platform: p,
       listings: listings.map(l => ({ ...l, source_platform: l.source_platform || l.platform || p })),
       agency: Number(b.agency_signal || 0),
       duplicate: Number(b.duplicate || 0),
+      blocked,
     };
   };
 
@@ -719,9 +689,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     try {
       const platforms = platform === ALL_PLATFORMS ? MULTI_SEARCH_PLATFORMS : [platform];
       // Limităm numărul total de interogări ca să nu consumăm credite inutil.
-      const jobs = platforms
-        .flatMap(p => terms.slice(0, 3).map(t => ({ p, t })))
-        .slice(0, 12);
+      // Întâi acoperim fiecare portal cu interogarea principală, apoi adăugăm
+      // variantele. Astfel limita nu mai taie ultimul portal din listă.
+      const primaryJobs = platforms.map(p => ({ p, t: terms[0] }));
+      const variantJobs = terms.slice(1, 3).flatMap(t => platforms.map(p => ({ p, t })));
+      const jobs = [...primaryJobs, ...variantJobs].slice(0, 15);
       const settled = await Promise.allSettled(jobs.map(j => searchOnePlatform(j.t, j.p)));
       const ok = settled.flatMap(r => (r.status === "fulfilled" ? [r.value] : []));
       const failedCount = settled.length - ok.length;
@@ -785,6 +757,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
 
       const agency = ok.reduce((s, r) => s + r.agency, 0);
       const duplicate = ok.reduce((s, r) => s + r.duplicate, 0);
+      const blocked = ok.reduce((s, r) => s + r.blocked, 0);
       const perMap = new Map<string, number>();
       for (const r of ok) perMap.set(r.platform, (perMap.get(r.platform) || 0) + r.listings.length);
       const perPlatform = Array.from(perMap.entries())
@@ -799,6 +772,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
           (agency ? ` · ${agency} agenții excluse` : "") +
           (duplicate ? ` · ${duplicate} deja în listă` : "") +
+          (blocked ? ` · ${blocked} surse blocate sau schimbate` : "") +
           (generic ? ` · ${generic} pagini de căutare eliminate` : "") +
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
       );
@@ -1267,7 +1241,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         const sortResults = (list: AdHocListing[]): AdHocListing[] => {
           if (sort === "relevance") return list;
           const price = (l: AdHocListing) => exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
-          const mp = (l: AdHocListing) => surfaceOf(`${l.title || ""} ${l.description || ""}`);
+          const mp = (l: AdHocListing) => surfaceFromText(`${l.title || ""} ${l.description || ""}`);
           const arr = [...list];
           if (sort === "price-asc") return arr.sort((a, b) => (price(a) ?? Infinity) - (price(b) ?? Infinity));
           if (sort === "price-desc") return arr.sort((a, b) => (price(b) ?? -Infinity) - (price(a) ?? -Infinity));
@@ -1339,7 +1313,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     ) : null}
                     {(() => {
                       const pv = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
-                      const mp = surfaceOf(`${l.title || ""} ${l.description || ""}`);
+                      const mp = surfaceFromText(`${l.title || ""} ${l.description || ""}`);
                       const per = pricePerSqm(pv, mp);
                       return per ? <span>{per.toLocaleString("ro-RO")} €/mp</span> : null;
                     })()}
@@ -1442,7 +1416,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                   ["Titlu", "Platformă", "Zonă", "Camere", "Preț (€)", "€/mp", "Telefon", "Link"],
                   main.map(l => {
                     const pv = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
-                    const mp = surfaceOf(`${l.title || ""} ${l.description || ""}`);
+                    const mp = surfaceFromText(`${l.title || ""} ${l.description || ""}`);
                     return [
                       l.title || "",
                       listingPortal(l),
