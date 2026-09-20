@@ -217,6 +217,8 @@ const OWNER_URL_FILTERS: Record<string, string> = {
   'BursaImobiliara.ro': 'inurl:proprietar OR inurl:persoane-fizice',
   'Homezz.ro': 'inurl:proprietar OR inurl:persoane-fizice',
   'Anuntul.ro': 'inurl:proprietar OR inurl:persoane-fizice',
+  'Anunturi-Imobiliare.ro': 'inurl:proprietar OR inurl:persoane-fizice',
+  'Tocmai.ro': 'inurl:proprietar OR inurl:persoane-fizice',
 };
 
 /** Detect platform name from a free-text query (best-effort). */
@@ -270,6 +272,14 @@ const PLATFORM_FILTER_TOGGLES: Record<string, PlatformFilterDef[]> = {
     { id: 'no_agency', hint: '-inurl:agentie -inurl:agency -agentie', defaultOn: true },
   ],
   'Anuntul.ro': [
+    { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
+    { id: 'no_agency', hint: '-inurl:agentie -inurl:agency -agentie', defaultOn: true },
+  ],
+  'Anunturi-Imobiliare.ro': [
+    { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
+    { id: 'no_agency', hint: '-inurl:agentie -inurl:agency -agentie', defaultOn: true },
+  ],
+  'Tocmai.ro': [
     { id: 'private',   hint: 'inurl:proprietar OR inurl:persoane-fizice', defaultOn: true },
     { id: 'no_agency', hint: '-inurl:agentie -inurl:agency -agentie', defaultOn: true },
   ],
