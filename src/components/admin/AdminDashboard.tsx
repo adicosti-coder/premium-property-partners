@@ -774,6 +774,46 @@ const AdminDashboard = () => {
 
 type SortOrder = "newest" | "oldest";
 
+/** Titluri tipice de pagini de listare/căutare, nu anunțuri reale. */
+const LIST_TITLE_RE =
+  /^(\s*)(pagina|apartamente|case|garsoniere|terenuri|imobile|anunturi|anunțuri|oferte|rezultate)\b|anunturi gratuite|anunțuri gratuite|pagina de rezultat/i;
+
+/** True doar pentru un anunț individual (link + titlu de anunț, nu pagină de căutare). */
+function isIndividualListing(p: { title: string | null; source_url: string | null }): boolean {
+  const title = (p.title || "").trim();
+  if (title && LIST_TITLE_RE.test(title)) return false;
+
+  const raw = (p.source_url || "").trim();
+  if (!raw) return !!title; // fără link ne bazăm pe titlu
+  let path = raw;
+  let search = "";
+  try {
+    const u = new URL(raw);
+    path = u.pathname;
+    search = u.search.toLowerCase();
+  } catch {
+    /* fallback pe string brut */
+  }
+  const lower = path.toLowerCase();
+  if (
+    /(caut|search|rezultate|results|filtr|anunturi\/?$|anunturi-|oferte\/?$|lista|categorie|category|zona\/|cartier\/|\/q\/|\/sitemap)/.test(
+      lower,
+    )
+  )
+    return false;
+  if (/(q=|query=|search|filtr|page=|pagina=|categor|pret=|price=|camere)/.test(search)) return false;
+
+  const lastRaw = lower.replace(/\/+$/, "").split("/").pop() || "";
+  const last = lastRaw.replace(/\.(html?|php|aspx?)$/, "");
+  return (
+    /\d{4,}/.test(last) ||
+    /-[a-z0-9]{6,}$/.test(last) ||
+    /id[a-z0-9]{4,}/.test(last) ||
+    /\/d\/oferta\//.test(lower) ||
+    /-[a-z0-9-]{10,}$/.test(last)
+  );
+}
+
 function ProspectContactsCard({ prospects }: { prospects: ProspectContact[] }) {
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
   const [fromDate, setFromDate] = useState<string>("");
