@@ -388,7 +388,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
     }
     
-    if (partitions.length > 0) {
+    if (!soft && partitions.length > 0) {
       const anyPartitionMentioned = PARTITION_OPTIONS.some(o =>
         (o.words ?? [o.value]).some(w => normalizedText.includes(norm(w))),
       );
