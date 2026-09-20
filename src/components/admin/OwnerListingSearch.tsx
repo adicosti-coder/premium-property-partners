@@ -1552,7 +1552,8 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           Caută anunțuri de la proprietari
         </CardTitle>
         <CardDescription>
-          Caută pe OLX, Storia.ro, imobiliare.ro, Publi24 și BursaImobiliara.ro doar anunțurile publicate de proprietari.
+          Caută pe OLX, Storia.ro, imobiliare.ro, Publi24, BursaImobiliara.ro, Homezz.ro, Anuntul.ro,
+          Anunturi-Imobiliare.ro și Tocmai.ro doar anunțurile publicate de proprietari.
           Agențiile sunt excluse automat, iar rezultatele intră și în „Anunțuri noi găsite”.
         </CardDescription>
       </CardHeader>
