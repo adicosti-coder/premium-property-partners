@@ -889,6 +889,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             source_platform: r.source_platform,
           };
           if (!isIndividualAd(l)) return;
+          if (!isRealEstateAd(l)) return;
           setResults(prev => {
             if (!prev) return prev; // nicio căutare activă
             const key = normalizeAdUrl(l.url);
