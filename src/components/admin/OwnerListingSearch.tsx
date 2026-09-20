@@ -343,7 +343,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
    * le respectă. Informația lipsă din anunț NU exclude anunțul — arătăm mai
    * degrabă oferta, decât să o pierdem din cauza unui titlu sărac.
    */
-  const excludeReason = (l: AdHocListing): string | null => {
+  const excludeReason = (l: AdHocListing, mode: "strict" | "soft" = "strict"): string | null => {
+    /** În modul relaxat nu pierdem oferta pentru detalii fine (compartimentare, etaj, dotări, suprafață). */
+    const soft = mode === "soft";
     const min = minPrice ? Number(minPrice.replace(/[^\d]/g, "")) : null;
     const max = maxPrice ? Number(maxPrice.replace(/[^\d]/g, "")) : null;
     const wantedRooms = rooms.map(r => Number(r)).filter(n => Number.isFinite(n));
@@ -386,7 +388,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
     }
     
-    if (partitions.length > 0) {
+    if (!soft && partitions.length > 0) {
       const anyPartitionMentioned = PARTITION_OPTIONS.some(o =>
         (o.words ?? [o.value]).some(w => normalizedText.includes(norm(w))),
       );
@@ -403,7 +405,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
     }
 
-    if (extras.length > 0 && !thinText) {
+    if (!soft && extras.length > 0 && !thinText) {
       const missing = extras.filter(x => {
         const opt = EXTRA_OPTIONS.find(o => o.value === x);
         return !(opt?.words ?? [x]).some(w => normalizedText.includes(norm(w)));
@@ -411,7 +413,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       if (missing.length > 0) return `nu mentioneaza: ${missing.join(", ")}`;
     }
 
-    if (floors.length > 0) {
+    if (!soft && floors.length > 0) {
       const f = floorInfo(rawText);
       if (f.known) {
         const v = f.value;
@@ -429,7 +431,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       }
     }
     const mp = surfaceFromText(rawText);
-    if (mp !== null) {
+    if (!soft && mp !== null) {
       if (minMp !== null && mp < minMp) return `${mp} mp, sub minim`;
       if (maxMp !== null && mp > maxMp) return `${mp} mp, peste maxim`;
     }
@@ -1151,6 +1153,33 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         <AddAgencyPhoneDialog size="default" className="min-h-[48px] sm:min-h-0" />
       </div>
 
+      <div className="space-y-1.5">
+        <div className="text-[11px] text-muted-foreground">Camere (poți alege mai multe)</div>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { value: "1", label: "1 cameră" },
+            { value: "2", label: "2 camere" },
+            { value: "3", label: "3 camere" },
+            { value: "4", label: "4+ camere" },
+          ].map(r => {
+            const on = rooms.includes(r.value);
+            return (
+              <Button
+                key={r.value}
+                type="button"
+                size="sm"
+                variant={on ? "default" : "outline"}
+                aria-pressed={on}
+                className="h-9 text-xs"
+                onClick={() => { setRooms(v => toggleIn(v, r.value)); setIgnoreFilters(false); }}
+              >
+                {r.label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:items-center gap-2">
         <Select value={deal} onValueChange={setDeal}>
           <SelectTrigger className="sm:w-[170px] min-h-[48px] sm:min-h-0" aria-label="Tip tranzacție">
@@ -1162,32 +1191,6 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <SelectItem value="inchiriere">Doar închiriere</SelectItem>
           </SelectContent>
         </Select>
-        <div className="space-y-1.5">
-          <div className="text-[11px] text-muted-foreground">Camere (poți alege mai multe)</div>
-          <div className="flex flex-wrap gap-1.5">
-            {[
-              { value: "1", label: "1 cameră" },
-              { value: "2", label: "2 camere" },
-              { value: "3", label: "3 camere" },
-              { value: "4", label: "4+ camere" },
-            ].map(r => {
-              const on = rooms.includes(r.value);
-              return (
-                <Button
-                  key={r.value}
-                  type="button"
-                  size="sm"
-                  variant={on ? "default" : "outline"}
-                  aria-pressed={on}
-                  className="h-9 text-xs"
-                  onClick={() => { setRooms(v => toggleIn(v, r.value)); setIgnoreFilters(false); }}
-                >
-                  {r.label}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
         <Input
           value={minPrice}
           onChange={e => setMinPrice(e.target.value)}
@@ -1308,7 +1311,14 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             );
           return arr;
         };
-        const matched = sortResults(filterListings(results));
+        const strict = sortResults(filterListings(results));
+        // Dacă detaliile fine (compartimentare, etaj, dotări, suprafață) nu apar scrise în anunț,
+        // nu pierdem oferta: relaxăm automat aceste condiții și spunem clar ce s-a relaxat.
+        const relaxed = strict.length === 0
+          ? sortResults(results.filter(l => excludeReason(l, "soft") === null))
+          : [];
+        const usedRelaxed = strict.length === 0 && relaxed.length > 0;
+        const matched = usedRelaxed ? relaxed : strict;
         const main = ignoreFilters ? sortResults(results) : matched;
         const rest = ignoreFilters ? [] : results.filter(r => !matched.includes(r));
 
@@ -1508,6 +1518,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               </Button>
             )}
           </div>
+          {usedRelaxed && !ignoreFilters && (
+            <p className="text-[11px] rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-foreground">
+              Niciun anunț nu scria toate detaliile cerute, așa că am relaxat compartimentarea, etajul, dotările și
+              suprafața. Zona, numărul de camere, tipul tranzacției și prețul sunt respectate.
+            </p>
+          )}
           {main.length > 0 ? (
             <>
               <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
