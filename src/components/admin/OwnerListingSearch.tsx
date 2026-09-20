@@ -1517,6 +1517,12 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               </Button>
             )}
           </div>
+          {usedRelaxed && !ignoreFilters && (
+            <p className="text-[11px] rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-foreground">
+              Niciun anunț nu scria toate detaliile cerute, așa că am relaxat compartimentarea, etajul, dotările și
+              suprafața. Zona, numărul de camere, tipul tranzacției și prețul sunt respectate.
+            </p>
+          )}
           {main.length > 0 ? (
             <>
               <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
