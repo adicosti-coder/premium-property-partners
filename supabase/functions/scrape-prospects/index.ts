@@ -632,6 +632,37 @@ async function proxyFetchHtml(
 }
 
 /**
+ * Buget de apeluri prin proxy (Scrape.do / Firecrawl stealth) pe invocare.
+ * Fiecare apel costă credite, deci separăm bugetul pentru listele de căutare
+ * (scump și repetitiv) de cel pentru paginile de anunț (valoare mare: preț,
+ * telefon, descriere reală).
+ */
+const PROXY_BUDGET = {
+  searchPages: 0,
+  detailPages: 0,
+  maxSearchPages: 4,
+  maxDetailPages: 12,
+};
+
+function resetProxyBudget(opts?: { maxSearchPages?: number; maxDetailPages?: number }) {
+  PROXY_BUDGET.searchPages = 0;
+  PROXY_BUDGET.detailPages = 0;
+  if (opts?.maxSearchPages !== undefined) PROXY_BUDGET.maxSearchPages = opts.maxSearchPages;
+  if (opts?.maxDetailPages !== undefined) PROXY_BUDGET.maxDetailPages = opts.maxDetailPages;
+}
+
+function canSpendProxy(kind: 'search' | 'detail'): boolean {
+  return kind === 'search'
+    ? PROXY_BUDGET.searchPages < PROXY_BUDGET.maxSearchPages
+    : PROXY_BUDGET.detailPages < PROXY_BUDGET.maxDetailPages;
+}
+
+function spendProxy(kind: 'search' | 'detail') {
+  if (kind === 'search') PROXY_BUDGET.searchPages++;
+  else PROXY_BUDGET.detailPages++;
+}
+
+/**
  * fetch normal + deblocare prin proxy. `alwaysProxy` sare peste fetch-ul direct
  * pentru domeniile despre care știm că blochează sau randează din JS (OLX).
  */
@@ -639,7 +670,7 @@ async function fetchHtmlUnblockable(
   url: string,
   timeoutMs = 6000,
   referer?: string,
-  opts: { alwaysProxy?: boolean } = {},
+  opts: { alwaysProxy?: boolean; budget?: 'search' | 'detail' } = {},
 ): Promise<{ ok: boolean; status: number; html: string; unblocked: boolean }> {
   if (!opts.alwaysProxy) {
     const direct = await fetchHtml(url, timeoutMs, referer);
@@ -647,6 +678,12 @@ async function fetchHtmlUnblockable(
     const blocked = [0, 403, 429, 503].includes(direct.status);
     if (!blocked) return { ...direct, unblocked: false };
   }
+  const budget = opts.budget;
+  if (budget && !canSpendProxy(budget)) {
+    console.log(JSON.stringify({ kind: 'proxy_budget_exhausted', url, budget, spent: PROXY_BUDGET }));
+    return { ok: false, status: 0, html: '', unblocked: false };
+  }
+  if (budget) spendProxy(budget);
   const viaProxy = await proxyFetchHtml(url);
   if (viaProxy.ok) {
     console.log(JSON.stringify({ kind: 'proxy_unblocked', url, via: viaProxy.via, len: viaProxy.html.length }));
@@ -807,7 +844,13 @@ async function hydrateFreeResult(result: FreeResult): Promise<FreeResult> {
   if (!sparse) return result;
 
   const referer = (() => { try { return new URL(result.url).origin + '/'; } catch { return undefined; } })();
-  const { ok, html } = await fetchHtmlUnblockable(result.url, 4000, referer);
+  // OLX blochează fetch-ul direct din datacenter (403) — mergem direct pe proxy
+  // stealth, ca să nu pierdem un apel inutil, dar pe bugetul de „detail”.
+  const isOlx = /(?:^|\.)olx\.ro$/i.test((() => { try { return new URL(result.url).hostname.replace(/^www\./, ''); } catch { return ''; } })());
+  const { ok, html } = await fetchHtmlUnblockable(result.url, isOlx ? 12000 : 4000, referer, {
+    alwaysProxy: isOlx,
+    budget: isOlx ? 'detail' : undefined,
+  });
   if (!ok || !html) return result;
 
   const pick = (patterns: RegExp[]): string => {
@@ -851,17 +894,22 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   // Probăm 2 pattern-uri URL OLX (categorie imobiliare + cautare globală) ca să prindem mai multe rezultate.
   // Proxy-ul costă, deci mergem pe cel mai productiv URL mai întâi și ne oprim
   // imediat ce avem suficiente rezultate.
-  const urls = [
-    `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
-    // fără termen: lista completă a proprietarilor din Timișoara (ordonată după dată)
-    `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
-  ];
+  const targetedUrl = `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`;
+  // Lista generică (fără termen) aduce aceleași anunțuri la fiecare rulare și
+  // consumă proxy degeaba → o folosim doar ca rezervă, când căutarea țintită
+  // nu a returnat aproape nimic.
+  const genericUrl = `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`;
   const out: FreeResult[] = [];
   const seen = new Set<string>();
-  for (const url of urls) {
+  const urls = [targetedUrl];
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
     if (out.length >= max) break;
     // OLX blochează datacenter-ul și randează lista din JS → mereu prin proxy.
-    const { ok, html } = await fetchHtmlUnblockable(url, 5500, 'https://www.olx.ro/', { alwaysProxy: true });
+    const { ok, html } = await fetchHtmlUnblockable(url, 5500, 'https://www.olx.ro/', {
+      alwaysProxy: true,
+      budget: 'search',
+    });
     if (!ok || !html) continue;
     // Titluri din ancore + linkuri din payload-ul JSON (OLX randează din JS,
     // deci calea sigură e să luăm orice apariție de /d/oferta/, chiar escapată).
@@ -903,6 +951,10 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
       kind: 'olx_direct_page', url, found: out.length,
       candidates: candidates.length, anchors: anchorTitles.size, htmlLen: html.length,
     }));
+    // Rezervă: doar dacă termenul țintit nu a adus nimic util.
+    if (i === urls.length - 1 && url === targetedUrl && out.length < 2 && canSpendProxy('search')) {
+      urls.push(genericUrl);
+    }
   }
   return out;
 }
@@ -989,7 +1041,7 @@ async function directImobiliareSearch(query: string, max: number): Promise<FreeR
       const pick = (key: string) => decodeBasicHtml(block.match(new RegExp(`"${key}":"([^"]*)"`, 'i'))?.[1] || '');
       const sellerType = pick('sellerType').toLowerCase();
       if (sellerType === 'agency' || sellerType === 'developer') continue;
-      const title = pick('title') || titleFromListingUrl(href);
+      const title = pick('title') || titleFromListingUrl(href) || '';
       const markdown = `${title} ${pick('descriptionPreview')} ${pick('location')} ${pick('price')}`.trim();
       pushUniqueResult(out, seen, { url: href, title, description: markdown, markdown }, max);
     }
@@ -1875,6 +1927,10 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Buget de apeluri prin proxy pe rulare: puține pagini de căutare (scumpe,
+    // rezultate repetitive) și mai multe pagini de anunț (aduc preț/telefon).
+    resetProxyBudget({ maxSearchPages: 4, maxDetailPages: 12 });
 
     // Parse optional params
     let maxResults = 8;
