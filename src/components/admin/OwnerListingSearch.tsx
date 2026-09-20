@@ -497,6 +497,33 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     const price = exactPrices[(l.url || "").trim()] ?? priceValue(l.price);
     if (min !== null && price !== null && price < min) return "pret sub minim";
     if (max !== null && price !== null && price > max) return "pret peste maxim";
+    // Data publicării și durata online — datele lipsă nu exclud anunțul.
+    const published = l.created_at ? new Date(l.created_at).getTime() : null;
+    if (published !== null && Number.isFinite(published)) {
+      if (ageFilter !== ANY_AGE) {
+        const limit = Date.now() - Number(ageFilter) * 86400000;
+        if (published < limit) return `publicat mai demult de ${ageFilter} zile`;
+      }
+      if (publishedFrom) {
+        const from = new Date(`${publishedFrom}T00:00:00`).getTime();
+        if (Number.isFinite(from) && published < from) return "publicat inainte de data ceruta";
+      }
+      if (publishedTo) {
+        const to = new Date(`${publishedTo}T23:59:59`).getTime();
+        if (Number.isFinite(to) && published > to) return "publicat dupa data ceruta";
+      }
+    }
+    if (durationFilter !== ANY_DURATION) {
+      const d = daysOnline(l);
+      if (d !== null) {
+        const ok =
+          durationFilter === "lt3" ? d < 3 :
+          durationFilter === "lt7" ? d < 7 :
+          durationFilter === "7to30" ? d >= 7 && d <= 30 :
+          durationFilter === "gt30" ? d > 30 : true;
+        if (!ok) return `online de ${d} zile`;
+      }
+    }
     return null;
   };
 
