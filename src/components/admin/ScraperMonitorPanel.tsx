@@ -584,6 +584,8 @@ export default function ScraperMonitorPanel() {
 
       <ScraperHealthPanel />
 
+      <ProxyBudgetPanel />
+
       {/* Live job progress */}
 
       {runningJob && (
