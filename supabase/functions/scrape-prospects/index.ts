@@ -531,74 +531,102 @@ async function fetchHtml(url: string, timeoutMs = 6000, referer?: string): Promi
 }
 
 /**
- * OLX (CloudFront) blochează cu 403 orice fetch din datacenter. Când se
- * întâmplă, cerem pagina prin Firecrawl cu proxy stealth — singura cale
- * care trece de anti-bot. Folosit DOAR ca fallback, deci costul rămâne mic.
- * `maxAge` permite servirea unei copii recente din cache-ul Firecrawl.
+ * OLX (CloudFront) blochează fetch-ul din datacenter, iar lista de anunțuri e
+ * randată din JS. Deblocarea se face prin proxy real: Scrape.do (render JS,
+ * IP rezidențial RO) și, ca rezervă, Firecrawl cu proxy stealth.
  */
-async function unblockedFetchHtml(
+async function proxyFetchHtml(
   url: string,
-  timeoutMs = 20000,
-  opts: { maxAgeMs?: number } = {},
-): Promise<{ ok: boolean; status: number; html: string; via: 'firecrawl' | 'none' }> {
-  const key = Deno.env.get('FIRECRAWL_API_KEY') || '';
-  if (!key) return { ok: false, status: 0, html: '', via: 'none' };
+  timeoutMs = 25000,
+): Promise<{ ok: boolean; status: number; html: string; via: 'scrapedo' | 'firecrawl' | 'none' }> {
+  const scrapeDoKey = Deno.env.get('SCRAPE_DO_API_KEY') || '';
+  if (scrapeDoKey) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const endpoint = `https://api.scrape.do/?token=${encodeURIComponent(scrapeDoKey)}` +
+        `&url=${encodeURIComponent(url)}&render=true&super=true&geoCode=ro&waitUntil=domcontentloaded&customWait=2500`;
+      const resp = await fetch(endpoint, { signal: ctrl.signal });
+      const html = resp.ok ? await resp.text() : '';
+      if (resp.ok && html.length > 500) {
+        return { ok: true, status: 200, html, via: 'scrapedo' };
+      }
+      console.warn(JSON.stringify({ kind: 'proxy_scrapedo_failed', url, status: resp.status, len: html.length }));
+    } catch (e) {
+      console.warn(JSON.stringify({ kind: 'proxy_scrapedo_error', url, message: (e as Error).message }));
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  const fcKey = Deno.env.get('FIRECRAWL_API_KEY') || '';
+  if (!fcKey) return { ok: false, status: 0, html: '', via: 'none' };
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const resp = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       signal: ctrl.signal,
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${fcKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
         formats: ['html', 'links'],
         onlyMainContent: false,
         proxy: 'stealth',
         blockAds: true,
-        waitFor: 1200,
-        maxAge: opts.maxAgeMs ?? 900000,
+        waitFor: 1500,
+        maxAge: 900000,
         location: { country: 'RO', languages: ['ro-RO'] },
       }),
     });
     if (!resp.ok) {
       const body = await resp.text().catch(() => '');
-      console.warn(JSON.stringify({ kind: 'unblock_fetch_failed', url, status: resp.status, body: body.slice(0, 300) }));
+      console.warn(JSON.stringify({ kind: 'proxy_firecrawl_failed', url, status: resp.status, body: body.slice(0, 200) }));
       return { ok: false, status: resp.status, html: '', via: 'firecrawl' };
     }
     const json = await resp.json().catch(() => ({} as Record<string, unknown>));
     const doc = (json as { data?: Record<string, unknown> }).data ?? (json as Record<string, unknown>);
     const html = typeof doc.html === 'string' ? doc.html : typeof doc.rawHtml === 'string' ? doc.rawHtml : '';
     const rawLinks = Array.isArray(doc.links) ? (doc.links as unknown[]) : [];
-    const links = rawLinks
+    // Linkurile descoperite devin ancore sintetice, ca parserele pe regex
+    // existente să le poată folosi fără modificări.
+    const synthetic = rawLinks
       .map((l) => (typeof l === 'string' ? l : (l as { url?: string })?.url))
-      .filter((l): l is string => typeof l === 'string');
-    // Linkurile descoperite sunt adăugate ca ancore sintetice, ca parserele
-    // existente (bazate pe regex pe <a href>) să le poată folosi direct.
-    const synthetic = links.map((l) => `<a href="${l}"></a>`).join('');
+      .filter((l): l is string => typeof l === 'string')
+      .map((l) => `<a href="${l}"></a>`)
+      .join('');
     const merged = `${html}${synthetic}`;
     return { ok: merged.length > 0, status: 200, html: merged, via: 'firecrawl' };
   } catch (e) {
-    console.warn(JSON.stringify({ kind: 'unblock_fetch_error', url, message: (e as Error).message }));
+    console.warn(JSON.stringify({ kind: 'proxy_firecrawl_error', url, message: (e as Error).message }));
     return { ok: false, status: 0, html: '', via: 'firecrawl' };
   } finally {
     clearTimeout(timer);
   }
 }
 
-/** fetch normal, cu fallback automat prin proxy stealth la blocaj (403/429/0). */
+/**
+ * fetch normal + deblocare prin proxy. `alwaysProxy` sare peste fetch-ul direct
+ * pentru domeniile despre care știm că blochează sau randează din JS (OLX).
+ */
 async function fetchHtmlUnblockable(
   url: string,
   timeoutMs = 6000,
   referer?: string,
+  opts: { alwaysProxy?: boolean } = {},
 ): Promise<{ ok: boolean; status: number; html: string; unblocked: boolean }> {
-  const direct = await fetchHtml(url, timeoutMs, referer);
-  if (direct.ok && direct.html) return { ...direct, unblocked: false };
-  const blockedSignal = direct.status === 403 || direct.status === 429 || direct.status === 0 || direct.status === 503;
-  if (!blockedSignal) return { ...direct, unblocked: false };
-  const viaProxy = await unblockedFetchHtml(url);
-  if (viaProxy.ok) return { ok: true, status: 200, html: viaProxy.html, unblocked: true };
-  return { ...direct, unblocked: false };
+  if (!opts.alwaysProxy) {
+    const direct = await fetchHtml(url, timeoutMs, referer);
+    if (direct.ok && direct.html) return { ...direct, unblocked: false };
+    const blocked = [0, 403, 429, 503].includes(direct.status);
+    if (!blocked) return { ...direct, unblocked: false };
+  }
+  const viaProxy = await proxyFetchHtml(url);
+  if (viaProxy.ok) {
+    console.log(JSON.stringify({ kind: 'proxy_unblocked', url, via: viaProxy.via, len: viaProxy.html.length }));
+    return { ok: true, status: 200, html: viaProxy.html, unblocked: true };
+  }
+  return { ok: false, status: viaProxy.status, html: '', unblocked: false };
 }
 
 function stripQueryOperators(q: string): string {
