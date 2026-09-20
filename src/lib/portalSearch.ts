@@ -390,8 +390,8 @@ export function filtersToParams(f: PortalFilters): URLSearchParams {
   put("smax", f.maxSurface);
   if (f.types.length) p.set("tip", f.types.join(","));
   if (f.rooms.length) p.set("camere", f.rooms.join(","));
-  if (f.comp.length) p.set("comp", f.partitions.join(","));
-  if (f.dotari.length) p.set("dotari", f.amenities.join(","));
+  if (f.partitions.length) p.set("comp", f.partitions.join(","));
+  if (f.amenities.length) p.set("dotari", f.amenities.join(","));
   if (f.sort !== "relevance") p.set("sort", f.sort);
   return p;
 }
