@@ -1303,7 +1303,7 @@ async function freeSearchWithRetry(
 async function freeHydratePhoneFromUrl(url: string): Promise<string | null> {
   try {
     const referer = (() => { try { return new URL(url).origin + '/'; } catch { return undefined; } })();
-    const { ok, html } = await fetchHtml(url, 4500, referer);
+    const { ok, html } = await fetchHtmlUnblockable(url, 4500, referer);
     if (!ok || !html) return null;
     const phones = extractPhonesFromPayload('', html, html, null);
     return phones[0] ?? null;
