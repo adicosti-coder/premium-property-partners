@@ -823,8 +823,9 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   const category = intent.house ? 'case' : intent.land ? 'terenuri' : 'apartamente-garsoniere';
   // private_business=1 filtrează direct anunțurile proprietarilor (fără agenții)
   // Probăm 2 pattern-uri URL OLX (categorie imobiliare + cautare globală) ca să prindem mai multe rezultate.
+  // Proxy-ul costă, deci mergem pe cel mai productiv URL mai întâi și ne oprim
+  // imediat ce avem suficiente rezultate.
   const urls = [
-    `https://www.olx.ro/d/imobiliare/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
     `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/q-${encodeURIComponent(slug)}/?search%5Bprivate_business%5D=1`,
     // fără termen: lista completă a proprietarilor din Timișoara (ordonată după dată)
     `https://www.olx.ro/imobiliare/${category}-${transaction}/timisoara/?search%5Bprivate_business%5D=1&search%5Border%5D=created_at:desc`,
@@ -833,10 +834,9 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
   const seen = new Set<string>();
   for (const url of urls) {
     if (out.length >= max) break;
-    // OLX blochează datacenter-ul cu 403 → fallback automat prin proxy stealth.
-    const { ok, html, unblocked } = await fetchHtmlUnblockable(url, 5500, 'https://www.olx.ro/');
+    // OLX blochează datacenter-ul și randează lista din JS → mereu prin proxy.
+    const { ok, html } = await fetchHtmlUnblockable(url, 5500, 'https://www.olx.ro/', { alwaysProxy: true });
     if (!ok || !html) continue;
-    if (unblocked) console.log(JSON.stringify({ kind: 'olx_unblocked', url }));
     // Titlurile din HTML (parser clasic) + linkurile brute (fallback proxy).
     const re = /<a[^>]+href="((?:https:\/\/www\.olx\.ro)?\/d\/oferta\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
     let m: RegExpExecArray | null;
@@ -855,6 +855,7 @@ async function directOlxSearch(query: string, max: number): Promise<FreeResult[]
       const finalTitle = title || slugTitle;
       if (finalTitle.length > 5) out.push({ url: href, title: finalTitle, markdown: finalTitle });
     }
+    console.log(JSON.stringify({ kind: 'olx_direct_page', url, found: out.length }));
   }
   return out;
 }
