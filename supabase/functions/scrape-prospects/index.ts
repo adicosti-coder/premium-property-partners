@@ -720,10 +720,18 @@ async function fetchHtmlUnblockable(
   const budget = opts.budget;
   if (budget && !canSpendProxy(budget)) {
     console.log(JSON.stringify({ kind: 'proxy_budget_exhausted', url, budget, spent: PROXY_BUDGET }));
+    logProxyCall({ provider: 'none', kind: budget, url, ok: false, status: 0, budgetExhausted: true });
     return { ok: false, status: 0, html: '', unblocked: false };
   }
   if (budget) spendProxy(budget);
   const viaProxy = await proxyFetchHtml(url);
+  logProxyCall({
+    provider: viaProxy.via,
+    kind: budget ?? 'other',
+    url,
+    ok: viaProxy.ok,
+    status: viaProxy.status,
+  });
   if (viaProxy.ok) {
     console.log(JSON.stringify({ kind: 'proxy_unblocked', url, via: viaProxy.via, len: viaProxy.html.length }));
     return { ok: true, status: 200, html: viaProxy.html, unblocked: true };
