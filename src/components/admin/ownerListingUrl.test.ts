@@ -43,6 +43,7 @@ describe("regulile anunțurilor de proprietari", () => {
   it("separă proprietarul confirmat de rezultatul neverificat", () => {
     expect(ownerVerification({ title: "Direct proprietar, apartament decomandat" })).toBe("confirmed");
     expect(ownerVerification({ title: "Apartament 3 camere decomandat" })).toBe("review");
+    expect(ownerVerification({ title: "Apartament 3 camere", prospect_type: "proprietar" })).toBe("review");
   });
 
   it("respinge anunțurile expirate și conținutul neimobiliar", () => {

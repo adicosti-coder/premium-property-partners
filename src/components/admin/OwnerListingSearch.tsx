@@ -45,6 +45,7 @@ export interface AdHocListing {
   platform?: string | null;
   prospect_type?: string | null;
   owner_verified?: boolean | null;
+  ai_score_breakdown?: { explicit_owner_signal?: boolean } | null;
   is_active?: boolean | null;
   lifecycle_status?: string | null;
 }
