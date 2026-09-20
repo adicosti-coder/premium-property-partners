@@ -755,6 +755,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       const seen = new Set<string>();
       const listings: AdHocListing[] = [];
       let generic = 0;
+      let offTopic = 0;
       for (const r of ok) {
         for (const l of r.listings) {
           if (!isIndividualAd(l)) { generic++; continue; }
