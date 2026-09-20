@@ -233,6 +233,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   const [sort, setSort] = useState<SortValue>("relevance");
   /** An construcție (interval), ca pe portaluri. */
   const [yearFilter, setYearFilter] = useState<string>(ANY_YEAR);
+  /** Publicat în ultimele X zile (data apariției anunțului). */
+  const [ageFilter, setAgeFilter] = useState<string>(ANY_AGE);
+  /** Durata de când anunțul este online. */
+  const [durationFilter, setDurationFilter] = useState<string>(ANY_DURATION);
+  /** Interval exact pentru data publicării (opțional). */
+  const [publishedFrom, setPublishedFrom] = useState("");
+  const [publishedTo, setPublishedTo] = useState("");
   /** Scanare automată: caută periodic și adaugă anunțurile noi fără click. */
   const [autoLive, setAutoLive] = useState<boolean>(() => {
     try { return window.localStorage.getItem("rt_owner_search_auto") !== "0"; } catch { return true; }
