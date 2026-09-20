@@ -523,6 +523,35 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
     return true;
   };
 
+  /** Cuvinte care arată clar că anunțul NU este imobiliar rezidențial. */
+  const OFF_TOPIC_WORDS = [
+    "taxi", "licenta taxi", "autorizatie", "autorizatia", "vand afacere", "afacere la cheie",
+    "afaceri", "srl", "s r l", "firma", "fond de comert", "masina", "autoturism", "remorca",
+    "tractor", "utilaj", "loc de munca", "angajez", "angajam", "curs", "meditatii",
+    "accomodation", "accommodation", "cazare", "regim hotelier", "noapte", "camere de hotel",
+    "statie de autobuz", "publicitate", "panou", "reclama", "credit", "asigurari",
+  ];
+
+  /** Cuvinte care confirmă că este vorba de un imobil rezidențial. */
+  const REAL_ESTATE_WORDS = [
+    "apartament", "apartamente", "garsoniera", "garsoniere", "casa", "case", "vila", "vile",
+    "duplex", "penthouse", "imobil", "imobile", "locuinta", "bloc", "mansarda", "teren",
+    "camere", "camera", "mp", "m2", "spatiu comercial", "birou", "studio", "decomandat",
+    "semidecomandat", "nedecomandat", "etaj", "parter", "bucatarie", "dormitor",
+  ];
+
+  /**
+   * Elimină anunțurile care nu au nicio legătură cu imobiliarele rezidențiale
+   * (licențe taxi, afaceri, utilaje, cazare turistică etc.).
+   */
+  const isRealEstateAd = (l: AdHocListing): boolean => {
+    const t = ` ${norm(`${l.title || ""} ${l.description || ""} ${l.zone || ""}`)} `;
+    if (t.trim().length === 0) return false;
+    const hasWord = (w: string) => t.includes(` ${norm(w)} `) || t.includes(` ${norm(w)},`);
+    if (OFF_TOPIC_WORDS.some(hasWord)) return false;
+    return REAL_ESTATE_WORDS.some(hasWord);
+  };
+
   /** Anunțuri deja salvate care se potrivesc cu căutarea — ca să avem mereu linkuri. */
   const fetchExisting = async (base: string, platforms: string[]): Promise<AdHocListing[]> => {
     const words = base.split(/\s+/).filter(w => w.length >= 3).slice(0, 3);
@@ -726,9 +755,11 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       const seen = new Set<string>();
       const listings: AdHocListing[] = [];
       let generic = 0;
+      let offTopic = 0;
       for (const r of ok) {
         for (const l of r.listings) {
           if (!isIndividualAd(l)) { generic++; continue; }
+          if (!isRealEstateAd(l)) { offTopic++; continue; }
           const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
           if (key && seen.has(key)) continue;
           if (key) seen.add(key);
@@ -742,6 +773,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
       let existingShown = 0;
       for (const l of existing) {
         if (!(l.url || "").trim()) continue; // salvate deja verificate; cerem doar link
+        if (!isRealEstateAd(l)) { offTopic++; continue; }
 
         const key = normalizeAdUrl(l.url) || `${l.title || ""}|${l.price || ""}`;
         if (key && seen.has(key)) continue;
@@ -795,6 +827,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (duplicate ? ` · ${duplicate} deja în listă` : "") +
           (blocked ? ` · ${blocked} surse blocate sau schimbate` : "") +
           (generic ? ` · ${generic} pagini de căutare eliminate` : "") +
+          (offTopic ? ` · ${offTopic} anunțuri fără legătură cu imobiliarele eliminate` : "") +
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
       );
       window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
@@ -856,6 +889,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             source_platform: r.source_platform,
           };
           if (!isIndividualAd(l)) return;
+          if (!isRealEstateAd(l)) return;
           setResults(prev => {
             if (!prev) return prev; // nicio căutare activă
             const key = normalizeAdUrl(l.url);
