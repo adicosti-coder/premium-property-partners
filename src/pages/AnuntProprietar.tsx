@@ -111,6 +111,18 @@ export default function AnuntProprietar() {
     [listing?.price, listing?.currency],
   );
 
+  /** Fotografiile anunțului: cele îmbogățite au prioritate, apoi cele originale. */
+  const photos = useMemo(() => {
+    const collect = (value: unknown): string[] =>
+      Array.isArray(value)
+        ? value.map((v) => String(v ?? "").trim()).filter((v) => /^https?:\/\//i.test(v))
+        : [];
+    const all = [...collect(listing?.enriched_images), ...collect(listing?.images)];
+    return Array.from(new Set(all)).slice(0, 20);
+  }, [listing?.enriched_images, listing?.images]);
+  const [activePhoto, setActivePhoto] = useState(0);
+  useEffect(() => setActivePhoto(0), [id, photos.length]);
+
   const copy = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value);
