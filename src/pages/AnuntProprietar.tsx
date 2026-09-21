@@ -329,6 +329,17 @@ export default function AnuntProprietar() {
                           onClick={() => copy(listing.contact_phone as string, "Telefonul")}>
                           <Copy className="h-4 w-4 mr-1.5" /> Copiază
                         </Button>
+                        {listing.phone_normalized && (
+                          <Button asChild size="sm" variant="outline" className="min-h-[44px]">
+                            <a
+                              href={`https://wa.me/${String(listing.phone_normalized).replace(/[^0-9]/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1.5" /> WhatsApp
+                            </a>
+                          </Button>
+                        )}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Fără telefon salvat.</p>
