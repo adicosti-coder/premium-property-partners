@@ -2979,7 +2979,7 @@ Deno.serve(async (req) => {
                     price: existingRow.price ?? extracted.price ?? null,
                     phone: existingRow.contact_phone ?? extracted.contactPhone ?? null,
                     contact_phone: existingRow.contact_phone ?? extracted.contactPhone ?? null,
-                    zone: existingRow.zone ?? extracted.zone ?? null,
+                    zone: existingRow.zone ?? extracted.location ?? null,
                     rooms: existingRow.rooms ?? extracted.rooms ?? null,
                     source_platform: canonicalPlatform(existingRow.source_platform || platform, url),
                     prospect_type: existingRow.prospect_type ?? 'necunoscut',
