@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       offersInMd: (md.match(/\/d\/oferta\//g) || []).length,
       linkCount: links.length,
       offerLinks: links.filter((l) => typeof l === 'string' && l.includes('/d/oferta/')).slice(0, 5),
-      sample: (md || html).slice(0, 500),
+      sample: (md || html).slice(0, 2500),
       offerPaths: Array.from(new Set((html.match(/(?:https:\/\/www\.olx\.ro)?\\?\/d\\?\/oferta\\?\/[A-Za-z0-9\-_%.]+/gi) || []))).slice(0, 8),
       err: (j as { error?: unknown }).error ?? null,
     };
