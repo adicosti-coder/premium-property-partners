@@ -2931,7 +2931,7 @@ Deno.serve(async (req) => {
               const refreshedPhone = normalizeRoPhone(extracted.contactPhone);
               const { data: existingRow } = await supabase
                 .from('prospect_listings')
-                .select('id, search_keywords, phone_normalized, source_platform')
+                .select('id, search_keywords, phone_normalized, source_platform, title, description, price, contact_phone, zone, rooms, prospect_type, is_active, lifecycle_status, created_at, last_seen_at')
                 .eq('source_url', url)
                 .maybeSingle();
               if (existingRow) {
