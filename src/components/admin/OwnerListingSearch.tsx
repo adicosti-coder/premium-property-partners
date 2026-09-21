@@ -92,13 +92,8 @@ const PLATFORM_OPTIONS = [
   "Storia.ro",
   "imobiliare.ro",
   "Publi24",
-  "BursaImobiliara.ro",
   "Homezz.ro",
   "Anuntul.ro",
-  "Anunturi-Imobiliare.ro",
-  "Tocmai.ro",
-  "Facebook Groups",
-  "Facebook Marketplace",
 ];
 
 const MULTI_SEARCH_PLATFORMS = [
@@ -106,11 +101,8 @@ const MULTI_SEARCH_PLATFORMS = [
   "Storia.ro",
   "imobiliare.ro",
   "Publi24",
-  "BursaImobiliara.ro",
   "Homezz.ro",
   "Anuntul.ro",
-  "Anunturi-Imobiliare.ro",
-  "Tocmai.ro",
 ];
 
 /** Parametri de urmărire care nu schimbă anunțul — se elimină la comparare. */

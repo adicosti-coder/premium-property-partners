@@ -24,3 +24,10 @@
 - [x] Aliniere filtre, interogări live și numărători pe rezultate reale
 - [x] Îmbunătățire discovery/parsing pentru anunțuri rezidențiale Timișoara
 - [ ] Teste de regresie și verificare autentificată în Admin
+
+## Audit portaluri căutare proprietari (21 sep 2026)
+- [x] Verificat răspunsul real și formatul linkurilor pentru fiecare portal selectabil
+- [x] Reparat accesul cu fallback pentru Storia, imobiliare.ro și Publi24
+- [x] Reparat URL-urile și parserele Homezz.ro și Anuntul.ro
+- [x] Eliminat din selector sursele moarte/parcate sau neverificabile (Tocmai, Facebook, Anunturi-Imobiliare, Bursa)
+- [ ] Redeploy și căutare autentificată pe fiecare portal rămas
