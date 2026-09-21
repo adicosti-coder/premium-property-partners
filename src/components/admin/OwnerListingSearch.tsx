@@ -1544,6 +1544,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                     )}
 
                     {l.url && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 px-2 text-[11px]"
+                        disabled={openingDetails === (l.url || "").trim()}
+                        onClick={() => openDetails(l)}
+                      >
+                        {openingDetails === (l.url || "").trim() ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Images className="h-3 w-3 mr-1" />
+                        )}
+                        Vezi detalii, foto și contact
+                      </Button>
+                    )}
+                    {l.url && (
                       <a
                         href={l.url}
                         target="_blank"
