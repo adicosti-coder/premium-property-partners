@@ -35,6 +35,18 @@ describe("regulile anunțurilor de proprietari", () => {
     expect(isIndividualOwnerListing({ url: "https://www.olx.ro/imobiliare/apartamente-garsoniere-de-vanzare/q-proprietar/" })).toBe(false);
   });
 
+  it("acceptă linkurile individuale Homezz și Anunțul, nu paginile lor de listare", () => {
+    expect(isIndividualOwnerListing({ url: "https://homezz.ro/apartament-2-camere-lipovei-4047230.html" })).toBe(true);
+    expect(isIndividualOwnerListing({ url: "https://homezz.ro/vanzare-apartamente/timisoara-tm" })).toBe(false);
+    expect(isIndividualOwnerListing({ url: "https://www.anuntul.ro/anunt-vanzare-apartament-2-camere-timisoara-E0zaJ4" })).toBe(true);
+    expect(isIndividualOwnerListing({ url: "https://www.anuntul.ro/anunturi-imobiliare-vanzari/" })).toBe(false);
+  });
+
+  it("respinge lista Publi24 chiar dacă adresa începe cu anunțuri", () => {
+    expect(isIndividualOwnerListing({ url: "https://publi24.ro/anunturi/imobiliare/de-vanzare/apartamente/timis/timisoara?resfeatures=Decomandat" })).toBe(false);
+    expect(isIndividualOwnerListing({ url: "https://publi24.ro/anunturi/imobiliare/de-vanzare/apartamente/apartamente-2-camere/anunt/apartament-decomandat/1d32238i603475g62186h895744f0gg8.html" })).toBe(true);
+  });
+
   it("nu prezintă agenția ca proprietar", () => {
     const listing = { title: "Apartament 3 camere", description: "Agenție imobiliară, comision cumpărător" };
     expect(hasAgencyEvidence(listing)).toBe(true);

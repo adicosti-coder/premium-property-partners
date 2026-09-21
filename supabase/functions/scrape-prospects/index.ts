@@ -1851,7 +1851,7 @@ function isGenericSearchPage(url: string | null | undefined, title: string | nul
     /imobiliare\.ro\/oferta[/-]/.test(u) ||
     // imobiliare.ro: doar anunț real (slug cu ID numeric la final), nu pagini de listare pe zonă
     /imobiliare\.ro\/[^?#]*-\d{6,}(?:[/?#]|$)/i.test(rawUrl) ||
-    /publi24\.ro\/anunturi\//.test(u) ||
+    /publi24\.ro\/anunturi\/[^?#]+\/anunt\/[^?#]+\.html(?:[/?#]|$)/i.test(rawUrl) ||
     /bursaimobiliara\.ro\/.+\/[a-z0-9-]+-\d+\.html/.test(u) ||
     /homezz\.ro\/[a-z0-9-]+-\d{5,}\.html(?:[/?#]|$)/i.test(rawUrl) ||
     /anuntul\.ro\/anunt-(?:vanzare|inchiriere)-[a-z0-9-]+/i.test(u) ||
