@@ -1,34 +1,24 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
+// Temporary internal harness: invokes scrape-prospects with the internal secret
+// so we can verify the OLX path end-to-end.
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-  const body = await req.json().catch(() => ({} as Record<string, unknown>));
-  const url = typeof body.url === 'string' ? body.url : '';
-  const fc = Deno.env.get('FIRECRAWL_API_KEY') || '';
-  const r = await fetch('https://api.firecrawl.dev/v2/scrape', {
+  const body = await req.json().catch(() => ({}));
+  const url = `${Deno.env.get('SUPABASE_URL')}/functions/v1/scrape-prospects`;
+  const svc = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const r = await fetch(url, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${fc}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, formats: ['rawHtml'], onlyMainContent: false, proxy: 'stealth', location: { country: 'RO', languages: ['ro-RO'] } }),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${svc}`,
+      'x-webhook-secret': svc,
+      apikey: svc,
+    },
+    body: JSON.stringify(body),
   });
-  const j = await r.json().catch(() => ({}));
-  const doc = (j as { data?: Record<string, unknown> }).data ?? (j as Record<string, unknown>);
-  const raw = typeof doc.rawHtml === 'string' ? doc.rawHtml : '';
-  let parsed: unknown = null;
-  try { parsed = JSON.parse(raw); } catch { /* not json */ }
-  const offers = (parsed as { data?: Record<string, unknown>[] })?.data ?? [];
-  const summary = offers.slice(0, 2).map((o) => ({
-    keys: Object.keys(o),
-    id: o.id,
-    url: o.url,
-    title: o.title,
-    business: (o as { business?: unknown }).business,
-    created_time: o.created_time,
-    location: o.location,
-    contact: o.contact,
-    user: o.user,
-    params: (o as { params?: unknown[] }).params,
-    partner: (o as { partner?: unknown }).partner,
-    category: (o as { category?: unknown }).category,
-  }));
-  return new Response(JSON.stringify({ total: (parsed as { metadata?: { total_elements?: number } })?.metadata?.total_elements, count: offers.length, summary }, null, 1).slice(0, 12000), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  const text = await r.text();
+  return new Response(JSON.stringify({ status: r.status, body: text.slice(0, 6000) }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 });
