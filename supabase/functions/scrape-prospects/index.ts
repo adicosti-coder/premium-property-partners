@@ -930,7 +930,102 @@ async function hydrateFreeResult(result: FreeResult): Promise<FreeResult> {
   };
 }
 
+/**
+ * OLX randează lista din JS, iar HTML-ul returnat de proxy conține doar anunțuri
+ * recomandate (taxi, afaceri, cazare) — de aici „niciun anunț găsit”. Feed-ul
+ * public folosit de propriul site OLX (`/api/v1/offers`) merge prin proxy și
+ * întoarce date reale: titlu, descriere, preț, cameră, suprafață, etaj,
+ * compartimentare, localitate și tipul vânzătorului. Un singur apel de proxy
+ * per interogare, fără pagini de detaliu.
+ */
+async function olxApiSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 6);
+  if (!clean) return [];
+  const intent = searchIntent(query);
+  const terms = /timi[sș]oara/i.test(clean) ? clean : `${clean} timisoara`;
+  const limit = Math.min(Math.max(max * 3, 20), 40);
+  const apiUrl = `https://www.olx.ro/api/v1/offers/?offset=0&limit=${limit}` +
+    `&query=${encodeURIComponent(terms)}&sort_by=created_at%3Adesc`;
+
+  const { ok, html } = await fetchHtmlUnblockable(apiUrl, 12000, 'https://www.olx.ro/', {
+    alwaysProxy: true,
+    budget: 'search',
+  });
+  if (!ok || !html) return [];
+  let payload: { data?: Record<string, unknown>[] };
+  try {
+    payload = JSON.parse(html.trim());
+  } catch {
+    console.warn(JSON.stringify({ kind: 'olx_api_parse_failed', len: html.length }));
+    return [];
+  }
+  const offers = Array.isArray(payload.data) ? payload.data : [];
+  const out: FreeResult[] = [];
+  let skippedBusiness = 0;
+  let skippedCategory = 0;
+
+  for (const offer of offers) {
+    if (out.length >= max) break;
+    const url = typeof offer.url === 'string' ? offer.url : '';
+    if (!url) continue;
+    const category = offer.category as { type?: string } | undefined;
+    // Cazarea în regim hotelier / alte categorii nu sunt anunțuri imobiliare.
+    if (category?.type && category.type !== 'real_estate') { skippedCategory++; continue; }
+    if (offer.business === true) { skippedBusiness++; continue; }
+    const partner = offer.partner as { code?: string } | null | undefined;
+    if (partner && typeof partner === 'object' && Object.keys(partner).length > 0) { skippedBusiness++; continue; }
+
+    const title = typeof offer.title === 'string' ? offer.title : '';
+    const rawDesc = typeof offer.description === 'string' ? offer.description : '';
+    const description = decodeBasicHtml(rawDesc.replace(/<[^>]+>/g, ' ')).slice(0, 2000);
+
+    const params = Array.isArray(offer.params) ? offer.params as Record<string, unknown>[] : [];
+    const facts: string[] = [];
+    for (const p of params) {
+      const key = typeof p.key === 'string' ? p.key : '';
+      const value = p.value as { label?: string; value?: number; currency?: string } | undefined;
+      if (!value) continue;
+      if (key === 'price') {
+        const amount = typeof value.value === 'number' ? value.value : undefined;
+        if (amount) facts.push(`Preț: ${amount} ${value.currency || ''}`.trim());
+        else if (value.label) facts.push(`Preț: ${value.label}`);
+        continue;
+      }
+      if (value.label) facts.push(`${typeof p.name === 'string' ? p.name : key}: ${value.label}`);
+    }
+    const location = offer.location as { city?: { name?: string }; district?: { name?: string } } | undefined;
+    const city = location?.city?.name || '';
+    const districtName = location?.district?.name || '';
+    if (city) facts.push(`Localitate: ${city}${districtName ? `, ${districtName}` : ''}`);
+    const user = offer.user as { company_name?: string; name?: string } | undefined;
+    if (user?.company_name) facts.push(`Vânzător firmă: ${user.company_name}`);
+    else if (user?.name) facts.push(`Vânzător persoană fizică: ${user.name}`);
+    if (typeof offer.created_time === 'string') facts.push(`Publicat: ${offer.created_time}`);
+
+    // Zona căutată: acceptăm Timișoara și localitățile din Timiș; restul nu are
+    // legătură cu portofoliul nostru.
+    const cityLow = city.toLowerCase();
+    if (cityLow && !/timi/.test(cityLow) && !clean.toLowerCase().includes(cityLow)) continue;
+
+    out.push({
+      url,
+      title,
+      description,
+      markdown: [title, description, facts.join(' · ')].filter(Boolean).join('\n'),
+    });
+  }
+
+  console.log(JSON.stringify({
+    kind: 'olx_api_search', terms, offers: offers.length, kept: out.length,
+    skippedBusiness, skippedCategory, rent: intent.rent,
+  }));
+  return out;
+}
+
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
+  // Prima opțiune: feed-ul oficial OLX (date complete, un singur apel proxy).
+  const viaApi = await olxApiSearch(query, max);
+  if (viaApi.length > 0) return viaApi;
   const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
   const slug = clean.replace(/\s+/g, '-').toLowerCase();
