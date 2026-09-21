@@ -4016,6 +4016,63 @@ export type Database = {
           },
         ]
       }
+      owner_outreach_messages: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          duration_months: number | null
+          id: string
+          message: string
+          offer_price: number | null
+          prospect_listing_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          duration_months?: number | null
+          id?: string
+          message: string
+          offer_price?: number | null
+          prospect_listing_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          duration_months?: number | null
+          id?: string
+          message?: string
+          offer_price?: number | null
+          prospect_listing_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_outreach_messages_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_outreach_messages_prospect_listing_id_fkey"
+            columns: ["prospect_listing_id"]
+            isOneToOne: false
+            referencedRelation: "v_prospect_funnel"
+            referencedColumns: ["prospect_id"]
+          },
+        ]
+      }
       owner_payments: {
         Row: {
           amount: number
@@ -5825,6 +5882,7 @@ export type Database = {
           price_checked_at: string | null
           price_per_sqm: number | null
           prospect_type: string
+          published_at: string | null
           quality_analysis: Json | null
           quality_analyzed_at: string | null
           quality_override: Json | null
@@ -5922,6 +5980,7 @@ export type Database = {
           price_checked_at?: string | null
           price_per_sqm?: number | null
           prospect_type?: string
+          published_at?: string | null
           quality_analysis?: Json | null
           quality_analyzed_at?: string | null
           quality_override?: Json | null
@@ -6019,6 +6078,7 @@ export type Database = {
           price_checked_at?: string | null
           price_per_sqm?: number | null
           prospect_type?: string
+          published_at?: string | null
           quality_analysis?: Json | null
           quality_analyzed_at?: string | null
           quality_override?: Json | null
