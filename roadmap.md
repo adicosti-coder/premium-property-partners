@@ -31,3 +31,10 @@
 - [x] Reparat URL-urile și parserele Homezz.ro și Anuntul.ro
 - [x] Eliminat din selector sursele moarte/parcate sau neverificabile (Tocmai, Facebook, Anunturi-Imobiliare, Bursa)
 - [x] Redeploy și căutare autentificată pe fiecare portal rămas
+
+## Mesaje către proprietari + anunțuri OLX (21 sep 2026)
+- [x] Formular „Mesaj către proprietar" (preț propus, durată, text) cu salvare + istoric
+- [x] Data publicării anunțurilor (`published_at`) salvată și completată la reverificare
+- [x] Lista „Anunțuri găsite": filtre stare/vechime, coloane Stare și Publicat
+- [x] Fotografii OLX salvate din feed (8-12 poze/anunț) — verificat pe pagina de detalii
+- [ ] Telefonul proprietarilor OLX: nu este public în feed, se vede doar în anunțul original
