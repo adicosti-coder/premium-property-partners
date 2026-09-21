@@ -865,6 +865,29 @@ function canonicalPlatform(label: string, url: string): string {
 
 interface FreeResult { url: string; title?: string; markdown?: string; description?: string }
 
+/**
+ * Data publicării anunțului. OLX o expune în feed (`created_time`) și o scriem
+ * în textul rezultatului ca „Publicat: <ISO>”; alte portaluri o afișează ca
+ * dată locală. Fără ea nu putem filtra anunțurile vechi/expirate.
+ */
+function extractPublishedAt(text: string): string | null {
+  if (!text) return null;
+  const iso = text.match(/Publicat:\s*([0-9]{4}-[0-9]{2}-[0-9]{2}(?:[T ][0-9:.+Z-]+)?)/i);
+  if (iso) {
+    const d = new Date(iso[1].replace(' ', 'T'));
+    if (!isNaN(d.getTime())) return d.toISOString();
+  }
+  const ro = text.match(/Publicat:?\s*(?:la\s*)?([0-9]{1,2})[.\/ -]([0-9]{1,2})[.\/ -]([0-9]{4})/i);
+  if (ro) {
+    const d = new Date(Number(ro[3]), Number(ro[2]) - 1, Number(ro[1]), 12);
+    if (!isNaN(d.getTime())) return d.toISOString();
+  }
+  if (/publicat/i.test(text) && /\b(astazi|astăzi|azi)\b/i.test(text)) {
+    return new Date().toISOString();
+  }
+  return null;
+}
+
 function decodeBasicHtml(text: string): string {
   return text
     .replace(/&quot;/gi, '"')
@@ -1025,11 +1048,22 @@ async function olxApiSearch(query: string, max: number): Promise<FreeResult[]> {
     const cityLow = city.toLowerCase();
     if (cityLow && !/timi/.test(cityLow) && !clean.toLowerCase().includes(cityLow)) continue;
 
+    // Fotografiile din feed: `link` conține șabloane {width}/{height}; le
+    // rezolvăm la o dimensiune utilă ca să apară în pagina de detalii din Admin.
+    const photos = Array.isArray(offer.photos) ? offer.photos as Record<string, unknown>[] : [];
+    const photoMd = photos
+      .map((p) => (typeof p.link === 'string' ? p.link : ''))
+      .filter(Boolean)
+      .slice(0, 12)
+      .map((link) => link.replace(/\{width\}/g, '1000').replace(/\{height\}/g, '750'))
+      .map((link) => `![](${link})`)
+      .join(' ');
+
     out.push({
       url,
       title,
       description,
-      markdown: [title, description, facts.join(' · ')].filter(Boolean).join('\n'),
+      markdown: [title, description, facts.join(' · '), photoMd].filter(Boolean).join('\n'),
     });
   }
 
@@ -2866,6 +2900,7 @@ Deno.serve(async (req) => {
                     : discoveryMode
                       ? 'Import automat: descoperire broad din marketplace; fără semnal de agenție, necesită verificare rapidă înainte de publicare.'
                       : 'Import automat: rezultat din query filtrat pe proprietari/persoane fizice; necesită verificare rapidă.',
+                published_at: extractPublishedAt(`${markdown}\n${result.markdown || ''}`),
                 scraped_at: new Date().toISOString(),
                 last_seen_at: new Date().toISOString(),
               }, { onConflict: 'source_url', ignoreDuplicates: true })
@@ -2911,6 +2946,9 @@ Deno.serve(async (req) => {
                   search_keywords: mergedKeywords,
                   source_platform: canonicalPlatform(existingRow.source_platform || platform, url),
                 };
+                // Completăm data publicării dacă lipsea (filtrarea anunțurilor vechi).
+                const freshPublishedAt = extractPublishedAt(`${markdown}\n${result.markdown || ''}`);
+                if (freshPublishedAt) patch.published_at = freshPublishedAt;
                 // Only fill a missing phone — never overwrite a verified one.
                 if (!existingRow.phone_normalized && refreshedPhone) {
                   patch.contact_phone = extracted.contactPhone;

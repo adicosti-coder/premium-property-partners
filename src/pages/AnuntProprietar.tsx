@@ -42,6 +42,11 @@ export default function AnuntProprietar() {
   const [pubDesc, setPubDesc] = useState("");
   const [pubImage, setPubImage] = useState("");
   const [saving, setSaving] = useState(false);
+  // Mesaj către proprietar: preț propus, durată contract și textul mesajului.
+  const [offerPrice, setOfferPrice] = useState("");
+  const [durationMonths, setDurationMonths] = useState("12");
+  const [outreachText, setOutreachText] = useState("");
+  const [savingOutreach, setSavingOutreach] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -96,6 +101,47 @@ export default function AnuntProprietar() {
       return data;
     },
   });
+
+  const { data: outreach } = useQuery({
+    queryKey: ["owner-listing-outreach", id],
+    enabled: isAdmin && !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("owner_outreach_messages")
+        .select("id, offer_price, currency, duration_months, message, status, created_at")
+        .eq("prospect_listing_id", id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const saveOutreach = async () => {
+    if (!listing) return;
+    const message = outreachText.trim();
+    if (message.length < 10) {
+      toast({ title: "Scrie mesajul", description: "Mesajul are nevoie de cel puțin 10 caractere.", variant: "destructive" });
+      return;
+    }
+    setSavingOutreach(true);
+    const { error } = await supabase.from("owner_outreach_messages").insert({
+      prospect_listing_id: listing.id,
+      offer_price: offerPrice.trim() ? Number(offerPrice.replace(/[^0-9.]/g, "")) : null,
+      currency: listing.currency ?? "EUR",
+      duration_months: durationMonths.trim() ? Number(durationMonths.replace(/[^0-9]/g, "")) : null,
+      message,
+      created_by: user?.id ?? null,
+    });
+    setSavingOutreach(false);
+    if (error) {
+      toast({ title: "Mesajul nu a fost salvat", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Mesaj salvat", description: "Îl găsești mai jos, în istoricul mesajelor." });
+    setOutreachText("");
+    await qc.invalidateQueries({ queryKey: ["owner-listing-outreach", id] });
+  };
 
   useEffect(() => {
     if (!listing) return;
@@ -419,6 +465,85 @@ export default function AnuntProprietar() {
                     Publicat: {dt(published.published_at)}
                     {published.is_published ? "" : ` · retras: ${dt(published.unpublished_at)}`}
                   </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-primary" /> Mesaj către proprietar
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="offer-price">Preț propus ({listing.currency || "EUR"})</Label>
+                    <Input
+                      id="offer-price"
+                      inputMode="numeric"
+                      value={offerPrice}
+                      onChange={(e) => setOfferPrice(e.target.value)}
+                      placeholder={listing.price ? String(Math.round(Number(listing.price))) : "ex. 95000"}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="offer-duration">Durată (luni)</Label>
+                    <Input
+                      id="offer-duration"
+                      inputMode="numeric"
+                      value={durationMonths}
+                      onChange={(e) => setDurationMonths(e.target.value)}
+                      placeholder="ex. 12"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="offer-message">Mesaj</Label>
+                  <Textarea
+                    id="offer-message"
+                    rows={5}
+                    value={outreachText}
+                    onChange={(e) => setOutreachText(e.target.value)}
+                    placeholder="Bună ziua, am văzut anunțul dumneavoastră și v-aș propune administrarea apartamentului…"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={saveOutreach} disabled={savingOutreach} className="min-h-[44px]">
+                    {savingOutreach
+                      ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                      : <MessageCircle className="h-4 w-4 mr-1.5" />}
+                    Salvează mesajul
+                  </Button>
+                  {listing.phone_normalized && (
+                    <Button asChild variant="outline" className="min-h-[44px]">
+                      <a
+                        href={`https://wa.me/${String(listing.phone_normalized).replace(/[^0-9]/g, "")}?text=${encodeURIComponent(outreachText)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Trimite pe WhatsApp
+                      </a>
+                    </Button>
+                  )}
+                </div>
+
+                {(outreach ?? []).length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Mesaje salvate</p>
+                    {(outreach ?? []).map((m) => (
+                      <div key={m.id} className="rounded-lg border p-3 text-sm space-y-1">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span>{dt(m.created_at)}</span>
+                          {m.offer_price != null && (
+                            <Badge variant="secondary">{eur(Number(m.offer_price), m.currency)}</Badge>
+                          )}
+                          {m.duration_months != null && <Badge variant="outline">{m.duration_months} luni</Badge>}
+                        </div>
+                        <p className="whitespace-pre-wrap">{m.message}</p>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>

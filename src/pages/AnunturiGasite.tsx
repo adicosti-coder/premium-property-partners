@@ -26,9 +26,24 @@ interface Row {
   contact_name: string | null;
   last_seen_at: string | null;
   scraped_at: string | null;
+  published_at: string | null;
   is_active: boolean | null;
   lifecycle_status: string | null;
 }
+
+/** Vârsta anunțului în zile (după data publicării, altfel după data preluării). */
+const ageDays = (r: Row): number | null => {
+  const ref = r.published_at || r.scraped_at;
+  if (!ref) return null;
+  return Math.floor((Date.now() - new Date(ref).getTime()) / 86_400_000);
+};
+
+const statusLabel = (r: Row): { label: string; tone: "default" | "secondary" | "destructive" | "outline" } => {
+  if (r.lifecycle_status === "expired") return { label: "expirat", tone: "destructive" };
+  if (r.is_active === false) return { label: "inactiv", tone: "destructive" };
+  if (r.lifecycle_status === "to_review") return { label: "de verificat", tone: "secondary" };
+  return { label: "activ", tone: "outline" };
+};
 
 const fmtDate = (v: string | null) =>
   v ? new Date(v).toLocaleString("ro-RO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
@@ -40,6 +55,8 @@ export default function AnunturiGasite() {
   const { isAdmin, isLoading: roleLoading } = useAdminRole(user);
   const [q, setQ] = useState("");
   const [platform, setPlatform] = useState("all");
+  const [state, setState] = useState("all");
+  const [age, setAge] = useState("all");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -57,7 +74,7 @@ export default function AnunturiGasite() {
       const { data, error } = await supabase
         .from("prospect_listings")
         .select(
-          "id, title, zone, price, rooms, source_platform, source_url, contact_phone, contact_name, last_seen_at, scraped_at, is_active, lifecycle_status",
+          "id, title, zone, price, rooms, source_platform, source_url, contact_phone, contact_name, last_seen_at, scraped_at, published_at, is_active, lifecycle_status",
         )
         .order("last_seen_at", { ascending: false, nullsFirst: false })
         .limit(500);
@@ -76,12 +93,23 @@ export default function AnunturiGasite() {
     const needle = q.trim().toLowerCase();
     return (data ?? []).filter((r) => {
       if (platform !== "all" && r.source_platform !== platform) return false;
+      const st = statusLabel(r).label;
+      if (state === "activ" && st !== "activ") return false;
+      if (state === "expirat" && !(st === "expirat" || st === "inactiv")) return false;
+      if (state === "verificat" && st !== "de verificat") return false;
+      if (age !== "all") {
+        const d = ageDays(r);
+        if (d == null) return false;
+        if (age === "7" && d > 7) return false;
+        if (age === "30" && d > 30) return false;
+        if (age === "old" && d <= 30) return false;
+      }
       if (!needle) return true;
       return [r.title, r.zone, r.contact_phone, r.contact_name, r.source_platform]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(needle));
     });
-  }, [data, q, platform]);
+  }, [data, q, platform, state, age]);
 
   const withPhone = rows.filter((r) => !!r.contact_phone).length;
 
@@ -155,6 +183,28 @@ export default function AnunturiGasite() {
               ))}
             </SelectContent>
           </Select>
+          <Select value={state} onValueChange={setState}>
+            <SelectTrigger className="w-[180px]" aria-label="Filtrează după stare">
+              <SelectValue placeholder="Toate stările" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toate stările</SelectItem>
+              <SelectItem value="activ">Active</SelectItem>
+              <SelectItem value="expirat">Expirate / inactive</SelectItem>
+              <SelectItem value="verificat">De verificat</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={age} onValueChange={setAge}>
+            <SelectTrigger className="w-[200px]" aria-label="Filtrează după vechime">
+              <SelectValue placeholder="Orice vechime" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Orice vechime</SelectItem>
+              <SelectItem value="7">Publicate în 7 zile</SelectItem>
+              <SelectItem value="30">Publicate în 30 zile</SelectItem>
+              <SelectItem value="old">Mai vechi de 30 zile</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <Card>
@@ -164,9 +214,11 @@ export default function AnunturiGasite() {
                 <TableRow>
                   <TableHead>Anunț</TableHead>
                   <TableHead>Sursă</TableHead>
+                  <TableHead>Stare</TableHead>
                   <TableHead>Zonă</TableHead>
                   <TableHead>Preț</TableHead>
                   <TableHead>Telefon</TableHead>
+                  <TableHead>Publicat</TableHead>
                   <TableHead>Ultima vizualizare</TableHead>
                   <TableHead>Preluat</TableHead>
                   <TableHead className="sr-only">Detalii</TableHead>
@@ -175,7 +227,7 @@ export default function AnunturiGasite() {
               <TableBody>
                 {rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-10">
+                    <TableCell colSpan={10} className="text-center text-muted-foreground py-10">
                       Nu există anunțuri pentru filtrul selectat.
                     </TableCell>
                   </TableRow>
@@ -200,12 +252,21 @@ export default function AnunturiGasite() {
                       {r.rooms ? <span className="text-xs text-muted-foreground">{r.rooms} camere</span> : null}
                     </TableCell>
                     <TableCell><Badge variant="outline">{r.source_platform || "Necunoscut"}</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant={statusLabel(r).tone}>{statusLabel(r).label}</Badge>
+                    </TableCell>
                     <TableCell className="text-sm">{r.zone || "—"}</TableCell>
                     <TableCell className="text-sm">{r.price ? `${Number(r.price).toLocaleString("ro-RO")} €` : "—"}</TableCell>
                     <TableCell className="text-sm">
                       {r.contact_phone ? (
                         <a href={`tel:${r.contact_phone}`} className="hover:underline">{r.contact_phone}</a>
                       ) : "—"}
+                    </TableCell>
+                    <TableCell className="text-sm whitespace-nowrap">
+                      {fmtDate(r.published_at)}
+                      {ageDays(r) != null && (
+                        <span className="block text-xs text-muted-foreground">{ageDays(r)} zile</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm whitespace-nowrap">{fmtDate(r.last_seen_at)}</TableCell>
                     <TableCell className="text-sm whitespace-nowrap">{fmtDate(r.scraped_at)}</TableCell>
