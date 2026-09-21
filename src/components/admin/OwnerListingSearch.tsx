@@ -1263,6 +1263,46 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         </Button>
       </div>
 
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <Select value={ageFilter} onValueChange={v => { setAgeFilter(v); setIgnoreFilters(false); }}>
+          <SelectTrigger className="sm:w-[180px] min-h-[48px] sm:min-h-0" aria-label="Data publicării">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY_AGE}>Orice dată a publicării</SelectItem>
+            {AGE_OPTIONS.map(o => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={durationFilter} onValueChange={v => { setDurationFilter(v); setIgnoreFilters(false); }}>
+          <SelectTrigger className="sm:w-[190px] min-h-[48px] sm:min-h-0" aria-label="Durata online">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ANY_DURATION}>Orice durată online</SelectItem>
+            {DURATION_OPTIONS.map(o => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          type="date"
+          value={publishedFrom}
+          onChange={e => { setPublishedFrom(e.target.value); setIgnoreFilters(false); }}
+          aria-label="Publicat de la data"
+          className="sm:w-[150px] min-h-[48px] sm:min-h-0"
+        />
+        <Input
+          type="date"
+          value={publishedTo}
+          onChange={e => { setPublishedTo(e.target.value); setIgnoreFilters(false); }}
+          aria-label="Publicat până la data"
+          className="sm:w-[150px] min-h-[48px] sm:min-h-0"
+        />
+      </div>
+
+
       <div className="rounded-lg border p-2 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-[11px] text-muted-foreground max-w-[26rem]">
