@@ -1634,13 +1634,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
                 {main.map(renderRow)}
               </div>
-               {(reviewMatching.length > 0 || rejected.length > 0) && (
+               {rejected.length > 0 && (
                  <details className="mt-3 rounded-md border bg-muted/20">
                    <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3 text-xs font-medium">
-                     <ChevronDown className="h-4 w-4" /> Diagnostic: {reviewMatching.length} de verificat, {rejected.length} neconforme
+                     <ChevronDown className="h-4 w-4" /> Diagnostic: {rejected.length} anunțuri care nu respectă filtrele
                    </summary>
                    <div className="border-t divide-y max-h-[320px] overflow-y-auto bg-background/60">
-                     {[...reviewMatching, ...rejected].map(renderRow)}
+                     {rejected.map(renderRow)}
                    </div>
                  </details>
                )}
@@ -1649,7 +1649,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                  {eligible.length > 0
-                   ? `Am găsit ${eligible.length} anunțuri individuale, dar niciun proprietar confirmat nu respectă filtrele alese.`
+                   ? `Am găsit ${eligible.length} anunțuri individuale, dar niciunul nu respectă filtrele alese. Apasă mai jos ca să le vezi pe toate.`
                   : "Niciun anunț găsit pentru aceste cuvinte. Încearcă o formulare mai simplă (ex: „decomandat Timișoara”)."}
               </p>
                {eligible.length > 0 && (() => {
@@ -1669,9 +1669,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               })()}
                {eligible.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                   {confirmed.length > 0 && <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
-                     Arată toți proprietarii confirmați ({confirmed.length})
-                   </Button>}
+                   <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
+                     Arată toate anunțurile găsite ({eligible.length})
+                   </Button>
                   <Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={resetFilters}>
                     Șterge filtrele
                   </Button>
