@@ -2962,6 +2962,33 @@ Deno.serve(async (req) => {
                 if (refreshErr) {
                   console.warn(`[refresh-duplicate] ${url}: ${refreshErr.message}`);
                 }
+                // Căutarea manuală trebuie să arate linkul fiecărui anunț găsit,
+                // inclusiv al celor deja salvate ("deja în listă").
+                if (
+                  customQuery &&
+                  existingRow.prospect_type !== 'agentie' &&
+                  existingRow.is_active !== false &&
+                  existingRow.lifecycle_status !== 'expired' &&
+                  existingRow.lifecycle_status !== 'rejected'
+                ) {
+                  results.push({
+                    title: existingRow.title || result.title || titleFromListingUrl(url),
+                    description: existingRow.description || result.markdown || result.description || null,
+                    url,
+                    source_url: url,
+                    price: existingRow.price ?? extracted.price ?? null,
+                    phone: existingRow.contact_phone ?? extracted.contactPhone ?? null,
+                    contact_phone: existingRow.contact_phone ?? extracted.contactPhone ?? null,
+                    zone: existingRow.zone ?? extracted.zone ?? null,
+                    rooms: existingRow.rooms ?? extracted.rooms ?? null,
+                    source_platform: canonicalPlatform(existingRow.source_platform || platform, url),
+                    prospect_type: existingRow.prospect_type ?? 'necunoscut',
+                    is_active: existingRow.is_active !== false,
+                    lifecycle_status: existingRow.lifecycle_status ?? 'new',
+                    created_at: existingRow.created_at ?? null,
+                    last_seen_at: existingRow.last_seen_at ?? null,
+                  } as any);
+                }
               }
             }
           }
