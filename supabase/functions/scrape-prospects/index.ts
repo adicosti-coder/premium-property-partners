@@ -713,7 +713,7 @@ async function fetchHtmlUnblockable(
   url: string,
   timeoutMs = 6000,
   referer?: string,
-  opts: { alwaysProxy?: boolean; budget?: 'search' | 'detail' } = {},
+  opts: { alwaysProxy?: boolean; budget?: 'search' | 'detail'; raw?: boolean } = {},
 ): Promise<{ ok: boolean; status: number; html: string; unblocked: boolean }> {
   if (!opts.alwaysProxy) {
     const direct = await fetchHtml(url, timeoutMs, referer);
