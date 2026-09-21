@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, Copy, ExternalLink, Globe, Loader2, Phone, ShieldAlert, ShieldCheck, Undo2,
+  ArrowLeft, Copy, ExternalLink, Globe, Loader2, MessageCircle, Phone, ShieldAlert, ShieldCheck, Undo2,
 } from "lucide-react";
 
 const eur = (v: number | null, currency?: string | null) =>
