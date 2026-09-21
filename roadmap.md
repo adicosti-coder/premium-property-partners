@@ -30,4 +30,4 @@
 - [x] Reparat accesul cu fallback pentru Storia, imobiliare.ro și Publi24
 - [x] Reparat URL-urile și parserele Homezz.ro și Anuntul.ro
 - [x] Eliminat din selector sursele moarte/parcate sau neverificabile (Tocmai, Facebook, Anunturi-Imobiliare, Bursa)
-- [ ] Redeploy și căutare autentificată pe fiecare portal rămas
+- [x] Redeploy și căutare autentificată pe fiecare portal rămas
