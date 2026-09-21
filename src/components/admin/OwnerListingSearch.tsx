@@ -1398,17 +1398,22 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         );
         const confirmed = eligible.filter(l => ownerVerification(l) === "confirmed");
         const review = eligible.filter(l => ownerVerification(l) === "review");
-        const strict = sortResults(filterListings(confirmed));
+        // Proprietarii confirmați apar primii, dar anunțurile „de verificat” rămân
+        // vizibile în lista principală — altfel o căutare bună pare fără rezultate.
+        const ownersFirst = (arr: AdHocListing[]) => [
+          ...arr.filter(l => ownerVerification(l) === "confirmed"),
+          ...arr.filter(l => ownerVerification(l) !== "confirmed"),
+        ];
+        const strict = sortResults(filterListings(eligible));
         // Dacă detaliile fine (compartimentare, etaj, dotări, suprafață) nu apar scrise în anunț,
         // nu pierdem oferta: relaxăm automat aceste condiții și spunem clar ce s-a relaxat.
         const relaxed = strict.length === 0
-          ? sortResults(confirmed.filter(l => excludeReason(l, "soft") === null))
+          ? sortResults(eligible.filter(l => excludeReason(l, "soft") === null))
           : [];
         const usedRelaxed = strict.length === 0 && relaxed.length > 0;
-        const matched = usedRelaxed ? relaxed : strict;
-        const main = ignoreFilters ? sortResults(confirmed) : matched;
-        const reviewMatching = sortResults(review.filter(l => excludeReason(l, usedRelaxed ? "soft" : "strict") === null));
-        const rejected = eligible.filter(r => !matched.includes(r) && !reviewMatching.includes(r));
+        const matched = ownersFirst(usedRelaxed ? relaxed : strict);
+        const main = ignoreFilters ? ownersFirst(sortResults(eligible)) : matched;
+        const rejected = eligible.filter(r => !main.includes(r));
 
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-3 space-y-2 hover:bg-accent/30">
