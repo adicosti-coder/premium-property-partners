@@ -183,6 +183,9 @@ interface Props {
  * Nu salvează cuvintele în listele de scanare — este o căutare la cerere.
  */
 export default function OwnerListingSearch({ embedded = false }: Props) {
+  const navigate = useNavigate();
+  /** Anunțul pentru care se caută pagina de detalii (ca să arătăm un spinner). */
+  const [openingDetails, setOpeningDetails] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<string>(ALL_PLATFORMS);
   /** Se pot alege mai multe tipuri de imobil simultan. */
