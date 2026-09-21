@@ -728,7 +728,7 @@ async function fetchHtmlUnblockable(
     return { ok: false, status: 0, html: '', unblocked: false };
   }
   if (budget) spendProxy(budget);
-  const viaProxy = await proxyFetchHtml(url);
+  const viaProxy = await proxyFetchHtml(url, 25000, { raw: opts.raw });
   logProxyCall({
     provider: viaProxy.via,
     kind: budget ?? 'other',
