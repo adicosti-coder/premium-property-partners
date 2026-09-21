@@ -564,6 +564,7 @@ async function fetchHtml(url: string, timeoutMs = 6000, referer?: string): Promi
 async function proxyFetchHtml(
   url: string,
   timeoutMs = 25000,
+  opts?: { raw?: boolean },
 ): Promise<{ ok: boolean; status: number; html: string; via: 'scrapedo' | 'firecrawl' | 'none' }> {
   const scrapeDoKey = Deno.env.get('SCRAPE_DO_API_KEY') || '';
   if (scrapeDoKey) {
