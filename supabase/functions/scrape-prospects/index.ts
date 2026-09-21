@@ -951,16 +951,15 @@ async function olxApiSearch(query: string, max: number): Promise<FreeResult[]> {
   const apiUrl = `https://www.olx.ro/api/v1/offers/?offset=0&limit=${limit}` +
     `&query=${encodeURIComponent(terms)}&sort_by=created_at%3Adesc`;
 
-  const { ok, html } = await fetchHtmlUnblockable(apiUrl, 12000, 'https://www.olx.ro/', {
+  const { ok, html } = await fetchHtmlUnblockable(apiUrl, 25000, 'https://www.olx.ro/', {
     alwaysProxy: true,
     budget: 'search',
+    raw: true,
   });
   if (!ok || !html) return [];
-  let payload: { data?: Record<string, unknown>[] };
-  try {
-    payload = JSON.parse(html.trim());
-  } catch {
-    console.warn(JSON.stringify({ kind: 'olx_api_parse_failed', len: html.length }));
+  const payload = parseJsonPayload(html);
+  if (!payload) {
+    console.warn(JSON.stringify({ kind: 'olx_api_parse_failed', len: html.length, head: html.slice(0, 200) }));
     return [];
   }
   const offers = Array.isArray(payload.data) ? payload.data : [];
