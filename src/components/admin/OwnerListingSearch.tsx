@@ -1459,6 +1459,15 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     {l.zone && <span>{l.zone}</span>}
                     {l.rooms ? <span>{l.rooms} camere</span> : null}
+                    {l.created_at ? (
+                      <span>
+                        publicat {new Date(l.created_at).toLocaleDateString("ro-RO")}
+                        {(() => {
+                          const d = daysOnline(l);
+                          return d === null ? "" : ` · online ${d} ${d === 1 ? "zi" : "zile"}`;
+                        })()}
+                      </span>
+                    ) : null}
                     {exactPrices[(l.url || "").trim()] != null ? (
                       <span className="font-medium text-foreground">
                         {Math.round(exactPrices[(l.url || "").trim()]).toLocaleString("ro-RO")} €
