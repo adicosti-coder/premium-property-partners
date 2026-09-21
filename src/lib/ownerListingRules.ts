@@ -84,7 +84,9 @@ export function isIndividualOwnerListing(candidate: OwnerListingCandidate): bool
     (/(^|\.)storia\.ro$/.test(host) && /\/ro\/oferta\/.+-id[a-z0-9_-]+$/i.test(path)) ||
     (/(^|\.)imobiliare\.ro$/.test(host) && (/\/oferta\//.test(path) || /-\d{6,}$/.test(path))) ||
     (/(^|\.)publi24\.ro$/.test(host) && /\/anunturi\/.+\/anunt\/.+/i.test(path)) ||
-    (/(^|\.)bursaimobiliara\.ro$/.test(host) && /-\d+\.html?$/i.test(path));
+    (/(^|\.)bursaimobiliara\.ro$/.test(host) && /-\d+\.html?$/i.test(path)) ||
+    (/(^|\.)homezz\.ro$/.test(host) && /-[0-9]{5,}\.html?$/i.test(path)) ||
+    (/(^|\.)anuntul\.ro$/.test(host) && /\/anunt-(?:vanzare|inchiriere)-[a-z0-9-]+$/i.test(path));
   if (knownPattern) return true;
 
   const last = path.split("/").filter(Boolean).pop()?.replace(/\.(html?|php|aspx?)$/, "") || "";
