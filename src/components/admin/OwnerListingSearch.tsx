@@ -1398,17 +1398,22 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
         );
         const confirmed = eligible.filter(l => ownerVerification(l) === "confirmed");
         const review = eligible.filter(l => ownerVerification(l) === "review");
-        const strict = sortResults(filterListings(confirmed));
+        // Proprietarii confirmați apar primii, dar anunțurile „de verificat” rămân
+        // vizibile în lista principală — altfel o căutare bună pare fără rezultate.
+        const ownersFirst = (arr: AdHocListing[]) => [
+          ...arr.filter(l => ownerVerification(l) === "confirmed"),
+          ...arr.filter(l => ownerVerification(l) !== "confirmed"),
+        ];
+        const strict = sortResults(filterListings(eligible));
         // Dacă detaliile fine (compartimentare, etaj, dotări, suprafață) nu apar scrise în anunț,
         // nu pierdem oferta: relaxăm automat aceste condiții și spunem clar ce s-a relaxat.
         const relaxed = strict.length === 0
-          ? sortResults(confirmed.filter(l => excludeReason(l, "soft") === null))
+          ? sortResults(eligible.filter(l => excludeReason(l, "soft") === null))
           : [];
         const usedRelaxed = strict.length === 0 && relaxed.length > 0;
-        const matched = usedRelaxed ? relaxed : strict;
-        const main = ignoreFilters ? sortResults(confirmed) : matched;
-        const reviewMatching = sortResults(review.filter(l => excludeReason(l, usedRelaxed ? "soft" : "strict") === null));
-        const rejected = eligible.filter(r => !matched.includes(r) && !reviewMatching.includes(r));
+        const matched = ownersFirst(usedRelaxed ? relaxed : strict);
+        const main = ignoreFilters ? ownersFirst(sortResults(eligible)) : matched;
+        const rejected = eligible.filter(r => !main.includes(r));
 
         const renderRow = (l: AdHocListing, idx: number) => (
                 <div key={`${l.url || idx}`} className="p-3 space-y-2 hover:bg-accent/30">
@@ -1604,7 +1609,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               </span>
             )}
             {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
-            {confirmed.length > 0 && (
+            {eligible.length > 0 && (
               <Button
                 type="button"
                 size="sm"
@@ -1614,7 +1619,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               >
                 {ignoreFilters
                   ? `Doar cele care respectă filtrele (${matched.length})`
-                  : `Arată toți proprietarii confirmați (${confirmed.length})`}
+                  : `Arată toate anunțurile găsite (${eligible.length})`}
               </Button>
             )}
           </div>
@@ -1629,13 +1634,13 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto bg-background/60">
                 {main.map(renderRow)}
               </div>
-               {(reviewMatching.length > 0 || rejected.length > 0) && (
+               {rejected.length > 0 && (
                  <details className="mt-3 rounded-md border bg-muted/20">
                    <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3 text-xs font-medium">
-                     <ChevronDown className="h-4 w-4" /> Diagnostic: {reviewMatching.length} de verificat, {rejected.length} neconforme
+                     <ChevronDown className="h-4 w-4" /> Diagnostic: {rejected.length} anunțuri care nu respectă filtrele
                    </summary>
                    <div className="border-t divide-y max-h-[320px] overflow-y-auto bg-background/60">
-                     {[...reviewMatching, ...rejected].map(renderRow)}
+                     {rejected.map(renderRow)}
                    </div>
                  </details>
                )}
@@ -1644,7 +1649,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
                  {eligible.length > 0
-                   ? `Am găsit ${eligible.length} anunțuri individuale, dar niciun proprietar confirmat nu respectă filtrele alese.`
+                   ? `Am găsit ${eligible.length} anunțuri individuale, dar niciunul nu respectă filtrele alese. Apasă mai jos ca să le vezi pe toate.`
                   : "Niciun anunț găsit pentru aceste cuvinte. Încearcă o formulare mai simplă (ex: „decomandat Timișoara”)."}
               </p>
                {eligible.length > 0 && (() => {
@@ -1664,9 +1669,9 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               })()}
                {eligible.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                   {confirmed.length > 0 && <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
-                     Arată toți proprietarii confirmați ({confirmed.length})
-                   </Button>}
+                   <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={() => setIgnoreFilters(true)}>
+                     Arată toate anunțurile găsite ({eligible.length})
+                   </Button>
                   <Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={resetFilters}>
                     Șterge filtrele
                   </Button>

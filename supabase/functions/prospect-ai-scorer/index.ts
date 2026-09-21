@@ -173,7 +173,7 @@ Returnează prin tool calling.`;
     const leadScore = Math.max(0, Math.min(100, parseInt(parsed.lead_score) || 0));
     const ownerSignal = hasOwnerFilterSignal(prospect);
     const isOwnerDirect = ownerSignal || parsed.is_owner_direct === true;
-    const finalProspectType = isOwnerDirect ? "proprietar" : (prospect.prospect_type || null);
+    const finalProspectType = isOwnerDirect ? "proprietar" : (prospect.prospect_type || "necunoscut");
 
     const ownerSentiment = ["presat", "deschis", "agentie", "neutru"].includes(parsed.owner_sentiment)
       ? parsed.owner_sentiment : "neutru";

@@ -2739,7 +2739,7 @@ Deno.serve(async (req) => {
                 status: 'new',
                 // A query containing „proprietar” is search intent, not proof.
                 // Only explicit wording on the listing can confirm ownership.
-                prospect_type: explicitOwnerSignal ? 'proprietar' : null,
+                prospect_type: explicitOwnerSignal ? 'proprietar' : 'necunoscut',
                 category,
                 lifecycle_status: suspectSpam ? 'to_review' : (failedValidation ? 'to_review' : 'new'),
                 is_active: failedValidation ? false : true,
@@ -2776,7 +2776,7 @@ Deno.serve(async (req) => {
                 ...inserted,
                 url: inserted.source_url,
                 phone: inserted.contact_phone,
-                prospect_type: explicitOwnerSignal ? 'proprietar' : null,
+                prospect_type: explicitOwnerSignal ? 'proprietar' : 'necunoscut',
                 owner_verified: explicitOwnerSignal,
                 is_active: !failedValidation,
                 lifecycle_status: suspectSpam || failedValidation ? 'to_review' : 'new',
