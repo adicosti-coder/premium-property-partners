@@ -564,6 +564,7 @@ async function fetchHtml(url: string, timeoutMs = 6000, referer?: string): Promi
 async function proxyFetchHtml(
   url: string,
   timeoutMs = 25000,
+  opts?: { raw?: boolean },
 ): Promise<{ ok: boolean; status: number; html: string; via: 'scrapedo' | 'firecrawl' | 'none' }> {
   const scrapeDoKey = Deno.env.get('SCRAPE_DO_API_KEY') || '';
   if (scrapeDoKey) {
@@ -596,11 +597,11 @@ async function proxyFetchHtml(
       headers: { Authorization: `Bearer ${fcKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
-        formats: ['html', 'links'],
+        formats: opts?.raw ? ['rawHtml'] : ['html', 'links'],
         onlyMainContent: false,
         proxy: 'stealth',
         blockAds: true,
-        waitFor: 1500,
+        waitFor: opts?.raw ? 0 : 1500,
         maxAge: 900000,
         location: { country: 'RO', languages: ['ro-RO'] },
       }),
@@ -612,7 +613,10 @@ async function proxyFetchHtml(
     }
     const json = await resp.json().catch(() => ({} as Record<string, unknown>));
     const doc = (json as { data?: Record<string, unknown> }).data ?? (json as Record<string, unknown>);
-    const html = typeof doc.html === 'string' ? doc.html : typeof doc.rawHtml === 'string' ? doc.rawHtml : '';
+    const html = opts?.raw
+      ? (typeof doc.rawHtml === 'string' ? doc.rawHtml : typeof doc.html === 'string' ? doc.html : '')
+      : (typeof doc.html === 'string' ? doc.html : typeof doc.rawHtml === 'string' ? doc.rawHtml : '');
+    if (opts?.raw) return { ok: html.length > 0, status: 200, html, via: 'firecrawl' };
     const rawLinks = Array.isArray(doc.links) ? (doc.links as unknown[]) : [];
     // Linkurile descoperite devin ancore sintetice, ca parserele pe regex
     // existente să le poată folosi fără modificări.
@@ -709,7 +713,7 @@ async function fetchHtmlUnblockable(
   url: string,
   timeoutMs = 6000,
   referer?: string,
-  opts: { alwaysProxy?: boolean; budget?: 'search' | 'detail' } = {},
+  opts: { alwaysProxy?: boolean; budget?: 'search' | 'detail'; raw?: boolean } = {},
 ): Promise<{ ok: boolean; status: number; html: string; unblocked: boolean }> {
   if (!opts.alwaysProxy) {
     const direct = await fetchHtml(url, timeoutMs, referer);
@@ -724,7 +728,7 @@ async function fetchHtmlUnblockable(
     return { ok: false, status: 0, html: '', unblocked: false };
   }
   if (budget) spendProxy(budget);
-  const viaProxy = await proxyFetchHtml(url);
+  const viaProxy = await proxyFetchHtml(url, 25000, { raw: opts.raw });
   logProxyCall({
     provider: viaProxy.via,
     kind: budget ?? 'other',
@@ -930,7 +934,122 @@ async function hydrateFreeResult(result: FreeResult): Promise<FreeResult> {
   };
 }
 
+/**
+ * Răspunsul JSON poate veni împachetat în HTML (unele proxy-uri îl randează
+ * într-un `<pre>`), deci extragem primul obiect JSON valid.
+ */
+function parseJsonPayload(body: string): { data?: Record<string, unknown>[] } | null {
+  const attempts: string[] = [];
+  const trimmed = body.trim();
+  attempts.push(trimmed);
+  const pre = trimmed.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+  if (pre) attempts.push(decodeBasicHtml(pre[1]));
+  const first = trimmed.indexOf('{"data"');
+  if (first >= 0) attempts.push(trimmed.slice(first));
+  for (const candidate of attempts) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === 'object') return parsed as { data?: Record<string, unknown>[] };
+    } catch { /* încercăm următoarea variantă */ }
+  }
+  return null;
+}
+
+/**
+ * OLX randează lista din JS, iar HTML-ul returnat de proxy conține doar anunțuri
+ * recomandate (taxi, afaceri, cazare) — de aici „niciun anunț găsit”. Feed-ul
+ * public folosit de propriul site OLX (`/api/v1/offers`) merge prin proxy și
+ * întoarce date reale: titlu, descriere, preț, cameră, suprafață, etaj,
+ * compartimentare, localitate și tipul vânzătorului. Un singur apel de proxy
+ * per interogare, fără pagini de detaliu.
+ */
+async function olxApiSearch(query: string, max: number): Promise<FreeResult[]> {
+  const clean = simplifyForFreeEngine(query, 6);
+  if (!clean) return [];
+  const intent = searchIntent(query);
+  const terms = /timi[sș]oara/i.test(clean) ? clean : `${clean} timisoara`;
+  const limit = Math.min(Math.max(max * 3, 20), 40);
+  const apiUrl = `https://www.olx.ro/api/v1/offers/?offset=0&limit=${limit}` +
+    `&query=${encodeURIComponent(terms)}&sort_by=created_at%3Adesc`;
+
+  const { ok, html } = await fetchHtmlUnblockable(apiUrl, 25000, 'https://www.olx.ro/', {
+    alwaysProxy: true,
+    budget: 'search',
+    raw: true,
+  });
+  if (!ok || !html) return [];
+  const payload = parseJsonPayload(html);
+  if (!payload) {
+    console.warn(JSON.stringify({ kind: 'olx_api_parse_failed', len: html.length, head: html.slice(0, 200) }));
+    return [];
+  }
+  const offers = Array.isArray(payload.data) ? payload.data : [];
+  const out: FreeResult[] = [];
+  let skippedBusiness = 0;
+  let skippedCategory = 0;
+
+  for (const offer of offers) {
+    if (out.length >= max) break;
+    const url = typeof offer.url === 'string' ? offer.url : '';
+    if (!url) continue;
+    const category = offer.category as { type?: string } | undefined;
+    // Cazarea în regim hotelier / alte categorii nu sunt anunțuri imobiliare.
+    if (category?.type && category.type !== 'real_estate') { skippedCategory++; continue; }
+    if (offer.business === true) { skippedBusiness++; continue; }
+    const partner = offer.partner as { code?: string } | null | undefined;
+    if (partner && typeof partner === 'object' && Object.keys(partner).length > 0) { skippedBusiness++; continue; }
+
+    const title = typeof offer.title === 'string' ? offer.title : '';
+    const rawDesc = typeof offer.description === 'string' ? offer.description : '';
+    const description = decodeBasicHtml(rawDesc.replace(/<[^>]+>/g, ' ')).slice(0, 2000);
+
+    const params = Array.isArray(offer.params) ? offer.params as Record<string, unknown>[] : [];
+    const facts: string[] = [];
+    for (const p of params) {
+      const key = typeof p.key === 'string' ? p.key : '';
+      const value = p.value as { label?: string; value?: number; currency?: string } | undefined;
+      if (!value) continue;
+      if (key === 'price') {
+        const amount = typeof value.value === 'number' ? value.value : undefined;
+        if (amount) facts.push(`Preț: ${amount} ${value.currency || ''}`.trim());
+        else if (value.label) facts.push(`Preț: ${value.label}`);
+        continue;
+      }
+      if (value.label) facts.push(`${typeof p.name === 'string' ? p.name : key}: ${value.label}`);
+    }
+    const location = offer.location as { city?: { name?: string }; district?: { name?: string } } | undefined;
+    const city = location?.city?.name || '';
+    const districtName = location?.district?.name || '';
+    if (city) facts.push(`Localitate: ${city}${districtName ? `, ${districtName}` : ''}`);
+    const user = offer.user as { company_name?: string; name?: string } | undefined;
+    if (user?.company_name) facts.push(`Vânzător firmă: ${user.company_name}`);
+    else if (user?.name) facts.push(`Vânzător persoană fizică: ${user.name}`);
+    if (typeof offer.created_time === 'string') facts.push(`Publicat: ${offer.created_time}`);
+
+    // Zona căutată: acceptăm Timișoara și localitățile din Timiș; restul nu are
+    // legătură cu portofoliul nostru.
+    const cityLow = city.toLowerCase();
+    if (cityLow && !/timi/.test(cityLow) && !clean.toLowerCase().includes(cityLow)) continue;
+
+    out.push({
+      url,
+      title,
+      description,
+      markdown: [title, description, facts.join(' · ')].filter(Boolean).join('\n'),
+    });
+  }
+
+  console.log(JSON.stringify({
+    kind: 'olx_api_search', terms, offers: offers.length, kept: out.length,
+    skippedBusiness, skippedCategory, rent: intent.rent,
+  }));
+  return out;
+}
+
 async function directOlxSearch(query: string, max: number): Promise<FreeResult[]> {
+  // Prima opțiune: feed-ul oficial OLX (date complete, un singur apel proxy).
+  const viaApi = await olxApiSearch(query, max);
+  if (viaApi.length > 0) return viaApi;
   const clean = simplifyForFreeEngine(query, 5);
   if (!clean) return [];
   const slug = clean.replace(/\s+/g, '-').toLowerCase();
