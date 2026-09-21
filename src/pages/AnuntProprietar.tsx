@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, Copy, ExternalLink, Globe, Loader2, Phone, ShieldAlert, ShieldCheck, Undo2,
+  ArrowLeft, Copy, ExternalLink, Globe, Loader2, MessageCircle, Phone, ShieldAlert, ShieldCheck, Undo2,
 } from "lucide-react";
 
 const eur = (v: number | null, currency?: string | null) =>
@@ -110,6 +110,18 @@ export default function AnuntProprietar() {
     () => eur(listing?.price ?? null, listing?.currency),
     [listing?.price, listing?.currency],
   );
+
+  /** Fotografiile anunțului: cele îmbogățite au prioritate, apoi cele originale. */
+  const photos = useMemo(() => {
+    const collect = (value: unknown): string[] =>
+      Array.isArray(value)
+        ? value.map((v) => String(v ?? "").trim()).filter((v) => /^https?:\/\//i.test(v))
+        : [];
+    const all = [...collect(listing?.enriched_images), ...collect(listing?.images)];
+    return Array.from(new Set(all)).slice(0, 20);
+  }, [listing?.enriched_images, listing?.images]);
+  const [activePhoto, setActivePhoto] = useState(0);
+  useEffect(() => setActivePhoto(0), [id, photos.length]);
 
   const copy = async (value: string, label: string) => {
     try {
@@ -227,6 +239,40 @@ export default function AnuntProprietar() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {photos.length > 0 ? (
+                  <div className="space-y-2">
+                    <img
+                      src={photos[activePhoto] ?? photos[0]}
+                      alt={`Fotografie anunț: ${listing.enriched_title || listing.title || "anunț proprietar"}`}
+                      loading="lazy"
+                      className="w-full aspect-[4/3] object-cover rounded-lg border bg-muted"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
+                    {photos.length > 1 && (
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {photos.map((src, i) => (
+                          <button
+                            key={`${src}-${i}`}
+                            type="button"
+                            onClick={() => setActivePhoto(i)}
+                            aria-label={`Vezi fotografia ${i + 1}`}
+                            className={`shrink-0 rounded-md border overflow-hidden ${i === activePhoto ? "ring-2 ring-primary" : ""}`}
+                          >
+                            <img src={src} alt="" loading="lazy" className="h-16 w-20 object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {photos.length} {photos.length === 1 ? "fotografie" : "fotografii"} preluate din anunțul original.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground rounded-lg border bg-muted/40 p-3">
+                    Anunțul nu are fotografii salvate. Deschide anunțul original pentru poze.
+                  </p>
+                )}
+
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div>
                     <p className="text-xs text-muted-foreground">Preț</p>
@@ -283,6 +329,17 @@ export default function AnuntProprietar() {
                           onClick={() => copy(listing.contact_phone as string, "Telefonul")}>
                           <Copy className="h-4 w-4 mr-1.5" /> Copiază
                         </Button>
+                        {listing.phone_normalized && (
+                          <Button asChild size="sm" variant="outline" className="min-h-[44px]">
+                            <a
+                              href={`https://wa.me/${String(listing.phone_normalized).replace(/[^0-9]/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1.5" /> WhatsApp
+                            </a>
+                          </Button>
+                        )}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">Fără telefon salvat.</p>

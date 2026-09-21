@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronDown, Download, ExternalLink, Loader2, Search, X, XCircle } from "lucide-react";
+import { ChevronDown, Download, ExternalLink, Images, Loader2, Search, X, XCircle } from "lucide-react";
 import { csvFileName, downloadCsv } from "@/utils/exportCsv";
 import { toast } from "@/hooks/use-toast";
 import { PROSPECT_REFRESH_EVENT } from "./KeywordRadarNewListings";
@@ -183,6 +184,9 @@ interface Props {
  * Nu salvează cuvintele în listele de scanare — este o căutare la cerere.
  */
 export default function OwnerListingSearch({ embedded = false }: Props) {
+  const navigate = useNavigate();
+  /** Anunțul pentru care se caută pagina de detalii (ca să arătăm un spinner). */
+  const [openingDetails, setOpeningDetails] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<string>(ALL_PLATFORMS);
   /** Se pot alege mai multe tipuri de imobil simultan. */
@@ -690,6 +694,46 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   };
 
   /** Marchează manual un anunț ca expirat, ca să nu mai apară în căutări și rapoarte. */
+  /**
+   * Deschide pagina de detalii a anunțului (foto, text integral, contact).
+   * Anunțurile găsite live sunt salvate în listă, deci le găsim după link.
+   */
+  const openDetails = async (l: AdHocListing) => {
+    const url = (l.url || "").trim();
+    if (!url) {
+      toast({ title: "Anunțul nu are link", description: "Fără link nu putem deschide pagina de detalii." });
+      return;
+    }
+    setOpeningDetails(url);
+    try {
+      const clean = normalizeOwnerListingUrl(url);
+      const variants = Array.from(new Set([url, clean, `${clean}/`]));
+      const { data, error } = await supabase
+        .from("prospect_listings")
+        .select("id, source_url")
+        .in("source_url", variants)
+        .limit(1);
+      if (error) throw error;
+      const found = (data ?? [])[0];
+      if (!found?.id) {
+        toast({
+          title: "Anunțul nu este încă salvat",
+          description: "Rulează din nou căutarea sau deschide anunțul original; pagina de detalii apare după salvare.",
+        });
+        return;
+      }
+      navigate(`/admin/anunt-proprietar/${found.id}`);
+    } catch (e) {
+      toast({
+        title: "Nu s-a putut deschide pagina",
+        description: (e as Error)?.message ?? "Încearcă din nou.",
+        variant: "destructive",
+      });
+    } finally {
+      setOpeningDetails(null);
+    }
+  };
+
   const markExpired = async (l: AdHocListing) => {
     const url = (l.url || "").trim();
     if (!url) {
@@ -1499,6 +1543,23 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
                       />
                     )}
 
+                    {l.url && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="h-8 px-2 text-[11px]"
+                        disabled={openingDetails === (l.url || "").trim()}
+                        onClick={() => openDetails(l)}
+                      >
+                        {openingDetails === (l.url || "").trim() ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Images className="h-3 w-3 mr-1" />
+                        )}
+                        Vezi detalii, foto și contact
+                      </Button>
+                    )}
                     {l.url && (
                       <a
                         href={l.url}
