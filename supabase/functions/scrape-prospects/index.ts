@@ -597,11 +597,11 @@ async function proxyFetchHtml(
       headers: { Authorization: `Bearer ${fcKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
-        formats: ['html', 'links'],
+        formats: opts?.raw ? ['rawHtml'] : ['html', 'links'],
         onlyMainContent: false,
         proxy: 'stealth',
         blockAds: true,
-        waitFor: 1500,
+        waitFor: opts?.raw ? 0 : 1500,
         maxAge: 900000,
         location: { country: 'RO', languages: ['ro-RO'] },
       }),
@@ -613,7 +613,10 @@ async function proxyFetchHtml(
     }
     const json = await resp.json().catch(() => ({} as Record<string, unknown>));
     const doc = (json as { data?: Record<string, unknown> }).data ?? (json as Record<string, unknown>);
-    const html = typeof doc.html === 'string' ? doc.html : typeof doc.rawHtml === 'string' ? doc.rawHtml : '';
+    const html = opts?.raw
+      ? (typeof doc.rawHtml === 'string' ? doc.rawHtml : typeof doc.html === 'string' ? doc.html : '')
+      : (typeof doc.html === 'string' ? doc.html : typeof doc.rawHtml === 'string' ? doc.rawHtml : '');
+    if (opts?.raw) return { ok: html.length > 0, status: 200, html, via: 'firecrawl' };
     const rawLinks = Array.isArray(doc.links) ? (doc.links as unknown[]) : [];
     // Linkurile descoperite devin ancore sintetice, ca parserele pe regex
     // existente să le poată folosi fără modificări.
