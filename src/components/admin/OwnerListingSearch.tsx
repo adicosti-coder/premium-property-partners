@@ -694,6 +694,46 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
   };
 
   /** Marchează manual un anunț ca expirat, ca să nu mai apară în căutări și rapoarte. */
+  /**
+   * Deschide pagina de detalii a anunțului (foto, text integral, contact).
+   * Anunțurile găsite live sunt salvate în listă, deci le găsim după link.
+   */
+  const openDetails = async (l: AdHocListing) => {
+    const url = (l.url || "").trim();
+    if (!url) {
+      toast({ title: "Anunțul nu are link", description: "Fără link nu putem deschide pagina de detalii." });
+      return;
+    }
+    setOpeningDetails(url);
+    try {
+      const clean = normalizeOwnerListingUrl(url);
+      const variants = Array.from(new Set([url, clean, `${clean}/`]));
+      const { data, error } = await supabase
+        .from("prospect_listings")
+        .select("id, source_url")
+        .in("source_url", variants)
+        .limit(1);
+      if (error) throw error;
+      const found = (data ?? [])[0];
+      if (!found?.id) {
+        toast({
+          title: "Anunțul nu este încă salvat",
+          description: "Rulează din nou căutarea sau deschide anunțul original; pagina de detalii apare după salvare.",
+        });
+        return;
+      }
+      navigate(`/admin/anunt-proprietar/${found.id}`);
+    } catch (e) {
+      toast({
+        title: "Nu s-a putut deschide pagina",
+        description: (e as Error)?.message ?? "Încearcă din nou.",
+        variant: "destructive",
+      });
+    } finally {
+      setOpeningDetails(null);
+    }
+  };
+
   const markExpired = async (l: AdHocListing) => {
     const url = (l.url || "").trim();
     if (!url) {
