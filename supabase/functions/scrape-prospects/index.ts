@@ -935,6 +935,27 @@ async function hydrateFreeResult(result: FreeResult): Promise<FreeResult> {
 }
 
 /**
+ * Răspunsul JSON poate veni împachetat în HTML (unele proxy-uri îl randează
+ * într-un `<pre>`), deci extragem primul obiect JSON valid.
+ */
+function parseJsonPayload(body: string): { data?: Record<string, unknown>[] } | null {
+  const attempts: string[] = [];
+  const trimmed = body.trim();
+  attempts.push(trimmed);
+  const pre = trimmed.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+  if (pre) attempts.push(decodeBasicHtml(pre[1]));
+  const first = trimmed.indexOf('{"data"');
+  if (first >= 0) attempts.push(trimmed.slice(first));
+  for (const candidate of attempts) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === 'object') return parsed as { data?: Record<string, unknown>[] };
+    } catch { /* încercăm următoarea variantă */ }
+  }
+  return null;
+}
+
+/**
  * OLX randează lista din JS, iar HTML-ul returnat de proxy conține doar anunțuri
  * recomandate (taxi, afaceri, cazare) — de aici „niciun anunț găsit”. Feed-ul
  * public folosit de propriul site OLX (`/api/v1/offers`) merge prin proxy și
