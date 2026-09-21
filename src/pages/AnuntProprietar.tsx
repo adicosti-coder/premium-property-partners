@@ -227,6 +227,40 @@ export default function AnuntProprietar() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {photos.length > 0 ? (
+                  <div className="space-y-2">
+                    <img
+                      src={photos[activePhoto] ?? photos[0]}
+                      alt={`Fotografie anunț: ${listing.enriched_title || listing.title || "anunț proprietar"}`}
+                      loading="lazy"
+                      className="w-full aspect-[4/3] object-cover rounded-lg border bg-muted"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
+                    {photos.length > 1 && (
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {photos.map((src, i) => (
+                          <button
+                            key={`${src}-${i}`}
+                            type="button"
+                            onClick={() => setActivePhoto(i)}
+                            aria-label={`Vezi fotografia ${i + 1}`}
+                            className={`shrink-0 rounded-md border overflow-hidden ${i === activePhoto ? "ring-2 ring-primary" : ""}`}
+                          >
+                            <img src={src} alt="" loading="lazy" className="h-16 w-20 object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {photos.length} {photos.length === 1 ? "fotografie" : "fotografii"} preluate din anunțul original.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground rounded-lg border bg-muted/40 p-3">
+                    Anunțul nu are fotografii salvate. Deschide anunțul original pentru poze.
+                  </p>
+                )}
+
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div>
                     <p className="text-xs text-muted-foreground">Preț</p>
