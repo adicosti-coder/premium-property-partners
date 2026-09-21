@@ -899,7 +899,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (perPlatform ? ` (${perPlatform})` : "") +
           (existingShown ? ` · ${existingShown} anunțuri deja salvate afișate cu link` : "") +
           (agency ? ` · ${agency} agenții excluse` : "") +
-          (duplicate ? ` · ${duplicate} deja în listă` : "") +
+          (duplicate ? ` · ${duplicate} anunțuri deja cunoscute, afișate mai jos cu link` : "") +
           (blocked ? ` · ${blocked} surse blocate sau schimbate` : "") +
           (generic ? ` · ${generic} pagini de căutare eliminate` : "") +
           (offTopic ? ` · ${offTopic} anunțuri fără legătură cu imobiliarele eliminate` : "") +
