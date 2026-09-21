@@ -1609,7 +1609,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               </span>
             )}
             {pricing && <span className="text-[11px] text-muted-foreground">Citesc prețurile de pe platforme…</span>}
-            {confirmed.length > 0 && (
+            {eligible.length > 0 && (
               <Button
                 type="button"
                 size="sm"
@@ -1619,7 +1619,7 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
               >
                 {ignoreFilters
                   ? `Doar cele care respectă filtrele (${matched.length})`
-                  : `Arată toți proprietarii confirmați (${confirmed.length})`}
+                  : `Arată toate anunțurile găsite (${eligible.length})`}
               </Button>
             )}
           </div>
