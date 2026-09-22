@@ -75,9 +75,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { propertyName, guestName, rating, title, content, guestEmail }: ReviewNotificationRequest = await req.json();
-
-    console.log("Received review notification request:", { propertyName, guestName, rating });
+    const body = await req.json().catch(() => ({}));
+    const reviewId = typeof body?.reviewId === "string" ? body.reviewId : "";
 
     // Create Supabase client to get admin emails
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -85,6 +84,36 @@ const handler = async (req: Request): Promise<Response> => {
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // The notification content is read from the stored review, never from the
+    // request body, so a caller cannot craft arbitrary email content.
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(reviewId)) {
+      return new Response(JSON.stringify({ error: "reviewId invalid" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const { data: reviewRow } = await supabase
+      .from("property_reviews")
+      .select("guest_name, guest_email, title, content, rating, property_id, properties(title)")
+      .eq("id", reviewId)
+      .maybeSingle();
+
+    if (!reviewRow) {
+      return new Response(JSON.stringify({ error: "review_not_found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const guestName = escapeHtml(reviewRow.guest_name);
+    const guestEmail = reviewRow.guest_email ? escapeHtml(reviewRow.guest_email) : "";
+    const title = reviewRow.title ? escapeHtml(reviewRow.title) : "";
+    const content = escapeHtml(reviewRow.content);
+    const rating = Number(reviewRow.rating) || 0;
+    const propertyName = escapeHtml((reviewRow as any).properties?.title ?? "Proprietate RealTrust");
+
 
     // Get admin users
     const { data: adminRoles, error: rolesError } = await supabase
