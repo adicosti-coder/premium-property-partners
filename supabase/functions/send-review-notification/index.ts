@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -73,6 +74,9 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const { propertyName, guestName, rating, title, content, guestEmail }: ReviewNotificationRequest = await req.json();

@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 import { signTrackingPayload } from "../_shared/trackingToken.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 // Generate tracked URL with UTM parameters
 function getTrackedUrl(
@@ -329,6 +330,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

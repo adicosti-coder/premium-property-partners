@@ -3,6 +3,7 @@
 // so the admin can watch the reaction in the Live Logs tab.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const DUMMY = "system.self_healing_dummy";
 
@@ -27,6 +28,9 @@ async function liveLog(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
