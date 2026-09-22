@@ -26,9 +26,9 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-// Multimodal model (Lovable AI Gateway). Kimi K3 is not available on the
-// gateway; this is the supported multimodal equivalent.
-const VISION_MODEL = "google/gemini-3.6-flash";
+// Multimodal model — direct Google Gemini API (GEMINI_API_KEY), no gateway.
+const VISION_MODEL = "gemini-1.5-flash";
+
 const DEFAULT_MAX_IMAGES = 5;
 const DEFAULT_AUTO_THRESHOLD = 70;
 
@@ -89,8 +89,9 @@ Deno.serve(async (req) => {
     actorId = auth.userId ?? null;
   }
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) return json({ error: "LOVABLE_API_KEY missing" }, 500);
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  if (!GEMINI_API_KEY) return json({ error: "GEMINI_API_KEY missing" }, 500);
+
 
   let body: { prospect_id?: string; id?: string; force?: boolean } = {};
   try {
