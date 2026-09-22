@@ -240,6 +240,19 @@ export default function ProspectTriageQueue() {
                         {actingId === row.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}
                         Aprobă pentru Andrei
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => runVision(row)}
+                        disabled={visionId === row.id}
+                        aria-label="Analizează pozele anunțului"
+                      >
+                        {visionId === row.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <>📷 Analizează pozele</>
+                        )}
+                      </Button>
                       <MarkAsAgencyButton
                         id={row.id}
                         source="prospect_listings"
