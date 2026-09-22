@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -33,15 +34,14 @@ const handler = async (req: Request): Promise<Response> => {
   if (!auth.ok) return auth.response!;
 
   try {
-    const { 
-      guestEmail, 
-      guestName, 
-      propertyName, 
-      reviewTitle,
-      reviewContent,
-      adminReply,
-      rating 
-    }: ReviewReplyRequest = await req.json();
+    const payload: ReviewReplyRequest = await req.json();
+    const guestEmail = payload.guestEmail;
+    const guestName = escapeHtml(payload.guestName);
+    const propertyName = escapeHtml(payload.propertyName);
+    const reviewTitle = payload.reviewTitle ? escapeHtml(payload.reviewTitle) : payload.reviewTitle;
+    const reviewContent = escapeHtml(payload.reviewContent);
+    const adminReply = escapeHtml(payload.adminReply);
+    const rating = Math.max(0, Math.min(5, Number(payload.rating) || 0));
 
     console.log("Processing reply notification for:", guestEmail);
 
