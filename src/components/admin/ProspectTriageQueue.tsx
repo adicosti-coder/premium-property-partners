@@ -173,6 +173,49 @@ export default function ProspectTriageQueue() {
                         {row.price && <span className="text-xs font-medium">€{row.price.toLocaleString()}</span>}
                       </div>
                       <div className="text-sm font-medium line-clamp-2">{row.title || "(fără titlu)"}</div>
+                      {Array.isArray(row.images) && row.images.length > 0 && (
+                        <div className="flex gap-1.5 mt-2 overflow-x-auto">
+                          {row.images.slice(0, 6).map((src, i) => (
+                            <img
+                              key={`${row.id}-img-${i}`}
+                              src={src}
+                              alt={`Fotografie ${i + 1} — ${row.title || "anunț"}`}
+                              loading="lazy"
+                              className="h-16 w-20 object-cover rounded-md border shrink-0 bg-muted"
+                            />
+                          ))}
+                          {row.images.length > 6 && (
+                            <div className="h-16 w-20 shrink-0 rounded-md border flex items-center justify-center text-xs text-muted-foreground">
+                              +{row.images.length - 6}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {(row.quality_score !== null || row.quality_analysis) && (
+                        <div className="mt-2 rounded-md border bg-muted/40 p-2 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap text-xs">
+                            <Badge variant="outline" className="text-[10px]">
+                              Calitate foto: {row.quality_score ?? "—"}/100
+                            </Badge>
+                            {row.quality_analysis?.condition && (
+                              <span className="text-muted-foreground">stare: {row.quality_analysis.condition}</span>
+                            )}
+                            {typeof row.quality_analysis?.hotel_readiness === "number" && (
+                              <span className="text-muted-foreground">regim hotelier: {row.quality_analysis.hotel_readiness}/100</span>
+                            )}
+                          </div>
+                          {row.quality_analysis?.highlights?.length ? (
+                            <div className="text-xs text-muted-foreground line-clamp-2">
+                              ✓ {row.quality_analysis.highlights.slice(0, 3).join(" · ")}
+                            </div>
+                          ) : null}
+                          {row.quality_analysis?.red_flags?.length ? (
+                            <div className="text-xs text-destructive line-clamp-2">
+                              ⚠ {row.quality_analysis.red_flags.slice(0, 3).join(" · ")}
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         {row.contact_phone && <span>📞 {row.contact_phone}</span>}
                         {row.source_url && (
