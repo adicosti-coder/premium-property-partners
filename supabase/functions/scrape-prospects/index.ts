@@ -2960,7 +2960,7 @@ Deno.serve(async (req) => {
                 // Only fill a missing phone — never overwrite a verified one.
                 if (!existingRow.phone_normalized && refreshedPhone) {
                   patch.contact_phone = extracted.contactPhone;
-                  if (extracted.contactEmail && !existingRow.contact_email) {
+                  if (extracted.contactEmail && !(existingRow as { contact_email?: string | null }).contact_email) {
                     patch.contact_email = extracted.contactEmail;
                   }
                   patch.phone_normalized = refreshedPhone;
