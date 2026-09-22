@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -173,7 +174,14 @@ const handler = async (req: Request): Promise<Response> => {
     const payload: NotificationRequest = await req.json();
     console.log("Notification payload:", payload);
 
-    const { type, submissionTitle, userEmail, userName, feedback, prizeName, contestName } = payload;
+    const raw = payload as NotificationRequest;
+    const type = raw.type;
+    const userEmail = raw.userEmail;
+    const submissionTitle = escapeHtml(raw.submissionTitle);
+    const userName = escapeHtml(raw.userName);
+    const feedback = raw.feedback ? escapeHtml(raw.feedback) : raw.feedback;
+    const prizeName = raw.prizeName ? escapeHtml(raw.prizeName) : raw.prizeName;
+    const contestName = raw.contestName ? escapeHtml(raw.contestName) : raw.contestName;
 
     let subject: string;
     let html: string;

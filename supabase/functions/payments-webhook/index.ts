@@ -7,6 +7,7 @@ import { type StripeEnv, verifyWebhook } from "../_shared/stripe.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { logLeadEvent } from "../_shared/leadEvents.ts";
 import { logAudit } from "../_shared/auditLog.ts";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
@@ -122,7 +123,7 @@ async function markContractPaid(session: any, env: StripeEnv) {
   )
     .map(
       (item) =>
-        `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${item.label}</td>
+        `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${escapeHtml(item.label)}</td>
          <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right">${((item.amount_cents ?? 0) / 100).toFixed(2)} ${currency}</td></tr>`,
     )
     .join("");
@@ -148,8 +149,8 @@ async function markContractPaid(session: any, env: StripeEnv) {
     subject: `✅ Contract semnat & plătit — ${(contract as any).owner_name}`,
     html: `<div style="font-family:system-ui,sans-serif;max-width:520px">
       <h2 style="color:#1a365d">Contract semnat & plătit</h2>
-      <p>Proprietar: <strong>${(contract as any).owner_name}</strong></p>
-      <p>Proprietate: ${(contract as any).property_address ?? "—"}</p>
+      <p>Proprietar: <strong>${escapeHtml((contract as any).owner_name)}</strong></p>
+      <p>Proprietate: ${escapeHtml((contract as any).property_address ?? "—")}</p>
       <p>Sumă încasată: <strong>${amount} ${currency}</strong> (${env})</p>
       <p>Cod acces portal proprietar: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px">${portalCode}</code></p>
       <p>Factură: <strong>${invoiceNumber}</strong></p>
@@ -167,7 +168,7 @@ async function markContractPaid(session: any, env: StripeEnv) {
       to: ownerEmail,
       subject: `Chitanță ${invoiceNumber} — ${amount} ${currency} | RealTrust Timișoara`,
       html: `<div style="font-family:system-ui,sans-serif;max-width:560px">
-        <h2 style="color:#1a365d">Mulțumim, ${(contract as any).owner_name}!</h2>
+        <h2 style="color:#1a365d">Mulțumim, ${escapeHtml((contract as any).owner_name)}!</h2>
         <p>Am primit plata de <strong>${amount} ${currency}</strong>. Mai jos ai chitanța detaliată.</p>
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin:12px 0">
           <tbody>
@@ -178,7 +179,7 @@ async function markContractPaid(session: any, env: StripeEnv) {
         </table>
         <p style="font-size:13px;color:#6b7280">Document fiscal: <strong>${invoiceNumber}</strong> · Data: ${new Date().toLocaleDateString("ro-RO")}</p>
         ${pdfLink ? `<p><a href="${pdfLink}" style="color:#1a365d;font-weight:600">Descarcă contractul semnat (PDF)</a> — link valabil 7 zile.</p>` : ""}
-        <p>Proprietatea ta din <strong>${(contract as any).property_address ?? "—"}</strong> intră acum în administrarea RealTrust.</p>
+        <p>Proprietatea ta din <strong>${escapeHtml((contract as any).property_address ?? "—")}</strong> intră acum în administrarea RealTrust.</p>
         <p>Codul tău de acces în portalul proprietarului este: <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:18px">${portalCode}</code></p>
         <p>Accesează portalul la: <a href="https://realtrust.ro/owner">realtrust.ro/owner</a></p>
         <p style="font-size:12px;color:#6b7280;margin-top:24px">Dacă ai întrebări, răspunde la acest email sau contactează-ne pe WhatsApp.</p>
