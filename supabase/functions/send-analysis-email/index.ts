@@ -79,6 +79,12 @@ Deno.serve(async (req) => {
   const row = Array.isArray(rows) ? rows[0] : null;
   if (!row) return json({ error: "not_found", message: "Analiza nu mai este disponibilă." }, 404);
 
+  // One delivery per analysis token: stops the endpoint being used as an
+  // open mailer for arbitrary recipients.
+  if (row.email_sent_at) {
+    return json({ error: "already_sent", message: "Analiza a fost deja trimisă pe e-mail." }, 409);
+  }
+
   const a = (row.analysis || {}) as Record<string, unknown>;
   const shareUrl = `${SITE}/analiza/${token}`;
   const expires = row.expires_at
