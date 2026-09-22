@@ -108,7 +108,7 @@ Scorează 0-100 în funcție de:
 
 Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
 
-    const GEMINI_MODEL = "gemini-2.5-flash";
+    const GEMINI_MODEL = "gemini-3.6-flash";
     const responseSchema = {
       type: "OBJECT",
       properties: {
@@ -209,7 +209,7 @@ Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
           urgency_level: urgencyLevel,
           reasoning: parsed.reasoning,
           recommended_pitch: parsed.recommended_pitch,
-          model: "google-direct/gemini-2.5-flash",
+          model: "google-direct/gemini-3.6-flash",
         },
         ai_scored_at: new Date().toISOString(),
       })

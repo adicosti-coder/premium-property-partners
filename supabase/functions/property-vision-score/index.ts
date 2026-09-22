@@ -27,7 +27,7 @@ const json = (body: unknown, status = 200) =>
   });
 
 // Multimodal model — direct Google Gemini API (GEMINI_API_KEY), no gateway.
-const VISION_MODEL = "gemini-2.5-flash";
+const VISION_MODEL = "gemini-3.6-flash";
 
 const DEFAULT_MAX_IMAGES = 5;
 const DEFAULT_AUTO_THRESHOLD = 70;
