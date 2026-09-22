@@ -21,7 +21,7 @@ export const ro = {
     title: "RealTrust Timișoara —",
     titleMid: "Imobiliare, Investiții",
     titleHighlight: "și Property Management",
-    subtitle: "Vânzări, cumpărări, închirieri pe termen lung și administrare apartamente în regim hotelier.\nSoluții complete pentru proprietari și investitori imobiliari.\nRandament net 9,4% — ocupare 75%.",
+    subtitle: "Vânzări, cumpărări, închirieri pe termen lung și administrare apartamente în regim hotelier.\nSoluții complete pentru proprietari și investitori imobiliari.\nRandament net estimat între 6,5% și 9,4% pe an, în funcție de ocupare, locație și amenajare.",
     cta: "Vezi cât produce apartamentul tău",
     ctaSecondary: "Vezi oportunitățile de investiție",
     ctaGuests: "Pentru oaspeți",
@@ -260,12 +260,12 @@ export const ro = {
       // Profit & ROI
       { 
         question: "Ce randament pot estima realist din apartamentul meu în Timișoara?", 
-        answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Pentru apartamentele administrate de noi (ATENEO, GREEN FOREST, Cross Square House, HELIOS) în zone precum Iulius Mall, Amazonia Aquapark sau Centrul Vechi, randamentul net țintit este 9,4%, calculat pe ipoteze publice (ocupare 75%). Cifra exactă pentru proprietatea ta o primești după evaluare." 
+        answer: "Estimările pleacă de la datele actuale de piață: tarif mediu pe noapte (ADR) în jur de 55€ și ocupare medie 65%. Proprietățile din portofoliul nostru atrag un randament net estimat între 6,5% și 9,4% pe an, în funcție de gradul de ocupare, locație și amenajare. Cifra exactă pentru proprietatea ta o primești după evaluare." 
       },
       // Transparență calcul randament
       {
-        question: "Cum se calculează concret randamentul net de 9,4%?",
-        answer: "Pornim de la venitul brut din cazare (tarif pe noapte × nopți ocupate, la o ocupare de 75%). Din acesta se scad costurile de operare (consumabile, lenjerie) și Property Management RealTrust, 15-20% din încasări. Taxa de curățenie nu te costă: este achitată separat de oaspeți la momentul rezervării. Abia după aceea se scad cheltuielile fixe (utilități, internet, întreținere) și comisionul nostru de administrare — de aceea 9,4% este venit curat (net), nu brut. Cifra finală pentru apartamentul tău se stabilește după evaluarea gratuită."
+        question: "Cum se calculează concret randamentul net estimat între 6,5% și 9,4%?",
+        answer: "Pornim de la venitul brut din cazare (tarif pe noapte × nopți ocupate). Din acesta se scad costurile de operare (consumabile, lenjerie) și Property Management RealTrust, 15-20% din încasări. Taxa de curățenie nu te costă: este achitată separat de oaspeți la momentul rezervării. Abia după aceea se scad cheltuielile fixe (utilități, internet, întreținere) — de aceea randamentul rezultat este venit curat (net), nu brut. Intervalul de 6,5%-9,4% pe an depinde de gradul de ocupare, locație și amenajare, iar cifra finală pentru apartamentul tău se stabilește după evaluarea gratuită."
       },
       // Servicii incluse
       { 
