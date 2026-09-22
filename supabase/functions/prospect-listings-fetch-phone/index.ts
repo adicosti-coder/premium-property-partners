@@ -9,11 +9,11 @@
 // a detailed audit note. Returns { success, found, phone, attempts, source }.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { requireAdmin } from "../_shared/adminAuth.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret, x-webhook-secret",
 };
 
 const PHONE_PATTERN = /(?:(?:\+|00)\s*40|0)\s*[237](?:[\s().\/-]*\d){8}\b/g;
@@ -201,8 +201,8 @@ async function tryExtract(url: string, apiKey: string, attempt: number): Promise
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const auth = await requireAdmin(req, corsHeaders);
-  if (!auth.ok) return auth.response!;
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   try {
     const { prospect_id, max_attempts } = await req.json().catch(() => ({}));

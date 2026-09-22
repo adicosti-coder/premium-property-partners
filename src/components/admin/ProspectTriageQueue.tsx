@@ -6,7 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, RefreshCw, CheckCircle2, AlertTriangle, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
+
+/** Normalizare telefon RO introdus manual → format internațional +40… */
+function normalizeRoPhone(raw: string): string | null {
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("0040")) digits = digits.slice(2);
+  if (/^40[237]\d{8}$/.test(digits)) return `+${digits}`;
+  if (/^0[237]\d{8}$/.test(digits)) return `+4${digits}`;
+  if (/^[237]\d{8}$/.test(digits)) return `+40${digits}`;
+  return null;
+}
 
 interface QualityAnalysis {
   quality_score?: number;
@@ -51,6 +62,39 @@ export default function ProspectTriageQueue() {
   const [loading, setLoading] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
   const [visionId, setVisionId] = useState<string | null>(null);
+  const [manualPhone, setManualPhone] = useState<Record<string, string>>({});
+  const [savingPhoneId, setSavingPhoneId] = useState<string | null>(null);
+
+  /** Telefon adăugat manual — deblochează pasul 3 (Contactează) pentru anunțurile fără număr. */
+  const saveManualPhone = async (row: TriageRow) => {
+    const raw = (manualPhone[row.id] || "").trim();
+    const normalized = normalizeRoPhone(raw);
+    if (!normalized) {
+      toast({
+        title: "Număr invalid",
+        description: "Scrie un număr de telefon românesc, ex: 0722 123 456.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSavingPhoneId(row.id);
+    try {
+      const { error } = await supabase
+        .from("prospect_listings")
+        .update({ contact_phone: normalized, phone_normalized: normalized, phone_source: "manual_admin" })
+        .eq("id", row.id);
+      if (error) throw error;
+      setRows(prev => prev.map(r => (r.id === row.id
+        ? { ...r, contact_phone: normalized, phone_normalized: normalized }
+        : r)));
+      setManualPhone(prev => ({ ...prev, [row.id]: "" }));
+      toast({ title: "Telefon salvat", description: `${normalized} — anunțul poate fi contactat.` });
+    } catch (e: any) {
+      toast({ title: "Eroare salvare telefon", description: e.message ?? String(e), variant: "destructive" });
+    } finally {
+      setSavingPhoneId(null);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -229,6 +273,39 @@ export default function ProspectTriageQueue() {
                           </a>
                         )}
                       </div>
+                      {!row.contact_phone && !row.phone_normalized && (
+                        <div className="mt-2 rounded-md border border-dashed p-2">
+                          <label
+                            htmlFor={`manual-phone-${row.id}`}
+                            className="text-xs text-muted-foreground"
+                          >
+                            Anunțul nu are telefon — adaugă-l manual ca să poți trimite mesajul
+                          </label>
+                          <div className="flex gap-2 mt-1">
+                            <Input
+                              id={`manual-phone-${row.id}`}
+                              inputMode="tel"
+                              placeholder="ex: 0722 123 456"
+                              value={manualPhone[row.id] || ""}
+                              onChange={e => setManualPhone(prev => ({ ...prev, [row.id]: e.target.value }))}
+                              onKeyDown={e => { if (e.key === "Enter") void saveManualPhone(row); }}
+                              className="h-10"
+                            />
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="h-10"
+                              onClick={() => saveManualPhone(row)}
+                              disabled={savingPhoneId === row.id}
+                              aria-label="Salvează telefonul adăugat manual"
+                            >
+                              {savingPhoneId === row.id
+                                ? <Loader2 className="h-4 w-4 animate-spin" />
+                                : "Salvează"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex sm:flex-col gap-2 shrink-0">
                       <Button

@@ -5835,6 +5835,33 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_auto_verify_state: {
+        Row: {
+          id: number
+          last_run_at: string | null
+          lease_until: string | null
+          pause_reason: string | null
+          paused: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          last_run_at?: string | null
+          lease_until?: string | null
+          pause_reason?: string | null
+          paused?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          last_run_at?: string | null
+          lease_until?: string | null
+          pause_reason?: string | null
+          paused?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       prospect_listings: {
         Row: {
           admin_notes: string | null
@@ -5847,6 +5874,9 @@ export type Database = {
           auto_blacklist_reason: string | null
           auto_blacklisted_at: string | null
           auto_call_triggered_at: string | null
+          auto_verify_attempts: number
+          auto_verify_last_at: string | null
+          auto_verify_status: string | null
           call_summary: string | null
           callback_attempts: number
           campaign_run_id: string | null
@@ -5898,6 +5928,7 @@ export type Database = {
           persona_generated_at: string | null
           persona_snapshot: Json | null
           phone_normalized: string | null
+          phone_source: string | null
           pre_campaign_status: string | null
           predictive_score: number | null
           price: number | null
@@ -5947,6 +5978,9 @@ export type Database = {
           auto_blacklist_reason?: string | null
           auto_blacklisted_at?: string | null
           auto_call_triggered_at?: string | null
+          auto_verify_attempts?: number
+          auto_verify_last_at?: string | null
+          auto_verify_status?: string | null
           call_summary?: string | null
           callback_attempts?: number
           campaign_run_id?: string | null
@@ -5998,6 +6032,7 @@ export type Database = {
           persona_generated_at?: string | null
           persona_snapshot?: Json | null
           phone_normalized?: string | null
+          phone_source?: string | null
           pre_campaign_status?: string | null
           predictive_score?: number | null
           price?: number | null
@@ -6047,6 +6082,9 @@ export type Database = {
           auto_blacklist_reason?: string | null
           auto_blacklisted_at?: string | null
           auto_call_triggered_at?: string | null
+          auto_verify_attempts?: number
+          auto_verify_last_at?: string | null
+          auto_verify_status?: string | null
           call_summary?: string | null
           callback_attempts?: number
           campaign_run_id?: string | null
@@ -6098,6 +6136,7 @@ export type Database = {
           persona_generated_at?: string | null
           persona_snapshot?: Json | null
           phone_normalized?: string | null
+          phone_source?: string | null
           pre_campaign_status?: string | null
           predictive_score?: number | null
           price?: number | null
