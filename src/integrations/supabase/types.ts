@@ -4023,6 +4023,7 @@ export type Database = {
           created_by: string | null
           currency: string
           duration_months: number | null
+          email: string | null
           id: string
           message: string
           next_reminder_at: string | null
@@ -4042,6 +4043,7 @@ export type Database = {
           created_by?: string | null
           currency?: string
           duration_months?: number | null
+          email?: string | null
           id?: string
           message: string
           next_reminder_at?: string | null
@@ -4061,6 +4063,7 @@ export type Database = {
           created_by?: string | null
           currency?: string
           duration_months?: number | null
+          email?: string | null
           id?: string
           message?: string
           next_reminder_at?: string | null
@@ -5849,6 +5852,7 @@ export type Database = {
           campaign_run_id: string | null
           category: Database["public"]["Enums"]["offer_category"] | null
           consecutive_failures: number
+          contact_email: string | null
           contact_name: string | null
           contact_phone: string | null
           conversion_probability: number | null
@@ -5920,6 +5924,7 @@ export type Database = {
           size: number | null
           source_platform: string
           source_url: string
+          stale_alerted_at: string | null
           status: string | null
           tags: string[]
           title: string | null
@@ -5947,6 +5952,7 @@ export type Database = {
           campaign_run_id?: string | null
           category?: Database["public"]["Enums"]["offer_category"] | null
           consecutive_failures?: number
+          contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           conversion_probability?: number | null
@@ -6018,6 +6024,7 @@ export type Database = {
           size?: number | null
           source_platform: string
           source_url: string
+          stale_alerted_at?: string | null
           status?: string | null
           tags?: string[]
           title?: string | null
@@ -6045,6 +6052,7 @@ export type Database = {
           campaign_run_id?: string | null
           category?: Database["public"]["Enums"]["offer_category"] | null
           consecutive_failures?: number
+          contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           conversion_probability?: number | null
@@ -6116,6 +6124,7 @@ export type Database = {
           size?: number | null
           source_platform?: string
           source_url?: string
+          stale_alerted_at?: string | null
           status?: string | null
           tags?: string[]
           title?: string | null

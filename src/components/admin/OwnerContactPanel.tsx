@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, MessageCircle, Smartphone, Copy, RefreshCw, ExternalLink, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { Loader2, MessageCircle, Smartphone, Copy, RefreshCw, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
 import { hasAgencyEvidence, isIndividualOwnerListing, isResidentialRealEstate } from "@/lib/ownerListingRules";
@@ -46,6 +46,7 @@ interface Prospect {
   source_url: string | null;
   description: string | null;
   prospect_type: string | null;
+  contact_email: string | null;
   created_at: string | null;
 }
 
@@ -88,7 +89,7 @@ export default function OwnerContactPanel() {
       const { data: rows, error } = await supabase
         .from("prospect_listings")
         .select(
-          "id, title, description, zone, rooms, price, currency, contact_name, contact_phone, phone_normalized, prospect_type, source_platform, lead_score, lifecycle_status, source_url, created_at",
+          "id, title, description, zone, rooms, price, currency, contact_name, contact_phone, phone_normalized, contact_email, prospect_type, source_platform, lead_score, lifecycle_status, source_url, created_at",
         )
         .eq("is_active", true)
         .eq("do_not_call", false)
@@ -203,6 +204,40 @@ export default function OwnerContactPanel() {
       refetch();
     } catch (err) {
       toast.error(`Mesajul s-a deschis, dar nu a fost salvat: ${(err as Error).message}`);
+    } finally {
+      setSending(null);
+    }
+  };
+
+  /** Canal alternativ: trimite același mesaj pe e-mail, prin info@realtrust.ro. */
+  const sendEmail = async (p: Prospect) => {
+    const email = (p.contact_email || "").trim();
+    if (!email) {
+      toast.error("Anunțul nu are adresă de e-mail.");
+      return;
+    }
+    const draft = draftOf(p);
+    setSending(p.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("owner-outreach-email", {
+        body: {
+          prospect_listing_id: p.id,
+          email,
+          message: draft.message.trim(),
+          offer_price: draft.offerPrice ? Number(draft.offerPrice) : null,
+          duration_months: draft.duration ? Number(draft.duration) : 12,
+          template_key: draft.templateKey,
+        },
+      });
+      if (error) throw error;
+      if ((data as { ok?: boolean })?.ok === false) {
+        throw new Error((data as { error?: string })?.error || "Trimiterea a eșuat");
+      }
+      toast.success(`E-mail trimis către ${email}. Memento programat la 24h.`);
+      queryClient.invalidateQueries({ queryKey: ["owner-followup-reminders"] });
+      refetch();
+    } catch (err) {
+      toast.error(`E-mailul nu a plecat: ${(err as Error).message}`);
     } finally {
       setSending(null);
     }
@@ -335,6 +370,17 @@ export default function OwnerContactPanel() {
                     >
                       <Smartphone className="mr-2 h-4 w-4" /> SMS
                     </Button>
+                    {p.contact_email && (
+                      <Button
+                        variant="outline"
+                        onClick={() => sendEmail(p)}
+                        disabled={sending === p.id}
+                        className="min-h-[48px] flex-1 sm:flex-none"
+                        aria-label="Trimite mesajul pe e-mail"
+                      >
+                        <Mail className="mr-2 h-4 w-4" /> E-mail
+                      </Button>
+                    )}
                     <Button variant="outline" onClick={() => copyMessage(p)} className="min-h-[48px]" aria-label="Copiază mesajul">
                       <Copy className="mr-2 h-4 w-4" /> Copiază
                     </Button>

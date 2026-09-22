@@ -1998,7 +1998,7 @@ function extractFromMarkdown(markdown: string, title: string, url: string): {
   title: string; description: string | null; price: number | null; currency: string;
   location: string | null; size: number | null; rooms: number | null;
   floor: string | null; yearBuilt: number | null; features: string[];
-  contactPhone: string | null; contactName: string | null; images: string[];
+  contactPhone: string | null; contactEmail: string | null; contactName: string | null; images: string[];
 } {
   const text = markdown || '';
   
@@ -2073,6 +2073,13 @@ function extractFromMarkdown(markdown: string, title: string, url: string): {
 
   // Contact — scan the whole scraped body, not only explicit "telefon:" labels.
   const contactPhone = extractPhonesFromText(text)[0] ?? null;
+  // E-mailul proprietarului (canal alternativ la WhatsApp). Ignorăm adresele
+  // portalului/agenției, care nu duc la proprietar.
+  const emailMatch = text.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi) ?? [];
+  const contactEmail = emailMatch
+    .map((e) => e.toLowerCase())
+    .find((e) => !/(olx|storia|imobiliare|publi24|homezz|anuntul|bursaimobiliara|facebook|google|noreply|no-reply|support|sentry)/.test(e))
+    ?? null;
 
   // Images from markdown
   const images: string[] = [];
@@ -2094,7 +2101,7 @@ function extractFromMarkdown(markdown: string, title: string, url: string): {
     title: title || titleFromListingUrl(url) || 'Anunț fără titlu',
     description: desc,
     price, currency, location, size, rooms, floor, yearBuilt,
-    features, contactPhone, contactName: null, images,
+    features, contactPhone, contactEmail, contactName: null, images,
   };
 }
 
@@ -2141,6 +2148,8 @@ Deno.serve(async (req) => {
     let autoFallbackThreshold = 1; // min URLs to consider "enough" — below this, escalate to Firecrawl
     let hydratePhones = false;
     let customPlatform: string | null = null;
+    // Filtru opțional pe portaluri (ex. cronul zilnic pe OLX/Storia/Publi24/Homezz).
+    let platformFilter: string[] | null = null;
     try {
       const body = await req.json();
       if (body?.max_results) maxResults = Math.min(body.max_results, 30);
@@ -2172,6 +2181,13 @@ Deno.serve(async (req) => {
         autoFallbackThreshold = Math.min(Math.max(0, Math.floor(body.auto_fallback_threshold)), 20);
       }
       hydratePhones = body?.hydrate_phones === true;
+      if (Array.isArray(body?.platforms)) {
+        const wanted = body.platforms
+          .filter((x: unknown) => typeof x === 'string')
+          .map((x: string) => x.toLowerCase().replace(/^www\./, '').trim())
+          .filter(Boolean);
+        if (wanted.length > 0) platformFilter = wanted;
+      }
     } catch { /* no body */ }
 
 
@@ -2336,6 +2352,21 @@ Deno.serve(async (req) => {
             ownerFilters: (k.owner_filters && typeof k.owner_filters === 'object') ? k.owner_filters : undefined,
           }))
         : DEFAULT_SEARCH_QUERIES.map((q) => ({ ...q, originalKeyword: q.query }));
+    }
+
+    if (platformFilter && !retryBatches && !customQuery) {
+      const before = queries.length;
+      const matches = (platform: string) => {
+        const p = (platform || '').toLowerCase();
+        return platformFilter!.some((w) => p.includes(w) || w.includes(p) || p.includes(w.split('.')[0]));
+      };
+      const filtered = queries.filter((q) => matches(q.platform));
+      if (filtered.length > 0) {
+        queries = filtered;
+        console.log(`🎯 Platform filter [${platformFilter.join(', ')}]: ${before} → ${queries.length} queries`);
+      } else {
+        console.warn(`Platform filter [${platformFilter.join(', ')}] matched no keywords — running unfiltered.`);
+      }
     }
 
     if (!retryBatches) {
@@ -2862,6 +2893,7 @@ Deno.serve(async (req) => {
                 images: extracted.images,
                 contact_name: extracted.contactName,
                 contact_phone: extracted.contactPhone,
+                contact_email: extracted.contactEmail,
                 phone_normalized: normalizeRoPhone(extracted.contactPhone),
                 score,
                 lead_score: score,
@@ -2952,6 +2984,9 @@ Deno.serve(async (req) => {
                 // Only fill a missing phone — never overwrite a verified one.
                 if (!existingRow.phone_normalized && refreshedPhone) {
                   patch.contact_phone = extracted.contactPhone;
+                  if (extracted.contactEmail && !(existingRow as { contact_email?: string | null }).contact_email) {
+                    patch.contact_email = extracted.contactEmail;
+                  }
                   patch.phone_normalized = refreshedPhone;
                   if (extracted.contactName) patch.contact_name = extracted.contactName;
                 }
