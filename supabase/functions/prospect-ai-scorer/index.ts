@@ -151,12 +151,18 @@ Returnează prin tool calling.`;
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (aiRes.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required - add credits to Lovable AI workspace" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (aiRes.status === 402 || aiRes.status === 403) {
+        let reason = "Creditele AI ale workspace-ului sunt epuizate sau limita AI este atinsă. Scorarea AI este pusă pe pauză până la alimentarea creditelor.";
+        try {
+          const parsedErr = JSON.parse(txt);
+          if (parsedErr?.error?.message || parsedErr?.message) reason = parsedErr.error?.message ?? parsedErr.message;
+        } catch { /* keep default message */ }
+        return new Response(
+          JSON.stringify({ error: reason, code: "ai_credits_unavailable", retryable: false, paused: true }),
+          { status: aiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
-      throw new Error(`AI gateway ${aiRes.status}`);
+      throw new Error(`AI gateway ${aiRes.status}: ${txt.slice(0, 300)}`);
     }
 
     const aiData = await aiRes.json();
