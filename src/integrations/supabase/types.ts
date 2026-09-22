@@ -4025,9 +4025,15 @@ export type Database = {
           duration_months: number | null
           id: string
           message: string
+          next_reminder_at: string | null
           offer_price: number | null
+          phone_normalized: string | null
           prospect_listing_id: string
+          reminder_stage: number
+          replied_at: string | null
+          sent_at: string | null
           status: string
+          template_key: string | null
           updated_at: string
         }
         Insert: {
@@ -4038,9 +4044,15 @@ export type Database = {
           duration_months?: number | null
           id?: string
           message: string
+          next_reminder_at?: string | null
           offer_price?: number | null
+          phone_normalized?: string | null
           prospect_listing_id: string
+          reminder_stage?: number
+          replied_at?: string | null
+          sent_at?: string | null
           status?: string
+          template_key?: string | null
           updated_at?: string
         }
         Update: {
@@ -4051,9 +4063,15 @@ export type Database = {
           duration_months?: number | null
           id?: string
           message?: string
+          next_reminder_at?: string | null
           offer_price?: number | null
+          phone_normalized?: string | null
           prospect_listing_id?: string
+          reminder_stage?: number
+          replied_at?: string | null
+          sent_at?: string | null
           status?: string
+          template_key?: string | null
           updated_at?: string
         }
         Relationships: [
