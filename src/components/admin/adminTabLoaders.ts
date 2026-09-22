@@ -10,6 +10,8 @@ type Loader = () => Promise<{ default: ComponentType<unknown> }>;
 
 const loaders: Record<string, Loader> = {
   dashboard: () => import("@/components/admin/AdminDashboard"),
+  astazi: () => import("@/components/admin/DailyCommandCenter"),
+  "flux-proprietari": () => import("@/components/admin/OwnerFlowWorkspace"),
   "ai-cache": () => import("@/components/admin/AICacheManager"),
   leads: () => import("@/components/admin/LeadsManager"),
   contracts: () => import("@/components/admin/ContractManager"),

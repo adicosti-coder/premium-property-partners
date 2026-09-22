@@ -33,6 +33,33 @@ export interface AdminGroup {
 
 export const ADMIN_GROUPS: AdminGroup[] = [
   {
+    id: "flux",
+    label: "Flux zilnic",
+    icon: Zap,
+    items: [
+      {
+        value: "astazi",
+        label: "Astăzi",
+        icon: LayoutDashboard,
+        keywords: [
+          "astazi", "astăzi", "azi", "start", "acum", "prioritati", "priorități",
+          "de facut", "de făcut", "centru", "comanda", "comandă", "sumar", "urgent",
+        ],
+      },
+      {
+        value: "flux-proprietari",
+        label: "Flux proprietari",
+        icon: Radar,
+        badgeKey: "hotProspects",
+        keywords: [
+          "flux", "proprietari", "cauta", "caută", "verifica", "verifică", "aproba",
+          "contact", "oferta", "ofertă", "whatsapp", "pipeline", "pasi", "pași",
+          "anunturi", "anunțuri", "triere", "scadere pret",
+        ],
+      },
+    ],
+  },
+  {
     id: "operational",
     label: "Operațional",
     icon: Zap,
