@@ -1,7 +1,7 @@
 // Trimite mesajul de colaborare direct pe e-mail proprietarului, ca alternativă
 // la WhatsApp/SMS. Expeditorul este info@realtrust.ro (singurul domeniu verificat).
 // Salvează trimiterea în `owner_outreach_messages` și programează mementoul la 24h.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 

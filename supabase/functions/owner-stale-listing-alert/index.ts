@@ -1,7 +1,7 @@
 // Alertă zilnică: anunțuri de proprietari (OLX și celelalte portaluri) care sunt
 // online de peste o lună. Proprietarul e deja obosit de anunț — e cel mai bun
 // moment de contactat. Fiecare anunț e alertat o singură dată.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 
