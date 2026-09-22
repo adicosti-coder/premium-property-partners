@@ -1998,7 +1998,7 @@ function extractFromMarkdown(markdown: string, title: string, url: string): {
   title: string; description: string | null; price: number | null; currency: string;
   location: string | null; size: number | null; rooms: number | null;
   floor: string | null; yearBuilt: number | null; features: string[];
-  contactPhone: string | null; contactName: string | null; images: string[];
+  contactPhone: string | null; contactEmail: string | null; contactName: string | null; images: string[];
 } {
   const text = markdown || '';
   
@@ -2073,6 +2073,13 @@ function extractFromMarkdown(markdown: string, title: string, url: string): {
 
   // Contact — scan the whole scraped body, not only explicit "telefon:" labels.
   const contactPhone = extractPhonesFromText(text)[0] ?? null;
+  // E-mailul proprietarului (canal alternativ la WhatsApp). Ignorăm adresele
+  // portalului/agenției, care nu duc la proprietar.
+  const emailMatch = text.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi) ?? [];
+  const contactEmail = emailMatch
+    .map((e) => e.toLowerCase())
+    .find((e) => !/(olx|storia|imobiliare|publi24|homezz|anuntul|bursaimobiliara|facebook|google|noreply|no-reply|support|sentry)/.test(e))
+    ?? null;
 
   // Images from markdown
   const images: string[] = [];
@@ -2094,7 +2101,7 @@ function extractFromMarkdown(markdown: string, title: string, url: string): {
     title: title || titleFromListingUrl(url) || 'Anunț fără titlu',
     description: desc,
     price, currency, location, size, rooms, floor, yearBuilt,
-    features, contactPhone, contactName: null, images,
+    features, contactPhone, contactEmail, contactName: null, images,
   };
 }
 
@@ -2862,6 +2869,7 @@ Deno.serve(async (req) => {
                 images: extracted.images,
                 contact_name: extracted.contactName,
                 contact_phone: extracted.contactPhone,
+                contact_email: extracted.contactEmail,
                 phone_normalized: normalizeRoPhone(extracted.contactPhone),
                 score,
                 lead_score: score,
@@ -2952,6 +2960,9 @@ Deno.serve(async (req) => {
                 // Only fill a missing phone — never overwrite a verified one.
                 if (!existingRow.phone_normalized && refreshedPhone) {
                   patch.contact_phone = extracted.contactPhone;
+                  if (extracted.contactEmail && !existingRow.contact_email) {
+                    patch.contact_email = extracted.contactEmail;
+                  }
                   patch.phone_normalized = refreshedPhone;
                   if (extracted.contactName) patch.contact_name = extracted.contactName;
                 }
