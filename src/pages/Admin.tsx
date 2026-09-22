@@ -42,7 +42,7 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [cmdOpen, setCmdOpen] = useState(false);
 
-  const initialTab = normalizeAdminTab(adminTab) || normalizeAdminTab(searchParams.get("tab")) || "dashboard";
+  const initialTab = normalizeAdminTab(adminTab) || normalizeAdminTab(searchParams.get("tab")) || "astazi";
   const [activeTab, setActiveTab] = useState(initialTab);
 
   const { isAdmin, isLoading: isAdminLoading } = useAdminRole(user);
@@ -164,7 +164,7 @@ const Admin = () => {
       navigate(tab.externalRoute);
       return;
     }
-    navigate(value === "dashboard" ? "/admin" : `/admin/${value}`);
+    navigate(value === "astazi" ? "/admin" : `/admin/${value}`);
     setActiveTab(value);
   }, [navigate]);
 
@@ -244,7 +244,7 @@ const Admin = () => {
                   <div className="ml-auto flex items-center gap-2">
                     <Button
                       size="sm"
-                      onClick={() => handleSelectTab("owner-search")}
+                      onClick={() => handleSelectTab("flux-proprietari")}
                       className="h-9 gap-1.5 bg-amber-500 text-white hover:bg-amber-600"
                       aria-label="Caută anunțuri de la proprietari"
                     >
