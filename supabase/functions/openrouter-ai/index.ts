@@ -65,8 +65,8 @@ Deno.serve(async (req) => {
     const model = rawModel && ALLOWED_MODELS.has(rawModel) ? rawModel : DEFAULT_MODEL;
 
     const finalSystem = jsonMode
-      ? `${systemPrompt ? systemPrompt + "\n\n" : ""}Răspunde DOAR cu JSON valid, fără text în afara obiectului JSON și fără code fences.`
-      : systemPrompt;
+      ? `${safeSystemPrompt ? safeSystemPrompt + "\n\n" : ""}Răspunde DOAR cu JSON valid, fără text în afara obiectului JSON și fără code fences.`
+      : safeSystemPrompt;
 
     const messages = [
       ...(finalSystem ? [{ role: "system", content: finalSystem }] : []),
