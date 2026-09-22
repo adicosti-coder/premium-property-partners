@@ -79,14 +79,14 @@ export default function DailyCommandCenter() {
           .eq("status", "failed")),
         headCount(() => supabase.from("prospect_price_drop_alerts")
           .select("*", { count: "exact", head: true })
-          .gte("created_at", since(24))),
+          .gte("alerted_at", since(24))),
         headCount(() => supabase.from("prospect_listings")
           .select("*", { count: "exact", head: true })
           .eq("is_active", true)
           .lt("last_seen_at", since(21 * 24))),
         headCount(() => supabase.from("automation_anomalies")
           .select("*", { count: "exact", head: true })
-          .is("resolved_at", null)),
+          .is("acknowledged_at", null)),
       ]);
       return { toVerify, hot, newToday, outreachPending, waPending, waFailed, priceDrops, expiringSoon, anomalies };
     },
