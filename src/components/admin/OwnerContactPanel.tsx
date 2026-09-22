@@ -92,9 +92,11 @@ export default function OwnerContactPanel() {
         .eq("is_active", true)
         .eq("do_not_call", false)
         .in("lifecycle_status", ["new", "interested", "callback", "to_review"])
+        // Doar cei cu telefon — altfel primele 60 după scor pot fi toate fără număr.
+        .or("phone_normalized.not.is.null,contact_phone.not.is.null")
         .order("lead_score", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
-        .limit(60);
+        .limit(150);
       if (error) throw error;
 
       const eligible = (rows ?? []).filter((r) => {
