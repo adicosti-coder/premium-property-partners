@@ -456,6 +456,13 @@
       "when": 1790091728013,
       "tag": "0064_owner_email_and_stale_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1790095861984,
+      "tag": "0065_tighten_public_select_policies",
+      "breakpoints": true
     }
   ]
 }
