@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
