@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -119,10 +120,10 @@ Deno.serve(async (req) => {
             );
             return `
               <tr style="border-bottom: 1px solid #e5e7eb;">
-                <td style="padding: 12px; font-weight: 500;">${ref.owner_name}</td>
-                <td style="padding: 12px;">${ref.owner_phone}</td>
-                <td style="padding: 12px;">${ref.property_location || "-"}</td>
-                <td style="padding: 12px;">${ref.referrer_name}</td>
+                <td style="padding: 12px; font-weight: 500;">${escapeHtml(ref.owner_name)}</td>
+                <td style="padding: 12px;">${escapeHtml(ref.owner_phone)}</td>
+                <td style="padding: 12px;">${escapeHtml(ref.property_location || "-")}</td>
+                <td style="padding: 12px;">${escapeHtml(ref.referrer_name)}</td>
                 <td style="padding: 12px; color: #dc2626; font-weight: 500;">${hoursAgo}h</td>
               </tr>
             `;

@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
       const digits = ownerPhone.replace(/[^\d]/g, "").slice(-9);
       let q = admin
         .from("leads")
-        .select("id")
+        .select("id, report_pdf_path")
         .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order("created_at", { ascending: false })
         .limit(1);
@@ -134,10 +134,15 @@ Deno.serve(async (req) => {
 
       const { data: leadRow } = await q.maybeSingle();
       if (leadRow?.id) {
-        await admin
-          .from("leads")
-          .update({ report_pdf_path: path, report_delivered_at: new Date().toISOString() })
-          .eq("id", leadRow.id);
+        // Never overwrite an already delivered report: a caller who guesses a
+        // phone/email must not be able to replace someone else's document.
+        if (!(leadRow as any).report_pdf_path) {
+          await admin
+            .from("leads")
+            .update({ report_pdf_path: path, report_delivered_at: new Date().toISOString() })
+            .eq("id", leadRow.id)
+            .is("report_pdf_path", null);
+        }
 
         await logLeadEvent({
           leadId: leadRow.id,

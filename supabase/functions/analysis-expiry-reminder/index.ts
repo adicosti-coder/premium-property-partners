@@ -2,6 +2,7 @@
 // Invoked by pg_cron (daily). Idempotent via property_analyses.expiry_notified_at.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,9 @@ const num = (v: unknown, suffix = "") =>
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
 
   const SB_URL = Deno.env.get("SUPABASE_URL");
   const SB_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");

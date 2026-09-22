@@ -110,9 +110,12 @@ export const exportPoiFavoritesPdf = async ({ title, pois, language, labels, cat
 // Generate a short random code
 const generateShareCode = (): string => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  // Cryptographically secure: share codes must not be guessable.
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
   let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < bytes.length; i++) {
+    code += chars.charAt(bytes[i] % chars.length);
   }
   return code;
 };

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -149,20 +150,37 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { userId, email, fullName }: WelcomeEmailRequest = await req.json();
+    const body = (await req.json().catch(() => ({}))) as WelcomeEmailRequest;
 
-    if (!email) {
-      throw new Error("Email is required");
+    // The recipient is always the authenticated caller — never a body value.
+    const supabaseUrlAuth = Deno.env.get("SUPABASE_URL")!;
+    const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      return new Response(JSON.stringify({ error: "Auth required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
-
-    console.log(`Sending welcome email to: ${email}`);
+    const authClient = createClient(supabaseUrlAuth, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: userData, error: userErr } = await authClient.auth.getUser(token);
+    if (userErr || !userData?.user?.email) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const email = userData.user.email;
+    const userId = userData.user.id;
+    const fullName = typeof body?.fullName === "string" ? body.fullName.slice(0, 120) : "";
 
     // Send welcome email
     const emailResponse = await resend.emails.send({
       from: "RealTrust <info@realtrust.ro>",
       to: [email],
       subject: "🎉 Bine ai venit la RealTrust & ApArt Hotel!",
-      html: getWelcomeEmailHtml(fullName || "", "ro"),
+      html: getWelcomeEmailHtml(escapeHtml(fullName), "ro"),
     });
 
     console.log("Welcome email sent successfully:", emailResponse);
@@ -189,7 +207,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in send-welcome-email function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Internal error" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -382,6 +384,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const auth = await requireAdmin(req, corsHeaders);
+  if (!auth.ok) return auth.response!;
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -390,7 +395,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const data: ReferralNotificationRequest = await req.json();
+    const rawData: ReferralNotificationRequest = await req.json();
+    // Escape every free-text field before it reaches the email templates.
+    const data: ReferralNotificationRequest = {
+      ...rawData,
+      referrerName: escapeHtml(rawData.referrerName),
+      ownerName: escapeHtml(rawData.ownerName),
+      propertyLocation: rawData.propertyLocation ? escapeHtml(rawData.propertyLocation) : rawData.propertyLocation,
+      rewardPropertyName: rawData.rewardPropertyName ? escapeHtml(rawData.rewardPropertyName) : rawData.rewardPropertyName,
+    };
     
     console.log("Received referral notification request:", {
       referrerEmail: data.referrerEmail,

@@ -2,6 +2,7 @@ import { requireAdmin } from "../_shared/adminAuth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -91,10 +92,10 @@ async function sendEmailNotification(
 
     const formatLeadRow = (lead: Lead, isOverdue: boolean) => `
       <tr style="border-bottom: 1px solid #e5e7eb;">
-        <td style="padding: 12px; ${isOverdue ? 'color: #dc2626;' : ''}">${lead.name}</td>
-        <td style="padding: 12px;">${lead.whatsapp_number}</td>
-        <td style="padding: 12px;">${lead.email || 'N/A'}</td>
-        <td style="padding: 12px;">${lead.property_type}</td>
+        <td style="padding: 12px; ${isOverdue ? 'color: #dc2626;' : ''}">${escapeHtml(lead.name)}</td>
+        <td style="padding: 12px;">${escapeHtml(lead.whatsapp_number)}</td>
+        <td style="padding: 12px;">${escapeHtml(lead.email || 'N/A')}</td>
+        <td style="padding: 12px;">${escapeHtml(lead.property_type)}</td>
         <td style="padding: 12px; ${isOverdue ? 'color: #dc2626; font-weight: 600;' : ''}">${new Date(lead.follow_up_date).toLocaleString('ro-RO', { dateStyle: 'short', timeStyle: 'short' })}</td>
       </tr>
     `;
@@ -301,10 +302,10 @@ serve(async (req) => {
       const isOverdue = followUpDate < new Date(todayStart);
       
       const notificationTitle = isOverdue 
-        ? `⚠️ Follow-up întârziat: ${lead.name}`
-        : `📅 Follow-up astăzi: ${lead.name}`;
+        ? `⚠️ Follow-up întârziat: ${escapeHtml(lead.name)}`
+        : `📅 Follow-up astăzi: ${escapeHtml(lead.name)}`;
       
-      const notificationBody = `Lead: ${lead.name} | Tel: ${lead.whatsapp_number} | Tip: ${lead.property_type}`;
+      const notificationBody = `Lead: ${escapeHtml(lead.name)} | Tel: ${escapeHtml(lead.whatsapp_number)} | Tip: ${escapeHtml(lead.property_type)}`;
 
       // Send Slack notification if webhook is configured
       if (slackWebhookUrl) {
@@ -325,19 +326,19 @@ serve(async (req) => {
                 fields: [
                   {
                     type: "mrkdwn",
-                    text: `*Nume:*\n${lead.name}`
+                    text: `*Nume:*\n${escapeHtml(lead.name)}`
                   },
                   {
                     type: "mrkdwn",
-                    text: `*Telefon:*\n${lead.whatsapp_number}`
+                    text: `*Telefon:*\n${escapeHtml(lead.whatsapp_number)}`
                   },
                   {
                     type: "mrkdwn",
-                    text: `*Tip proprietate:*\n${lead.property_type}`
+                    text: `*Tip proprietate:*\n${escapeHtml(lead.property_type)}`
                   },
                   {
                     type: "mrkdwn",
-                    text: `*Email:*\n${lead.email || 'N/A'}`
+                    text: `*Email:*\n${escapeHtml(lead.email || 'N/A')}`
                   }
                 ]
               },
@@ -359,7 +360,7 @@ serve(async (req) => {
             body: JSON.stringify(slackMessage),
           });
 
-          console.log(`Slack notification sent for lead: ${lead.name}`);
+          console.log(`Slack notification sent for lead: ${escapeHtml(lead.name)}`);
           notificationsSent++;
         } catch (slackError) {
           console.error('Error sending Slack notification:', slackError);

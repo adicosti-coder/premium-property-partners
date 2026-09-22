@@ -67,7 +67,24 @@ Deno.serve(async (req) => {
     const environment: StripeEnv = body?.environment === "live" ? "live" : "sandbox";
     const returnUrl = typeof body?.returnUrl === "string" ? body.returnUrl : "";
     if (!/^[a-f0-9]{32,64}$/i.test(token)) return json({ error: "Token invalid" }, 400);
-    if (!/^https?:\/\//.test(returnUrl)) return json({ error: "returnUrl invalid" }, 400);
+    // Only our own hosts may receive the Stripe redirect (open-redirect guard).
+    const ALLOWED_RETURN_HOSTS = [
+      "realtrust.ro",
+      "www.realtrust.ro",
+      "realtrust-aparthotel.lovable.app",
+    ];
+    let safeReturnUrl = "";
+    try {
+      const parsed = new URL(returnUrl);
+      const host = parsed.hostname.toLowerCase();
+      const allowed =
+        parsed.protocol === "https:" &&
+        (ALLOWED_RETURN_HOSTS.includes(host) || host.endsWith(".lovable.app"));
+      if (allowed) safeReturnUrl = parsed.toString();
+    } catch {
+      safeReturnUrl = "";
+    }
+    if (!safeReturnUrl) return json({ error: "returnUrl invalid" }, 400);
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -134,7 +151,7 @@ Deno.serve(async (req) => {
       line_items: stripeLineItems,
       mode: "payment",
       ui_mode: "embedded_page",
-      return_url: returnUrl,
+      return_url: safeReturnUrl,
       ...(customerId ? { customer: customerId } : {}),
       payment_intent_data: {
         description: "Taxă onboarding administrare RealTrust",

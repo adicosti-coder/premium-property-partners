@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -142,7 +143,7 @@ Deno.serve(async (req: Request) => {
   let emailed = false;
   if (created.length > 0 && emailEnabled) {
     const rows = created
-      .map((c) => `<tr><td>${c.alert_type}</td><td>${c.title}</td></tr>`)
+      .map((c) => `<tr><td>${escapeHtml(c.alert_type)}</td><td>${escapeHtml(c.title)}</td></tr>`)
       .join("");
     const res = await sendTeamEmail(
       {

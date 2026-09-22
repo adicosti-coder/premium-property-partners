@@ -8,6 +8,8 @@ const corsHeaders = {
 };
 
 import { signTrackingPayload } from "../_shared/trackingToken.ts";
+import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 // Generate tracked URL with UTM parameters
 function getTrackedUrl(
@@ -244,6 +246,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const denied = await requireInternalOrAdmin(req, corsHeaders);
+  if (denied) return denied;
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -351,7 +356,7 @@ serve(async (req) => {
         continue;
       }
 
-      const firstName = profile.full_name?.split(" ")[0] || "Salut";
+      const firstName = escapeHtml(profile.full_name?.split(" ")[0] || "Salut");
       const netWithSystem = Number(simulation.net_with_system) || 0;
       const diffVsClassic = Number(simulation.diff_vs_classic) || 0;
       const percentVsClassic = Number(simulation.percent_vs_classic) || 0;

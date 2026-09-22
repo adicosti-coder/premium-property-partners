@@ -25,6 +25,7 @@ export function buildClientOfferEmail(
 ): { subject: string; html: string } {
   const hello = name ? `Bună ziua, ${escapeHtml(name)}!` : "Bună ziua!";
   const propName = escapeHtml(String(prop.name ?? "apartamentul discutat"));
+  const safeUrl = /^https?:\/\//i.test(String(prop.url ?? "")) ? escapeHtml(String(prop.url)) : "";
   const priceTxt = prop.price
     ? `${Number(prop.price).toLocaleString("ro-RO")} €`
     : null;
@@ -78,7 +79,7 @@ export function buildClientOfferEmail(
       <p style="margin:8px 0 0;font-size:13px;color:#6b7280">Primiți lunar un raport cu încasările, cheltuielile și profitul net.</p>
     </td></tr>
   </table>
-  ${prop.url ? `<p style="margin:0 0 18px;font-size:14px"><a href="${prop.url}">Vedeți anunțul complet și pozele</a></p>` : ""}
+  ${safeUrl ? `<p style="margin:0 0 18px;font-size:14px"><a href="${safeUrl}">Vedeți anunțul complet și pozele</a></p>` : ""}
   <p style="margin:20px 0">
     <a href="${PUBLIC_WA_LINK}" style="background:#D4AF37;color:#111827;text-decoration:none;padding:13px 22px;border-radius:8px;font-weight:bold;display:inline-block">
       Continuați discuția pe WhatsApp

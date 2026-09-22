@@ -297,7 +297,14 @@ When you complete a full property analysis, include a structured report at the e
 
     const messages = [
       { role: "system", content: systemPrompt },
-      ...conversationHistory.slice(-10).map((m: any) => ({ role: m.role, content: m.content })),
+      // Only user/assistant turns from history: a caller must not be able to
+      // inject extra "system" instructions through the transcript.
+      ...conversationHistory
+        .slice(-10)
+        .map((m: any) => ({
+          role: m?.role === "assistant" ? "assistant" : "user",
+          content: String(m?.content ?? "").slice(0, 4000),
+        })),
       { role: "user", content: userContent },
     ];
 
