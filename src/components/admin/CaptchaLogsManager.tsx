@@ -262,6 +262,13 @@ const CaptchaLogsManager = () => {
   }, [logs]);
 
   // Export to CSV
+  // Neutralize spreadsheet formula injection in exported cells.
+  const csvCell = (value: unknown) => {
+    const raw = String(value ?? "");
+    const safe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+    return `"${safe.replace(/"/g, '""')}"`;
+  };
+
   const exportToCsv = () => {
     const headers = [
       "ID",
@@ -279,15 +286,15 @@ const CaptchaLogsManager = () => {
       headers.join(","),
       ...filteredLogs.map((log) =>
         [
-          log.id,
-          format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss"),
-          log.success ? "Success" : "Failed",
-          log.form_type,
-          log.ip_address || "",
-          log.score?.toString() || "",
-          log.hostname || "",
-          log.error_codes?.join(";") || "",
-          `"${(log.user_agent || "").replace(/"/g, '""')}"`,
+          csvCell(log.id),
+          csvCell(format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss")),
+          csvCell(log.success ? "Success" : "Failed"),
+          csvCell(log.form_type),
+          csvCell(log.ip_address || ""),
+          csvCell(log.score?.toString() || ""),
+          csvCell(log.hostname || ""),
+          csvCell(log.error_codes?.join(";") || ""),
+          csvCell(log.user_agent || ""),
         ].join(",")
       ),
     ];
