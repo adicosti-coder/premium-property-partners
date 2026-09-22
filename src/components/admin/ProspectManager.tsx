@@ -77,6 +77,7 @@ const PROSPECT_TYPES = [
   { value: 'proprietar', label: '🏠 Proprietari', icon: '🏠' },
   { value: 'agentie', label: '🏢 Agenții', icon: '🏢' },
   { value: 'dezvoltator', label: '🏗️ Dezvoltatori', icon: '🏗️' },
+  { value: 'necunoscut', label: '❓ Neclasificate', icon: '❓' },
 ] as const;
 
 // ── Conversation Labels ──────────────────────────────

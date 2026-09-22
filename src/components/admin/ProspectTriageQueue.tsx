@@ -26,7 +26,7 @@ interface TriageRow {
   created_at: string;
 }
 
-const AMBIGUOUS_TYPES = ["generic_search", "sale", "rent", "vanzare"];
+const AMBIGUOUS_TYPES = ["generic_search", "sale", "rent", "vanzare", "necunoscut"];
 
 export default function ProspectTriageQueue() {
   const [rows, setRows] = useState<TriageRow[]>([]);
