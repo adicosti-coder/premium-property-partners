@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, MessageCircle, Smartphone, Copy, RefreshCw, ExternalLink, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
+import { hasAgencyEvidence, isIndividualOwnerListing, isResidentialRealEstate } from "@/lib/ownerListingRules";
 import {
   getTemplate,
   isWhatsappCapable,
@@ -28,8 +29,6 @@ import {
 } from "@/lib/ownerOutreachTemplates";
 
 const WhatsappOutboundQueue = lazy(() => import("@/components/admin/WhatsappOutboundQueue"));
-
-const EXCLUDED_TYPES = ["agentie", "agency", "dezvoltator"];
 
 interface Prospect {
   id: string;
@@ -45,6 +44,8 @@ interface Prospect {
   lead_score: number | null;
   lifecycle_status: string | null;
   source_url: string | null;
+  description: string | null;
+  prospect_type: string | null;
   created_at: string | null;
 }
 
@@ -87,7 +88,7 @@ export default function OwnerContactPanel() {
       const { data: rows, error } = await supabase
         .from("prospect_listings")
         .select(
-          "id, title, zone, rooms, price, currency, contact_name, contact_phone, phone_normalized, source_platform, lead_score, lifecycle_status, source_url, created_at",
+          "id, title, description, zone, rooms, price, currency, contact_name, contact_phone, phone_normalized, prospect_type, source_platform, lead_score, lifecycle_status, source_url, created_at",
         )
         .eq("is_active", true)
         .eq("do_not_call", false)
@@ -99,10 +100,21 @@ export default function OwnerContactPanel() {
         .limit(150);
       if (error) throw error;
 
+      // Aceleași reguli ca în „Caută anunțuri de la proprietari": fără agenții,
+      // fără pagini de căutare/categorie și doar imobiliare rezidențiale.
       const eligible = (rows ?? []).filter((r) => {
-        const type = (r as { prospect_type?: string | null }).prospect_type;
-        if (type && EXCLUDED_TYPES.includes(String(type).toLowerCase())) return false;
-        return !!normalizeRoPhone(r.phone_normalized || r.contact_phone);
+        if (!normalizeRoPhone(r.phone_normalized || r.contact_phone)) return false;
+        const candidate = {
+          title: r.title,
+          description: r.description,
+          url: r.source_url,
+          phone: r.phone_normalized || r.contact_phone,
+          prospect_type: r.prospect_type,
+        };
+        if (hasAgencyEvidence(candidate)) return false;
+        if (!isResidentialRealEstate(candidate)) return false;
+        if (r.source_url && !isIndividualOwnerListing(candidate)) return false;
+        return true;
       }) as Prospect[];
 
       const ids = eligible.map((r) => r.id);
