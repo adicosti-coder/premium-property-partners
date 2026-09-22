@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireAdmin } from "../_shared/adminAuth.ts";
 import { isInternalCall } from "../_shared/cronAuth.ts";
+import { fetchWithRetry } from "../_shared/fetchRetry.ts";
 
 /* ──────────────────────────────────────────────────────────────
    AI Lead Scorer for prospect_listings.
@@ -128,7 +129,9 @@ Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
       ],
     };
 
-    const aiRes = await fetch(
+    // Google returnează frecvent 503 („high demand”) — reîncercăm cu backoff,
+    // altfel anunțurile noi rămân fără scor în coada de verificare.
+    const aiRes = await fetchWithRetry(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
       {
         method: "POST",
@@ -147,15 +150,17 @@ Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
           },
         }),
       },
+      { label: "prospect-ai-scorer", maxAttempts: 5, baseDelayMs: 1500, maxDelayMs: 20_000, timeoutMs: 120_000, maxBodyChars: 60_000 },
     );
 
     if (!aiRes.ok) {
-      const txt = await aiRes.text();
-      console.error("Gemini error:", aiRes.status, txt.slice(0, 500));
-      if (aiRes.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited de Google Gemini", retry: true }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      console.error("Gemini error:", aiRes.status, aiRes.body.slice(0, 500));
+      if (aiRes.status === 429 || aiRes.status >= 500 || aiRes.status === 0) {
+        return new Response(JSON.stringify({
+          error: "Google Gemini indisponibil temporar — se reîncearcă la următoarea rulare.",
+          code: "gemini_unavailable",
+          retry: true,
+        }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       if (aiRes.status === 401 || aiRes.status === 403) {
         return new Response(JSON.stringify({
@@ -164,10 +169,10 @@ Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
           retryable: false,
         }), { status: aiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      throw new Error(`Gemini ${aiRes.status}: ${txt.slice(0, 300)}`);
+      throw new Error(`Gemini ${aiRes.status}: ${aiRes.body.slice(0, 300)}`);
     }
 
-    const aiData = await aiRes.json();
+    const aiData = JSON.parse(aiRes.body || "{}");
     const rawText = (aiData?.candidates?.[0]?.content?.parts ?? [])
       .map((p: any) => p?.text ?? "")
       .join("")

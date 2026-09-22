@@ -8,6 +8,19 @@ import { Loader2, RefreshCw, CheckCircle2, AlertTriangle, ExternalLink } from "l
 import { toast } from "@/hooks/use-toast";
 import { MarkAsAgencyButton } from "@/components/admin/MarkAsAgencyButton";
 
+interface QualityAnalysis {
+  quality_score?: number;
+  condition?: string;
+  finishes?: string;
+  furnishing?: string;
+  hotel_readiness?: number;
+  renovation_needed?: boolean;
+  estimated_refresh_cost_eur?: number | null;
+  highlights?: string[];
+  red_flags?: string[];
+  reasoning?: string;
+}
+
 interface TriageRow {
   id: string;
   title: string | null;
@@ -22,6 +35,11 @@ interface TriageRow {
   lifecycle_status: string | null;
   rejection_reason: string | null;
   score: number | null;
+  lead_score: number | null;
+  images: string[] | null;
+  quality_score: number | null;
+  quality_analysis: QualityAnalysis | null;
+  quality_analyzed_at: string | null;
   scraped_at: string | null;
   created_at: string;
 }
@@ -32,6 +50,7 @@ export default function ProspectTriageQueue() {
   const [rows, setRows] = useState<TriageRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [visionId, setVisionId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,19 +58,53 @@ export default function ProspectTriageQueue() {
       // Ambiguous = not yet confirmed as owner OR explicitly flagged for review
       const { data, error } = await supabase
         .from("prospect_listings")
-        .select("id,title,source_url,source_platform,zone,location,price,contact_phone,phone_normalized,prospect_type,lifecycle_status,rejection_reason,score,scraped_at,created_at")
+        .select("id,title,source_url,source_platform,zone,location,price,contact_phone,phone_normalized,prospect_type,lifecycle_status,rejection_reason,score,lead_score,images,quality_score,quality_analysis,quality_analyzed_at,scraped_at,created_at")
         .eq("is_active", true)
         .or(`prospect_type.in.(${AMBIGUOUS_TYPES.join(",")}),prospect_type.is.null`)
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
-      setRows((data || []) as TriageRow[]);
+      setRows((data || []) as unknown as TriageRow[]);
     } catch (e: any) {
       toast({ title: "Eroare", description: e.message ?? String(e), variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const runVision = async (row: TriageRow) => {
+    setVisionId(row.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("property-vision-score", {
+        body: { prospect_id: row.id, force: true },
+      });
+      if (error) throw error;
+      const res = data as { quality_score?: number; analysis?: QualityAnalysis; error?: string };
+      if (res?.error) {
+        toast({
+          title: "Analiza pozelor nu a reușit",
+          description: res.error === "no_usable_images"
+            ? "Anunțul nu are poze salvate."
+            : res.error,
+          variant: "destructive",
+        });
+        return;
+      }
+      setRows((prev) => prev.map((r) => r.id === row.id
+        ? {
+            ...r,
+            quality_score: res?.quality_score ?? r.quality_score,
+            quality_analysis: res?.analysis ?? r.quality_analysis,
+            quality_analyzed_at: new Date().toISOString(),
+          }
+        : r));
+      toast({ title: "Poze analizate", description: `Scor calitate: ${res?.quality_score ?? "—"}/100` });
+    } catch (e: any) {
+      toast({ title: "Eroare analiză poze", description: e.message ?? String(e), variant: "destructive" });
+    } finally {
+      setVisionId(null);
+    }
+  };
 
   useEffect(() => { load(); }, [load]);
 
