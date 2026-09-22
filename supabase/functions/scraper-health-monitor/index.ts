@@ -14,6 +14,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { requireInternalOrAdmin } from "../_shared/internalOrAdmin.ts";
 import { sendTeamEmail } from "../_shared/teamEmail.ts";
+import { escapeHtml } from "../_shared/htmlEscape.ts";
 
 const STUCK_JOB_MINUTES = 15;
 const RECENT_RUNS = 25;
@@ -284,7 +285,7 @@ Deno.serve(async (req) => {
 
       if ((toAlert ?? []).length > 0) {
         const rows = (toAlert ?? []).map(
-          (i) => `<li><b>${i.kind}</b> · ${i.target} — ${i.remediation ?? ""}</li>`,
+          (i) => `<li><b>${escapeHtml(i.kind)}</b> · ${escapeHtml(i.target)} — ${escapeHtml(i.remediation ?? "")}</li>`,
         ).join("");
         const res = await sendTeamEmail({
           to: ALERT_TO,
