@@ -8,8 +8,8 @@ import AdminErrorBoundary from "@/components/admin/AdminErrorBoundary";
 
 const OwnerListingSearch = lazy(() => import("@/components/admin/OwnerListingSearch"));
 const ProspectTriageQueue = lazy(() => import("@/components/admin/ProspectTriageQueue"));
-const WhatsappOutboundQueue = lazy(() => import("@/components/admin/WhatsappOutboundQueue"));
-const PriceDropAlertsPanel = lazy(() => import("@/components/admin/PriceDropAlertsPanel"));
+const OwnerContactPanel = lazy(() => import("@/components/admin/OwnerContactPanel"));
+const OwnerFollowUpPanel = lazy(() => import("@/components/admin/OwnerFollowUpPanel"));
 
 const AMBIGUOUS_TYPES = ["generic_search", "sale", "rent", "vanzare", "necunoscut"];
 
@@ -27,8 +27,8 @@ interface Step {
 const STEPS: Step[] = [
   { key: "search", label: "1. Caută", short: "Caută", hint: "Găsește anunțuri de la proprietari pe toate portalurile.", icon: Search, Component: OwnerListingSearch as ComponentType<unknown> },
   { key: "verify", label: "2. Verifică", short: "Verifică", hint: "Aprobă proprietarii reali, cu poze și analiză automată.", icon: CheckCircle2, Component: ProspectTriageQueue as ComponentType<unknown> },
-  { key: "contact", label: "3. Contactează", short: "Contact", hint: "Trimite oferta pe WhatsApp și urmărește livrarea.", icon: MessageSquare, Component: WhatsappOutboundQueue as ComponentType<unknown> },
-  { key: "follow", label: "4. Urmărește", short: "Urmărește", hint: "Vezi scăderile de preț și momentul bun de renegociere.", icon: TrendingDown, Component: PriceDropAlertsPanel as ComponentType<unknown> },
+  { key: "contact", label: "3. Contactează", short: "Contact", hint: "Șabloane precompletate cu datele proprietarului — trimite pe WhatsApp sau SMS.", icon: MessageSquare, Component: OwnerContactPanel as ComponentType<unknown> },
+  { key: "follow", label: "4. Urmărește", short: "Urmărește", hint: "Mementouri la 24h și 72h pentru cei care nu au răspuns, plus scăderile de preț.", icon: TrendingDown, Component: OwnerFollowUpPanel as ComponentType<unknown> },
 ];
 
 const since = (hours: number) => new Date(Date.now() - hours * 3600_000).toISOString();
