@@ -26,9 +26,9 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-// Multimodal model (Lovable AI Gateway). Kimi K3 is not available on the
-// gateway; this is the supported multimodal equivalent.
-const VISION_MODEL = "google/gemini-3.6-flash";
+// Multimodal model — direct Google Gemini API (GEMINI_API_KEY), no gateway.
+const VISION_MODEL = "gemini-3.6-flash";
+
 const DEFAULT_MAX_IMAGES = 5;
 const DEFAULT_AUTO_THRESHOLD = 70;
 
@@ -89,8 +89,9 @@ Deno.serve(async (req) => {
     actorId = auth.userId ?? null;
   }
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) return json({ error: "LOVABLE_API_KEY missing" }, 500);
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  if (!GEMINI_API_KEY) return json({ error: "GEMINI_API_KEY missing" }, 500);
+
 
   let body: { prospect_id?: string; id?: string; force?: boolean } = {};
   try {
@@ -215,110 +216,132 @@ Deno.serve(async (req) => {
     }
 
     if (!fromCache) {
+    const imageParts: Array<{ inlineData: { mimeType: string; data: string } }> = [];
+    for (const url of images) {
+      try {
+        const r = await fetch(url);
+        if (!r.ok) continue;
+        const mimeType = r.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+        if (!mimeType.startsWith("image/")) continue;
+        const buf = new Uint8Array(await r.arrayBuffer());
+        if (buf.byteLength === 0 || buf.byteLength > 6_000_000) continue;
+        let binary = "";
+        for (let i = 0; i < buf.length; i += 8192) {
+          binary += String.fromCharCode(...buf.subarray(i, i + 8192));
+        }
+        imageParts.push({ inlineData: { mimeType, data: btoa(binary) } });
+      } catch (e) {
+        console.error("[property-vision-score] image fetch failed", url, String(e));
+      }
+    }
+
+    if (imageParts.length === 0) {
+      await logVisionError("images_unreachable", { images: images.length });
+      return json({ error: "images_unreachable", fallback: "text_only" }, 502);
+    }
+
     const aiRes = await fetchWithRetry(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      `https://generativelanguage.googleapis.com/v1beta/models/${VISION_MODEL}:generateContent`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "x-goog-api-key": GEMINI_API_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: VISION_MODEL,
-          messages: [
-            {
-              role: "system",
-              content:
-                "Ești evaluator tehnic de apartamente pentru RealTrust Timișoara (regim hotelier). Analizezi EXCLUSIV ce se vede în fotografii: stare reală, finisaje, mobilier, uzură, lumină, calitate băi/bucătărie. Nu inventezi detalii care nu apar în poze. Răspunzi STRICT prin tool calling.",
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text:
-                    `Analizează fotografiile acestui apartament și dă un Property Quality Score 0-100 ` +
-                    `(100 = gata de regim hotelier fără investiție, 0 = necesită renovare completă).\n` +
-                    `Context anunț: ${contextLine || "necunoscut"}\n` +
-                    `Evaluează stare, finisaje, mobilare, potențial regim hotelier, semnale negative (igrasie, uzură, ` +
-                    `mobilier vechi, poze slabe) și estimează bugetul de refresh în EUR dacă e nevoie.`,
-                },
-                ...images.map((url) => ({ type: "image_url", image_url: { url } })),
+          systemInstruction: {
+            parts: [{
+              text:
+                "Ești evaluator tehnic de apartamente pentru RealTrust Timișoara (regim hotelier). Analizezi EXCLUSIV ce se vede în fotografii: stare reală, finisaje, mobilier, uzură, lumină, calitate băi/bucătărie. Nu inventezi detalii care nu apar în poze. Răspunzi STRICT cu JSON valid conform schemei.",
+            }],
+          },
+          contents: [{
+            role: "user",
+            parts: [
+              {
+                text:
+                  `Analizează fotografiile acestui apartament și dă un Property Quality Score 0-100 ` +
+                  `(100 = gata de regim hotelier fără investiție, 0 = necesită renovare completă).\n` +
+                  `Context anunț: ${contextLine || "necunoscut"}\n` +
+                  `Evaluează stare, finisaje, mobilare, potențial regim hotelier, semnale negative (igrasie, uzură, ` +
+                  `mobilier vechi, poze slabe) și estimează bugetul de refresh în EUR dacă e nevoie.`,
+              },
+              ...imageParts,
+            ],
+          }],
+          generationConfig: {
+            temperature: 0.3,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                quality_score: { type: "INTEGER", description: "Property Quality Score 0-100" },
+                condition: { type: "STRING", enum: CONDITIONS },
+                finishes: { type: "STRING", enum: FINISHES },
+                furnishing: { type: "STRING", enum: FURNISHING },
+                hotel_readiness: { type: "INTEGER", description: "Pretabilitate regim hotelier 0-100" },
+                renovation_needed: { type: "BOOLEAN" },
+                estimated_refresh_cost_eur: { type: "INTEGER", description: "Buget estimat refresh in EUR, 0 daca nu e necesar" },
+                highlights: { type: "ARRAY", items: { type: "STRING" } },
+                red_flags: { type: "ARRAY", items: { type: "STRING" } },
+                reasoning: { type: "STRING", description: "Explicație 1-3 propoziții" },
+              },
+              required: [
+                "quality_score",
+                "condition",
+                "finishes",
+                "furnishing",
+                "hotel_readiness",
+                "renovation_needed",
+                "estimated_refresh_cost_eur",
+                "highlights",
+                "red_flags",
+                "reasoning",
               ],
             },
-          ],
-          tools: [{
-            type: "function",
-            function: {
-              name: "submit_quality_analysis",
-              description: "Submit the visual property quality analysis",
-              parameters: {
-                type: "object",
-                properties: {
-                  quality_score: { type: "integer", description: "Property Quality Score 0-100" },
-                  condition: { type: "string", enum: CONDITIONS },
-                  finishes: { type: "string", enum: FINISHES },
-                  furnishing: { type: "string", enum: FURNISHING },
-                  hotel_readiness: { type: "integer", description: "Pretabilitate regim hotelier 0-100" },
-                  renovation_needed: { type: "boolean" },
-                  estimated_refresh_cost_eur: { type: "integer", description: "Buget estimat refresh in EUR, 0 daca nu e necesar" },
-                  highlights: { type: "array", items: { type: "string" }, description: "Puncte forte vizibile" },
-                  red_flags: { type: "array", items: { type: "string" }, description: "Probleme vizibile" },
-                  reasoning: { type: "string", description: "Explicație 1-3 propoziții" },
-                },
-                required: [
-                  "quality_score",
-                  "condition",
-                  "finishes",
-                  "furnishing",
-                  "hotel_readiness",
-                  "renovation_needed",
-                  "estimated_refresh_cost_eur",
-                  "highlights",
-                  "red_flags",
-                  "reasoning",
-                ],
-                additionalProperties: false,
-              },
-            },
-          }],
-          tool_choice: { type: "function", function: { name: "submit_quality_analysis" } },
+          },
         }),
       },
-      { label: "property-vision-score", maxAttempts: 3, timeoutMs: 60_000, maxBodyChars: 200_000 },
+      { label: "property-vision-score", maxAttempts: 3, timeoutMs: 120_000, maxBodyChars: 200_000 },
     );
 
     if (!aiRes.ok) {
-      await logVisionError("gateway", {
+      await logVisionError("gemini", {
         status: aiRes.status,
         error: aiRes.error ?? aiRes.body,
-        images: images.length,
+        images: imageParts.length,
         fallback: true,
       });
       if (aiRes.status === 429) return json({ error: "rate_limited", retry: true }, 429);
-      if (aiRes.status === 402) {
-        return json({ error: "credits_exhausted", message: "Adaugă credite AI în workspace." }, 402);
+      if (aiRes.status === 401 || aiRes.status === 403) {
+        return json({
+          error: "gemini_key_invalid",
+          message: "Cheia Google Gemini (GEMINI_API_KEY) este invalidă sau nu are acces la model.",
+        }, aiRes.status);
       }
-      console.error("[property-vision-score] gateway error", aiRes.status, aiRes.body);
+      console.error("[property-vision-score] gemini error", aiRes.status, aiRes.body);
       // Fallback: prospect keeps its text-only lead score, nothing is overwritten.
-      return json({ error: `ai_gateway_${aiRes.status || "network"}`, fallback: "text_only" }, 502);
+      return json({ error: `gemini_${aiRes.status || "network"}`, fallback: "text_only" }, 502);
     }
 
     const aiData = JSON.parse(aiRes.body || "{}");
-    const args = aiData?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!args) {
-      await logVisionError("no_tool_call", { status: aiRes.status, images: images.length });
-      return json({ error: "no_tool_call", fallback: "text_only" }, 502);
+    const rawText = (aiData?.candidates?.[0]?.content?.parts ?? [])
+      .map((p: any) => p?.text ?? "")
+      .join("")
+      .trim();
+    if (!rawText) {
+      await logVisionError("empty_response", { status: aiRes.status, images: imageParts.length });
+      return json({ error: "empty_response", fallback: "text_only" }, 502);
     }
 
     let parsed: Partial<VisionResult> = {};
     try {
-      parsed = JSON.parse(args);
+      parsed = JSON.parse(rawText.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim());
     } catch {
-      await logVisionError("invalid_tool_arguments", { images: images.length });
-      return json({ error: "invalid_tool_arguments", fallback: "text_only" }, 502);
-
+      await logVisionError("invalid_json", { images: imageParts.length });
+      return json({ error: "invalid_json", fallback: "text_only" }, 502);
     }
+
 
     qualityScore = clamp(parsed.quality_score, 0, 100);
     hotelReadiness = clamp(parsed.hotel_readiness, 0, 100);
