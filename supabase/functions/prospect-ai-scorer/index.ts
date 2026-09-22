@@ -106,76 +106,81 @@ Scorează 0-100 în funcție de:
 4. Calitate descriere (dacă e foarte vagă, poate fi semnal de proprietar netehnic = +5; dacă e copy generic agenție = -20)
 5. Date contact directe disponibile (+10)
 
-Returnează prin tool calling.`;
+Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "Ești expert în scoring lead-uri imobiliare pentru agenții premium din Timișoara. Răspunzi STRICT prin tool calling, niciodată text liber." },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "submit_lead_score",
-            description: "Submit lead scoring analysis",
-            parameters: {
-              type: "object",
-              properties: {
-                lead_score: { type: "integer", minimum: 0, maximum: 100, description: "Scor 0-100" },
-                category: { type: "string", enum: ["vanzare", "inchiriere", "hotelier"], description: "Categoria detectată" },
-                is_owner_direct: { type: "boolean", description: "True dacă pare proprietar direct, false dacă e agenție" },
-                hotel_potential: { type: "integer", minimum: 0, maximum: 100, description: "Potențial regim hotelier 0-100" },
-                urgency_signals: { type: "array", items: { type: "string" }, description: "Cuvinte cheie de urgență detectate" },
-                owner_sentiment: { type: "string", enum: ["presat", "deschis", "agentie", "neutru"], description: "Sentimentul proprietarului: 'presat' (vrea să vândă rapid, semnale de urgență/discount), 'deschis' (deschis la colaborare/regim hotelier/agenție), 'agentie' (este agenție imobiliară), 'neutru' (nu se poate determina)" },
-                urgency_level: { type: "integer", minimum: 0, maximum: 10, description: "Nivel urgență 0-10 bazat pe limbaj (0=fără urgență, 10=extrem de presat)" },
-                reasoning: { type: "string", description: "Explicație 1-2 propoziții" },
-                recommended_pitch: { type: "string", description: "Sugestie de abordare pentru apel (1 propoziție, adaptată sentimentului)" },
-              },
-              required: ["lead_score", "category", "is_owner_direct", "hotel_potential", "owner_sentiment", "urgency_level", "reasoning", "recommended_pitch"],
-              additionalProperties: false,
-            },
+    const GEMINI_MODEL = "gemini-1.5-flash";
+    const responseSchema = {
+      type: "OBJECT",
+      properties: {
+        lead_score: { type: "INTEGER", description: "Scor 0-100" },
+        category: { type: "STRING", enum: ["vanzare", "inchiriere", "hotelier"] },
+        is_owner_direct: { type: "BOOLEAN" },
+        hotel_potential: { type: "INTEGER", description: "Potențial regim hotelier 0-100" },
+        urgency_signals: { type: "ARRAY", items: { type: "STRING" } },
+        owner_sentiment: { type: "STRING", enum: ["presat", "deschis", "agentie", "neutru"] },
+        urgency_level: { type: "INTEGER", description: "Nivel urgență 0-10" },
+        reasoning: { type: "STRING", description: "Explicație 1-2 propoziții" },
+        recommended_pitch: { type: "STRING", description: "Sugestie de abordare pentru apel" },
+      },
+      required: [
+        "lead_score", "category", "is_owner_direct", "hotel_potential",
+        "owner_sentiment", "urgency_level", "reasoning", "recommended_pitch",
+      ],
+    };
+
+    const aiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{
+              text: "Ești expert în scoring lead-uri imobiliare pentru agenții premium din Timișoara. Răspunzi STRICT cu JSON valid conform schemei, niciodată text liber.",
+            }],
           },
-        }],
-        tool_choice: { type: "function", function: { name: "submit_lead_score" } },
-      }),
-    });
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          generationConfig: {
+            temperature: 0.4,
+            responseMimeType: "application/json",
+            responseSchema,
+          },
+        }),
+      },
+    );
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
-      console.error("AI error:", aiRes.status, txt);
+      console.error("Gemini error:", aiRes.status, txt.slice(0, 500));
       if (aiRes.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited", retry: true }), {
+        return new Response(JSON.stringify({ error: "Rate limited de Google Gemini", retry: true }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (aiRes.status === 402 || aiRes.status === 403) {
-        let reason = "Creditele AI ale workspace-ului sunt epuizate sau limita AI este atinsă. Scorarea AI este pusă pe pauză până la alimentarea creditelor.";
-        try {
-          const parsedErr = JSON.parse(txt);
-          if (parsedErr?.error?.message || parsedErr?.message) reason = parsedErr.error?.message ?? parsedErr.message;
-        } catch { /* keep default message */ }
-        return new Response(
-          JSON.stringify({ error: reason, code: "ai_credits_unavailable", retryable: false, paused: true }),
-          { status: aiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
+      if (aiRes.status === 401 || aiRes.status === 403) {
+        return new Response(JSON.stringify({
+          error: "Cheia Google Gemini (GEMINI_API_KEY) este invalidă sau nu are acces la model.",
+          code: "gemini_key_invalid",
+          retryable: false,
+        }), { status: aiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      throw new Error(`AI gateway ${aiRes.status}: ${txt.slice(0, 300)}`);
+      throw new Error(`Gemini ${aiRes.status}: ${txt.slice(0, 300)}`);
     }
 
     const aiData = await aiRes.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in AI response");
+    const rawText = (aiData?.candidates?.[0]?.content?.parts ?? [])
+      .map((p: any) => p?.text ?? "")
+      .join("")
+      .trim();
+    if (!rawText) throw new Error("Empty Gemini response");
 
     let parsed: any = {};
     try {
-      parsed = JSON.parse(toolCall.function.arguments);
+      parsed = JSON.parse(rawText.replace(/^```(?:json)?/i, "").replace(/```$/, "").trim());
     } catch {
-      throw new Error("Invalid JSON in tool call");
+      throw new Error("Invalid JSON in Gemini response");
     }
+
 
     const leadScore = Math.max(0, Math.min(100, parseInt(parsed.lead_score) || 0));
     const ownerSignal = hasOwnerFilterSignal(prospect);
