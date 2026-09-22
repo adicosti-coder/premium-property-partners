@@ -150,12 +150,17 @@ Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
           },
         }),
       },
-      { label: "prospect-ai-scorer", maxAttempts: 5, baseDelayMs: 1500, maxDelayMs: 20_000, timeoutMs: 120_000, maxBodyChars: 60_000 },
+      { label: "prospect-ai-scorer", maxAttempts: 7, baseDelayMs: 2500, maxDelayMs: 30_000, timeoutMs: 120_000, maxBodyChars: 60_000 },
     );
 
     if (!aiRes.ok) {
       console.error("Gemini error:", aiRes.status, aiRes.body.slice(0, 500));
       if (aiRes.status === 429 || aiRes.status >= 500 || aiRes.status === 0) {
+        // Marcăm anunțul pentru reîncercare automată (cron), fără să-l blocăm.
+        await supabase
+          .from("prospect_listings")
+          .update({ auto_verify_status: "reîncercare" })
+          .eq("id", prospectId);
         return new Response(JSON.stringify({
           error: "Google Gemini indisponibil temporar — se reîncearcă la următoarea rulare.",
           code: "gemini_unavailable",

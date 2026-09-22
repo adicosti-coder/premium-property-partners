@@ -906,6 +906,26 @@ export default function OwnerListingSearch({ embedded = false }: Props) {
           (failedCount ? ` · ${failedCount} platforme fără răspuns` : ""),
       );
       window.dispatchEvent(new Event(PROSPECT_REFRESH_EVENT));
+      // Verificare în fundal (telefon + scor + poze) pentru anunțurile abia găsite,
+      // ca să nu aștepți tu 40 de secunde per anunț.
+      const verifyUrls = listings
+        .map(l => (l.url || "").trim())
+        .filter(Boolean)
+        .slice(0, 20);
+      if (verifyUrls.length) {
+        void supabase.functions
+          .invoke("prospect-auto-verify", { body: { source_urls: verifyUrls, limit: 8 } })
+          .then(({ data }) => {
+            const res = data as { processed?: number; paused?: string | null } | null;
+            if (!quiet && res?.processed) {
+              toast({
+                title: "Verificare în fundal pornită",
+                description: `${res.processed} anunțuri se completează automat (telefon, scor, poze).`,
+              });
+            }
+          })
+          .catch(() => { /* verificarea rulează oricum din cron */ });
+      }
       if (!quiet && listings.length === 0) {
         toast({
           title: "Niciun anunț găsit",
