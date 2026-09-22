@@ -305,7 +305,7 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
     }
 
     try {
-      const { error } = await supabase.from("property_reviews").insert({
+      const { data: inserted, error } = await supabase.from("property_reviews").insert({
         property_id: propertyId,
         guest_name: data.guest_name,
         guest_email: data.guest_email || null,
@@ -313,7 +313,7 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
         content: data.content,
         rating: rating,
         is_published: false,
-      });
+      }).select("id").single();
 
       if (error) throw error;
 
@@ -322,14 +322,7 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
 
       // Send email notification to admins (fire and forget)
       supabase.functions.invoke("send-review-notification", {
-        body: {
-          propertyName,
-          guestName: data.guest_name,
-          rating,
-          title: data.title || undefined,
-          content: data.content,
-          guestEmail: data.guest_email || undefined,
-        },
+        body: { reviewId: inserted?.id },
       }).catch((err) => console.error("Failed to send review notification:", err));
 
       setIsSubmitted(true);
