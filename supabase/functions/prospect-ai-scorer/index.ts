@@ -209,7 +209,7 @@ Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
           urgency_level: urgencyLevel,
           reasoning: parsed.reasoning,
           recommended_pitch: parsed.recommended_pitch,
-          model: "google/gemini-2.5-flash",
+          model: "google-direct/gemini-1.5-flash",
         },
         ai_scored_at: new Date().toISOString(),
       })
