@@ -435,6 +435,13 @@
       "when": 1789979863828,
       "tag": "0061_owner_outreach_and_published_at",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1790067404149,
+      "tag": "0062_auto_owner_outreach_message_on_contact_score",
+      "breakpoints": true
     }
   ]
 }
