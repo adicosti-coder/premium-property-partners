@@ -150,8 +150,15 @@ const ScrollToTop = () => {
   useEffect(() => {
     // First-touch campaign / outreach attribution (utm, gclid, ?src=andrei_wa)
     captureCampaignAttribution();
-    if (typeof window.gtag === "function") {
-      window.gtag("config", GA_MEASUREMENT_ID, { page_path: location.pathname });
+    const isAdminRoute = /^\/admin(\/|$)/.test(location.pathname);
+    (window as unknown as Record<string, unknown>)[`ga-disable-${GA_MEASUREMENT_ID}`] = isAdminRoute;
+    if (!isAdminRoute && typeof window.gtag === "function") {
+      // SPA page_view only — never re-run config (avoids resetting session source)
+      window.gtag("event", "page_view", {
+        page_path: location.pathname,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
     }
     // Meta Pixel SPA page view (no-op without ads consent / pixel ID)
     void import("@/lib/conversionTracking").then((m) => m.trackMetaPageView()).catch(() => {});
