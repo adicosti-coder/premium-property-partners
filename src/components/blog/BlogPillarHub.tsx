@@ -149,8 +149,8 @@ const useEvaluareSectionViewTracking = () => {
               event_category: "blog_pillar_hub",
               event_label: `view_${id}`,
               section_id: id,
-              page_path: window.location.pathname,
-              source: "scroll_intersection",
+              trigger_type: "scroll_depth",
+              non_interaction: true,
             });
           }
           observer.unobserve(entry.target);

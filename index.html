@@ -251,6 +251,8 @@
     <!-- GA4 deferred — loads on first user interaction to avoid TBT impact -->
     <script>
       (function() {
+        // Never load GA4 on admin routes
+        if (/^\/admin(\/|$)/.test(location.pathname)) { window['ga-disable-G-JXDGWL3G6V'] = true; return; }
         var loaded = false;
         function loadGA4() {
           if (loaded) return;
