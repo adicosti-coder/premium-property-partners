@@ -45,6 +45,7 @@ function generateToken(): string {
 //     x-webhook-secret OR Authorization: Bearer <SERVICE_ROLE_KEY>.
 //  2. Authenticated admins (via requireAdmin) for any manual/UI-triggered use.
 import { requireAdmin } from '../_shared/adminAuth.ts'
+import { resolveSender } from '../_shared/teamEmail.ts'
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -371,8 +372,13 @@ Deno.serve(async (req) => {
           'Authorization': `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: fromOverride
-            || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <info@realtrust.ro>`),
+          // Resend only knows the root domain (notify.realtrust.ro is delegated to
+          // Lovable's nameservers, so Resend 403s it). Normalise any sender to the
+          // verified domain before sending; the queue fallback keeps notify.*.
+          from: resolveSender(
+            fromOverride
+              || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <info@realtrust.ro>`),
+          ),
 
           to: [effectiveRecipient],
           subject: resolvedSubject,

@@ -305,15 +305,16 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
     }
 
     try {
-      const { data: inserted, error } = await supabase.from("property_reviews").insert({
-        property_id: propertyId,
-        guest_name: data.guest_name,
-        guest_email: data.guest_email || null,
-        title: data.title || null,
-        content: data.content,
-        rating: rating,
-        is_published: false,
-      }).select("id").single();
+      // Guests cannot read property_reviews (RLS denies anon SELECT), so the id is
+      // returned by a dedicated RPC instead of INSERT ... RETURNING.
+      const { data: reviewId, error } = await supabase.rpc("submit_property_review", {
+        _property_id: propertyId,
+        _guest_name: data.guest_name,
+        _content: data.content,
+        _rating: rating,
+        _guest_email: data.guest_email || null,
+        _title: data.title || null,
+      });
 
       if (error) throw error;
 
@@ -322,7 +323,7 @@ const GuestReviewForm = ({ propertyId, propertyName }: GuestReviewFormProps) => 
 
       // Send email notification to admins (fire and forget)
       supabase.functions.invoke("send-review-notification", {
-        body: { reviewId: inserted?.id },
+        body: { reviewId },
       }).catch((err) => console.error("Failed to send review notification:", err));
 
       setIsSubmitted(true);

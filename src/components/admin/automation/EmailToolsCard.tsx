@@ -40,7 +40,7 @@ export function EmailToolsCard({ runs }: { runs: Run[] }) {
           templateName: "automation-run-report",
           recipientEmail: reportEmail,
           idempotencyKey: `manual-report-${Date.now()}`,
-          fromOverride: "RealTrust Sistem <noreply@notify.realtrust.ro>",
+          fromOverride: "RealTrust Sistem <info@realtrust.ro>",
           templateData: {
             summary: `Raport manual: ${ok} OK / ${failed} eșuate din ultimele ${recent.length}`,
             results: recent,
