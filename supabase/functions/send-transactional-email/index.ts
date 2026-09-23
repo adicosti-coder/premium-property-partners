@@ -45,6 +45,7 @@ function generateToken(): string {
 //     x-webhook-secret OR Authorization: Bearer <SERVICE_ROLE_KEY>.
 //  2. Authenticated admins (via requireAdmin) for any manual/UI-triggered use.
 import { requireAdmin } from '../_shared/adminAuth.ts'
+import { resolveSender } from '../_shared/teamEmail.ts'
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
