@@ -12489,6 +12489,17 @@ export type Database = {
         }
         Returns: string
       }
+      submit_property_review: {
+        Args: {
+          _content: string
+          _guest_email?: string
+          _guest_name: string
+          _property_id: string
+          _rating: number
+          _title?: string
+        }
+        Returns: string
+      }
       validate_chat_session: {
         Args: { p_session_id: string }
         Returns: boolean
