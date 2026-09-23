@@ -371,8 +371,13 @@ Deno.serve(async (req) => {
           'Authorization': `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: fromOverride
-            || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <info@realtrust.ro>`),
+          // Resend only knows the root domain (notify.realtrust.ro is delegated to
+          // Lovable's nameservers, so Resend 403s it). Normalise any sender to the
+          // verified domain before sending; the queue fallback keeps notify.*.
+          from: resolveSender(
+            fromOverride
+              || (isSystemTemplate(templateName) ? SYSTEM_FROM : `${SITE_NAME} <info@realtrust.ro>`),
+          ),
 
           to: [effectiveRecipient],
           subject: resolvedSubject,
