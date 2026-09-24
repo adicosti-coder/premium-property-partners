@@ -99,26 +99,46 @@ Deno.serve(async (req) => {
       return json({ success: true, processed: 0, note: "nothing_to_verify" });
     }
 
+    // Buget total sub limita platformei; fiecare apel are propriul plafon.
+    const deadline = now + 110_000;
     const callFn = async (name: string, payload: unknown) => {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          "x-webhook-secret": SERVICE_KEY,
-        },
-        body: JSON.stringify(payload),
-      });
-      const text = await res.text();
-      let parsed: any = {};
-      try { parsed = JSON.parse(text); } catch { /* text simplu */ }
-      return { status: res.status, ok: res.ok, data: parsed };
+      const remaining = deadline - Date.now() - 5_000;
+      if (remaining < 5_000) return { status: 0, ok: false, data: { timeout: true } as any };
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), Math.min(45_000, remaining));
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SERVICE_KEY}`,
+            "x-webhook-secret": SERVICE_KEY,
+          },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal,
+        });
+        const text = await res.text();
+        let parsed: any = {};
+        try { parsed = JSON.parse(text); } catch { /* text simplu */ }
+        return { status: res.status, ok: res.ok, data: parsed };
+      } catch {
+        // Timeout propriu: tratat ca „reîncercare mai târziu".
+        return { status: 504, ok: false, data: { timeout: true } };
+      } finally {
+        clearTimeout(timer);
+      }
     };
 
     const results: Array<Record<string, unknown>> = [];
     let paused: string | null = null;
 
     for (const row of pending) {
+      if (Date.now() > deadline - 15_000) break;
+      // Marcăm încercarea înainte de apeluri, ca un anunț lent să nu fie reluat la nesfârșit.
+      await supabase.from("prospect_listings").update({
+        auto_verify_attempts: (row.auto_verify_attempts ?? 0) + 1,
+        auto_verify_last_at: new Date().toISOString(),
+      }).eq("id", row.id);
       const steps: Record<string, string> = {};
 
       if (!row.phone_normalized && !row.contact_phone) {
