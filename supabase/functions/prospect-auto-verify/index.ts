@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const ids = Array.isArray(body.prospect_ids) ? (body.prospect_ids as string[]).slice(0, 25) : null;
     const urls = Array.isArray(body.source_urls) ? (body.source_urls as string[]).slice(0, 40) : null;
-    const limit = Math.max(1, Math.min(10, Number(body.limit) || 6));
+    const limit = Math.max(1, Math.min(10, Number(body.limit) || 3));
     const resume = body.resume === true;
 
     // ── circuit breaker + single-flight lease ───────────────────────────────
@@ -177,8 +177,6 @@ Deno.serve(async (req) => {
 
       const retryLater = Object.values(steps).includes("retry_later");
       await supabase.from("prospect_listings").update({
-        auto_verify_attempts: (row.auto_verify_attempts ?? 0) + 1,
-        auto_verify_last_at: new Date().toISOString(),
         auto_verify_status: paused ? "blocat" : retryLater ? "reîncercare" : "verificat",
       }).eq("id", row.id);
 
