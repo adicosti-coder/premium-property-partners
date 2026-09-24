@@ -2575,9 +2575,14 @@ Deno.serve(async (req) => {
 
           if (!outcome.ok) {
             const msg = `${outcome.errorMessage || 'search failed'} (after ${outcome.attempts} attempts, mode=${scanMode}${enableAutoFallback ? '+autofallback' : ''})`;
-            logScrapeError('search_http', new Error(msg), {
-              platform, keyword: query, http_status: outcome.status, attempts: outcome.attempts, scan_mode: scanMode,
-            });
+            // Un cuvânt-cheie fără rezultate e normal (alte cuvinte/portaluri aduc anunțuri) → warn, nu error.
+            if (!outcome.status && /no results/i.test(outcome.errorMessage || '')) {
+              console.warn(JSON.stringify({ kind: 'search_no_results', platform, keyword: query.slice(0, 80), attempts: outcome.attempts }));
+            } else {
+              logScrapeError('search_http', new Error(msg), {
+                platform, keyword: query, http_status: outcome.status, attempts: outcome.attempts, scan_mode: scanMode,
+              });
+            }
             jobErrors.push({
               platform, keyword: query, http_status: outcome.status ?? null,
               message: msg, phase: `${scanMode}_search`, retryable: true, attempts: outcome.attempts,
