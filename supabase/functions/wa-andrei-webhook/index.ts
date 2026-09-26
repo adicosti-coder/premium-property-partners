@@ -460,24 +460,29 @@ Deno.serve(async (req) => {
             if (!leadId) {
               let area = 0;
               let propType = "necunoscut";
+              let listingName: string | null = null;
+              let listingLabel = "";
               if (pendingReply.prospect_listing_id) {
                 const { data: pl } = await supabase
                   .from("prospect_listings")
-                  .select("size, rooms, prospect_type, contact_name")
+                  .select("size, rooms, prospect_type, contact_name, title, zone, price, currency")
                   .eq("id", pendingReply.prospect_listing_id)
                   .maybeSingle();
                 area = Number(pl?.size ?? 0) || 0;
                 propType = pl?.prospect_type
                   ? String(pl.prospect_type)
                   : (pl?.rooms ? `${pl.rooms} camere` : "necunoscut");
+                listingName = pl?.contact_name ?? null;
+                listingLabel = [pl?.title, pl?.zone, pl?.price ? `${pl.price} ${pl?.currency ?? "EUR"}` : null]
+                  .filter(Boolean).join(" · ");
               }
               const { data: newLead, error: leadErr } = await supabase
                 .from("leads")
                 .insert({
-                  name: profileName || `Client WhatsApp ${from}`,
+                  name: profileName || listingName || `Client WhatsApp ${from}`,
                   whatsapp_number: from,
                   source: "whatsapp_reply",
-                  message: text,
+                  message: listingLabel ? `[Anunț: ${listingLabel}] ${text}` : text,
                   property_area: area,
                   property_type: propType,
                 })
