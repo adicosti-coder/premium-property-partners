@@ -35,19 +35,28 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const ids = Array.isArray(body.prospect_ids) ? (body.prospect_ids as string[]).slice(0, 25) : null;
     const urls = Array.isArray(body.source_urls) ? (body.source_urls as string[]).slice(0, 40) : null;
-    const limit = Math.max(1, Math.min(10, Number(body.limit) || 3));
+    let limit = Math.max(1, Math.min(10, Number(body.limit) || 3));
     const resume = body.resume === true;
 
     // ── circuit breaker + single-flight lease ───────────────────────────────
     const { data: state } = await supabase
       .from("prospect_auto_verify_state")
-      .select("paused, pause_reason, lease_until")
+      .select("paused, pause_reason, lease_until, updated_at")
       .eq("id", 1)
       .maybeSingle();
 
-    if (resume) {
+    // Cota Gemini se resetează la miezul nopții ora Pacific. Dacă pauza e din cauza cotei
+    // și între timp a venit o zi nouă, reluăm automat cu UN singur anunț de probă.
+    const pacificDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
+    const quotaPause = state?.paused && /cota|quota|RESOURCE_EXHAUSTED/i.test(state.pause_reason || "");
+    const newQuotaDay = quotaPause && state?.updated_at &&
+      pacificDay(new Date(state.updated_at)) !== pacificDay(new Date());
+    let probeOnly = false;
+
+    if (resume || newQuotaDay) {
       await supabase.from("prospect_auto_verify_state")
         .update({ paused: false, pause_reason: null, updated_at: new Date().toISOString() }).eq("id", 1);
+      probeOnly = !!newQuotaDay && !resume;
     } else if (state?.paused) {
       return json({ skipped: "paused", reason: state.pause_reason });
     }
