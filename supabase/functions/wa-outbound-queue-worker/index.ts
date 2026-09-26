@@ -183,13 +183,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Doar eșecurile din ultimele 24h care țin de sănătatea numărului.
+    // Erorile de configurare a șablonului (404 / 132001) nu blochează coada.
     const { data: lastAttempts } = await supabase
       .from("wa_outbound_queue")
-      .select("status")
+      .select("status, last_error")
       .in("status", ["sent", "failed", "replied"])
+      .gte("updated_at", since)
       .order("updated_at", { ascending: false })
-      .limit(maxConsecutiveFailures);
-    const attempts = lastAttempts ?? [];
+      .limit(maxConsecutiveFailures * 3);
+    const TEMPLATE_CFG = /template_invalid|http_404|132001|does not exist/i;
+    const attempts = (lastAttempts ?? [])
+      .filter((a) => !(a.status === "failed" && TEMPLATE_CFG.test(a.last_error ?? "")))
+      .slice(0, maxConsecutiveFailures);
     if (
       attempts.length >= maxConsecutiveFailures &&
       attempts.every((a) => a.status === "failed")
@@ -430,7 +436,7 @@ Deno.serve(async (req) => {
       } else {
         const err = (send.error ?? `http_${send.status}`).slice(0, 500);
         // Eroarea 132001 = șablonul nu există la Meta; reîncercarea nu ajută.
-        const permanent = /132001|does not exist in the translation|Template name does not exist/i.test(err);
+        const permanent = /132001|does not exist in the translation|Template name does not exist|http_404/i.test(err);
         const exhausted = permanent || attempts >= MAX_ATTEMPTS;
         // Backoff la nivel de coadă: 5min, 25min
         const delayMin = attempts === 1 ? 5 : 25;
@@ -447,7 +453,7 @@ Deno.serve(async (req) => {
           .eq("id", item.id);
 
         results.push({ id: item.id, status: exhausted ? "failed" : "retry", error: err });
-        if (exhausted) {
+        if (exhausted && !permanent) {
           consecutiveFailures += 1;
           await relayToMake("wa_outbound_failed", {
             queue_id: item.id,
