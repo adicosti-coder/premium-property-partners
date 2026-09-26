@@ -760,7 +760,7 @@ Deno.serve(async (req) => {
       // Cerere explicită din Make: trimitem șablonul aprobat, marcat clar ca
       // șablon (nu pretindem că textul agentului a ajuns la client).
       const tplName = body.template_name ||
-        Deno.env.get("WA_DEFAULT_TEMPLATE") || "intake_prospect_apartments";
+        Deno.env.get("WA_DEFAULT_TEMPLATE") || "prospect_intro_premium_v3";
       const tplLang = body.template_language || "ro";
       const sentTpl = await sendToMeta({
         messaging_product: "whatsapp",
@@ -1195,7 +1195,7 @@ Deno.serve(async (req) => {
         to: phone.replace(/^\+/, ""),
         type: "template",
         template: {
-          name: Deno.env.get("WA_DEFAULT_TEMPLATE") || "intake_prospect_apartments",
+          name: Deno.env.get("WA_DEFAULT_TEMPLATE") || "prospect_intro_premium_v3",
           language: { code: "ro" },
         },
       });

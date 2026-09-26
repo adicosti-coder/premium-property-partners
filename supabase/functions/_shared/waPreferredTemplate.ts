@@ -4,7 +4,7 @@
 import { WA_API_VERSION, WA_BUSINESS_ACCOUNT_ID, waToken } from "./waConfig.ts";
 
 export const WA_PREMIUM_TEMPLATE = "prospect_intro_premium_v3";
-export const WA_LEGACY_TEMPLATE = "intake_prospect_apartments";
+export const WA_LEGACY_TEMPLATE = "prospect_intro_premium_v3";
 
 let cached: { name: string; at: number } | null = null;
 const TTL_MS = 10 * 60_000;
