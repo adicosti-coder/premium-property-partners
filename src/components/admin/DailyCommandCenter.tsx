@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
+import OutreachMonitorPanel from "./OutreachMonitorPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -157,6 +158,8 @@ export default function DailyCommandCenter() {
           )}
         </CardContent>
       </Card>
+
+      <OutreachMonitorPanel />
 
       <Card>
         <CardHeader>
