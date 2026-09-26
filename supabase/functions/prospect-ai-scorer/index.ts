@@ -33,6 +33,10 @@ function hasOwnerFilterSignal(prospect: any): boolean {
   return OWNER_SIGNALS.some((signal) => blob.includes(signal));
 }
 
+function isQuotaExhausted(body: string): boolean {
+  return /RESOURCE_EXHAUSTED|quota exceeded|free_tier/i.test(body || "");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -150,10 +154,21 @@ Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
           },
         }),
       },
-      { label: "prospect-ai-scorer", maxAttempts: 7, baseDelayMs: 2500, maxDelayMs: 30_000, timeoutMs: 120_000, maxBodyChars: 60_000 },
+      { label: "prospect-ai-scorer", maxAttempts: 7, baseDelayMs: 2500, maxDelayMs: 30_000, timeoutMs: 120_000, maxBodyChars: 60_000,
+        // Cota zilnică epuizată nu se rezolvă în câteva secunde — nu mai ardem cereri.
+        shouldRetry: (_s, b) => !isQuotaExhausted(b) },
     );
 
     if (!aiRes.ok) {
+      if (aiRes.status === 429 && isQuotaExhausted(aiRes.body)) {
+        await supabase.from("prospect_listings").update({ auto_verify_status: "reîncercare" }).eq("id", prospectId);
+        // 402 → prospect-auto-verify pune verificarea pe pauză (circuit breaker) până la reluare manuală.
+        return new Response(JSON.stringify({
+          error: "Cota zilnică Google Gemini este epuizată — activează facturarea în Google AI Studio sau reia mâine.",
+          code: "gemini_quota_exhausted",
+          retry: false,
+        }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       console.error("Gemini error:", aiRes.status, aiRes.body.slice(0, 500));
       if (aiRes.status === 429 || aiRes.status >= 500 || aiRes.status === 0) {
         // Marcăm anunțul pentru reîncercare automată (cron), fără să-l blocăm.

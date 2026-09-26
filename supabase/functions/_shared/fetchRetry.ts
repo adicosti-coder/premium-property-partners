@@ -24,6 +24,8 @@ export interface RetryOptions {
   /** Max characters kept from the response body. Default 1000. Raise it when the
    *  caller needs to parse the full payload (e.g. AI gateway JSON responses). */
   maxBodyChars?: number;
+  /** Return false to stop retrying a retryable status (e.g. daily quota exhausted). */
+  shouldRetry?: (status: number, body: string) => boolean;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -82,7 +84,7 @@ export async function fetchWithRetry(
         return { ok: true, status: res.status, body: lastBody, attempts: attempt };
       }
 
-      if (!isRetryableStatus(res.status) || attempt === maxAttempts) {
+      if (!isRetryableStatus(res.status) || attempt === maxAttempts || (opts.shouldRetry && !opts.shouldRetry(res.status, lastBody))) {
         console.error(`[${label}] failed [${res.status}] attempt ${attempt}/${maxAttempts}: ${lastBody}`);
         return {
           ok: false,
