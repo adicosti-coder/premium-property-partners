@@ -629,19 +629,19 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
     slug: "spitalul-judetean",
     geoQuestion: "Cum este zona Spitalului Județean din Timișoara?",
     geoAnswer:
-      "Zona Spitalului Județean grupează locuințele din jurul Spitalului Clinic Județean de Urgență „Pius Brînzeu", cel mai mare centru medical din vestul României, în sudul Timișoarei, de-a lungul Căii Girocului. Fondul locativ combină blocuri din anii '70–'80 cu ansambluri noi spre Giroc. Cererea de închiriere este una dintre cele mai stabile din oraș, susținută de personalul medical și de studenții UMF, iar centrul este la 12–15 minute cu mașina.",
+      "Zona Spitalului Județean grupează locuințele din jurul Spitalului Clinic Județean de Urgență „Pius Brînzeu”, cel mai mare centru medical din vestul României, în sudul Timișoarei, de-a lungul Căii Girocului. Fondul locativ combină blocuri din anii '70–'80 cu ansambluri noi spre Giroc. Cererea de închiriere este una dintre cele mai stabile din oraș, susținută de personalul medical și de studenții UMF, iar centrul este la 12–15 minute cu mașina.",
     sections: [
       {
         heading: "Cum este zona",
         paragraphs: [
-          "Zona Spitalului Județean este una dintre puținele micro-piețe din Timișoara construite în jurul unui singur angajator: Spitalul Clinic Județean de Urgență „Pius Brînzeu", cu mii de angajați și un flux zilnic de pacienți, rezidenți și studenți la medicină. Acest reper dă ritmul întregii zone — cerere de locuit constantă, comerț de proximitate și un flux de oameni care nu depinde de sezon sau de conjunctură.",
+          "Zona Spitalului Județean este una dintre puținele micro-piețe din Timișoara construite în jurul unui singur angajator: Spitalul Clinic Județean de Urgență „Pius Brînzeu”, cu mii de angajați și un flux zilnic de pacienți, rezidenți și studenți la medicină. Acest reper dă ritmul întregii zone — cerere de locuit constantă, comerț de proximitate și un flux de oameni care nu depinde de sezon sau de conjunctură.",
           "Din punct de vedere urban, zona are două straturi. Aproape de spital predomină blocurile din anii '70–'80, cu garsoniere și apartamente de 2 camere, multe deja adaptate pentru închiriere. Spre sud, pe măsură ce te apropii de limita cu Giroc, apar ansamblurile rezidențiale noi, cu apartamente de 2–3 camere, balcoane generoase și parcări proprii.",
         ],
       },
       {
         heading: "Pentru cine este potrivită",
         paragraphs: [
-          "Este zona firească pentru personalul medical care vrea să locuiască la câteva minute de serviciu, pentru studenții și rezidenții UMF „Victor Babeș" și pentru familiile care au nevoie de acces rapid la servicii medicale. Pentru aceste categorii, distanța față de spital contează mai mult decât distanța față de centru.",
+          "Este zona firească pentru personalul medical care vrea să locuiască la câteva minute de serviciu, pentru studenții și rezidenții UMF „Victor Babeș” și pentru familiile care au nevoie de acces rapid la servicii medicale. Pentru aceste categorii, distanța față de spital contează mai mult decât distanța față de centru.",
           "Pentru investitori, zona este o strategie de stabilitate: chiriașii tipici (medici, asistenți, rezidenți) semnează contracte pe termen lung, plătesc punctual și reînnoiesc ani la rând. Nu este zona pentru speculație rapidă, ci pentru venit previzibil.",
         ],
       },
