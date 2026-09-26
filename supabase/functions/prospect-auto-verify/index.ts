@@ -45,22 +45,15 @@ Deno.serve(async (req) => {
       .eq("id", 1)
       .maybeSingle();
 
-    // Cota Gemini se resetează la miezul nopții ora Pacific. Dacă pauza e din cauza cotei
-    // și între timp a venit o zi nouă, reluăm automat cu UN singur anunț de probă.
-    const pacificDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
-    const quotaPause = state?.paused && /cota|quota|RESOURCE_EXHAUSTED/i.test(state.pause_reason || "");
-    const newQuotaDay = quotaPause && state?.updated_at &&
-      pacificDay(new Date(state.updated_at)) !== pacificDay(new Date());
-    let probeOnly = false;
-
-    if (resume || newQuotaDay) {
+    // Plan pay-as-you-go Google AI: nu mai există pauză zilnică. Pauza se ridică
+    // explicit cu resume=true (sau manual din Admin); hard-errors (402/403) rămân
+    // singurul motiv de oprire ca siguranță.
+    if (resume) {
       await supabase.from("prospect_auto_verify_state")
         .update({ paused: false, pause_reason: null, updated_at: new Date().toISOString() }).eq("id", 1);
-      probeOnly = !!newQuotaDay && !resume;
     } else if (state?.paused) {
       return json({ skipped: "paused", reason: state.pause_reason });
     }
-    if (probeOnly) limit = 1;
 
     const now = Date.now();
     if (state?.lease_until && new Date(state.lease_until).getTime() > now) {
