@@ -79,6 +79,7 @@ export const STATIC_PAGES: { url: string; priority: string; changefreq: string }
   { url: "/imobiliare-timisoara/complex-studentesc", priority: "0.8", changefreq: "monthly" },
   { url: "/imobiliare-timisoara/calea-lipovei", priority: "0.8", changefreq: "monthly" },
   { url: "/imobiliare-timisoara/isho", priority: "0.8", changefreq: "monthly" },
+  { url: "/imobiliare-timisoara/spitalul-judetean", priority: "0.8", changefreq: "monthly" },
   { url: "/zona/centru", priority: "0.7", changefreq: "weekly" },
   { url: "/zona/iulius-town", priority: "0.7", changefreq: "weekly" },
   { url: "/zona/fabric", priority: "0.7", changefreq: "weekly" },
