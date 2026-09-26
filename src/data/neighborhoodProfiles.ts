@@ -623,6 +623,79 @@ export const neighborhoodProfiles: NeighborhoodProfile[] = [
       "Absența parcării poate limita cererea la anumite categorii de chiriași și oaspeți.",
     ],
   },
+
+  /* ═══════════════════════ SPITALUL JUDEȚEAN ═══════════════════════ */
+  {
+    slug: "spitalul-judetean",
+    geoQuestion: "Cum este zona Spitalului Județean din Timișoara?",
+    geoAnswer:
+      "Zona Spitalului Județean grupează locuințele din jurul Spitalului Clinic Județean de Urgență „Pius Brînzeu”, cel mai mare centru medical din vestul României, în sudul Timișoarei, de-a lungul Căii Girocului. Fondul locativ combină blocuri din anii '70–'80 cu ansambluri noi spre Giroc. Cererea de închiriere este una dintre cele mai stabile din oraș, susținută de personalul medical și de studenții UMF, iar centrul este la 12–15 minute cu mașina.",
+    sections: [
+      {
+        heading: "Cum este zona",
+        paragraphs: [
+          "Zona Spitalului Județean este una dintre puținele micro-piețe din Timișoara construite în jurul unui singur angajator: Spitalul Clinic Județean de Urgență „Pius Brînzeu”, cu mii de angajați și un flux zilnic de pacienți, rezidenți și studenți la medicină. Acest reper dă ritmul întregii zone — cerere de locuit constantă, comerț de proximitate și un flux de oameni care nu depinde de sezon sau de conjunctură.",
+          "Din punct de vedere urban, zona are două straturi. Aproape de spital predomină blocurile din anii '70–'80, cu garsoniere și apartamente de 2 camere, multe deja adaptate pentru închiriere. Spre sud, pe măsură ce te apropii de limita cu Giroc, apar ansamblurile rezidențiale noi, cu apartamente de 2–3 camere, balcoane generoase și parcări proprii.",
+        ],
+      },
+      {
+        heading: "Pentru cine este potrivită",
+        paragraphs: [
+          "Este zona firească pentru personalul medical care vrea să locuiască la câteva minute de serviciu, pentru studenții și rezidenții UMF „Victor Babeș” și pentru familiile care au nevoie de acces rapid la servicii medicale. Pentru aceste categorii, distanța față de spital contează mai mult decât distanța față de centru.",
+          "Pentru investitori, zona este o strategie de stabilitate: chiriașii tipici (medici, asistenți, rezidenți) semnează contracte pe termen lung, plătesc punctual și reînnoiesc ani la rând. Nu este zona pentru speculație rapidă, ci pentru venit previzibil.",
+        ],
+      },
+      {
+        heading: "Acces și mobilitate",
+        paragraphs: [
+          "Calea Girocului leagă zona direct de centru (12–15 minute cu mașina) și de inelul de circulație spre sudul orașului. Transportul public acoperă tronsonul urban, cu frecvență bună în segmentul apropiat de spital.",
+          "Diminețile, artera colectează și fluxul dinspre comunele din sud, deci traficul de intrare în oraș este consistent. Pentru personalul medical care lucrează în schimburi, acest aspect contează mai puțin decât pentru navetiștii clasici.",
+        ],
+      },
+      {
+        heading: "Servicii și puncte de interes",
+        paragraphs: [
+          "Pe lângă spitalul propriu-zis, zona are farmacii, cabinete medicale private, laboratoare de analize, supermarketuri și comerț de proximitate. Universitatea de Medicină și Farmacie este la distanță scurtă, ceea ce menține cererea din partea studenților.",
+          "Pentru cazare pe termen scurt, există o nișă reală dar modestă: aparținătorii pacienților internați și pacienții în trataiment ambulatoriu caută cazare aproape de spital pentru câteva zile sau săptămâni.",
+        ],
+      },
+      {
+        heading: "Ce tip de proprietăți găsești",
+        paragraphs: [
+          "În segmentul apropiat de spital predomină garsonierele și apartamentele de 2 camere în blocuri din anii '70–'80, cu suprafețe compacte și prețuri de intrare accesibile. Multe sunt deja amenajate pentru închiriere, ceea ce reduce timpul până la primul chiriaș.",
+          "Spre Giroc, oferta se schimbă: apartamente noi de 2–3 camere, cu finisaje moderne și parcare, potrivite pentru familii tinere sau pentru închiriere către cadre medicale cu venituri peste medie.",
+        ],
+      },
+    ],
+    pros: [
+      "Cerere de închiriere foarte stabilă, susținută de cel mai mare angajator medical din vestul țării.",
+      "Preț de intrare sub media zonelor centrale (estimare internă RealTrust).",
+      "Chiriași cu contracte lungi și rată mică de vacanță.",
+      "Ofertă mixtă: blocuri accesibile lângă spital, ansambluri noi spre Giroc.",
+    ],
+    cons: [
+      "Trafic dens dimineața pe Calea Girocului spre centru.",
+      "Potențial limitat pentru cazare turistică pe termen scurt.",
+      "Apreciere de capital mai lentă decât în zonele premium.",
+      "Infrastructură în curs de completare spre limita cu Giroc.",
+    ],
+    checklist: [
+      "Verifică distanța reală pe jos până la intrarea în spital — contează direct pentru chiriașul medical.",
+      "Cere nivelul cheltuielilor de întreținere pentru blocurile din anii '70–'80.",
+      "Verifică starea instalațiilor comune și dacă blocul a fost reabilitat termic.",
+      "Pentru ansamblurile noi: confirmă recepția la terminarea lucrărilor și racordarea la utilități.",
+      "Estimează chiria realizabilă pe baza anunțurilor active din aceeași zonă, nu din centru.",
+    ],
+    investment: [
+      "Modelul dominant este închirierea pe termen lung către personal medical: venit brut moderat, dar extrem de previzibil, cu vacanță minimă și costuri mici de remarketing. Randamentul depinde strict de prețul de intrare negociat — la prețurile actuale ale zonei, raportul este favorabil.",
+      "Pentru regim hotelier, zona este o nișă, nu o piață de masă: cererea vine de la aparținătorii pacienților și de trataimentele ambulatorii, nu de la turiști. În simulările noastre, ocuparea de referință de 75% este o ipoteză prudentă doar pentru unități poziționate foarte aproape de spital și tarifate corect.",
+    ],
+    risks: [
+      "Dependența de un singur generator de cerere (spitalul).",
+      "Apreciere de capital mai lentă decât în zonele centrale sau premium.",
+      "Concurență ridicată pe segmentul de garsoniere pentru studenți la medicină.",
+    ],
+  },
 ];
 
 export const getNeighborhoodProfile = (slug: string): NeighborhoodProfile | undefined =>

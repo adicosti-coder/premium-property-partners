@@ -293,6 +293,29 @@ export const neighborhoods: NeighborhoodData[] = [
       { id: 'gir2-4', title: 'Duplex modern — City Garden Giroc', price: 198000, pricePerSqm: 1720, rooms: 4, floor: 1, surface: 115, badge: 'vanzare', imageAlt: 'Duplex City Garden Giroc' },
     ],
   },
+  {
+    slug: 'spitalul-judetean',
+    name: 'Spitalul Județean',
+    fullName: 'Spitalul Județean',
+    avgPricePerSqm: 1690,
+    listingsCount: 4,
+    description:
+      'Zona Spitalului Județean de Urgență „Pius Brînzeu" din Timișoara este unul dintre cele mai stabile micro-piețe imobiliare din sudul orașului, construită în jurul celui mai mare centru medical din vestul României. Cererea de închiriere vine constant din partea personalului medical (medici, asistenți, rezidenți), a studenților UMF „Victor Babeș" și a familiilor care au nevoie de acces rapid la servicii medicale. Zona se întinde de-a lungul Căii Girocului și a străzilor adiacente, cu un fond locativ mixt: blocuri din anii \'70–\'80 aproape de spital și ansambluri rezidențiale noi spre limita cu Giroc. Prețul mediu este de 1.690 €/mp (estimare internă RealTrust), sub media zonelor centrale, ceea ce oferă un raport preț-randament atractiv pentru investitori. Chiriile pe termen lung sunt printre cele mai previzibile din oraș — contractele cu personalul medical se reînnoiesc ani la rând, iar vacanța este minimă. Accesul spre centru se face în 12–15 minute cu mașina sau cu transportul public de pe Calea Girocului. Profilul rezidenților: personal medical, studenți la medicină, familii tinere și investitori care caută stabilitate, nu speculație.',
+    metaTitle: 'Apartamente Spitalul Județean Timișoara | RealTrust Imobiliare',
+    metaDescription: 'Apartamente de vânzare și închiriat lângă Spitalul Județean Timișoara. Cerere constantă de la personal medical, preț mediu 1.690 €/mp. Administrare RealTrust.',
+    faq: [
+      { question: 'De ce este zona Spitalului Județean bună pentru investiții?', answer: 'Cererea de închiriere este una dintre cele mai stabile din Timișoara, susținută de personalul medical al spitalului județean și de studenții UMF. Contractele se reînnoiesc ani la rând, iar vacanța este minimă.' },
+      { question: 'Care este prețul mediu în zona Spitalului Județean?', answer: 'Prețul mediu este de aproximativ 1.690 €/mp (estimare internă RealTrust), sub media zonelor centrale, cu un raport preț-randament atractiv pentru investitori.' },
+      { question: 'Cât durează drumul de la Spitalul Județean spre centru?', answer: 'Accesul spre centrul Timișoarei durează 12–15 minute cu mașina sau cu transportul public de pe Calea Girocului.' },
+      { question: 'Ce tip de proprietăți găsesc în zona Spitalului Județean?', answer: 'Fondul locativ este mixt: blocuri din anii \'70–\'80 aproape de spital (garsoniere și 2 camere) și ansambluri rezidențiale noi spre limita cu Giroc, cu apartamente de 2–3 camere.' },
+    ],
+    listings: [
+      { id: 'spj-1', title: 'Garsonieră lângă spital — personal medical', price: 54000, pricePerSqm: 1690, rooms: 1, floor: 3, surface: 32, badge: 'administrare', imageAlt: 'Garsonieră Spitalul Județean Timișoara' },
+      { id: 'spj-2', title: 'Apartament 2 camere — Calea Girocului', price: 82800, pricePerSqm: 1690, rooms: 2, floor: 2, surface: 49, badge: 'administrare', imageAlt: 'Apartament 2 camere Calea Girocului Timișoara' },
+      { id: 'spj-3', title: 'Apartament 3 camere — bloc nou', price: 126800, pricePerSqm: 1720, rooms: 3, floor: 4, surface: 74, badge: 'vanzare', imageAlt: 'Apartament 3 camere bloc nou Spitalul Județean' },
+      { id: 'spj-4', title: 'Studio renovat — investiție medicină', price: 59800, pricePerSqm: 1660, rooms: 1, floor: 1, surface: 36, badge: 'vanzare', imageAlt: 'Studio investiție Spitalul Județean Timișoara' },
+    ],
+  },
 ];
 
 export const getNeighborhoodBySlug = (slug: string): NeighborhoodData | undefined =>
