@@ -17,7 +17,7 @@ export default function OutreachMonitorPanel() {
     refetchInterval: 60_000,
     queryFn: async () => {
       const since24 = new Date(Date.now() - 86_400_000).toISOString();
-      const [sent, pending, delivered, failed, lastSent, lastInbound, inbound7d, scored24, lastScored, hot, settings] =
+      const [sent, pending, delivered, failed, lastSent, lastInbound, inbound7d, scored24, lastScored, hot, settings, replies] =
         await Promise.all([
           countQ("wa_outbound_queue", (q) => q.eq("status", "sent")),
           countQ("wa_outbound_queue", (q) => q.eq("status", "pending")),
@@ -30,11 +30,19 @@ export default function OutreachMonitorPanel() {
           (supabase as any).from("prospect_listings").select("ai_scored_at").not("ai_scored_at", "is", null).order("ai_scored_at", { ascending: false }).limit(1).maybeSingle(),
           (supabase as any).from("prospect_listings").select("id, title, lead_score, source_platform, ai_scored_at").gte("lead_score", 70).not("ai_scored_at", "is", null).order("ai_scored_at", { ascending: false }).limit(5),
           (supabase as any).from("wa_agent_settings").select("outbound_paused, outbound_pause_reason").eq("id", 1).maybeSingle(),
+          (supabase as any).from("wa_conversations").select("id, wa_profile_name, phone_normalized, last_inbound_at, prospect_id").not("last_inbound_at", "is", null).order("last_inbound_at", { ascending: false }).limit(5),
         ]);
+      const convs = replies.data ?? [];
+      const pids = convs.map((c: any) => c.prospect_id).filter(Boolean);
+      const { data: pls } = pids.length
+        ? await (supabase as any).from("prospect_listings").select("id, title, zone, contact_name").in("id", pids)
+        : { data: [] };
+      const plMap = new Map((pls ?? []).map((p: any) => [p.id, p]));
+      const recentReplies = convs.map((c: any) => ({ ...c, listing: plMap.get(c.prospect_id) }));
       return {
         sent, pending, delivered, failed, inbound7d, scored24,
         lastSent: lastSent.data?.sent_at, lastInbound: lastInbound.data?.created_at,
-        lastScored: lastScored.data?.ai_scored_at, hot: hot.data ?? [], settings: settings.data,
+        lastScored: lastScored.data?.ai_scored_at, hot: hot.data ?? [], settings: settings.data, recentReplies,
       };
     },
   });
@@ -85,6 +93,24 @@ export default function OutreachMonitorPanel() {
                 <div>Ultima scorare: {fmt(data.lastScored)}</div>
                 <div>Anunțuri scorate în 24h: {data.scored24} (~{(data.scored24 / 24).toFixed(1)}/oră)</div>
               </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium mb-2">Ultimele răspunsuri de la proprietari</div>
+              {data.recentReplies.length === 0 ? (
+                <div className="text-sm text-muted-foreground">Niciun răspuns încă.</div>
+              ) : (
+                <ul className="space-y-1 text-sm">
+                  {data.recentReplies.map((r: any) => (
+                    <li key={r.id} className="flex justify-between gap-2">
+                      <span className="truncate">
+                        {r.wa_profile_name || r.listing?.contact_name || r.phone_normalized}
+                        <span className="text-muted-foreground"> · {r.listing ? `${r.listing.title ?? "Anunț"} · ${r.listing.zone ?? "zonă necunoscută"}` : "fără anunț legat"}</span>
+                      </span>
+                      <span className="text-xs text-muted-foreground shrink-0">{fmt(r.last_inbound_at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div>
               <div className="text-sm font-medium mb-2">Ultimele scoruri ≥70</div>
