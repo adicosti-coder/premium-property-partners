@@ -182,7 +182,7 @@ export const neighborhoods: NeighborhoodData[] = [
     listingsCount: 4,
     description:
       'Complexul Studențesc din Timișoara este o zonă vibrantă, dominată de campusurile Universității Politehnica și ale Universității de Vest. Cererea de cazare este constantă datorită populației studențești de peste 40.000 de persoane și a fluxului continuu de profesori, cercetători și participanți la conferințe. Zona dispune de facilități moderne — cantină, librării, terenuri sportive — și este conectată excelent la centrul orașului prin tramvai (10 minute). Investițiile în garsoniere și studiouri din această zonă generează randamente de 8-10% net, susținute de cererea ridicată pe tot parcursul anului universitar. Profilul rezidenților: studenți, cadre didactice și tineri profesioniști.',
-    metaTitle: 'Apartamente Complex Studențesc Timișoara | RealTrust Imobiliare',
+    metaTitle: 'Apartamente de vânzare Complex Studențesc Timișoara | RealTrust',
     metaDescription: 'Apartamente în Complexul Studențesc Timișoara. Cerere constantă, randament 8-10%, preț mediu 1.720 €/mp. Ideal investiții cu management RealTrust.',
     faq: [
       { question: 'Ce randament oferă o investiție în Complexul Studențesc?', answer: 'Garsonierele și studiourile din Complexul Studențesc generează randamente de 8-10% net, susținute de cererea constantă a celor peste 40.000 de studenți.' },
@@ -301,7 +301,7 @@ export const neighborhoods: NeighborhoodData[] = [
     listingsCount: 4,
     description:
       'Zona Spitalului Județean de Urgență „Pius Brînzeu" din Timișoara este unul dintre cele mai stabile micro-piețe imobiliare din sudul orașului, construită în jurul celui mai mare centru medical din vestul României. Cererea de închiriere vine constant din partea personalului medical (medici, asistenți, rezidenți), a studenților UMF „Victor Babeș" și a familiilor care au nevoie de acces rapid la servicii medicale. Zona se întinde de-a lungul Căii Girocului și a străzilor adiacente, cu un fond locativ mixt: blocuri din anii \'70–\'80 aproape de spital și ansambluri rezidențiale noi spre limita cu Giroc. Prețul mediu este de 1.690 €/mp (estimare internă RealTrust), sub media zonelor centrale, ceea ce oferă un raport preț-randament atractiv pentru investitori. Chiriile pe termen lung sunt printre cele mai previzibile din oraș — contractele cu personalul medical se reînnoiesc ani la rând, iar vacanța este minimă. Accesul spre centru se face în 12–15 minute cu mașina sau cu transportul public de pe Calea Girocului. Profilul rezidenților: personal medical, studenți la medicină, familii tinere și investitori care caută stabilitate, nu speculație.',
-    metaTitle: 'Apartamente Spitalul Județean Timișoara | RealTrust Imobiliare',
+    metaTitle: 'Apartamente de vânzare Spitalul Județean Timișoara | RealTrust',
     metaDescription: 'Apartamente de vânzare și închiriat lângă Spitalul Județean Timișoara. Cerere constantă de la personal medical, preț mediu 1.690 €/mp. Administrare RealTrust.',
     faq: [
       { question: 'De ce este zona Spitalului Județean bună pentru investiții?', answer: 'Cererea de închiriere este una dintre cele mai stabile din Timișoara, susținută de personalul medical al spitalului județean și de studenții UMF. Contractele se reînnoiesc ani la rând, iar vacanța este minimă.' },
