@@ -58,6 +58,11 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://realtrust.ro/imobiliare-timisoara/spitalul-judetean</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 <url>
     <loc>https://realtrust.ro/blog/categorie/ghid-turistic-timisoara</loc>
     <changefreq>weekly</changefreq>
