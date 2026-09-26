@@ -28,7 +28,7 @@ export default function OutreachMonitorPanel() {
           countQ("wa_messages", (q) => q.eq("direction", "inbound").gte("created_at", new Date(Date.now() - 7 * 86_400_000).toISOString())),
           countQ("prospect_listings", (q) => q.gte("ai_scored_at", since24)),
           (supabase as any).from("prospect_listings").select("ai_scored_at").not("ai_scored_at", "is", null).order("ai_scored_at", { ascending: false }).limit(1).maybeSingle(),
-          (supabase as any).from("prospect_listings").select("id, title, lead_score, platform, ai_scored_at").gte("lead_score", 70).not("ai_scored_at", "is", null).order("ai_scored_at", { ascending: false }).limit(5),
+          (supabase as any).from("prospect_listings").select("id, title, lead_score, source_platform, ai_scored_at").gte("lead_score", 70).not("ai_scored_at", "is", null).order("ai_scored_at", { ascending: false }).limit(5),
           (supabase as any).from("wa_agent_settings").select("outbound_paused, outbound_pause_reason").eq("id", 1).maybeSingle(),
         ]);
       return {
@@ -94,7 +94,7 @@ export default function OutreachMonitorPanel() {
                 <ul className="space-y-1 text-sm">
                   {data.hot.map((h: any) => (
                     <li key={h.id} className="flex justify-between gap-2">
-                      <span className="truncate">{h.title ?? "Anunț"} <span className="text-muted-foreground">· {h.platform}</span></span>
+                      <span className="truncate">{h.title ?? "Anunț"} <span className="text-muted-foreground">· {h.source_platform}</span></span>
                       <Badge variant="secondary">{h.lead_score}</Badge>
                     </li>
                   ))}
