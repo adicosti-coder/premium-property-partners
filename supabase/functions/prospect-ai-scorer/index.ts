@@ -33,8 +33,13 @@ function hasOwnerFilterSignal(prospect: any): boolean {
   return OWNER_SIGNALS.some((signal) => blob.includes(signal));
 }
 
+// Doar limita ZILNICĂ oprește verificarea. Pe planul pay-as-you-go, 429 înseamnă de obicei
+// limită pe minut (PerMinute) → se reîncearcă cu pauze, fără circuit breaker.
 function isQuotaExhausted(body: string): boolean {
-  return /RESOURCE_EXHAUSTED|quota exceeded|free_tier/i.test(body || "");
+  const b = body || "";
+  if (/PerMinute|per minute|RATE_LIMIT/i.test(b) && !/PerDay|per day/i.test(b)) return false;
+  return /PerDay|per day|free_tier|billing/i.test(b) ||
+    (/RESOURCE_EXHAUSTED|quota exceeded/i.test(b) && !/retryDelay/i.test(b));
 }
 
 serve(async (req) => {
