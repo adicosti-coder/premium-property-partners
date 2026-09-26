@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       continue;
     }
     const tpl = await resolveApprovedTemplate(
-      Deno.env.get("WA_OUTBOUND_TEMPLATE") || "intake_prospect_apartments",
+      Deno.env.get("WA_OUTBOUND_TEMPLATE") || "prospect_intro_premium_v3",
       "ro",
     );
     const { error: qErr } = await supabase.from("wa_outbound_queue").insert({

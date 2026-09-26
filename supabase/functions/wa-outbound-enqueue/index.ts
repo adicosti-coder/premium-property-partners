@@ -18,7 +18,7 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const DEFAULT_TEMPLATE = Deno.env.get("WA_OUTBOUND_TEMPLATE") || "intake_prospect_apartments";
+const DEFAULT_TEMPLATE = Deno.env.get("WA_OUTBOUND_TEMPLATE") || "prospect_intro_premium_v3";
 
 /** RO phone → +40XXXXXXXXX, or null when unusable. */
 function normalizePhone(raw?: string | null): string | null {
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
       prospect_listing_id: p.id,
       template_name: templateName,
       template_language: templateLanguage,
-      // Șablonul aprobat `intake_prospect_apartments` nu are variabile → fără parametri.
+      // Șablonul de prim contact nu are variabile → fără parametri.
       template_params: [],
       status: "pending",
       priority,

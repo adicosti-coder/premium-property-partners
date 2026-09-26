@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
     }
 
     // Fereastra de 24h e închisă → doar șablonul aprobat poate fi livrat.
-    const tplName = Deno.env.get("WA_DEFAULT_TEMPLATE") || "intake_prospect_apartments";
+    const tplName = Deno.env.get("WA_DEFAULT_TEMPLATE") || "prospect_intro_premium_v3";
     const meta = await sendToMeta({
       messaging_product: "whatsapp",
       to: c.phone_normalized.replace(/^\+/, ""),
