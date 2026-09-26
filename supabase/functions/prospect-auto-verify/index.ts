@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
     } else if (state?.paused) {
       return json({ skipped: "paused", reason: state.pause_reason });
     }
+    if (probeOnly) limit = 1;
 
     const now = Date.now();
     if (state?.lease_until && new Date(state.lease_until).getTime() > now) {
