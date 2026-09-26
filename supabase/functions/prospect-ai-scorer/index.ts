@@ -92,26 +92,12 @@ serve(async (req) => {
       });
     }
 
-    const userPrompt = `Analizează acest anunț imobiliar din Timișoara (sau zonă) extras de scraper-ul nostru și scorează-l ca lead pentru agenția RealTrust.
-
-DATE ANUNȚ:
-- Titlu: ${prospect.title || "?"}
-- Tip: ${prospect.prospect_type || "?"}
-- Locație: ${prospect.location || "?"} (zonă: ${prospect.zone || "?"})
-- Preț: ${prospect.price || "?"} ${prospect.currency || "EUR"}
-- Camere: ${prospect.rooms || "?"} | Suprafață: ${prospect.size || "?"} mp | An: ${prospect.year_built || "?"}
-- Sursă: ${prospect.source_platform || "?"}
-- Contact afișat: ${prospect.contact_name || "necunoscut"}
-- Descriere: ${(prospect.description || "").slice(0, 1500)}
-
-Scorează 0-100 în funcție de:
-1. Potențial conversie (proprietar direct >> agenție; lipsă agenție = +30)
-2. Pretabilitate regim hotelier (centru, 1-3 cam, mobilat = +20)
-3. Preț sub-pieței / urgență (cuvinte: "urgent", "negociabil", "preț scăzut" = +15)
-4. Calitate descriere (dacă e foarte vagă, poate fi semnal de proprietar netehnic = +5; dacă e copy generic agenție = -20)
-5. Date contact directe disponibile (+10)
-
-Răspunde EXCLUSIV cu un obiect JSON valid conform schemei.`;
+    // Prompt compact: doar atributele esențiale, descriere comprimată (economie de tokens).
+    const desc = (prospect.description || "").replace(/\s+/g, " ").trim().slice(0, 600);
+    const userPrompt = `Anunț Timișoara → scor lead RealTrust.
+${prospect.title || "?"} | ${prospect.zone || prospect.location || "?"} | ${prospect.price || "?"} ${prospect.currency || "EUR"} | ${prospect.rooms || "?"}cam ${prospect.size || "?"}mp | an ${prospect.year_built || "?"} | ${prospect.source_platform || "?"} | contact: ${prospect.contact_name || "?"}
+Descriere: ${desc || "-"}
+Criterii: proprietar direct +30; pretabil hotelier (centru, 1-3 cam, mobilat) +20; urgență/negociabil +15; date contact +10; copy generic agenție -20.`;
 
     const GEMINI_MODEL = "gemini-3.6-flash";
     const responseSchema = {
