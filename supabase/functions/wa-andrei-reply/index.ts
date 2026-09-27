@@ -182,8 +182,9 @@ ${settings.system_prompt ? `\nINDICAȚII SUPLIMENTARE:\n${String(settings.system
 ANUNȚUL PROPRIETARULUI: ${listingText}
 MEMORIE RealTrust: ${contextText || "(primul contact)"}
 
-Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interested" | "neutral" | "not_interested", "wants_call": true|false, "summary": "rezumat scurt", "email": "adresa dacă proprietarul a scris-o, altfel null"}
-"hot" = interes clar (vrea să vândă/administreze cu noi, acceptă evaluarea) sau cere să fie sunat.`;
+Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interested" | "neutral" | "not_interested", "wants_call": true|false, "summary": "rezumat scurt", "email": "adresa dacă proprietarul a scris-o, altfel null", "outcome": "vandut" | "inchiriat" | "pierdut" | null}
+"hot" = interes clar (vrea să vândă/administreze cu noi, acceptă evaluarea) sau cere să fie sunat.
+"outcome" = DOAR dacă proprietarul confirmă explicit: "vandut" = a vândut proprietatea prin RealTrust; "inchiriat" = a închiriat-o / a semnat administrarea cu RealTrust; "pierdut" = a vândut/închiriat deja altfel, anunțul nu mai e disponibil sau refuză definitiv. Altfel null.`;
 
   const contents = (history || [])
     .filter((m) => m.content)
@@ -197,6 +198,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
   let replyText = "";
   let intent = "neutral";
   let wantsCall = false;
+  let outcome: string | null = null;
   let summary = "";
   let tokensIn = 0;
   let tokensOut = 0;
@@ -226,6 +228,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
     replyText = String(parsed.reply ?? "").trim();
     intent = String(parsed.intent ?? "neutral");
     wantsCall = parsed.wants_call === true;
+    outcome = ["vandut", "inchiriat", "pierdut"].includes(parsed.outcome) ? parsed.outcome : null;
     summary = String(parsed.summary ?? "").slice(0, 300);
     tokensIn = data?.usageMetadata?.promptTokenCount ?? 0;
     tokensOut = data?.usageMetadata?.candidatesTokenCount ?? 0;
@@ -357,6 +360,20 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
     await supabase.from("wa_conversations")
       .update({ status: "closed", handoff_reason: summary || "not_interested" })
       .eq("id", conversationId);
+  }
+
+  // Conversie automată în Lead Manager (Vândut / Închiriat / Pierdut) din răspunsul proprietarului.
+  const autoOutcome = outcome ?? (intent === "not_interested" ? "pierdut" : null);
+  if (autoOutcome && conv?.phone_normalized) {
+    try {
+      const { data: lds } = await supabase.from("leads").select("id, crm_status")
+        .eq("whatsapp_number", conv.phone_normalized).order("created_at", { ascending: false }).limit(1);
+      const ld = lds?.[0];
+      // Nu retrogradăm o conversie deja câștigată în „Pierdut”.
+      if (ld && !(autoOutcome === "pierdut" && ["vandut", "inchiriat"].includes(String(ld.crm_status)))) {
+        await supabase.from("leads").update({ crm_status: autoOutcome }).eq("id", ld.id);
+      }
+    } catch (e) { console.error("[wa-andrei-reply] auto conversion failed:", e); }
   }
 
   // Check status again (a tool may have changed it)
