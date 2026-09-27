@@ -17,12 +17,14 @@ export default function OutreachMonitorPanel() {
     refetchInterval: 60_000,
     queryFn: async () => {
       const since24 = new Date(Date.now() - 86_400_000).toISOString();
-      const [sent, pending, delivered, failed, lastSent, lastInbound, inbound7d, scored24, lastScored, hot, settings, replies] =
+      const [sent, pending, delivered, failed, chatSent, chatReplies, lastSent, lastInbound, inbound7d, scored24, lastScored, hot, settings, replies] =
         await Promise.all([
           countQ("wa_outbound_queue", (q) => q.eq("status", "sent")),
           countQ("wa_outbound_queue", (q) => q.eq("status", "pending")),
           countQ("wa_outbound_queue", (q) => q.not("delivered_at", "is", null)),
           countQ("wa_outbound_queue", (q) => q.eq("status", "failed")),
+          countQ("chat_messages", (q) => q.eq("role", "user")),
+          countQ("chat_messages", (q) => q.eq("role", "assistant")),
           (supabase as any).from("wa_outbound_queue").select("sent_at").not("sent_at", "is", null).order("sent_at", { ascending: false }).limit(1).maybeSingle(),
           (supabase as any).from("wa_messages").select("created_at").eq("direction", "inbound").order("created_at", { ascending: false }).limit(1).maybeSingle(),
           countQ("wa_messages", (q) => q.eq("direction", "inbound").gte("created_at", new Date(Date.now() - 7 * 86_400_000).toISOString())),
@@ -40,7 +42,7 @@ export default function OutreachMonitorPanel() {
       const plMap = new Map((pls ?? []).map((p: any) => [p.id, p]));
       const recentReplies = convs.map((c: any) => ({ ...c, listing: plMap.get(c.prospect_id) }));
       return {
-        sent, pending, delivered, failed, inbound7d, scored24,
+        sent, pending, delivered, failed, chatSent, chatReplies, inbound7d, scored24,
         lastSent: lastSent.data?.sent_at, lastInbound: lastInbound.data?.created_at,
         lastScored: lastScored.data?.ai_scored_at, hot: hot.data ?? [], settings: settings.data, recentReplies,
       };
@@ -53,6 +55,8 @@ export default function OutreachMonitorPanel() {
         { label: "În coadă", v: data.pending },
         { label: "Livrate (confirmat Meta)", v: data.delivered },
         { label: "Eșuate", v: data.failed },
+        { label: "Chat mobil · trimise", v: data.chatSent },
+        { label: "Chat mobil · răspunsuri", v: data.chatReplies },
       ]
     : [];
 
@@ -70,7 +74,7 @@ export default function OutreachMonitorPanel() {
           <div className="text-sm text-muted-foreground">Se încarcă…</div>
         ) : (
           <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
               {tiles.map((t) => (
                 <div key={t.label} className="rounded-lg border p-3">
                   <div className="text-xs text-muted-foreground">{t.label}</div>
