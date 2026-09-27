@@ -287,9 +287,9 @@ const INSTANT_REPLIES: Array<[RegExp, string]> = [
   [/disponibil|availability|libere|free now/i, "⚡ Verific disponibilitatea live acum. Rezervarea directă are -5% cu codul DIRECT5 👇"],
   [/sun|call|apel|programe|rezerv|book/i, "⚡ Sigur! Scrie-ne numărul tău de telefon aici și te contactăm imediat, sau folosește butonul WhatsApp de jos 👇"],
 ];
-const getInstantReply = (msg: string): string | null => {
+const getInstantReply = (msg: string, fallback = false): string | null => {
   for (const [re, reply] of INSTANT_REPLIES) if (re.test(msg)) return reply;
-  return null;
+  return fallback ? "⚡ Am primit mesajul tău! Andrei îți răspunde chiar acum 👇 (dacă preferi, lasă un număr de telefon și te sunăm noi)" : null;
 };
 
 // Context-aware quick actions based on current page
@@ -572,8 +572,8 @@ const AIChatbot = () => {
       setMessages(prev => [
         ...prev,
         { id: crypto.randomUUID(), role: "user", content: content || (language === "ro" ? "Am atașat o imagine cu proprietatea." : "I attached a property image."), timestamp: new Date(), imagePreview: currentImage || undefined },
-        ...(overrideMessage && getInstantReply(overrideMessage)
-          ? [{ id: crypto.randomUUID(), role: "assistant" as const, content: getInstantReply(overrideMessage)!, timestamp: new Date() }]
+        ...(content && getInstantReply(content, !overrideMessage && language === "ro")
+          ? [{ id: crypto.randomUUID(), role: "assistant" as const, content: getInstantReply(content, !overrideMessage && language === "ro")!, timestamp: new Date() }]
           : []),
         { id: assistantId!, role: "assistant", content: "", isStreaming: true, timestamp: new Date() }
       ]);
