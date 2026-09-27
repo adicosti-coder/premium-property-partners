@@ -1045,8 +1045,8 @@ const AIChatbot = () => {
 
                     {/* Typing indicator */}
                     {isLoading && messages[messages.length - 1]?.content === "" && (
-                      <div className="flex gap-4">
-                        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
+                      <div className="flex gap-2.5 md:gap-4">
+                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
                           <Bot className="w-5 h-5 text-primary-foreground" />
                         </div>
                         <div className="bg-muted/50 rounded-[1.5rem] rounded-tl-none border border-border/30 px-5 py-3">
