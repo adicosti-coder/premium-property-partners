@@ -220,7 +220,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, language = "ro", conversationHistory = [], pageContext = "/", imageBase64, imagesArray, qualificationContext } = await req.json();
+    const { message, sessionId = "", language = "ro", conversationHistory = [], pageContext = "/", imageBase64, imagesArray, qualificationContext } = await req.json();
 
     if ((!message && !imageBase64 && !imagesArray?.length) || (message && message.length > 2000)) {
       return new Response(JSON.stringify({ error: "invalid_message" }), {
@@ -420,7 +420,7 @@ When you complete a full property analysis, include a structured report at the e
         });
       }
 
-      return streamSSE(streamResponse, corsHeaders);
+      return streamSSE(streamResponse, corsHeaders, (t) => logChat(String(sessionId).slice(0, 100), language, message, t));
     }
 
     // ─── No tool calls: stream the initial response as SSE ──
@@ -446,6 +446,7 @@ When you complete a full property analysis, include a structured report at the e
         await writer.write(encoder.encode("data: [DONE]\n\n"));
       } finally {
         await writer.close();
+        await logChat(String(sessionId).slice(0, 100), language, message, content);
       }
     })();
 
@@ -461,9 +462,31 @@ When you complete a full property analysis, include a structured report at the e
   }
 });
 
+// ─── Chat logging (feeds the Admin „Astăzi" counters) ────────
+async function logChat(sessionId: string, language: string, userMsg: string, assistantMsg: string) {
+  try {
+    if (!sessionId || !assistantMsg) return;
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    let { data: conv } = await sb.from("chat_conversations").select("id").eq("session_id", sessionId).maybeSingle();
+    if (!conv) {
+      const ins = await sb.from("chat_conversations").insert({ session_id: sessionId, language }).select("id").single();
+      if (ins.error) { console.error("[chat-log] conv", ins.error); return; }
+      conv = ins.data;
+    } else {
+      await sb.from("chat_conversations").update({ last_activity_at: new Date().toISOString() }).eq("id", conv.id);
+    }
+    const { error } = await sb.from("chat_messages").insert([
+      { conversation_id: conv!.id, role: "user", content: (userMsg || "[imagine]").slice(0, 4000) },
+      { conversation_id: conv!.id, role: "assistant", content: assistantMsg.slice(0, 8000) },
+    ]);
+    if (error) console.error("[chat-log] msgs", error);
+  } catch (e) { console.error("[chat-log]", e); }
+}
+
 // ─── SSE Stream Helper ──────────────────────────────────────
 
-function streamSSE(response: Response, corsHeaders: Record<string, string>): Response {
+function streamSSE(response: Response, corsHeaders: Record<string, string>, onDone?: (text: string) => Promise<void>): Response {
+  let full = "";
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
@@ -492,6 +515,7 @@ function streamSSE(response: Response, corsHeaders: Record<string, string>): Res
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content;
             if (content) {
+              full += content;
               await writer.write(encoder.encode(`data: ${JSON.stringify({ delta: content })}\n\n`));
             }
           } catch {}
@@ -501,6 +525,7 @@ function streamSSE(response: Response, corsHeaders: Record<string, string>): Res
       console.error("Stream error:", e);
     } finally {
       await writer.close();
+      if (onDone) await onDone(full);
     }
   })();
 
