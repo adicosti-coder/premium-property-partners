@@ -205,6 +205,36 @@ async function detectAndSaveLead(message: string, conversationHistory: any[]) {
   }
 }
 
+// ─── Chat lead e-mails (alertă internă + follow-up vizitator) ─────
+async function notifyChatLead(message: string, sessionId: string, pageContext: string, history: any[]) {
+  if (!message) return;
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const sid = String(sessionId || "").slice(0, 80) || crypto.randomUUID();
+  const userTurns = (history || []).filter((m: any) => m?.role === "user").length;
+  const email = (message.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "").toLowerCase();
+  const phone = message.match(/(?:\+?40|0)7\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/)?.[0] ?? "";
+  // Alertă internă: primul mesaj al sesiunii + ori de câte ori apar date de contact
+  if (userTurns === 0 || email || phone) {
+    await sb.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "chat-lead-alert",
+        idempotencyKey: `chat-alert-${sid}-${email || phone || "first"}`,
+        templateData: { source: "chat", message: message.slice(0, 500), page: String(pageContext).slice(0, 200), email: email || undefined, phone: phone || undefined },
+      },
+    });
+  }
+  if (email) {
+    await sb.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "hot-lead-followup",
+        recipientEmail: email,
+        idempotencyKey: `chat-followup-${sid}-${email}`,
+        templateData: { intro: "Mulțumim pentru mesajul din chat! Ca să vă răspundem concret, vă propun un apel scurt, de 2 minute." },
+      },
+    });
+  }
+}
+
 // ─── Main Handler ───────────────────────────────────────────
 
 serve(async (req) => {
@@ -230,6 +260,7 @@ serve(async (req) => {
 
     // Async lead detection
     detectAndSaveLead(message, conversationHistory).catch(console.error);
+    notifyChatLead(message, sessionId, pageContext, conversationHistory).catch(console.error);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -239,6 +270,13 @@ serve(async (req) => {
     }
 
     let systemPrompt = await buildSystemPrompt(language, pageContext);
+    systemPrompt += `\n\n=== ANDREI (CONSULTANT RealTrust) — PROPRIETARI ===
+Când vizitatorul este proprietar sau întreabă despre vânzare, închiriere, evaluare, comision sau randament, răspunde din perspectiva lui Andrei, consultant RealTrust Timișoara, în același stil ca pe WhatsApp: scurt (2-3 propoziții), cald, profesionist, consultativ, fără presiune.
+- VÂNZARE: prioritizează „Vânzare Asistată” (cumpărători calificați, dosare complete, negociere și acte) și propune o evaluare GRATUITĂ a prețului de piață.
+- ÎNCHIRIERE: prioritizează „Regim Hotelier (ApArt Hotel)” — randament net estimat ~9,4%/an, administrare RealTrust 15-20%, 100% pasiv.
+- COSTURI: fii transparent (administrare 15-20%), explică valoarea și propune un apel de 2 minute. Nu menționa alte procente de cheltuieli.
+- Nu avem birou pentru clienți: evaluările și vizionările se fac la apartament.
+- Încheie cu o întrebare deschisă sau invitația la un apel de 2 minute; cere politicos telefonul sau e-mailul pentru a trimite detaliile.`;
     const forceInvestmentListings = isInvestmentListingIntent(message || "", pageContext);
 
     // Enhance system prompt with qualification context and HostScan capabilities.
