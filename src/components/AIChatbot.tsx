@@ -997,21 +997,15 @@ const AIChatbot = () => {
                         key={m.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={cn("flex gap-2.5 md:gap-4 group", m.role === "user" ? "flex-row-reverse" : "flex-row")}
+                        className={cn("flex gap-2 group", m.role === "user" ? "justify-end" : "justify-start")}
                       >
                         <div className={cn(
-                          "w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
-                          m.role === "user" ? "bg-muted text-foreground" : "bg-primary text-primary-foreground"
-                        )}>
-                          {m.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
-                        </div>
-                        <div className={cn(
-                          "max-w-[calc(100%-3rem)] md:max-w-[80%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] shadow-sm relative min-w-0 break-words [overflow-wrap:anywhere]",
+                          "max-w-[85%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] relative min-w-0 break-words [overflow-wrap:anywhere]",
                           m.role === "user"
-                            ? "bg-primary text-primary-foreground rounded-tr-none"
+                            ? "bg-card border border-border/70 rounded-tr-[0.35rem] shadow-sm"
                             : m.isError
-                              ? "bg-destructive/10 border border-destructive/20 rounded-tl-none"
-                              : "bg-muted/50 rounded-tl-none border border-border/30"
+                              ? "bg-destructive/10 border border-destructive/20 rounded-tl-[0.35rem]"
+                              : "bg-accent/[0.07] border border-accent/20 rounded-tl-[0.35rem] shadow-sm"
                         )}>
                           {/* Image preview */}
                           {m.imagePreview && (
@@ -1045,14 +1039,11 @@ const AIChatbot = () => {
 
                     {/* Typing indicator */}
                     {isLoading && messages[messages.length - 1]?.content === "" && (
-                      <div className="flex gap-2.5 md:gap-4">
-                        <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-lg">
-                          <Bot className="w-5 h-5 text-primary-foreground" />
-                        </div>
-                        <div className="bg-muted/50 rounded-[1.5rem] rounded-tl-none border border-border/30 px-5 py-3">
+                      <div className="flex justify-start">
+                        <div className="bg-accent/[0.07] rounded-[1.5rem] rounded-tl-[0.35rem] border border-accent/20 px-5 py-3 shadow-sm">
                           <div className="flex gap-1.5 items-center">
                             {[0, 1, 2].map((i) => (
-                              <motion.div key={i} className="w-2 h-2 rounded-full bg-primary/60" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
+                              <motion.div key={i} className="w-2 h-2 rounded-full bg-accent/60" animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
                             ))}
                           </div>
                         </div>
