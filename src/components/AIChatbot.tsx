@@ -881,7 +881,7 @@ const AIChatbot = () => {
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
-              "fixed z-50 bg-card/98 backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
+              "fixed z-50 bg-card backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
               isMinimized
                 ? "bottom-8 right-8 w-72 h-16 rounded-full"
                 : "bottom-[max(4.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] md:bottom-4 right-2 md:right-4 left-2 md:left-auto w-auto max-w-[calc(100vw-1rem)] md:w-[450px] h-[min(74vh,700px)] md:h-[700px] rounded-[1.75rem]"
