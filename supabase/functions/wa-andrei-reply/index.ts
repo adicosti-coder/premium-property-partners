@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
 
   // 2. Conversation + history
   const { data: conv } = await supabase.from("wa_conversations")
-    .select("id, phone_normalized, status, prospect_id, last_outbound_at, last_inbound_at")
+    .select("id, phone_normalized, status, prospect_id, last_outbound_at, last_inbound_at, wa_profile_name")
     .eq("id", conversationId).maybeSingle();
   if (!conv) {
     return new Response(JSON.stringify({ error: "Conversation not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
