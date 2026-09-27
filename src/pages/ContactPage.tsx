@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import QuickContactForm from "@/components/contact/QuickContactForm";
+import CallbackCard from "@/components/contact/CallbackCard";
 import { useRegisterFAQs } from "@/hooks/useFAQSchema";
 
 const GlobalConversionWidgets = lazy(() => import("@/components/GlobalConversionWidgets"));
@@ -194,6 +195,8 @@ const ContactPage = () => {
               </Button>
             </Link>
           </section>
+
+          <CallbackCard />
 
           {/* Quick contact cards */}
           <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
