@@ -597,6 +597,7 @@ const AIChatbot = () => {
         },
         body: JSON.stringify({
           message: content || "",
+          sessionId: (() => { try { let id = sessionStorage.getItem("rt_chat_sid"); if (!id) { id = crypto.randomUUID(); sessionStorage.setItem("rt_chat_sid", id); } return id; } catch { return ""; } })(),
           language,
           conversationHistory: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
           pageContext: currentPath,
