@@ -61,6 +61,9 @@ const PropertyCard = ({
     rawReviews > 0;
   const displayRating = hasRating ? Math.min(10, normalizedRating).toFixed(1) : null;
   const displayReviews = hasRating ? rawReviews : 0;
+  const ratingLabel = hasRating && normalizedRating >= 9
+    ? (language === "ro" ? "Superb" : "Superb")
+    : null;
 
   // Sanity guard: ignore implausible live prices (scraper poate prinde total sejur / RON)
   const livePrice = liveData?.price_per_night;
@@ -271,6 +274,7 @@ const PropertyCard = ({
             <span className="flex items-center gap-1 text-xs text-muted-foreground/80">
               <Star className="w-3 h-3 fill-primary text-primary" aria-hidden="true" />
               <span className="font-semibold text-foreground">{displayRating}</span>
+              {ratingLabel && <span className="font-medium text-foreground">{ratingLabel}</span>}
               <span>({displayReviews} {t.reviews})</span>
             </span>
           ) : (
