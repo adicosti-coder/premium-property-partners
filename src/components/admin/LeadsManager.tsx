@@ -938,6 +938,7 @@ const LeadsManager = () => {
                   <TableHead>{text.property}</TableHead>
                   <TableHead>HostScan</TableHead>
                   <TableHead>{text.profit}</TableHead>
+                  <TableHead>Mesaj</TableHead>
                   <TableHead>Conversie</TableHead>
                   <TableHead>{text.source}</TableHead>
                   <TableHead>{text.date}</TableHead>

@@ -225,6 +225,15 @@ export const LeadTableRow = ({
           <span className="text-muted-foreground">-</span>
         )}
       </TableCell>
+      <TableCell className="max-w-[260px] align-top">
+        {lead.message ? (
+          <p className="text-xs text-foreground whitespace-pre-wrap [overflow-wrap:anywhere] line-clamp-4" title={lead.message}>
+            {lead.message}
+          </p>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        )}
+      </TableCell>
       <TableCell onClick={(e) => e.stopPropagation()}><ConversionCell lead={lead} /></TableCell>
       <TableCell>{sourceBadge}</TableCell>
       <TableCell>
