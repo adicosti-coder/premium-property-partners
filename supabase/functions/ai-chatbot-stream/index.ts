@@ -420,7 +420,7 @@ When you complete a full property analysis, include a structured report at the e
         });
       }
 
-      return streamSSE(streamResponse);
+      return streamSSE(streamResponse, corsHeaders);
     }
 
     // ─── No tool calls: stream the initial response as SSE ──
