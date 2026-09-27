@@ -216,6 +216,7 @@ async function notifyChatLead(message: string, sessionId: string, pageContext: s
   // Alertă internă: primul mesaj al sesiunii + ori de câte ori apar date de contact
   if (userTurns === 0 || email || phone) {
     const r = await sb.functions.invoke("send-transactional-email", {
+      headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
       body: {
         templateName: "chat-lead-alert",
         idempotencyKey: `chat-alert-${sid}-${email || phone || "first"}`,
@@ -226,6 +227,7 @@ async function notifyChatLead(message: string, sessionId: string, pageContext: s
   }
   if (email) {
     await sb.functions.invoke("send-transactional-email", {
+      headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
       body: {
         templateName: "hot-lead-followup",
         recipientEmail: email,

@@ -241,6 +241,7 @@ const handler = async (req: Request): Promise<Response> => {
       try {
         await supabase.from("leads").update({ lead_grade: "hot", engagement_status: "hot_lead", lead_score: 90 }).eq("id", leadId);
         await supabase.functions.invoke("send-transactional-email", {
+          headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
           body: {
             templateName: "chat-lead-alert",
             idempotencyKey: `contact-callback-alert-${leadId}`,
@@ -249,6 +250,7 @@ const handler = async (req: Request): Promise<Response> => {
         });
         if (email) {
           await supabase.functions.invoke("send-transactional-email", {
+            headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
             body: {
               templateName: "hot-lead-followup",
               recipientEmail: email,

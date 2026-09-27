@@ -329,6 +329,7 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
         ?? (lastUserEmail() || null);
       if (followEmail && leadId) {
         const { error: fErr } = await supabase.functions.invoke("send-transactional-email", {
+          headers: { "x-webhook-secret": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "" },
           body: {
             templateName: "hot-lead-followup",
             recipientEmail: followEmail,
