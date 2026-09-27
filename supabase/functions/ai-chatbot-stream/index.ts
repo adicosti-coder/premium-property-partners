@@ -463,7 +463,7 @@ When you complete a full property analysis, include a structured report at the e
 
 // ─── SSE Stream Helper ──────────────────────────────────────
 
-function streamSSE(response: Response): Response {
+function streamSSE(response: Response, corsHeaders: Record<string, string>): Response {
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
