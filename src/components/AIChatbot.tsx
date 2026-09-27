@@ -936,13 +936,6 @@ const AIChatbot = () => {
                     <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9" onClick={handleNewChat} title={text.newChat}>
                       <RotateCcw className="w-4 h-4 text-muted-foreground" />
                     </Button>
-                    <Button
-                      variant="ghost" size="icon"
-                      className={cn("rounded-xl h-9 w-9 transition-colors", voiceMode && "bg-primary/20 text-primary")}
-                      onClick={async () => voiceMode ? endVoiceMode() : startVoiceMode()}
-                    >
-                      {isConnectingVoice ? <Loader2 className="w-4 h-4 animate-spin" /> : voiceMode ? <Headphones className="w-5 h-5 text-primary" /> : <Mic className="w-5 h-5 text-muted-foreground" />}
-                    </Button>
                   </>
                 )}
                 <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/50 h-9 w-9 hidden md:flex" onClick={() => setIsMinimized(!isMinimized)}>
