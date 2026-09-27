@@ -123,21 +123,24 @@ Deno.serve(async (req) => {
     console.warn("[wa-andrei-reply] context fetch failed:", e);
   }
 
-  // 4. Contextul anunțului (titlu, zonă, preț) din campania de prospectare
+  // 4. Contextul anunțului (titlu, zonă, preț, tip tranzacție) din campania de prospectare
   let listingText = "(anunț necunoscut)";
+  let listingCategory = "";
   let listingId: string | null = conv.prospect_id ?? null;
   try {
     let q = supabase.from("prospect_listings")
-      .select("id, title, zone, price, currency, rooms, size, contact_name");
+      .select("id, title, zone, price, currency, rooms, size, contact_name, category");
     q = listingId ? q.eq("id", listingId) : q.eq("phone_normalized", conv.phone_normalized);
     const { data: pl } = await q.limit(1).maybeSingle();
     if (pl) {
       listingId = pl.id;
+      listingCategory = String(pl.category ?? "").trim().toLowerCase();
       listingText = [
         pl.title, pl.zone ? `zona ${pl.zone}` : null,
         pl.price ? `${pl.price} ${pl.currency ?? "EUR"}` : null,
         pl.rooms ? `${pl.rooms} camere` : null, pl.size ? `${pl.size} mp` : null,
         pl.contact_name ? `proprietar: ${pl.contact_name}` : null,
+        pl.category ? `tip anunț: ${pl.category}` : null,
       ].filter(Boolean).join(" · ");
     }
   } catch (e) {
