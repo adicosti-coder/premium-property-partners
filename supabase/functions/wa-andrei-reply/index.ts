@@ -1,9 +1,9 @@
-// wa-andrei-reply — generează răspunsul AI (GPT-5.4-mini) și îl trimite via wa-andrei-send.
-// Internal-only, invocat de wa-andrei-webhook.
+// wa-andrei-reply — răspunsul AI (Gemini direct) pentru proprietarii care răspund
+// la campania WhatsApp; detectează Hot Lead. Internal-only, invocat de wa-andrei-webhook.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@1";
-import { generateText, tool, stepCountIs } from "npm:ai@5";
-import { z } from "npm:zod@3";
+import { relayToMake } from "../_shared/makeRelay.ts";
+
+const GEMINI_MODEL = "gemini-3.6-flash";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,9 +38,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!lovableKey) {
-    return new Response(JSON.stringify({ error: "LOVABLE_API_KEY missing" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!geminiKey) {
+    return new Response(JSON.stringify({ error: "GEMINI_API_KEY missing" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   let payload: { conversation_id?: string } = {};
@@ -123,104 +123,85 @@ Deno.serve(async (req) => {
     console.warn("[wa-andrei-reply] context fetch failed:", e);
   }
 
-  // 4. AI SDK provider + tools
-  const provider = createOpenAICompatible({
-    name: "lovable",
-    baseURL: "https://ai.gateway.lovable.dev/v1",
-    supportsStructuredOutputs: false,
-    headers: {
-      "Lovable-API-Key": lovableKey,
-      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
-    },
-  });
-  const model = provider("openai/gpt-5.4-mini");
+  // 4. Contextul anunțului (titlu, zonă, preț) din campania de prospectare
+  let listingText = "(anunț necunoscut)";
+  let listingId: string | null = conv.prospect_id ?? null;
+  try {
+    let q = supabase.from("prospect_listings")
+      .select("id, title, zone, price, currency, rooms, size, contact_name");
+    q = listingId ? q.eq("id", listingId) : q.eq("phone_normalized", conv.phone_normalized);
+    const { data: pl } = await q.limit(1).maybeSingle();
+    if (pl) {
+      listingId = pl.id;
+      listingText = [
+        pl.title, pl.zone ? `zona ${pl.zone}` : null,
+        pl.price ? `${pl.price} ${pl.currency ?? "EUR"}` : null,
+        pl.rooms ? `${pl.rooms} camere` : null, pl.size ? `${pl.size} mp` : null,
+        pl.contact_name ? `proprietar: ${pl.contact_name}` : null,
+      ].filter(Boolean).join(" · ");
+    }
+  } catch (e) {
+    console.warn("[wa-andrei-reply] listing context failed:", e);
+  }
 
-  const tools = {
-    escalate_to_call: tool({
-      description: "Cere ca Andrei să sune proprietarul acum (când lead-ul e cald și clar). Folosește DOAR când proprietarul a răspuns clar la calificare și e deschis să continue conversația la telefon.",
-      inputSchema: z.object({
-        reason: z.string().describe("De ce e escaladat: rezumat scurt lead + interes"),
-        qualification_score: z.number().min(0).max(100).describe("Scor calificare 0-100"),
-      }),
-      execute: async ({ reason, qualification_score }) => {
-        await supabase.from("wa_conversations")
-          .update({
-            status: "escalated_to_call",
-            handoff_reason: reason,
-            qualification_score,
-            assigned_channel: "voice",
-          })
-          .eq("id", conversationId);
-        // Best-effort: kick off voice call (stack-ul vechi)
-        try {
-          await fetch(`${supabaseUrl}/functions/v1/voice-agent-initiate`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
-            body: JSON.stringify({ phone: conv.phone_normalized, source: "wa_escalation" }),
-          }).catch(() => {});
-        } catch {}
-        return { ok: true };
-      },
-    }),
-    mark_qualified: tool({
-      description: "Marchează lead-ul cu un scor de calificare (0-100) fără a escalada. Folosește la finalul unei conversații informative.",
-      inputSchema: z.object({
-        score: z.number().min(0).max(100),
-        notes: z.string(),
-      }),
-      execute: async ({ score, notes }) => {
-        await supabase.from("wa_conversations")
-          .update({ qualification_score: score, handoff_reason: notes })
-          .eq("id", conversationId);
-        return { ok: true };
-      },
-    }),
-    handoff_human: tool({
-      description: "Predă conversația unui operator uman (când proprietarul cere detalii tehnice / contract / plată sau e nemulțumit). Oprește răspunsurile AI pe această conversație.",
-      inputSchema: z.object({ reason: z.string() }),
-      execute: async ({ reason }) => {
-        await supabase.from("wa_conversations")
-          .update({ status: "awaiting_human", handoff_reason: reason })
-          .eq("id", conversationId);
-        return { ok: true };
-      },
-    }),
-  };
+  const systemPrompt = `Ești Andrei, consultant RealTrust Timișoara. Răspunzi pe WhatsApp proprietarilor care au răspuns la mesajul nostru despre anunțul lor.
+STIL: scurt (max 2-3 propoziții), profesionist, consultativ, în română, fără markdown, fără presiune.
+SERVICII (menționează-le natural, doar cât e relevant):
+1) Vânzare asistată — promovare, filtrarea cumpărătorilor, negociere și acte, până la semnare.
+2) Regim hotelier — administrare completă ApArt Hotel, randament net estimat ~9,4%/an; administrarea RealTrust e 15-20%.
+REGULI: nu avem birou pentru clienți — vizionările/evaluările se fac la apartament. Nu inventa prețuri sau promisiuni. Propune mereu un pas concret: o scurtă discuție telefonică sau o evaluare a proprietății.
+Dacă proprietarul refuză, mulțumește politicos și încheie.
+${settings.system_prompt ? `\nINDICAȚII SUPLIMENTARE:\n${String(settings.system_prompt).slice(0, 3000)}\n` : ""}
+ANUNȚUL PROPRIETARULUI: ${listingText}
+MEMORIE RealTrust: ${contextText || "(primul contact)"}
 
-  // 5. Build messages
-  const systemPrompt = `${settings.system_prompt}
+Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interested" | "neutral" | "not_interested", "wants_call": true|false, "summary": "rezumat scurt"}
+"hot" = interes clar (vrea să vândă/administreze cu noi, acceptă evaluarea) sau cere să fie sunat.`;
 
-CANAL: WhatsApp text. Mesaj MAX 2-3 propoziții. Nu formatări markdown.
+  const contents = (history || [])
+    .filter((m) => m.content)
+    .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: String(m.content) }] }));
 
-CONTEXT PROPRIETAR (din memoria RealTrust):
-${contextText || "(fără istoric anterior — primul contact)"}`;
-
-  const messages = (history || []).map((m) => ({
-    role: m.role as "user" | "assistant",
-    content: m.content,
-  }));
-
-  if (messages.length === 0) {
-    // no inbound yet? safety
+  if (contents.length === 0) {
     return new Response(JSON.stringify({ ok: true, skipped: "no_history" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // 6. Generate
+  // 5. Gemini direct
   let replyText = "";
+  let intent = "neutral";
+  let wantsCall = false;
+  let summary = "";
   let tokensIn = 0;
   let tokensOut = 0;
   try {
-    const result = await generateText({
-      model,
-      system: systemPrompt,
-      messages,
-      tools,
-      stopWhen: stepCountIs(5),
-      providerOptions: { lovable: { service_tier: "priority" } },
-    });
-    replyText = (result.text || "").trim();
-    tokensIn = result.usage?.inputTokens ?? 0;
-    tokensOut = result.usage?.outputTokens ?? 0;
+    let resp: Response | null = null;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": geminiKey },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents,
+            generationConfig: { responseMimeType: "application/json" },
+          }),
+        },
+      );
+      if (resp.status !== 429 && resp.status < 500) break;
+      await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+    }
+    if (!resp || !resp.ok) throw new Error(`gemini_${resp?.status}: ${(await resp?.text())?.slice(0, 200)}`);
+    const data = await resp.json();
+    const raw = (data?.candidates?.[0]?.content?.parts ?? []).map((p: any) => p.text ?? "").join("");
+    let parsed: any = {};
+    try { parsed = JSON.parse(raw); } catch { parsed = { reply: raw }; }
+    replyText = String(parsed.reply ?? "").trim();
+    intent = String(parsed.intent ?? "neutral");
+    wantsCall = parsed.wants_call === true;
+    summary = String(parsed.summary ?? "").slice(0, 300);
+    tokensIn = data?.usageMetadata?.promptTokenCount ?? 0;
+    tokensOut = data?.usageMetadata?.candidatesTokenCount ?? 0;
   } catch (e) {
     console.error("[wa-andrei-reply] AI call failed:", e);
     await supabase.from("wa_messages").insert({
@@ -231,6 +212,65 @@ ${contextText || "(fără istoric anterior — primul contact)"}`;
       error: `ai_error: ${String(e).slice(0, 300)}`,
     });
     return new Response(JSON.stringify({ error: "AI generation failed", details: String(e) }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // 6. Hot Lead → Lead Manager + alertă
+  if (intent === "hot" || wantsCall) {
+    try {
+      const { data: lead } = await supabase.from("leads").select("id, lead_score")
+        .eq("whatsapp_number", conv.phone_normalized)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      let leadId = lead?.id ?? null;
+      const note = `[WhatsApp AI] ${wantsCall ? "Cere să fie sunat. " : ""}${summary}`;
+      if (leadId) {
+        await supabase.from("leads").update({
+          lead_grade: "hot",
+          lead_score: Math.max(Number(lead?.lead_score ?? 0), 90),
+          engagement_status: "hot_lead",
+          is_read: false,
+          scored_at: new Date().toISOString(),
+        }).eq("id", leadId);
+      } else {
+        const { data: nl } = await supabase.from("leads").insert({
+          name: `Client WhatsApp ${conv.phone_normalized}`,
+          whatsapp_number: conv.phone_normalized,
+          source: "whatsapp_reply",
+          message: `[Anunț: ${listingText}] ${note}`,
+          property_area: 0,
+          property_type: "necunoscut",
+          lead_grade: "hot",
+          lead_score: 90,
+          engagement_status: "hot_lead",
+        }).select("id").maybeSingle();
+        leadId = nl?.id ?? null;
+      }
+      await supabase.from("wa_conversations")
+        .update({ qualification_score: 90, handoff_reason: note, lead_id: leadId })
+        .eq("id", conversationId);
+      if (listingId) {
+        await supabase.from("prospect_listings").update({ lifecycle_status: "interested" }).eq("id", listingId);
+      }
+      const { data: admins } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+      const rows = (admins ?? []).map((a: { user_id: string }) => ({
+        user_id: a.user_id,
+        type: "success",
+        title: wantsCall ? "🔥 Hot Lead: proprietarul cere să fie sunat" : "🔥 Hot Lead pe WhatsApp",
+        message: `${conv.phone_normalized} · ${listingText}. ${summary}`.slice(0, 500),
+        action_url: "/admin?tab=leads",
+        action_label: "Deschide lead-ul",
+      }));
+      if (rows.length) await supabase.from("user_notifications").insert(rows);
+      await relayToMake("wa_hot_lead", {
+        lead_id: leadId, conversation_id: conversationId, phone: conv.phone_normalized,
+        listing: listingText, wants_call: wantsCall, summary,
+      });
+    } catch (e) {
+      console.error("[wa-andrei-reply] hot lead update failed:", e);
+    }
+  } else if (intent === "not_interested") {
+    await supabase.from("wa_conversations")
+      .update({ status: "closed", handoff_reason: summary || "not_interested" })
+      .eq("id", conversationId);
   }
 
   // Check status again (a tool may have changed it)
