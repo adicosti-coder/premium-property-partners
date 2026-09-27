@@ -173,7 +173,7 @@ const EvaluareGratuita = () => {
       email: form.email,
       property_type: form.propertyType,
       property_area: 0,
-      message: `[evaluare_gratuita] Zonă: ${zoneLabel} · Camere: ${form.rooms || "-"}`,
+      message: `[evaluare_gratuita] Zonă: ${zoneLabel} · Camere: ${form.rooms || "-"}${surface ? ` · ${surface} mp` : ""}${estimate ? ` · Estimare auto: ${estimate.min}-${estimate.max} €` : ""}`,
       source: "evaluare_gratuita",
       simulation_data: withCampaignTracking({
         zone: form.zone,
