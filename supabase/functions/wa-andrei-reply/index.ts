@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
 
   // 2. Conversation + history
   const { data: conv } = await supabase.from("wa_conversations")
-    .select("id, phone_normalized, status, prospect_id, last_outbound_at, last_inbound_at")
+    .select("id, phone_normalized, status, prospect_id, last_outbound_at, last_inbound_at, wa_profile_name")
     .eq("id", conversationId).maybeSingle();
   if (!conv) {
     return new Response(JSON.stringify({ error: "Conversation not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -127,13 +127,15 @@ Deno.serve(async (req) => {
   let listingText = "(anunț necunoscut)";
   let listingCategory = "";
   let listingId: string | null = conv.prospect_id ?? null;
+  let listingInfo: any = null;
   try {
     let q = supabase.from("prospect_listings")
-      .select("id, title, zone, price, currency, rooms, size, contact_name, category");
+      .select("id, title, zone, price, currency, rooms, size, contact_name, category, source_url, published_at");
     q = listingId ? q.eq("id", listingId) : q.eq("phone_normalized", conv.phone_normalized);
     const { data: pl } = await q.limit(1).maybeSingle();
     if (pl) {
       listingId = pl.id;
+      listingInfo = pl;
       listingCategory = String(pl.category ?? "").trim().toLowerCase();
       listingText = [
         pl.title, pl.zone ? `zona ${pl.zone}` : null,
@@ -156,6 +158,15 @@ Deno.serve(async (req) => {
       ? `STRATEGIE (anunț de ÎNCHIRIERE): prioritizează „Regim Hotelier (ApArt Hotel)” — administrare 100% pasivă, randament net estimat ~9,4%/an, cu administrarea RealTrust de 15-20%. Prezintă beneficiul fără bătăi de cap: ne ocupăm de oaspeți, curățenie, chei și taxe.`
       : `STRATEGIE: descoperă mai întâi dacă proprietarul vrea să vândă sau să închirieze, apoi aplică varianta potrivită: Vânzare Asistată cu evaluare gratuită a prețului, respectiv Regim Hotelier cu randament net estimat ~9,4%/an (administrare RealTrust 15-20%).`;
 
+  // E-mail cunoscut pentru acest proprietar?
+  let knownEmail: string | null = null;
+  try {
+    const { data: le } = await supabase.from("leads").select("email")
+      .eq("whatsapp_number", conv.phone_normalized).not("email", "is", null)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    knownEmail = le?.email ?? null;
+  } catch { /* ignore */ }
+
   const systemPrompt = `Ești Andrei, consultant RealTrust Timișoara. Răspunzi pe WhatsApp proprietarilor care au răspuns la mesajul nostru despre anunțul lor.
 STIL: scurt (max 2-3 propoziții), cald dar profesionist, consultativ, în română, fără markdown, fără presiune.
 FINAL MANDATORIU: încheie fiecare mesaj cu o întrebare deschisă sau cu o invitație la un apel de 2 minute ori la o vizionare/evaluare la apartament.
@@ -166,11 +177,12 @@ SERVICII (menționează-le natural, doar cât e relevant):
 COMISION & COSTURI: când proprietarul întreabă direct de comision sau costuri, fii transparent — administrarea RealTrust este de 15-20% din venit și în regim hotelier ea acoperă administrarea 100% pasivă (oaspeți, curățenie, chei, taxe). Explică valoarea adusă și orientează discuția spre un apel scurt. NU menționa niciodată alte procente de cheltuieli.
 REGULI: nu avem birou pentru clienți — vizionările/evaluările se fac la apartament. Nu inventa prețuri sau promisiuni.
 Dacă proprietarul refuză, mulțumește politicos și încheie.
+E-MAIL: ${knownEmail ? "avem deja adresa de e-mail a proprietarului, nu o mai cere." : "dacă proprietarul arată interes, cere-i politicos adresa de e-mail ca să-i trimitem detaliile anunțului și analiza. Dacă o scrie, pune-o în câmpul \"email\"."}
 ${settings.system_prompt ? `\nINDICAȚII SUPLIMENTARE:\n${String(settings.system_prompt).slice(0, 3000)}\n` : ""}
 ANUNȚUL PROPRIETARULUI: ${listingText}
 MEMORIE RealTrust: ${contextText || "(primul contact)"}
 
-Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interested" | "neutral" | "not_interested", "wants_call": true|false, "summary": "rezumat scurt"}
+Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interested" | "neutral" | "not_interested", "wants_call": true|false, "summary": "rezumat scurt", "email": "adresa dacă proprietarul a scris-o, altfel null"}
 "hot" = interes clar (vrea să vândă/administreze cu noi, acceptă evaluarea) sau cere să fie sunat.`;
 
   const contents = (history || [])
@@ -227,6 +239,39 @@ Răspunde DOAR cu JSON: {"reply": "textul mesajului", "intent": "hot" | "interes
       error: `ai_error: ${String(e).slice(0, 300)}`,
     });
     return new Response(JSON.stringify({ error: "AI generation failed", details: String(e) }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // 5b. E-mail automat cu detaliile anunțului, după ce proprietarul își lasă adresa
+  try {
+    const lastUserText = [...contents].reverse().find((c) => c.role === "user")?.parts?.[0]?.text ?? "";
+    const found = (lastUserText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "").toLowerCase();
+    const email = found && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(found) ? found : null;
+    if (email && email !== knownEmail) {
+      await supabase.from("leads").update({ email }).eq("whatsapp_number", conv.phone_normalized);
+      const detailUrl = listingInfo?.published_at
+        ? `https://realtrust.ro/anunturi-proprietari?anunt=${listingInfo.id}`
+        : (listingInfo?.source_url || "https://realtrust.ro/pentru-proprietari");
+      const { error: mailErr } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "owner-listing-details",
+          recipientEmail: email,
+          idempotencyKey: `owner-listing-details-${conversationId}-${email}`,
+          templateData: {
+            name: listingInfo?.contact_name || conv.wa_profile_name || "",
+            title: listingInfo?.title || "",
+            zone: listingInfo?.zone || "",
+            price: listingInfo?.price ? `${listingInfo.price} ${listingInfo.currency ?? "EUR"}` : "",
+            rooms: listingInfo?.rooms ?? null,
+            size: listingInfo?.size ?? null,
+            category: listingInfo?.category || "",
+            url: detailUrl,
+          },
+        },
+      });
+      if (mailErr) console.error("[wa-andrei-reply] email send failed:", mailErr);
+    }
+  } catch (e) {
+    console.warn("[wa-andrei-reply] email step failed:", e);
   }
 
   // 6. Hot Lead → Lead Manager + alertă

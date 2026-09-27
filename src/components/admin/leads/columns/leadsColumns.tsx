@@ -92,6 +92,14 @@ export const LeadTableRow = ({
           <div>
             <div className="flex items-center gap-2">
               <p className={!lead.is_read ? "font-semibold" : ""}>{lead.name}</p>
+              {(() => {
+                const st = String((lead as any).crm_status ?? "").toLowerCase();
+                const closed = ["closed", "inchis", "închis", "won", "lost", "converted", "rejected"].includes(st);
+                const hot = !closed && (lead.engagement_status === "hot_lead" || lead.lead_grade === "hot");
+                const label = closed ? "Închis" : hot ? "🔥 Hot Lead" : "În proces";
+                const cls = closed ? "bg-muted text-muted-foreground" : hot ? "bg-destructive/15 text-destructive" : "bg-primary/10 text-primary";
+                return <span className={`inline-block mt-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold ${cls}`}>{label}</span>;
+              })()}
               {lead.lead_score != null && <LeadScoreBadge lead={lead} />}
             </div>
             {lead.message && (
