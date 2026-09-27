@@ -176,10 +176,12 @@ Adapt your suggestions and tone to match the page context.`;
 
 // ─── Lead Detection ─────────────────────────────────────────
 
-async function detectAndSaveLead(message: string, conversationHistory: any[]) {
-  const phoneRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}/;
-  const match = message.match(phoneRegex);
-  if (!match) return;
+async function detectAndSaveLead(message: string, conversationHistory: any[], pageContext = "/") {
+  const phoneRegex = /(?:\+?40|0)7\d{2}[\s.-]?\d{3}[\s.-]?\d{3}/;
+  const phone = message.match(phoneRegex)?.[0]?.replace(/[\s.-]/g, "") ?? "";
+  const email = (message.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "").toLowerCase();
+  // Salvăm lead-ul dacă avem telefon SAU e-mail valid (telefonul nu e obligatoriu)
+  if (!phone && !email) return;
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const allText = conversationHistory.map((m: any) => m.content).join(" ") + " " + message;
@@ -193,17 +195,55 @@ async function detectAndSaveLead(message: string, conversationHistory: any[]) {
   else if (/2\s*cam|two.?room/i.test(allText)) propertyType = "2_camere";
 
   try {
-    await sb.from("leads").insert({
+    // Deduplicare: același contact în ultimele 24h → doar completăm datele lipsă
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    let existing: any = null;
+    if (email) {
+      const { data } = await sb.from("leads").select("id, message, whatsapp_number, email")
+        .eq("email", email).gte("created_at", since).limit(1).maybeSingle();
+      existing = data;
+    }
+    if (!existing && phone) {
+      const { data } = await sb.from("leads").select("id, message, whatsapp_number, email")
+        .eq("whatsapp_number", phone).gte("created_at", since).limit(1).maybeSingle();
+      existing = data;
+    }
+
+    const conversation = [...conversationHistory.filter((m: any) => m?.role === "user").map((m: any) => String(m.content ?? "")), message]
+      .filter(Boolean).join("\n").slice(-1500);
+
+    if (existing) {
+      await sb.from("leads").update({
+        email: existing.email || email || null,
+        whatsapp_number: existing.whatsapp_number || phone || "-",
+        message: conversation,
+        lead_grade: "hot",
+        engagement_status: "hot_lead",
+        lead_score: 90,
+      }).eq("id", existing.id);
+      return;
+    }
+
+    const { data: inserted } = await sb.from("leads").insert({
       name,
-      whatsapp_number: match[0].replace(/\s/g, ""),
+      whatsapp_number: phone || "-",
+      email: email || null,
+      message: conversation,
       property_type: propertyType,
       property_area: propertyType === "studio" ? 35 : propertyType === "2_camere" ? 55 : 75,
-      source: "AI Chat (Tools)",
-    });
+      source: `Chat Premium (${String(pageContext).slice(0, 80)})`,
+      engagement_status: "hot_lead",
+    }).select("id").maybeSingle();
+    // Trigger-ul de auto-scoring rulează la INSERT; forțăm starea Hot Lead după inserare.
+    if (inserted?.id) {
+      await sb.from("leads").update({ lead_grade: "hot", lead_score: 90, engagement_status: "hot_lead" }).eq("id", inserted.id);
+    }
+
   } catch (err) {
     console.error("[lead-save]", err);
   }
 }
+
 
 // ─── Chat lead e-mails (alertă internă + follow-up vizitator) ─────
 async function notifyChatLead(message: string, sessionId: string, pageContext: string, history: any[]) {
@@ -262,7 +302,7 @@ serve(async (req) => {
     }
 
     // Async lead detection
-    detectAndSaveLead(message, conversationHistory).catch(console.error);
+    detectAndSaveLead(message, conversationHistory, pageContext).catch(console.error);
     notifyChatLead(message, sessionId, pageContext, conversationHistory).catch(console.error);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
