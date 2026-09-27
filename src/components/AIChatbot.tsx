@@ -232,7 +232,7 @@ const MarkdownContent = memo(forwardRef<HTMLDivElement, { content: string; isStr
     const { text, cards } = parseConciergeListingCards(content);
 
     return (
-      <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[1.6] tracking-tight">
+      <div ref={ref} className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-[1.6] tracking-tight break-words [overflow-wrap:anywhere]">
         {text && (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
@@ -884,7 +884,7 @@ const AIChatbot = () => {
               "fixed z-50 bg-card/98 backdrop-blur-xl border border-border/50 shadow-[0_30px_100px_rgba(0,0,0,0.38)] flex flex-col overflow-hidden transition-all duration-500",
               isMinimized
                 ? "bottom-8 right-8 w-72 h-16 rounded-full"
-                : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-2 md:right-4 left-2 md:left-auto w-auto md:w-[450px] h-[min(82vh,720px)] md:h-[700px] rounded-[1.75rem]"
+                : "bottom-[max(4.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] md:bottom-4 right-2 md:right-4 left-2 md:left-auto w-auto max-w-[calc(100vw-1rem)] md:w-[450px] h-[min(74vh,700px)] md:h-[700px] rounded-[1.75rem]"
             )}
           >
             {/* Stream Progress Bar */}
@@ -1013,7 +1013,7 @@ const AIChatbot = () => {
                           {m.role === "user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                         </div>
                         <div className={cn(
-                          "max-w-[calc(100%-3rem)] md:max-w-[80%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] shadow-sm relative overflow-hidden",
+                          "max-w-[calc(100%-3rem)] md:max-w-[80%] p-3.5 md:p-4 md:px-5 rounded-[1.35rem] md:rounded-[1.5rem] shadow-sm relative min-w-0 break-words [overflow-wrap:anywhere]",
                           m.role === "user"
                             ? "bg-primary text-primary-foreground rounded-tr-none"
                             : m.isError
